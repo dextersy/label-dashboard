@@ -8,6 +8,7 @@
         <?php include_once('inc/view/navbar.php'); ?>
     
             <div class="container-fluid">
+            <?php include_once('./inc/view/artist-selection.php'); ?>
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#summary">Summary</a></li>

@@ -1,3 +1,4 @@
+<?php include_once('./inc/controller/page-check.php'); ?>
 <nav class="navbar navbar-default navbar-fixed">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -7,7 +8,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Dashboard</a>
+            <a class="navbar-brand" href="#"><?=$title_text;?></a>
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav navbar-left">
@@ -41,9 +42,6 @@
                         <i class="fa fa-search"></i>
                         <p class="hidden-lg hidden-md">Search</p>
                     </a>
-                </li>
-                <li>
-                    <?php include_once('./inc/view/artist-selection.php'); ?>
                 </li>
             </ul>
 

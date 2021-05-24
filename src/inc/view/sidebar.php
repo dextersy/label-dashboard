@@ -14,7 +14,7 @@
                 </a>
             </div>
 
-            <?php include_once("./inc/controller/sidebar-active-check.php"); ?>
+            <?php include_once("./inc/controller/page-check.php"); ?>
             <ul class="nav">
                 <li<? if($dashboard_active) { ?> class="active"<? } ?>>
                     <a href="dashboard.php">
