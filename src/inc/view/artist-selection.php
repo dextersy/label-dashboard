@@ -2,7 +2,7 @@
 require_once('./inc/model/artist.php');
 require_once('./inc/controller/get-artist-list.php');
 ?>
-<div class="dropdown">
+<div class="dropdown" style="padding:20px;">
     <button class="btn btn-default dropdown-toggle" type="button" id="artistSelection" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
         <?php
             if ($_SESSION['current_artist'] != NULL ) {
