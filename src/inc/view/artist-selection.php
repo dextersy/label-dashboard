@@ -9,7 +9,7 @@ require_once('./inc/controller/get-artist-list.php');
                 $artist = new Artist;
                 $artist->fromID($_SESSION['current_artist']);
         ?>
-        <?=$artist->name;?>
+        <img src="./assets/img/logo-purple.png" width="50"> <?=$artist->name;?>
         <?php
             }
             else {
