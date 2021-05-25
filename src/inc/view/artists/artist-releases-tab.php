@@ -5,7 +5,7 @@
     if ($_SESSION['current_artist']) {
         $releases = getReleaseListForArtist($_SESSION['current_artist']);
     }
-    function getStatusString($status) {
+    function getReleaseStatusString($status) {
         if ( $status == 'Pending' ) {
             $color = "gray";
         } else if ($status == 'Live' ) {
@@ -39,7 +39,7 @@
                 <td><a href="<?=$release->spotify_link;?>" target="_blank"><?=$release->spotify_link;?></a></td>
                 <td><a href="<?=$release->apple_link;?>" target="_blank"><?=$release->apple_link;?></a></td>
                 <td><a href="<?=$release->youtube_link;?>" target="_blank"><?=$release->youtube_link;?></a></td>
-                <td><?=getStatusString($release->status);?></a></td>
+                <td><?=getReleaseStatusString($release->status);?></a></td>
             </tr>
 <?  } ?>
         </tbody>

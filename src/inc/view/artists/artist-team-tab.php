@@ -1,3 +1,18 @@
+<?
+    include_once('./inc/controller/get_team_members.php');
+
+    $userAccessRights = getTeamMembersForArtist($_SESSION['current_artist']);
+
+    function getUserStatusString($status) {
+        if ( $status == "Pending" ) {
+            $color = 'gray';
+        }
+        else if ($status == "Active") {
+            $color = 'green';
+        }
+        return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i></span>";
+    }
+?>
 <h3>Assigned Team Members</h3>
 <div class="table-responsive">
     <table class="table">
@@ -10,18 +25,20 @@
             <th>Actions</th></tr>
         </thead>
         <tbody>
+<?
+    foreach($userAccessRights as $user) {
+?>
             <tr>
-                <td>Dexter</td>
-                <td>sy.dexter@gmail.com</td>
+                <td><?=$user->first_name . " " . $user->last_name; ?></td>
+                <td><?=$user->email_address; ?></td>
                 <td>Read</td>
                 <td>Read</td>
-                <td><span style="color:green;"><i class="fa fa-circle" aria-hidden="true"></i></span>
+                <td><?=getUserStatusString($user->status); ?></i></span>
                 Active</td>
                 <td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                 <i class="fa fa-trash" aria-hidden="true"></i></i></td>
             </tr>
-            <tr><td>Debb</td><td>debbacebu@gmail.com</td><td>Read</td><td>Read</td>
-            <td><span style="color:grey;"><i class="fa fa-circle" aria-hidden="true"></i></span> Pending</td><td><i class="fas fa-pencil"><i class="fas fa-trash"></i></td></tr>
+<?  } ?>
         </tbody>
     </table>
 </div>
