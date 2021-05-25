@@ -12,6 +12,7 @@ class Release{
     public $apple_music_link;
     public $youtube_link;
     public $release_date;
+    public $status;
 
     function __construct(
         $id = null, 
@@ -21,7 +22,8 @@ class Release{
         $spotify_link= null, 
         $apple_music_link= null, 
         $youtube_link= null,
-        $release_date = null
+        $release_date = null,
+        $status = null
     ) 
     {
         $this->id = $id;
@@ -32,6 +34,7 @@ class Release{
         $this->apple_music_link = $apple_music_link;
         $this->youtube_link = $youtube_link;
         $this->release_date = $release_date;
+        $this->status = $status;
       }
 
     function fromID($id) {
@@ -45,6 +48,7 @@ class Release{
             $this->apple_music_link = $row['apple_music_link'];
             $this->youtube_link = $row['youtube_link'];
             $this->release_date = $row['release_date'];
+            $this->status = $row['status'];
         }
     }
 }

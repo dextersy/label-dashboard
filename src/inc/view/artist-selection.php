@@ -5,17 +5,14 @@ require_once('./inc/controller/get-artist-list.php');
 <div class="dropdown" style="padding:20px;">
     <button class="btn btn-default dropdown-toggle" type="button" id="artistSelection" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
         <?php
-            if ($_SESSION['current_artist'] != NULL ) {
-                $artist = new Artist;
-                $artist->fromID($_SESSION['current_artist']);
+            if ($_SESSION['current_artist'] == NULL ) {
+                $artists = getArtistListForUser(null);
+                $_SESSION['current_artist'] = $artists[0]->id; // Use first artist in list
+            }
+            $artist = new Artist;
+            $artist->fromID($_SESSION['current_artist']);
         ?>
         <img src="./assets/img/logo-purple.png" width="50"> <?=$artist->name;?>
-        <?php
-            }
-            else {
-        ?>
-        Choose an artist
-        <? } ?>
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu" aria-labelledby="artistSelection">
@@ -30,5 +27,7 @@ require_once('./inc/controller/get-artist-list.php');
         }
     ?>
     </ul>
+    <? /* TODO Limit to admin */ ?>
+    <a href="newartist.php"><i class="fa fa-plus"></i></a>
 </div>
     

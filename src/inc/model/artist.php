@@ -58,14 +58,28 @@ class Artist{
     }
 
     function save() {
-        $sql = "UPDATE `artist` SET ".
-            "`name` = '" . $this->name . "', " .
-            "`website_page_url` = '" . $this->website_page_url . "', " .
-            "`facebook_handle` = '" . $this->facebook_handle . "', " .
-            "`instagram_handle` = '" . $this->instagram_handle . "', " .
-            "`twitter_handle` = '" . $this->twitter_handle . "', " .
-            "`bio` = '" . $this->bio . "' " .
-            "WHERE `id` = " . $this->id;
+
+        if ( $this->id == null ) {
+            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`) ".
+                "VALUES(" .
+                "'" . $this->name . "', ".
+                "'" . $this->website_page_url . "', ".
+                "'" . $this->facebook_handle . "', ".
+                "'" . $this->instagram_handle . "', ".
+                "'" . $this->twitter_handle . "', " .
+                "'" . $this->bio . "'" .
+                ")";
+        }
+        else {
+            $sql = "UPDATE `artist` SET ".
+                "`name` = '" . $this->name . "', " .
+                "`website_page_url` = '" . $this->website_page_url . "', " .
+                "`facebook_handle` = '" . $this->facebook_handle . "', " .
+                "`instagram_handle` = '" . $this->instagram_handle . "', " .
+                "`twitter_handle` = '" . $this->twitter_handle . "', " .
+                "`bio` = '" . $this->bio . "' " .
+                "WHERE `id` = " . $this->id;
+        }
         $result = MySQLConnection::query($sql);
         if ($result) {
             return true;

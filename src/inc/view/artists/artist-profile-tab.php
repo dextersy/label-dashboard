@@ -1,12 +1,20 @@
 <?php
 require_once('./inc/model/artist.php');
 $artist = new Artist;
+
 if ($_SESSION['current_artist'] != NULL) {
     $artist->fromID($_SESSION['current_artist']);
+    $title = "Your Artist Profile";
 }
+else {
+    $title = "New Artist";
+}
+
+$formAction = "update-artist.php?from=" . $_SERVER['REQUEST_URI'];
+
 ?>
-<h3>Your Artist Profile</h3>
-<form action="update-artist.php?from=<?=$_SERVER['REQUEST_URI'];?>" method="POST">
+<h3><?=$title;?></h3>
+<form action="<?=$formAction;?>" method="POST">
     <input type="hidden" name="id" value="<?=$artist->id;?>">
     <div class="form-group">
         <label for="name">Name</label>
