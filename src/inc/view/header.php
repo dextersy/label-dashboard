@@ -1,4 +1,6 @@
-<? session_start(); ?>
+<? 
+    include_once("./inc/controller/access_check.php");
+?>
 <!doctype html>
 <html lang="en">
 <head>

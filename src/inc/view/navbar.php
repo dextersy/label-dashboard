@@ -1,4 +1,7 @@
-<?php include_once('./inc/controller/page-check.php'); ?>
+<?php 
+include_once('./inc/controller/page-check.php'); 
+session_start();
+?>
 <nav class="navbar navbar-default navbar-fixed">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -48,11 +51,11 @@
             <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a href="">
-                        <p><i class="fa fa-user"></i> Account</p>
+                        <p><i class="fa fa-user"></i><?=$_SESSION['logged_in_username'];?></p>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="logout.php">
                         <p>Log out</p>
                     </a>
                 </li>

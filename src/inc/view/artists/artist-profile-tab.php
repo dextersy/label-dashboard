@@ -10,7 +10,7 @@ else {
     $title = "New Artist";
 }
 
-$formAction = "update-artist.php?from=" . $_SERVER['REQUEST_URI'];
+$formAction = "action.update-artist.php?from=" . $_SERVER['REQUEST_URI'];
 
 ?>
 <h3><?=$title;?></h3>

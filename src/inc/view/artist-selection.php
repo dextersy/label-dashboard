@@ -1,13 +1,12 @@
 <? 
 require_once('./inc/model/artist.php');
-require_once('./inc/controller/get-artist-list.php');
+require_once('./inc/controller/access_check.php');
 ?>
 <div class="dropdown" style="padding:20px;">
     <button class="btn btn-default dropdown-toggle" type="button" id="artistSelection" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
         <?php
-            if ($_SESSION['current_artist'] == NULL ) {
-                $artists = getArtistListForUser(null);
-                $_SESSION['current_artist'] = $artists[0]->id; // Use first artist in list
+            if ($_SESSION['current_artist'] == null ) {
+                $_SESSION['current_artist'] = $availableArtists[0]->id; // Use first artist in list
             }
             $artist = new Artist;
             $artist->fromID($_SESSION['current_artist']);
@@ -17,8 +16,7 @@ require_once('./inc/controller/get-artist-list.php');
     </button>
     <ul class="dropdown-menu" aria-labelledby="artistSelection">
     <?php
-        $artists = getArtistListForUser($_SESSION['username']);
-        foreach($artists as $artist) {
+        foreach($availableArtists as $artist) {
     ?>
         <li><a href="./inc/controller/set-selected-artist.php?id=<?=$artist->id;?>&from=<?=$_SERVER['REQUEST_URI'];?>">
         <?=$artist->name;?>
@@ -27,7 +25,8 @@ require_once('./inc/controller/get-artist-list.php');
         }
     ?>
     </ul>
-    <? /* TODO Limit to admin */ ?>
+    <? if ( $isAdmin ) { ?>
     <a href="newartist.php"><i class="fa fa-plus"></i></a>
+    <? } ?>
 </div>
     

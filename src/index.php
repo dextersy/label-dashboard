@@ -1,3 +1,11 @@
+<?
+  require_once('./inc/util/Redirect.php');
+
+  session_start();
+  if($_SESSION['logged_in_user'] != null) {
+    redirectTo('/dashboard.php');
+  }
+?>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <link href="assets/css/login.css" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
@@ -14,9 +22,9 @@
     </div>
 
     <!-- Login Form -->
-    <form>
+    <form action="action.login.php" method="POST">
       <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">
-      <input type="text" id="password" class="fadeIn third" name="login" placeholder="password">
+      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
       <input type="submit" class="fadeIn fourth" value="Log In">
     </form>
 

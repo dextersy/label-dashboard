@@ -31,11 +31,11 @@ class Artist{
         $this->twitter_handle = $twitter_handle;
         $this->bio = $bio;
         $this->starting_balance = $starting_balance;
-      }
+    }
 
     function fromID($id) {
         $result = MySQLConnection::query("SELECT * FROM `artist` WHERE `id` = " . $id);
-        if ($row = $result->fetch_assoc()) {
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->id = $id;
             $this->name = $row['name'];
             $this->website_page_url = $row['website_page_url'];
