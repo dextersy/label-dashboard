@@ -50,7 +50,7 @@ session_start();
 
             <ul class="nav navbar-nav navbar-right">
                 <li>
-                    <a href="">
+                    <a href="myprofile.php">
                         <p><i class="fa fa-user"></i><?=$_SESSION['logged_in_username'];?></p>
                     </a>
                 </li>

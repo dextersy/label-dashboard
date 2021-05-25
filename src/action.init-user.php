@@ -6,5 +6,7 @@
     $user->fromFormPOST($_POST);
     $user->save();
 
+    $_SESSION['logged_in_username'] = $user->username;
+
     redirectTo('/index.php');
 ?>
