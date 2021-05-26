@@ -6,6 +6,13 @@
     redirectTo('/dashboard.php');
   }
 ?>
+<header>
+  <title>Melt Dashboard Beta</title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+</header>
+
+<body>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <link href="assets/css/login.css" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
@@ -35,3 +42,4 @@
 
   </div>
 </div>
+</body>

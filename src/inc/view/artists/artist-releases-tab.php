@@ -31,7 +31,8 @@
             <th>Status <i class="fa fa-bandcamp"></th>
         </thead>
         <tbody>
-<? foreach ($releases as $release) { ?>
+<? if ($releases) {
+        foreach ($releases as $release) { ?>
             <tr>
                 <td><?=$release->catalog_no;?></td>
                 <td><?=$release->title;?></td>
@@ -41,6 +42,9 @@
                 <td><a href="<?=$release->youtube_link;?>" target="_blank"><?=$release->youtube_link;?></a></td>
                 <td><?=getReleaseStatusString($release->status);?></a></td>
             </tr>
+<?      } 
+    } else { ?>
+    No releases yet.
 <?  } ?>
         </tbody>
     </table>

@@ -12,7 +12,6 @@ class User{
     public $last_name;
     public $profile_photo;
     public $is_admin;
-    public $invite_hash;
 
     function __construct(
         $id = null, 
@@ -22,8 +21,7 @@ class User{
         $first_name= null, 
         $last_name= null, 
         $profile_photo= null, 
-        $is_admin= false,
-        $invite_hash = null
+        $is_admin= false
     ) 
     {
         $this->id = $id;
@@ -34,7 +32,6 @@ class User{
         $this->last_name = $last_name;
         $this->profile_photo = $profile_photo;
         $this->is_admin = $is_admin;
-        $this->invite_hash = $invite_hash;
     }
 
 
@@ -49,18 +46,6 @@ class User{
             $this->last_name = $row['last_name'];
             $this->profile_photo = $row['profile_photo'];
             $this->is_admin = $row['is_admin'];
-            $this->invite_hash = $row['invite_hash'];
-        }
-    }
-
-    function fromInviteHash($hash) {
-        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `invite_hash` = '" . $hash . "'");
-        if ($row = $result->fetch_assoc()) {
-            $this->fromID($row['id']);
-            return true;
-        }
-        else {
-            return false;
         }
     }
 
@@ -90,19 +75,20 @@ class User{
     function fromFormPOST($post) {
         $this->id = $_POST['id'];
         $this->username = $_POST['username'];
-        $this->password_md5 = md5($_POST['password']);
+        if ($_POST['password']) {
+            $this->password_md5 = md5($_POST['password']);
+        }
         $this->email_address = $_POST['email_address'];
         $this->first_name = $_POST['first_name'];
         $this->last_name = $_POST['last_name'];
         $this->profile_photo = $_POST['profile_photo'];
         $this->is_admin = $_POST['is_admin'];
-        $this->invite_hash = $_POST['invite_hash'];
     }
 
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `invite_hash`) ".
+            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`) ".
                 "VALUES(" .
                 "'" . $this->username . "', ".
                 "'" . $this->password_md5 . "', ".
@@ -110,8 +96,7 @@ class User{
                 "'" . $this->first_name . "', ".
                 "'" . $this->last_name . "', " .
                 "'" . $this->profile_photo . "', " .
-                "'" . $this->is_admin . "', " .
-                "'" . $this->invite_hash . "'" .
+                "'" . (($this->is_admin != '') ? $this->is_admin : "0") . "'" .
                 ")";
         }
         else {
@@ -122,8 +107,7 @@ class User{
                 "`first_name` = '" . $this->first_name . "', " .
                 "`last_name` = '" . $this->last_name . "', " .
                 "`profile_photo` = '" . $this->profile_photo . "', " .
-                "`is_admin` = '" . $this->is_admin . "', " .
-                "`invite_hash` = '" . $this->invite_hash . "' " .
+                "`is_admin` = '" . $this->is_admin . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
