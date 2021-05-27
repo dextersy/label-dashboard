@@ -49,6 +49,10 @@ class Release{
             $this->youtube_link = $row['youtube_link'];
             $this->release_date = $row['release_date'];
             $this->status = $row['status'];
+            return true;
+        }
+        else {
+            return false;
         }
     }
 }

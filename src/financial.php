@@ -14,6 +14,9 @@
                         <li class="active"><a data-toggle="tab" href="#summary">Summary</a></li>
                         <li><a data-toggle="tab" href="#royalties">Royalties</a></li>
                         <li><a data-toggle="tab" href="#payments">Payments and Advances</a></li>
+                    <? if ($isAdmin) { ?> 
+                        <li><a data-toggle="tab" href="#new-royalty"><i class="fa fa-lock" aria-hidden="true"></i> New Royalty</a></li>
+                    <? } ?>
                     </ul>
 
                     <div class="tab-content">
@@ -22,34 +25,17 @@
                             
                         </div>
                         <div id="royalties" class="tab-pane fade">
-                            <h3>Royalties</h3>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr><th>Name</th>
-                                        <th>Email address</th>
-                                        <th>Artist Access</th>
-                                        <th>Financial Access</th>
-                                        <th>Status</th>
-                                        <th>Actions</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Dexter</td>
-                                            <td>sy.dexter@gmail.com</td>
-                                            <td>Read</td>
-                                            <td>Read</td>
-                                            <td>Active</td>
-                                            <td><i class="fas fa-pencil"></i><i class="fas fa-trash"></i></td>
-                                        </tr>
-                                        <tr><td>Debb</td><td>debbacebu@gmail.com</td><td>Read</td><td>Read</td><td><i class="fas fa-pencil"><i class="fas fa-trash"></i></td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <?php include_once('./inc/view/financial/royalties-view.php'); ?>
                         </div>
                         <div id="payments" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/payments-view.php'); ?>
                         </div>
+
+                    <? if ($isAdmin) { ?>
+                        <div id="new-royalty" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/new-royalty.php'); ?>
+                        </div>
+                    <? } ?>
                     </div>
                 </div>
             </div>
