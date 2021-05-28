@@ -22,8 +22,7 @@
 
                     <div class="tab-content">
                         <div id="summary" class="tab-pane fade in active">
-                            <h3>Summary</h3>
-                            
+                            <?php include_once('./inc/view/financial/summary-view.php'); ?>                                
                         </div>
                         <div id="royalties" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/royalties-view.php'); ?>

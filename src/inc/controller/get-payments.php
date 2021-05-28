@@ -29,4 +29,14 @@ function getPaymentsForArtist($artist_id){
     return $paymentViewItems;
 }
 
+function getTotalPaymentsForArtist($artist_id){
+    $sql = "SELECT SUM(`amount`) AS `total_payment` FROM `payment` " .
+            "WHERE `artist_id` = ". $artist_id;
+    $result = MySQLConnection::query($sql);
+    if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+        $totalPayments = $row['total_payment'];
+    }
+    return $totalPayments;
+}
+
 ?>

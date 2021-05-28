@@ -1,5 +1,5 @@
 <?
-    include("./inc/controller/get-payments.php");
+    include_once("./inc/controller/get-payments.php");
     session_start();
     $paymentViewItems = getPaymentsForArtist($_SESSION['current_artist']);
 ?>
@@ -9,7 +9,7 @@
         <thead>
             <tr><th>Date Paid</th>
             <th>Description</th>
-            <th>Amount</th>
+            <th style="text-align:right">Amount</th>
         </thead>
         <tbody>
         <? if ($paymentViewItems) {
@@ -17,7 +17,7 @@
             <tr>
                 <td><?=$paymentViewItem->date_paid;?></td>
                 <td><?=$paymentViewItem->description;?></td>
-                <td><?=$paymentViewItem->amount;?></td>                
+                <td align="right"><?=number_format($paymentViewItem->amount, 2);?></td>                
             </tr>
         <?  }
         } else {
