@@ -16,6 +16,7 @@
                         <li><a data-toggle="tab" href="#payments">Payments and Advances</a></li>
                     <? if ($isAdmin) { ?> 
                         <li><a data-toggle="tab" href="#new-royalty"><i class="fa fa-lock" aria-hidden="true"></i> New Royalty</a></li>
+                        <li><a data-toggle="tab" href="#new-payment"><i class="fa fa-lock" aria-hidden="true"></i> New Payment</a></li>
                     <? } ?>
                     </ul>
 
@@ -34,6 +35,9 @@
                     <? if ($isAdmin) { ?>
                         <div id="new-royalty" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/new-royalty.php'); ?>
+                        </div>
+                        <div id="new-payment" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/new-payment.php'); ?>
                         </div>
                     <? } ?>
                     </div>

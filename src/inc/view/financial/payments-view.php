@@ -1,24 +1,29 @@
+<?
+    include("./inc/controller/get-payments.php");
+    session_start();
+    $paymentViewItems = getPaymentsForArtist($_SESSION['current_artist']);
+?>
 <h3>Payments and Advances</h3>
 <div class="table-responsive">
     <table class="table">
         <thead>
-            <tr><th>Name</th>
-            <th>Email address</th>
-            <th>Artist Access</th>
-            <th>Financial Access</th>
-            <th>Status</th>
-            <th>Actions</th></tr>
+            <tr><th>Date Paid</th>
+            <th>Description</th>
+            <th>Amount</th>
         </thead>
         <tbody>
+        <? if ($paymentViewItems) {
+            foreach($paymentViewItems as $paymentViewItem) { ?>
             <tr>
-                <td>Dexter</td>
-                <td>sy.dexter@gmail.com</td>
-                <td>Read</td>
-                <td>Read</td>
-                <td>Active</td>
-                <td><i class="fas fa-pencil"></i><i class="fas fa-trash"></i></td>
+                <td><?=$paymentViewItem->date_paid;?></td>
+                <td><?=$paymentViewItem->description;?></td>
+                <td><?=$paymentViewItem->amount;?></td>                
             </tr>
-            <tr><td>Debb</td><td>debbacebu@gmail.com</td><td>Read</td><td>Read</td><td><i class="fas fa-pencil"><i class="fas fa-trash"></i></td></tr>
+        <?  }
+        } else {
+        ?>
+            No payments and advances yet.
+        <? } ?>
         </tbody>
     </table>
 </div>
