@@ -51,7 +51,7 @@ class User{
 
     function fromUsername($user) {
         $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `username` = '" . $user . "'");
-        if ($row = $result->fetch_assoc()) {
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
         }

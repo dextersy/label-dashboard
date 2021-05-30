@@ -7,6 +7,7 @@
     if(!$user->fromUsername($_POST['login'])) {
         if (!$user->fromEmailAddress($_POST['login']) ) {
             redirectTo("/index.php?err=no_user");
+            die();
         }
     }
 
