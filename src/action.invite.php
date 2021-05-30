@@ -78,5 +78,5 @@
     $artist->fromID($artistaccess->artist_id);
     sendInviteEmail($user->email_address, $artist->name, $inviteHash);
 
-    redirectTo('/artist.php#team');
+    redirectTo('/artist.php?action=invite');
 ?>

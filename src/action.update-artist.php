@@ -5,5 +5,5 @@
     $artist = new Artist;
     $artist->fromFormPOST($_POST);
     $artist->save();
-    redirectBack();
+    redirectTo("/artist.php?action=profile")
 ?>

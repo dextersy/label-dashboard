@@ -9,6 +9,7 @@
     
             <div class="container-fluid">
             <?php include_once('./inc/view/artist-selection.php'); ?>
+            <?php include_once('./inc/view/artists/artist-alert-message.php'); ?>
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#profile">Profile</a></li>

@@ -28,6 +28,22 @@
       <img src="assets/img/logo-purple.png" id="icon" alt="Melt Records" />
     </div>
 
+    <!-- Alert -->
+    <?
+      if ($_GET['err'] == 'no_user') {
+    ?>
+      <div class="alert alert-danger" role="alert">
+        User not found. Please try again or ask admin to invite you.
+      </div>
+    <? }
+      else if ($_GET['err'] == 'pass') {
+    ?>
+      <div class="alert alert-danger" role="alert">
+        Wrong password. Please try again.
+      </div>
+    <?
+      }
+    ?>
     <!-- Login Form -->
     <form action="action.login.php" method="POST">
       <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">
