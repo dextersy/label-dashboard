@@ -18,7 +18,7 @@ require_once('./inc/controller/access_check.php');
     <?php
         foreach($availableArtists as $artist) {
     ?>
-        <li><a href="./inc/controller/set-selected-artist.php?id=<?=$artist->id;?>&from=<?=$_SERVER['REQUEST_URI'];?>">
+        <li><a href="action.set-selected-artist.php?id=<?=$artist->id;?>&from=<?=$_SERVER['REQUEST_URI'];?>">
         <?=$artist->name;?>
         </a></li>
     <?
