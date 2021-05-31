@@ -4,6 +4,7 @@ include_once('./inc/config.php');
 
 class MySQLConnection {
     private static $conn = null;
+    public static $lastInsertID = 0;
 
     public static function connect() {
         if (self::$conn == null) {
@@ -18,7 +19,9 @@ class MySQLConnection {
         if (self::$conn == null) {
             MySQLConnection::connect();
         }
-        return self::$conn->query($sql);
+        $result = self::$conn->query($sql);
+        self::$lastInsertID = self::$conn->insert_id;
+        return $result;
     }
 }
 

@@ -55,5 +55,53 @@ class Release{
             return false;
         }
     }
+
+    function fromFormPOST($post) {
+        $this->id = $row['id'];
+        $this->title = $post['title'];
+        $this->catalog_no = $post['catalog_no'];
+        $this->UPC = $post['UPC'];
+        $this->spotify_link = $post['spotify_link'];
+        $this->apple_music_link = $post['apple_music_link'];
+        $this->youtube_link = $post['youtube_link'];
+        $this->release_date = $post['release_date'];
+        $this->status = ($post['live'] == '1') ? "Live" : "Pending";
+    }
+
+    function save() {
+
+        if ( $this->id == null ) {
+            $sql = "INSERT INTO `release` (`title`, `catalog_no`, `UPC`, `spotify_link`, `apple_music_link`, `youtube_link`, `release_date`, `status`) ".
+                "VALUES(" .
+                "'" . $this->title . "', ".
+                "'" . $this->catalog_no . "', ".
+                "'" . $this->UPC . "', ".
+                "'" . $this->spotify_link . "', ".
+                "'" . $this->apple_music_link . "', " .
+                "'" . $this->youtube_link . "', " .
+                "'" . $this->release_date . "', " .
+                "'" . $this->status . "'" .
+                ")";
+        }
+        else {
+            $sql = "UPDATE `release` SET ".
+                "`title` = '" . $this->title . "', " .
+                "`catalog_no` = '" . $this->catalog_no . "', " .
+                "`UPC` = '" . $this->UPC . "', " .
+                "`spotify_link` = '" . $this->spotify_link . "', " .
+                "`apple_music_link` = '" . $this->apple_music_link . "', " .
+                "`youtube_link` = '" . $this->youtube_link . "', " .
+                "`release_date` = '" . $this->release_date . "', " .
+                "`status` = '" . $this->status . "' " .
+                "WHERE `id` = " . $this->id;
+        }
+        $result = MySQLConnection::query($sql);
+        if ($result) {
+            return MySQLConnection::$lastInsertID;
+        }
+        else {
+            return false;
+        }
+    }
 }
 ?>

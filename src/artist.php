@@ -15,6 +15,9 @@
                         <li class="active"><a data-toggle="tab" href="#profile">Profile</a></li>
                         <li><a data-toggle="tab" href="#releases">Releases</a></li>
                         <li><a data-toggle="tab" href="#team">Team</a></li>
+                        <? if ($isAdmin) { ?> 
+                        <li><a data-toggle="tab" href="#new-release"><i class="fa fa-lock" aria-hidden="true"></i> New Release</a></li>
+                    <? } ?>
                     </ul>
 
                     <div class="tab-content">
@@ -26,6 +29,9 @@
                         </div>
                         <div id="team" class="tab-pane fade">
                             <?php include_once('./inc/view/artists/artist-team-tab.php'); ?>
+                        </div>
+                        <div id="new-release" class="tab-pane fade">
+                            <?php include_once('./inc/view/artists/release-info.php'); ?>
                         </div>
                     </div>
                 </div>
