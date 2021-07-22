@@ -1,5 +1,6 @@
 <?
     session_start();
+    include_once('./inc/controller/page-check.php');
     include_once('./inc/controller/get-artist-list.php');
     include_once('./inc/controller/get-release-list.php');
 

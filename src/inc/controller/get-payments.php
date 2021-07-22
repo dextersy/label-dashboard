@@ -8,10 +8,13 @@ class PaymentViewItem {
     public $amount;
 }
 
-function getPaymentsForArtist($artist_id){
+function getPaymentsForArtist($artist_id, $start=0, $limit=-1){
     $sql = "SELECT `id` FROM `payment` " .
             "WHERE `artist_id` = ". $artist_id . " ".
             "ORDER BY `date_paid` DESC";
+    if ($limit >= 0) {
+        $sql = $sql . " LIMIT ". $start .", " . $limit;
+    }
     $result = MySQLConnection::query($sql);
     $i = 0;
     

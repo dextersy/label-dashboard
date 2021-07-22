@@ -11,10 +11,13 @@ class RoyaltyViewItem {
     public $amount;
 }
 
-function getRoyaltiesForArtist($artist_id){
+function getRoyaltiesForArtist($artist_id, $start = 0, $limit = -1){
     $sql = "SELECT `id` FROM `royalty` " .
             "WHERE `artist_id` = ". $artist_id . " ".
             "ORDER BY `date_recorded` DESC";
+    if ($limit >= 0) {
+        $sql = $sql . " LIMIT ". $start .", " . $limit;
+    }
     $result = MySQLConnection::query($sql);
     $i = 0;
     
