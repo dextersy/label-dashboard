@@ -68,24 +68,24 @@ class Royalty{
         if ( $this->id == null ) {
             $sql = "INSERT INTO `royalty` (`artist_id`, `earning_id`, `percentage_of_earning`, `amount`, `release_id`, `description`, `date_recorded`) ".
                 "VALUES(" .
-                "'" . $this->artist_id . "', ".
-                (($this->earning_id != null) ? $this->earning_id : 'NULL') . ", ".
-                (($this->percentage_of_earning != null) ? $this->percentage_of_earning : 'NULL') . ", ".
-                "'" . $this->amount . "', ".
-                (($this->release_id != null) ? $this->release_id : 'NULL') . ", ".
-                "'" . $this->description . "', " .
+                "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
+                (($this->earning_id != null) ? MySQLConnection::escapeString($this->earning_id) : 'NULL') . ", ".
+                (($this->percentage_of_earning != null) ? MySQLConnection::escapeString($this->percentage_of_earning) : 'NULL') . ", ".
+                "'" . MySQLConnection::escapeString($this->amount) . "', ".
+                (($this->release_id != null) ? MySQLConnection::escapeString($this->release_id) : 'NULL') . ", ".
+                "'" . MySQLConnection::escapeString($this->description) . "', " .
                 "CURDATE()".
                 ")";
         }
         else {
             $sql = "UPDATE `royalty` SET ".
-                "`artist_id` = '" . $this->artist_id . "', " .
-                "`earning_id` = '" . $this->earning_id . "', " .
-                "`percentage_of_earning` = '" . $this->percentage_of_earning . "', " .
-                "`amount` = '" . $this->amount . "', " .
-                "`release_id` = '" . $this->release_id . "', " .
-                "`description` = '" . $this->description . "', " .
-                "`date_recorded` = '" . $this->date_recorded . "' " .
+                "`artist_id` = '" . MySQLConnection::escapeString($this->artist_id) . "', " .
+                "`earning_id` = '" . MySQLConnection::escapeString($this->earning_id) . "', " .
+                "`percentage_of_earning` = '" . MySQLConnection::escapeString($this->percentage_of_earning) . "', " .
+                "`amount` = '" . MySQLConnection::escapeString($this->amount) . "', " .
+                "`release_id` = '" . MySQLConnection::escapeString($this->release_id) . "', " .
+                "`description` = '" . MySQLConnection::escapeString($this->description) . "', " .
+                "`date_recorded` = '" . MySQLConnection::escapeString($this->date_recorded) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

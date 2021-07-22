@@ -61,13 +61,13 @@ class ArtistAccess{
     function saveNew() {
         $sql = "INSERT INTO `artist_access` (`artist_id`, `user_id`, `can_view_payments`, `can_view_royalties`, `can_edit_artist_profile`, `status`, `invite_hash`) ".
                     "VALUES(" .
-                    "'" . $this->artist_id . "', ".
-                    "'" . $this->user_id . "', ".
-                    "'" . $this->can_view_payments . "', ".
-                    "'" . $this->can_view_royalties . "', ".
-                    "'" . $this->can_edit_artist_profile . "', " .
-                    "'" . $this->status . "', " .
-                    "'" . $this->invite_hash . "'" .
+                    "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
+                    "'" . MySQLConnection::escapeString($this->user_id) . "', ".
+                    "'" . MySQLConnection::escapeString($this->can_view_payments) . "', ".
+                    "'" . MySQLConnection::escapeString($this->can_view_royalties) . "', ".
+                    "'" . MySQLConnection::escapeString($this->can_edit_artist_profile) . "', " .
+                    "'" . MySQLConnection::escapeString($this->status) . "', " .
+                    "'" . MySQLConnection::escapeString($this->invite_hash) . "'" .
                     ")";
         $result = MySQLConnection::query($sql);
         if ($result) {
@@ -80,11 +80,11 @@ class ArtistAccess{
 
     function saveUpdates() {
         $sql = "UPDATE `artist_access` SET ".
-                "`can_view_payments` = '" . $this->can_view_payments . "', " .
-                "`can_view_royalties` = '" . $this->can_view_royalties . "', " .
-                "`can_edit_artist_profile` = '" . $this->can_edit_artist_profile . "', " .
-                "`status` = '" . $this->status . "', " .
-                "`invite_hash` = '" . $this->invite_hash . "' ".
+                "`can_view_payments` = '" . MySQLConnection::escapeString($this->can_view_payments) . "', " .
+                "`can_view_royalties` = '" . MySQLConnection::escapeString($this->can_view_royalties) . "', " .
+                "`can_edit_artist_profile` = '" . MySQLConnection::escapeString($this->can_edit_artist_profile) . "', " .
+                "`status` = '" . MySQLConnection::escapeString($this->status) . "', " .
+                "`invite_hash` = '" . MySQLConnection::escapeString($this->invite_hash) . "' ".
                 "WHERE `artist_id` = '" . $this->artist_id . "' AND `user_id` = '" . $this->user_id . "'";
         $result = MySQLConnection::query($sql);
         if ($result) {

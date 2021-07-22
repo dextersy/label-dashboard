@@ -30,8 +30,8 @@ class ReleaseArtist{
     function saveNew() {
         $sql = "INSERT INTO `release_artist` (`artist_id`, `release_id`) ".
                     "VALUES(" .
-                    "'" . $this->artist_id . "', ".
-                    "'" . $this->release_id . "'".
+                    "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
+                    "'" . MySQLConnection::escapeString($this->release_id) . "'".
                     ")";
         $result = MySQLConnection::query($sql);
         if ($result) {

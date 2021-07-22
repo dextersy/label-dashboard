@@ -17,11 +17,18 @@ class MySQLConnection {
 
     public static function query($sql) {
         if (self::$conn == null) {
-            MySQLConnection::connect();
+            self::connect();
         }
         $result = self::$conn->query($sql);
         self::$lastInsertID = self::$conn->insert_id;
         return $result;
+    }
+
+    public static function escapeString($string) {
+        if (self::$conn == null) {
+            self::connect();
+        }
+        return self::$conn->real_escape_string($string);
     }
 }
 

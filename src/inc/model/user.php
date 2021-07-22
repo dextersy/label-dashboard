@@ -90,25 +90,25 @@ class User{
         if ( $this->id == null ) {
             $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`) ".
                 "VALUES(" .
-                "'" . $this->username . "', ".
-                "'" . $this->password_md5 . "', ".
-                "'" . $this->email_address . "', ".
-                "'" . $this->first_name . "', ".
-                "'" . $this->last_name . "', " .
-                "'" . $this->profile_photo . "', " .
-                "'" . (($this->is_admin != '') ? $this->is_admin : "0") . "'" .
+                "'" . MySQLConnection::escapeString($this->username) . "', ".
+                "'" . MySQLConnection::escapeString($this->password_md5) . "', ".
+                "'" . MySQLConnection::escapeString($this->email_address) . "', ".
+                "'" . MySQLConnection::escapeString($this->first_name) . "', ".
+                "'" . MySQLConnection::escapeString($this->last_name) . "', " .
+                "'" . MySQLConnection::escapeString($this->profile_photo) . "', " .
+                "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "'" .
                 ")";
         }
         else {
             $sql = "UPDATE `user` SET ".
-                "`username` = '" . $this->username . "', " .
-                "`password_md5` = '" . $this->password_md5 . "', " .
-                "`email_address` = '" . $this->email_address . "', " .
-                "`first_name` = '" . $this->first_name . "', " .
-                "`last_name` = '" . $this->last_name . "', " .
-                "`profile_photo` = '" . $this->profile_photo . "', " .
-                "`is_admin` = '" . $this->is_admin . "' " .
-                "WHERE `id` = " . $this->id;
+                "`username` = '" . MySQLConnection::escapeString($this->username) . "', " .
+                "`password_md5` = '" . MySQLConnection::escapeString($this->password_md5) . "', " .
+                "`email_address` = '" . MySQLConnection::escapeString($this->email_address) . "', " .
+                "`first_name` = '" . MySQLConnection::escapeString($this->first_name) . "', " .
+                "`last_name` = '" . MySQLConnection::escapeString($this->last_name) . "', " .
+                "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "', " .
+                "`is_admin` = '" . MySQLConnection::escapeString($this->is_admin) . "' " .
+                "WHERE `id` = " . MySQLConnection::escapeString($this->id);
         }
         $result = MySQLConnection::query($sql);
         if ($result) {

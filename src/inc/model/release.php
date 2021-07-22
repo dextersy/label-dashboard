@@ -73,26 +73,26 @@ class Release{
         if ( $this->id == null ) {
             $sql = "INSERT INTO `release` (`title`, `catalog_no`, `UPC`, `spotify_link`, `apple_music_link`, `youtube_link`, `release_date`, `status`) ".
                 "VALUES(" .
-                "'" . $this->title . "', ".
-                "'" . $this->catalog_no . "', ".
-                "'" . $this->UPC . "', ".
-                "'" . $this->spotify_link . "', ".
-                "'" . $this->apple_music_link . "', " .
-                "'" . $this->youtube_link . "', " .
-                "'" . $this->release_date . "', " .
-                "'" . $this->status . "'" .
+                "'" . MySQLConnection::escapeString($this->title) . "', ".
+                "'" . MySQLConnection::escapeString($this->catalog_no) . "', ".
+                "'" . MySQLConnection::escapeString($this->UPC) . "', ".
+                "'" . MySQLConnection::escapeString($this->spotify_link) . "', ".
+                "'" . MySQLConnection::escapeString($this->apple_music_link) . "', " .
+                "'" . MySQLConnection::escapeString($this->youtube_link) . "', " .
+                "'" . MySQLConnection::escapeString($this->release_date) . "', " .
+                "'" . MySQLConnection::escapeString($this->status) . "'" .
                 ")";
         }
         else {
             $sql = "UPDATE `release` SET ".
-                "`title` = '" . $this->title . "', " .
-                "`catalog_no` = '" . $this->catalog_no . "', " .
-                "`UPC` = '" . $this->UPC . "', " .
-                "`spotify_link` = '" . $this->spotify_link . "', " .
-                "`apple_music_link` = '" . $this->apple_music_link . "', " .
-                "`youtube_link` = '" . $this->youtube_link . "', " .
-                "`release_date` = '" . $this->release_date . "', " .
-                "`status` = '" . $this->status . "' " .
+                "`title` = '" . MySQLConnection::escapeString($this->title) . "', " .
+                "`catalog_no` = '" . MySQLConnection::escapeString($this->catalog_no) . "', " .
+                "`UPC` = '" . MySQLConnection::escapeString($this->UPC) . "', " .
+                "`spotify_link` = '" . MySQLConnection::escapeString($this->spotify_link) . "', " .
+                "`apple_music_link` = '" . MySQLConnection::escapeString($this->apple_music_link) . "', " .
+                "`youtube_link` = '" . MySQLConnection::escapeString($this->youtube_link) . "', " .
+                "`release_date` = '" . MySQLConnection::escapeString($this->release_date) . "', " .
+                "`status` = '" . MySQLConnection::escapeString($this->status) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

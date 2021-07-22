@@ -49,18 +49,18 @@ class Payment {
         if ( $this->id == null ) {
             $sql = "INSERT INTO `payment` (`description`, `amount`, `artist_id`, `date_paid`) ".
                 "VALUES(" .
-                "'" . $this->description . "', ".
-                "'" . $this->amount . "', ".
-                "'" . $this->artist_id . "', ".
+                "'" . MySQLConnection::escapeString($this->description) . "', ".
+                "'" . MySQLConnection::escapeString($this->amount) . "', ".
+                "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
                 "CURDATE()".
                 ")";
         }
         else {
             $sql = "UPDATE `payment` SET ".
-                "`description` = '" . $this->description . "', " .
-                "`amount` = '" . $this->amount . "', " .
-                "`artist_id` = '" . $this->artist_id . "', " .
-                "`date_paid` = '" . $this->date_paid . "' " .
+                "`description` = '" . MySQLConnection::escapeString($this->description) . "', " .
+                "`amount` = '" . MySQLConnection::escapeString($this->amount) . "', " .
+                "`artist_id` = '" . MySQLConnection::escapeString($this->artist_id) . "', " .
+                "`date_paid` = '" . MySQLConnection::escapeString($this->date_paid) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
