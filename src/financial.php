@@ -12,6 +12,7 @@
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#summary">Summary</a></li>
+                        <li><a data-toggle="tab" href="#earnings">Earnings</a></li>
                         <li><a data-toggle="tab" href="#royalties">Royalties</a></li>
                         <li><a data-toggle="tab" href="#payments">Payments and Advances</a></li>
                     <? if ($isAdmin) { ?> 
@@ -24,6 +25,9 @@
                     <div class="tab-content">
                         <div id="summary" class="tab-pane fade in active">
                             <?php include_once('./inc/view/financial/summary-view.php'); ?>                                
+                        </div>
+                        <div id="earnings" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/earnings-view.php'); ?>
                         </div>
                         <div id="royalties" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/royalties-view.php'); ?>

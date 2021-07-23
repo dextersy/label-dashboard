@@ -1,11 +1,12 @@
 <? 
-
+    include_once('./inc/controller/get-earnings.php'); 
     include_once('./inc/controller/get-royalties.php'); 
     include_once('./inc/controller/get-payments.php'); 
 
     session_start();
     $totalRoyalties = getTotalRoyaltiesForArtist($_SESSION['current_artist']);
     $totalPayments = getTotalPaymentsForArtist($_SESSION['current_artist']);
+    $totalEarnings = getTotalEarningsForArtist($_SESSION['current_artist']);
     $currentBalance = $totalRoyalties - $totalPayments;
 ?>
 <h3>Summary</h3>
@@ -29,8 +30,9 @@
                 <h4 class="title"><strong>Total Earnings</strong></h4>
             </div>
             <div class="content">
-               <br>
-                <h5><strong>COMING SOON.</strong></h5>
+               Your current total earnings* are
+                <h5><strong>P<?=number_format($totalEarnings, 2);?></strong></h5>
+                <em>* Starting April 2021</em>
             </div>
         </div>
     </div>
