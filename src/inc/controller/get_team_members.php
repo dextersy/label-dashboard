@@ -7,8 +7,9 @@
         public $artistAccess;
         public $financialAccess;
         public $status;
+        public $invite_hash;
 
-        public function __construct($user_id, $first_name, $last_name, $email_address, $artistAccess, $financialAccess, $status) {
+        public function __construct($user_id, $first_name, $last_name, $email_address, $artistAccess, $financialAccess, $status, $invite_hash) {
             $this->user_id = $user_id;
             $this->first_name = $first_name;
             $this->last_name = $last_name;
@@ -16,6 +17,7 @@
             $this->artistAccess = $artistAccess;
             $this->financialAccess = $financialAccess;
             $this->status = $status;
+            $this->invite_hash = $invite_hash;
         }
     }
 
@@ -37,7 +39,8 @@
                 $row['email_address'],
                 null,
                 null,
-                $row['status']
+                $row['status'],
+                $row['invite_hash']
             );
         }
         return $userAccessRights;
