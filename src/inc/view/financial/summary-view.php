@@ -19,7 +19,7 @@
             </div>
             <div class="content">
                 Your current balance is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="This is what we owe you."></i><br>
-                <h5><strong>P<?=number_format($currentBalance, 2);?></strong></h5><br>
+                <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3><br>
             </div>
         </div>
     </div>
@@ -33,6 +33,7 @@
                Your current total earnings* are
                 <h5><strong>P<?=number_format($totalEarnings, 2);?></strong></h5>
                 <em>* Starting April 2021</em>
+                <p><a data-toggle="tab" href="#earnings">View earning details</a></p>
             </div>
         </div>
     </div>
@@ -43,7 +44,7 @@
                 <h4 class="title"><strong>Total Royalties</strong></h4>
             </div>
             <div class="content">
-                Your current total payments and advances is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="These are the royalties you've earned from all merch, digital, and streaming sales."></i><br>
+                Your current total royalties is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="These are the royalties you've earned from all merch, digital, and streaming sales."></i><br>
                 <h5><strong>P<?=number_format($totalRoyalties, 2);?></strong></h5>
                 <p><a data-toggle="tab" href="#royalties">View royalty details</a></p>
             </div>
