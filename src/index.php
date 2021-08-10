@@ -43,6 +43,13 @@
       </div>
     <?
       }
+      else if ($_GET['err'] == 'invalid_hash') {
+    ?>
+      <div class="alert alert-danger" role="alert">
+        Invalid code. Please request invite again.
+      </div>
+    <?
+      }
     ?>
     <!-- Login Form -->
     <form action="action.login.php" method="POST">

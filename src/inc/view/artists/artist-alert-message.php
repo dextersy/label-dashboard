@@ -6,11 +6,21 @@
         }, 2500); // <-- time in milliseconds
     </script>
 
-    <div class="alert alert-success" id="alert-box" role="alert">
+    
     <? if ($_GET['action'] == 'profile') { ?>
-        Profile successfully updated.
-    <? } else if ($_GET['action']=='invite') { ?>
-        Team member invite email sent.
-    <? } ?>
+        <div class="alert alert-success" id="alert-box" role="alert">
+            Profile successfully updated.
+        <div>
+    <? } else if ($_GET['action']=='invite') { 
+        if($_GET['status']=='email_failed') { ?>
+        <div class="alert alert-danger" id="alert-box" role="alert">
+            Failed to send invite email. Please check your email address is correct or contact support.
+        </div>
+        <? } else { ?>
+        <div class="alert alert-success" id="alert-box" role="alert">
+            Team member invite email sent.
+        </div>
+        <? }
+    } ?>
     </div>
 <? } ?>

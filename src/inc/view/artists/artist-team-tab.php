@@ -35,8 +35,17 @@
                 <td>Read</td>
                 <td>Read</td>
                 <td><?=getUserStatusString($user->status); ?></td>
-                <td><i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                <i class="fa fa-trash" aria-hidden="true"></i></i></td>
+                <td>
+                <?php if ($user->status == 'Pending') { ?>
+                    <form action="action.invite.php" method="POST">
+                        <input type="hidden" name="email_address" value="<?=$user->email_address;?>">
+                        <input type="hidden" name="invite_hash" value="<?=$user->invite_hash;?>">
+                        <input type="submit" class="btn" value="Resend invite">
+                    </form>
+                <?php } ?>
+                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                </td>
             </tr>
 <?      }
     } else {

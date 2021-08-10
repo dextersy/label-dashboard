@@ -21,9 +21,6 @@
                 <input type="hidden" name="id" value="<?=$user->id;?>">
             </div>
             <div class="form-group">
-                <input type="hidden" name="invite_hash" value="<?=$user->invite_hash;?>">
-                </div>
-            <div class="form-group">
                 <input type="hidden" name="is_admin" value="<?=$user->is_admin;?>">
                 </div>
             <div class="form-group">

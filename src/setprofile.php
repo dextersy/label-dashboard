@@ -1,18 +1,28 @@
 <?php
   require_once("./inc/model/user.php");
   require_once("./inc/model/artistaccess.php");
+  require_once("./inc/util/Redirect.php");
 
   if ($_GET['u']) {
     $hash = $_GET['u'];
     $artistAccess = new ArtistAccess;
     $artistAccess->fromInviteHash($hash);
-    $user = new User;
-    $user->fromID($artistAccess->user_id);
+
+    if(!isset($artistAccess->artist_id)) {
+      redirectTo('/index.php?err=invalid_hash');
+    }
+    else {
+      $user = new User;
+      $user->fromID($artistAccess->user_id);
+      if($user->password_md5 != "" || !isset($user->password_md5)) {
+        $artistAccess->status = "Accepted";
+        $artistAccess->invite_hash = "";
+        $artistAccess->saveUpdates();
+        redirectTo("/dashboard.php");
+      }
+    }
   }
-  else if ($_GET['email']) {
-    $user = new User;
-    $user->fromEmailAddress($_GET['email']);
-  }
+
 ?>
 <header>
   <title>Melt Dashboard Beta</title>

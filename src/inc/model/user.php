@@ -102,7 +102,6 @@ class User{
         else {
             $sql = "UPDATE `user` SET ".
                 "`username` = '" . MySQLConnection::escapeString($this->username) . "', " .
-                "`password_md5` = '" . MySQLConnection::escapeString($this->password_md5) . "', " .
                 "`email_address` = '" . MySQLConnection::escapeString($this->email_address) . "', " .
                 "`first_name` = '" . MySQLConnection::escapeString($this->first_name) . "', " .
                 "`last_name` = '" . MySQLConnection::escapeString($this->last_name) . "', " .
@@ -112,11 +111,25 @@ class User{
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
-            return true;
+            // Update password if it's set
+            if ($this->id != null && isset($this->password_md5)) {
+                $sql = "UPDATE `user` SET ".
+                    "`password_md5` = '" . MySQLConnection::escapeString($this->password_md5) . "' ".
+                    "WHERE `id` = " . MySQLConnection::escapeString($this->id);
+                $result = MySQLConnection::query($sql);
+                if ($result) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
         else {
             return false;
         }
+
+        
     }
 }
 ?>
