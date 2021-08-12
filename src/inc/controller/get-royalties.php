@@ -52,4 +52,13 @@ function getTotalRoyaltiesForArtist($artist_id){
     return $totalRoyalties;
 }
 
+function getTotalRoyaltiesForArtistForRelease($artist_id, $release_id){
+    $sql = "SELECT SUM(`amount`) AS `total_royalty` FROM `royalty` " .
+            "WHERE `artist_id` = ". $artist_id . " AND `release_id` = " . $release_id;
+    $result = MySQLConnection::query($sql);
+    if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+        $totalRoyalties = $row['total_royalty'];
+    }
+    return $totalRoyalties;
+}
 ?>
