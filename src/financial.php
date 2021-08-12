@@ -15,6 +15,7 @@
                         <li><a data-toggle="tab" href="#earnings">Earnings</a></li>
                         <li><a data-toggle="tab" href="#royalties">Royalties</a></li>
                         <li><a data-toggle="tab" href="#payments">Payments and Advances</a></li>
+                        <li><a data-toggle="tab" href="#recuperable_expenses">Recuperable Expenses</a></li>
                     <? if ($isAdmin) { ?> 
                         <li><a data-toggle="tab" href="#new-royalty"><i class="fa fa-lock" aria-hidden="true"></i> New Royalty</a></li>
                         <li><a data-toggle="tab" href="#new-payment"><i class="fa fa-lock" aria-hidden="true"></i> New Payment</a></li>
@@ -34,6 +35,9 @@
                         </div>
                         <div id="payments" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/payments-view.php'); ?>
+                        </div>
+                        <div id="recuperable_expenses" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/recuperable-expense-view.php'); ?>
                         </div>
 
                     <? if ($isAdmin) { ?>
