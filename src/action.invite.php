@@ -5,8 +5,7 @@
     require_once('./inc/model/artistaccess.php');
     require_once('./inc/util/Redirect.php');
 	require_once('./inc/util/Mailer.php');
-
-    session_start();
+	require_once('./inc/controller/access_check.php');
 
     $GLOBALS['debugOutput'] = [];
 

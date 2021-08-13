@@ -6,6 +6,12 @@
     require_once('./inc/util/Redirect.php');
     require_once('./inc/controller/get-artist-list.php');
     require_once('./inc/controller/get-recuperable-expense.php');
+    require_once('./inc/controller/access_check.php');
+
+    if(!$isAdmin) {
+        redirectTo("/index.php");
+        die();
+    }
 
     $earning = new Earning;
     $earning->fromFormPOST($_POST);
