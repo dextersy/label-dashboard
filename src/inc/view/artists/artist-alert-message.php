@@ -10,7 +10,7 @@
     <? if ($_GET['action'] == 'profile') { ?>
         <div class="alert alert-success" id="alert-box" role="alert">
             Profile successfully updated.
-        <div>
+        </div>
     <? } else if ($_GET['action']=='invite') { 
         if($_GET['status']=='email_failed') { ?>
         <div class="alert alert-danger" id="alert-box" role="alert">
