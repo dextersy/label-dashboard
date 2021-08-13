@@ -2,6 +2,7 @@
     require_once('./inc/model/release.php');
     require_once('./inc/model/releaseartist.php');
     require_once('./inc/util/Redirect.php');
+    require_once('./inc/controller/access_check.php');
 
     $release = new Release;
     $release->fromFormPOST($_POST);
