@@ -44,10 +44,14 @@ class ReleaseArtist{
     }
 
     function saveNew() {
-        $sql = "INSERT INTO `release_artist` (`artist_id`, `release_id`) ".
+        $sql = "INSERT INTO `release_artist` (`artist_id`, `release_id`, `streaming_royalty_percentage`, `sync_royalty_percentage`, `download_royalty_percentage`, `physical_royalty_percentage`) ".
                     "VALUES(" .
                     "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
-                    "'" . MySQLConnection::escapeString($this->release_id) . "'".
+                    "'" . MySQLConnection::escapeString($this->release_id) . "', ".
+                    "'" . MySQLConnection::escapeString($this->streaming_royalty_percentage) . "', ".
+                    "'" . MySQLConnection::escapeString($this->sync_royalty_percentage) . "', ".
+                    "'" . MySQLConnection::escapeString($this->download_royalty_percentage) . "', ".
+                    "'" . MySQLConnection::escapeString($this->physical_royalty_percentage) . "'".
                     ")";
         $result = MySQLConnection::query($sql);
         if ($result) {
