@@ -14,7 +14,7 @@ require_once('./inc/controller/access_check.php');
         <img src="./assets/img/logo-purple.png" width="50"> <?=$artist->name;?>
         <span class="caret"></span>
     </button>
-    <ul class="dropdown-menu" aria-labelledby="artistSelection">
+    <ul class="dropdown-menu" aria-labelledby="artistSelection" style="max-height:500px;overflow-y:auto;">
     <?php
         foreach($availableArtists as $artist) {
     ?>
