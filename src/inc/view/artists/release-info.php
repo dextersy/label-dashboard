@@ -6,29 +6,31 @@
 
 <h3>New Release</h3>
 <form action="action.update-release.php" method="POST">
-    <div class="form-group">
-    <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
-    <label for="description">Title</label>
-        <input type="text" class="form-control" id="title" name="title" placeholder="Title">
-    
-    </div>
-    <div class="form-group">
-        <label for="catalog_no">Catalog Number</label>
-        <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number">
-    </div>
-    <div class="form-group">
-        <label for="UPC">UPC</label>
-        <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
-    </div>  
-    <div class="form-release_date">
-        <label for="amount">Release Date (YYYY-MM-DD)</label>
-        <input type="text" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
-    </div> 
-    <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
-        <label class="form-check-label" for="flexCheckDefault">
-            Already released
-    </label>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+            <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
+            <label for="description">Title</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+            
+            </div>
+            <div class="form-group">
+                <label for="catalog_no">Catalog Number</label>
+                <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number">
+            </div>
+            <div class="form-group">
+                <label for="UPC">UPC</label>
+                <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
+            </div>  
+            <div class="form-group">
+                <label for="amount">Release Date (YYYY-MM-DD)</label>
+                <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
+            </div> 
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
+                <label class="form-check-label" for="flexCheckDefault">Already released</label>
+            </div>
+        </div>
     </div>
     <h4>Royalty Splits</h4>
     <div class="table-responsive">
