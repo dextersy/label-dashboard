@@ -4,12 +4,36 @@
     include_once('./inc/controller/get-royalties.php');
     include_once('./inc/controller/get-earnings.php');
     include_once('./inc/model/releaseartist.php');
+    include_once('./inc/controller/access_check.php');
 
     session_start();
     $releases = getReleaseListForArtist($_SESSION['current_artist']);
 ?>
+<script type="text/javascript">
+    function onClickAddRecuperableExpense(release_id, release_name) {
+        document.getElementById('add-recuperable-expense').style.display="block";
+        document.getElementById('add_recuperable_expense_release_id').value = release_id;
+        document.getElementById('add_recuperable_expense_release').innerHTML = release_name;
+    }
+    function onClickCancel() {
+        document.getElementById('add-recuperable-expense').style.display="none";
+    }
+</script>
 <h3>Release Information</h3>
 <p>This tab shows financial details regarding your release, including splits, recuperable expenses, earnings, and revenues.</p>
+<div id="add-recuperable-expense" class="row" style="display:none">
+    <div class="col-md-4">
+        <form action="action.add-recuperable-expense.php" method="POST">
+            <input type="hidden" id="add_recuperable_expense_release_id" name="release_id" value="">
+                <h4>Add recuperable expense for:</label> <span id="add_recuperable_expense_release"></span></h4>
+                <label for="description">Description</label>
+                <input type="text" class="form-control" id="add_recuperable_expense_description" name="expense_description" placeholder="Description">
+                <label for="amount">Amount (in PHP)</label>
+                <input type="text" class="form-control" id="add_recuperable_expense_amount" name="expense_amount" placeholder="Amount">
+            <button type="submit" class="btn btn-default">Add</button><button type="button" class="btn btn-default" onClick="onClickCancel()">Cancel</button>
+        </form>
+    </div>
+</div>
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -47,6 +71,9 @@
                 <td align="right"><?=number_format($recuperableExpense, 2);?></td>
                 <td align="right"><?=number_format($earnings, 2);?></td>
                 <td align="right"><?=number_format($royalties, 2);?></td>
+                <?php if ($isAdmin) { ?>
+                <td><a href="#" onclick="onClickAddRecuperableExpense(<?=$release->id;?>, '<?=str_replace("'","\'", $release->title);?>');"><i class="fa fa-plus"></i></a></td>
+                <?php } ?>
             </tr>
         <?
                     
