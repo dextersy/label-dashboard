@@ -1,4 +1,14 @@
-<?php include_once('./inc/view/header.php'); ?>
+<?php 
+require_once('./inc/controller/access_check.php');
+
+if(!$isAdmin) {
+    redirectTo("/index.php");
+    die();
+}
+
+include_once('./inc/view/header.php'); 
+?>
+
 <body>
 
 <div class="wrapper">

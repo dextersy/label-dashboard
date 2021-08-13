@@ -4,50 +4,14 @@
     require_once('./inc/model/artist.php');
     require_once('./inc/model/artistaccess.php');
     require_once('./inc/util/Redirect.php');
-
-    use PHPMailer\PHPMailer\PHPMailer;
-	use PHPMailer\PHPMailer\Exception;
-
-    // Load Composer's autoloader
-	require 'vendor/autoload.php';
-
-    session_start();
+	require_once('./inc/util/Mailer.php');
+	require_once('./inc/controller/access_check.php');
 
     $GLOBALS['debugOutput'] = [];
 
     function sendInviteEmail($emailAddress, $artistName, $inviteHash) {
-		try {
-			//PHPMailer Object
-			$mail = new PHPMailer(true); //Argument true in constructor enables exceptions
-			$mail->isSMTP();
-			$mail->Host = SMTP_HOST;
-			$mail->SMTPAuth = true;
-			$mail->Username = SMTP_USER;
-			$mail->Password = SMTP_PASS;
-			$mail->Port = SMTP_PORT;
-
-			//From email address and name
-			$mail->From = "no-reply@melt-records.com";
-			$mail->FromName = "Melt Records Artist Dashboard";
-
-			//To address and name
-			$mail->addAddress($emailAddress, "");
-
-			//Address to which recipient will reply
-			$mail->addReplyTo("hi@melt-records.com", "Reply");
-
-			//Send HTML or Plain Text email
-			$mail->isHTML(true);
-
-			$mail->Subject = "You've been invited to join ". $artistName . "'s team!";
-			$mail->Body = generateEmailFromTemplate($artistName, $inviteHash);
-			$mail->AltBody = "This is the plain text version of the email content";
-
-			$mail->send();
-		} catch (Exception $e) {
-			return false;
-		}
-		return true;
+		$subject = "You've been invited to join ". $artistName . "'s team!";
+		return sendEmail($emailAddress, $subject, generateEmailFromTemplate($artistName, $inviteHash));
 	}
 
     function generateEmailFromTemplate($artistName, $inviteHash) {

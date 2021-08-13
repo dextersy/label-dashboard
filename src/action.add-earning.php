@@ -2,16 +2,39 @@
     require_once('./inc/model/earning.php');
     require_once('./inc/model/royalty.php');
     require_once('./inc/model/releaseartist.php');
+    require_once('./inc/model/recuperableexpense.php');
     require_once('./inc/util/Redirect.php');
     require_once('./inc/controller/get-artist-list.php');
+    require_once('./inc/controller/get-recuperable-expense.php');
+    require_once('./inc/controller/access_check.php');
+
+    if(!$isAdmin) {
+        redirectTo("/index.php");
+        die();
+    }
 
     $earning = new Earning;
     $earning->fromFormPOST($_POST);
     $earning->save();
-
+    
     // Calculate royalties
     if ( $_POST['calculateRoyalties'] == '1') {
-        $artists = getArtistListForRelease($_POST['release_id']);
+        // Recup amount
+        $recuperableExpenseBalance = getRecuperableExpenseBalance($_POST['release_id']);
+        if ($earning->amount >= $recuperableExpenseBalance) {
+            $recuperatedAmount = $recuperableExpenseBalance;
+        }
+        else {
+            $recuperatedAmount = $earning->amount;
+        }
+        $earning->amount -= $recuperatedAmount; 
+        $recuperableExpense = new RecuperableExpense(null, $_POST['release_id'], "Recouped from earnings", $recuperatedAmount*-1);
+        $recuperableExpense->save();
+
+        // Calculate royalties per artist
+        if ($earning->amount > 0) {
+            $artists = getArtistListForRelease($_POST['release_id']);
+        }
         if ($artists) {
             foreach ($artists as $artist) {
                 $releaseArtist = new ReleaseArtist;
@@ -52,6 +75,24 @@
             }
         }
     }
+
+    function sendEarningsNotification($emailAddress, $artistName, $inviteHash) {
+		$subject = "You've been invited to join ". $artistName . "'s team!";
+		return sendEmail($emailAddress, $subject, generateEmailFromTemplate($artistName, $inviteHash));
+	}
+
+    function generateEmailFromTemplate($artistName, $inviteHash) {
+		define ('TEMPLATE_LOCATION', 'assets/templates/invite_email.html', false);
+		$file = fopen(TEMPLATE_LOCATION, 'r');
+		$msg = fread($file, filesize(TEMPLATE_LOCATION));
+		fclose($file);
+
+        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/assets/img/logo-purple.png", $msg);
+		$msg = str_replace('%ARTIST%', $artistName, $msg);
+		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/setprofile.php?u=" . $inviteHash, $msg);
+		
+		return $msg;
+	}
 
     redirectTo("/financial.php#earning");
 ?>
