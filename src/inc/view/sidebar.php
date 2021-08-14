@@ -34,7 +34,15 @@
                         <p>Financial</p>
                     </a>
                 </li>
+                <? if ($isAdmin) { ?>
+                    <li<? if($admin_active) { ?> class="active"<? } ?>>
+                        <a href="admin.php">
+                            <i class="pe-7s-lock"></i>
+                            <p>Admin</p>
+                        </a>
+                    </li>
                 
+                <? } ?>
             </ul>
     	</div>
     </div>
