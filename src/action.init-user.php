@@ -2,8 +2,7 @@
     require_once('./inc/model/artistaccess.php');
     require_once('./inc/model/user.php');
     require_once('./inc/util/Redirect.php');
-    require_once('./inc/controller/access_check.php');
-
+    
     $user = new User;
     $user->fromFormPOST($_POST);
     $user->save();
