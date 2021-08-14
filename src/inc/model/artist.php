@@ -82,6 +82,9 @@ class Artist{
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
+            if($this->id == null) {
+                $this->id = MySQLConnection::$lastInsertID;
+            }
             return true;
         }
         else {
