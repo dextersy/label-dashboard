@@ -6,5 +6,8 @@
     $artist = new Artist;
     $artist->fromFormPOST($_POST);
     $artist->save();
+
+    $_SESSION['current_artist'] = $artist->id;
+
     redirectTo("/artist.php?action=profile")
 ?>
