@@ -22,6 +22,7 @@
 ?>
             <tr>
                 <td><select class="form-control" name="release_id_<?=$i;?>">
+                <option value="-1"></option>
 <?
             foreach($releases as $release) {
 ?>
@@ -29,7 +30,7 @@
 
 <?  } ?>
                 </select></td>
-                <td><select class="form-control" name="type">
+                <td><select class="form-control" name="type_<?=$i;?>">
                     <option value="Sync">Sync</option>
                     <option value="Streaming">Streaming</option>
                     <option value="Downloads">Downloads</option>
