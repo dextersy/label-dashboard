@@ -68,12 +68,13 @@
                 <td><?=$streaming_royalty;?></td>
                 <td><?=$download_royalty;?></td>
                 <td><?=$physical_royalty;?></td>
-                <td align="right"><?=number_format($recuperableExpense, 2);?></td>
+                <td align="right"><?=number_format($recuperableExpense, 2);?>
+                <?php if ($isAdmin) { ?>
+                <a href="#" onclick="onClickAddRecuperableExpense(<?=$release->id;?>, '<?=str_replace("'","\'", $release->title);?>');"><i class="fa fa-plus"></i></a>
+                <?php } ?> 
+                </td>
                 <td align="right"><?=number_format($earnings, 2);?></td>
                 <td align="right"><?=number_format($royalties, 2);?></td>
-                <?php if ($isAdmin) { ?>
-                <td><a href="#" onclick="onClickAddRecuperableExpense(<?=$release->id;?>, '<?=str_replace("'","\'", $release->title);?>');"><i class="fa fa-plus"></i></a></td>
-                <?php } ?>
             </tr>
         <?
                     
