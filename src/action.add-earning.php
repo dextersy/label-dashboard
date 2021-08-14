@@ -78,15 +78,20 @@
             }
 
             // Send email notification
-            $users = getTeamMembersForArtist($artist->id);
+            $users = getActiveTeamMembersForArtist($artist->id);
+            $i = 0;
             foreach ($users as $user) {
+                $emailAddresses[$i++] = $user->email_address;
+            }
+            if ($i > 0) {
                 sendEarningsNotification(
-                        $user->email_address, 
-                        $artist, 
-                        $release, 
-                        $earning, 
-                        $recuperatedAmount,
-                        $royalty);
+                    $emailAddresses, 
+                    $artist, 
+                    $release, 
+                    $earning, 
+                    $recuperatedAmount,
+                    $royalty
+                );
             }
         }
     }
