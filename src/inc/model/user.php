@@ -111,8 +111,11 @@ class User{
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
+            if($this->id == null) {
+                $this->id = MySQLConnection::$lastInsertID;
+            }
             // Update password if it's set
-            if ($this->id != null && isset($this->password_md5)) {
+            if (isset($this->password_md5)) {
                 $sql = "UPDATE `user` SET ".
                     "`password_md5` = '" . MySQLConnection::escapeString($this->password_md5) . "' ".
                     "WHERE `id` = " . MySQLConnection::escapeString($this->id);
