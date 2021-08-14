@@ -1,97 +1,56 @@
-# [Light Bootstrap Dashboard](http://www.creative-tim.com/product/light-bootstrap-dashboard)
+# Melt Records Artist Dashboard
 
-![alt text](http://s3.amazonaws.com/creativetim_bucket/products/32/original/opt_lbd_thumbnail.jpg "Light Bootstrap Dashboard")
+At Melt Records, we believe in *transparency* first and foremost - that we should NOT be afraid to share and engage in conversations with our artist regarding what we do, how we do it, and how much we make out of it.
 
-Light Bootstrap Dashboard is an admin dashboard template designed to be beautiful and simple. It is built on top of Bootstrap 4 and it is fully responsive. It comes with a big collections of elements that will offer you multiple possibilities to create the app that best fits your needs. It can be used to create admin panels, project management systems, web applications backend, CMS or CRM.
+This dashboard is an effort to exemplify this value, by providing our artists easy access to as much information as is available, without obscuring the important details.
 
-The product represents a big suite of front-end developer tools that can help you jump start your project. We have created it thinking about things you actually need in a dashboard. Light Bootstrap Dashboard contains multiple handpicked and optimised plugins. Everything is designed to fit with one another. As you will be able to see, the dashboard you can access on Creative Tim is a customisation of this product.
+To further encourage transparency, we've released this dashboard as a public and open-source repository, so others may use it freely for their own purposes and audit the implementation to make sure that calculations and other things are carried out correctly.
 
-It comes with 6 filter colors for the sidebar (`black`, `azure`,`green`,`orange`,`red`,`purple`) and an option to have a background image.
+Feel free to fork this repository for your own modifications. I'd be happy to get your contributions to this dashboard!
 
-Special thanks go to: Robert McIntosh for the notification system Chartist for the wonderful charts We are very excited to share this dashboard with you and we look forward to hearing your feedback!
-
-## Links:
-
-- [Live Preview](http://demos.creative-tim.com/light-bootstrap-dashboard/examples/dashboard.html?ref=github-repo)
-- [Video Tutorial](https://www.youtube.com/watch?v=c3M3NQtFyqM)
-- [Light Bootstrap Dashboard PRO](https://www.creative-tim.com/product/light-bootstrap-dashboard-pro) (from $39)
+\- **Dexter Sy**, Melt Records
 
 ## Quick start
 
-Quick start options:
+This project requires a working web server (Nginx, Apache, or any HTTP server of your choice), the PHP modules (recommended at least PHP 7.3), and MySQL.
 
-Download from Github.
-Download from Creative Tim.
-Clone the repo: git clone https://github.com/creativetimofficial/light-bootstrap-dashboard.git.
+[Note: There is not yet a MySQL schema included as of August 2021. This will be added in a future commit.]
 
+### To get started:
+1. Copy all the files in `src` to your web server document root. (Refer to your web server's manual for details on how to set up local domains, as needed.)
+2. Make a copy or reanme `inc/config.php.sample` to `inc/config.php`.
+3. Input the necessary details for your database server and SMTP server on `config.php`. The following information is needed:
+        
+        // Update your actual server, database, user, and password here
+        define('DB_SERVER', 'localhost');
+        define('DB_DATABASE', 'meltrecords_dashboard');
+        define('DB_USER', '');
+        define('DB_PASSWORD', '');
 
-### What's included
+        // Update your actual SMTP configuration here
+        define('SMTP_HOST', 'email-smtp.ap-southeast-1.amazonaws.com');
+        define('SMTP_PORT', '587');
+        define('SMTP_SECURE', 'tls');
+        define('SMTP_USER', '');
+        define('SMTP_PASS', '');
 
-Within the download you'll find the following directories and files:
+    `Note: Don't forget to change DB_SERVER, DB_DATABASE, SMTP_PORT, SMTP_SECURE to your actual database and SMTP settings. The included values are only examples.`
 
-```
-Light Bootstrap Dashboard
-├── CHANGELOG.md
-├── README.md
-├── assets
-│   ├── css
-│   ├── fonts
-│   ├── img
-│   ├── js
-│   │   ├── core
-│   │   │   ├── bootstrap.min.js
-│   │   │   ├── jquery.3.2.1.min.js
-│   │   │   └── popper.min.js
-│   │   ├── demo.js
-│   │   ├── light-bootstrap-dashboard.js
-│   │   └── plugins
-│   │       ├── bootstrap-datepicker.js
-│   │       ├── bootstrap-notify.js
-│   │       ├── bootstrap-switch.js
-│   │       ├── chartist.min.js
-│   │       └── nouislider.min.js
-│   └── main.css
-├── deploy.sh
-├── documentation
-│   ├── template.html
-│   └── tutorial-components.html
-├── examples
-│   ├── dashboard.html
-│   ├── forms
-│   │   └── extended.html
-│   ├── icons.html
-│   ├── maps.html
-│   ├── notifications.html
-│   ├── table.html
-│   ├── typography.html
-│   ├── upgrade.html
-│   └── user.html
-└── package-lock.json
-```
+Run the app on your PHP-enabled webserver and access it through http://localhost
 
 ### License
+Copyright 2021 Dexter Sy & Melt Records (https://www.melt-records.com)
 
 Copyright 2019 Creative Tim (http://www.creative-tim.com)
+
 Licensed under MIT (https://github.com/creativetimofficial/light-bootstrap-dashboard/blob/master/LICENSE.md)
 
 ## Useful Links
 
-More products from Creative Tim: http://www.creative-tim.com/products
-
-Tutorials: https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w
-
-Freebies: http://www.creative-tim.com/products
-
-Affiliate Program (earn money): http://www.creative-tim.com/affiliates/new
-
 Social Media:
 
-Twitter: https://twitter.com/CreativeTim
+Twitter: https://twitter.com/meltrecordsph
 
-Facebook: https://www.facebook.com/CreativeTim
+Facebook: https://www.facebook.com/meltrecordsph
 
-Dribbble: https://dribbble.com/creativetim
-
-Google+: https://plus.google.com/+CreativetimPage
-
-Instagram: https://instagram.com/creativetimofficial
+Instagram: https://instagram.com/meltrecordsph
