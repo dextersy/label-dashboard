@@ -18,7 +18,7 @@ This project requires a working web server (Nginx, Apache, or any HTTP server of
 
 ### To get started:
 1. Copy all the files in `src` to your web server document root. (Refer to your web server's manual for details on how to set up local domains, as needed.)
-2. Make a copy or reanme `inc/config.php.sample` to `inc/config.php`.
+2. Make a copy or rename `inc/config.php.sample` to `inc/config.php`.
 3. Input the necessary details for your database server and SMTP server on `config.php`. The following information is needed:
         
         // Update your actual server, database, user, and password here
@@ -36,7 +36,9 @@ This project requires a working web server (Nginx, Apache, or any HTTP server of
 
     `Note: Don't forget to change DB_SERVER, DB_DATABASE, SMTP_PORT, SMTP_SECURE to your actual database and SMTP settings. The included values are only examples.`
 
-Run the app on your PHP-enabled webserver and access it through http://localhost
+4. Run the app on your PHP-enabled webserver and access it through http://localhost
+
+    `Note: Due to limitations of the code, it's not currently possible to run the app on a subdirectory (e.g. localhost/meltrecords) - this results in unexpected behavior. If you are hosting more than one site on your web server, please set up vhosts locally.`
 
 ### License
 Copyright 2021 Dexter Sy & Melt Records (https://www.melt-records.com)
