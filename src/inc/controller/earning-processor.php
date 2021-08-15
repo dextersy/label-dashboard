@@ -31,7 +31,7 @@
             foreach ($artists as $artist) {
                 unset($royalty);
                 // Calculate royalties
-                if ( $calculateRoyalties == true ) {
+                if ( $calculateRoyalties == true && $earningRemainingForRoyalties > 0 ) {
                     $releaseArtist = new ReleaseArtist;
                     $releaseArtist->fromID($artist->id, $earning->release_id);
                     switch($earning->type) {
