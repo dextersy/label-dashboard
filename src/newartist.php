@@ -10,7 +10,7 @@ include_once('./inc/view/header.php');
 ?>
 
 <body>
-
+<?php include('./inc/view/after-body.php'); ?>
 <div class="wrapper">
     <?php include_once('inc/view/sidebar.php'); ?>
 
