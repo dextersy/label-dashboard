@@ -45,4 +45,29 @@
         }
         return $userAccessRights;
     }
+
+    function getActiveTeamMembersForArtist($artist){
+        $sql = "SELECT * FROM `artist_access` ".
+            "INNER JOIN `user` ON `artist_access`.`user_id` = `user`.`id` ".
+            "WHERE `artist_id` = " . $artist . " AND `status`= 'Accepted'";
+        $result = MySQLConnection::query($sql);
+        if ($result->num_rows < 1) {
+            return null;
+        }
+    
+        $i = 0;
+        while($row = $result->fetch_assoc()) {
+            $userAccessRights[$i++] = new UserAccessRights(
+                $row['user_id'],
+                $row['first_name'],
+                $row['last_name'],
+                $row['email_address'],
+                null,
+                null,
+                $row['status'],
+                $row['invite_hash']
+            );
+        }
+        return $userAccessRights;
+    }
 ?>

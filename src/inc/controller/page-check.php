@@ -13,4 +13,8 @@
         $financial_active = true;
         $title_text = "Financial";
     }
+    if (strpos($request_uri, "admin.php")) {
+        $admin_active = true;
+        $title_text = "Admin";
+    }
 ?>
