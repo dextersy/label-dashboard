@@ -19,11 +19,15 @@ include_once('./inc/view/header.php');
             <div class="container-fluid">
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#summary">Summary View</a></li>
                         <li><a data-toggle="tab" href="#bulk-add-earnings">Bulk Add Earnings</a></li>
                     </ul>
 
                     <div class="tab-content">
-                        <div id="bulk-add-earnings" class="tab-pane fade in active">
+                        <div id="summary" class="tab-pane fade in active">
+                            <?php include_once('./inc/view/admin/admin-summary-view.php'); ?>                                
+                        </div>
+                        <div id="bulk-add-earnings" class="tab-pane fade">
                             <?php include_once('./inc/view/admin/bulk-add-earnings.php'); ?>                                
                         </div>
                     </div>
