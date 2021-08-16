@@ -7,9 +7,26 @@
     $artists = getAllArtists();
     $overallTotalRoyalties = 0;
     $overallTotalEarnings = 0;
-?>
 
+    if(isset($_POST['date_from']) && isset($_POST['date_to'])) {
+        $startDate = $_POST['date_from'];
+        $endDate = $_POST['date_to'];
+    }
+    else {
+        $startDate = date("Y-m-d", strtotime('-30 days'));
+        $endDate = date("Y-m-d");
+    }
+?>
 <h3>Earnings and Royalties Summary</h3>
+<div class='picker'>
+    <form action="admin.php" method="POST">
+        <label for="fromperiod">From</label>
+        <input type="date" id="fromperiod" name="date_from" value="<?=$startDate;?>">
+        <label for="toperiod">to</label>
+        <input type="date" id="toperiod" name="date_to" value="<?=$endDate;?>">
+        <button class="btn btn-default" type="submit">Filter</button>
+    </form>
+</div>
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -20,8 +37,8 @@
         <tbody>
 <? if ($artists) {
         foreach ($artists as $artist) { 
-            $totalEarnings = getTotalEarningsForArtist($artist->id);
-            $totalRoyalties = getTotalRoyaltiesForArtist($artist->id);
+            $totalEarnings = getTotalEarningsForArtist($artist->id, $startDate, $endDate);
+            $totalRoyalties = getTotalRoyaltiesForArtist($artist->id, $startDate, $endDate);
 
             $overallTotalEarnings += $totalEarnings;
             $overallTotalRoyalties += $totalRoyalties;

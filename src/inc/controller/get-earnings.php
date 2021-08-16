@@ -42,9 +42,12 @@ function getEarningsForArtist($artist_id, $start = 0, $limit = -1){
     return $earningViewItems;
 }
 
-function getTotalEarningsForArtist($artist_id){
+function getTotalEarningsForArtist($artist_id, $start_date = null, $end_date = null){
     $sql = "SELECT SUM(`amount`) AS `total_earning` FROM `earning` " .
             "WHERE `release_id` IN (SELECT `release_id` FROM `release_artist` WHERE `artist_id` = '". $artist_id ."')";
+    if($start_date != null && $end_date != null) {
+        $sql = $sql . " AND `date_recorded` BETWEEN '" . $start_date . "' AND '" . $end_date . "'";
+    }
     $result = MySQLConnection::query($sql);
     if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
         $totalEarnings = $row['total_earning'];
