@@ -37,8 +37,21 @@
             i++;
         }
     }
+
+    function onInputAmount() {
+        var totalAmount = 0;
+        for(var i = 0; document.getElementById('amount_'+i); i++) {
+            totalAmount += Number(document.getElementById('amount_'+i).value);
+        }
+        document.getElementById('total_earnings_display').innerHTML = "P" + totalAmount.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+    }
 </script>
 <h3>Bulk Add Earnings</h3>
+<div class="row">
+    <div class="col-md-3">
+        <strong>Current total earnings:</strong> <span id="total_earnings_display"></span>
+    </div>
+</div>
 <form action="action.bulk-add-earnings.php" method="POST">
 <div class="table-responsive">
     <table class="table">
@@ -84,7 +97,7 @@
                 </select>
                 </td>
                 <td><input type="text" class="form-control" id="description_<?=$i;?>" name="description_<?=$i;?>" placeholder="Description"></td>
-                <td><input type="text" class="form-control" id="amount_<?=$i;?>" name="amount_<?=$i;?>" placeholder="Amount"></td>
+                <td><input type="text" class="form-control" id="amount_<?=$i;?>" name="amount_<?=$i;?>" placeholder="Amount" onChange="onInputAmount();"></td>
                 <td><input class="form-check-input" type="checkbox" value="1" name="calculateRoyalties_<?=$i;?>" id="calculateRoyalties_<?=$i;?>" checked></td>
             </tr>
 <?      } ?>
