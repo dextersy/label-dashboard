@@ -1,15 +1,7 @@
 <?php
     require_once('./inc/model/earning.php');
-    require_once('./inc/model/royalty.php');
-    require_once('./inc/model/release.php');
-    require_once('./inc/model/releaseartist.php');
-    require_once('./inc/model/recuperableexpense.php');
-    require_once('./inc/util/Redirect.php');
-    require_once('./inc/controller/get-artist-list.php');
-    require_once('./inc/controller/get-recuperable-expense.php');
     require_once('./inc/controller/access_check.php');
-    require_once('./inc/controller/get_team_members.php');
-    require_once('./inc/util/Mailer.php');
+    require_once('./inc/controller/earning-processor.php');
 
     if(!$isAdmin) {
         redirectTo("/index.php");
@@ -20,76 +12,7 @@
     $earning->fromFormPOST($_POST);
     $earning->save();
 
-    // Recup amount
-    $recuperableExpenseBalance = getRecuperableExpenseBalance($_POST['release_id']);
-    if ($earning->amount >= $recuperableExpenseBalance) {
-        $recuperatedAmount = $recuperableExpenseBalance;
-    }
-    else {
-        $recuperatedAmount = $earning->amount;
-    }
-    $earningRemainingForRoyalties = $earning->amount - $recuperatedAmount; 
-    $recuperableExpense = new RecuperableExpense(null, $_POST['release_id'], "Recouped from earnings", $recuperatedAmount*-1);
-    $recuperableExpense->save();
-   
-    $release = new Release;
-    $release->fromID($_POST['release_id']);
-    $artists = getArtistListForRelease($_POST['release_id']);
-    
-    if ($artists) {
-        foreach ($artists as $artist) {
-            unset($royalty);
-            // Calculate royalties
-            if ( $_POST['calculateRoyalties'] == '1') {
-                $releaseArtist = new ReleaseArtist;
-                $releaseArtist->fromID($artist->id, $_POST['release_id']);
-                switch($_POST['type']) {
-                    case 'Sync': 
-                        $royaltyBase = $releaseArtist->sync_royalty_type;
-                        $royaltyPercent = $releaseArtist->sync_royalty_percentage;
-                        break;
-                    case 'Streaming':
-                        $royaltyBase = $releaseArtist->streaming_royalty_type;
-                        $royaltyPercent = $releaseArtist->streaming_royalty_percentage;
-                        break;
-                    case 'Downloads':
-                        $royaltyBase = $releaseArtist->download_royalty_type;
-                        $royaltyPercent = $releaseArtist->download_royalty_percentage;
-                        break;
-                    case 'Physical':
-                        $royaltyBase = $releaseArtist->physical_royalty_type;
-                        $royaltyPercent = $releaseArtist->physical_royalty_percentage;
-                        break;
-                    default: break;
-                }
-                
-                if ($royaltyBase == 'Revenue') {
-                    $royaltyAmount = $earningRemainingForRoyalties * $royaltyPercent;
-                }
-
-                $royalty = new Royalty;
-                $royalty->id = null;
-                $royalty->artist_id = $artist->id;
-                $royalty->earning_id = $earning->id;
-                $royalty->amount = $royaltyAmount;
-                $royalty->release_id = $_POST['release_id'];
-                $royalty->description = "Royalties from " . $_POST['description'];
-                $royalty->save();
-            }
-
-            // Send email notification
-            $users = getTeamMembersForArtist($artist->id);
-            foreach ($users as $user) {
-                sendEarningsNotification(
-                        $user->email_address, 
-                        $artist, 
-                        $release, 
-                        $earning, 
-                        $recuperatedAmount,
-                        $royalty);
-            }
-        }
-    }
+    processNewEarning($earning, ($_POST['calculateRoyalties']=='1'));
 
     function sendEarningsNotification ( $emailAddress, $artist, $release, $earning, $recuperatedAmount, $royalty) 
     {

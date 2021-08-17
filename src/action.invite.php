@@ -11,7 +11,8 @@
 
     function sendInviteEmail($emailAddress, $artistName, $inviteHash) {
 		$subject = "You've been invited to join ". $artistName . "'s team!";
-		return sendEmail($emailAddress, $subject, generateEmailFromTemplate($artistName, $inviteHash));
+		$emailAddresses[0] = $emailAddress;
+		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($artistName, $inviteHash));
 	}
 
     function generateEmailFromTemplate($artistName, $inviteHash) {

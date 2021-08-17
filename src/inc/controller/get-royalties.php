@@ -25,7 +25,7 @@ function getRoyaltiesForArtist($artist_id, $start = 0, $limit = -1){
         $royalties[$i] = new Royalty;
         $royalties[$i]->fromID($row['id']);
 
-        $royaltyViewItems[$i] = new Royalty;
+        $royaltyViewItems[$i] = new RoyaltyViewItem;
         $royaltyViewItems[$i]->date_recorded = $royalties[$i]->date_recorded;
         $royaltyViewItems[$i]->description = $royalties[$i]->description;
         $royaltyViewItems[$i]->amount = $royalties[$i]->amount;
@@ -42,9 +42,12 @@ function getRoyaltiesForArtist($artist_id, $start = 0, $limit = -1){
     return $royaltyViewItems;
 }
 
-function getTotalRoyaltiesForArtist($artist_id){
+function getTotalRoyaltiesForArtist($artist_id, $start_date = null, $end_date = null){
     $sql = "SELECT SUM(`amount`) AS `total_royalty` FROM `royalty` " .
             "WHERE `artist_id` = ". $artist_id;
+    if($start_date != null && $end_date != null) {
+        $sql = $sql . " AND `date_recorded` BETWEEN '" . $start_date . "' AND '" . $end_date . "'";
+    }
     $result = MySQLConnection::query($sql);
     if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
         $totalRoyalties = $row['total_royalty'];

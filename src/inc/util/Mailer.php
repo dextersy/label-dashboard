@@ -5,7 +5,7 @@
     // Load Composer's autoloader
 	require 'vendor/autoload.php';
 
-    function sendEmail($emailAddress, $subject, $body) {
+    function sendEmail($emailAddresses, $subject, $body) {
 		try {
 			//PHPMailer Object
 			$mail = new PHPMailer(true); //Argument true in constructor enables exceptions
@@ -21,7 +21,9 @@
 			$mail->FromName = "Melt Records Artist Dashboard";
 
 			//To address and name
-			$mail->addAddress($emailAddress, "");
+			foreach($emailAddresses as $emailAddress) {
+				$mail->addAddress($emailAddress, "");
+			}
 
 			//Address to which recipient will reply
 			$mail->addReplyTo("hi@melt-records.com", "Reply");

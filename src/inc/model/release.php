@@ -57,7 +57,7 @@ class Release{
     }
 
     function fromFormPOST($post) {
-        $this->id = $row['id'];
+        $this->id = $post['id'];
         $this->title = $post['title'];
         $this->catalog_no = $post['catalog_no'];
         $this->UPC = $post['UPC'];
