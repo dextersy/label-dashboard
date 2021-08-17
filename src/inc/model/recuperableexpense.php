@@ -42,11 +42,12 @@ class RecuperableExpense{
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `recuperable_expense` (`release_id`, `expense_description`, `expense_amount`) ".
+            $sql = "INSERT INTO `recuperable_expense` (`release_id`, `expense_description`, `expense_amount`, `date_recorded`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->release_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->expense_description) . "', ".
-                "'" . MySQLConnection::escapeString($this->expense_amount) . "'".
+                "'" . MySQLConnection::escapeString($this->expense_amount) . "' ,".
+                "CURDATE()" .
                 ")";
         }
         else {
