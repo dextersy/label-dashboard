@@ -40,15 +40,17 @@
             $totalEarnings = getTotalEarningsForArtist($artist->id, $startDate, $endDate);
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id, $startDate, $endDate);
 
-            $overallTotalEarnings += $totalEarnings;
-            $overallTotalRoyalties += $totalRoyalties;
+            if ($totalEarnings >0 || $totalRoyalties >0) {
+                $overallTotalEarnings += $totalEarnings;
+                $overallTotalRoyalties += $totalRoyalties;
         ?>
             <tr>
                 <td><?=$artist->name;?></td>
                 <td style="text-align:right;">Php<?=number_format($totalEarnings,2);?></td>
                 <td style="text-align:right;">Php<?=number_format($totalRoyalties,2);?></td>
             </tr>
-<?      } 
+<?          }
+         } 
     } else { ?>
     No releases yet.
 <?  } ?>
