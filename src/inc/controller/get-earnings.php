@@ -65,14 +65,4 @@ function getTotalEarningsForRelease($release_id){
     return $totalEarnings;
 }
 
-function getTotalEarningsForRelease($release_id){
-    $sql = "SELECT SUM(`amount`) AS `total_earning` FROM `earning` " .
-            "WHERE `release_id` = " . $release_id;
-    $result = MySQLConnection::query($sql);
-    if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
-        $totalEarnings = $row['total_earning'];
-    }
-    return $totalEarnings;
-}
-
 ?>
