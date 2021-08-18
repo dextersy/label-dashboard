@@ -28,7 +28,7 @@
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id);
             $totalPayments = getTotalPaymentsForArtist($artist->id);
             $totalBalance = $totalRoyalties - $totalPayments;
-            if ($totalBalance >0) {
+            if ($totalBalance != 0) {
                 $overallTotalPayables += $totalBalance;
         ?>
             <tr>
@@ -74,7 +74,7 @@
         foreach ($releases as $release) { 
             $recuperableExpense = getRecuperableExpenseBalance($release->id);
             
-            if ($recuperableExpense >0) {
+            if ($recuperableExpense != 0) {
                 $overallTotalRecuperableExpense += $recuperableExpense;
         ?>
             <tr>
