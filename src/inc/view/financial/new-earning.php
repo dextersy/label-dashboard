@@ -22,7 +22,11 @@ $releases = getReleaseListForArtist($_SESSION['current_artist']);
         </select>
     </div>
     <div class="form-group">
-        <label for="websiteURL">Earning Type</label><i class="fab fa-facebook-f"></i>
+        <label for="earningDate">Earning Date</label>
+        <input type="date" class="form-control" id="earningDate" name="date_recorded" value="<?=date("Y-m-d");?>">
+    </div>
+    <div class="form-group">
+        <label for="websiteURL">Earning Type</label>
         <select class="form-control" name="type">
             <option value="Sync">Sync</option>
             <option value="Streaming">Streaming</option>

@@ -58,7 +58,7 @@ class Earning{
                 "'" . MySQLConnection::escapeString($this->type) . "', ".
                 "'" . MySQLConnection::escapeString($this->amount) . "', ".
                 "'" . MySQLConnection::escapeString($this->description) . "', " .
-                "CURDATE()".
+                "'" . MySQLConnection::escapeString($this->date_recorded) . "'".
                 ")";
         }
         else {

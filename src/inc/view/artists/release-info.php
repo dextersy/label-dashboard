@@ -12,7 +12,6 @@
             <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
             <label for="description">Title</label>
                 <input type="text" class="form-control" id="title" name="title" placeholder="Title">
-            
             </div>
             <div class="form-group">
                 <label for="catalog_no">Catalog Number</label>
@@ -23,7 +22,7 @@
                 <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
             </div>  
             <div class="form-group">
-                <label for="amount">Release Date (YYYY-MM-DD)</label>
+                <label for="amount">Release Date</label>
                 <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
             </div> 
             <div class="form-group">

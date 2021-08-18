@@ -52,7 +52,7 @@ class Payment {
                 "'" . MySQLConnection::escapeString($this->description) . "', ".
                 "'" . MySQLConnection::escapeString($this->amount) . "', ".
                 "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
-                "CURDATE()".
+                "'" . MySQLConnection::escapeString($this->date_paid) . "'".
                 ")";
         }
         else {

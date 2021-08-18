@@ -10,6 +10,14 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/css/bootstrap.css" rel="stylesheet"/>
 <script type="text/javascript">
+    function onInputApplyAllDate() {
+        var i = 0;
+        var description = document.getElementById('applyAllDateRecorded').value;
+        while(document.getElementById('date_recorded_'+i)) {
+            document.getElementById('date_recorded_' + i).value = description;
+            i++;
+        }
+    }
     function onSelectApplyAllType(){
         var i = 0;
         var selectedIndex = document.getElementById("applyAllType").selectedIndex;
@@ -57,6 +65,7 @@
     <table class="table">
         <thead>
             <tr><th>Release</th>
+            <th>Earning Date</th>
             <th>Earning Type</th>
             <th>Earning Description</th>
             <th>Earning Amount</th>
@@ -65,6 +74,7 @@
         <tbody>
         <tr style="background-color:#f1f1f1;">
             <td><em>Apply to all</em></td>
+            <td><input type="date" class="form-control" id="applyAllDateRecorded" name="applyAllDateRecorded" onchange="onInputApplyAllDate();"></td>
             <td><select class="form-control" name="applyAllType" id="applyAllType" onchange="onSelectApplyAllType();">
                     <option value="Sync">Sync</option>
                     <option value="Streaming">Streaming</option>
@@ -89,6 +99,7 @@
 
 <?  } ?>
                 </select></td>
+                <td><input type="date" class="form-control" id="date_recorded_<?=$i;?>" name="date_recorded_<?=$i;?>" value="<?=date("Y-m-d");?>"></td>
                 <td><select class="form-control" id="type_<?=$i;?>" name="type_<?=$i;?>">
                     <option value="Sync">Sync</option>
                     <option value="Streaming">Streaming</option>

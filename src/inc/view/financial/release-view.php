@@ -26,6 +26,8 @@
         <form action="action.add-recuperable-expense.php" method="POST">
             <input type="hidden" id="add_recuperable_expense_release_id" name="release_id" value="">
                 <h4>Add recuperable expense for:</label> <span id="add_recuperable_expense_release"></span></h4>
+                <label for="expenseDate">Recorded Date</label>
+                <input type="date" class="form-control" id="expenseDate" name="date_recorded" value="<?=date("Y-m-d");?>">
                 <label for="description">Description</label>
                 <input type="text" class="form-control" id="add_recuperable_expense_description" name="expense_description" placeholder="Description">
                 <label for="amount">Amount (in PHP)</label>

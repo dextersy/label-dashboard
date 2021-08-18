@@ -20,7 +20,7 @@
             $recuperatedAmount = $earning->amount;
         }
         $earningRemainingForRoyalties = $earning->amount - $recuperatedAmount; 
-        $recuperableExpense = new RecuperableExpense(null, $earning->release_id, "Recouped from earnings", $recuperatedAmount*-1);
+        $recuperableExpense = new RecuperableExpense(null, $earning->release_id, "Recouped from earnings", $recuperatedAmount*-1, $earning->date_recorded);
         $recuperableExpense->save();
     
         $release = new Release;
@@ -65,6 +65,7 @@
                     $royalty->amount = $royaltyAmount;
                     $royalty->release_id = $earning->release_id;
                     $royalty->description = "Royalties from " . $earning->description;
+                    $royalty->date_recorded = $earning->date_recorded;
                     $royalty->save();
                 }
 
