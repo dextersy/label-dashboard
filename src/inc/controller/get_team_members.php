@@ -70,4 +70,22 @@
         }
         return $userAccessRights;
     }
+
+    function getAllAdmins(){
+        $sql = "SELECT `id` FROM `user` ".
+            "WHERE `is_admin` IS TRUE";
+        $result = MySQLConnection::query($sql);
+        if ($result->num_rows < 1) {
+            return null;
+        }
+    
+        $i = 0;
+        while($row = $result->fetch_assoc()) {
+            $users[$i] = new User;
+            $users[$i]->fromID($row['id']);
+            $i++;
+        }
+        return $users;
+    }
+
 ?>
