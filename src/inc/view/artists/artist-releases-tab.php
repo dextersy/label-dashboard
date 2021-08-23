@@ -22,7 +22,8 @@
 <div class="table-responsive">
     <table class="table">
         <thead>
-            <tr><th>Catalog Number</th>
+            <tr><th></th>
+            <th>Catalog Number</th>
             <th>Title</th>
             <th>Date released</th>
             <th>Spotify <i class="fa fa-spotify"></i></th>
@@ -34,6 +35,7 @@
 <? if ($releases) {
         foreach ($releases as $release) { ?>
             <tr>
+                <td><img width="100" src="<?=$release->cover_art;?>"></td>
                 <td><?=$release->catalog_no;?></td>
                 <td><?=$release->title;?></td>
                 <td><?=$release->release_date;?></td>

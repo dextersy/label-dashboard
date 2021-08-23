@@ -6,3 +6,5 @@ ALTER TABLE `recuperable_expense` CHANGE `date_recorded` `date_recorded` DATE NU
 ALTER TABLE `artist` 
 DROP COLUMN `starting_balance`,
 ADD COLUMN `profile_photo` VARCHAR(255) NULL AFTER `website_page_url`;
+ALTER TABLE `release` 
+ADD COLUMN `cover_art` VARCHAR(255) NULL AFTER `status`;

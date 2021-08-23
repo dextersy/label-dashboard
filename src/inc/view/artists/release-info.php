@@ -5,11 +5,15 @@
 ?>
 
 <h3>New Release</h3>
-<form action="action.update-release.php" method="POST">
+<form action="action.update-release.php" method="POST" enctype="multipart/form-data">
     <div class="row">
         <div class="col-md-4">
+        <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
             <div class="form-group">
-            <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
+                <label for="cover_art">Cover art</label>
+                <input type="file" class="form-control" id="cover_art" name="cover_art">
+            </div>
+            <div class="form-group">
             <label for="description">Title</label>
                 <input type="text" class="form-control" id="title" name="title" placeholder="Title">
             </div>
