@@ -7,7 +7,7 @@
     require_once('./inc/util/FileUploader.php');
 
     $result = 'ok';
-    if(isset($_FILES["profile_photo"])) {
+    if(isset($_FILES["profile_photo"]["tmp_name"])) {
         $profilePhoto = uploadImage($_FILES['profile_photo']);
         if($profilePhoto == null) {
             $result = 'err_photo';
