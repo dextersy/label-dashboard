@@ -6,8 +6,12 @@
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/util/FileUploader.php');
 
+    $result = 'ok';
     if(isset($_FILES["profile_photo"])) {
         $profilePhoto = uploadImage($_FILES['profile_photo']);
+        if($profilePhoto == null) {
+            $result = 'err_photo';
+        }
     }
 
     if(isset($_POST['id'])) {
@@ -50,5 +54,5 @@
 		return $msg;
 	}
 
-    redirectTo("/artist.php?action=profile")
+    redirectTo("/artist.php?action=profile&status=" . $result);
 ?>
