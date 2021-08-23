@@ -11,7 +11,7 @@
         <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
             <div class="form-group">
                 <label for="cover_art">Cover art</label>
-                <input type="file" class="form-control" id="cover_art" name="cover_art">
+                <input type="file" class="form-control" id="cover_art" name="cover_art" accept=".jpg, .png">
             </div>
             <div class="form-group">
             <label for="description">Title</label>

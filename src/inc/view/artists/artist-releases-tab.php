@@ -17,8 +17,60 @@
         return "<span style=\"color:" . $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status;
     }
 ?>
-
+<? if ($isAdmin) { ?>
+<script type="text/javascript">
+    function activateEditRelease(id, title, cat_no, upc, release_date, status) {
+        document.getElementById('edit_release_form').style.display = "block";
+        document.getElementById('release_id').value = id;
+        document.getElementById('title').value = title;
+        document.getElementById('catalog_no').value = cat_no;
+        document.getElementById('UPC').value = upc;
+        document.getElementById('release_date').value = release_date;
+        if(status=="Live") {
+            document.getElementById('live').checked = true;
+        }
+        else {
+            document.getElementById('live').checked = false;
+        }
+    }
+</script>
+<? } ?>
 <h3>Releases</h3>
+<form action="action.update-release.php" method="POST" enctype="multipart/form-data">
+<input type="hidden" name="id" id="release_id" value="" />
+<div class="card" id="edit_release_form" style="display:none;">
+    <div class="col-md-3">
+        <div class="form-group">
+        <label for="cover_art">Cover art</label>
+            <input type="file" class="form-control" id="cover_art" name="cover_art" accept=".jpg, .png">
+        </div>
+        <div class="form-group">
+        <label for="description">Title</label>
+            <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+        </div>
+        <div class="form-group">
+            <label for="catalog_no">Catalog Number</label>
+            <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number">
+        </div>
+        
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="UPC">UPC</label>
+            <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
+        </div>  
+        <div class="form-group">
+            <label for="amount">Release Date</label>
+            <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
+        </div> 
+        <div class="form-group">
+            <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
+            <label class="form-check-label" for="flexCheckDefault">Already released</label>
+        </div>
+        <button type="submit">Save Changes</button>
+    </div>
+</div>
+</form>
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -30,6 +82,7 @@
             <th>Apple Music <i class="fa fa-apple"></th>
             <th>Bandcamp <i class="fa fa-bandcamp"></th>
             <th>Status <i class="fa fa-bandcamp"></th>
+            <th></th>
         </thead>
         <tbody>
 <? if ($releases) {
@@ -43,6 +96,16 @@
                 <td><a href="<?=$release->apple_link;?>" target="_blank"><?=$release->apple_link;?></a></td>
                 <td><a href="<?=$release->youtube_link;?>" target="_blank"><?=$release->youtube_link;?></a></td>
                 <td><?=getReleaseStatusString($release->status);?></a></td>
+                <td>
+                <? if ($isAdmin) { ?>
+                    <a href="#" 
+                    onclick="activateEditRelease('<?=$release->id;?>', 
+                        '<?=$release->title;?>', '<?=$release->catalog_no;?>', '<?=$release->UPC;?>', 
+                        '<?=$release->release_date;?>', '<?=$release->status;?>')">
+                    <i class="fa fa-pencil"></i>
+                </a>
+                <? } ?>
+                </td>
             </tr>
 <?      } 
     } else { ?>

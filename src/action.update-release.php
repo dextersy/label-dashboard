@@ -21,15 +21,13 @@
         die();
     }
 
-    if(isset($_FILES["cover_art"]["tmp_name"])) {
-        $cover_art = uploadImage($_FILES['cover_art']);
-        if($cover_art == null) {
-            $result = 'err_photo';
-        }
-    }
+    
     $release = new Release;
     $release->fromFormPOST($_POST);
-    $release->cover_art = $cover_art;
+    if(isset($_FILES["cover_art"]["tmp_name"]) && $_FILES["cover_art"]["tmp_name"] != "") {
+        $release->cover_art = uploadImage($_FILES['cover_art']);
+    }
+    
     $release_id = $release->save();
 
     for ($i = 1; $_POST['artist_id_'.$i] != ""; $i++) {
