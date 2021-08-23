@@ -14,8 +14,15 @@ $formAction = "action.update-artist.php?from=" . $_SERVER['REQUEST_URI'];
 
 ?>
 <h3><?=$title;?></h3>
-<form action="<?=$formAction;?>" method="POST">
+<form action="<?=$formAction;?>" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="id" value="<?=$artist->id;?>">
+    <? if (isset($artist->profile_photo) && $artist->profile_photo != "") { ?>
+    <img src="<?=$artist->profile_photo;?>" width="400">
+    <? } ?>
+    <div class="form-group">
+        <label for="profile_photo">Profile Photo</label>
+        <input type="file" class="form-control" id="profile_photo" name="profile_photo" accept=".jpg, .png" />
+    </div>
     <div class="form-group">
         <label for="name">Name</label>
         <input type="text" class="form-control" id="name" name="name" placeholder="Artist Name" value="<?=$artist->name;?>">
@@ -39,6 +46,6 @@ $formAction = "action.update-artist.php?from=" . $_SERVER['REQUEST_URI'];
     <div class="form-group">
         <label for="bio">Bio</label>
         <textarea class="form-control" id="bio" name="bio"><?=$artist->bio;?></textarea>
-    </div>                                                         
+    </div>                                                            
     <button type="submit" class="btn btn-default">Save Changes</button>
 </form>

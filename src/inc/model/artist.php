@@ -11,7 +11,7 @@ class Artist{
     public $instagram_handle;
     public $twitter_handle;
     public $bio;
-    public $starting_balance;
+    public $profile_photo;
 
     function __construct(
         $id = null, 
@@ -21,7 +21,7 @@ class Artist{
         $instagram_handle= null, 
         $twitter_handle= null, 
         $bio= null, 
-        $starting_balance= null) 
+        $profile_photo= null) 
     {
         $this->id = $id;
         $this->name = $name;
@@ -30,7 +30,7 @@ class Artist{
         $this->instagram_handle = $instagram_handle;
         $this->twitter_handle = $twitter_handle;
         $this->bio = $bio;
-        $this->starting_balance = $starting_balance;
+        $this->profile_photo = $profile_photo;
     }
 
     function fromID($id) {
@@ -43,7 +43,7 @@ class Artist{
             $this->instagram_handle = $row['instagram_handle'];
             $this->twitter_handle = $row['twitter_handle'];
             $this->bio = $row['bio'];
-            $this->starting_balance = $row['starting_balance'];
+            $this->profile_photo = $row['profile_photo'];
         }
     }
 
@@ -60,14 +60,15 @@ class Artist{
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`) ".
+            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`, `profile_photo`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->name) . "', ".
                 "'" . MySQLConnection::escapeString($this->website_page_url) . "', ".
                 "'" . MySQLConnection::escapeString($this->facebook_handle) . "', ".
                 "'" . MySQLConnection::escapeString($this->instagram_handle) . "', ".
                 "'" . MySQLConnection::escapeString($this->twitter_handle) . "', " .
-                "'" . MySQLConnection::escapeString($this->bio) . "'" .
+                "'" . MySQLConnection::escapeString($this->bio) . "', " .
+                "'" . MySQLConnection::escapeString($this->profile_photo) . "'" .
                 ")";
         }
         else {
@@ -77,7 +78,8 @@ class Artist{
                 "`facebook_handle` = '" . MySQLConnection::escapeString($this->facebook_handle) . "', " .
                 "`instagram_handle` = '" . MySQLConnection::escapeString($this->instagram_handle) . "', " .
                 "`twitter_handle` = '" . MySQLConnection::escapeString($this->twitter_handle) . "', " .
-                "`bio` = '" . MySQLConnection::escapeString($this->bio) . "' " .
+                "`bio` = '" . MySQLConnection::escapeString($this->bio) . "', " .
+                "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

@@ -4,6 +4,11 @@
     require_once('./inc/controller/access_check.php');
     require_once('./inc/util/Mailer.php');
     require_once('./inc/controller/get_team_members.php');
+    require_once('./inc/util/FileUploader.php');
+
+    if(isset($_FILES["profile_photo"])) {
+        $profilePhoto = uploadImage($_FILES['profile_photo']);
+    }
 
     if(isset($_POST['id'])) {
         $artistOld = new Artist;
@@ -11,6 +16,7 @@
     }
     $artist = new Artist;
     $artist->fromFormPOST($_POST);
+    $artist->profile_photo = $profilePhoto;
     $artist->save();
 
     $_SESSION['current_artist'] = $artist->id;
