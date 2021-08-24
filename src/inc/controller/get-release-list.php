@@ -17,13 +17,13 @@ function getReleaseListForArtist($artist_id){
 }
 
 function getAllReleases() {
-    $sql = "SELECT * FROM `release` ".
+    $sql = "SELECT `id` FROM `release` ".
             "ORDER BY `catalog_no` ASC";
     $result = MySQLConnection::query($sql);
     $i = 0;
     while($row = $result->fetch_assoc()) {
         $releases[$i] = new Release;
-        $releases[$i]->fromFormPOST($row);
+        $releases[$i]->fromID($row['id']);
         $i++;
     }
     return $releases;    
