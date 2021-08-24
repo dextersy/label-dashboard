@@ -30,7 +30,8 @@ function getAllReleases() {
 }
 
 function generateCatalogNumber() {
-    $sql = "SELECT `catalog_no` FROM `release` ORDER BY `catalog_no` DESC";
+    // TODO Probably need to have a better query here to exclude consignments
+    $sql = "SELECT `catalog_no` FROM `release` WHERE `catalog_no` NOT LIKE 'MLTC%' ORDER BY `catalog_no` DESC";
     $result = MySQLConnection::query($sql);
     while ($row = $result->fetch_assoc()) {
         $newNumber = (int)str_replace("MLT","",$row['catalog_no']);
