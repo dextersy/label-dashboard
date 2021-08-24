@@ -33,6 +33,9 @@
             document.getElementById('live').checked = false;
         }
     }
+    function hideEditRelease() {
+        document.getElementById('edit_release_form').style.display = "none";
+    }
 </script>
 <? } ?>
 <h3>Releases</h3>
@@ -67,7 +70,9 @@
             <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
             <label class="form-check-label" for="flexCheckDefault">Already released</label>
         </div>
-        <button type="submit">Save Changes</button>
+        <button type="submit" class="btn btn-default">Save Changes</button>
+        <button type="button" class="btn btn-default" onclick="hideEditRelease();">Cancel</button>
+
     </div>
 </div>
 </form>
@@ -78,9 +83,7 @@
             <th>Catalog Number</th>
             <th>Title</th>
             <th>Date released</th>
-            <th>Spotify <i class="fa fa-spotify"></i></th>
-            <th>Apple Music <i class="fa fa-apple"></th>
-            <th>Bandcamp <i class="fa fa-bandcamp"></th>
+            <th>Links </th>
             <th>Status <i class="fa fa-bandcamp"></th>
             <th></th>
         </thead>
@@ -88,13 +91,16 @@
 <? if ($releases) {
         foreach ($releases as $release) { ?>
             <tr>
-                <td><img width="100" src="<?=$release->cover_art;?>"></td>
+                <td><img style="width:100px;height:100px;object-fit:cover;" src="<?=$release->cover_art!=""?$release->cover_art:"assets/img/placeholder.jpg";?>"></td>
                 <td><?=$release->catalog_no;?></td>
                 <td><?=$release->title;?></td>
                 <td><?=$release->release_date;?></td>
-                <td><a href="<?=$release->spotify_link;?>" target="_blank"><?=$release->spotify_link;?></a></td>
-                <td><a href="<?=$release->apple_link;?>" target="_blank"><?=$release->apple_link;?></a></td>
-                <td><a href="<?=$release->youtube_link;?>" target="_blank"><?=$release->youtube_link;?></a></td>
+                <td>
+                    <a href="<?=$release->spotify_link!=""?$release->spotify_link:"#";?>" target="_blank"><i style="font-size: 1.5em;" class="fa fa-spotify"></i></a>
+                    <a href="<?=$release->apple_link!=""?$release->apple_link:"#";;?>" target="_blank"><i style="font-size: 1.5em;"  class="fa fa-apple"></i></a>
+                    <a href="<?=$release->youtube_link!=""?$release->youtube_link:"#";?>" target="_blank"><i style="font-size: 1.5em;"  class="fa fa-youtube"></i></a>
+                    <a href="<?=$release->bandcamp_link!=""?$release->bandcamp_link:"#";?>" target="_blank"><i style="font-size: 1.5em;"  class="fa fa-bandcamp"></i></a>
+                </td>
                 <td><?=getReleaseStatusString($release->status);?></a></td>
                 <td>
                 <? if ($isAdmin) { ?>
