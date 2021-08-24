@@ -29,4 +29,15 @@ function getAllReleases() {
     return $releases;    
 }
 
+function generateCatalogNumber() {
+    $sql = "SELECT `catalog_no` FROM `release` ORDER BY `catalog_no` DESC";
+    $result = MySQLConnection::query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $newNumber = (int)str_replace("MLT","",$row['catalog_no']);
+        $newNumber++;
+        return "MLT" . $newNumber;
+    }
+    return null;
+}
+
 ?>
