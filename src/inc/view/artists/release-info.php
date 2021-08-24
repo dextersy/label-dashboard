@@ -46,7 +46,7 @@
                 <td width="10%"><input type="number" class="form-control" name="sync_royalty_1" id="sync_royalty_1" min="0" max="100" step="1" value="50">% of revenue</td>
                 <td width="10%"><input type="number" class="form-control" name="download_royalty_1" id="download_royalty_1" min="0" max="100" step="1" value="50">% of revenue</td>
                 <td width="10%"><input type="number" class="form-control" name="streaming_royalty_1" id="streaming_royalty_1" min="0" max="100" step="1" value="50">% of revenue</td>
-               <td width="10%"><input type="number" class="form-control" name="physical_royalty_1" id="physical_royalty_1" min="0" max="100" step="1" value="20">% of revenue</td>
+               <td width="10%"><input type="number" class="form-control" name="physical_royalty_1" id="physical_royalty_1" min="0" max="100" step="1" value="15">% of revenue</td>
             </tr>
     </table>        
         <table class="table">
@@ -72,7 +72,7 @@
                 <td width="10%"><input type="number" class="form-control" name="sync_royalty_<?=$i;?>" id="sync_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">% of revenue</td>
                 <td width="10%"><input type="number" class="form-control" name="download_royalty_<?=$i;?>" id="download_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">% of revenue</td>
                 <td width="10%"><input type="number" class="form-control" name="streaming_royalty_<?=$i;?>" id="streaming_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">% of revenue</td>
-               <td width="10%"><input type="number" class="form-control" name="physical_royalty_<?=$i;?>" id="physical_royalty_<?=$i;?>" min="0" max="100" step="1" value="20">% of revenue</td>
+               <td width="10%"><input type="number" class="form-control" name="physical_royalty_<?=$i;?>" id="physical_royalty_<?=$i;?>" min="0" max="100" step="1" value="15">% of revenue</td>
             </tr>
 <?  } ?>
         </table>
