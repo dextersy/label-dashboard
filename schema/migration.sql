@@ -18,4 +18,4 @@ CREATE TABLE `artist_image` (
   `date_uploaded` date NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_artist_image_artist_id_idx` (`artist_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
