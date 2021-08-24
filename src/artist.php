@@ -13,6 +13,7 @@
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#profile">Profile</a></li>
+                        <li><a data-toggle="tab" href="#gallery">Media</a></li>
                         <li><a data-toggle="tab" href="#releases">Releases</a></li>
                         <li><a data-toggle="tab" href="#team">Team</a></li>
                         <? if ($isAdmin) { ?> 
@@ -23,6 +24,9 @@
                     <div class="tab-content">
                         <div id="profile" class="tab-pane fade in active">
                             <?php include_once('./inc/view/artists/artist-profile-tab.php'); ?>
+                        </div>
+                        <div id="gallery" class="tab-pane fade">
+                            <?php include_once('./inc/view/artists/artist-gallery-tab.php'); ?>
                         </div>
                         <div id="releases" class="tab-pane fade">
                             <?php include_once('./inc/view/artists/artist-releases-tab.php'); ?>
