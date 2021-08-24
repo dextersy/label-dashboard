@@ -37,7 +37,10 @@ class Payment {
     }
 
     function fromFormPOST($post) {
-        $this->id = $post['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
         $this->description = $post['description'];
         $this->amount = $post['amount'];
         $this->artist_id = $post['artist_id'];

@@ -73,7 +73,10 @@ class User{
     }
 
     function fromFormPOST($post) {
-        $this->id = $_POST['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
         $this->username = $_POST['username'];
         if ($_POST['password']) {
             $this->password_md5 = md5($_POST['password']);

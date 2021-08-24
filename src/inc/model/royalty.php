@@ -49,7 +49,10 @@ class Royalty{
     }
 
     function fromFormPOST($post) {
-        $this->id = $post['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
         $this->date_recorded = $post['date_recorded'];
         $this->artist_id = $post['artist_id'];
         $this->earning_id = $post['earning_id'];

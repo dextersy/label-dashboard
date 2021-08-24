@@ -37,7 +37,10 @@ class RecuperableExpense{
     }
 
     function fromFormPOST($post) {
-        $this->id = $post['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
         $this->release_id = $post['release_id'];
         $this->expense_description = $post['expense_description'];
         $this->expense_amount = $post['expense_amount'];

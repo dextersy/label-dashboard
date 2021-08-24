@@ -41,7 +41,10 @@ class Earning{
     }
 
     function fromFormPOST($post) {
-        $this->id = $post['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
         $this->release_id = $post['release_id'];
         $this->type = $post['type'];
         $this->amount = $post['amount'];
