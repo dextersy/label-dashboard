@@ -2,34 +2,34 @@
 
 require_once('./inc/util/MySQLConnection.php');
 
-class ArtistImage{
+class ArtistDocument{
 
     public $id;
     public $path;
-    public $credits;
+    public $title;
     public $artist_id;
     public $date_uploaded;
 
     function __construct(
         $id = null, 
         $path = null, 
-        $credits = null, 
+        $title = null, 
         $artist_id= null,
         $date_uploaded = null) 
     {
         $this->id = $id;
         $this->path = $path;
-        $this->credits = $credits;
+        $this->title = $title;
         $this->artist_id = $artist_id;
         $this->date_uploaded = $date_uploaded;
     }
 
     function fromID($id) {
-        $result = MySQLConnection::query("SELECT * FROM `artist_image` WHERE `id` = " . $id);
+        $result = MySQLConnection::query("SELECT * FROM `artist_documents` WHERE `id` = " . $id);
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->id = $id;
             $this->path = $row['path'];
-            $this->credits = $row['credits'];
+            $this->title = $row['title'];
             $this->artist_id = $row['artist_id'];
             $this->date_uploaded = $row['date_uploaded'];
         }
@@ -40,7 +40,7 @@ class ArtistImage{
             $this->id = $_POST['id'];
             $this->fromID($this->id);
         }
-        $this->credits = $_POST['credits'];
+        $this->title = $_POST['title'];
         $this->artist_id = $_POST['artist_id'];
         $this->date_uploaded = $_POST['date_uploaded'];
     }
@@ -48,18 +48,18 @@ class ArtistImage{
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `artist_image` (`path`, `credits`, `artist_id`, `date_uploaded`) ".
+            $sql = "INSERT INTO `artist_documents` (`path`, `title`, `artist_id`, `date_uploaded`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->path) . "', ".
-                "'" . MySQLConnection::escapeString($this->credits) . "', ".
+                "'" . MySQLConnection::escapeString($this->title) . "', ".
                 "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->date_uploaded) . "'".
                 ")";
         }
         else {
-            $sql = "UPDATE `artist_image` SET ".
+            $sql = "UPDATE `artist_documents` SET ".
                 "`path` = '" . MySQLConnection::escapeString($this->path) . "', " .
-                "`credits` = '" . MySQLConnection::escapeString($this->credits) . "', " .
+                "`title` = '" . MySQLConnection::escapeString($this->title) . "', " .
                 "`artist_id` = '" . MySQLConnection::escapeString($this->artist_id) . "', " .
                 "`date_uploaded` = '" . MySQLConnection::escapeString($this->date_uploaded) . "' " .
                 "WHERE `id` = " . $this->id;

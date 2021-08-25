@@ -23,4 +23,22 @@ function uploadImage($file) {
         return null;
     }
 }
+
+function uploadDocument($file) {
+    $target_dir = "uploads/";
+    $target_file = $target_dir . basename($file["name"]);
+    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    
+    $i = 0;
+    while(file_exists($target_file)) {
+        $target_file = $target_dir . basename($file["name"]) . "_" . $i;
+        $i++;
+    }
+    if(move_uploaded_file($file["tmp_name"], $target_file)) {
+        return $target_file;
+    }
+    else {
+        return null;
+    }
+}
 ?>
