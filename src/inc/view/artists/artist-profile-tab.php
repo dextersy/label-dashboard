@@ -18,7 +18,7 @@ $formAction = "action.update-artist.php?from=" . $_SERVER['REQUEST_URI'];
     <input type="hidden" name="id" value="<?=$artist->id;?>">
     <div class="row">
         <div class="col-md-4">
-            <img src="<?=($artist->profile_photo!="") ? $artist->profile_photo : "assets/img/placeholder.jpg";?>" width="100%">
+            <img src="<?=($artist->profile_photo!="") ? $artist->profile_photo : "assets/img/placeholder.jpg";?>" width="100%" style="border:#cccccc 1px solid; padding:5px;">
             <div class="form-group">
                 <label for="profile_photo">Profile Photo</label>
                 <input type="file" class="form-control" id="profile_photo" name="profile_photo" accept=".jpg, .png" />
