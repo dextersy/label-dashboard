@@ -6,21 +6,15 @@
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/util/FileUploader.php');
 
-    $result = 'ok';
-    if(isset($_FILES["profile_photo"]["tmp_name"])) {
-        $profilePhoto = uploadImage($_FILES['profile_photo']);
-        if($profilePhoto == null) {
-            $result = 'err_photo';
-        }
-    }
-
     if(isset($_POST['id'])) {
         $artistOld = new Artist;
         $artistOld->fromID($_POST['id']);
     }
     $artist = new Artist;
     $artist->fromFormPOST($_POST);
-    $artist->profile_photo = $profilePhoto;
+    if(isset($_FILES["profile_photo"]["tmp_name"]) && $_FILES["profile_photo"]["tmp_name"] != "") {
+        $artist->profile_photo = uploadImage($_FILES['cover_art']);
+    }
     $artist->save();
 
     $_SESSION['current_artist'] = $artist->id;
