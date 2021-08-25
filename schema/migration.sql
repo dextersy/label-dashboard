@@ -21,16 +21,14 @@ CREATE TABLE `artist_image` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --- Updated August 25, 2021
-CREATE TABLE `record_label`.`artist_documents` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(255) NULL,
-  `path` VARCHAR(255) NOT NULL,
-  `date_uploaded` DATE NULL,
-  `artist_id` INT NOT NULL,
+CREATE TABLE `artist_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) DEFAULT NULL,
+  `path` varchar(255) NOT NULL,
+  `date_uploaded` date DEFAULT NULL,
+  `artist_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_artist_documents_artist_id_idx` (`artist_id` ASC) VISIBLE,
-  CONSTRAINT `fk_artist_documents_artist_id`
-    FOREIGN KEY (`artist_id`)
-    REFERENCES `record_label`.`artist` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION);
+  KEY `fk_artist_documents_artist_id_idx` (`artist_id`),
+  CONSTRAINT `fk_artist_documents_artist_id` FOREIGN KEY (`artist_id`) REFERENCES `artist` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+
