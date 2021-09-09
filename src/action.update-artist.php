@@ -13,7 +13,7 @@
     $artist = new Artist;
     $artist->fromFormPOST($_POST);
     if(isset($_FILES["profile_photo"]["tmp_name"]) && $_FILES["profile_photo"]["tmp_name"] != "") {
-        $artist->profile_photo = uploadImage($_FILES['cover_art']);
+        $artist->profile_photo = uploadImage($_FILES['profile_photo']);
     }
     $artist->save();
 
