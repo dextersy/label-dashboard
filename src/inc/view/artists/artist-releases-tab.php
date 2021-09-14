@@ -106,7 +106,7 @@
                 <? if ($isAdmin) { ?>
                     <a href="#" 
                     onclick="activateEditRelease('<?=$release->id;?>', 
-                        '<?=$release->title;?>', '<?=$release->catalog_no;?>', '<?=$release->UPC;?>', 
+                        '<?=addslashes($release->title);?>', '<?=$release->catalog_no;?>', '<?=$release->UPC;?>', 
                         '<?=$release->release_date;?>', '<?=$release->status;?>')">
                     <i class="fa fa-pencil"></i>
                 </a>
