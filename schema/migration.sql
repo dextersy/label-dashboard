@@ -32,3 +32,6 @@ CREATE TABLE `artist_documents` (
   CONSTRAINT `fk_artist_documents_artist_id` FOREIGN KEY (`artist_id`) REFERENCES `artist` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
 
+--- Updated September 21, 2021
+ALTER TABLE `artist` 
+CHANGE COLUMN `bio` `bio` VARCHAR(4096) NULL DEFAULT NULL ;
