@@ -12,6 +12,7 @@
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#summary">Summary</a></li>
+                        <li><a data-toggle="tab" href="#documents">Documents</a></li>
                         <li><a data-toggle="tab" href="#earnings">Earnings</a></li>
                         <li><a data-toggle="tab" href="#royalties">Royalties</a></li>
                         <li><a data-toggle="tab" href="#payments">Payments and Advances</a></li>
@@ -26,6 +27,9 @@
                     <div class="tab-content">
                         <div id="summary" class="tab-pane fade in active">
                             <?php include_once('./inc/view/financial/summary-view.php'); ?>                                
+                        </div>
+                        <div id="documents" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/documents-view.php'); ?>
                         </div>
                         <div id="earnings" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/earnings-view.php'); ?>
@@ -61,9 +65,7 @@
 
 
 </body>
-        <!--   Core JS Files   -->
-        <script src="assets/js/jquery.3.2.1.min.js" type="text/javascript"></script>
-	<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+<? include_once('inc/view/footer.php'); ?>
 
 
 </html>

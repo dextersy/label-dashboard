@@ -14,6 +14,7 @@
         $earning->type = $_POST['type_'.$i];
         $earning->description = $_POST['description_'.$i];
         $earning->amount = $_POST['amount_'.$i];
+        $earning->date_recorded = $_POST['date_recorded_'.$i];
         $earning->save();
 
         processNewEarning($earning, ($_POST['calculateRoyalties_'.$i]=='1'));

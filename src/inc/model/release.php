@@ -23,6 +23,7 @@ class Release{
         $apple_music_link= null, 
         $youtube_link= null,
         $release_date = null,
+        $cover_art = null,
         $status = null
     ) 
     {
@@ -34,6 +35,7 @@ class Release{
         $this->apple_music_link = $apple_music_link;
         $this->youtube_link = $youtube_link;
         $this->release_date = $release_date;
+        $this->cover_art = $cover_art;
         $this->status = $status;
       }
 
@@ -48,6 +50,7 @@ class Release{
             $this->apple_music_link = $row['apple_music_link'];
             $this->youtube_link = $row['youtube_link'];
             $this->release_date = $row['release_date'];
+            $this->cover_art = $row['cover_art'];
             $this->status = $row['status'];
             return true;
         }
@@ -57,7 +60,10 @@ class Release{
     }
 
     function fromFormPOST($post) {
-        $this->id = $post['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
         $this->title = $post['title'];
         $this->catalog_no = $post['catalog_no'];
         $this->UPC = $post['UPC'];
@@ -71,7 +77,7 @@ class Release{
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `release` (`title`, `catalog_no`, `UPC`, `spotify_link`, `apple_music_link`, `youtube_link`, `release_date`, `status`) ".
+            $sql = "INSERT INTO `release` (`title`, `catalog_no`, `UPC`, `spotify_link`, `apple_music_link`, `youtube_link`, `release_date`, `cover_art`, `status`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
                 "'" . MySQLConnection::escapeString($this->catalog_no) . "', ".
@@ -80,6 +86,7 @@ class Release{
                 "'" . MySQLConnection::escapeString($this->apple_music_link) . "', " .
                 "'" . MySQLConnection::escapeString($this->youtube_link) . "', " .
                 "'" . MySQLConnection::escapeString($this->release_date) . "', " .
+                "'" . MySQLConnection::escapeString($this->cover_art) . "', " .
                 "'" . MySQLConnection::escapeString($this->status) . "'" .
                 ")";
         }
@@ -92,6 +99,7 @@ class Release{
                 "`apple_music_link` = '" . MySQLConnection::escapeString($this->apple_music_link) . "', " .
                 "`youtube_link` = '" . MySQLConnection::escapeString($this->youtube_link) . "', " .
                 "`release_date` = '" . MySQLConnection::escapeString($this->release_date) . "', " .
+                "`cover_art` = '" . MySQLConnection::escapeString($this->cover_art) . "', " .
                 "`status` = '" . MySQLConnection::escapeString($this->status) . "' " .
                 "WHERE `id` = " . $this->id;
         }

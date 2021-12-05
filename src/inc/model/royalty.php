@@ -49,7 +49,11 @@ class Royalty{
     }
 
     function fromFormPOST($post) {
-        $this->id = $post['id'];
+        if (isset($_POST['id'])) {
+            $this->id = $_POST['id'];
+            $this->fromID($this->id);
+        }
+        $this->date_recorded = $post['date_recorded'];
         $this->artist_id = $post['artist_id'];
         $this->earning_id = $post['earning_id'];
         $this->percentage_of_earning = $post['percentage_of_earning'];
@@ -74,7 +78,7 @@ class Royalty{
                 "'" . MySQLConnection::escapeString($this->amount) . "', ".
                 (($this->release_id != null) ? MySQLConnection::escapeString($this->release_id) : 'NULL') . ", ".
                 "'" . MySQLConnection::escapeString($this->description) . "', " .
-                "CURDATE()".
+                "'" . MySQLConnection::escapeString($this->date_recorded) . "'".
                 ")";
         }
         else {

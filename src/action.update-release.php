@@ -2,6 +2,7 @@
     require_once('./inc/model/release.php');
     require_once('./inc/model/releaseartist.php');
     require_once('./inc/util/Redirect.php');
+    require_once('./inc/util/FileUploader.php');
     require_once('./inc/controller/access_check.php');
 
     // Check if total splits don't exceed 100
@@ -20,8 +21,13 @@
         die();
     }
 
+    
     $release = new Release;
     $release->fromFormPOST($_POST);
+    if(isset($_FILES["cover_art"]["tmp_name"]) && $_FILES["cover_art"]["tmp_name"] != "") {
+        $release->cover_art = uploadImage($_FILES['cover_art']);
+    }
+    
     $release_id = $release->save();
 
     for ($i = 1; $_POST['artist_id_'.$i] != ""; $i++) {
@@ -33,5 +39,5 @@
         $artistRelease->saveNew();
     }
 
-    redirectTo("/artist.php?action=release")
+    redirectTo("/artist.php?action=release&result=" . $result);
 ?>

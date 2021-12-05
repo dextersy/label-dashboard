@@ -21,6 +21,10 @@ $releases = getReleaseListForArtist($_SESSION['current_artist']);
         </select>
     </div>
     <div class="form-group">
+        <label for="royaltyDate">Royalty Date</label>
+        <input type="date" class="form-control" id="royaltyDate" name="date_recorded" value="<?=date("Y-m-d");?>">
+    </div>
+    <div class="form-group">
         <label for="description">Description</label>
         <input type="text" class="form-control" id="description" name="description" placeholder="Description">
     </div> 

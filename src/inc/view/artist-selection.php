@@ -11,7 +11,8 @@ require_once('./inc/controller/access_check.php');
             $artist = new Artist;
             $artist->fromID($_SESSION['current_artist']);
         ?>
-        <img src="./assets/img/logo-purple.png" width="50"> <?=$artist->name;?>
+        <img style="width:50px; height:50px; object-fit: cover; border-radius:100%;" src="<?=$artist->profile_photo?$artist->profile_photo:"assets/img/logo-purple.png";?>">
+        &nbsp;&nbsp;<?=$artist->name;?>
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu" aria-labelledby="artistSelection" style="max-height:500px;overflow-y:auto;">

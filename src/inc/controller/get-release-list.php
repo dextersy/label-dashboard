@@ -17,16 +17,28 @@ function getReleaseListForArtist($artist_id){
 }
 
 function getAllReleases() {
-    $sql = "SELECT * FROM `release` ".
+    $sql = "SELECT `id` FROM `release` ".
             "ORDER BY `catalog_no` ASC";
     $result = MySQLConnection::query($sql);
     $i = 0;
     while($row = $result->fetch_assoc()) {
         $releases[$i] = new Release;
-        $releases[$i]->fromFormPOST($row);
+        $releases[$i]->fromID($row['id']);
         $i++;
     }
     return $releases;    
+}
+
+function generateCatalogNumber() {
+    // TODO Probably need to have a better query here to exclude consignments
+    $sql = "SELECT `catalog_no` FROM `release` WHERE `catalog_no` NOT LIKE 'MLTC%' ORDER BY `catalog_no` DESC";
+    $result = MySQLConnection::query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $newNumber = (int)str_replace("MLT","",$row['catalog_no']);
+        $newNumber++;
+        return "MLT" . $newNumber;
+    }
+    return null;
 }
 
 ?>
