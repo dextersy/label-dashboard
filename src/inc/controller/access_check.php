@@ -3,6 +3,7 @@
     include_once('./inc/model/user.php');
     include_once('./inc/util/Redirect.php');
 
+    include_once('./inc/controller/brand_check.php');
     session_start();
 
     if ($_SESSION['logged_in_user'] == null ) {
@@ -19,4 +20,5 @@
     } else {
         $availableArtists = getAllArtists();
     }
+
 ?>

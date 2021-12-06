@@ -35,3 +35,33 @@ CREATE TABLE `artist_documents` (
 --- Updated September 21, 2021
 ALTER TABLE `artist` 
 CHANGE COLUMN `bio` `bio` VARCHAR(4096) NULL DEFAULT NULL ;
+
+--- Updated December 6, 2021
+CREATE TABLE `brand` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `brand_name` VARCHAR(255) NOT NULL,
+  `logo_url` VARCHAR(255) NULL,
+  `brand_color` VARCHAR(45) NOT NULL DEFAULT '#ffffff',
+  PRIMARY KEY (`id`));
+CREATE TABLE `domain` (
+  `brand_id` INT NOT NULL,
+  `domain_name` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`brand_id`, `domain_name`),
+  CONSTRAINT `fk_domain_brand`
+    FOREIGN KEY (`brand_id`)
+    REFERENCES `brand` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+INSERT INTO `brand` (`brand_name`, `logo_url`) VALUES ('Melt Records', 'assets/img/Melt Records-logo-WHITE.png');
+ALTER TABLE `artist` 
+ADD COLUMN `brand_id` INT NOT NULL DEFAULT 1 AFTER `profile_photo`;
+ALTER TABLE `artist` 
+ADD CONSTRAINT `fk_artist_brand`
+  FOREIGN KEY (`brand_id`)
+  REFERENCES `brand` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+
+
