@@ -63,5 +63,10 @@ ADD CONSTRAINT `fk_artist_brand`
   ON UPDATE NO ACTION;
 
 
+----- NEW
+ALTER TABLE `brand` 
+CHANGE COLUMN `brand_color` `brand_color` ENUM('blue', 'azure', 'green', 'orange', 'red', 'purple') NOT NULL DEFAULT 'blue' ;
+ALTER TABLE `domain` 
+ADD COLUMN `status` ENUM('Verified', 'Unverified', 'Pending') NULL DEFAULT 'Unverified' AFTER `domain_name`;
 
 
