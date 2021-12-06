@@ -1,4 +1,4 @@
-<div class="sidebar" data-color="purple" data-image="assets/img/sidebar-5.jpg">
+<div class="sidebar" data-color="<?=$_SESSION['brand_color'];?>" data-image="assets/img/sidebar-5.jpg">
 
     <!--
 
