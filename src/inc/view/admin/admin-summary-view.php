@@ -4,7 +4,7 @@
     require_once('./inc/controller/get-royalties.php');
     require_once('./inc/controller/get-earnings.php');
 
-    $artists = getAllArtists();
+    $artists = getAllArtists($_SESSION['brand_id']);
     $overallTotalRoyalties = 0;
     $overallTotalEarnings = 0;
 
@@ -37,6 +37,7 @@
         <tbody>
 <? if ($artists) {
         foreach ($artists as $artist) { 
+            // @TODO Total earnings is not suitably calculated - earnings will add up double for each artist involved in the release
             $totalEarnings = getTotalEarningsForArtist($artist->id, $startDate, $endDate);
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id, $startDate, $endDate);
 

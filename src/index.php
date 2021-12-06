@@ -1,13 +1,14 @@
 <?
   require_once('./inc/util/Redirect.php');
 
+  include_once('./inc/controller/brand_check.php');
   session_start();
   if($_SESSION['logged_in_user'] != null) {
     redirectTo('/dashboard.php');
   }
 ?>
 <header>
-  <title>Melt Dashboard Beta</title>
+  <title><?=$_SESSION['brand_name'];?> Dashboard Beta</title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
   <!-- Google Tag Manager -->
@@ -31,12 +32,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper fadeInDown">
-  <div id="formContent">
+  <div id="formContent" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <!-- Tabs Titles -->
 
     <!-- Icon -->
     <div class="fadeIn first">
-      <img src="assets/img/logo-purple.png" id="icon" alt="Melt Records" />
+      <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
 
     <!-- Alert -->

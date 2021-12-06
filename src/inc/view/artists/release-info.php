@@ -2,7 +2,7 @@
     include_once('./inc/controller/get-artist-list.php');
     include_once('./inc/controller/get-release-list.php');
 
-    $artists = getAllArtists();
+    $artists = getAllArtists($_SESSION['brand_id']);
     $defaultCatNo = generateCatalogNumber();
 ?>
 

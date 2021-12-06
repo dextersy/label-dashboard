@@ -16,6 +16,7 @@ $formAction = "action.update-artist.php?from=" . $_SERVER['REQUEST_URI'];
 <h3><?=$title;?></h3>
 <form action="<?=$formAction;?>" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="id" value="<?=$artist->id;?>">
+    <input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
     <div class="row">
         <div class="col-md-3">
             <img src="<?=($artist->profile_photo!="") ? $artist->profile_photo : "assets/img/placeholder.jpg";?>" width="100%" style="border:#cccccc 1px solid; padding:5px;">

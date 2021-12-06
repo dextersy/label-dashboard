@@ -1,4 +1,4 @@
-<div class="sidebar" data-color="purple" data-image="assets/img/sidebar-5.jpg">
+<div class="sidebar" data-color="<?=$_SESSION['brand_color'];?>" data-image="assets/img/sidebar-5.jpg">
 
     <!--
 
@@ -10,7 +10,7 @@
     	<div class="sidebar-wrapper">
             <div class="logo">
                 <a href="http://www.melt-records.com" class="simple-text">
-                    <img src="assets/img/Melt%20Records-logo-WHITE.png" width="200">
+                    <img src="<?=$_SESSION['brand_logo'];?>" width="200">
                 </a>
             </div>
 
