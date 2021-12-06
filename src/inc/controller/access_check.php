@@ -18,7 +18,7 @@
     if (!$isAdmin) {
         $availableArtists = getArtistListForUser($_SESSION['logged_in_user']);
     } else {
-        $availableArtists = getAllArtists();
+        $availableArtists = getAllArtists($_SESSION['brand_id']);
     }
 
 ?>

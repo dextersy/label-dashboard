@@ -8,7 +8,7 @@
     require_once('./inc/controller/get-release-list.php');
     require_once('./inc/controller/get-recuperable-expense.php');
 
-    $artists = getAllArtists();
+    $artists = getAllArtists($_SESSION['brand_id']);
     $releases = getAllReleases();
 ?>
 <h3>Balance Summary</h3>

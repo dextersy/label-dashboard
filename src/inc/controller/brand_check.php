@@ -4,6 +4,7 @@
     if ($_SESSION['brand_name'] == null) {
         $brand = findBrandByDomain($_SERVER['HTTP_HOST']);
         if ($brand != null) {
+            $_SESSION['brand_id'] = $brand->id;
             $_SESSION['brand_name'] = $brand->brand_name;
             $_SESSION['brand_logo'] = $brand->logo_url;
             $_SESSION['brand_color'] = $brand->brand_color;

@@ -2,8 +2,8 @@
 require_once('./inc/util/MySQLConnection.php');
 require_once('./inc/model/artist.php');
 
-function getAllArtists(){
-    $result = MySQLConnection::query("SELECT * FROM `artist` ORDER BY `name` ASC");
+function getAllArtists($brand_id){
+    $result = MySQLConnection::query("SELECT * FROM `artist` WHERE `brand_id`='" . $brand_id ."' ORDER BY `name` ASC");
     if ($result->num_rows < 1) {
         return null;
     }
