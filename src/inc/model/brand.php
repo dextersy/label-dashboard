@@ -37,7 +37,9 @@ class Brand{
             $this->fromID($this->id);
         }
         $this->brand_name = $_POST['brand_name'];
-        $this->logo_url = $_POST['logo_url'];
+        if(isset($_POST['logo_url'])) {
+            $this->logo_url = $_POST['logo_url'];
+        }
         $this->brand_color = $_POST['brand_color'];
     }
 
@@ -53,13 +55,13 @@ class Brand{
         }
         else {
             $sql = "UPDATE `brand` SET ".
-                "`name` = '" . MySQLConnection::escapeString($this->brand_name) . "', " .
+                "`brand_name` = '" . MySQLConnection::escapeString($this->brand_name) . "', " .
                 "`logo_url` = '" . MySQLConnection::escapeString($this->logo_url) . "', " .
                 "`brand_color` = '" . MySQLConnection::escapeString($this->brand_color) . "' " .
                 "WHERE `id` = " . $this->id;
         }
-        echo $sql;
         $result = MySQLConnection::query($sql);
+        //echo $sql;
         if ($result) {
             if($this->id == null) {
                 $this->id = MySQLConnection::$lastInsertID;

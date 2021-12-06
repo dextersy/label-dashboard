@@ -9,14 +9,14 @@ $brand->fromID($_SESSION['brand_id']);
 $formAction = "action.update-brand.php?from=" . $_SERVER['REQUEST_URI'];
 
 ?>
-<h3><?=$title;?></h3>
+<h3>Brand Settings</h3>
 <form action="<?=$formAction;?>" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="id" value="<?=$brand->id;?>">
     <div class="row">
         <div class="col-md-5">
             <div class="form-group">
-                <img src="<?=($brand->logo_url!="") ? $brand->logo_url : "assets/img/placeholder.jpg";?>" width="300" style="background-color:#cccccc;">
-                <label for="profile_photo">Logo</label>
+                <label for="profile_photo">Logo</label><br>
+                <img src="<?=($brand->logo_url!="") ? $brand->logo_url : "assets/img/placeholder.jpg";?>" width="300" style="background-color:#cccccc;"><br>
                 <input type="file" class="form-control" id="logo_url" name="logo_url" accept=".jpg, .png" />
             </div>
             <div class="form-group">
@@ -24,15 +24,15 @@ $formAction = "action.update-brand.php?from=" . $_SERVER['REQUEST_URI'];
                 <input type="text" class="form-control" id="brand_name" name="brand_name" placeholder="Brand Name" value="<?=$brand->brand_name;?>">
             </div>
             <div class="form-group">
-                <label for="name">Brand color</label>
-                <select name="brand_color">
-                    <option <?=$brand->color=='purple'?"selected":"";?> value="purple">Purple</option>
-                    <option <?=$brand->color=='red'?"selected":"";?> value="red">Red</option>
-                    <option <?=$brand->color=='blue'?"selected":"";?> value="blue">Blue</option>
-                    <option <?=$brand->color=='azure'?"selected":"";?> value="azure">Azure</option>
-                    <option <?=$brand->color=='green'?"selected":"";?> value="green">Green</option>
-                    <option <?=$brand->color=='black'?"selected":"";?> value="black">Black</option>
-                    <option <?=$brand->color=='white'?"selected":"";?> value="white">White</option>
+                <label for="name">Brand color <?=$brand->color;?></label>
+                <select class="form-control" name="brand_color">
+                    <option <?=$brand->brand_color=='purple'?"selected":"";?> value="purple">Purple</option>
+                    <option <?=$brand->brand_color=='red'?"selected":"";?> value="red">Red</option>
+                    <option <?=$brand->brand_color=='blue'?"selected":"";?> value="blue">Blue</option>
+                    <option <?=$brand->brand_color=='azure'?"selected":"";?> value="azure">Azure</option>
+                    <option <?=$brand->brand_color=='green'?"selected":"";?> value="green">Green</option>
+                    <option <?=$brand->brand_color=='black'?"selected":"";?> value="black">Black</option>
+                    <option <?=$brand->brand_color=='white'?"selected":"";?> value="white">White</option>
                 </select>
             </div>
 
