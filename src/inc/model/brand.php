@@ -58,6 +58,7 @@ class Brand{
                 "`brand_color` = '" . MySQLConnection::escapeString($this->brand_color) . "' " .
                 "WHERE `id` = " . $this->id;
         }
+        echo $sql;
         $result = MySQLConnection::query($sql);
         if ($result) {
             if($this->id == null) {

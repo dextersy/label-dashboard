@@ -29,7 +29,7 @@ include_once('./inc/view/header.php');
                         <div id="brand" class="tab-pane fade in active">
                             <?php include_once('./inc/view/admin/brand-settings.php'); ?>                                
                         </div>
-                        <div id="summary" class="tab-pane fade in active">
+                        <div id="summary" class="tab-pane fade">
                             <?php include_once('./inc/view/admin/admin-summary-view.php'); ?>                                
                         </div>
                         <div id="balance" class="tab-pane fade">
