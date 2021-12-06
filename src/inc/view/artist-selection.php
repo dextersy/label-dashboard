@@ -11,7 +11,7 @@ require_once('./inc/controller/access_check.php');
             $artist = new Artist;
             $artist->fromID($_SESSION['current_artist']);
         ?>
-        <img style="width:50px; height:50px; object-fit: cover; border-radius:100%;" src="<?=$artist->profile_photo?$artist->profile_photo:"assets/img/logo-purple.png";?>">
+        <img style="width:50px; height:50px; object-fit: cover; border-radius:100%;" src="<?=$artist->profile_photo?$artist->profile_photo:"assets/img/placeholder.png";?>">
         &nbsp;&nbsp;<?=$artist->name;?>
         <span class="caret"></span>
     </button>
