@@ -4,6 +4,7 @@
 
     // Load Composer's autoloader
 	require 'vendor/autoload.php';
+	require 'util/controller/brand_check.php';
 
     function sendEmail($emailAddresses, $subject, $body) {
 		try {
@@ -18,7 +19,7 @@
 
 			//From email address and name
 			$mail->From = "no-reply@melt-records.com";
-			$mail->FromName = "Melt Records Artist Dashboard";
+			$mail->FromName = $_SESSION['brand_name'] . " Artist Dashboard";
 
 			//To address and name
 			foreach($emailAddresses as $emailAddress) {

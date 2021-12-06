@@ -112,7 +112,7 @@
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
-        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/assets/img/logo-purple.png", $msg);
+        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST_NAME%', $artistName, $msg);
         $msg = str_replace('%RELEASE_TITLE%', $releaseName, $msg);
         $msg = str_replace('%EARNING_DESC%', $earningDescription, $msg);

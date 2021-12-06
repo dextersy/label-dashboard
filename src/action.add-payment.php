@@ -43,7 +43,7 @@
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
-        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/assets/img/logo-purple.png", $msg);
+        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST%', $artistName, $msg);
         $msg = str_replace('%AMOUNT%', "Php " . number_format($payment->amount, 2), $msg);
         $msg = str_replace('%DESCRIPTION%', $payment->description, $msg);

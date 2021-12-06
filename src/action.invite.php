@@ -21,7 +21,7 @@
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
-        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/assets/img/logo-purple.png", $msg);
+        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST%', $artistName, $msg);
 		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/setprofile.php?u=" . $inviteHash, $msg);
 		
