@@ -6,7 +6,7 @@ require_once('./inc/model/brand.php');
 $brand = new Brand;
 $brand->fromID($_SESSION['brand_id']);
 
-$formAction = "action.update_brand.php?from=" . $_SERVER['REQUEST_URI'];
+$formAction = "action.update-brand.php?from=" . $_SERVER['REQUEST_URI'];
 
 ?>
 <h3><?=$title;?></h3>
@@ -15,7 +15,7 @@ $formAction = "action.update_brand.php?from=" . $_SERVER['REQUEST_URI'];
     <div class="row">
         <div class="col-md-5">
             <div class="form-group">
-                <img src="<?=($brand->logo_url!="") ? $brand->logo_url : "assets/img/placeholder.jpg";?>" width="300" style="border:#cccccc 1px solid; padding:5px;">
+                <img src="<?=($brand->logo_url!="") ? $brand->logo_url : "assets/img/placeholder.jpg";?>" width="300" style="background-color:#cccccc;">
                 <label for="profile_photo">Logo</label>
                 <input type="file" class="form-control" id="logo_url" name="logo_url" accept=".jpg, .png" />
             </div>
