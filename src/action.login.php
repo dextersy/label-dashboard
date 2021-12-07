@@ -2,10 +2,12 @@
     require_once('./inc/util/Redirect.php');
     require_once('./inc/model/user.php');
 
+    include_once('./inc/controller/brand_check.php');
+
     session_start();
     $user = new User;
-    if(!$user->fromUsername($_POST['login'])) {
-        if (!$user->fromEmailAddress($_POST['login']) ) {
+    if(!$user->fromUsername($_SESSION['brand_id'], $_POST['login'])) {
+        if (!$user->fromEmailAddress($_SESSION['brand_id'], $_POST['login']) ) {
             redirectTo("/index.php?err=no_user");
             die();
         }

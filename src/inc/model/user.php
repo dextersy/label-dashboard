@@ -12,6 +12,7 @@ class User{
     public $last_name;
     public $profile_photo;
     public $is_admin;
+    public $brand_id;
 
     function __construct(
         $id = null, 
@@ -21,7 +22,8 @@ class User{
         $first_name= null, 
         $last_name= null, 
         $profile_photo= null, 
-        $is_admin= false
+        $is_admin= false,
+        $brand_id = null
     ) 
     {
         $this->id = $id;
@@ -32,6 +34,7 @@ class User{
         $this->last_name = $last_name;
         $this->profile_photo = $profile_photo;
         $this->is_admin = $is_admin;
+        $this->brand_id = $brand_id;
     }
 
 
@@ -46,11 +49,12 @@ class User{
             $this->last_name = $row['last_name'];
             $this->profile_photo = $row['profile_photo'];
             $this->is_admin = $row['is_admin'];
+            $this->brand_id = $row['brand_id'];
         }
     }
 
-    function fromUsername($user) {
-        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `username` = '" . $user . "'");
+    function fromUsername($brand_id, $user) {
+        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `username` = '" . $user . "' AND `brand_id` = '" . $brand_id . "'");
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
@@ -60,10 +64,10 @@ class User{
         }
     }
 
-    function fromEmailAddress($email) {
+    function fromEmailAddress($brand_id, $email) {
 
-        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `email_address` = '" . $email . "'");
-        if ($row = $result->fetch_assoc()) {
+        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `email_address` = '" . $email . "' AND `brand_id` = '" . $brand_id . "'");
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
         }
@@ -86,12 +90,13 @@ class User{
         $this->last_name = $_POST['last_name'];
         $this->profile_photo = $_POST['profile_photo'];
         $this->is_admin = $_POST['is_admin'];
+        $this->brand_id = $_POST['brand_id'];
     }
 
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`) ".
+            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `brand_id`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->username) . "', ".
                 "'" . MySQLConnection::escapeString($this->password_md5) . "', ".
@@ -99,7 +104,8 @@ class User{
                 "'" . MySQLConnection::escapeString($this->first_name) . "', ".
                 "'" . MySQLConnection::escapeString($this->last_name) . "', " .
                 "'" . MySQLConnection::escapeString($this->profile_photo) . "', " .
-                "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "'" .
+                "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
+                "'" . MySQLConnection::escapeString($this->brand_id) . "'" .
                 ")";
         }
         else {
@@ -109,7 +115,8 @@ class User{
                 "`first_name` = '" . MySQLConnection::escapeString($this->first_name) . "', " .
                 "`last_name` = '" . MySQLConnection::escapeString($this->last_name) . "', " .
                 "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "', " .
-                "`is_admin` = '" . MySQLConnection::escapeString($this->is_admin) . "' " .
+                "`is_admin` = '" . MySQLConnection::escapeString($this->is_admin) . "', " .
+                "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "' " .
                 "WHERE `id` = " . MySQLConnection::escapeString($this->id);
         }
         $result = MySQLConnection::query($sql);

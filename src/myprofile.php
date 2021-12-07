@@ -19,6 +19,7 @@
             <form action="action.init-user.php" method="POST">
             <div class="form-group">
                 <input type="hidden" name="id" value="<?=$user->id;?>">
+                <input type="hidden" name="brand_id" value="<?=$user->brand_id;?>">
             </div>
             <div class="form-group">
                 <input type="hidden" name="is_admin" value="<?=$user->is_admin;?>">
