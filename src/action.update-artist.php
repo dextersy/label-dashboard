@@ -29,10 +29,36 @@
         }
 		$subject = "Changes made to ". $artist->name . "'s profile!";
 
-        $changeHistory = "(COMING SOON)"; // TODO Add actual change details
+        $changeHistory = generateArtistDiffDetails($artistOld, $artist);
 
 		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($artist->name, $changeHistory));
 	}
+
+    function generateArtistDiffDetails($old, $new) {
+        $table = "<table><tr><td>Field</td><td>New value</td></tr>";
+        if($old->name != $new->name) {
+            $table = $table . "<tr><td>Name</td><td>" . $new->name . "</td></tr>";
+        }
+        if($old->website_page_url != $new->website_page_url) {
+            $table = $table . "<tr><td>Website URL</td><td>" . $new->website_page_url . "</td></tr>";
+        }
+        if($old->facebook_handle != $new->facebook_handle) {
+            $table = $table . "<tr><td>Facebook</td><td>" . $new->facebook_handle . "</td></tr>";
+        }
+        if($old->instagram_handle != $new->instagram_handle) {
+            $table = $table . "<tr><td>Instagram Handle</td><td>" . $new->instagram_handle . "</td></tr>";
+        }
+        if($old->twitter_handle != $new->twitter_handle) {
+            $table = $table . "<tr><td>Twitter Handle</td><td>" . $new->twitter_handle . "</td></tr>";
+        }
+        if($old->bio != $new->bio) {
+            $table = $table . "<tr><td>Bio</td><td>" . $new->bio . "</td></tr>";
+        }
+        if($old->profile_photo != $new->profile_photo) {
+            $table = $table . "<tr><td>Profile Photo</td><td>New photo uploaded.</td></tr>";
+        }
+        $table = $table . "</table>";
+    }
 
     function generateEmailFromTemplate($artistName, $changeHistory) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/artist_update_email.html', false);
