@@ -58,6 +58,7 @@
             $table = $table . "<tr><td>Profile Photo</td><td>New photo uploaded.</td></tr>";
         }
         $table = $table . "</table>";
+        return $table;
     }
 
     function generateEmailFromTemplate($artistName, $changeHistory) {
