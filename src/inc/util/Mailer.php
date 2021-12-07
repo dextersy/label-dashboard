@@ -4,7 +4,8 @@
 
     // Load Composer's autoloader
 	require 'vendor/autoload.php';
-	require 'util/controller/brand_check.php';
+	
+	include_once './inc/controller/brand_check.php';
 
     function sendEmail($emailAddresses, $subject, $body) {
 		try {
