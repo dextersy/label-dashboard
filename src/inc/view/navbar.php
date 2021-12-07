@@ -14,6 +14,7 @@ session_start();
             <a class="navbar-brand" href="#"><?=$title_text;?></a>
         </div>
         <div class="collapse navbar-collapse">
+            <?php /*
             <ul class="nav navbar-nav navbar-left">
                 <li>
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -21,7 +22,7 @@ session_start();
                         <p class="hidden-lg hidden-md">Dashboard</p>
                     </a>
                 </li>
-                <?php /*
+                
                 <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                             <i class="fa fa-globe"></i>
@@ -39,15 +40,15 @@ session_start();
                         <li><a href="#">Another notification</a></li>
                         </ul>
                 </li>
-                */ ?>
                 <li>
                     <a href="">
                         <i class="fa fa-search"></i>
                         <p class="hidden-lg hidden-md">Search</p>
                     </a>
                 </li>
+                
             </ul>
-
+            */ ?>
             <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a href="myprofile.php">
