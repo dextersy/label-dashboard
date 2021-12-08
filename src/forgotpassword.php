@@ -48,31 +48,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         User not found. Please try again or ask admin to invite you.
       </div>
     <? }
-      else if ($_GET['err'] == 'pass') {
+
+      if ($_GET['err'] == 'sent' ) {
     ?>
-      <div class="alert alert-danger" role="alert">
-        Wrong password. Please try again.
-      </div>
+    <p style="color:#aaaaaa">Your password reset link has been sent to your email.<p>
     <?
-      }
-      else if ($_GET['err'] == 'invalid_hash') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Invalid code. Please request invite again.
-      </div>
-    <?
-      }
+      } else {
     ?>
     <!-- Login Form -->
-    <form action="action.login.php" method="POST">
-      <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">
-      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
-      <input type="submit" class="fadeIn fourth" value="Log In">
+    <form action="action.send-reset-link.php" method="POST">
+      <input type="text" id="email_address" class="fadeIn second" name="email_address" placeholder="Email address">
+      <input type="submit" class="fadeIn fourth" value="Send Password Reset Link">
     </form>
+    <? } ?>
 
     <!-- Remind Passowrd -->
     <div id="formFooter">
-      <a class="underlineHover" href="forgotpassword.php">Forgot Password?</a>
+      <a class="underlineHover" href="index.php">Back to login</a>
     </div>
 
   </div>

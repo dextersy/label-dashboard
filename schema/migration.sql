@@ -69,7 +69,6 @@ ALTER TABLE `domain`
 ADD COLUMN `status` ENUM('Verified', 'Unverified', 'Pending') NULL DEFAULT 'Unverified' AFTER `domain_name`;
 
 
------ NEW
 ALTER TABLE `user` 
 ADD COLUMN `brand_id` INT NOT NULL DEFAULT 1 AFTER `is_admin`;
 ALTER TABLE `user` 
@@ -78,3 +77,9 @@ ADD CONSTRAINT `fk_user_brand`
   REFERENCES `brand` (`id`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+
+----- NEW
+ALTER TABLE `user` 
+ADD COLUMN `reset_hash` VARCHAR(255) NULL AFTER `brand_id`;
+
