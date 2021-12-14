@@ -26,12 +26,17 @@
         $i = 0;
         
         $admins = getAllAdmins($_SESSION['brand_id']);
-        foreach($admins as $recipient) {
-            $emailAddresses[$i++] = $recipient->email_address;
+        if ($admins != null) {
+            foreach($admins as $recipient) {
+                $emailAddresses[$i++] = $recipient->email_address;
+            }
         }
+        
         $users = getActiveTeamMembersForArtist($artist->id);
-        foreach ($users as $recipient) {
-            $emailAddresses[$i++] = $recipient->email_address;
+        if ($users != null) {
+            foreach ($users as $recipient) {
+                $emailAddresses[$i++] = $recipient->email_address;
+            }
         }
 
 		$subject = "Changes made to ". $artist->name . "'s profile!";
