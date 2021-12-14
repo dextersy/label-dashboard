@@ -19,18 +19,22 @@
 
     $_SESSION['current_artist'] = $artist->id;
     
-    sendAdminNotification($artistOld, $artist);
+    sendNotification($artistOld, $artist);
 
-    function sendAdminNotification($artistOld, $artist) {
-        $admins = getAllAdmins();
+    function sendNotification($artistOld, $artist) {
         $i = 0;
-        foreach($admins as $admin) {
-            $emailAddresses[$i++] = $admin->email_address;
+        
+        $admins = getAllAdmins();
+        foreach($admins as $recipient) {
+            $emailAddresses[$i++] = $recipient->email_address;
         }
+        $users = getActiveTeamMembersForArtist($artist->id);
+        foreach ($users as $recipient) {
+            $emailAddresses[$i++] = $recipient->email_address;
+        }
+
 		$subject = "Changes made to ". $artist->name . "'s profile!";
-
         $changeHistory = generateArtistDiffDetails($artistOld, $artist);
-
 		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($artist->name, $changeHistory));
 	}
 
