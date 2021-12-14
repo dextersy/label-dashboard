@@ -1,6 +1,8 @@
 <?
     include_once('./inc/controller/get_team_members.php');
 
+    include_once('./inc/controller/brand_check.php');
+
     $userAccessRights = getTeamMembersForArtist($_SESSION['current_artist']);
 
     function getUserStatusString($status) {
@@ -38,6 +40,7 @@
                 <td>
                 <?php if ($user->status == 'Pending') { ?>
                     <form action="action.invite.php" method="POST">
+                        <input type="hidden" name="brand_id" value="<?=$user->brand_id;?>">
                         <input type="hidden" name="email_address" value="<?=$user->email_address;?>">
                         <input type="hidden" name="invite_hash" value="<?=$user->invite_hash;?>">
                         <input type="submit" class="btn" value="Resend invite">
@@ -61,6 +64,7 @@
     <div class="col-md-6">
         <form action="action.invite.php" method="POST">
         <div class="form-group">
+            <input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
             <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
             <input type="submit" class="btn btn-primary" value="Invite Team Member">
         </div>                 

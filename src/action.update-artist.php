@@ -2,6 +2,7 @@
     require_once('./inc/model/artist.php');
     require_once('./inc/util/Redirect.php');
     require_once('./inc/controller/access_check.php');
+    require_once('./inc/controller/brand_check.php');
     require_once('./inc/util/Mailer.php');
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/util/FileUploader.php');
@@ -24,7 +25,7 @@
     function sendNotification($artistOld, $artist) {
         $i = 0;
         
-        $admins = getAllAdmins();
+        $admins = getAllAdmins($_SESSION['brand_id']);
         foreach($admins as $recipient) {
             $emailAddresses[$i++] = $recipient->email_address;
         }

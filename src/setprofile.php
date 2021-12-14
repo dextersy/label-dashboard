@@ -2,6 +2,7 @@
   require_once("./inc/model/user.php");
   require_once("./inc/model/artistaccess.php");
   require_once("./inc/util/Redirect.php");
+  require_once("./inc/controller/brand_check.php");
 
   if ($_GET['u']) {
     $hash = $_GET['u'];
@@ -25,7 +26,7 @@
 
 ?>
 <header>
-  <title>Melt Dashboard Beta</title>
+  <title><?=$_SESSION['brand_name'];?> Dashboard Beta</title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
   <!-- Google Tag Manager -->
@@ -52,12 +53,13 @@
 
     <!-- Icon -->
     <div class="fadeIn first">
-      <img src="assets/img/logo-purple.png" id="icon" alt="Melt Records" />
+      <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
 
     <!-- Login Form -->
     <p><strong>Please update your profile.</strong></p>
     <form action="action.init-user.php" method="POST">
+      <input type="hidden" name="brand_id" value="<?=$user->brand_id;?>">
       <input type="hidden" name="id" value="<?=$user->id;?>">
       <input type="hidden" name="invite_hash" value="<?=$artistAccess->invite_hash;?>">
       <input type="hidden" name="is_admin" value="<?=$user->is_admin;?>">

@@ -5,6 +5,7 @@
     
     $user = new User;
     $user->fromFormPOST($_POST);
+    unset($user->reset_hash);
     $user->save();
 
     session_start();

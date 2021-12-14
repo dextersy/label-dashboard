@@ -1,10 +1,20 @@
 <?
   require_once('./inc/util/Redirect.php');
+  require_once('./inc/model/user.php');
 
   include_once('./inc/controller/brand_check.php');
   session_start();
   if($_SESSION['logged_in_user'] != null) {
     redirectTo('/dashboard.php');
+  }
+
+  if ($_GET['code']) {
+    $user = new User;
+    if(!$user->fromResetHash($_SESSION['brand_id'], $_GET['code'])) {
+      $error = true;
+    }
+  } else {
+    $error = true;
   }
 ?>
 <header>
@@ -42,37 +52,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Alert -->
     <?
-      if ($_GET['err'] == 'no_user') {
+      if ($error) {
     ?>
       <div class="alert alert-danger" role="alert">
-        User not found. Please try again or ask admin to invite you.
+        The link you used is invalid. <a href="index.php">Please try again.</a>
       </div>
-    <? }
-      else if ($_GET['err'] == 'pass') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Wrong password. Please try again.
-      </div>
-    <?
-      }
-      else if ($_GET['err'] == 'invalid_hash') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Invalid code. Please request invite again.
-      </div>
-    <?
-      }
+    <? } else {
     ?>
     <!-- Login Form -->
-    <form action="action.login.php" method="POST">
-      <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">
-      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
-      <input type="submit" class="fadeIn fourth" value="Log In">
+    <form action="action.init-user.php" method="POST">
+      <input type="hidden" name="id" value="<?=$user->id;?>">
+      <input type="password" id="password" class="fadeIn second" name="password" placeholder="New Password">
+      <input type="password" id="validation" class="fadeIn third" name="validation" placeholder="Verify New Password">
+      <input type="submit" class="fadeIn fourth" value="Set New Password">
     </form>
+    <? } ?>
 
     <!-- Remind Passowrd -->
     <div id="formFooter">
-      <a class="underlineHover" href="forgotpassword.php">Forgot Password?</a>
+      <a class="underlineHover" href="index.php">Back to login</a>
     </div>
 
   </div>

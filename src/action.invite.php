@@ -6,6 +6,7 @@
     require_once('./inc/util/Redirect.php');
 	require_once('./inc/util/Mailer.php');
 	require_once('./inc/controller/access_check.php');
+	require_once('./inc/controller/brand_check.php');
 
     $GLOBALS['debugOutput'] = [];
 
@@ -46,7 +47,7 @@
 	
 	if($result) {
 		$user = new User;
-		if (!$user->fromEmailAddress($_POST['email_address'])) { // means this is a new user
+		if (!$user->fromEmailAddress($_SESSION['brand_id'], $_POST['email_address'])) { // means this is a new user
 			$user->fromFormPOST($_POST);
 			$user->save();
 		}

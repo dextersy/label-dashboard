@@ -1,4 +1,4 @@
-<?
+<?  
     class UserAccessRights {
         public $user_id;
         public $first_name;
@@ -71,9 +71,9 @@
         return $userAccessRights;
     }
 
-    function getAllAdmins(){
+    function getAllAdmins($brand_id){
         $sql = "SELECT `id` FROM `user` ".
-            "WHERE `is_admin` IS TRUE";
+            "WHERE `is_admin` IS TRUE and `brand_id` = '" . $brand_id . "'";
         $result = MySQLConnection::query($sql);
         if ($result->num_rows < 1) {
             return null;

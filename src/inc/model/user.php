@@ -12,6 +12,8 @@ class User{
     public $last_name;
     public $profile_photo;
     public $is_admin;
+    public $brand_id;
+    public $reset_hash;
 
     function __construct(
         $id = null, 
@@ -21,7 +23,9 @@ class User{
         $first_name= null, 
         $last_name= null, 
         $profile_photo= null, 
-        $is_admin= false
+        $is_admin= false,
+        $brand_id = null,
+        $reset_hash = null
     ) 
     {
         $this->id = $id;
@@ -32,6 +36,8 @@ class User{
         $this->last_name = $last_name;
         $this->profile_photo = $profile_photo;
         $this->is_admin = $is_admin;
+        $this->brand_id = $brand_id;
+        $this->reset_hash = $reset_hash;
     }
 
 
@@ -46,11 +52,13 @@ class User{
             $this->last_name = $row['last_name'];
             $this->profile_photo = $row['profile_photo'];
             $this->is_admin = $row['is_admin'];
+            $this->brand_id = $row['brand_id'];
+            $this->reset_hash = $row['reset_hash'];
         }
     }
 
-    function fromUsername($user) {
-        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `username` = '" . $user . "'");
+    function fromUsername($brand_id, $user) {
+        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `username` = '" . $user . "' AND `brand_id` = '" . $brand_id . "'");
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
@@ -60,10 +68,21 @@ class User{
         }
     }
 
-    function fromEmailAddress($email) {
+    function fromEmailAddress($brand_id, $email) {
 
-        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `email_address` = '" . $email . "'");
-        if ($row = $result->fetch_assoc()) {
+        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `email_address` = '" . $email . "' AND `brand_id` = '" . $brand_id . "'");
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+            $this->fromID($row['id']);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    function fromResetHash($brand_id, $reset_hash) {
+        $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `reset_hash` = '" . $reset_hash . "' AND `brand_id` = '" . $brand_id . "'");
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
         }
@@ -77,21 +96,22 @@ class User{
             $this->id = $_POST['id'];
             $this->fromID($this->id);
         }
-        $this->username = $_POST['username'];
+        $this->username = isset($_POST['username'])?$_POST['username']:$this->username;
         if ($_POST['password']) {
             $this->password_md5 = md5($_POST['password']);
         }
-        $this->email_address = $_POST['email_address'];
-        $this->first_name = $_POST['first_name'];
-        $this->last_name = $_POST['last_name'];
-        $this->profile_photo = $_POST['profile_photo'];
-        $this->is_admin = $_POST['is_admin'];
+        $this->email_address = isset($_POST['email_address'])?$_POST['email_address']:$this->email_address;
+        $this->first_name = isset($_POST['first_name'])?$_POST['first_name']:$this->first_name;
+        $this->last_name = isset($_POST['last_name'])?$_POST['last_name']:$this->last_name;
+        $this->profile_photo = isset($_POST['profile_photo'])?$_POST['profile_photo']:$this->profile_photo;
+        $this->is_admin = isset($_POST['is_admin'])?$_POST['is_admin']:$this->is_admin;
+        $this->brand_id = isset($_POST['brand_id'])?$_POST['brand_id']:$this->brand_id;
+        $this->reset_hash = isset($_POST['reset_hash'])?$_POST['reset_hash']:$this->reset_hash;
     }
 
     function save() {
-
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`) ".
+            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `brand_id`, `reset_hash`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->username) . "', ".
                 "'" . MySQLConnection::escapeString($this->password_md5) . "', ".
@@ -99,7 +119,9 @@ class User{
                 "'" . MySQLConnection::escapeString($this->first_name) . "', ".
                 "'" . MySQLConnection::escapeString($this->last_name) . "', " .
                 "'" . MySQLConnection::escapeString($this->profile_photo) . "', " .
-                "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "'" .
+                "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
+                "'" . MySQLConnection::escapeString($this->brand_id) . "', " .
+                "'" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "'" .
                 ")";
         }
         else {
@@ -109,7 +131,9 @@ class User{
                 "`first_name` = '" . MySQLConnection::escapeString($this->first_name) . "', " .
                 "`last_name` = '" . MySQLConnection::escapeString($this->last_name) . "', " .
                 "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "', " .
-                "`is_admin` = '" . MySQLConnection::escapeString($this->is_admin) . "' " .
+                "`is_admin` = '" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
+                "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "', " .
+                "`reset_hash` = '" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "' " .
                 "WHERE `id` = " . MySQLConnection::escapeString($this->id);
         }
         $result = MySQLConnection::query($sql);
