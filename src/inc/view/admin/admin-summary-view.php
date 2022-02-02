@@ -3,6 +3,7 @@
     require_once('./inc/controller/get-artist-list.php');
     require_once('./inc/controller/get-royalties.php');
     require_once('./inc/controller/get-earnings.php');
+    require_once('./inc/controller/get-payments.php');
 
     $artists = getAllArtists($_SESSION['brand_id']);
     $overallTotalRoyalties = 0;
@@ -31,23 +32,23 @@
     <table class="table">
         <thead>
             <tr><th>Artist</th>
-            <th>Total earnings</th>
+            <th>Total payments</th>
             <th>Total royalties</th>
         </thead>
         <tbody>
 <? if ($artists) {
         foreach ($artists as $artist) { 
             // @TODO Total earnings is not suitably calculated - earnings will add up double for each artist involved in the release
-            $totalEarnings = getTotalEarningsForArtist($artist->id, $startDate, $endDate);
+            $totalPayments = getTotalPaymentsForArtist($artist->id, $startDate, $endDate);
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id, $startDate, $endDate);
 
-            if ($totalEarnings >0 || $totalRoyalties >0) {
-                $overallTotalEarnings += $totalEarnings;
+            if ($totalPayments >0 || $totalRoyalties >0) {
+                $overallTotalPayments += $totalPayments;
                 $overallTotalRoyalties += $totalRoyalties;
         ?>
             <tr>
                 <td><?=$artist->name;?></td>
-                <td style="text-align:right;">Php<?=number_format($totalEarnings,2);?></td>
+                <td style="text-align:right;">Php<?=number_format($totalPayments,2);?></td>
                 <td style="text-align:right;">Php<?=number_format($totalRoyalties,2);?></td>
             </tr>
 <?          }
@@ -63,10 +64,10 @@
             <div class="card">
 
                 <div class="header">
-                    <h4 class="title">Total Earnings</h4>
+                    <h4 class="title">Total Payments</h4>
                 </div>
                 <div class="content">
-                    <h5>Php <?=number_format($overallTotalEarnings,2);?></h5>
+                    <h5>Php <?=number_format($overallTotalPayments,2);?></h5>
                 </div>
             </div>
         </div>

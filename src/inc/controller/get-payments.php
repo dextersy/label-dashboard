@@ -32,9 +32,12 @@ function getPaymentsForArtist($artist_id, $start=0, $limit=-1){
     return $paymentViewItems;
 }
 
-function getTotalPaymentsForArtist($artist_id){
+function getTotalPaymentsForArtist($artist_id, $start_date = null, $end_date = null){
     $sql = "SELECT SUM(`amount`) AS `total_payment` FROM `payment` " .
             "WHERE `artist_id` = ". $artist_id;
+    if($start_date != null && $end_date != null) {
+        $sql = $sql . " AND `date_paid` BETWEEN '" . $start_date . "' AND '" . $end_date . "'";
+    }
     $result = MySQLConnection::query($sql);
     if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
         $totalPayments = $row['total_payment'];
