@@ -55,9 +55,12 @@ function getTotalEarningsForArtist($artist_id, $start_date = null, $end_date = n
     return $totalEarnings;
 }
 
-function getTotalEarningsForRelease($release_id, $start_date = null, $end_date = null){
+function getTotalEarningsForRelease($release_id, $start_date = null, $end_date = null, $type=null){
     $sql = "SELECT SUM(`amount`) AS `total_earning` FROM `earning` " .
             "WHERE `release_id` = " . $release_id;
+    if($type != null) {
+        $sql = $sql . " AND type = '" . $type . "'";
+    }
     if($start_date != null && $end_date != null) {
         $sql = $sql . " AND `date_recorded` BETWEEN '" . $start_date . "' AND '" . $end_date . "'";
     }

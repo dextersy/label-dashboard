@@ -9,8 +9,12 @@
     $artists = getAllArtists($_SESSION['brand_id']);
     $releases = getAllReleases($_SESSION['brand_id']);
     $overallTotalRoyalties = 0;
-    $overallTotalEarnings = 0;
     $overallTotalPayments = 0;
+
+    $overallTotalStreamingEarnings = 0;
+    $overallTotalSyncEarnings = 0;
+    $overallTotalDownloadEarnings = 0;
+    $overallTotalPhysicalEarnings = 0;
 
     if(isset($_POST['date_from']) && isset($_POST['date_to'])) {
         $startDate = $_POST['date_from'];
@@ -37,19 +41,61 @@
 <h3>Earnings Summary</h3>
 <? if ($releases) {
     foreach ($releases as $release) {
-        $totalEarnings = getTotalEarningsForRelease($release->id, $startDate, $endDate);
-        $overallTotalEarnings += $totalEarnings;
+        $totalEarnings = getTotalEarningsForRelease($release->id, $startDate, $endDate, "Streaming");
+        $overallTotalStreamingEarnings += $totalEarnings;
+
+        $totalEarnings = getTotalEarningsForRelease($release->id, $startDate, $endDate, "Sync");
+        $overallTotalSyncEarnings += $totalEarnings;
+
+        $totalEarnings = getTotalEarningsForRelease($release->id, $startDate, $endDate, "Downloads");
+        $overallTotalDownloadEarnings += $totalEarnings;
+
+        $totalEarnings = getTotalEarningsForRelease($release->id, $startDate, $endDate, "Physical");
+        $overallTotalPhysicalEarnings += $totalEarnings;
     } 
 ?>
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-2">
         <div class="card">
 
             <div class="header">
-                <h4 class="title">Total Earnings</h4>
+                <h4 class="title">Physical Earnings</h4>
             </div>
             <div class="content">
-                <h5>Php <?=number_format($overallTotalEarnings,2);?></h5>
+                <h5>Php <?=number_format($overallTotalPhysicalEarnings,2);?></h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+
+            <div class="header">
+                <h4 class="title">Download Earnings</h4>
+            </div>
+            <div class="content">
+                <h5>Php <?=number_format($overallTotalDownloadEarnings,2);?></h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+
+            <div class="header">
+                <h4 class="title">Streaming Earnings</h4>
+            </div>
+            <div class="content">
+                <h5>Php <?=number_format($overallTotalStreamingEarnings,2);?></h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+
+            <div class="header">
+                <h4 class="title">Sync Earnings</h4>
+            </div>
+            <div class="content">
+                <h5>Php <?=number_format($overallTotalSyncEarnings,2);?></h5>
             </div>
         </div>
     </div>
@@ -59,7 +105,7 @@
 <? } ?>
 
 <h3>Payments and Royalties Summary</h3>
-
+<div class="col-md-5">
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -90,6 +136,7 @@
 <?  } ?>
     </tbody>
     </table>
+    </div>
     </div>
     <div class="row">
         <div class="col-md-4">
