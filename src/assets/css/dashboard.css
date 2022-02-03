@@ -1,0 +1,24 @@
+* {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+h1, h2, h3, h4 {
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-weight:bold;
+}
+
+.nav-tabs {
+    display:flex;
+    overflow:auto;
+}
+
+.nav-tabs>li.active>a {
+    border:1px solid #dddddd;
+    border-radius:10%;
+}
+
+.header-icon {
+    font-size:30px !important;
+    color:#333333;
+    padding:10px;
+}   

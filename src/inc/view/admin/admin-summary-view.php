@@ -26,7 +26,7 @@
     }
 ?>
 <div class="row" style="padding-top:10px;">
-    <div class="col-md-4">
+    <div class="col-md-8">
     <div class='picker'>
         <form action="admin.php" method="POST">
             <label for="fromperiod">From</label>
@@ -59,6 +59,7 @@
         <div class="card">
 
             <div class="header">
+                <i class="fa fa-shopping-bag header-icon"></i>
                 <h4 class="title">Physical Earnings</h4>
             </div>
             <div class="content">
@@ -70,6 +71,7 @@
         <div class="card">
 
             <div class="header">
+                <i class="fa fa-download header-icon"></i>
                 <h4 class="title">Download Earnings</h4>
             </div>
             <div class="content">
@@ -81,6 +83,7 @@
         <div class="card">
 
             <div class="header">
+                <i class="fa fa-headphones header-icon"></i>
                 <h4 class="title">Streaming Earnings</h4>
             </div>
             <div class="content">
@@ -92,6 +95,7 @@
         <div class="card">
 
             <div class="header">
+                <i class="fa fa-television header-icon"></i>
                 <h4 class="title">Sync Earnings</h4>
             </div>
             <div class="content">
