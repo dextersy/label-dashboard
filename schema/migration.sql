@@ -78,8 +78,13 @@ ADD CONSTRAINT `fk_user_brand`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-
------ NEW
 ALTER TABLE `user` 
 ADD COLUMN `reset_hash` VARCHAR(255) NULL AFTER `brand_id`;
 
+
+----- NEW
+ALTER TABLE `domain` 
+ADD UNIQUE INDEX `domain_name_UNIQUE` (`domain_name` ASC) VISIBLE;
+;
+
+-----

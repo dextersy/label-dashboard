@@ -2,12 +2,14 @@
 require_once('./inc/controller/access_check.php');
 require_once('./inc/controller/brand_check.php');
 require_once('./inc/model/brand.php');
+require_once('./inc/model/domain.php');
 
 $brand = new Brand;
 $brand->fromID($_SESSION['brand_id']);
 
 $formAction = "action.update-brand.php?from=" . $_SERVER['REQUEST_URI'];
 
+include_once("./inc/view/admin/brand-setting-alert-message.php");
 ?>
 <h3>Brand Settings</h3>
 <form action="<?=$formAction;?>" method="POST" enctype="multipart/form-data">
@@ -40,3 +42,35 @@ $formAction = "action.update-brand.php?from=" . $_SERVER['REQUEST_URI'];
         </div>
     </div>
 </form>
+<h3>Domains</h3>
+<p>These domains will resolve to your dashboard.</p>
+<div class="col-md-4">
+    <div class="table-responsive">
+        <table class="table">
+            <tbody>
+<? 
+    $domains = Domain::getDomainsForBrand($_SESSION['brand_id']);
+    if ($domains) {
+        foreach ($domains as $domain) { 
+        ?>
+            <tr>
+                <td><?=$domain->domain_name;?></td>
+                <td><a href="action.delete-domain.php?brand_id=<?=$_SESSION['brand_id'];?>&domain_name=<?=$domain->domain_name;?>"><i class="fa fa-trash"></i></a></td>
+            </tr>
+<?          
+        } 
+    } else { ?>
+    No domains configured.
+<?  } ?>
+            </tbody>
+        </table>
+    </div>
+    
+    <h4>Add domain</h4>
+    <form action="action.add-domain.php" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="brand_id" value="<?=$brand->id;?>">
+    <input type="text" class="form-control" name="domain_name">
+    <button type="submit" class="btn btn-default">Add</button>
+    </form>
+
+</div>
