@@ -33,6 +33,19 @@
                 break;
         }
     }
+    else if ($_GET['action'] == "VerifyDomain") {
+        switch($_GET['status']) {
+            case "OK":
+                $msg = "Successfully verified domain.";
+                break;
+            case "Failed":
+                $msg = "Failed to verify domain. Check your A Records.";
+                break;
+            default:
+                break;
+        }
+    }
+
     if ($msg && $type) {
     ?>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>

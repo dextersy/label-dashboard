@@ -11,7 +11,7 @@
     $domain = new Domain;
     $domain->fromFormPOST($_POST);
     if($domain->saveNew()) {
-        redirectTo("/admin.php?action=addDomain&status=OK");
+        redirectTo("/action.verify-domain.php?brand_id=" . $_POST['brand_id'] . "&domain_name=" . $_POST['domain_name']);
     }
     else {
         redirectTo("/admin.php?action=addDomain&status=Failed");

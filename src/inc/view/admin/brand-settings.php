@@ -55,7 +55,11 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
         ?>
             <tr>
                 <td><?=$domain->domain_name;?></td>
-                <td><a href="action.delete-domain.php?brand_id=<?=$_SESSION['brand_id'];?>&domain_name=<?=$domain->domain_name;?>"><i class="fa fa-trash"></i></a></td>
+                <td>
+                    <?=$domain->status == "Verified" ? "<i class=\"fa fa-check\" alt=\"Verified\"></i>" : "<a href=\"action.verify-domain.php?brand_id=" . $_SESSION['brand_id'] . "&domain_name=" . $domain->domain_name . "\">[ Verify ]</as>";?>
+                    <a href="action.delete-domain.php?brand_id=<?=$_SESSION['brand_id'];?>&domain_name=<?=$domain->domain_name;?>">
+                    <i class="fa fa-trash"></i></a>
+                </td>
             </tr>
 <?          
         } 
