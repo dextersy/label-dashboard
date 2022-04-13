@@ -15,6 +15,7 @@
         <div class="card">
 
             <div class="header">
+            <i class="fa fa-balance-scale header-icon"></i>
                 <h4 class="title"><strong>Current Balance</strong></h4> 
             </div>
             <div class="content">
@@ -27,7 +28,9 @@
     <div class="col-md-3">
         <div class="card">
             <div class="header">
-                <h4 class="title"><strong>Total Earnings</strong></h4>
+            <i class="fa fa-dollar header-icon"></i>
+                <h4 class="title">                    
+                    <strong>Total Earnings</strong></h4>
             </div>
             <div class="content">
                Your current total earnings* are
@@ -41,6 +44,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="header">
+                <i class="fa fa-star header-icon"></i>
                 <h4 class="title"><strong>Total Royalties</strong></h4>
             </div>
             <div class="content">
@@ -54,6 +58,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="header">
+            <i class="fa fa-credit-card header-icon"></i>
                 <h4 class="title"><strong>Total Payments</strong></h4>
             </div>
             <div class="content">

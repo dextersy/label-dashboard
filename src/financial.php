@@ -11,12 +11,12 @@
             <?php include_once('./inc/view/artist-selection.php'); ?>
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
-                        <li class="active"><a data-toggle="tab" href="#summary">Summary</a></li>
-                        <li><a data-toggle="tab" href="#documents">Documents</a></li>
-                        <li><a data-toggle="tab" href="#earnings">Earnings</a></li>
-                        <li><a data-toggle="tab" href="#royalties">Royalties</a></li>
-                        <li><a data-toggle="tab" href="#payments">Payments and Advances</a></li>
-                        <li><a data-toggle="tab" href="#release">Release Information</a></li>
+                        <li class="active"><a data-toggle="tab" href="#summary"><i class="fa fa-info"></i> Summary</a></li>
+                        <li><a data-toggle="tab" href="#documents"><i class="fa fa-file"></i> Documents</a></li>
+                        <li><a data-toggle="tab" href="#earnings"><i class="fa fa-dollar"></i> Earnings</a></li>
+                        <li><a data-toggle="tab" href="#royalties"><i class="fa fa-star"></i> Royalties</a></li>
+                        <li><a data-toggle="tab" href="#payments"><i class="fa fa-credit-card"></i> Payments and Advances</a></li>
+                        <li><a data-toggle="tab" href="#release"><i class="fa fa-play"></i> Release Information</a></li>
                     <? if ($isAdmin) { ?> 
                         <li><a data-toggle="tab" href="#new-royalty"><i class="fa fa-lock" aria-hidden="true"></i> New Royalty</a></li>
                         <li><a data-toggle="tab" href="#new-payment"><i class="fa fa-lock" aria-hidden="true"></i> New Payment</a></li>
