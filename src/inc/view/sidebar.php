@@ -1,3 +1,9 @@
+<?
+include_once('inc/controller/access_check.php'); 
+include_once('inc/controller/brand_check.php'); 
+
+echo "Brand website : " . $_SESSION['brand_website'];
+?>
 <div class="sidebar" data-color="<?=$_SESSION['brand_color'];?>" data-image="assets/img/sidebar-5.jpg">
 
     <!--
@@ -9,7 +15,7 @@
 
     	<div class="sidebar-wrapper">
             <div class="logo">
-                <a href="http://www.melt-records.com" class="simple-text">
+                <a href="<?=$_SESSION['brand_website'];?>" class="simple-text">
                     <img src="<?=$_SESSION['brand_logo'];?>" width="200">
                 </a>
             </div>

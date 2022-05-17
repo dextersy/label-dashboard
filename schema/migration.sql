@@ -88,3 +88,5 @@ ADD UNIQUE INDEX `domain_name_UNIQUE` (`domain_name` ASC) VISIBLE;
 ;
 
 -----
+ALTER TABLE `brand` 
+ADD COLUMN `brand_website` VARCHAR(45) NULL AFTER `brand_color`;

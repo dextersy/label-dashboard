@@ -26,6 +26,10 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
                 <input type="text" class="form-control" id="brand_name" name="brand_name" placeholder="Brand Name" value="<?=$brand->brand_name;?>">
             </div>
             <div class="form-group">
+                <label for="name">Website</label><i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="This will be linked to your logo. Include http or https in the URL (e.g. https://yourbrand.com)"></i>
+                <input type="text" class="form-control" id="brand_website" name="brand_website" placeholder="Brand Website" value="<?=$brand->brand_website;?>">
+            </div>
+            <div class="form-group">
                 <label for="name">Brand color <?=$brand->color;?></label>
                 <select class="form-control" name="brand_color">
                     <option <?=$brand->brand_color=='purple'?"selected":"";?> value="purple">Purple</option>

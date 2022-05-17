@@ -8,6 +8,7 @@
             $_SESSION['brand_name'] = $brand->brand_name;
             $_SESSION['brand_logo'] = $brand->logo_url;
             $_SESSION['brand_color'] = $brand->brand_color;
+            $_SESSION['brand_website'] = $brand->brand_website;
         }
         else {
             redirectTo('/nobrand.php');

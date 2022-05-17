@@ -8,7 +8,7 @@
         die();
     }
 
-    $result = dns_get_record($_GET['domain_name'],DNS_A);
+    $result = @dns_get_record($_GET['domain_name'],DNS_A);
     $ip_server = $_SERVER['SERVER_ADDR'];
 
     if( $result[0]["ip"] == $ip_server ) {
