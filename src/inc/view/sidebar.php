@@ -2,7 +2,6 @@
 include_once('inc/controller/access_check.php'); 
 include_once('inc/controller/brand_check.php'); 
 
-echo "Brand website : " . $_SESSION['brand_website'];
 ?>
 <div class="sidebar" data-color="<?=$_SESSION['brand_color'];?>" data-image="assets/img/sidebar-5.jpg">
 
