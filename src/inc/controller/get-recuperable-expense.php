@@ -48,4 +48,24 @@ function getRecuperableExpensesForRelease($release_id, $start = 0, $limit = -1){
     }
     return $recuperable_expense_view;
 }
+
+function getTotalNewRecuperableExpenseForPeriod($date_start, $date_end) {
+    $sql = "SELECT SUM(`expense_amount`) AS `total_new_recuperable_expense` FROM `recuperable_expense` " .
+        "WHERE `expense_amount` > 0 AND `date_recorded` BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+    $result = MySQLConnection::query($sql);
+    if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+        $total = $row['total_new_recuperable_expense'];
+    }
+    return $total;
+}
+
+function getTotalRecuperatedExpenseForPeriod($date_start, $date_end) {
+    $sql = "SELECT SUM(`expense_amount`) AS `total_new_recuperable_expense` FROM `recuperable_expense` " .
+        "WHERE `expense_amount` < 0 AND `date_recorded` BETWEEN '" . $date_start . "' AND '" . $date_end . "'";
+    $result = MySQLConnection::query($sql);
+    if($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+        $total = $row['total_new_recuperable_expense'];
+    }
+    return $total;
+}
 ?>

@@ -5,6 +5,7 @@
     require_once('./inc/controller/get-royalties.php');
     require_once('./inc/controller/get-earnings.php');
     require_once('./inc/controller/get-payments.php');
+    require_once('./inc/controller/get-recuperable-expense.php');
 
     $artists = getAllArtists($_SESSION['brand_id']);
     $releases = getAllReleases($_SESSION['brand_id']);
@@ -162,6 +163,28 @@
                 </div>
                 <div class="content">
                     <h5>Php <?=number_format($overallTotalRoyalties,2);?></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+
+                <div class="header">
+                    <h4 class="title">Total New Recuperable Expense</h4>
+                </div>
+                <div class="content">
+                    <h5>Php <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate),2);?></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+
+                <div class="header">
+                    <h4 class="title">Total Recuperated Expenses</h4>
+                </div>
+                <div class="content">
+                    <h5>Php <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate)),2);?></h5>
                 </div>
             </div>
         </div>
