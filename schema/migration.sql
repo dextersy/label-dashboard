@@ -90,3 +90,21 @@ ADD UNIQUE INDEX `domain_name_UNIQUE` (`domain_name` ASC) VISIBLE;
 -----
 ALTER TABLE `brand` 
 ADD COLUMN `brand_website` VARCHAR(45) NULL AFTER `brand_color`;
+
+---- 09-29-2022
+CREATE TABLE `payment_method` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `artist_id` INT NOT NULL,
+  `type` VARCHAR(45) NOT NULL,
+  `account_name` VARCHAR(45) NOT NULL,
+  `account_number_or_email` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_payment_methods_artist_id_idx` (`artist_id` ASC),
+  CONSTRAINT `fk_payment_methods_artist_id`
+    FOREIGN KEY (`artist_id`)
+    REFERENCES `artist` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+ALTER TABLE `payment_method` 
+ADD COLUMN `is_default_for_artist` TINYINT NOT NULL DEFAULT 0 AFTER `account_number_or_email`;
+
