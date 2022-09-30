@@ -12,6 +12,17 @@
 
     $payment = new Payment;
     $payment->fromFormPOST($_POST);
+    if (isset($_POST['paid_thru'])) {
+        $haystack = $_POST['paid_thru'];
+        
+        $payment->paid_thru_type = substr($haystack, 0, strpos($haystack, "-") - 1);
+        $haystack = substr($haystack, strpos($haystack, "-") + 1);
+
+        $payment->paid_thru_account_name = substr($haystack, 0, strpos($haystack, "-") - 1);
+        $haystack = substr($haystack, strpos($haystack, "-") + 1);
+
+        $payment->paid_thru_account_number = $haystack;
+    }
     $payment->save();
     
     $GLOBALS['debugOutput'] = [];

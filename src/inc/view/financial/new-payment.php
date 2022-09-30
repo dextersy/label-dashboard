@@ -1,8 +1,14 @@
 <?
-session_start();
+    session_start();
+    $totalRoyalties = getTotalRoyaltiesForArtist($_SESSION['current_artist']);
+    $totalPayments = getTotalPaymentsForArtist($_SESSION['current_artist']);
+    $totalBalance = $totalRoyalties - $totalPayments;
+
+    $paymentMethods = PaymentMethod::getPaymentMethodsForArtist($_SESSION['current_artist']);
 ?>
 
 <h3><?=$title;?></h3>
+<div class="col-md-6">
 <form action="action.add-payment.php" method="POST">
     <input type="hidden" name="artist_id" value="<?=$_SESSION['current_artist'];?>">
     <div class="form-group">
@@ -15,7 +21,20 @@ session_start();
     </div>
     <div class="form-group">
         <label for="amount">Amount (in PHP)</label>
-        <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount">
+        <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>">
     </div> 
-    <button type="submit" class="btn btn-default">Save Changes</button>
+    <div class="form-group">
+        <label for="paid_thru">Paid through</label>
+        <select name="paid_thru" class="form-control">
+<?php   
+    foreach($paymentMethods as $paymentMethod) {
+?>
+            <option><?=$paymentMethod->type . " - " . $paymentMethod->account_name . " - " . $paymentMethod->account_number_or_email;?></option>
+<?php
+    }
+?>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-default">Add Payment</button>
 </form>
+</div>

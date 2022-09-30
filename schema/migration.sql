@@ -108,3 +108,8 @@ CREATE TABLE `payment_method` (
 ALTER TABLE `payment_method` 
 ADD COLUMN `is_default_for_artist` TINYINT NOT NULL DEFAULT 0 AFTER `account_number_or_email`;
 
+--- 09-30-2022
+ALTER TABLE `payment` 
+ADD COLUMN `paid_thru_type` VARCHAR(45) NULL AFTER `date_paid`,
+ADD COLUMN `paid_thru_account_name` VARCHAR(45) NULL AFTER `paid_thru_type`,
+ADD COLUMN `paid_thru_account_number` VARCHAR(45) NULL AFTER `paid_thru_account_name`;

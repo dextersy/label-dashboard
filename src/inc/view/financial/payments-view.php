@@ -6,12 +6,13 @@
 ?>
 <div class="row">
     <div class="col-md-6">
-        <h3>Payments and Advances</h3>
+        <h3>Payments and Advances <? if ($isAdmin) { ?><a data-toggle="tab" href="#new-payment"><i class="fa fa-plus"></i></a><? } ?></h3>
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr><th>Date Paid</th>
                     <th>Description</th>
+                    <th>Paid Through</th>
                     <th style="text-align:right">Amount</th>
                 </thead>
                 <tbody>
@@ -20,6 +21,7 @@
                     <tr>
                         <td><?=$paymentViewItem->date_paid;?></td>
                         <td><?=$paymentViewItem->description;?></td>
+                        <td><?=$paymentViewItem->paid_thru_type;?> - <?=$paymentViewItem->paid_thru_account_name;?> - <?=$paymentViewItem->paid_thru_account_number;?></td>
                         <td align="right"><?=number_format($paymentViewItem->amount, 2);?></td>                
                     </tr>
                 <?  }

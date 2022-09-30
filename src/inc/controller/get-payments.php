@@ -26,6 +26,9 @@ function getPaymentsForArtist($artist_id, $start=0, $limit=-1){
         $paymentViewItems[$i]->date_paid = $payment->date_paid;
         $paymentViewItems[$i]->description = $payment->description;
         $paymentViewItems[$i]->amount = $payment->amount;
+        $paymentViewItems[$i]->paid_thru_type = $payment->paid_thru_type;
+        $paymentViewItems[$i]->paid_thru_account_name = $payment->paid_thru_account_name;
+        $paymentViewItems[$i]->paid_thru_account_number = $payment->paid_thru_account_number;
 
         $i++;
     }
