@@ -8,6 +8,7 @@
         <?php include_once('inc/view/navbar.php'); ?>
     
             <div class="container-fluid">
+            <?php include_once('./inc/view/notifications.php'); ?>
             <?php include_once('./inc/view/artist-selection.php'); ?>
             <?php include_once('./inc/view/artists/artist-alert-message.php'); ?>
                 <div class="row" style="padding:20px;">

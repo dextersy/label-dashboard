@@ -9,6 +9,7 @@
 
 
         <div class="content">
+            <?php include_once('inc/view/notifications.php'); ?>
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-4">

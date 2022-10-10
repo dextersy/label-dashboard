@@ -3,11 +3,12 @@
 <?php include('./inc/view/after-body.php'); ?>
 <div class="wrapper">
     <?php include_once('inc/view/sidebar.php'); ?>
-
+    
     <div class="main-panel">
         <?php include_once('inc/view/navbar.php'); ?>
-    
+        
             <div class="container-fluid">
+            <?php include_once('./inc/view/notifications.php'); ?>
             <?php include_once('./inc/view/artist-selection.php'); ?>
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
