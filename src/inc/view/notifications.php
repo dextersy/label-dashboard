@@ -18,8 +18,8 @@ include_once('inc/model/artist.php');
 ?>
 <div class="row">
     <div class="col-md-12">
-        <div class="alert alert-info alert-dismissible fade in" role="alert">
-        <strong>You have some information missing in your profile.</strong> Click <a href="artist.php">here</a> to update your profile.
+        <div class="alert alert-warning alert-dismissible fade in" role="alert">
+        You have some information missing in your profile. Click <a href="artist.php">here</a> to update your profile.
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
     </div>
@@ -31,8 +31,8 @@ include_once('inc/model/artist.php');
     if (!$paymentMethods) { ?>
 <div class="row">
     <div class="col-md-12">
-        <div class="alert alert-info alert-dismissible fade in" role="alert">
-        <strong>You have not set any payment methods.</strong> Click <a href="financial.php#payments">here</a> to update your payment settings.
+        <div class="alert alert-warning alert-dismissible fade in" role="alert">
+        You have not set any payment methods. Click <a href="financial.php#payments">here</a> to update your payment settings.
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
     </div>

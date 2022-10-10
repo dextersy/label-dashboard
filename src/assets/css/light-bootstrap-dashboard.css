@@ -1209,19 +1209,31 @@ fieldset[disabled] .btn-neutral.active {
 }
 
 .alert-info {
-    background-color: #63d8f1;
+    background-color: #d9eefd;
+    border: 1px solid #00526c;
+    color: #00526c;
 }
 
 .alert-success {
     background-color: #a1e82c;
+    border: 1px solid #203610;
+    color: #203610;
 }
 
 .alert-warning {
-    background-color: #ffbc67;
+    background-color: #fff6b6;
+    color: #000000;
+    border: 1px solid #ab4f00;
 }
 
 .alert-danger {
-    background-color: #fc727a;
+    background-color: pink;
+    color: red;
+    border: 1px solid red;
+}
+
+.alert-danger a {
+    color: rgb(255, 107, 107);
 }
 
 .table .radio,
