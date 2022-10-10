@@ -11,7 +11,7 @@ session_start();
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#"><?=$title_text;?></a>
+            <a class="navbar-brand" href="#"><i class="<?=$title_icon;?>" style="font-weight:bold;"></i> <?=$title_text;?></a>
         </div>
         <div class="collapse navbar-collapse">
             <?php /*

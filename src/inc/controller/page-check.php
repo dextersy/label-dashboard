@@ -4,18 +4,22 @@
     
     if (strpos($request_uri, "dashboard.php")) {
         $dashboard_active = true;
+        $title_icon = "pe-7s-graph";
         $title_text = "Dashboard";
     }
     if (strpos($request_uri, "artist.php")) {
         $artist_active = true;
-        $title_text = "Artist | " .  $_SESSION['current_artist_name'];
+        $title_icon = "pe-7s-headphones";
+        $title_text = "Artist";
     }
     if (strpos($request_uri, "financial.php")) {
         $financial_active = true;
-        $title_text = "Financial | " .  $_SESSION['current_artist_name'];
+        $title_icon = "pe-7s-note2";
+        $title_text = "Financial";
     }
     if (strpos($request_uri, "admin.php")) {
         $admin_active = true;
+        $title_icon = "pe-7s-lock";
         $title_text = "Admin";
     }
     if (strpos($request_uri, "myprofile.php")) {
