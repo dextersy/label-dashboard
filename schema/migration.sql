@@ -113,3 +113,47 @@ ALTER TABLE `payment`
 ADD COLUMN `paid_thru_type` VARCHAR(45) NULL AFTER `date_paid`,
 ADD COLUMN `paid_thru_account_name` VARCHAR(45) NULL AFTER `paid_thru_type`,
 ADD COLUMN `paid_thru_account_number` VARCHAR(45) NULL AFTER `paid_thru_account_name`;
+
+--- 03-29-2023
+CREATE TABLE `new_table` (
+  `brand_id` INT NOT NULL,
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(255) NOT NULL,
+  `date_and_time` DATETIME NOT NULL,
+  `venue` VARCHAR(255) NOT NULL,
+  `description` VARCHAR(1024) NULL,
+  `poster_url` VARCHAR(255) NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `event_id_UNIQUE` (`id` ASC) VISIBLE);
+ALTER TABLE `new_table` 
+ADD INDEX `fk_brand_idx` (`brand_id` ASC) VISIBLE;
+;
+ALTER TABLE `new_table` 
+ADD CONSTRAINT `fk_brand`
+  FOREIGN KEY (`brand_id`)
+  REFERENCES `brand` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+ALTER TABLE `new_table` 
+RENAME TO  `event` ;
+
+CREATE TABLE `ticket` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `event_id` INT NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `email_address` VARCHAR(255) NOT NULL,
+  `contact_number` VARCHAR(45) NULL,
+  `number_of_entries` INT NOT NULL DEFAULT 1,
+  `ticket_code` VARCHAR(5) NOT NULL,
+  `status` ENUM('New', 'Payment Confirmed', 'Ticket sent.') NOT NULL DEFAULT 'New',
+  PRIMARY KEY (`id`));
+
+ALTER TABLE `ticket` 
+ADD INDEX `fk_event_idx` (`event_id` ASC) VISIBLE;
+;
+ALTER TABLE `ticket` 
+ADD CONSTRAINT `fk_event`
+  FOREIGN KEY (`event_id`)
+  REFERENCES `event` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;

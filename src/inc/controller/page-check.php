@@ -7,7 +7,7 @@
         $title_icon = "pe-7s-graph";
         $title_text = "Dashboard";
     }
-    if (strpos($request_uri, "artist.php")) {
+    if (strpos($request_uri, "artist.php") || strpos($request_uri, "newartist.php")) {
         $artist_active = true;
         $title_icon = "pe-7s-headphones";
         $title_text = "Artist";
@@ -22,11 +22,13 @@
         $title_icon = "pe-7s-lock";
         $title_text = "Admin";
     }
+    if (strpos($request_uri, "events.php") || strpos($request_uri, "newevent.php")) {
+        $events_active = true;
+        $title_icon = "pe-7s-date";
+        $title_text = "Events";
+    }
     if (strpos($request_uri, "myprofile.php")) {
         $title_text = "Edit Your Profile";
-    }
-    if (strpos($request_uri, "newartist.php")) {
-        $title_text = "New Artist";
     }
 
 ?>
