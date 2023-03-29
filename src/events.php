@@ -28,10 +28,9 @@
                             <?php include_once('./inc/view/events/event-info-tab.php'); ?>
                         </div>
                         <div id="tickets" class="tab-pane fade">
-                            <?php include_once('./inc/view/artists/artist-profile-tab.php'); ?>
+                            <?php include_once('./inc/view/events/ticket-list.php'); ?>
                         </div>
                         <div id="new-tickets" class="tab-pane fade">
-                            <?php include_once('./inc/view/artists/release-info.php'); ?>
                         </div>
                     </div>
                 </div>

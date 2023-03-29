@@ -82,7 +82,6 @@ class Event{
                 "`venue` = '" . MySQLConnection::escapeString($this->venue) . "' " .
                 "WHERE `id` = " . $this->id;
         }
-        echo $sql;
         $result = MySQLConnection::query($sql);
         if ($result) {
             return MySQLConnection::$lastInsertID;
