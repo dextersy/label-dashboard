@@ -1,1 +1,1 @@
-cp -rf src/* /var/www/html/meltrecords
+cp -rf src/* ~/htdocs
