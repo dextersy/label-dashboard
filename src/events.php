@@ -16,6 +16,7 @@
     
             <div class="container-fluid">
                 <?php include_once('./inc/view/event-selection.php'); ?>
+                <?php include_once('./inc/view/events/events-alert-message.php'); ?>
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#details"><i class="fa fa-info"></i>Details</a></li>

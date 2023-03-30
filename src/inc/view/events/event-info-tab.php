@@ -32,7 +32,7 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
             </div>
             <div class="form-group">
                 <label for="amount">Date</label>
-                <input type="date" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$event->date_and_time;?>">
+                <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$event->date_and_time;?>">
             </div> 
             <div class="form-group">
                 <label for="websiteURL">Venue</label><i class="fab fa-facebook-f"></i>
