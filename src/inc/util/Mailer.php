@@ -20,7 +20,7 @@
 
 			//From email address and name
 			$mail->From = "no-reply@melt-records.com";
-			$mail->FromName = $_SESSION['brand_name'] . " Artist Dashboard";
+			$mail->FromName = $_SESSION['brand_name'];
 
 			//To address and name
 			foreach($emailAddresses as $emailAddress) {

@@ -27,7 +27,7 @@
                 <td><?=$ticket->contact_number; ?></td>
                 <td><?=$ticket->number_of_entries; ?></td>
                 <td><strong><?=$ticket->ticket_code; ?></strong></td>
-                <td><?=$ticket->status; ?></td>
+                <td><?=$ticket->status; ?> <a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Send ]</a></td>
             </tr>
 <?      }
     } else {
