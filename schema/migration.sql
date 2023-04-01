@@ -157,3 +157,10 @@ ADD CONSTRAINT `fk_event`
   REFERENCES `event` (`id`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+---- 03/31
+ALTER TABLE `event` 
+ADD COLUMN `rsvp_link` VARCHAR(255) NULL AFTER `poster_url`;
+ALTER TABLE `event` 
+ADD COLUMN `ticket_price` DECIMAL NOT NULL AFTER `rsvp_link`;
+

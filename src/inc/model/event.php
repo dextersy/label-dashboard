@@ -10,6 +10,8 @@ class Event{
     public $description;
     public $poster_url;
     public $venue;
+    public $rsvp_link;
+    public $ticket_price;
 
     function __construct(
         $id = null, 
@@ -18,7 +20,9 @@ class Event{
         $date_and_time = null,
         $description = null,
         $poster_url = null,
-        $venue = null
+        $venue = null,
+        $rsvp_link = null,
+        $ticket_price = null
     ) 
     {
         $this->id = $id;
@@ -28,6 +32,8 @@ class Event{
         $this->description = $description;
         $this->poster_url = $poster_url;
         $this->venue = $venue;
+        $this->rsvp_link = $rsvp_link;
+        $this->ticket_price = $ticket_price;
       }
 
     function fromID($id) {
@@ -40,6 +46,8 @@ class Event{
             $this->description = $row['description'];
             $this->poster_url = $row['poster_url'];
             $this->venue = $row['venue'];
+            $this->rsvp_link = $row['rsvp_link'];
+            $this->ticket_price = $row['ticket_price'];
             return true;
         }
         else {
@@ -57,19 +65,23 @@ class Event{
         $this->date_and_time = $post['date_and_time'];
         $this->description = $post['description'];
         $this->venue = $post['venue'];
+        $this->rsvp_link = $post['rsvp_link'];
+        $this->ticket_price = $post['ticket_price'];
     }
 
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`) ".
+            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
                 "'" . MySQLConnection::escapeString($this->date_and_time) . "', ".
                 "'" . MySQLConnection::escapeString($this->description) . "', ".
                 "'" . MySQLConnection::escapeString($this->poster_url) . "', ".
-                "'" . MySQLConnection::escapeString($this->venue) . "'" .
+                "'" . MySQLConnection::escapeString($this->venue) . "', ".
+                "'" . MySQLConnection::escapeString($this->rsvp_link) . "', ".
+                "'" . MySQLConnection::escapeString($this->ticket_price) . "'" .
                 ")";
         }
         else {
@@ -79,7 +91,9 @@ class Event{
                 "`date_and_time` = '" . MySQLConnection::escapeString($this->date_and_time) . "', " .
                 "`description` = '" . MySQLConnection::escapeString($this->description) . "', " .
                 "`poster_url` = '" . MySQLConnection::escapeString($this->poster_url) . "', " .
-                "`venue` = '" . MySQLConnection::escapeString($this->venue) . "' " .
+                "`venue` = '" . MySQLConnection::escapeString($this->venue) . "', " .
+                "`rsvp_link` = '" . MySQLConnection::escapeString($this->rsvp_link) . "', " .
+                "`ticket_price` = '" . MySQLConnection::escapeString($this->ticket_price) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

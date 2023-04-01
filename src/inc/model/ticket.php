@@ -93,6 +93,9 @@ class Ticket{
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
+            if(!isset($this->id)) {
+                $this->id = MySQLConnection::$lastInsertID;
+            }
             return MySQLConnection::$lastInsertID;
         }
         else {

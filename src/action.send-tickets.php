@@ -9,24 +9,24 @@
 
     $GLOBALS['debugOutput'] = [];
 
-    function sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $numberOfEntries, $eventDate) {
+    function sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink) {
 		$subject = "Here's your ticket to ". $eventName . " on " . $eventDate . "!";
 		$emailAddresses[0] = $emailAddress;
-		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries));
+		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink));
 	}
 
-    function generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries) {
+    function generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/event_ticket_email.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
-        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
+        $msg = str_replace("%BRAND_NAME%", $_SESSION['brand_name'], $msg);
 		$msg = str_replace('%EVENT_NAME%', $eventName, $msg);
 		$msg = str_replace('%NAME%', $name, $msg);
 		$msg = str_replace('%TICKET_CODE%', $ticketCode, $msg);
 		$msg = str_replace('%NO_OF_ENTRIES%', $numberOfEntries, $msg);
-		$msg = str_replace('%LINK%', "#", $msg); // todo Add RSVP link to event details
+		$msg = str_replace('%RSVP_LINK%', $rsvpLink, $msg);
 		
 		return $msg;
 	}

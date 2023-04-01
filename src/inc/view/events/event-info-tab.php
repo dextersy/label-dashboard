@@ -35,8 +35,16 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
                 <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$event->date_and_time;?>">
             </div> 
             <div class="form-group">
-                <label for="websiteURL">Venue</label><i class="fab fa-facebook-f"></i>
+                <label for="websiteURL">Venue</label>
                 <input type="text" class="form-control" id="venue" name="venue" placeholder="Venue" value="<?=$event->venue;?>">
+            </div>
+            <div class="form-group">
+                <label for="websiteURL">RSVP link</label>
+                <input type="text" class="form-control" id="rsvp_link" name="rsvp_link" placeholder="RSVP Link" value="<?=$event->rsvp_link;?>">
+            </div>
+            <div class="form-group">
+                <label for="websiteURL">Ticket price</label>
+                <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>">
             </div>
        </div>
     </div>
