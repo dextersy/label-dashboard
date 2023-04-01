@@ -164,3 +164,9 @@ ADD COLUMN `rsvp_link` VARCHAR(255) NULL AFTER `poster_url`;
 ALTER TABLE `event` 
 ADD COLUMN `ticket_price` DECIMAL NOT NULL AFTER `rsvp_link`;
 
+---- 04/01
+ALTER TABLE `ticket` 
+ADD COLUMN `payment_link` VARCHAR(255) NULL AFTER `status`,
+ADD COLUMN `payment_link_id` VARCHAR(45) NULL AFTER `payment_link`;
+
+

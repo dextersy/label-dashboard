@@ -12,6 +12,8 @@ class Ticket{
     public $number_of_entries;
     public $ticket_code;
     public $status;
+    public $payment_link;
+    public $payment_link_id;
 
     function __construct(
         $id = null, 
@@ -21,7 +23,9 @@ class Ticket{
         $contact_number = null,
         $number_of_entries = null,
         $ticket_code = null,
-        $status = null
+        $status = null,
+        $payment_link = null,
+        $payment_link_id = null
     ) 
     {
         $this->id = $id;
@@ -32,6 +36,8 @@ class Ticket{
         $this->number_of_entries = $number_of_entries;
         $this->ticket_code = $ticket_code;
         $this->status = $status;
+        $this->payment_link = $payment_link;
+        $this->payment_link_id = $payment_link_id;
     }
 
     function fromID($id) {
@@ -45,6 +51,8 @@ class Ticket{
             $this->number_of_entries = $row['number_of_entries'];
             $this->ticket_code = $row['ticket_code'];
             $this->status = $row['status'];
+            $this->payment_link = $row['payment_link'];
+            $this->payment_link_id = $row['payment_link_id'];
             return true;
         }
         else {
@@ -64,12 +72,14 @@ class Ticket{
         $this->number_of_entries = $post['number_of_entries'];
         $this->ticket_code = $post['ticket_code'];
         $this->status = $post['status'];
+
+        // Intentionally left out payment link and link ID since this is never coming from form data
     }
 
     function save() {
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`) ".
+            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->event_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->name) . "', ".
@@ -77,7 +87,9 @@ class Ticket{
                 "'" . MySQLConnection::escapeString($this->contact_number) . "', ".
                 "'" . MySQLConnection::escapeString($this->number_of_entries) . "', ".
                 "'" . MySQLConnection::escapeString($this->ticket_code) . "', ".
-                "'" . MySQLConnection::escapeString($this->status) . "'" .
+                "'" . MySQLConnection::escapeString($this->status) . "', ".
+                (isset($this->payment_link) ? ("'" . MySQLConnection::escapeString($this->payment_link) . "'") : "NULL") . ", ".
+                (isset($this->payment_link_id) ? ("'" . MySQLConnection::escapeString($this->payment_link_id) . "'")  : "NULL") .
                 ")";
         }
         else {
@@ -88,6 +100,8 @@ class Ticket{
                 "`contact_number` = '" . MySQLConnection::escapeString($this->contact_number) . "', " .
                 "`number_of_entries` = '" . MySQLConnection::escapeString($this->number_of_entries) . "', " .
                 "`ticket_code` = '" . MySQLConnection::escapeString($this->ticket_code) . "', " .
+                (isset($this->payment_link) ? "`payment_link` = '" . MySQLConnection::escapeString($this->payment_link) . "', " : "") .
+                (isset($this->payment_link) ? "`payment_link_id` = '" . MySQLConnection::escapeString($this->payment_link_id) . "', " : "") .
                 "`status` = '" . MySQLConnection::escapeString($this->status) . "' " .
                 "WHERE `id` = " . $this->id;
         }
