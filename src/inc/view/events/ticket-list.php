@@ -4,8 +4,47 @@
     include_once('./inc/controller/brand_check.php');
 
     $tickets = getTicketsForEvent($_SESSION['current_event']);
+
+    function getTicketStatusText($status, $payment_link) {
+        if(!isset($payment_link)) {
+            $color = 'red';
+            $status = 'Error - no payment link';
+        }
+        else if ( $status == "New" ) {
+            $color = 'grey';
+        }
+        else if ($status == "Payment Confirmed") {
+            $color = 'orange';
+        }
+        else if ($status == "Ticket sent.") {
+            $color = 'green';
+        }
+        return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
+    }
+    function getTicketLink($status, $payment_link) {
+        if (!isset($payment_link)) {
+            return "";
+        }
+        if ( $status == "New" ) {
+            $link = "[ Mark as paid ]";
+        }
+        else if ($status == "Payment Confirmed") {
+            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $ticket->id . "\">[ Send Ticket ]</a>";
+        }
+        else if ($status == "Ticket sent.") {
+            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $ticket->id . "\">[ Resend Ticket ]</a>";
+        }
+        return $link;
+    }
 ?>
-<h3>Tickets</h3>
+<div class="row">
+    <div class="col-md-6"><h3>Tickets</h3></div>
+    <div class="col-md-6">
+        <a href="action.verify-ticket-payments.php">
+            <button class="btn">Verify Payments</button>
+        </a>
+    </div>
+</div>
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -27,7 +66,8 @@
                 <td><?=$ticket->contact_number; ?></td>
                 <td><?=$ticket->number_of_entries; ?></td>
                 <td><strong><?=$ticket->ticket_code; ?></strong></td>
-                <td><?=$ticket->status; ?> <a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Send ]</a></td>
+                <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
+                <td><?=getTicketLink($ticket->status, $ticket->payment_link); ?></td>
             </tr>
 <?      }
     } else {

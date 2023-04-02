@@ -19,7 +19,9 @@
                 $row['contact_number'],
                 $row['number_of_entries'],
                 $row['ticket_code'],
-                $row['status']
+                $row['status'],
+                $row['payment_link'],
+                $row['payment_link_id']
             );
         }
         return $tickets;
