@@ -9,7 +9,7 @@
 
     $GLOBALS['debugOutput'] = [];
 
-    function sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink) {
+    function sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $numberOfEntries, $eventDate, $rsvpLink) {
 		$subject = "Here's your ticket to ". $eventName . " on " . $eventDate . "!";
 		$emailAddresses[0] = $emailAddress;
 		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink));
@@ -44,7 +44,8 @@
 			$ticket->name,
 			$ticket->ticket_code,
 			$ticket->number_of_entries,
-			$event->date_and_time
+			$event->date_and_time,
+			$event->rsvp_link
 		);
 		if ($result) {
 			$ticket->status = "Ticket sent.";

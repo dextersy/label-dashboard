@@ -21,7 +21,7 @@
         }
         return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
     }
-    function getTicketLink($status, $payment_link) {
+    function getTicketLink($id, $status, $payment_link) {
         if (!isset($payment_link)) {
             return "";
         }
@@ -29,10 +29,10 @@
             $link = "[ Mark as paid ]";
         }
         else if ($status == "Payment Confirmed") {
-            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $ticket->id . "\">[ Send Ticket ]</a>";
+            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $id . "\">[ Send Ticket ]</a>";
         }
         else if ($status == "Ticket sent.") {
-            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $ticket->id . "\">[ Resend Ticket ]</a>";
+            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $id . "\">[ Resend Ticket ]</a>";
         }
         return $link;
     }
@@ -67,7 +67,7 @@
                 <td><?=$ticket->number_of_entries; ?></td>
                 <td><strong><?=$ticket->ticket_code; ?></strong></td>
                 <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
-                <td><?=getTicketLink($ticket->status, $ticket->payment_link); ?></td>
+                <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
             </tr>
 <?      }
     } else {
