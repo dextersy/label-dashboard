@@ -17,6 +17,10 @@
             Ticket successfully sent.
         </div>
         <? }
-    } ?>
+    } else if ($_GET['action']=='paid') { ?>
+    <div class="alert alert-success" id="alert-box" role="alert">
+            Ticket mark as paid.
+        </div>
+    <? } ?>
     </div>
 <? } ?>
