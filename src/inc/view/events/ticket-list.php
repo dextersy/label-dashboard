@@ -26,7 +26,7 @@
             return "";
         }
         if ( $status == "New" ) {
-            $link = "<a href=\"action.mark-tickets-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a>";
+            $link = "<a href=\"action.mark-ticket-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a>";
         }
         else if ($status == "Payment Confirmed") {
             $link = "<a href=\"action.send-tickets.php?ticket_id=" . $id . "\">[ Send Ticket ]</a>";
