@@ -46,7 +46,7 @@ html {
     background: #fff;
     padding: 30px;
     width: 90%;
-    max-width: 450px;
+    max-width: 768px;
     position: relative;
     padding: 0px;
     -webkit-box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
@@ -58,7 +58,7 @@ html {
     padding: 25px;
     text-align: center;
     width: 90%;
-    max-width: 450px;
+    max-width: 768px;
   }
 
   #formFooter {
