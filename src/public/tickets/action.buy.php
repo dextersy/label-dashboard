@@ -1,9 +1,10 @@
 <?
     chdir("../..");
+    include_once("./inc/config.php");
     include_once("./inc/model/ticket.php");
     include_once("./inc/model/event.php");
     include_once("./inc/util/Redirect.php");
-    include_once("./inc/config.php");
+    include_once("./inc/util/Mailer.php");
 
     function createPaymentLink($amount, $description) {
 
@@ -37,6 +38,30 @@
         }
     }
 
+    $GLOBALS['debugOutput'] = [];
+
+    function sendPaymentLink($emailAddress, $eventName, $name, $amount, $numberOfEntries, $paymentLink) {
+		$subject = "Complete your payment for ". $eventName;
+		$emailAddresses[0] = $emailAddress;
+		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($eventName, $name, $amount, $numberOfEntries, $paymentLink));
+	}
+
+    function generateEmailFromTemplate($eventName, $name, $amount, $numberOfEntries, $paymentLink) {
+		define ('TEMPLATE_LOCATION', 'assets/templates/event_ticket_payment_link.html', false);
+		$file = fopen(TEMPLATE_LOCATION, 'r');
+		$msg = fread($file, filesize(TEMPLATE_LOCATION));
+		fclose($file);
+
+        $msg = str_replace("%BRAND_NAME%", $_SESSION['brand_name'], $msg);
+		$msg = str_replace('%EVENT_NAME%', $eventName, $msg);
+		$msg = str_replace('%NAME%', $name, $msg);
+		$msg = str_replace('%PAYMENT_AMOUNT%', $amount, $msg);
+		$msg = str_replace('%NO_OF_ENTRIES%', $numberOfEntries, $msg);
+		$msg = str_replace('%PAYMENT_LINK%', $paymentLink, $msg);
+		
+		return $msg;
+	}
+
     $ticket = new Ticket;
     $ticket->fromFormPOST($_POST);
     $ticket->status = "New";
@@ -60,12 +85,25 @@
         $ticket->payment_link = $response->data->attributes->checkout_url;
         $ticket->payment_link_id = $response->data->id;
         $ticket->save();
+
+        $result = sendPaymentLink(
+            $ticket->email_address, 
+            $event->title, 
+            $ticket->name, 
+            $amount, 
+            $ticket->number_of_entries, 
+            $ticket->payment_link
+        );
+
+        if($result) {
+            redirectTo("/public/tickets/pay.php?id=" . $ticket->id);
+        }
+        else {
+            redirectTo("/public/tickets/buy.php?err");
+        }
     }
     else {
-        echo $response;
+        redirectTo("/public/tickets/buy.php?err");
     }
 
-    // todo Send notification
-
-    redirectTo("/public/tickets/pay.php?id=" . $ticket->id);
 ?>
