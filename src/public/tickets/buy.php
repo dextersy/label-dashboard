@@ -31,9 +31,7 @@
       <td width="75%"><h1 style="color:black;">Buy tickets to <strong><?=$event->title;?></strong></h1>
       <h4>Step 1. Please provide your details.</h4>
     </td></tr>
-    </table>
-    <br><br>
-    
+    </table>    
 </div>
   <div id="formContent" style="background-color:<?=$brand->brand_color;?>;">
     <!-- Tabs Titles -->
