@@ -21,7 +21,7 @@
 
 <body>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="style.css" rel="stylesheet">
+<link href="style.css?version=1.3" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
@@ -37,7 +37,7 @@
     <h1><?=money_format("Php %i", $ticket->number_of_entries * $event->ticket_price)?></h1>
     <!-- Tabs Titles -->
     <!-- Login Form -->
-    <a href="<?=$ticket->payment_link;?>" target="_blank">
+    <a href="<?=$ticket->payment_link;?>">
       <button class="paymentLinkButton">Pay for Tickets</button>
     </a>
     <p style="font-size:12px"><em>This link has also been sent to your email.</em></p>
