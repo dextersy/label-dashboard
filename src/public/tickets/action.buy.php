@@ -62,6 +62,17 @@
 		return $msg;
 	}
 
+    function sendAdminNotification($eventName, $name, $amount, $numberOfEntries) {
+		$subject = "New ticket order for ". $eventName;
+		$emailAddresses[0] = "sy.dexter@gmail.com"; // @todo Replace with actual admin
+        $body = "<h1>New ticket order</h1>";
+        $body = $body . "<p>Name: " . $name . "<br>";
+        $body = $body . "Amount: P" . $amount . "<br>";
+        $body = $body . "No. of entries: " . $numberOfEntries . "</p>";
+
+		return sendEmail($emailAddresses, $subject, $body);
+	}
+
     $ticket = new Ticket;
     $ticket->fromFormPOST($_POST);
     $ticket->status = "New";
@@ -94,6 +105,8 @@
             $ticket->number_of_entries, 
             $ticket->payment_link
         );
+
+        sendAdminNotification($event->title, $ticket->name, $amount, $ticket->number_of_entries);
 
         if($result) {
             redirectTo("/public/tickets/pay.php?id=" . $ticket->id);
