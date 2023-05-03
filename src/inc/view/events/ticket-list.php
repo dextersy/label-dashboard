@@ -53,6 +53,7 @@
             <th>Contact number</th>
             <th>No. of tickets</th>
             <th>Ticket code</th>
+            <th>Payment Link</th>
             <th>Status</th>
         </thead>
         <tbody>
@@ -66,6 +67,7 @@
                 <td><?=$ticket->contact_number; ?></td>
                 <td><?=$ticket->number_of_entries; ?></td>
                 <td><strong><?=$ticket->ticket_code; ?></strong></td>
+                <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
                 <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
                 <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
             </tr>
@@ -90,6 +92,7 @@
             <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
             <input type="phone" class="form-control" id="contact_number" name="contact_number" placeholder="Contact number">
             <input type="text" class="form-control" id="number_of_entries" name="number_of_entries" placeholder="Number of tickets">
+            <input class="form-check-input" type="checkbox" value="1" name="send_email" id="send_email"><label class="form-check-label" for="flexCheckDefault">Send payment email</label>
             <input type="submit" class="btn btn-primary" value="Add Ticket">
         </div>                 
         </form>
