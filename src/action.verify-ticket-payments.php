@@ -50,7 +50,7 @@
     foreach($tickets as $ticket) {
         
         //echo $ticket->id . " - " . $ticket->payment_link . "<br>";
-        if (isTicketPaid($ticket->payment_link_id)) {
+        if ($ticket->status == 'New' && isTicketPaid($ticket->payment_link_id)) {
             $ticket->status = "Payment Confirmed";
             $ticket->save();
         }
