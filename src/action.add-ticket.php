@@ -124,6 +124,4 @@
         // todo Add error message
     }
     redirectTo("/events.php#tickets");
-
-    
 ?>
