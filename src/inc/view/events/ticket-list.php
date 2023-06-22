@@ -43,6 +43,10 @@
         <a href="action.verify-ticket-payments.php">
             <button class="btn">Verify Payments</button>
         </a>
+        &nbsp;
+        <a href="action.send-payment-reminders.php">
+            <button class="btn">Send Payment Reminder</button>
+        </a>
     </div>
 </div>
 <div class="table-responsive">
