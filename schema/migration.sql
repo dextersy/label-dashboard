@@ -170,3 +170,9 @@ ADD COLUMN `payment_link` VARCHAR(255) NULL AFTER `status`,
 ADD COLUMN `payment_link_id` VARCHAR(45) NULL AFTER `payment_link`;
 
 
+--- 07/31
+ALTER TABLE `artist` 
+ADD COLUMN `tiktok_handle` VARCHAR(45) NULL AFTER `brand_id`,
+ADD COLUMN `band_members` VARCHAR(4096) NULL AFTER `tiktok_handle`,
+ADD COLUMN `youtube_channel` VARCHAR(255) NULL AFTER `band_members`;
+

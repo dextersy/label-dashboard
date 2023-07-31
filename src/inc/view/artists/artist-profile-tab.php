@@ -46,10 +46,22 @@ $formAction = "action.update-artist.php?from=" . $_SERVER['REQUEST_URI'];
                 <label for="twitterHandle">Twitter <i class="fa fa-twitter" aria-hidden="true"></i></label>
                 <input type="text" class="form-control" id="twitterHandle" name="twitterHandle" placeholder="Twitter handle" value="<?=$artist->twitter_handle;?>">
             </div>
+            <div class="form-group">
+                <label for="tiktokHandle">Tiktok</label><i class="fa fab-tiktok"></i>
+                <input type="text" class="form-control" id="tiktokHandle" name="tiktokHandle" placeholder="Tiktok handle" value="<?=$artist->tiktok_handle;?>">
+            </div>
+            <div class="form-group">
+                <label for="youtubeChannel">YouTube Channel</label><i class="fa fa-youtube"></i>
+                <input type="text" class="form-control" id="youtubeChannel" name="youtubeChannel" placeholder="YouTube channel" value="<?=$artist->youtube_channel;?>">
+            </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-8">
+            <div class="form-group">
+                <label for="bandMembers">Band Members</label>
+                <textarea class="form-control" id="bandMembers" name="bandMembers" rows="4" placeholder="Band Members"><?=$artist->band_members;?></textarea>
+            </div>
             <div class="form-group">
                 <label for="bio">Bio</label>
                 <textarea class="form-control" id="bio" name="bio" style="height:250px;"><?=$artist->bio;?></textarea>
