@@ -20,6 +20,7 @@
                         <? if ($isAdmin) { ?> 
                         <li><a data-toggle="tab" href="#new-release"><i class="fa fa-lock" aria-hidden="true"></i> New Release</a></li>
                     <? } ?>
+                        <li><a data-toggle="tab" href="#submit-release"><i class="fa fa-upload" aria-hidden="true"></i> Submit A Release</a></li>
                     </ul>
 
                     <div class="tab-content">
@@ -37,6 +38,9 @@
                         </div>
                         <div id="new-release" class="tab-pane fade">
                             <?php include_once('./inc/view/artists/release-info.php'); ?>
+                        </div>
+                        <div id="submit-release" class="tab-pane fade">
+                            <?php include_once('./inc/view/artists/release-submission.php'); ?>
                         </div>
                     </div>
                 </div>
