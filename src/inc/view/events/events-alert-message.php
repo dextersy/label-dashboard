@@ -21,6 +21,12 @@
     <div class="alert alert-success" id="alert-box" role="alert">
             Ticket mark as paid.
         </div>
-    <? } ?>
+    <? 
+    } else if ($_GET['action']=='canceled') { ?>
+        <div class="alert alert-success" id="alert-box" role="alert">
+                Successfully canceled ticket.
+            </div>
+        <? }
+    ?>
     </div>
 <? } ?>

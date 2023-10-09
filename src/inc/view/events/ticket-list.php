@@ -11,13 +11,16 @@
             $status = 'Error - no payment link';
         }
         else if ( $status == "New" ) {
-            $color = 'grey';
+            $color = 'black';
         }
         else if ($status == "Payment Confirmed") {
             $color = 'orange';
         }
         else if ($status == "Ticket sent.") {
             $color = 'green';
+        }
+        else if ($status == "Canceled") {
+            $color = 'grey';
         }
         return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
     }
@@ -26,7 +29,8 @@
             return "";
         }
         if ( $status == "New" ) {
-            $link = "<a href=\"action.mark-ticket-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a>";
+            $link = "<a href=\"action.mark-ticket-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a> " .
+                        "<a href=\"action.cancel-ticket.php?ticket_id=" . $id . "\">[ Cancel ]</a> ";
         }
         else if ($status == "Payment Confirmed") {
             $link = "<a href=\"action.send-tickets.php?ticket_id=" . $id . "\">[ Send Ticket ]</a>";

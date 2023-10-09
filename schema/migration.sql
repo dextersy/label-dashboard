@@ -176,3 +176,6 @@ ADD COLUMN `tiktok_handle` VARCHAR(45) NULL AFTER `brand_id`,
 ADD COLUMN `band_members` VARCHAR(4096) NULL AFTER `tiktok_handle`,
 ADD COLUMN `youtube_channel` VARCHAR(255) NULL AFTER `band_members`;
 
+--- 10/09
+ALTER TABLE `ticket` 
+CHANGE COLUMN `status` `status` ENUM('New', 'Payment Confirmed', 'Ticket sent.', 'Canceled') NOT NULL DEFAULT 'New' ;
