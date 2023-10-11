@@ -7,8 +7,8 @@
     $paid = 0; $new = 0;
     if ($tickets) {
         foreach($tickets as $ticket) {
-            if($ticket->status == 'New') $new++;
-            if($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') $paid++;
+            if($ticket->status == 'New') $new += $ticket->number_of_entries;
+            if($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') $paid += $ticket->number_of_entries;
         }
     } 
 
