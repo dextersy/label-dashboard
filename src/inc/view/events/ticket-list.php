@@ -4,6 +4,13 @@
     include_once('./inc/controller/brand_check.php');
 
     $tickets = getTicketsForEvent($_SESSION['current_event']);
+    $paid = 0; $new = 0;
+    if ($tickets) {
+        foreach($tickets as $ticket) {
+            if($ticket->status == 'New') $new++;
+            if($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') $paid++;
+        }
+    } 
 
     function getTicketStatusText($status, $payment_link) {
         if(!isset($payment_link)) {
@@ -51,6 +58,8 @@
         <a href="action.send-payment-reminders.php">
             <button class="btn">Send Payment Reminder</button>
         </a>
+        &nbsp;
+        Total paid: <?=$paid;?>, total pending: <?=$new;?>
     </div>
 </div>
 <div class="table-responsive">
