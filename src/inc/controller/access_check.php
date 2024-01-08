@@ -23,4 +23,8 @@
         $availableEvents = getAllEvents($_SESSION['brand_id']);
     }
 
+    if (!isset($_SESSION['current_artist'])) {
+        $_SESSION['current_artist'] = $availableArtists[0]->id;
+    }
+
 ?>
