@@ -3,13 +3,14 @@
     include_once('./inc/controller/get-release-list.php');
 
     $artists = getAllArtists($_SESSION['brand_id']);
-    $defaultCatNo = generateCatalogNumber();
+    $defaultCatNo = generateCatalogNumber($_SESSION['brand_id']);
 ?>
 
 <h3>New Release</h3>
 <form action="action.update-release.php" method="POST" enctype="multipart/form-data">
     <div class="row">
         <div class="col-md-4">
+        <input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
         <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
             <div class="form-group">
                 <label for="cover_art">Cover art</label>

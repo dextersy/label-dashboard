@@ -4,7 +4,7 @@
     include_once('./inc/model/release.php');
 
     $artists = getAllArtists($_SESSION['brand_id']);
-    $defaultCatNo = generateCatalogNumber();
+    $defaultCatNo = generateCatalogNumber($_SESSION['brand_id']);
     if (isset($_GET['id'])) {
         $release->fromID($_GET['id']);
     }

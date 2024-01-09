@@ -184,3 +184,15 @@ CHANGE COLUMN `status` `status` ENUM('New', 'Payment Confirmed', 'Ticket sent.',
 ALTER TABLE `brand` 
 ADD COLUMN `release_submission_url` VARCHAR(1024) NULL AFTER `brand_website`,
 ADD COLUMN `catalog_prefix` VARCHAR(5) NULL AFTER `release_submission_url`;
+
+ALTER TABLE `release` 
+ADD COLUMN `brand_id` INT NOT NULL DEFAULT 1 AFTER `cover_art`,
+ADD INDEX `fk_brand_id_idx` (`brand_id` ASC) VISIBLE;
+;
+ALTER TABLE `release` 
+ADD CONSTRAINT `fk_brand_id`
+  FOREIGN KEY (`brand_id`)
+  REFERENCES `brand` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
