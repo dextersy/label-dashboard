@@ -179,3 +179,8 @@ ADD COLUMN `youtube_channel` VARCHAR(255) NULL AFTER `band_members`;
 --- 10/09
 ALTER TABLE `ticket` 
 CHANGE COLUMN `status` `status` ENUM('New', 'Payment Confirmed', 'Ticket sent.', 'Canceled') NOT NULL DEFAULT 'New' ;
+
+--- 01/09/2024
+ALTER TABLE `brand` 
+ADD COLUMN `release_submission_url` VARCHAR(1024) NULL AFTER `brand_website`,
+ADD COLUMN `catalog_prefix` VARCHAR(5) NULL AFTER `release_submission_url`;
