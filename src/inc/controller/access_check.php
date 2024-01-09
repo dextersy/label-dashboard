@@ -24,7 +24,12 @@
     }
 
     if (!isset($_SESSION['current_artist'])) {
-        $_SESSION['current_artist'] = $availableArtists[0]->id;
+        if(isset($availableArtists[0]->id)) {
+            $_SESSION['current_artist'] = $availableArtists[0]->id;
+        }
+        else {
+            if(!str_contains($_SERVER['REQUEST_URI'],"newartist.php")) redirectTo('/newartist.php');
+        }
     }
 
 ?>

@@ -64,7 +64,7 @@ class Artist {
     }
 
     function fromFormPOST($post) {
-        if (isset($_POST['id'])) {
+        if (isset($_POST['id']) && strlen($_POST['id'] > 0)) {
             $this->id = $_POST['id'];
             $this->fromID($this->id);
         }

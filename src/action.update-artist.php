@@ -7,7 +7,7 @@
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/util/FileUploader.php');
 
-    if(isset($_POST['id'])) {
+    if(isset($_POST['id']) && strlen($_POST['id']) > 0) {
         $artistOld = new Artist;
         $artistOld->fromID($_POST['id']);
     }
