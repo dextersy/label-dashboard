@@ -4,7 +4,7 @@
 
     $brands = getChildBrands($_SESSION['brand_id']);
 ?>
-<h3>Child Brands</h3>
+<h3>Sub-brands</h3>
 <div class="table-responsive">
     
 <? 
@@ -16,13 +16,15 @@
         <tr><th>Brand ID</th>
             <th>Brand Name</th>
             <th style="text-align:right;">Net earnings</th>
-            <th style="text-align:right;">Total payments</th>
+            <th style="text-align:right;">Commission</th>
+            <th style="text-align:right;">Payments made</th>
             <th style="text-align:right;">Payable balance</th>
         </thead>
         <tbody>
 <?
         foreach ($brands as $brand) { 
-            $balance = $brand->earnings - $brand->payments;
+            $commission = $brand->earnings * 0.2; //TODO Make commission configurable
+            $balance = $brand->earnings - $commission - $brand->payments;
             if ($balance != 0) {
                 $overallTotalPayables += $totalBalance;
             }
@@ -31,7 +33,8 @@
                 <td><?=$brand->brand_id;?></td>
                 <td><?=$brand->brand_name;?></td>
                 <td style="text-align:right;">Php<?=number_format($brand->earnings,2);?></td>
-                <td style="text-align:right;"><strong>Php<?=number_format($brand->payments,2);?></strong></td>
+                <td style="text-align:right;">Php<?=number_format($commission,2);?></td>
+                <td style="text-align:right;">Php<?=number_format($brand->payments,2);?></td>
                 <td style="text-align:right;"><strong>Php<?=number_format($balance,2);?></strong></td>
             </tr>
 <?
