@@ -2,7 +2,7 @@
 
 require_once('./inc/util/MySQLConnection.php');
 
-class Brand{
+class Brand {
     public $id;
     public $brand_name;
     public $logo_url;
@@ -10,6 +10,7 @@ class Brand{
     public $brand_website;
     public $release_submission_url;
     public $catalog_prefix;
+    public $parent_brand;
 
     function __construct(
         $id = null, 
@@ -18,7 +19,8 @@ class Brand{
         $brand_color = null,
         $brand_website = null,
         $release_submission_url = null,
-        $catalog_prefix = null
+        $catalog_prefix = null,
+        $parent_brand = null
     ) 
     {
         $this->id = $id;
@@ -28,6 +30,7 @@ class Brand{
         $this->brand_website = $brand_website;
         $this->release_submission_url = $release_submission_url;
         $this->catalog_prefix = $catalog_prefix;
+        $this->parent_brand = $parent_brand;
     }
 
     function fromID($id) {
@@ -40,6 +43,7 @@ class Brand{
             $this->brand_website = $row['brand_website'];
             $this->release_submission_url = $row['release_submission_url'];
             $this->catalog_prefix = $row['catalog_prefix'];
+            $this->parent_brand = $row['parent_brand']; // Assuming 'parent_brand' is a field in the database
         }
     }
 
@@ -61,18 +65,20 @@ class Brand{
         if(isset($_POST['catalog_prefix'])) {
             $this->catalog_prefix = $_POST['catalog_prefix'];
         }
+        $this->parent_brand = $_POST['parent_brand']; // Assuming 'parent_brand' is received from the form
     }
 
     function save() {
         if ($this->id == null ) {
-            $sql = "INSERT INTO `brand` (`name`, `logo_url`, `brand_color`, `brand_website`, `release_submission_url`, `catalog_prefix`) ".
+            $sql = "INSERT INTO `brand` (`name`, `logo_url`, `brand_color`, `brand_website`, `release_submission_url`, `catalog_prefix`, `parent_brand`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_name) . "', ".
                 "'" . MySQLConnection::escapeString($this->logo_url) . "', " .
                 "'" . MySQLConnection::escapeString($this->brand_color) . "', " .
                 "'" . MySQLConnection::escapeString($this->brand_website) . "', " .
                 "'" . MySQLConnection::escapeString($this->release_submission_url) . "', " .
-                "'" . MySQLConnection::escapeString($this->catalog_prefix) . "'" .
+                "'" . MySQLConnection::escapeString($this->catalog_prefix) . "', " .
+                "'" . MySQLConnection::escapeString($this->parent_brand) . "'" .
                 ")";
         }
         else {
@@ -82,7 +88,8 @@ class Brand{
                 "`brand_color` = '" . MySQLConnection::escapeString($this->brand_color) . "', " .
                 "`brand_website` = '" . MySQLConnection::escapeString($this->brand_website) . "', " .
                 "`release_submission_url` = '" . MySQLConnection::escapeString($this->release_submission_url) . "', " .
-                "`catalog_prefix` = '" . MySQLConnection::escapeString($this->catalog_prefix) . "' " .
+                "`catalog_prefix` = '" . MySQLConnection::escapeString($this->catalog_prefix) . "', " .
+                "`parent_brand` = '" . MySQLConnection::escapeString($this->parent_brand) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

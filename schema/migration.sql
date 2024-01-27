@@ -196,3 +196,15 @@ ADD CONSTRAINT `fk_brand_id`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+-- 01/27/2024
+ALTER TABLE `brand` 
+ADD COLUMN `parent_brand` INT NULL DEFAULT NULL AFTER `catalog_prefix`,
+ADD INDEX `fk_brand_parent_brand_idx` (`parent_brand` ASC) VISIBLE;
+;
+ALTER TABLE `brand` 
+ADD CONSTRAINT `fk_brand_parent_brand`
+  FOREIGN KEY (`parent_brand`)
+  REFERENCES `brand` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+

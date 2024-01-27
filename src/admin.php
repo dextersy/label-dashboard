@@ -23,6 +23,7 @@ include_once('./inc/view/header.php');
                         <li><a data-toggle="tab" href="#summary">Summary View</a></li>
                         <li><a data-toggle="tab" href="#balance">Balance Summary</a></li>
                         <li><a data-toggle="tab" href="#bulk-add-earnings">Bulk Add Earnings</a></li>
+                        <li><a data-toggle="tab" href="#child-brands">Child Brands</a></li>
                     </ul>
 
                     <div class="tab-content">
@@ -35,8 +36,8 @@ include_once('./inc/view/header.php');
                         <div id="balance" class="tab-pane fade">
                             <?php include_once('./inc/view/admin/balance-summary.php'); ?>                                
                         </div>
-                        <div id="bulk-add-earnings" class="tab-pane fade">
-                            <?php include_once('./inc/view/admin/bulk-add-earnings.php'); ?>                                
+                        <div id="child-brands" class="tab-pane fade">
+                            <?php include_once('./inc/view/admin/child-brands.php'); ?>                                
                         </div>
                     </div>
                 </div>
