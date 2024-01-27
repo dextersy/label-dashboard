@@ -2,8 +2,7 @@
 
 require_once('./inc/util/MySQLConnection.php');
 
-class Ticket{
-
+class Ticket {
     public $id;
     public $event_id;
     public $name;
@@ -14,6 +13,8 @@ class Ticket{
     public $status;
     public $payment_link;
     public $payment_link_id;
+    public $price_per_ticket;
+    public $payment_processing_fee;
 
     function __construct(
         $id = null, 
@@ -25,7 +26,9 @@ class Ticket{
         $ticket_code = null,
         $status = null,
         $payment_link = null,
-        $payment_link_id = null
+        $payment_link_id = null,
+        $price_per_ticket = null,
+        $payment_processing_fee = null
     ) 
     {
         $this->id = $id;
@@ -38,6 +41,8 @@ class Ticket{
         $this->status = $status;
         $this->payment_link = $payment_link;
         $this->payment_link_id = $payment_link_id;
+        $this->price_per_ticket = $price_per_ticket;
+        $this->payment_processing_fee = $payment_processing_fee;
     }
 
     function fromID($id) {
@@ -53,9 +58,10 @@ class Ticket{
             $this->status = $row['status'];
             $this->payment_link = $row['payment_link'];
             $this->payment_link_id = $row['payment_link_id'];
+            $this->price_per_ticket = $row['price_per_ticket'];
+            $this->payment_processing_fee = $row['payment_processing_fee'];
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -72,47 +78,47 @@ class Ticket{
         $this->number_of_entries = $post['number_of_entries'];
         $this->ticket_code = $post['ticket_code'];
         $this->status = $post['status'];
-
-        // Intentionally left out payment link and link ID since this is never coming from form data
+        // Intentionally left out payment link, link ID, price per ticket, and payment processing fee since this is never coming from form data
     }
 
     function save() {
-
-        if ( $this->id == null ) {
-            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`) ".
+        if ($this->id == null) {
+            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`) ".
                 "VALUES(" .
-                "'" . MySQLConnection::escapeString($this->event_id) . "', ".
-                "'" . MySQLConnection::escapeString($this->name) . "', ".
-                "'" . MySQLConnection::escapeString($this->email_address) . "', ".
-                "'" . MySQLConnection::escapeString($this->contact_number) . "', ".
-                "'" . MySQLConnection::escapeString($this->number_of_entries) . "', ".
-                "'" . MySQLConnection::escapeString($this->ticket_code) . "', ".
-                "'" . MySQLConnection::escapeString($this->status) . "', ".
-                (isset($this->payment_link) ? ("'" . MySQLConnection::escapeString($this->payment_link) . "'") : "NULL") . ", ".
-                (isset($this->payment_link_id) ? ("'" . MySQLConnection::escapeString($this->payment_link_id) . "'")  : "NULL") .
+                "'" . MySQLConnection::escapeString($this->event_id) . "', " .
+                "'" . MySQLConnection::escapeString($this->name) . "', " .
+                "'" . MySQLConnection::escapeString($this->email_address) . "', " .
+                "'" . MySQLConnection::escapeString($this->contact_number) . "', " .
+                "'" . MySQLConnection::escapeString($this->number_of_entries) . "', " .
+                "'" . MySQLConnection::escapeString($this->ticket_code) . "', " .
+                "'" . MySQLConnection::escapeString($this->status) . "', " .
+                (isset($this->payment_link) ? ("'" . MySQLConnection::escapeString($this->payment_link) . "'") : "NULL") . ", " .
+                (isset($this->payment_link_id) ? ("'" . MySQLConnection::escapeString($this->payment_link_id) . "'")  : "NULL") . ", " .
+                (isset($this->price_per_ticket) ? ("'" . MySQLConnection::escapeString($this->price_per_ticket) . "'")  : "NULL") . ", " .
+                (isset($this->payment_processing_fee) ? ("'" . MySQLConnection::escapeString($this->payment_processing_fee) . "'")  : "NULL") .
                 ")";
-        }
-        else {
-            $sql = "UPDATE `ticket` SET ".
+        } else {
+            $sql = "UPDATE `ticket` SET " .
                 "`event_id` = '" . MySQLConnection::escapeString($this->event_id) . "', " .
                 "`name` = '" . MySQLConnection::escapeString($this->name) . "', " .
                 "`email_address` = '" . MySQLConnection::escapeString($this->email_address) . "', " .
                 "`contact_number` = '" . MySQLConnection::escapeString($this->contact_number) . "', " .
                 "`number_of_entries` = '" . MySQLConnection::escapeString($this->number_of_entries) . "', " .
                 "`ticket_code` = '" . MySQLConnection::escapeString($this->ticket_code) . "', " .
-                (isset($this->payment_link) ? "`payment_link` = '" . MySQLConnection::escapeString($this->payment_link) . "', " : "") .
-                (isset($this->payment_link) ? "`payment_link_id` = '" . MySQLConnection::escapeString($this->payment_link_id) . "', " : "") .
                 "`status` = '" . MySQLConnection::escapeString($this->status) . "' " .
-                "WHERE `id` = " . $this->id;
+                (isset($this->payment_link) ? ", `payment_link` = '" . MySQLConnection::escapeString($this->payment_link) ."'" : "") .
+                (isset($this->payment_link_id) ? ", `payment_link_id` = '" . MySQLConnection::escapeString($this->payment_link_id)."'" : "") .
+                (isset($this->price_per_ticket) ? ", `price_per_ticket` = '" . MySQLConnection::escapeString($this->price_per_ticket)."'" : "") .
+                (isset($this->payment_processing_fee) ? ", `payment_processing_fee` = '" . MySQLConnection::escapeString($this->payment_processing_fee)."'" : "") .
+                " WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
-            if(!isset($this->id)) {
+            if (!isset($this->id)) {
                 $this->id = MySQLConnection::$lastInsertID;
             }
             return MySQLConnection::$lastInsertID;
-        }
-        else {
+        } else {
             return false;
         }
     }

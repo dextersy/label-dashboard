@@ -6,9 +6,13 @@
     $tickets = getTicketsForEvent($_SESSION['current_event']);
     $paid = 0; $new = 0;
     if ($tickets) {
+        $total_sold = 0;
+        $total_processing_fee = 0;
         foreach($tickets as $ticket) {
             if($ticket->status == 'New') $new += $ticket->number_of_entries;
             if($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') $paid += $ticket->number_of_entries;
+            $total_processing_fee += (isset($ticket->payment_processing_fee) ? $ticket->payment_processing_fee : 0);
+            $total_sold += $ticket->status != 'New' ? ($ticket->number_of_entries * $ticket->price_per_ticket) : 0;
         }
     } 
 
@@ -58,8 +62,8 @@
         <a href="action.send-payment-reminders.php">
             <button class="btn">Send Payment Reminder</button>
         </a>
-        &nbsp;
-        Total paid: <?=$paid;?>, total pending: <?=$new;?>
+        <br>
+        Total paid: <?=$paid;?>, total pending: <?=$new;?>, paid amount: <?=number_format($total_sold,2);?>, total fees: <?=number_format($total_processing_fee,2);?>
     </div>
 </div>
 <div class="table-responsive">
@@ -71,6 +75,8 @@
             <th>No. of tickets</th>
             <th>Ticket code</th>
             <th>Payment Link</th>
+            <th>Total paid</th>
+            <th>Processing fee</th>
             <th>Status</th>
         </thead>
         <tbody>
@@ -85,6 +91,8 @@
                 <td><?=$ticket->number_of_entries; ?></td>
                 <td><strong><?=$ticket->ticket_code; ?></strong></td>
                 <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
+                <td style="text-align:right;"><?=$ticket->status != 'New'? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
+                <td style="text-align:right;"><?=$ticket->status != 'New'? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                 <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
                 <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
             </tr>

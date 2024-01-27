@@ -21,7 +21,9 @@
                 $row['ticket_code'],
                 $row['status'],
                 $row['payment_link'],
-                $row['payment_link_id']
+                $row['payment_link_id'],
+                $row['price_per_ticket'],
+                $row['payment_processing_fee']
             );
         }
         return $tickets;

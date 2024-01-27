@@ -208,3 +208,8 @@ ADD CONSTRAINT `fk_brand_parent_brand`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+-- 01/27/2024
+ALTER TABLE `ticket` 
+ADD COLUMN `price_per_ticket` DECIMAL(10,2) NULL DEFAULT NULL AFTER `payment_link_id`,
+ADD COLUMN `payment_processing_fee` DECIMAL(10,2) NULL DEFAULT NULL AFTER `price_per_ticket`;
+

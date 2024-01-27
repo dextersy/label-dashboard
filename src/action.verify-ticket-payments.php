@@ -5,7 +5,12 @@
     require_once('./inc/controller/get_tickets.php');
     require_once('./inc/util/Redirect.php');
 
-    function isTicketPaid($payment_link_id) {
+    class PaymentInfo {
+        public $payment_processing_fees;
+        public $status;
+    }
+
+    function getPaymentInformation($payment_link_id) {
         if(!isset($payment_link_id)) return false;
         $curl = curl_init();
 
@@ -29,14 +34,23 @@
         curl_close($curl);
 
         if ($err) {
-            return false;
+            return null;
         } else {
             $responseObject = json_decode($response);
+            
             if($responseObject->data->attributes->status == 'paid') {
-                return true;
+                $totalProcessingFee = 0;
+                $payments = $responseObject->data->attributes->payments;
+                foreach ($payments as $payment) {
+                    $totalProcessingFee += ($payment->data->attributes->amount - $payment->data->attributes->net_amount) / 100;
+                }
+                $info = new PaymentInfo();
+                $info->payment_processing_fees = $totalProcessingFee;
+                $info->status = 'paid';
+                return $info;
             }
             else {
-                return false;
+                return null;
             }
         }
     }
@@ -50,9 +64,13 @@
     foreach($tickets as $ticket) {
         
         //echo $ticket->id . " - " . $ticket->payment_link . "<br>";
-        if ($ticket->status == 'New' && isTicketPaid($ticket->payment_link_id)) {
-            $ticket->status = "Payment Confirmed";
-            $ticket->save();
+        if ($ticket->status == 'New' ) {
+            $info = getPaymentInformation($ticket->payment_link_id);
+            if ($info != null) {
+                $ticket->payment_processing_fee = $info->payment_processing_fees;
+                $ticket->status = "Payment Confirmed";
+                $ticket->save();
+            }
         }
     }
     redirectTo("/events.php?action=VerifyPayments&status=" . ($success ? "OK": "Failed"));
