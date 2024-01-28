@@ -12,7 +12,7 @@
             if($ticket->status == 'New') $new += $ticket->number_of_entries;
             if($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') $paid += $ticket->number_of_entries;
             $total_processing_fee += (isset($ticket->payment_processing_fee) ? $ticket->payment_processing_fee : 0);
-            $total_sold += $ticket->status != 'New' ? ($ticket->number_of_entries * $ticket->price_per_ticket) : 0;
+            $total_sold += ($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') ? ($ticket->number_of_entries * $ticket->price_per_ticket) : 0;
         }
     } 
 
@@ -91,8 +91,8 @@
                 <td><?=$ticket->number_of_entries; ?></td>
                 <td><strong><?=$ticket->ticket_code; ?></strong></td>
                 <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
-                <td style="text-align:right;"><?=$ticket->status != 'New'? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
-                <td style="text-align:right;"><?=$ticket->status != 'New'? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
+                <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
+                <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                 <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
                 <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
             </tr>

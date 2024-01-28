@@ -6,7 +6,7 @@
     require_once('./inc/util/Mailer.php');
     require_once('./inc/util/FileUploader.php');
 
-    if(isset($_POST['id'])) {
+    if(isset($_POST['id']) && $_POST['id'] != '') {
         $eventOld = new Event;
         $eventOld->fromID($_POST['id']);
     }

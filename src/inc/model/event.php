@@ -56,7 +56,7 @@ class Event{
     }
 
     function fromFormPOST($post) {
-        if (isset($_POST['id'])) {
+        if (isset($_POST['id']) && $_POST['id'] != '') {
             $this->id = $_POST['id'];
             $this->fromID($this->id);
         }
