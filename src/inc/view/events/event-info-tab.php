@@ -13,6 +13,14 @@ else {
 $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
 
 ?>
+<script type="text/javascript">
+    function copyBuyLink() {
+        var copyText = document.getElementById("buy_link");
+        copyText.select();
+        copyText.setSelectionRange(0, 999999);
+        navigator.clipboard.writeText(copyText.value);
+    }
+</script>
 <h3><?=$title;?></h3>
 <form action="<?=$formAction;?>" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="id" value="<?=$event->id;?>">
@@ -45,6 +53,18 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
             <div class="form-group">
                 <label for="websiteURL">Ticket price</label>
                 <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>">
+            </div>
+            <div class="form-group">
+                <label for="websiteURL">Ticket purchase link</label>
+                <em>Share this link to ticket buyers.</em>
+                <div class="row">
+                    <div class="col-md-11">
+                        <input type="text" class="form-control" id="buy_link" name="buy_link" value="<?=isset($event->id)?"https://" . $_SERVER['SERVER_NAME'] . "/public/tickets/buy.php?id=" . $event->id : "Save to see buy link";?>" readonly>
+                    </div>
+                    <div class="col-md-1">
+                        <a href="javascript:copyBuyLink();"><i class="fa fa-copy"></i></a>
+                    </div>
+                </div>
             </div>
        </div>
     </div>
