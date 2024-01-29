@@ -37,6 +37,9 @@ include_once('./inc/view/header.php');
                         <div id="balance" class="tab-pane fade">
                             <?php include_once('./inc/view/admin/balance-summary.php'); ?>                                
                         </div>
+                        <div id="bulk-add-earnings" class="tab-pane fade">
+                            <?php include_once('./inc/view/admin/bulk-add-earnings.php'); ?>                                
+                        </div>
                         <div id="users" class="tab-pane fade">
                             <?php include_once('./inc/view/admin/users-list.php'); ?>                                
                         </div>
