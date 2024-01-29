@@ -14,6 +14,7 @@
             <th>First Name</th>
             <th>Last Name</th>
             <th>Email address</th>
+            <th>Last logged in</th>
             <th>Is administrator</th>
         </thead>
         <tbody>
@@ -25,6 +26,7 @@
                 <td><?=$user->first_name;?></td>
                 <td><?=$user->last_name;?></td>
                 <td><?=$user->email_address;?></td>
+                <td><?=isset($user->last_logged_in)?date_format(date_create($user->last_logged_in),'M d, Y \a\t h:i:sA'):"Never";?></td>
                 <td><?=$user->is_admin ? "✔️": "";?></td>
                 <td><a href="action.toggle-admin.php?id=<?=$user->id;?>"><?=$user->is_admin?"Remove admin":"Make admin";?></a>
             </tr>

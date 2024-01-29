@@ -20,7 +20,8 @@ function getAllActiveUsers($brand_id){
             $row['profile_photo'],
             $row['is_admin'],
             $row['brand_id'],
-            null
+            null,
+            $row['last_logged_in']
         );
     }
     return $users;

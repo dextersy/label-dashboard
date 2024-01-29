@@ -14,6 +14,7 @@ class User{
     public $is_admin;
     public $brand_id;
     public $reset_hash;
+    public $last_logged_in;
 
     function __construct(
         $id = null, 
@@ -25,7 +26,8 @@ class User{
         $profile_photo= null, 
         $is_admin= false,
         $brand_id = null,
-        $reset_hash = null
+        $reset_hash = null,
+        $last_logged_in = null
     ) 
     {
         $this->id = $id;
@@ -38,6 +40,7 @@ class User{
         $this->is_admin = $is_admin;
         $this->brand_id = $brand_id;
         $this->reset_hash = $reset_hash;
+        $this->last_logged_in = $last_logged_in;
     }
 
 
@@ -111,7 +114,7 @@ class User{
 
     function save() {
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `brand_id`, `reset_hash`) ".
+            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `brand_id`, `reset_hash`, `last_logged_in`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->username) . "', ".
                 "'" . MySQLConnection::escapeString($this->password_md5) . "', ".
@@ -121,7 +124,8 @@ class User{
                 "'" . MySQLConnection::escapeString($this->profile_photo) . "', " .
                 "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', " .
-                "'" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "'" .
+                "'" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "', " .
+                "'" . ((isset($this->last_logged_in))?MySQLConnection::escapeString($this->last_logged_in):"NULL") . "'" .
                 ")";
         }
         else {
@@ -133,7 +137,8 @@ class User{
                 "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "', " .
                 "`is_admin` = '" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
                 "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "', " .
-                "`reset_hash` = '" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "' " .
+                "`reset_hash` = '" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "', " .
+                "`last_logged_in` = '" . ((isset($this->last_logged_in))?MySQLConnection::escapeString($this->last_logged_in):"NULL") . "' " .
                 "WHERE `id` = " . MySQLConnection::escapeString($this->id);
         }
         $result = MySQLConnection::query($sql);
@@ -158,8 +163,7 @@ class User{
         else {
             return false;
         }
-
-        
     }
 }
+
 ?>
