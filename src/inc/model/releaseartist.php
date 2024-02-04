@@ -62,6 +62,22 @@ class ReleaseArtist{
         }
     }
 
+    function save() {
+        $sql = "UPDATE `release_artist` SET " .
+                    "`sync_royalty_percentage` = '" . MySQLConnection::escapeString($this->sync_royalty_percentage) . "', " . 
+                    "`streaming_royalty_percentage` = '" . MySQLConnection::escapeString($this->streaming_royalty_percentage) . "', " . 
+                    "`download_royalty_percentage` = '" . MySQLConnection::escapeString($this->download_royalty_percentage) . "', " . 
+                    "`physical_royalty_percentage` = '" . MySQLConnection::escapeString($this->physical_royalty_percentage) . "' " . 
+                    "WHERE `artist_id` = '" . MySQLConnection::escapeString($this->artist_id) . "' AND `release_id` = '" . MySQLConnection::escapeString($this->release_id) . "'";
+        $result = MySQLConnection::query($sql);
+        if ($result) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
 }
 
 ?>
