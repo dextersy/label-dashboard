@@ -124,8 +124,8 @@ class User{
                 "'" . MySQLConnection::escapeString($this->profile_photo) . "', " .
                 "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', " .
-                "'" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "', " .
-                "'" . ((isset($this->last_logged_in))?MySQLConnection::escapeString($this->last_logged_in):"NULL") . "'" .
+                ((isset($this->reset_hash))? "'" . MySQLConnection::escapeString($this->reset_hash) . "'" :"NULL") . ", " .
+                ((isset($this->last_logged_in))? "'" . MySQLConnection::escapeString($this->last_logged_in) ."'":"NULL") .
                 ")";
         }
         else {
@@ -137,8 +137,8 @@ class User{
                 "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "', " .
                 "`is_admin` = '" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
                 "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "', " .
-                "`reset_hash` = '" . ((isset($this->reset_hash))?MySQLConnection::escapeString($this->reset_hash):"NULL") . "', " .
-                "`last_logged_in` = '" . ((isset($this->last_logged_in))?MySQLConnection::escapeString($this->last_logged_in):"NULL") . "' " .
+                "`reset_hash` = " . ((isset($this->reset_hash))? "'" . MySQLConnection::escapeString($this->reset_hash) . "'":"NULL") . ", " .
+                "`last_logged_in` = " . ((isset($this->last_logged_in))? "'" . MySQLConnection::escapeString($this->last_logged_in) . "'":"NULL") . " " .
                 "WHERE `id` = " . MySQLConnection::escapeString($this->id);
         }
         $result = MySQLConnection::query($sql);
