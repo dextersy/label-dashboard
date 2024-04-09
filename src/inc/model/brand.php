@@ -65,7 +65,9 @@ class Brand {
         if(isset($_POST['catalog_prefix'])) {
             $this->catalog_prefix = $_POST['catalog_prefix'];
         }
-        $this->parent_brand = $_POST['parent_brand']; // Assuming 'parent_brand' is received from the form
+        if(isset($_POST['parent_brand'])) {
+            $this->parent_brand = $_POST['parent_brand'];
+        }
     }
 
     function save() {
@@ -88,8 +90,8 @@ class Brand {
                 "`brand_color` = '" . MySQLConnection::escapeString($this->brand_color) . "', " .
                 "`brand_website` = '" . MySQLConnection::escapeString($this->brand_website) . "', " .
                 "`release_submission_url` = '" . MySQLConnection::escapeString($this->release_submission_url) . "', " .
-                "`catalog_prefix` = '" . MySQLConnection::escapeString($this->catalog_prefix) . "', " .
-                "`parent_brand` = '" . MySQLConnection::escapeString($this->parent_brand) . "' " .
+                "`catalog_prefix` = '" . MySQLConnection::escapeString($this->catalog_prefix) . "'" .
+                (isset($this->parent_brand) ?  ", " . "`parent_brand` = '" . MySQLConnection::escapeString($this->parent_brand) . "' " : " ") .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
