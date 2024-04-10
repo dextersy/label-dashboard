@@ -17,9 +17,10 @@ function getReleaseListForArtist($artist_id){
     return $releases;
 }
 
-function getAllReleases() {
-    $sql = "SELECT `id` FROM `release` ".
-            "ORDER BY `catalog_no` ASC";
+function getAllReleases($brand_id) {
+    $sql = "SELECT `id` FROM `release` " . 
+        "WHERE brand_id = '" . $brand_id . "' " .
+        "ORDER BY `catalog_no` ASC";
     $result = MySQLConnection::query($sql);
     $i = 0;
     while($row = $result->fetch_assoc()) {

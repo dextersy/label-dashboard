@@ -173,7 +173,7 @@
                     <h4 class="title">Total New Recuperable Expense</h4>
                 </div>
                 <div class="content">
-                    <h5>Php <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate),2);?></h5>
+                    <h5>Php <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id']),2);?></h5>
                 </div>
             </div>
         </div>
@@ -184,7 +184,7 @@
                     <h4 class="title">Total Recuperated Expenses</h4>
                 </div>
                 <div class="content">
-                    <h5>Php <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate)),2);?></h5>
+                    <h5>Php <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id'])),2);?></h5>
                 </div>
             </div>
         </div>

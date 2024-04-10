@@ -9,7 +9,7 @@
     require_once('./inc/controller/get-recuperable-expense.php');
 
     $artists = getAllArtists($_SESSION['brand_id']);
-    $releases = getAllReleases();
+    $releases = getAllReleases($_SESSION['brand_id']);
 ?>
 <h3>Balance Summary</h3>
 <div class="table-responsive">

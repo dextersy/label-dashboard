@@ -2,7 +2,7 @@
     require_once('./inc/model/release.php');
     require_once('./inc/controller/get-release-list.php');
 
-    $releases = getAllReleases();
+    $releases = getAllReleases($_SESSION['brand_id']);
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.js"></script>

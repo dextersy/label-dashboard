@@ -216,3 +216,15 @@ ADD COLUMN `payment_processing_fee` DECIMAL(10,2) NULL DEFAULT NULL AFTER `price
 -- 01/29/2024
 ALTER TABLE `user` 
 ADD COLUMN `last_logged_in` DATETIME NULL DEFAULT NULL AFTER `reset_hash`;
+
+--- 04/10/2024
+ALTER TABLE `recuperable_expense` 
+ADD COLUMN `brand_id` INT NOT NULL DEFAULT 1 AFTER `date_recorded`,
+ADD INDEX `fk_recuperable_expense_brand_idx` (`brand_id` ASC) VISIBLE;
+;
+ALTER TABLE `recuperable_expense` 
+ADD CONSTRAINT `fk_recuperable_expense_brand`
+  FOREIGN KEY (`brand_id`)
+  REFERENCES `brand` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
