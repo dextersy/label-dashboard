@@ -3,6 +3,16 @@
     require_once('./inc/model/user.php');
     require_once('./inc/util/Redirect.php');
     
+    if (!$_POST['invite_hash']) {
+        require_once('./inc/controller/access_check.php');
+    }
+    else {
+        $artistAccess = new ArtistAccess;
+        $artistAccess->fromInviteHash($_POST['invite_hash']);
+        if(!isset($artistAccess->artist_id)) {
+            redirectTo('/index.php?err=invalid_hash');
+        }
+    }
     $user = new User;
     $user->fromFormPOST($_POST);
     unset($user->reset_hash);
