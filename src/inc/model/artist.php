@@ -46,7 +46,8 @@ class Artist {
     }
 
     function fromID($id) {
-        $result = MySQLConnection::query("SELECT * FROM `artist` WHERE `id` = " . $id);
+        $sql = "SELECT * FROM `artist` WHERE `id` = " . $id;
+        $result = MySQLConnection::query($sql);
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->id = $id;
             $this->name = $row['name'];

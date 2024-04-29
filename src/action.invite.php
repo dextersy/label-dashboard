@@ -41,7 +41,6 @@
 		$artistaccess->fromInviteHash($_POST['invite_hash']);
 		$artist->fromID($artistaccess->artist_id);
 	}
-	$artist->fromID($artistaccess->artist_id);
 
 	$result = sendInviteEmail($_POST['email_address'], $artist->name, $inviteHash);
 	
