@@ -25,18 +25,23 @@
                 <input type="hidden" name="is_admin" value="<?=$user->is_admin;?>">
                 </div>
             <div class="form-group">
-                <input type="text" id="login" class="form-control" name="username" placeholder="username" value="<?=$user->username;?>">
+                <label for="username">Username</label>
+                <input type="text" id="login" class="form-control" name="username" placeholder="Username" value="<?=$user->username;?>" readonly>
                 </div>
             <div class="form-group">
-                <input type="text" id="login" class="form-control" name="email_address" placeholder="email" value="<?=$user->email_address;?>">
+                <label for="email_address">Email address</label>
+                <input type="text" id="login" class="form-control" name="email_address" placeholder="Email address" value="<?=$user->email_address;?>" readonly>
                 </div>
             <div class="form-group">
+                <label for="first_name">First name</label>
                 <input type="text" id="login" class="form-control" name="first_name" placeholder="First name" value="<?=$user->first_name;?>">
                 </div>
             <div class="form-group">
+                <label for="last_name">Last name</label>
                 <input type="text" id="login" class="form-control" name="last_name" placeholder="Last name" value="<?=$user->last_name;?>">
                 </div>
             <div class="form-group">
+                <label for="password">Password</label>
                 <input type="password" id="password" class="form-control" name="password" placeholder="password">
                 </div>
                 <input type="submit" class="btn btn-primary" value="Save Changes">

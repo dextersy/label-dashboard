@@ -13,10 +13,7 @@
         }
     }
 
-    if ($user->password_md5 == null || $user->password_md5 == '') {
-        redirectTo("/setprofile.php?u=" . $user->invite_hash);
-    }
-    else if ($user->password_md5 == md5($_POST['password'])) {
+    if ($user->password_md5 == md5($_POST['password'])) {
         $_SESSION['logged_in_user'] = $user->id;
         $_SESSION['logged_in_username'] = $user->username;
 

@@ -228,3 +228,8 @@ ADD CONSTRAINT `fk_recuperable_expense_brand`
   REFERENCES `brand` (`id`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+--- 04/29
+ALTER TABLE `artist` 
+DROP INDEX `name_UNIQUE` ;
+;

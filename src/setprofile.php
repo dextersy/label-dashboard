@@ -15,13 +15,16 @@
     else {
       $user = new User;
       $user->fromID($artistAccess->user_id);
-      if($user->password_md5 != "" || !isset($user->password_md5)) {
+      if(isset($user->password_md5) && $user->password_md5 != "") {
         $artistAccess->status = "Accepted";
         $artistAccess->invite_hash = "";
         $artistAccess->saveUpdates();
         redirectTo("/dashboard.php");
       }
     }
+  }
+  else {
+    redirectTo('/index.php?err=invalid_hash');
   }
 
 ?>
@@ -63,8 +66,9 @@
       <input type="hidden" name="id" value="<?=$user->id;?>">
       <input type="hidden" name="invite_hash" value="<?=$artistAccess->invite_hash;?>">
       <input type="hidden" name="is_admin" value="<?=$user->is_admin;?>">
-      <input type="text" id="login" class="fadeIn second" name="username" placeholder="username" value="<?=$user->username;?>">
-      <input type="text" id="login" class="fadeIn second" name="email_address" placeholder="email" value="<?=$user->email_address;?>">
+      <? if (!isset($user->username) || $user->username == '') { ?> 
+        <input type="text" id="login" class="fadeIn second" name="username" placeholder="username" value="<?=$user->username;?>">
+      <? } ?>
       <input type="text" id="login" class="fadeIn second" name="first_name" placeholder="First name" value="<?=$user->first_name;?>">
       <input type="text" id="login" class="fadeIn second" name="last_name" placeholder="Last name" value="<?=$user->last_name;?>">
       <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
