@@ -254,3 +254,5 @@ CREATE TABLE `login_attempt` (
     REFERENCES `user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
+ALTER TABLE `meltrecords_dashboard`.`login_attempt` 
+CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT ;

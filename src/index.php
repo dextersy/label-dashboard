@@ -1,6 +1,6 @@
 <?
   require_once('./inc/util/Redirect.php');
-
+  require_once('./inc/config.php');
   include_once('./inc/controller/brand_check.php');
   session_start();
   if($_SESSION['logged_in_user'] != null) {
@@ -59,6 +59,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ?>
       <div class="alert alert-danger" role="alert">
         Invalid code. Please request invite again.
+      </div>
+    <?
+      }
+      else if ($_GET['err'] == 'lock') {
+    ?>
+      <div class="alert alert-danger" role="alert">
+        Your account is locked due to too many failed logins. Try again in <?=LOCK_TIME_IN_SECONDS/60;?> minutes.
       </div>
     <?
       }

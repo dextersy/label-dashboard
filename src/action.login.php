@@ -3,6 +3,7 @@
     require_once('./inc/model/user.php');
     require_once('./inc/model/loginattempt.php');
 
+    require_once('./inc/controller/check-login-lock.php');
     include_once('./inc/controller/brand_check.php');
 
     session_start();
@@ -12,6 +13,12 @@
             redirectTo("/index.php?err=no_user");
             die();
         }
+    }
+
+    // Check login lock
+    if (checkLoginLock($user->id)) {
+        redirectTo("/index.php?err=lock");
+        die();
     }
 
     if ($user->password_md5 == md5($_POST['password'])) {

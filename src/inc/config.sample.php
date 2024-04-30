@@ -15,4 +15,13 @@ define('SMTP_SECURE', 'tls');
 define('SMTP_USER', '');
 define('SMTP_PASS', '');
 
+// Input Paymongo secret key for events payments
+define('PAYMONGO_SECRET_KEY', '');
+
+// Login security
+define('FAILED_LOGIN_LIMIT', 3);
+define('LOCK_TIME_IN_SECONDS', 120);
+
+
+
 ?>
