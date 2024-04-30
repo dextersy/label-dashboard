@@ -3,6 +3,7 @@
   require_once("./inc/model/artistaccess.php");
   require_once("./inc/util/Redirect.php");
   require_once("./inc/controller/brand_check.php");
+  session_start();
 
   if ($_GET['u']) {
     $hash = $_GET['u'];
@@ -51,7 +52,7 @@
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper fadeInDown">
-  <div id="formContent">
+  <div id="formContent" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <!-- Tabs Titles -->
 
     <!-- Icon -->
