@@ -1,6 +1,7 @@
 <?
     require_once('./inc/util/Redirect.php');
     require_once('./inc/model/user.php');
+    require_once('./inc/model/loginattempt.php');
 
     include_once('./inc/controller/brand_check.php');
 
@@ -17,10 +18,18 @@
         $_SESSION['logged_in_user'] = $user->id;
         $_SESSION['logged_in_username'] = $user->username;
 
-        $user->last_logged_in = date("Y-m-d H:i:s");
-        $user->save();
+        //$user->last_logged_in = date("Y-m-d H:i:s");
+        //$user->save();
+
+        $loginattempt = new LoginAttempt(null, $user->id, "Successful", date("Y-m-d H:i:s"), $_SESSION['brand_id']);
+        $loginattempt->save();
+
         redirectTo("/dashboard.php");
     } else {
+
+        $loginattempt = new LoginAttempt(null, $user->id, "Failed", date("Y-m-d H:i:s"), $_SESSION['brand_id']);
+        $loginattempt->save();
+        
         redirectTo("/index.php?err=pass");
     }
 

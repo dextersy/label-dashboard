@@ -233,3 +233,24 @@ ADD CONSTRAINT `fk_recuperable_expense_brand`
 ALTER TABLE `artist` 
 DROP INDEX `name_UNIQUE` ;
 ;
+
+--- 04/30
+CREATE TABLE `login_attempt` (
+  `id` INT NOT NULL,
+  `user_id` INT NOT NULL,
+  `status` ENUM('Successful', 'Failed') NOT NULL,
+  `date_and_time` DATETIME NOT NULL,
+  `brand_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_login_attempt_1_idx` (`brand_id` ASC) VISIBLE,
+  INDEX `fk_login_attempt_2_idx` (`user_id` ASC) VISIBLE,
+  CONSTRAINT `fk_login_attempt_1`
+    FOREIGN KEY (`brand_id`)
+    REFERENCES `brand` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_login_attempt_2`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
