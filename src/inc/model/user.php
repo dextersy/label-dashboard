@@ -2,7 +2,7 @@
 
 require_once('./inc/util/MySQLConnection.php');
 
-class User{
+class User {
 
     public $id;
     public $username;
@@ -14,22 +14,19 @@ class User{
     public $is_admin;
     public $brand_id;
     public $reset_hash;
-    public $last_logged_in;
 
     function __construct(
         $id = null, 
         $username = null, 
         $password_md5 = null, 
-        $email_address= null, 
-        $first_name= null, 
-        $last_name= null, 
-        $profile_photo= null, 
-        $is_admin= false,
+        $email_address = null, 
+        $first_name = null, 
+        $last_name = null, 
+        $profile_photo = null, 
+        $is_admin = false,
         $brand_id = null,
-        $reset_hash = null,
-        $last_logged_in = null
-    ) 
-    {
+        $reset_hash = null
+    ) {
         $this->id = $id;
         $this->username = $username;
         $this->password_md5 = $password_md5;
@@ -40,9 +37,7 @@ class User{
         $this->is_admin = $is_admin;
         $this->brand_id = $brand_id;
         $this->reset_hash = $reset_hash;
-        $this->last_logged_in = $last_logged_in;
     }
-
 
     function fromID($id) {
         $result = MySQLConnection::query("SELECT * FROM `user` WHERE `id` = " . $id);
@@ -65,20 +60,17 @@ class User{
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     function fromEmailAddress($brand_id, $email) {
-
         $result = MySQLConnection::query("SELECT `id` FROM `user` WHERE `email_address` = '" . $email . "' AND `brand_id` = '" . $brand_id . "'");
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -88,8 +80,7 @@ class User{
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->fromID($row['id']);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -99,37 +90,35 @@ class User{
             $this->id = $_POST['id'];
             $this->fromID($this->id);
         }
-        $this->username = isset($_POST['username'])?$_POST['username']:$this->username;
+        $this->username = isset($_POST['username']) ? $_POST['username'] : $this->username;
         if ($_POST['password']) {
             $this->password_md5 = md5($_POST['password']);
         }
-        $this->email_address = isset($_POST['email_address'])?$_POST['email_address']:$this->email_address;
-        $this->first_name = isset($_POST['first_name'])?$_POST['first_name']:$this->first_name;
-        $this->last_name = isset($_POST['last_name'])?$_POST['last_name']:$this->last_name;
-        $this->profile_photo = isset($_POST['profile_photo'])?$_POST['profile_photo']:$this->profile_photo;
-        $this->is_admin = isset($_POST['is_admin'])?$_POST['is_admin']:$this->is_admin;
-        $this->brand_id = isset($_POST['brand_id'])?$_POST['brand_id']:$this->brand_id;
-        $this->reset_hash = isset($_POST['reset_hash'])?$_POST['reset_hash']:$this->reset_hash;
+        $this->email_address = isset($_POST['email_address']) ? $_POST['email_address'] : $this->email_address;
+        $this->first_name = isset($_POST['first_name']) ? $_POST['first_name'] : $this->first_name;
+        $this->last_name = isset($_POST['last_name']) ? $_POST['last_name'] : $this->last_name;
+        $this->profile_photo = isset($_POST['profile_photo']) ? $_POST['profile_photo'] : $this->profile_photo;
+        $this->is_admin = isset($_POST['is_admin']) ? $_POST['is_admin'] : $this->is_admin;
+        $this->brand_id = isset($_POST['brand_id']) ? $_POST['brand_id'] : $this->brand_id;
+        $this->reset_hash = isset($_POST['reset_hash']) ? $_POST['reset_hash'] : $this->reset_hash;
     }
 
     function save() {
-        if ( $this->id == null ) {
-            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `brand_id`, `reset_hash`, `last_logged_in`) ".
+        if ($this->id == null) {
+            $sql = "INSERT INTO `user` (`username`, `password_md5`, `email_address`, `first_name`, `last_name`, `profile_photo`, `is_admin`, `brand_id`, `reset_hash`) " .
                 "VALUES(" .
-                "'" . MySQLConnection::escapeString($this->username) . "', ".
-                "'" . MySQLConnection::escapeString($this->password_md5) . "', ".
-                "'" . MySQLConnection::escapeString($this->email_address) . "', ".
-                "'" . MySQLConnection::escapeString($this->first_name) . "', ".
+                "'" . MySQLConnection::escapeString($this->username) . "', " .
+                "'" . MySQLConnection::escapeString($this->password_md5) . "', " .
+                "'" . MySQLConnection::escapeString($this->email_address) . "', " .
+                "'" . MySQLConnection::escapeString($this->first_name) . "', " .
                 "'" . MySQLConnection::escapeString($this->last_name) . "', " .
                 "'" . MySQLConnection::escapeString($this->profile_photo) . "', " .
                 "'" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', " .
-                ((isset($this->reset_hash))? "'" . MySQLConnection::escapeString($this->reset_hash) . "'" :"NULL") . ", " .
-                ((isset($this->last_logged_in))? "'" . MySQLConnection::escapeString($this->last_logged_in) ."'":"NULL") .
+                ((isset($this->reset_hash)) ? "'" . MySQLConnection::escapeString($this->reset_hash) . "'" : "NULL") .
                 ")";
-        }
-        else {
-            $sql = "UPDATE `user` SET ".
+        } else {
+            $sql = "UPDATE `user` SET " .
                 "`username` = '" . MySQLConnection::escapeString($this->username) . "', " .
                 "`email_address` = '" . MySQLConnection::escapeString($this->email_address) . "', " .
                 "`first_name` = '" . MySQLConnection::escapeString($this->first_name) . "', " .
@@ -137,33 +126,23 @@ class User{
                 "`profile_photo` = '" . MySQLConnection::escapeString($this->profile_photo) . "', " .
                 "`is_admin` = '" . (($this->is_admin != '') ? MySQLConnection::escapeString($this->is_admin) : "0") . "', " .
                 "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "', " .
-                "`reset_hash` = " . ((isset($this->reset_hash))? "'" . MySQLConnection::escapeString($this->reset_hash) . "'":"NULL") . ", " .
-                "`last_logged_in` = " . ((isset($this->last_logged_in))? "'" . MySQLConnection::escapeString($this->last_logged_in) . "'":"NULL") . " " .
+                "`reset_hash` = " . ((isset($this->reset_hash)) ? "'" . MySQLConnection::escapeString($this->reset_hash) . "'" : "NULL") . " " .
                 "WHERE `id` = " . MySQLConnection::escapeString($this->id);
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
-            if($this->id == null) {
+            if ($this->id == null) {
                 $this->id = MySQLConnection::$lastInsertID;
             }
-            // Update password if it's set
             if (isset($this->password_md5)) {
-                $sql = "UPDATE `user` SET ".
-                    "`password_md5` = '" . MySQLConnection::escapeString($this->password_md5) . "' ".
+                $sql = "UPDATE `user` SET " .
+                    "`password_md5` = '" . MySQLConnection::escapeString($this->password_md5) . "' " .
                     "WHERE `id` = " . MySQLConnection::escapeString($this->id);
                 $result = MySQLConnection::query($sql);
-                if ($result) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return $result ? true : false;
             }
         }
-        else {
-            return false;
-        }
+        return false;
     }
 }
-
 ?>
