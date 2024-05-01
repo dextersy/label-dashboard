@@ -18,6 +18,21 @@
     
     $user = new User;
     $user->fromFormPOST($_POST);
+    if ($_POST['origin'] == 'myprofile' && $_POST['new_password'] && $_POST['new_password'] != '') { 
+        if (md5($_POST['old_password']) == $user->password_md5) {
+            if ($_POST['new_password'] == $_POST['confirm_password']) {
+                $user->password_md5 = md5($_POST['new_password']);
+            }
+            else {
+                redirectTo('/myprofile.php?err=mismatch');
+                die();
+            }
+        }
+        else {
+            redirectTo('/myprofile.php?err=wrong_password');
+            die();
+        }
+    }
     unset($user->reset_hash);
     $user->save();
 
@@ -36,5 +51,10 @@
         $artistAccess->saveUpdates();
     }
 
-    redirectTo('/index.php');
+    if ($_POST['origin'] == 'myprofile') {
+        redirectTo('/myprofile.php?err=0');
+    }
+    else {
+        redirectTo('/index.php');
+    }
 ?>
