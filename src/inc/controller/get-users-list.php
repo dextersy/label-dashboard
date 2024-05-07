@@ -3,6 +3,7 @@ require_once('./inc/util/MySQLConnection.php');
 require_once('./inc/model/artist.php');
 
 class UserViewItem {
+    public $id;
     public $username;
     public $first_name;
     public $last_name;
@@ -10,7 +11,8 @@ class UserViewItem {
     public $last_logged_in;
     public $is_admin;
 
-    function __construct($username,$first_name,$last_name,$email_address,$last_logged_in,$is_admin){
+    function __construct($id,$username,$first_name,$last_name,$email_address,$last_logged_in,$is_admin){
+        $this->id = $id;
         $this->username = $username;
         $this->first_name = $first_name;
         $this->last_name = $last_name;
@@ -31,6 +33,7 @@ function getAllActiveUsers($brand_id){
         $result_login = MySQLConnection::query("SELECT `date_and_time` FROM `login_attempt` WHERE `user_id`='" . $row['id'] ."' ORDER BY `date_and_time` DESC LIMIT 0,1");
         $row_login = $result_login->fetch_assoc();
         $users[$i++] = new UserViewItem(
+            $row['id'],
             $row['username'],
             $row['first_name'],
             $row['last_name'],
