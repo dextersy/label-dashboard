@@ -36,3 +36,15 @@
         </tbody>
     </table>
 </div>
+
+<div class="row">
+    <div class="col-md-6">
+        <form action="action.invite-administrator.php" method="POST">
+        <div class="form-group">
+            <input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
+            <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
+            <input type="submit" class="btn btn-primary" value="Invite Administrator">
+        </div>                 
+        </form>
+    </div>
+</div>
