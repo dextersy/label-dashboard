@@ -13,7 +13,7 @@
   <title>Buy tickets to <?=$event->title;?></title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
-  <meta property="og:image" content="<?=$event->poster_url;?>"/>
+  <meta property="og:image" content="<?="https://" . $_SERVER['SERVER_NAME'] . "/" . $event->poster_url;?>"/>
 </header>
 
 <body>
@@ -38,28 +38,7 @@
 
 
     <!-- Alert -->
-    <?
-      if ($_GET['err'] == 'no_user') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        User not found. Please try again or ask admin to invite you.
-      </div>
-    <? }
-      else if ($_GET['err'] == 'pass') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Wrong password. Please try again.
-      </div>
-    <?
-      }
-      else if ($_GET['err'] == 'invalid_hash') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Invalid code. Please request invite again.
-      </div>
-    <?
-      }
-    ?>
+    
     <!-- Login Form -->
     <form action="action.buy.php" method="POST">
       <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
