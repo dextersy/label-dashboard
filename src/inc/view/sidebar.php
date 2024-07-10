@@ -40,15 +40,6 @@ include_once('inc/controller/brand_check.php');
                     </a>
                 </li>
                 <? if ($isAdmin) { ?>
-                    <li<? if($admin_active) { ?> class="active"<? } ?>>
-                        <a href="admin.php">
-                            <i class="pe-7s-lock"></i>
-                            <p>Admin</p>
-                        </a>
-                    </li>
-                
-                <? } ?>
-                <? if ($isAdmin) { ?>
                     <li<? if($events_active) { ?> class="active"<? } ?>>
                         <a href="events.php">
                             <i class="pe-7s-date"></i>
@@ -57,6 +48,16 @@ include_once('inc/controller/brand_check.php');
                     </li>
                 
                 <? } ?>
+                <? if ($isAdmin) { ?>
+                    <li<? if($admin_active) { ?> class="active"<? } ?>>
+                        <a href="admin.php">
+                            <i class="pe-7s-lock"></i>
+                            <p>Admin</p>
+                        </a>
+                    </li>
+                
+                <? } ?>
+                
             </ul>
     	</div>
     </div>
