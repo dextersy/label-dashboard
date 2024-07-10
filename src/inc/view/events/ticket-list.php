@@ -2,6 +2,7 @@
     include_once('./inc/controller/get_tickets.php');
 
     include_once('./inc/controller/brand_check.php');
+    include_once('./inc/model/eventreferrer.php');
 
     $tickets = getTicketsForEvent($_SESSION['current_event']);
     $paid = 0; $new = 0;
@@ -77,12 +78,20 @@
             <th>Payment Link</th>
             <th>Total paid</th>
             <th>Processing fee</th>
+            <th>Referred by</th>
             <th>Status</th>
         </thead>
         <tbody>
 <?
     if ($tickets) {
         foreach($tickets as $ticket) {
+            if(isset($ticket->referrer_id)) {
+                $referrer = new EventReferrer;
+                $referrer->fromID($ticket->referrer_id);
+            }
+            else {
+                $referrer = null;
+            }
 ?>
             <tr>
                 <td><?=$ticket->name; ?></td>
@@ -93,6 +102,7 @@
                 <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
                 <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
                 <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
+                <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
                 <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
                 <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
             </tr>
@@ -117,6 +127,7 @@
             <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
             <input type="phone" class="form-control" id="contact_number" name="contact_number" placeholder="Contact number">
             <input type="text" class="form-control" id="number_of_entries" name="number_of_entries" placeholder="Number of tickets">
+            <input type="text" class="form-control" id="referral_code" name="referral_code" placeholder="Referral code (optional)">
             <input class="form-check-input" type="checkbox" value="1" name="send_email" id="send_email"><label class="form-check-label" for="flexCheckDefault">Send payment email</label>
             <input type="submit" class="btn btn-primary" value="Add Ticket">
         </div>                 

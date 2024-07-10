@@ -67,6 +67,7 @@
       <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address">
       <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number">
       <input type="text" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?">
+      <input type="text" id="referral_code" class="fadeIn fifth" name="referral_code" placeholder="Referral code (optional)" <?=isset($_GET['ref'])?'value="' . $_GET['ref'] . '" readonly':'';?>>
       <input type="submit" class="fadeIn sixth" value="Order Tickets">
     </form>
 

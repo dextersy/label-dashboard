@@ -23,7 +23,8 @@
                 $row['payment_link'],
                 $row['payment_link_id'],
                 $row['price_per_ticket'],
-                $row['payment_processing_fee']
+                $row['payment_processing_fee'],
+                $row['referrer_id']
             );
         }
         return $tickets;

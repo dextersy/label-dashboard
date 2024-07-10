@@ -256,3 +256,35 @@ CREATE TABLE `login_attempt` (
     ON UPDATE NO ACTION);
 ALTER TABLE `meltrecords_dashboard`.`login_attempt` 
 CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT ;
+
+--- 07/10
+CREATE TABLE `event_referrer` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(45) NOT NULL,
+  `referral_code` VARCHAR(45) NOT NULL,
+  `event_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  INDEX `fk_event_referrer_event_id_idx` (`event_id` ASC) VISIBLE,
+  CONSTRAINT `fk_event_referrer_event_id`
+    FOREIGN KEY (`event_id`)
+    REFERENCES `event` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+
+ALTER TABLE `ticket` 
+ADD COLUMN `referrer_id` INT NULL AFTER `payment_processing_fee`,
+ADD INDEX `fk_ticket_referrer_idx` (`referrer_id` ASC) VISIBLE;
+;
+
+ALTER TABLE `ticket` 
+ADD CONSTRAINT `fk_ticket_referrer`
+  FOREIGN KEY (`referrer_id`)
+  REFERENCES `event_referrer` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `event_referrer` 
+ADD UNIQUE INDEX `referral_code_UNIQUE` (`referral_code` ASC) VISIBLE;
+;
+

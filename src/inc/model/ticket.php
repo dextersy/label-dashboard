@@ -15,6 +15,7 @@ class Ticket {
     public $payment_link_id;
     public $price_per_ticket;
     public $payment_processing_fee;
+    public $referrer_id;
 
     function __construct(
         $id = null, 
@@ -28,7 +29,8 @@ class Ticket {
         $payment_link = null,
         $payment_link_id = null,
         $price_per_ticket = null,
-        $payment_processing_fee = null
+        $payment_processing_fee = null,
+        $referrer_id = null
     ) 
     {
         $this->id = $id;
@@ -43,6 +45,7 @@ class Ticket {
         $this->payment_link_id = $payment_link_id;
         $this->price_per_ticket = $price_per_ticket;
         $this->payment_processing_fee = $payment_processing_fee;
+        $this->referrer_id = $referrer_id;
     }
 
     function fromID($id) {
@@ -60,6 +63,7 @@ class Ticket {
             $this->payment_link_id = $row['payment_link_id'];
             $this->price_per_ticket = $row['price_per_ticket'];
             $this->payment_processing_fee = $row['payment_processing_fee'];
+            $this->referrer_id = $row['referrer_id'];
             return true;
         } else {
             return false;
@@ -78,12 +82,12 @@ class Ticket {
         $this->number_of_entries = $post['number_of_entries'];
         $this->ticket_code = $post['ticket_code'];
         $this->status = $post['status'];
-        // Intentionally left out payment link, link ID, price per ticket, and payment processing fee since this is never coming from form data
+        $this->referrer_id = $post['referrer_id'];
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`) ".
+            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`, `referrer_id`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->event_id) . "', " .
                 "'" . MySQLConnection::escapeString($this->name) . "', " .
@@ -95,7 +99,8 @@ class Ticket {
                 (isset($this->payment_link) ? ("'" . MySQLConnection::escapeString($this->payment_link) . "'") : "NULL") . ", " .
                 (isset($this->payment_link_id) ? ("'" . MySQLConnection::escapeString($this->payment_link_id) . "'")  : "NULL") . ", " .
                 (isset($this->price_per_ticket) ? ("'" . MySQLConnection::escapeString($this->price_per_ticket) . "'")  : "NULL") . ", " .
-                (isset($this->payment_processing_fee) ? ("'" . MySQLConnection::escapeString($this->payment_processing_fee) . "'")  : "NULL") .
+                (isset($this->payment_processing_fee) ? ("'" . MySQLConnection::escapeString($this->payment_processing_fee) . "'")  : "NULL") . ", " .
+                (isset($this->referrer_id) ? ("'" . MySQLConnection::escapeString($this->referrer_id) . "'")  : "NULL") . "" .
                 ")";
         } else {
             $sql = "UPDATE `ticket` SET " .
@@ -110,7 +115,9 @@ class Ticket {
                 (isset($this->payment_link_id) ? ", `payment_link_id` = '" . MySQLConnection::escapeString($this->payment_link_id)."'" : "") .
                 (isset($this->price_per_ticket) ? ", `price_per_ticket` = '" . MySQLConnection::escapeString($this->price_per_ticket)."'" : "") .
                 (isset($this->payment_processing_fee) ? ", `payment_processing_fee` = '" . MySQLConnection::escapeString($this->payment_processing_fee)."'" : "") .
-                " WHERE `id` = " . $this->id;
+                (isset($this->referrer_id) ? ", `referrer_id` = '" . MySQLConnection::escapeString($this->referrer_id)."'" : " ") .
+                "WHERE `id` = " . $this->id;
+            echo $sql;
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
@@ -123,4 +130,5 @@ class Ticket {
         }
     }
 }
+
 ?>

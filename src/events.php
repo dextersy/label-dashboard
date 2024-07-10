@@ -21,7 +21,7 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#details"><i class="fa fa-info"></i>Details</a></li>
                         <li><a data-toggle="tab" href="#tickets"><i class="fa fa-ticket"></i>Tickets</a></li>
-                        <li><a data-toggle="tab" href="#new-tickets"><i class="fa fa-plus" aria-hidden="true"></i>New Tickets</a></li>
+                        <li><a data-toggle="tab" href="#referrers"><i class="fa fa-user-plus" aria-hidden="true"></i>Referrals</a></li>
                     </ul>
 
                     <div class="tab-content">
@@ -31,7 +31,8 @@
                         <div id="tickets" class="tab-pane fade">
                             <?php include_once('./inc/view/events/ticket-list.php'); ?>
                         </div>
-                        <div id="new-tickets" class="tab-pane fade">
+                        <div id="referrers" class="tab-pane fade">
+                            <?php include_once('./inc/view/events/referrers-list.php'); ?>
                         </div>
                     </div>
                 </div>

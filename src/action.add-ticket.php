@@ -3,6 +3,7 @@
     require_once('./inc/model/event.php');
     require_once('./inc/controller/access_check.php');
     require_once('./inc/util/Mailer.php');
+    require_once('./inc/controller/get_referrers.php');
 
     if(!$isAdmin) {
         redirectTo("/index.php");
@@ -80,6 +81,14 @@
 
     $ticket = new Ticket;
     $ticket->fromFormPOST($_POST);
+
+    // Set referral code, if applicable
+    if(isset($_POST['referral_code']) && $_POST['referral_code'] != '') {
+        $referrer = getReferrerFromCode($_POST['referral_code']);
+        if(isset($referrer)) {
+            $ticket->referrer_id = $referrer->id;
+        }
+    }
 
     // Generate ticket code
     $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';

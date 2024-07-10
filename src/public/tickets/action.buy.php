@@ -5,6 +5,7 @@
     include_once("./inc/model/event.php");
     include_once("./inc/util/Redirect.php");
     include_once("./inc/util/Mailer.php");
+    include_once("./inc/controller/get_referrers.php");
 
     function createPaymentLink($amount, $description) {
 
@@ -76,6 +77,15 @@
     $ticket = new Ticket;
     $ticket->fromFormPOST($_POST);
     $ticket->status = "New";
+
+    // Set referral code if applicable
+    if(isset($_POST['referral_code']) && $_POST['referral_code'] != '') {
+        $referrer = getReferrerFromCode($_POST['referral_code']);
+        if(isset($referrer)) {
+            $ticket->referrer_id = $referrer->id;
+        }
+    }
+
     // Generate ticket code
     $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $randomString = '';

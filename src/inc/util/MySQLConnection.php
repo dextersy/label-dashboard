@@ -19,9 +19,14 @@ class MySQLConnection {
         if (self::$conn == null) {
             self::connect();
         }
-        $result = self::$conn->query($sql);
-        self::$lastInsertID = self::$conn->insert_id;
-        return $result;
+        try {
+            $result = self::$conn->query($sql);
+            self::$lastInsertID = self::$conn->insert_id;
+            return $result;
+        }
+        catch (Exception $e) {
+            return null; // TODO Maybe better to do specific error handling here
+        }
     }
 
     public static function escapeString($string) {
