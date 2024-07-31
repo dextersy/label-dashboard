@@ -3,6 +3,7 @@
     include_once("./inc/config.php");
     include_once("./inc/model/ticket.php");
     include_once("./inc/model/event.php");
+    include_once("./inc/model/user.php");
     include_once("./inc/util/Redirect.php");
     include_once("./inc/util/Mailer.php");
     include_once("./inc/controller/get_referrers.php");
