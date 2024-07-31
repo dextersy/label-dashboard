@@ -6,6 +6,7 @@
     include_once("./inc/util/Redirect.php");
     include_once("./inc/util/Mailer.php");
     include_once("./inc/controller/get_referrers.php");
+    require_once('./inc/controller/get_team_members.php');
 
     function createPaymentLink($amount, $description) {
 
@@ -64,9 +65,16 @@
 	}
 
     function sendAdminNotification($eventName, $name, $amount, $numberOfEntries) {
+        $i = 0;
+        $admins = getAllAdmins($_SESSION['brand_id']);
+        if ($admins != null) {
+            foreach($admins as $recipient) {
+                $emailAddresses[$i++] = $recipient->email_address;
+            }
+        }
+
 		$subject = "New ticket order for ". $eventName;
-		$emailAddresses[0] = "sy.dexter@gmail.com"; // @todo Replace with actual admin
-        $body = "<h1>New ticket order</h1>";
+		$body = "<h1>New ticket order</h1>";
         $body = $body . "<p>Name: " . $name . "<br>";
         $body = $body . "Amount: P" . $amount . "<br>";
         $body = $body . "No. of entries: " . $numberOfEntries . "</p>";
