@@ -4,11 +4,10 @@
     include_once('./inc/controller/brand_check.php');
 
     $referrers = getReferrersForEvent($_SESSION['current_event']);
-    $referral_link_prefix = "https://" . $_SERVER['SERVER_NAME'] . "/public/tickets/buy.php?id=" . $event->id . "&ref=";
 ?>
 <script type="text/javascript">
-    function copyReferralLink(code) {
-        navigator.clipboard.writeText('<?=$referral_link_prefix;?>'+code);
+    function copyText(text) {
+        navigator.clipboard.writeText(text);
     }
 </script>
 <div class="row">
@@ -36,7 +35,7 @@
                 <td><?=$sales->tickets_sold; ?></td>
                 <td style="text-align:right;"><?="Php ". number_format($sales->gross_amount_sold,2); ?></td>
                 <td style="text-align:right;"><?="Php ". number_format($sales->net_amount_sold, 2); ?></td>
-                <td><a href="javascript:copyReferralLink('<?=$referrer->referral_code;?>');"><i class="fa fa-copy"></i></a></div></td>
+                <td><a href="javascript:copyText('<?=$referrer->referral_shortlink;?>');"><i class="fa fa-copy"></i></a></div></td>
             </tr>
 <?      }
     } else {

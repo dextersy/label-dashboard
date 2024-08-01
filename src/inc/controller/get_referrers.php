@@ -15,7 +15,8 @@
                 $row['id'],
                 $row['name'],
                 $row['referral_code'],
-                $row['event_id']
+                $row['event_id'],
+                $row['referral_shortlink']
             );
         }
         return $referrers;
@@ -75,7 +76,8 @@
                 $row['id'],
                 $row['name'],
                 $row['referral_code'],
-                $row['event_id']
+                $row['event_id'],
+                $row['referral_shortlink']
             );
             return $referrer;
         }
