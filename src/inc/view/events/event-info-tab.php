@@ -15,7 +15,7 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
 ?>
 <script type="text/javascript">
     function copyBuyLink() {
-        var copyText = document.getElementById("buy_link");
+        var copyText = document.getElementById("buy_shortlink");
         copyText.select();
         copyText.setSelectionRange(0, 999999);
         navigator.clipboard.writeText(copyText.value);
@@ -59,7 +59,7 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
                 <em>Share this link to ticket buyers.</em>
                 <div class="row">
                     <div class="col-md-11">
-                        <input type="text" class="form-control" id="buy_link" name="buy_link" value="<?=isset($event->id)?"https://" . $_SERVER['SERVER_NAME'] . "/public/tickets/buy.php?id=" . $event->id : "Save to see buy link";?>" readonly>
+                        <input type="text" class="form-control" id="buy_shortlink" name="buy_shortlink" value="<?=isset($event->id)? $event->buy_shortlink : "Save to see buy link";?>" readonly>
                     </div>
                     <div class="col-md-1">
                         <a href="javascript:copyBuyLink();"><i class="fa fa-copy"></i></a>

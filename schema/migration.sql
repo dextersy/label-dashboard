@@ -288,3 +288,8 @@ ALTER TABLE `event_referrer`
 ADD UNIQUE INDEX `referral_code_UNIQUE` (`referral_code` ASC) VISIBLE;
 ;
 
+--- JULY 31, 2024
+ALTER TABLE `event` 
+ADD COLUMN `buy_shortlink` VARCHAR(1024) NULL DEFAULT NULL AFTER `ticket_price`;
+ALTER TABLE `meltrecords_dashboard`.`event_referrer` 
+ADD COLUMN `referral_shortlink` VARCHAR(1024) NULL DEFAULT NULL AFTER `event_id`;

@@ -22,6 +22,7 @@ define('PAYMONGO_SECRET_KEY', '');
 define('FAILED_LOGIN_LIMIT', 3);
 define('LOCK_TIME_IN_SECONDS', 120);
 
-
-
+// Input Short.io key for events shortlinking
+define('SHORT_IO_KEY', '');
+define('SHORT_IO_DOMAIN', '');
 ?>
