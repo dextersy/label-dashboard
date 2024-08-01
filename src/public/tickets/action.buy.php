@@ -3,6 +3,7 @@
     include_once("./inc/config.php");
     include_once("./inc/model/ticket.php");
     include_once("./inc/model/event.php");
+    include_once("./inc/model/eventreferrer.php");
     include_once("./inc/model/user.php");
     include_once("./inc/util/Redirect.php");
     include_once("./inc/util/Mailer.php");
@@ -58,14 +59,14 @@
         $msg = str_replace("%BRAND_NAME%", $_SESSION['brand_name'], $msg);
 		$msg = str_replace('%EVENT_NAME%', $eventName, $msg);
 		$msg = str_replace('%NAME%', $name, $msg);
-		$msg = str_replace('%PAYMENT_AMOUNT%', $amount, $msg);
+		$msg = str_replace('%PAYMENT_AMOUNT%', number_format($amount, 2), $msg);
 		$msg = str_replace('%NO_OF_ENTRIES%', $numberOfEntries, $msg);
 		$msg = str_replace('%PAYMENT_LINK%', $paymentLink, $msg);
 		
 		return $msg;
 	}
 
-    function sendAdminNotification($eventName, $name, $amount, $numberOfEntries) {
+    function sendAdminNotification($eventName, $ticket, $amount) {
         $i = 0;
         $admins = getAllAdmins($_SESSION['brand_id']);
         if ($admins != null) {
@@ -74,11 +75,23 @@
             }
         }
 
+        $referrerName = "";
+        if (isset($ticket->referrer_id) && $ticket->referrer_id != '') {
+            $referrer = new EventReferrer;
+            $referrer->fromID($ticket->referrer_id);
+            $referrerName = $referrer->name;
+        }
+
 		$subject = "New ticket order for ". $eventName;
 		$body = "<h1>New ticket order</h1>";
-        $body = $body . "<p>Name: " . $name . "<br>";
-        $body = $body . "Amount: P" . $amount . "<br>";
-        $body = $body . "No. of entries: " . $numberOfEntries . "</p>";
+        $body = $body . "<p>Name: " . $ticket->name . "<br>";
+        $body = $body . "Email address: " . $ticket->email_address . "<br>";
+        $body = $body . "Contact number: " . $ticket->contact_number . "<br>";
+        $body = $body . "Ticket code: " . $ticket->ticket_code . "<br>";
+        $body = $body . "Payment link ID: " . $ticket->payment_link_id . "<br>";
+        $body = $body . "Amount: P" . number_format($amount, 2) . "<br>";
+        $body = $body . "Referrer: " . $referrerName . "<br>";
+        $body = $body . "No. of entries: " . $ticket->number_of_entries . "</p>";
 
 		return sendEmail($emailAddresses, $subject, $body);
 	}
@@ -128,7 +141,7 @@
             $ticket->payment_link
         );
 
-        sendAdminNotification($event->title, $ticket->name, $amount, $ticket->number_of_entries);
+        sendAdminNotification($event->title, $ticket, $amount);
 
         if($result) {
             redirectTo("/public/tickets/pay.php?id=" . $ticket->id);
