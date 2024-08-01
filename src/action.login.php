@@ -21,20 +21,35 @@
         die();
     }
 
+    $proxy_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    $remote_ip = $_SERVER['REMOTE_ADDR'];
+
     if ($user->password_md5 == md5($_POST['password'])) {
         $_SESSION['logged_in_user'] = $user->id;
         $_SESSION['logged_in_username'] = $user->username;
 
-        //$user->last_logged_in = date("Y-m-d H:i:s");
-        //$user->save();
-
-        $loginattempt = new LoginAttempt(null, $user->id, "Successful", date("Y-m-d H:i:s"), $_SESSION['brand_id']);
+        $loginattempt = new LoginAttempt(
+                                null, 
+                                $user->id, 
+                                "Successful", 
+                                date("Y-m-d H:i:s"), 
+                                $_SESSION['brand_id'], 
+                                $proxy_ip, 
+                                $remote_ip
+                            );
         $loginattempt->save();
 
         redirectTo("/dashboard.php");
     } else {
-
-        $loginattempt = new LoginAttempt(null, $user->id, "Failed", date("Y-m-d H:i:s"), $_SESSION['brand_id']);
+        $loginattempt = new LoginAttempt(
+                                null, 
+                                $user->id, 
+                                "Failed", 
+                                date("Y-m-d H:i:s"), 
+                                $_SESSION['brand_id'], 
+                                $proxy_ip, 
+                                $remote_ip
+                            );
         $loginattempt->save();
         
         redirectTo("/index.php?err=pass");
