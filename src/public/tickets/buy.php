@@ -28,18 +28,35 @@
     <div id="formHeader">
       <table style="border:0px">
       <tr><td width="25%"><img src="../../<?=$event->poster_url;?>" width="90%"></td>
-      <td width="75%"><h1 style="color:black;">Buy tickets to <strong><?=$event->title;?></strong></h1>
-      <h4>Step 1. Please provide your details.</h4>
+      <td width="75%">
+
+<?
+  if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
+?>
+  <h1 style="color:black;">Buy tickets to <strong><?=$event->title;?></strong></h1>
+  <h4>Step 1. Please provide your details.</h4>
+<?php
+  }
+  else {
+?>
+  <h1 style="color:black;">Sorry, ticket sales for this event are closed.</h1>
+  <h4>Walk-in may still be available at the show.<br>Check our social media for more details.</h4>
+<?php 
+  }
+?>
     </td></tr>
     </table>    
 </div>
+<?php
+  if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
+?>
   <div id="formContent" style="background-color:<?=$brand->brand_color;?>;">
     <!-- Tabs Titles -->
 
 
     <!-- Alert -->
     
-    <!-- Login Form -->
+    <!-- Sales purchase Form -->
     <form action="action.buy.php" method="POST">
       <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
       <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name">
@@ -55,5 +72,6 @@
     <p style="font-size:12px;">Your payment link will be displayed after placing your order.</p>
     </div>
   </div>
+<?}?>
 </div>
 </body>

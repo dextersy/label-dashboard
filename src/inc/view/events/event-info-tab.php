@@ -55,6 +55,10 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
                 <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>">
             </div>
             <div class="form-group">
+                <label for="amount">Close ticket sales on</label>
+                <input type="datetime-local" class="form-control" id="close_time" name="close_time" placeholder="Date" value="<?=$event->close_time;?>">
+            </div> 
+            <div class="form-group">
                 <label for="websiteURL">Ticket purchase link</label>
                 <em>Share this link to ticket buyers.</em>
                 <div class="row">
@@ -65,6 +69,9 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
                         <a href="javascript:copyBuyLink();"><i class="fa fa-copy"></i></a>
                     </div>
                 </div>
+            </div>
+            <div class="form-group">
+                <strong>Status: </strong><?=(!isset($event->close_time) || time() <= strtotime($event->close_time))?"Open":"Closed";?>
             </div>
        </div>
     </div>

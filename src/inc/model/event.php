@@ -14,6 +14,7 @@ class Event {
     public $rsvp_link;
     public $ticket_price;
     public $buy_shortlink;
+    public $close_time;
 
     function __construct(
         $id = null, 
@@ -25,7 +26,8 @@ class Event {
         $venue = null,
         $rsvp_link = null,
         $ticket_price = null,
-        $buy_shortlink = null
+        $buy_shortlink = null,
+        $close_time = null
     ) 
     {
         $this->id = $id;
@@ -38,6 +40,7 @@ class Event {
         $this->rsvp_link = $rsvp_link;
         $this->ticket_price = $ticket_price;
         $this->buy_shortlink = $buy_shortlink;
+        $this->close_time = $close_time;
     }
 
     function fromID($id) {
@@ -53,6 +56,7 @@ class Event {
             $this->rsvp_link = $row['rsvp_link'];
             $this->ticket_price = $row['ticket_price'];
             $this->buy_shortlink = $row['buy_shortlink']; 
+            $this->close_time = $row['close_time'];
             return true;
         }
         else {
@@ -75,11 +79,14 @@ class Event {
         if(isset($post['buy_shortlink'])) {
             $this->buy_shortlink = $post['buy_shortlink'];
         }
+        if(isset($post['close_time'])) {
+            $this->close_time = $post['close_time'];
+        }
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`) ".
+            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
@@ -89,7 +96,8 @@ class Event {
                 "'" . MySQLConnection::escapeString($this->venue) . "', ".
                 "'" . MySQLConnection::escapeString($this->rsvp_link) . "', ".
                 "'" . MySQLConnection::escapeString($this->ticket_price) . "', ".
-                "'" . MySQLConnection::escapeString($this->buy_shortlink) . "'" .
+                "'" . MySQLConnection::escapeString($this->buy_shortlink) . "', ".
+                "'" . MySQLConnection::escapeString($this->close_time) . "'" .
                 ")";
         }
         else {
@@ -102,7 +110,8 @@ class Event {
                 "`venue` = '" . MySQLConnection::escapeString($this->venue) . "', " .
                 "`rsvp_link` = '" . MySQLConnection::escapeString($this->rsvp_link) . "', " .
                 "`ticket_price` = '" . MySQLConnection::escapeString($this->ticket_price) . "', " .
-                "`buy_shortlink` = '" . MySQLConnection::escapeString($this->buy_shortlink) . "' " .
+                "`buy_shortlink` = '" . MySQLConnection::escapeString($this->buy_shortlink) . "', " .
+                "`close_time` = '" . MySQLConnection::escapeString($this->close_time) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
@@ -117,4 +126,5 @@ class Event {
         }
     }
 }
+
 ?>

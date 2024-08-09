@@ -298,3 +298,7 @@ ADD COLUMN `referral_shortlink` VARCHAR(1024) NULL DEFAULT NULL AFTER `event_id`
 ALTER TABLE `login_attempt` 
 ADD COLUMN `proxy_ip` VARCHAR(45) NULL DEFAULT NULL AFTER `brand_id`,
 ADD COLUMN `remote_ip` VARCHAR(45) NULL DEFAULT NULL AFTER `proxy_ip`;
+
+--- AUG 9, 2024
+ALTER TABLE `event` 
+ADD COLUMN `close_time` DATETIME NULL DEFAULT NULL AFTER `buy_shortlink`;
