@@ -51,7 +51,7 @@
         while($row = $result->fetch_assoc()) {
             $tickets_sold += $row['number_of_entries'];
             $gross_amount_sold += $row['price_per_ticket'] * $row['number_of_entries'];
-            $net_amount_sold = $gross_amount_sold - $row['payment_processing_fee'];
+            $net_amount_sold += $gross_amount_sold - $row['payment_processing_fee'];
         }
         $referrerSales = new EventReferrerSales(
             $id,
