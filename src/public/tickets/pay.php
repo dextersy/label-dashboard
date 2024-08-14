@@ -43,7 +43,7 @@
     <p style="font-size:12px"><em>This link has also been sent to your email.</em></p>
     <!-- Remind Passowrd -->
     <div id="formFooter">
-    <p style="font-size:12px">This link will redirect you to our external payment provider.</p>
+    <p style="font-size:12px">This link will redirect you to our external payment provider. The payee information will be <b>Melt Records Music Publishing Inc.</b>.</p>
     <p style="font-size:12px;">Upon completing your payment, please give us 2 to 3 days to verify and send your ticket.</p>
     </div>
   </div>
