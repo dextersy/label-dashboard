@@ -53,7 +53,7 @@
     $referrer->fromFormPOST($_POST);
     $referrer->save();
 
-    if (!isset($referrer->referral_shortlink) || $referrer->referral_shortlink == '' || !str_starts_with($referrer->referral_shortlink, 'http')) {
+    if (!isset($referrer->referral_shortlink) || $referrer->referral_shortlink == '' || substr( $referrer->referral_shortlink, 0, 4 ) != "http" ) {
         $referrer->referral_shortlink = createReferralShortlink($referrer);
         $referrer->save();
     }

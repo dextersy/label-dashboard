@@ -58,7 +58,7 @@
     }
     $event->save();
 
-    if (!isset($event->buy_shortlink) || $event->buy_shortlink == '' || !str_starts_with($event->buy_shortlink, 'http')) {
+    if (!isset($event->buy_shortlink) || $event->buy_shortlink == '' || substr($event->buy_shortlink, 0, 4) != 'http' ) {
         $shortlinkPath = "Buy" . preg_replace('/[^a-z\d]+/i', '', $event->title); // Default value
         if (isset($_POST['slug']) && $_POST['slug'] != '') {
             $shortlinkPath = $_POST['slug'];
