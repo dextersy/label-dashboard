@@ -34,8 +34,8 @@
 <?
   if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
 ?>
-  <h1 style="color:black;">Buy tickets to <strong><?=$event->title;?></strong></h1>
-  <h4>Step 1. Please provide your details.</h4>
+  <h1 style="color:black; font-size:2rem;">Buy tickets to <strong><?=$event->title;?></strong></h1>
+  <h5>Step 1. Please provide your details.</h4>
 <?php
   }
   else {
