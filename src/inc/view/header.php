@@ -1,4 +1,5 @@
 <? 
+    include_once("./inc/controller/block_check.php");
     include_once("./inc/controller/access_check.php");
     include_once("./inc/controller/page-check.php");
 ?>

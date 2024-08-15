@@ -2,6 +2,7 @@
   require_once("./inc/model/user.php");
   require_once("./inc/model/artistaccess.php");
   require_once("./inc/util/Redirect.php");
+  include_once('./inc/controller/block_check.php');
   require_once("./inc/controller/brand_check.php");
   session_start();
 
