@@ -302,3 +302,8 @@ ADD COLUMN `remote_ip` VARCHAR(45) NULL DEFAULT NULL AFTER `proxy_ip`;
 --- AUG 9, 2024
 ALTER TABLE `event` 
 ADD COLUMN `close_time` DATETIME NULL DEFAULT NULL AFTER `buy_shortlink`;
+
+
+--- AUG 16, 2024
+ALTER TABLE `artist` 
+ADD COLUMN `payout_point` INT NOT NULL DEFAULT 1000 AFTER `youtube_channel`;

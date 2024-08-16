@@ -15,6 +15,7 @@ class Artist {
     public $tiktok_handle;
     public $band_members;
     public $youtube_channel;
+    public $payout_point;
 
     function __construct(
         $id = null, 
@@ -28,7 +29,8 @@ class Artist {
         $brand_id = null,
         $tiktok_handle = null,
         $band_members = null,
-        $youtube_channel = null
+        $youtube_channel = null,
+        $payout_point = 1000 // Default to 1000
     ) 
     {
         $this->id = $id;
@@ -43,6 +45,7 @@ class Artist {
         $this->tiktok_handle = $tiktok_handle;
         $this->band_members = $band_members;
         $this->youtube_channel = $youtube_channel;
+        $this->payout_point = $payout_point;
     }
 
     function fromID($id) {
@@ -61,6 +64,7 @@ class Artist {
             $this->tiktok_handle = $row['tiktok_handle'];
             $this->band_members = $row['band_members'];
             $this->youtube_channel = $row['youtube_channel'];
+            $this->payout_point = $row['payout_point'];
         }
     }
 
@@ -79,11 +83,14 @@ class Artist {
         $this->tiktok_handle = $_POST['tiktokHandle'];
         $this->band_members = $_POST['bandMembers'];
         $this->youtube_channel = $_POST['youtubeChannel'];
+        if (isset($post['payoutPoint']) && $post['payoutPoint'] != '') {
+            $this->payout_point = $_POST['payoutPoint'];
+        }
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`, `profile_photo`, `brand_id`, `tiktok_handle`, `band_members`, `youtube_channel`) " .
+            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`, `profile_photo`, `brand_id`, `tiktok_handle`, `band_members`, `youtube_channel`, `payout_point`) " .
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->name) . "', " .
                 "'" . MySQLConnection::escapeString($this->website_page_url) . "', " .
@@ -95,7 +102,8 @@ class Artist {
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', " .
                 "'" . MySQLConnection::escapeString($this->tiktok_handle) . "', " .
                 "'" . MySQLConnection::escapeString($this->band_members) . "', " .
-                "'" . MySQLConnection::escapeString($this->youtube_channel) . "'" .
+                "'" . MySQLConnection::escapeString($this->youtube_channel) . "', " .
+                "'" . MySQLConnection::escapeString($this->payout_point) . "'" .
                 ")";
         } else {
             $sql = "UPDATE `artist` SET " .
@@ -109,7 +117,8 @@ class Artist {
                 "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "', " .
                 "`tiktok_handle` = '" . MySQLConnection::escapeString($this->tiktok_handle) . "', " .
                 "`band_members` = '" . MySQLConnection::escapeString($this->band_members) . "', " .
-                "`youtube_channel` = '" . MySQLConnection::escapeString($this->youtube_channel) . "' " .
+                "`youtube_channel` = '" . MySQLConnection::escapeString($this->youtube_channel) . "', " .
+                "`payout_point` = '" . MySQLConnection::escapeString($this->payout_point) . "' " .
                 "WHERE `id` = " . $this->id;
         }
 
