@@ -3,11 +3,28 @@
 
     include_once('./inc/controller/brand_check.php');
 
+    $event = new Event;
+    $event->fromID($_SESSION['current_event']);
+
     $referrers = getReferrersForEvent($_SESSION['current_event']);
 ?>
 <script type="text/javascript">
     function copyText(text) {
         navigator.clipboard.writeText(text);
+    }
+
+    function generateReferralCode() {
+        var eventTitle = '<?=$event->title;?>';
+        var referrerName = document.getElementById('referrer_name').value;
+        var referralCode = eventTitle.replace(/[^A-Z0-9]/ig, "") + "-" + referrerName.replace(/[^A-Z0-9]/ig, "");
+        document.getElementById('referral_code_text').value = referralCode;
+    }
+
+    function generateSlug() {
+        var referralCode = document.getElementById('referral_code_text').value;
+        var slug = "Buy" + referralCode.replace(/[^A-Z0-9]/ig, "");
+        document.getElementById('slug').value = slug;
+        
     }
 </script>
 <div class="row">
@@ -53,8 +70,9 @@
         <form action="action.add-event-referrer.php" method="POST">
         <div class="form-group">
             <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
-            <input type="text" class="form-control" id="name" name="name" placeholder="Referrer name">
-            <input type="text" class="form-control" id="referral_code" name="referral_code" placeholder="Referral code">
+            <input type="text" class="form-control" id="referrer_name" name="name" placeholder="Referrer name" onchange="generateReferralCode();">
+            <input type="text" class="form-control" id="referral_code_text" name="referral_code" placeholder="Referral code" onchange="generateSlug();">
+            <input type="text" class="form-control" id="slug" name="slug" placeholder="URL slug">
             <input type="submit" class="btn btn-primary" value="Add Referrer">
         </div>                 
         </form>
