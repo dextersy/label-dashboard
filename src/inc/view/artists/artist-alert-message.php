@@ -12,15 +12,27 @@
             Profile successfully updated.
         </div>
     <? } else if ($_GET['action']=='invite') { 
-        if($_GET['status']=='email_failed') { ?>
+            if($_GET['status']=='email_failed') { ?>
         <div class="alert alert-danger" id="alert-box" role="alert">
             Failed to send invite email. Please check your email address is correct or contact support.
         </div>
-        <? } else { ?>
+        <?  } else { ?>
         <div class="alert alert-success" id="alert-box" role="alert">
             Team member invite email sent.
         </div>
-        <? }
-    } ?>
+    <?      } 
+        }
+        else if ($_GET['action']=='RemoveMember') {
+            if($_GET['status']=='OK') { ?>
+                <div class="alert alert-success" id="alert-box" role="alert">
+                    Successfully removed team member.
+                </div>  
+    <?      } else { ?>
+                <div class="alert alert-success" id="alert-box" role="alert">
+                    Failed to remove team member. Please try again or contact your administrator.
+                </div>
+    <?      } 
+        }
+    ?>
     </div>
 <? } ?>

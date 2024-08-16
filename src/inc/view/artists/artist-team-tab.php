@@ -36,8 +36,7 @@
                 <td><?=$user->email_address; ?></td>
                 <td>Read</td>
                 <td>Read</td>
-                <td><?=getUserStatusString($user->status); ?></td>
-                <td>
+                <td><?=getUserStatusString($user->status); ?>
                 <?php if ($user->status == 'Pending') { ?>
                     <form action="action.invite.php" method="POST">
                         <input type="hidden" name="brand_id" value="<?=$user->brand_id;?>">
@@ -46,8 +45,11 @@
                         <input type="submit" class="btn" value="Resend invite">
                     </form>
                 <?php } ?>
-                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                </td>
+                <td>
+                <a href="action.remove-team-member.php?artist=<?=$_SESSION['current_artist'];?>&user=<?=$user->user_id;?>">
                     <i class="fa fa-trash" aria-hidden="true"></i>
+                </a>
                 </td>
             </tr>
 <?      }

@@ -28,7 +28,12 @@
             $_SESSION['current_artist'] = $availableArtists[0]->id;
         }
         else {
-            if(!str_contains($_SERVER['REQUEST_URI'],"newartist.php")) redirectTo('/newartist.php');
+            if($isAdmin && !str_contains($_SERVER['REQUEST_URI'],"newartist.php")) {
+                redirectTo('/newartist.php');
+            }
+            else {
+                redirectTo('/noteam.php');
+            }
         }
     }
 
