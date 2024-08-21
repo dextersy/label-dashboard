@@ -2,6 +2,8 @@
     chdir("../..");
     include_once("./inc/util/Mailer.php");
     include_once("./inc/model/ticket.php");
+    include_once("./inc/util/Redirect.php");
+    include_once("./inc/controller/ticket-controller.php");
 
     function sendAdminNotification($ticket) {
 		$subject = "Payment for ticket # " . $ticket->id . " successful.";
@@ -17,7 +19,7 @@
 	}
 
     function sendAdminFailureNotification($reason) {
-		$subject = "Payment failure detected.";
+		$subject = "Link payment webhook error detected.";
 		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Replace with actual administrators later
         $body = "We detected a failed webhook event.<br>Reason: " . $reason;
 		return sendEmail($emailAddresses, $subject, $body);
@@ -33,6 +35,14 @@
             if(!sendAdminNotification($ticket)){
                 sendAdminFailureNotification("Failed to send email.");
             }
+            if (!updateTicketPaymentStatus($ticket->id)) {
+                sendAdminFailureNotification("Ticket payment verification failed.");
+            }
+            else {
+                if (!sendTicket($ticket->id)) {
+                    sendAdminFailureNotification("Failed to send ticket to customer.");
+                }
+            }
         }
         else {
             sendAdminFailureNotification("Invalid payment link ID in JSON response - " . $response->data->attributes->data->id);
@@ -40,6 +50,5 @@
     } else {
         sendAdminFailureNotification("Invalid JSON response.");
     }
-
     http_response_code(200); // Always respond success TODO: Maybe we shouldn't?
 ?>
