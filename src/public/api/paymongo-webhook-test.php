@@ -35,7 +35,7 @@
             }
         }
         else {
-            sendAdminFailureNotification("Invalid payment link ID in JSON response.");
+            sendAdminFailureNotification("Invalid payment link ID in JSON response - " . $response->data->attributes->data->id);
         }
     } else {
         sendAdminFailureNotification("Invalid JSON response.");
