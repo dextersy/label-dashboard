@@ -71,7 +71,7 @@ class Ticket {
     }
 
     function fromPaymentLinkID($id) {
-        $result = MySQLConnection::query("SELECT * FROM `ticket` WHERE `payment_link_id` = " . $id);
+        $result = MySQLConnection::query("SELECT * FROM `ticket` WHERE `payment_link_id` = '" . $id . "'");
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->id = $row['id'];
             $this->event_id = $row['event_id'];
