@@ -1,5 +1,6 @@
 <?
   require_once('./inc/util/Redirect.php');
+  include_once('./inc/controller/block_check.php');
   require_once('./inc/model/user.php');
 
   include_once('./inc/controller/brand_check.php');

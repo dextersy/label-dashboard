@@ -1,13 +1,7 @@
-<?
-  include_once('./inc/controller/block_check.php');
-  require_once('./inc/util/Redirect.php');
-  require_once('./inc/config.php');
-  include_once('./inc/controller/brand_check.php');
-  session_start();
-  if($_SESSION['logged_in_user'] != null) {
-    redirectTo('/dashboard.php');
-  }
+<?php
+    include_once('./inc/controller/brand_check.php');
 ?>
+<html>
 <header>
   <title><?=$_SESSION['brand_name'];?> Dashboard Beta</title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
@@ -40,49 +34,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
-
-    <!-- Alert -->
-    <?
-      if ($_GET['err'] == 'no_user') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        User not found. Please try again or ask admin to invite you.
-      </div>
-    <? }
-      else if ($_GET['err'] == 'pass') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Wrong password. Please try again.
-      </div>
-    <?
-      }
-      else if ($_GET['err'] == 'invalid_hash') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Invalid code. Please request invite again.
-      </div>
-    <?
-      }
-      else if ($_GET['err'] == 'lock') {
-    ?>
-      <div class="alert alert-danger" role="alert">
-        Your account is locked due to too many failed logins. Try again in <?=LOCK_TIME_IN_SECONDS/60;?> minutes.
-      </div>
-    <?
-      }
-    ?>
-    <!-- Login Form -->
-    <form action="action.login.php" method="POST">
-      <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">
-      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
-      <input type="submit" class="fadeIn fourth" value="Log In">
-    </form>
-
+    
     <!-- Remind Passowrd -->
     <div id="formFooter">
-      <a class="underlineHover" href="forgotpassword.php">Forgot Password?</a>
+      <h3><strong>You are not yet part of an artist team.</strong></h3>
+      <p>Please ask your band or label administrator to invite you to your artist team.</p>
+      <a href="logout.php">
+        <input type="button" class="fadeIn fourth" value="Sign Out">
+        </a>
     </div>
 
   </div>
 </div>
 </body>
+</html>

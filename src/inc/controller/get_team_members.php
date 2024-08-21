@@ -71,6 +71,20 @@
         return $userAccessRights;
     }
 
+    function removeMemberFromTeam($artist_id, $user_id) {
+        $sql = "DELETE FROM `artist_access` " .
+            "WHERE  `artist_id` = '" . MySQLConnection::escapeString($artist_id) . "' ". 
+            "AND `user_id` = '" . MySQLConnection::escapeString($user_id) . "' " .
+            "LIMIT 1";
+        $result = MySQLConnection::query($sql);
+        if ($result) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     function getAllAdmins($brand_id){
         $sql = "SELECT `id` FROM `user` ".
             "WHERE `is_admin` IS TRUE and `brand_id` = '" . $brand_id . "'";

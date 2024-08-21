@@ -7,8 +7,7 @@
     require_once('./inc/util/Mailer.php');
     require_once('./inc/util/FileUploader.php');
 
-    function createBuyShortlink($event) {
-        $shortlinkPath = "Buy" . preg_replace('/[^a-z\d]+/i', '', $event->title);
+    function createBuyShortlink($event, $shortlinkPath) {
         $fullUrl = "https://" . $_SERVER['SERVER_NAME'] . "/public/tickets/buy.php?id=" . $event->id;
 
         $curl = curl_init();
@@ -59,8 +58,12 @@
     }
     $event->save();
 
-    if (!isset($event->buy_shortlink) || $event->buy_shortlink == '' || !str_starts_with($event->buy_shortlink, 'http')) {
-        $event->buy_shortlink = createBuyShortlink($event);
+    if (!isset($event->buy_shortlink) || $event->buy_shortlink == '' || substr($event->buy_shortlink, 0, 4) != 'http' ) {
+        $shortlinkPath = "Buy" . preg_replace('/[^a-z\d]+/i', '', $event->title); // Default value
+        if (isset($_POST['slug']) && $_POST['slug'] != '') {
+            $shortlinkPath = $_POST['slug'];
+        }
+        $event->buy_shortlink = createBuyShortlink($event, $shortlinkPath);
         $event->save();
     }
 

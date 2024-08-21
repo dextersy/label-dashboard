@@ -1,4 +1,7 @@
-<?php include_once('./inc/view/header.php'); ?>
+<?php 
+include_once('./inc/view/header.php'); 
+include_once("./inc/controller/access_check.php");
+?>
 <script type="text/javascript">
     function onClickChangePassword() {
         document.getElementById('password-change').style.display = 'block';

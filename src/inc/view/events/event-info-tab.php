@@ -20,6 +20,12 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
         copyText.setSelectionRange(0, 999999);
         navigator.clipboard.writeText(copyText.value);
     }
+
+    function generateSlug() {
+        var eventName = document.getElementById('title').value;
+        var slug = "Buy" + eventName.replace(/[^A-Z0-9]/ig, "");
+        document.getElementById('slug').value = slug;
+    }
 </script>
 <h3><?=$title;?></h3>
 <form action="<?=$formAction;?>" method="POST" enctype="multipart/form-data">
@@ -36,7 +42,7 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
         <div class="col-md-5">
             <div class="form-group">
                 <label for="name">Title</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="<?=$event->title;?>">
+                <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="<?=$event->title;?>" onchange="generateSlug();">
             </div>
             <div class="form-group">
                 <label for="amount">Date</label>
@@ -58,6 +64,12 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
                 <label for="amount">Close ticket sales on</label>
                 <input type="datetime-local" class="form-control" id="close_time" name="close_time" placeholder="Date" value="<?=$event->close_time;?>">
             </div> 
+        <? if (!isset($event->id)) { ?>
+            <div class="form-group">
+                <label for="slug">URL Slug</label>
+                <input type="text" class="form-control" id="slug" name="slug" placeholder="Slug" value="">
+            </div>
+        <? } ?>
             <div class="form-group">
                 <label for="websiteURL">Ticket purchase link</label>
                 <em>Share this link to ticket buyers.</em>

@@ -19,23 +19,33 @@
             <th style="text-align:right;">Total royalties</th>
             <th style="text-align:right;">Total payments</th>
             <th style="text-align:right;">Total balance</th>
+            <th style="text-align:right;">Payout point</th>
+            <th style="text-align:right;">Due for payment</th>
         </thead>
         <tbody>
 <? 
     if ($artists) {
-        $overallTotalPayables = 0;
+        $overallDueForPayment = 0;
+        $overallBalance = 0;
         foreach ($artists as $artist) { 
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id);
             $totalPayments = getTotalPaymentsForArtist($artist->id);
             $totalBalance = $totalRoyalties - $totalPayments;
             if ($totalBalance != 0) {
-                $overallTotalPayables += $totalBalance;
+                $overallBalance += $totalBalance;
+
+                if($totalBalance > $artist->payout_point) {
+                    $overallDueForPayment += $totalBalance;
+                }
         ?>
             <tr>
                 <td><?=$artist->name;?></td>
                 <td style="text-align:right;">Php<?=number_format($totalRoyalties,2);?></td>
                 <td style="text-align:right;">Php<?=number_format($totalPayments,2);?></td>
                 <td style="text-align:right;"><strong>Php<?=number_format($totalBalance,2);?></strong></td>
+                <td style="text-align:right;">Php<?=number_format($artist->payout_point,0);?></td>
+                <td style="text-align:right;"><?=($totalBalance > $artist->payout_point)?"✓":"";?></td>
+
             </tr>
 <?          }
          } 
@@ -53,7 +63,19 @@
                     <h4 class="title">Total Balance</h4>
                 </div>
                 <div class="content">
-                    <h3>Php <?=number_format($overallTotalPayables,2);?></h3>
+                    <h3>Php <?=number_format($overallBalance,2);?></h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+
+                <div class="header">
+                    <h4 class="title">Total Due For Payment</h4>
+                </div>
+                <div class="content">
+                    <h3>Php <?=number_format($overallDueForPayment,2);?></h3>
                 </div>
             </div>
         </div>

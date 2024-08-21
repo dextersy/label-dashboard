@@ -3,8 +3,7 @@
     require_once('./inc/controller/access_check.php');
     require_once('./inc/util/Mailer.php');
 
-    function createReferralShortlink($eventReferrer) {
-        $shortlinkPath = "Buy" . preg_replace('/[^a-z\d]+/i', '', $eventReferrer->referral_code);
+    function createReferralShortlink($eventReferrer, $shortlinkPath) {
         $fullUrl = "https://" . $_SERVER['SERVER_NAME'] . "/public/tickets/buy.php?id=" . $eventReferrer->event_id . "&ref=" . $eventReferrer->referral_code;
 
         $curl = curl_init();
@@ -53,8 +52,12 @@
     $referrer->fromFormPOST($_POST);
     $referrer->save();
 
-    if (!isset($referrer->referral_shortlink) || $referrer->referral_shortlink == '' || !str_starts_with($referrer->referral_shortlink, 'http')) {
-        $referrer->referral_shortlink = createReferralShortlink($referrer);
+    if (!isset($referrer->referral_shortlink) || $referrer->referral_shortlink == '' || substr( $referrer->referral_shortlink, 0, 4 ) != "http" ) {
+        $shortlinkPath = "Buy" . preg_replace('/[^a-z\d]+/i', '', $eventReferrer->referral_code);
+        if (isset($_POST['slug']) && $_POST['slug'] != '') {
+            $shortlinkPath = $_POST['slug'];
+        }
+        $referrer->referral_shortlink = createReferralShortlink($referrer, $shortlinkPath);
         $referrer->save();
     }
 
