@@ -70,6 +70,28 @@ class Ticket {
         }
     }
 
+    function fromPaymentLinkID($id) {
+        $result = MySQLConnection::query("SELECT * FROM `ticket` WHERE `payment_link_id` = " . $id);
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+            $this->id = $row['id'];
+            $this->event_id = $row['event_id'];
+            $this->name = $row['name'];
+            $this->email_address = $row['email_address'];
+            $this->contact_number = $row['contact_number'];
+            $this->number_of_entries = $row['number_of_entries'];
+            $this->ticket_code = $row['ticket_code'];
+            $this->status = $row['status'];
+            $this->payment_link = $row['payment_link'];
+            $this->payment_link_id = $row['payment_link_id'];
+            $this->price_per_ticket = $row['price_per_ticket'];
+            $this->payment_processing_fee = $row['payment_processing_fee'];
+            $this->referrer_id = $row['referrer_id'];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     function fromFormPOST($post) {
         if (isset($_POST['id'])) {
             $this->id = $_POST['id'];
