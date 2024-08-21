@@ -1,4 +1,5 @@
 <?
+    include_once('./inc/header.php');
     require_once('./inc/model/artist.php');
     require_once('./inc/controller/get-artist-list.php');
     require_once('./inc/controller/get-royalties.php');
@@ -76,6 +77,7 @@
                 </div>
                 <div class="content">
                     <h3>Php <?=number_format($overallDueForPayment,2);?></h3>
+                    <button class="btn" style="border:2px gray solid; width:100%;">Pay Now</button>
                 </div>
             </div>
         </div>

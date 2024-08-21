@@ -20,7 +20,10 @@
             </div>
             <div class="content">
                 Your current balance is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="This is what we owe you."></i><br>
-                <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3><br>
+                <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3>
+                <? if ($isAdmin) { ?>
+                <button class="btn" style="width:100%">Pay Now</button>
+                <? } ?>
             </div>
         </div>
     </div>
