@@ -1,4 +1,5 @@
 <?php 
+    chdir("../..");
     include_once("./inc/util/Mailer.php");
 
     function sendAdminNotification($data) {
