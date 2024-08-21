@@ -2,10 +2,10 @@
     chdir("../..");
     include_once("./inc/util/Mailer.php");
 
-    function sendAdminNotification($data) {
-		$subject = "Paymongo webhook event occurred";
+    function sendAdminNotification() {
+		$subject = "Paymongo webhook event received.";
 		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Replace with actual administrators later
-        $body = "Data of type " + $data->data->attributes->type + " received.";
+        $body = "Received a webhook event.";
 		return sendEmail($emailAddresses, $subject, $body);
 	}
 
@@ -21,7 +21,7 @@
     
 
     if ($data !== null) {
-        sendAdminNotification($data);
+        sendAdminNotification();
     } else {
         sendAdminFailureNotification();
     }
