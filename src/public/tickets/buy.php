@@ -27,11 +27,19 @@
 <div class="wrapper fadeInDown">
     <div id="formHeader">
       <div class="row align-items-center h-100">
+<?php
+  if (isset($event->poster_url) && $event->poster_url != '') {
+?>
       <div class="col-md-4">
         <img src="../../<?=$event->poster_url;?>" class="event-poster">
       </div>
       <div class="col-md-8">
+<? } 
+  else { 
+?>
+      <div class="col-md-12">
 <?
+  }
   if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
 ?>
   <h1 style="color:black; font-size:2rem;">Buy tickets to <strong><?=$event->title;?></strong></h1>

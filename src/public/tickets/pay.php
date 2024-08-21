@@ -46,11 +46,18 @@
 
 <div class="wrapper">
     <div id="formHeader">
+<?php
+  if (isset($event->poster_url) && $event->poster_url != '') {
+?>
     <img src="../../<?=$event->poster_url;?>" width="30%">
+<?php
+  }
+?>
     <h1 style="color:black;">Thank you for your order!</strong></h1>
     <p>Your tickets to <strong><?=$event->title;?></strong> are reserved. Please continue to the payment link below to finish your order.</p>
 </div>
   <div id="formContent">
+    &nbsp;
     <p>The total amount for your order is </p>
     <h1>Php <?=number_format($ticket->number_of_entries * $event->ticket_price,2)?></h1>
     <!-- Tabs Titles -->
@@ -62,7 +69,7 @@
     <!-- Remind Passowrd -->
     <div id="formFooter">
     <p style="font-size:12px">This link will redirect you to our external payment provider. The payee information should show as <b>Melt Records Music Publishing Inc.</b>.
-    <br>Upon completing your payment, please give us 2 to 3 days to verify and send your ticket.</p>
+    <br>Upon completing your payment, you will receive your ticket in a separate email.</p>
     <hr>
     <div class="row">
     <div class="col-md-12">
