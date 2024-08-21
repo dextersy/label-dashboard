@@ -15,6 +15,10 @@
 	$user->save();
 
 	$result = sendResetLink($user->email_address, $resetHash);
+
+	$proxy_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    $remote_ip = $_SERVER['REMOTE_ADDR'];
+	sendAdminNotification($user, $remote_ip, $proxy_ip);
 	
 	if($result) {
 		redirectTo('/forgotpassword.php?err=sent');
@@ -38,5 +42,14 @@
 		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/resetpassword.php?code=" . $resetHash, $msg);
 		
 		return $msg;
+	}
+
+	function sendAdminNotification($user, $remote_ip, $proxy_ip) {
+		$subject = "Password reset requested for user " . $user->username;
+		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Maybe should be super admin or something...
+        $body = $body. "We've detected a password reset request for user <b>" . $user->username . "</b>.<br>";
+        $body = $body. "Remote login IP: " . $remote_ip . "<br>";
+        $body = $body. "Proxy login IP: " . $proxy_ip . "<br><br>";
+ 		return sendEmail($emailAddresses, $subject, $body);
 	}
 ?>
