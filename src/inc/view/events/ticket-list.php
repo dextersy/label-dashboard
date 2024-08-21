@@ -1,5 +1,5 @@
 <?
-    include_once('./inc/controller/get_tickets.php');
+    include_once('./inc/controller/ticket-controller.php');
 
     include_once('./inc/controller/brand_check.php');
     include_once('./inc/model/eventreferrer.php');

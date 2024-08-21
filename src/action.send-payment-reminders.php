@@ -2,7 +2,7 @@
     require_once('./inc/config.php');
     require_once('./inc/model/ticket.php');
     require_once('./inc/controller/access_check.php');
-    require_once('./inc/controller/get_tickets.php');
+    require_once('./inc/controller/ticket-controller.php');
     require_once('./inc/util/Redirect.php');
     require_once('./inc/util/Mailer.php');
 
