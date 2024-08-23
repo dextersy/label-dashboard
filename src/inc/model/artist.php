@@ -30,7 +30,7 @@ class Artist {
         $tiktok_handle = null,
         $band_members = null,
         $youtube_channel = null,
-        $payout_point = 1000 // Default to 1000
+        $payout_point = null
     ) 
     {
         $this->id = $id;
@@ -65,6 +65,11 @@ class Artist {
             $this->band_members = $row['band_members'];
             $this->youtube_channel = $row['youtube_channel'];
             $this->payout_point = $row['payout_point'];
+
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
@@ -121,7 +126,6 @@ class Artist {
                 "`payout_point` = '" . MySQLConnection::escapeString($this->payout_point) . "' " .
                 "WHERE `id` = " . $this->id;
         }
-
         $result = MySQLConnection::query($sql);
         if ($result) {
             if ($this->id == null) {

@@ -9,3 +9,6 @@
 .badge-danger {
     background-color: red;
 }
+.badge-warning {
+    background-color: orange !important;
+}

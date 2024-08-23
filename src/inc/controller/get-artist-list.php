@@ -2,6 +2,18 @@
 require_once('./inc/util/MySQLConnection.php');
 require_once('./inc/model/artist.php');
 
+class ArtistListItem {
+    public $id;
+    public $name;
+    public $payout_point;
+
+    function __construct($id, $name, $payout_point) {
+        $this->id = $id;
+        $this->name = $name;
+        $this->payout_point = $payout_point;
+    }
+}
+
 function getAllArtists($brand_id){
     $result = MySQLConnection::query("SELECT * FROM `artist` WHERE `brand_id`='" . $brand_id ."' ORDER BY `name` ASC");
     if ($result->num_rows < 1) {
@@ -10,15 +22,10 @@ function getAllArtists($brand_id){
     
     $i = 0;
     while($row = $result->fetch_assoc()) {
-        $artists[$i++] = new Artist(
+        $artists[$i++] = new ArtistListItem(
             $row['id'],
             $row['name'],
-            $row['website_page_url'],
-            $row['facebook_handle'],
-            $row['instagram_handle'],
-            $row['twitter_handle'],
-            $row['bio'],
-            $row['starting_balance']
+            $row['payout_point']
         );
     }
     return $artists;
@@ -38,12 +45,7 @@ function getArtistListForUser($user){
         $artists[$i++] = new Artist(
             $row['id'],
             $row['name'],
-            $row['website_page_url'],
-            $row['facebook_handle'],
-            $row['instagram_handle'],
-            $row['twitter_handle'],
-            $row['bio'],
-            $row['starting_balance']
+            $row['payout_point']
         );
     }
     return $artists;
@@ -63,12 +65,7 @@ function getArtistListForRelease($release_id) {
         $artists[$i++] = new Artist(
             $row['id'],
             $row['name'],
-            $row['website_page_url'],
-            $row['facebook_handle'],
-            $row['instagram_handle'],
-            $row['twitter_handle'],
-            $row['bio'],
-            $row['starting_balance']
+            $row['payout_point']
         );
     }
     return $artists;
