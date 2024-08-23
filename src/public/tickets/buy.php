@@ -19,7 +19,7 @@
 <body>
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="style.css?version=1.4" rel="stylesheet">
+<link href="style.css?version=1.5" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
@@ -68,14 +68,15 @@
     <!-- Sales purchase Form -->
     <form action="action.buy.php" method="POST">
       <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
-      <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name"><br>
-      <span class="fadeIn second" style="font-size:14px;color:white;"><em>Please use a name that appears on any valid ID.</em></span>
-      <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address">
-      <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number">
-      <input type="text" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?">
+      <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name" required><br>
+      <span class="fadeIn second field-description"><em>Please use a name that appears on any valid ID.</em></span>
+      <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address" required>
+      <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number" required>
+      <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?" required>
       <input type="text" id="referral_code" class="fadeIn fifth" name="referral_code" placeholder="Referral code (optional)" <?=isset($_GET['ref'])?'value="' . $_GET['ref'] . '" readonly':'';?>><br><br>
-      <span class="fadeIn sixth" style="font-size:14px; color:white; width: 100%;">We respect your privacy and will use your information only for the purpose of validating your purchase.<br>By submitting this form, you agree to share your data with us.</span><br>
       <input type="submit" class="fadeIn sixth" value="Order Tickets">
+      <div class="fadeIn sixth field-description">We respect your privacy and will use your information only for the purpose of validating your purchase.<br>By submitting this form, you agree to share your data with us.</div>
+      
     </form>
 
     <!-- Remind Passowrd -->
