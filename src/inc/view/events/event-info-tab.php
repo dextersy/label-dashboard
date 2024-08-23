@@ -12,6 +12,9 @@ else {
 
 $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
 
+$status = (!isset($event->close_time) || time() <= strtotime($event->close_time))?"Open":"Closed";
+$statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->close_time))?"badge-success":"badge-danger";
+
 ?>
 <script type="text/javascript">
     function copyBuyLink() {
@@ -83,7 +86,7 @@ $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
                 </div>
             </div>
             <div class="form-group">
-                <strong>Status: </strong><?=(!isset($event->close_time) || time() <= strtotime($event->close_time))?"Open":"Closed";?>
+                <strong>Status: </strong><span class="badge badge-pill <?=$statusBadgeClass;?>"><?=$status;?></span>
             </div>
        </div>
     </div>
