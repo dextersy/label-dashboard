@@ -44,16 +44,19 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
         </div>
         <div class="col-md-5">
             <div class="form-group">
+                <strong>Status: </strong><span class="badge badge-pill <?=$statusBadgeClass;?>"><?=$status;?></span>
+            </div>
+            <div class="form-group">
                 <label for="name">Title</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="<?=$event->title;?>" onchange="generateSlug();">
+                <input type="text" class="form-control" id="title" name="title" placeholder="Title" value="<?=$event->title;?>" onchange="generateSlug();" required>
             </div>
             <div class="form-group">
                 <label for="amount">Date</label>
-                <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$event->date_and_time;?>">
+                <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$event->date_and_time;?>" required>
             </div> 
             <div class="form-group">
                 <label for="websiteURL">Venue</label>
-                <input type="text" class="form-control" id="venue" name="venue" placeholder="Venue" value="<?=$event->venue;?>">
+                <input type="text" class="form-control" id="venue" name="venue" placeholder="Venue" value="<?=$event->venue;?>" required>
             </div>
             <div class="form-group">
                 <label for="websiteURL">RSVP link</label>
@@ -61,7 +64,7 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
             </div>
             <div class="form-group">
                 <label for="websiteURL">Ticket price</label>
-                <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>">
+                <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>" required>
             </div>
             <div class="form-group">
                 <label for="amount">Close ticket sales on</label>
@@ -70,7 +73,7 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
         <? if (!isset($event->id)) { ?>
             <div class="form-group">
                 <label for="slug">URL Slug</label>
-                <input type="text" class="form-control" id="slug" name="slug" placeholder="Slug" value="">
+                <input type="text" class="form-control" id="slug" name="slug" placeholder="Slug" value="" required>
             </div>
         <? } ?>
             <div class="form-group">
@@ -84,9 +87,6 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                         <a href="javascript:copyBuyLink();"><i class="fa fa-copy"></i></a>
                     </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <strong>Status: </strong><span class="badge badge-pill <?=$statusBadgeClass;?>"><?=$status;?></span>
             </div>
        </div>
     </div>
