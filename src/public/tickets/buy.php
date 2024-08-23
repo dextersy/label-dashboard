@@ -70,7 +70,7 @@
     <form action="action.buy.php" method="POST">
       <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
       <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name" required><br>
-      <div class="fadeIn second badge badge-info"><i class="fa fa-info-circle"></i> Please use a name that appears on any valid ID.</div>
+      <div class="fadeIn second badge badge-pill badge-light"><i class="fa fa-info-circle"></i> Please use a name that appears on any valid ID.</div>
       <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address" required>
       <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number" required>
       <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?" required>
