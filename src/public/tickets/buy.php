@@ -19,6 +19,7 @@
 <body>
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
 <link href="style.css?version=1.5" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -69,7 +70,7 @@
     <form action="action.buy.php" method="POST">
       <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
       <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name" required><br>
-      <span class="fadeIn second field-description"><em>Please use a name that appears on any valid ID.</em></span>
+      <div class="fadeIn second badge badge-info"><i class="fa fa-info-circle"></i> Please use a name that appears on any valid ID.</div>
       <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address" required>
       <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number" required>
       <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?" required>
