@@ -8,8 +8,8 @@
         <?php include_once('inc/view/navbar.php'); ?>
         
             <div class="container-fluid">
-            <?php include_once('./inc/view/notifications.php'); ?>
             <?php include_once('./inc/view/artist-selection.php'); ?>
+            <?php include_once('./inc/view/notifications.php'); ?>
                 <div class="row" style="padding:20px;">
                     <ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#summary"><i class="fa fa-info"></i> Summary</a></li>

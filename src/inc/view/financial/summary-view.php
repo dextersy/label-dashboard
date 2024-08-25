@@ -1,7 +1,7 @@
 <? 
     include_once('./inc/controller/get-earnings.php'); 
     include_once('./inc/controller/get-royalties.php'); 
-    include_once('./inc/controller/get-payments.php'); 
+    include_once('./inc/controller/payment-controller.php'); 
 
     session_start();
     $totalRoyalties = getTotalRoyaltiesForArtist($_SESSION['current_artist']);

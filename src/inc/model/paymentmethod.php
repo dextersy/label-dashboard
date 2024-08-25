@@ -56,27 +56,6 @@ class PaymentMethod{
         $this->is_default_for_artist = isset($post['is_default_for_artist']) ? $post['is_default_for_artist'] : "0";
     }
 
-    static function getPaymentMethodsForArtist($artist_id) {
-        $sql = "SELECT * FROM `payment_method` WHERE `artist_id` = '" . $artist_id . "'";
-        $result = MySQLConnection::query($sql);
-        if ($result->num_rows < 1) {
-            return null;
-        }
-
-        $i = 0;
-        while($row = $result->fetch_assoc()) {
-            $paymentMethods[$i++] = new PaymentMethod(
-                $row['id'],
-                $row['artist_id'],
-                $row['type'],
-                $row['account_name'],
-                $row['account_number_or_email'],
-                $row['is_default_for_artist']
-            );
-        }
-        return $paymentMethods;
-    }
-
     function save() {
 
         if ( $this->id == null ) {

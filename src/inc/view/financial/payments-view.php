@@ -1,7 +1,7 @@
 <?
     include_once("./inc/model/paymentmethod.php");
     include_once("./inc/model/artist.php");
-    include_once("./inc/controller/get-payments.php");
+    include_once("./inc/controller/payment-controller.php");
     session_start();
     $paymentViewItems = getPaymentsForArtist($_SESSION['current_artist']);
 
@@ -11,11 +11,6 @@
     $banklist = file_get_contents("./assets/banklist"); // @TODO Better to do via real time API, if possible
     $banks = explode("\n", $banklist);
 ?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/css/bootstrap.css" rel="stylesheet"/>
 
 <div class="row">
     <div class="col-md-6">
@@ -65,7 +60,7 @@
                     </thead>
                     <tbody>
         <? 
-            $paymentMethods = PaymentMethod::getPaymentMethodsForArtist($_SESSION['current_artist']);
+            $paymentMethods = getPaymentMethodsForArtist($_SESSION['current_artist']);
             if ($paymentMethods) {
                 foreach ($paymentMethods as $paymentMethod) { 
                 ?>
@@ -93,7 +88,8 @@
             <form action="action.add-payment-method.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="artist_id" value="<?=$_SESSION['current_artist'];?>">
             <label>Bank name</label>
-            <select class="selectpicker form-control" data-live-search="true" name="type" id="type" required>
+            <select class="selectpicker form-control" data-live-search="true" name="type" id="type" required="true">
+            <optgroup label="Supported banks">
         <?php
             foreach($banks as $bank) {
         ?>
@@ -101,6 +97,7 @@
         <?php
             }
         ?>  
+            </optgroup>
             </select>
             <label>Account name</label>
                 <input type="text" class="form-control" name="account_name" required>
@@ -112,3 +109,7 @@
 
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>

@@ -2,7 +2,7 @@
     require_once('./inc/model/artist.php');
     require_once('./inc/controller/get-artist-list.php');
     require_once('./inc/controller/get-royalties.php');
-    require_once('./inc/controller/get-payments.php');
+    require_once('./inc/controller/payment-controller.php');
 
     require_once('./inc/model/release.php');
     require_once('./inc/controller/get-release-list.php');

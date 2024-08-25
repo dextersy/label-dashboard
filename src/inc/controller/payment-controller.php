@@ -1,6 +1,8 @@
 <?php
+require_once('./inc/config.php');
 require_once('./inc/util/MySQLConnection.php');
 require_once('./inc/model/payment.php');
+require_once('./inc/model/paymentmethod.php');
 
 class PaymentViewItem {
     public $date_paid;
@@ -46,6 +48,56 @@ function getTotalPaymentsForArtist($artist_id, $start_date = null, $end_date = n
         $totalPayments = $row['total_payment'];
     }
     return $totalPayments;
+}
+
+function getWalletBalance($brand_id) {
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+    CURLOPT_URL => "https://api.paymongo.com/v1/wallets/" . PAYMONGO_WALLET_ID, // @TODO Replace this with database entry from brand
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => "",
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => "GET",
+    CURLOPT_HTTPHEADER => [
+        "accept: application/json",
+        "authorization: Basic " . PAYMONGO_SECRET_KEY
+    ],
+    ]);
+
+    $response = curl_exec($curl);
+    $err = curl_error($curl);
+
+    if($err) {
+        return -1;
+    }
+    else {
+        $wallet = json_decode($response);
+        return $wallet->data->attributes->available_balance / 100;
+    }
+}
+
+function getPaymentMethodsForArtist($artist_id) {
+    $sql = "SELECT * FROM `payment_method` WHERE `artist_id` = '" . $artist_id . "'";
+    $result = MySQLConnection::query($sql);
+    if ($result->num_rows < 1) {
+        return null;
+    }
+
+    $i = 0;
+    while($row = $result->fetch_assoc()) {
+        $paymentMethods[$i++] = new PaymentMethod(
+            $row['id'],
+            $row['artist_id'],
+            $row['type'],
+            $row['account_name'],
+            $row['account_number_or_email'],
+            $row['is_default_for_artist']
+        );
+    }
+    return $paymentMethods;
 }
 
 ?>

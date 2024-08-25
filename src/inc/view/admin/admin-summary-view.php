@@ -4,7 +4,7 @@
     require_once('./inc/controller/get-release-list.php');
     require_once('./inc/controller/get-royalties.php');
     require_once('./inc/controller/get-earnings.php');
-    require_once('./inc/controller/get-payments.php');
+    require_once('./inc/controller/payment-controller.php');
     require_once('./inc/controller/get-recuperable-expense.php');
 
     $artists = getAllArtists($_SESSION['brand_id']);
