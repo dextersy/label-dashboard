@@ -22,3 +22,28 @@ h1, h2, h3, h4 {
     color:#333333;
     padding:10px;
 }   
+
+/* For photo gallery artist */
+.artist-gallery-container {
+    width:250px;
+    height:250px;
+    position:relative;
+    display:inline-block;
+    margin:10px;
+}
+.artist-gallery-image {
+    width:250px;
+    height:250px;
+    object-fit:cover;
+}
+.artist-gallery-delete-button {
+    float: left;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 1000;
+    background-color: #6e6e6e87;
+    padding: 5px;
+    color: #FFFFFF;
+    font-weight: bold;
+ }

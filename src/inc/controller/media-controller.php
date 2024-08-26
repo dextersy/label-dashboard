@@ -20,4 +20,18 @@ function getPhotoGalleryForArtist($artist_id, $start = 0, $limit = -1){
     }
     return $artistImages;
 }
+
+function deleteMedia($id) {
+    $image = new ArtistImage;
+    $image->fromID($id);
+    $img_path = $image->path;
+
+    $sql = "DELETE FROM `artist_image` WHERE `id` = '" . $id . "'";
+    $result = MySQLConnection::query($sql);
+
+    if ($result) {
+        $result = unlink($img_path);
+    }
+    return $result;
+}
 ?>

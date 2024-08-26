@@ -1,5 +1,5 @@
 <?
-    include_once('./inc/controller/get-media.php');
+    include_once('./inc/controller/media-controller.php');
 
     $photoGallery = getPhotoGalleryForArtist($_SESSION['current_artist']);
 
@@ -12,7 +12,10 @@
     if ($photoGallery) {
         foreach($photoGallery as $photo) {
 ?>
-    <img src="<?=$photo->path;?>" style="width:250px;height:250px;object-fit:cover;"> 
+    <div class="artist-gallery-container">
+        <img src="<?=$photo->path;?>" class="artist-gallery-image">
+        <div class="artist-gallery-delete-button"><a href="action.delete-media.php?id=<?=$photo->id;?>" style="color:#FFFFFF;">X</a></div>
+    </div> 
 <?      }
     } else {
 ?>

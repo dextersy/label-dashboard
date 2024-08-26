@@ -37,7 +37,7 @@
     <link href="assets/css/light-bootstrap-dashboard.css?version=55" rel="stylesheet"/>
 
     <!-- Custom CSS for artist dashboard -->
-    <link href="assets/css/dashboard.css?version=52" rel="stylesheet"/>
+    <link href="assets/css/dashboard.css?version=53" rel="stylesheet"/>
 
 
     <!--     Fonts and icons     -->
