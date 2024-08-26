@@ -11,6 +11,7 @@ class Brand {
     public $release_submission_url;
     public $catalog_prefix;
     public $parent_brand;
+    public $paymongo_wallet_id;
 
     function __construct(
         $id = null, 
@@ -20,7 +21,8 @@ class Brand {
         $brand_website = null,
         $release_submission_url = null,
         $catalog_prefix = null,
-        $parent_brand = null
+        $parent_brand = null,
+        $paymongo_wallet_id = null
     ) 
     {
         $this->id = $id;
@@ -31,6 +33,7 @@ class Brand {
         $this->release_submission_url = $release_submission_url;
         $this->catalog_prefix = $catalog_prefix;
         $this->parent_brand = $parent_brand;
+        $this->paymongo_wallet_id = $paymongo_wallet_id;
     }
 
     function fromID($id) {
@@ -44,6 +47,7 @@ class Brand {
             $this->release_submission_url = $row['release_submission_url'];
             $this->catalog_prefix = $row['catalog_prefix'];
             $this->parent_brand = $row['parent_brand']; // Assuming 'parent_brand' is a field in the database
+            $this->paymongo_wallet_id = $row['paymongo_wallet_id'];
         }
     }
 
@@ -68,11 +72,14 @@ class Brand {
         if(isset($_POST['parent_brand'])) {
             $this->parent_brand = $_POST['parent_brand'];
         }
+        if(isset($_POST['paymongo_wallet_id'])) {
+            $this->paymongo_wallet_id = $_POST['paymongo_wallet_id'];
+        }
     }
 
     function save() {
         if ($this->id == null ) {
-            $sql = "INSERT INTO `brand` (`name`, `logo_url`, `brand_color`, `brand_website`, `release_submission_url`, `catalog_prefix`, `parent_brand`) ".
+            $sql = "INSERT INTO `brand` (`name`, `logo_url`, `brand_color`, `brand_website`, `release_submission_url`, `catalog_prefix`, `parent_brand`, `paymongo_wallet_id`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_name) . "', ".
                 "'" . MySQLConnection::escapeString($this->logo_url) . "', " .
@@ -80,7 +87,8 @@ class Brand {
                 "'" . MySQLConnection::escapeString($this->brand_website) . "', " .
                 "'" . MySQLConnection::escapeString($this->release_submission_url) . "', " .
                 "'" . MySQLConnection::escapeString($this->catalog_prefix) . "', " .
-                "'" . MySQLConnection::escapeString($this->parent_brand) . "'" .
+                "'" . MySQLConnection::escapeString($this->parent_brand) . "', " .
+                "'" . MySQLConnection::escapeString($this->paymongo_wallet_id) . "'" .
                 ")";
         }
         else {
@@ -92,6 +100,7 @@ class Brand {
                 "`release_submission_url` = '" . MySQLConnection::escapeString($this->release_submission_url) . "', " .
                 "`catalog_prefix` = '" . MySQLConnection::escapeString($this->catalog_prefix) . "'" .
                 (isset($this->parent_brand) ?  ", " . "`parent_brand` = '" . MySQLConnection::escapeString($this->parent_brand) . "' " : " ") .
+                ", `paymongo_wallet_id` = '" . MySQLConnection::escapeString($this->paymongo_wallet_id) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
@@ -107,5 +116,6 @@ class Brand {
         }
     }
 }
+
 
 ?>

@@ -3,6 +3,7 @@ require_once('./inc/config.php');
 require_once('./inc/util/MySQLConnection.php');
 require_once('./inc/model/payment.php');
 require_once('./inc/model/paymentmethod.php');
+require_once('./inc/model/brand.php');
 
 class PaymentViewItem {
     public $date_paid;
@@ -51,10 +52,13 @@ function getTotalPaymentsForArtist($artist_id, $start_date = null, $end_date = n
 }
 
 function getWalletBalance($brand_id) {
+    $brand = new Brand;
+    $brand->fromID($brand_id);
+    
     $curl = curl_init();
 
     curl_setopt_array($curl, [
-    CURLOPT_URL => "https://api.paymongo.com/v1/wallets/" . PAYMONGO_WALLET_ID, // @TODO Replace this with database entry from brand
+    CURLOPT_URL => "https://api.paymongo.com/v1/wallets/" . $brand->paymongo_wallet_id,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => "",
     CURLOPT_MAXREDIRS => 10,

@@ -49,6 +49,10 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
                 <label for="name">Release Submission URL</label><i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Link to the form where your artists should submit their releases."></i>
                 <input type="text" class="form-control" id="release_submission_url" name="release_submission_url" placeholder="Release Submission URL" value="<?=$brand->release_submission_url;?>">
             </div>
+            <div class="form-group">
+                <label for="name">Paymongo Wallet ID (optional)</label>
+                <input type="text" class="form-control" id="txt_paymongoWalletID" name="paymongo_wallet_id" placeholder="Paymongo Wallet ID" value="<?=$brand->paymongo_wallet_id;?>">
+            </div>
             <button type="submit" class="btn btn-default">Save Changes</button>
         </div>
     </div>
