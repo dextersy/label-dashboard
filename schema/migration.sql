@@ -307,3 +307,9 @@ ADD COLUMN `close_time` DATETIME NULL DEFAULT NULL AFTER `buy_shortlink`;
 --- AUG 16, 2024
 ALTER TABLE `artist` 
 ADD COLUMN `payout_point` INT NOT NULL DEFAULT 1000 AFTER `youtube_channel`;
+
+--- AUG 26, 2024
+ALTER TABLE `brand` 
+ADD COLUMN `paymongo_wallet_id` VARCHAR(255) NULL DEFAULT NULL AFTER `parent_brand`;
+ALTER TABLE `payment_method` 
+ADD COLUMN `bank_code` VARCHAR(45) NOT NULL DEFAULT 'N/A' AFTER `is_default_for_artist`;
