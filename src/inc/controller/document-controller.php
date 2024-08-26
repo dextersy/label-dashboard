@@ -20,4 +20,18 @@ function getDocumentsForArtist($artist_id, $start = 0, $limit = -1){
     }
     return $artistDocuments;
 }
+
+function deleteDocument($id) {
+    $document = new ArtistDocument;
+    $document->fromID($id);
+    $doc_path = $document->path;
+
+    $sql = "DELETE FROM `artist_documents` WHERE `id` = '" . $id . "'";
+    $result = MySQLConnection::query($sql);
+
+    if ($result) {
+        $result = unlink($doc_path);
+    }
+    return $result;
+}
 ?>

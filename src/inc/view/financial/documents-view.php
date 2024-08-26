@@ -1,5 +1,5 @@
 <?
-    include_once('./inc/controller/get-documents.php');
+    include_once('./inc/controller/document-controller.php');
     include_once('./inc/controller/access_check.php');
 
     $documents = getDocumentsForArtist($_SESSION['current_artist']);
@@ -30,11 +30,11 @@
         <div class="col-md-3">
             <div class="form-group">
             <label for="cover_art">Upload new</label>
-                <input type="file" class="form-control" id="document" name="document" accept=".pdf">
+                <input type="file" class="form-control" id="document" name="document" accept=".pdf" required>
             </div>
             <div class="form-group">
             <label for="description">Title</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+                <input type="text" class="form-control" id="title" name="title" placeholder="Title" required>
             </div>
             <button type="submit" class="btn btn-default">Upload</button>
         </div>
@@ -54,8 +54,12 @@
     <? } ?>
         </select>
     <? if ($isAdmin) { ?>
-        <a href="#" onclick="toggleUpload();"><i class="fa fa-plus"></i></a>
-    <? } ?>
+        <a href="#" onclick="toggleUpload();"><i class="fa fa-plus"></i></a>&nbsp; 
+        <? if(isset($default_path)) { ?>
+        <a href="action.delete-document.php?id=<?=$document->id;?>"><i class="fa fa-trash"></i></a>
+    <?      
+            }
+        } ?>
     </div>
 </div>
 <div class="row">
