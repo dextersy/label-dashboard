@@ -51,7 +51,7 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
             </div>
             <div class="form-group">
                 <label for="name">Paymongo Wallet ID (optional)</label>
-                <input type="text" class="form-control" id="txt_paymongoWalletID" name="paymongo_wallet_id" placeholder="Paymongo Wallet ID" value="<?=$brand->paymongo_wallet_id;?>">
+                <input type="password" class="form-control" id="txtHidden_paymongoWalletID" name="paymongo_wallet_id" placeholder="Paymongo Wallet ID" value="<?=$brand->paymongo_wallet_id;?>">
             </div>
             <button type="submit" class="btn btn-default">Save Changes</button>
         </div>
