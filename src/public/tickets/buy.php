@@ -1,10 +1,16 @@
 <?
     chdir("../..");
+    include_once("./inc/controller/brand_check.php");
     include_once("./inc/model/brand.php");
     include_once("./inc/model/event.php");
 
     $event = new Event;
     $event->fromID($_GET['id']);
+
+    if($event->brand_id != $_SESSION['brand_id'] || $event->title == '') {
+      header('HTTP/1.0 404 not found');
+      die();
+    }
 
     $brand = new Brand;
     $brand->fromID($event->brand_id);
