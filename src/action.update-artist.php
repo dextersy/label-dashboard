@@ -6,6 +6,7 @@
     require_once('./inc/util/Mailer.php');
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/util/FileUploader.php');
+    require_once('./inc/controller/users-controller.php');
 
     if(isset($_POST['id']) && strlen($_POST['id']) > 0) {
         $artistOld = new Artist;

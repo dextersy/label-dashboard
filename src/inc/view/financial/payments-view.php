@@ -40,10 +40,12 @@
             </table>
         </div>
         <h3>Payout point</h3>
-        <p><i class="fa fa-info-circle"></i> Set the amount to receive payouts. Minimum is P1,000. Charge of P10.00 is deducted from each payout.</p>
+        <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i> Set the minimum amount to send automatic payouts. Minimum is P1,000. Charge of P10.00 is deducted from each payout.
+        </div>
         <form action="action.set-payout-point.php" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?=$artist->id;?>">
-        <input type="number" min="1000" class="form-control" name="payout_point" value="<?=$artist->payout_point;?>" required>
+        <input type="number" min="1000" step="1" class="form-control" name="payout_point" value="<?=$artist->payout_point;?>" required>
         <button type="submit" class="btn btn-default">Save</button>
         </form>
     </div>
@@ -81,34 +83,34 @@
             </div>
             
             <h4>Add bank details</h4>
-            <div class="badge badge-pill badge-warning">
-                <i class="fa fa-warning"></i> Please make sure the details are correct. Payments sent to wrong accounts may not be recoverable.
-            </div>
+            
             <form action="action.add-payment-method.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="artist_id" value="<?=$_SESSION['current_artist'];?>">
             <label>Bank name</label>
-            <select class="selectpicker form-control" data-live-search="true" name="type" id="type" required="true">
-            <optgroup label="Supported banks">
+            <select class="form-control" name="bank_selection" id="type" required="true">
         <?php
             foreach($banks as $bank) {
         ?>
-                <option value="<?=$bank->bank_code;?>"><?=$bank->bank_name;?></option>
+                <option value="<?=$bank->bank_code;?>,<?=$bank->bank_name;?>"><?=$bank->bank_name;?></option>
         <?php
             }
         ?>  
-            </optgroup>
             </select>
             <label>Account name</label>
                 <input type="text" class="form-control" name="account_name" required>
             <label>Account number</label>
                 <input type="text" class="form-control" name="account_number_or_email" required>
-            
+            <div class="alert alert-info">
+                <i class="fa fa-warning"></i> Before submitting, please make sure the details are correct. Payments sent to wrong accounts may not be recoverable.
+            </div>
             <button type="submit" class="btn btn-default">Add Payment Method</button>
             </form>
 
     </div>
 </div>
+<!---
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+--->

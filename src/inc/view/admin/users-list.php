@@ -1,6 +1,6 @@
 <?
     require_once('./inc/model/brand.php');
-    require_once('./inc/controller/get-users-list.php');
+    require_once('./inc/controller/users-controller.php');
     require_once('./inc/controller/get-login-attempts.php');
 
     $users = getAllActiveUsers($_SESSION['brand_id']);

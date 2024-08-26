@@ -9,6 +9,7 @@
     include_once("./inc/util/Mailer.php");
     include_once("./inc/controller/get_referrers.php");
     require_once('./inc/controller/get_team_members.php');
+    require_once('./inc/controller/users-controller.php');
 
     function createPaymentLink($amount, $description) {
 

@@ -6,6 +6,7 @@
     require_once('./inc/util/Mailer.php');
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/util/FileUploader.php');
+    require_once('./inc/controller/users-controller.php');
 
 
     function __sendNotification($artist) {
@@ -52,5 +53,5 @@
         }
     }
 
-    redirectTo("/financial.php?action=payoutPoint&status=" . $result);
+    redirectTo("/financial.php?action=payoutPoint&status=" . ($result ? "OK" : "Failed"));
 ?>
