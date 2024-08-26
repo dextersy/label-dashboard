@@ -8,8 +8,7 @@
     $artist = new Artist;
     $artist->fromID($_SESSION['current_artist']);
 
-    $banklist = file_get_contents("./assets/banklist"); // @TODO Better to do via real time API, if possible
-    $banks = explode("\n", $banklist);
+    $banks = getSupportedBanksForTransfer();
 ?>
 
 <div class="row">
@@ -93,7 +92,7 @@
         <?php
             foreach($banks as $bank) {
         ?>
-                <option value="<?=$bank;?>"><?=$bank;?></option>
+                <option value="<?=$bank->bank_code;?>"><?=$bank->bank_name;?></option>
         <?php
             }
         ?>  

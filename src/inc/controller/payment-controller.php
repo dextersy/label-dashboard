@@ -79,6 +79,50 @@ function getWalletBalance($brand_id) {
     }
 }
 
+
+class SupportedBankForTransfer {
+    public $bank_code;
+    public $bank_name;
+    function __construct ($bank_code, $bank_name) {
+        $this->bank_code = $bank_code;
+        $this->bank_name = $bank_name;
+    }
+}
+function getSupportedBanksForTransfer() {
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+    CURLOPT_URL => "https://api.paymongo.com/v1/wallets/receiving_institutions?provider=pesonet", // @TODO consider if only Pesonet should be supported
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => "",
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => "GET",
+    CURLOPT_HTTPHEADER => [
+        "accept: application/json",
+        "authorization: Basic " . PAYMONGO_SECRET_KEY
+    ],
+    ]);
+
+    $response = curl_exec($curl);
+    $err = curl_error($curl);
+
+    if($err) {
+        return -1;
+    }
+    else {
+        $i = 0;
+        $supportedBanks = [];
+        $bankList = json_decode($response);
+        foreach ($bankList->data as $bank) {
+            $supportedBanks[$i] = new SupportedBankForTransfer($bank->attributes->provider_code, $bank->attributes->name);
+            $i++;
+        }
+        return $supportedBanks;
+    }
+}
+
 function getPaymentMethodsForArtist($artist_id) {
     $sql = "SELECT * FROM `payment_method` WHERE `artist_id` = '" . $artist_id . "'";
     $result = MySQLConnection::query($sql);
