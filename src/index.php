@@ -27,7 +27,7 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="assets/css/login.css?version=1.1" rel="stylesheet">
+<link href="assets/css/login.css?version=1.2" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
@@ -73,8 +73,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ?>
     <!-- Login Form -->
     <form action="action.login.php" method="POST">
-      <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">
-      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
+      <input type="text" id="login" class="fadeIn second" name="login" placeholder="login" required>
+      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password" required>
       <input type="submit" class="fadeIn fourth" value="Log In">
     </form>
 

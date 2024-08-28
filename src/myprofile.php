@@ -59,19 +59,19 @@ include_once("./inc/controller/access_check.php");
                 </div>
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="login" class="form-control" name="username" placeholder="Username" value="<?=$user->username;?>" readonly>
+                <input type="text" id="login" class="form-control" name="username" placeholder="Username" value="<?=$user->username;?>" readonly required>
                 </div>
             <div class="form-group">
                 <label for="email_address">Email address</label>
-                <input type="text" id="login" class="form-control" name="email_address" placeholder="Email address" value="<?=$user->email_address;?>" readonly>
+                <input type="text" id="login" class="form-control" name="email_address" placeholder="Email address" value="<?=$user->email_address;?>" readonly required>
                 </div>
             <div class="form-group">
                 <label for="first_name">First name</label>
-                <input type="text" id="login" class="form-control" name="first_name" placeholder="First name" value="<?=$user->first_name;?>">
+                <input type="text" id="login" class="form-control" name="first_name" placeholder="First name" value="<?=$user->first_name;?>" required>
                 </div>
             <div class="form-group">
                 <label for="last_name">Last name</label>
-                <input type="text" id="login" class="form-control" name="last_name" placeholder="Last name" value="<?=$user->last_name;?>">
+                <input type="text" id="login" class="form-control" name="last_name" placeholder="Last name" value="<?=$user->last_name;?>" required>
                 </div>
             <div class="form-group" id="password-no-change">
                 <label for="password">Password</label>

@@ -26,7 +26,7 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="assets/css/login.css?version=1.1" rel="stylesheet">
+<link href="assets/css/login.css?version=1.2" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
@@ -57,7 +57,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ?>
     <!-- Login Form -->
     <form action="action.send-reset-link.php" method="POST">
-      <input type="text" id="email_address" class="fadeIn second" name="email_address" placeholder="Email address">
+      <input type="email" id="email_address" class="fadeIn second" name="email_address" placeholder="Email address" required>
       <input type="submit" class="fadeIn fourth" value="Send Password Reset Link">
     </form>
     <? } ?>
