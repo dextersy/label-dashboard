@@ -44,6 +44,6 @@
 		$ticket->status = "Canceled";
 		$ticket->save();
 	}
-	redirectTo('/events.php?action=canceled');
+	redirectTo('/events.php?action=canceled#tickets');
     
 ?>

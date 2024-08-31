@@ -16,5 +16,5 @@
             $count++;
         }
     }
-    redirectTo("/events.php?action=VerifyPayments&count=" . $count);
+    redirectTo("/events.php?action=VerifyPayments&count=" . $count ."#tickets");
 ?>

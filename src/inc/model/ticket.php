@@ -139,7 +139,6 @@ class Ticket {
                 (isset($this->payment_processing_fee) ? ", `payment_processing_fee` = '" . MySQLConnection::escapeString($this->payment_processing_fee)."'" : "") .
                 (isset($this->referrer_id) ? ", `referrer_id` = '" . MySQLConnection::escapeString($this->referrer_id)."'" : " ") .
                 "WHERE `id` = " . $this->id;
-            echo $sql;
         }
         $result = MySQLConnection::query($sql);
         if ($result) {

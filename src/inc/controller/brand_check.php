@@ -1,4 +1,5 @@
 <?php
+    include_once('./inc/util/Redirect.php');
     include_once('./inc/model/brand.php');
     session_start();
     if ($_SESSION['brand_name'] == null) {

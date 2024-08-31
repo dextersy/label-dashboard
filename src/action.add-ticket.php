@@ -128,7 +128,7 @@
             sendAdminNotification($event->title, $ticket->name, $amount, $ticket->number_of_entries);
         
             if(!$result) {
-                redirectTo("/public/tickets/buy.php?err");
+                redirectTo("/events.php?err#tickets");
             }
         }
     }
