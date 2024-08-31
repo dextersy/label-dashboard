@@ -4,9 +4,9 @@
     require_once('./inc/controller/media-controller.php');
 
     if (deleteMedia($_GET['id'])) {
-        redirectTo("/artist.php?action=deletePhoto&status=OK");
+        redirectTo("/artist.php?action=deletePhoto&status=OK#gallery");
     }
     else {
-        redirectTo("/artist.php?action=deletePhoto&status=failed");
+        redirectTo("/artist.php?action=deletePhoto&status=failed#gallery");
     }
 ?>

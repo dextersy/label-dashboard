@@ -55,10 +55,10 @@
 			$artistaccess->saveNew();
 		}
 		
-		redirectTo('/artist.php?action=invite');
+		redirectTo('/artist.php?action=invite&status=OK#team');
 	}
 	else {
-		redirectTo('/artist.php?action=invite&status=email_failed');
+		redirectTo('/artist.php?action=invite&status=email_failed#team');
 	}
 
     

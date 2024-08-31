@@ -10,6 +10,6 @@
         $result = false;
     }
     
-    redirectTo("/artist.php?action=RemoveMember&status=" . ($result ? "OK": "Failed"));
+    redirectTo("/artist.php?action=RemoveMember&status=" . ($result ? "OK": "Failed") . "#team");
     
 ?>
