@@ -25,7 +25,7 @@
     $release = new Release;
     $release->fromFormPOST($_POST);
     if(isset($_FILES["cover_art"]["tmp_name"]) && $_FILES["cover_art"]["tmp_name"] != "") {
-        $release->cover_art = uploadImage($_FILES['cover_art']);
+        $release->cover_art = uploadImage($_FILES['cover_art']['name'], $_FILES['cover_art']['tmp_name']);
     }
     
     $release_id = $release->save();

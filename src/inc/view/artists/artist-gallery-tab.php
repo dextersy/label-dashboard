@@ -5,23 +5,52 @@
 
 ?>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    function toggleEditCaption(i) {
+        var span = document.getElementById('span_caption_' + i);
+        var form = document.getElementById('form_editCaption_' + i);
+        if(span.style.display == 'none') {
+            span.style.display = 'block';
+            form.style.display = 'none';
+        }
+        else {
+            span.style.display = 'none';
+            form.style.display = 'block';
+        }
+    }
+</script>
 
 <h3>Photo Gallery</h3>
 
 <div class="row">
 <div class="col-md-12">
 <?
+    $i = 0;
     if ($photoGallery) {
         foreach($photoGallery as $photo) {
 ?>
     <div class="artist-gallery-container">
-        <img src="<?=$photo->path;?>" class="artist-gallery-image">
+        <img src="<?=$photo->path;?>" class="artist-gallery-image"><br>
+        <span id="span_caption_<?=$i;?>">
+            <?=($photo->credits != '' && isset($photo->credits)) ? $photo->credits : "<em>Add a caption</em>";?> 
+            <a href="javascript:toggleEditCaption('<?=$i;?>');"><i class="fa fa-pencil"></i></a>
+        </span>
+        <div id="form_editCaption_<?=$i;?>" style="display:none;">
+            <form action="action.update-photo-caption.php" method="POST">
+                <input type="hidden" name="id" value="<?=$photo->id;?>">
+                <input type="text" name="credits" value="<?=$photo->credits;?>">
+                <button type="submit"><i class="fa fa-save"></i></button>
+                <a href="javascript:toggleEditCaption('<?=$i;?>');"><i class="fa fa-close"></i></a>
+            </form>
+        </div>
         <div class="artist-gallery-delete-button-container">
         <a class="artist-gallery-delete-button" data-toggle="modal" data-id="<?=$photo->id;?>" title="Delete this photo" href="#confirm-delete">X</a>
         </a>
         </div>
     </div> 
-<?      }
+<?      
+        $i++;
+        }
     } else {
 ?>
     No photos added yet.
@@ -58,7 +87,7 @@
         window.location.href = "/action.delete-media.php?id=" + photoId;
     });
 </script>
-
+<p>&nbsp;</p>
 <form action="action.upload-photo.php" method="POST" enctype="multipart/form-data">
 <input type="hidden" name="artist_id" id="artist_id" value="<?=$_SESSION['current_artist'];?>" />
 <input type="hidden" name="date_uploaded" value="<?=Date("Y-m-d");?>">
@@ -66,12 +95,9 @@
     <div class="card">
         <div class="col-md-3">
             <div class="form-group">
-            <label for="cover_art">Upload new</label>
-                <input type="file" class="form-control" id="gallery_image" name="gallery_image" accept=".jpg, .png">
-            </div>
-            <div class="form-group">
-            <label for="description">Credits</label>
-                <input type="text" class="form-control" id="credits" name="credits" placeholder="Title">
+            <label for="cover_art">Upload photos<br>
+            <em>You can add captions / credits later.</em></label>
+                <input type="file" class="form-control" id="gallery_image" name="gallery_image[]" accept=".jpg, .png" multiple>
             </div>
             <button type="submit" class="btn btn-default">Upload</button>
         </div>

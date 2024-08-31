@@ -54,7 +54,7 @@
     $event = new Event;
     $event->fromFormPOST($_POST);
     if(isset($_FILES["poster_url"]["tmp_name"]) && $_FILES["poster_url"]["tmp_name"] != "") {
-        $event->poster_url = uploadImage($_FILES['poster_url']);
+        $event->poster_url = uploadImage($_FILES['poster_url']['name'], $_FILES['poster_url']['tmp_name']);
     }
     $event->save();
 

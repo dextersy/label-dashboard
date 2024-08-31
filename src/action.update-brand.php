@@ -7,7 +7,7 @@
     $brand = new Brand;
     $brand->fromFormPOST($_POST);
     if(isset($_FILES["logo_url"]["tmp_name"]) && $_FILES["logo_url"]["tmp_name"] != "") {
-        $brand->logo_url = uploadImage($_FILES['logo_url']);
+        $brand->logo_url = uploadImage($_FILES['logo_url']['name'], $_FILES['logo_url']['tmp_name']);
     }
     $brand->save();
 

@@ -1,18 +1,18 @@
 <?php
 
-function uploadImage($file) {
+function uploadImage($filename, $tempname) {
     $target_dir = "uploads/";
-    $target_file = $target_dir . basename($file["name"]);
+    $target_file = $target_dir . basename($filename);
     $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
     
-    $check = getimagesize($file["tmp_name"]);
+    $check = getimagesize($tempname);
     if($check !== false) {
         $i = 0;
         while(file_exists($target_file)) {
-            $target_file = $target_dir . basename($file["name"]) . "_" . $i;
+            $target_file = $target_dir . basename($filename) . "_" . $i;
             $i++;
         }
-        if(move_uploaded_file($file["tmp_name"], $target_file)) {
+        if(move_uploaded_file($tempname, $target_file)) {
             return $target_file;
         }
         else {

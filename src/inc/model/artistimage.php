@@ -41,8 +41,8 @@ class ArtistImage{
             $this->fromID($this->id);
         }
         $this->credits = $_POST['credits'];
-        $this->artist_id = $_POST['artist_id'];
-        $this->date_uploaded = $_POST['date_uploaded'];
+        $this->artist_id = isset($_POST['artist_id']) ? $_POST['artist_id'] : $this->artist_id;
+        $this->date_uploaded = isset($_POST['date_uploaded']) ? $_POST['date_uploaded'] : $this->date_uploaded;
     }
 
     function save() {

@@ -8,21 +8,6 @@
     require_once('./inc/util/FileUploader.php');
     require_once('./inc/controller/users-controller.php');
 
-    if(isset($_POST['id']) && strlen($_POST['id']) > 0) {
-        $artistOld = new Artist;
-        $artistOld->fromID($_POST['id']);
-    }
-    $artist = new Artist;
-    $artist->fromFormPOST($_POST);
-    if(isset($_FILES["profile_photo"]["tmp_name"]) && $_FILES["profile_photo"]["tmp_name"] != "") {
-        $artist->profile_photo = uploadImage($_FILES['profile_photo']);
-    }
-    $artist->save();
-
-    $_SESSION['current_artist'] = $artist->id;
-    
-    sendNotification($artistOld, $artist);
-
     function sendNotification($artistOld, $artist) {
         $i = 0;
         
@@ -86,5 +71,20 @@
 		return $msg;
 	}
 
-    redirectTo("/artist.php?action=profile&status=" . $result);
+    // Main procedure
+    if(isset($_POST['id']) && strlen($_POST['id']) > 0) {
+        $artistOld = new Artist;
+        $artistOld->fromID($_POST['id']);
+    }
+    $artist = new Artist;
+    $artist->fromFormPOST($_POST);
+    if(isset($_FILES["profile_photo"]["tmp_name"]) && $_FILES["profile_photo"]["tmp_name"] != "") {
+        $artist->profile_photo = uploadImage($_FILES['profile_photo']['name'], $_FILES['profile_photo']['tmp_name']);
+    }
+    $artist->save();
+
+    $_SESSION['current_artist'] = $artist->id;
+    
+    sendNotification($artistOld, $artist);
+    redirectTo("/artist.php?action=profile&status=OK");
 ?>
