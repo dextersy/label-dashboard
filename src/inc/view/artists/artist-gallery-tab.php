@@ -23,12 +23,12 @@
 <h3>Photo Gallery</h3>
 
 <div class="row">
-<div class="col-md-12">
 <?
     $i = 0;
     if ($photoGallery) {
         foreach($photoGallery as $photo) {
 ?>
+<div class="col-md-2">
     <div class="artist-gallery-container">
         <img src="<?=$photo->path;?>" class="artist-gallery-image"><br>
         <span id="span_caption_<?=$i;?>">
@@ -48,6 +48,7 @@
         </a>
         </div>
     </div> 
+</div>
 <?      
         $i++;
         }
@@ -57,7 +58,6 @@
 <?
     } 
 ?>
-</div>
 </div>
 
 <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationLabel" aria-hidden="true" data-backdrop="false">
