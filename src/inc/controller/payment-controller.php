@@ -148,4 +148,64 @@ function getPaymentMethodsForArtist($artist_id) {
     return $paymentMethods;
 }
 
+// @return Reference number, if successful. null if failed.
+function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $description = '') {
+    $brand = new Brand;
+    $brand->fromID($brand_id);
+    $walletID = $brand->paymongo_wallet_id;
+    
+    $paymentMethod = new PaymentMethod;
+    $paymentMethod->fromID($paymentMethodId);
+
+    if (isset($paymentMethod->bank_code) && isset($paymentMethod->account_name) && isset($paymentMethod->account_number_or_email)) {
+  
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.paymongo.com/v1/wallets/" . $walletID . "/transactions",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => json_encode([
+                'data' => [
+                    'attributes' => [
+                            'amount' => $amount * 100,
+                            'receiver' => [
+                                            'bank_account_name' => $paymentMethod->account_name,
+                                            'bank_account_number' => $paymentMethod->account_number_or_email,
+                                            'bank_code' => $paymentMethod->bank_code
+                            ],
+                            'provider' => 'pesonet',
+                            'type' => 'send_money',
+                            'description' => $description
+                    ]
+                ]
+            ]),
+            CURLOPT_HTTPHEADER => [
+                "accept: application/json",
+                "authorization: Basic c2tfbGl2ZV9MUHhxU3hSU2p1bU1vRDZhUW1SeTVaTEo6",
+                "content-type: application/json"
+            ],
+        ]);
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+            return null;
+        } else {
+            // Return reference number
+            $json = json_decode($response);
+            return $json->data->attributes->reference_number;
+        }
+    }
+    else {
+        return null;
+    }
+}
+
 ?>

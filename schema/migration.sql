@@ -254,7 +254,7 @@ CREATE TABLE `login_attempt` (
     REFERENCES `user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
-ALTER TABLE `meltrecords_dashboard`.`login_attempt` 
+ALTER TABLE `login_attempt` 
 CHANGE COLUMN `id` `id` INT NOT NULL AUTO_INCREMENT ;
 
 --- 07/10
@@ -313,3 +313,16 @@ ALTER TABLE `brand`
 ADD COLUMN `paymongo_wallet_id` VARCHAR(255) NULL DEFAULT NULL AFTER `parent_brand`;
 ALTER TABLE `payment_method` 
 ADD COLUMN `bank_code` VARCHAR(45) NOT NULL DEFAULT 'N/A' AFTER `is_default_for_artist`;
+
+--- AUG 26, 2024
+ALTER TABLE `payment` 
+ADD COLUMN `payment_method_id` INT NULL DEFAULT NULL AFTER `paid_thru_account_number`,
+ADD COLUMN `reference_number` VARCHAR(45) NULL DEFAULT NULL AFTER `payment_method_id`,
+ADD INDEX `fk_payment_payment_method_idx` (`payment_method_id` ASC) VISIBLE;
+;
+ALTER TABLE `payment` 
+ADD CONSTRAINT `fk_payment_payment_method`
+  FOREIGN KEY (`payment_method_id`)
+  REFERENCES `payment_method` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;

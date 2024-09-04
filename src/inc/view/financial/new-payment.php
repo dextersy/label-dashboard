@@ -55,12 +55,12 @@
         <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>" onchange="checkBalance();" required min="1">
     </div> 
     <div class="form-group">
-        <label for="paid_thru">Paid through</label>
-        <select name="paid_thru" class="form-control">
+        <label for="select_paymentMethod">Paid through</label>
+        <select name="payment_method_id" id="select_paymentMethod" class="form-control">
 <?php   
     foreach($paymentMethods as $paymentMethod) {
 ?>
-            <option><?=$paymentMethod->type . " - " . $paymentMethod->account_name . " - " . $paymentMethod->account_number_or_email;?></option>
+            <option value="<?=$paymentMethod->id;?>"><?=$paymentMethod->type . " - " . $paymentMethod->account_name . " - " . $paymentMethod->account_number_or_email;?></option>
 <?php
     }
 ?>

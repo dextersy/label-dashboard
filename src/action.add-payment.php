@@ -3,6 +3,7 @@
     require_once('./inc/util/Redirect.php');
     require_once('./inc/controller/access_check.php');
     require_once('./inc/controller/get_team_members.php');
+    require_once('./inc/controller/payment-controller.php');
     require_once('./inc/util/Mailer.php');
 
     if(!$isAdmin) {
@@ -10,45 +11,55 @@
         die();
     }
 
+    $success = true;
     $payment = new Payment;
     $payment->fromFormPOST($_POST);
-    if (isset($_POST['paid_thru'])) {
-        $haystack = $_POST['paid_thru'];
+
+    if (isset($payment->payment_method_id) && $payment->payment_method_id != '' && $_POST['manualPayment'] != '1') {
+        // Pay through Paymongo
+        $referenceNumber = sendPaymentThroughPaymongo($_SESSION['brand_id'], $payment->payment_method_id, $payment->amount, $payment->description);
+        if($referenceNumber != null) {
+            $payment->reference_number = $referenceNumber;
+            $success = true;
+        }
+        else {
+            $success = false;
+        }
+    }
+
+    if($success) {
+        $payment->save();
         
-        $payment->paid_thru_type = substr($haystack, 0, strpos($haystack, "-") - 1);
-        $haystack = substr($haystack, strpos($haystack, "-") + 1);
-
-        $payment->paid_thru_account_name = substr($haystack, 0, strpos($haystack, "-") - 1);
-        $haystack = substr($haystack, strpos($haystack, "-") + 1);
-
-        $payment->paid_thru_account_number = $haystack;
+        $GLOBALS['debugOutput'] = [];
+        
+        // Send email notification
+        $artist = new Artist;
+        $artist->fromID($payment->artist_id);
+        $users = getActiveTeamMembersForArtist($artist->id);
+        $i = 0;
+        foreach ($users as $user) {
+            $emailAddresses[$i++] = $user->email_address;
+        }
+        if ($i > 0) {
+            __sendPaymentNotification(
+                $emailAddresses, 
+                $artist->name, 
+                $payment
+            );
+        }
+        redirectTo('/financial.php?action=addPayment&status=OK#payments');
     }
-    $payment->save();
-    
-    $GLOBALS['debugOutput'] = [];
-    
-    // Send email notification
-    $artist = new Artist;
-    $artist->fromID($payment->artist_id);
-    $users = getActiveTeamMembersForArtist($artist->id);
-    $i = 0;
-    foreach ($users as $user) {
-        $emailAddresses[$i++] = $user->email_address;
-    }
-    if ($i > 0) {
-        sendPaymentNotification(
-            $emailAddresses, 
-            $artist->name, 
-            $payment
-        );
+    else {
+        redirectTo('/financial.php?action=addPayment&status=failed#payments');
     }
 
-    function sendPaymentNotification($emailAddresses, $artistName, $payment) {
+    /// HELPER FUNCTIONS BELOW
+    function __sendPaymentNotification($emailAddresses, $artistName, $payment) {
 		$subject = "Payment made to ". $artistName . "!";
-		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($artistName, $payment));
+		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment));
 	}
 
-    function generateEmailFromTemplate($artistName, $payment) {
+    function __generateEmailFromTemplate($artistName, $payment) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/payment_notification_email.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
@@ -63,5 +74,4 @@
 		return $msg;
 	}
 
-    redirectTo('/financial.php#payments');
 ?>

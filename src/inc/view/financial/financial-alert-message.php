@@ -8,7 +8,10 @@
     }
     else if ($action == 'payoutPoint') {
         $msg = ($status == "OK") ? "Successfully updated payout point." : "Failed to change payout point. Please try again or contact your administrator.";
-    }    
+    } 
+    else if ($action == 'addPayment') {
+        $msg = ($status == "OK") ? "Payment request was successful." : "Failed to make payment request. Please try again or contact your administrator.";
+    }   
     $alert_type = ($status == 'OK') ? 'alert-success' : 'alert-danger';
 
 
