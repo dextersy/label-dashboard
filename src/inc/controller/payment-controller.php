@@ -148,6 +148,7 @@ function getPaymentMethodsForArtist($artist_id) {
     return $paymentMethods;
 }
 
+// @return Reference number, if successful. null if failed.
 function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $description = '') {
     $brand = new Brand;
     $brand->fromID($brand_id);
@@ -195,13 +196,15 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
         curl_close($curl);
 
         if ($err) {
-            return false;
+            return null;
         } else {
-            return true;
+            // Return reference number
+            $json = json_decode($response);
+            return $json->data->attributes->reference_number;
         }
     }
     else {
-        return false;
+        return null;
     }
 }
 

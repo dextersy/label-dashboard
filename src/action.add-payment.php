@@ -3,6 +3,7 @@
     require_once('./inc/util/Redirect.php');
     require_once('./inc/controller/access_check.php');
     require_once('./inc/controller/get_team_members.php');
+    require_once('./inc/controller/payment-controller.php');
     require_once('./inc/util/Mailer.php');
 
     if(!$isAdmin) {
@@ -13,12 +14,19 @@
     $success = true;
     $payment = new Payment;
     $payment->fromFormPOST($_POST);
-    echo "Payment method id = " . $payment->payment_method_id;
 
-    if (isset($payment->payment_method_id) && $payment->payment_method_id != '' && $_POST['manualPayment'] == '1') {
+    if (isset($payment->payment_method_id) && $payment->payment_method_id != '' && $_POST['manualPayment'] != '1') {
         // Pay through Paymongo
-        $success = sendPaymentThroughPaymongo($payment->payment_method_id, $payment->amount, $payment->description);
+        $referenceNumber = sendPaymentThroughPaymongo($_SESSION['brand_id'], $payment->payment_method_id, $payment->amount, $payment->description);
+        if($referenceNumber != null) {
+            $payment->reference_number = $referenceNumber;
+            $success = true;
+        }
+        else {
+            $success = false;
+        }
     }
+
     if($success) {
         $payment->save();
         
@@ -39,8 +47,13 @@
                 $payment
             );
         }
+        redirectTo('/financial.php?action=addPayment&status=OK#payments');
+    }
+    else {
+        redirectTo('/financial.php?action=addPayment&status=failed#payments');
     }
 
+    /// HELPER FUNCTIONS BELOW
     function __sendPaymentNotification($emailAddresses, $artistName, $payment) {
 		$subject = "Payment made to ". $artistName . "!";
 		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment));
@@ -61,5 +74,4 @@
 		return $msg;
 	}
 
-    redirectTo('/financial.php#payments');
 ?>
