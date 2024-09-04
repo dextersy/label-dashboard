@@ -20,7 +20,12 @@
             </div>
             <div class="content">
                 Your current balance is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="This is what we owe you."></i><br>
-                <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3><br>
+                <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3>
+                <? if ($isAdmin) { ?>
+                <a data-toggle="tab" href="#new-payment">
+                <button class="btn" style="width:100%" <?=$currentBalance <= 0 ? "disabled":"";?>><i class="fa fa-credit-card"></i> Pay Now</button>
+                </a>
+                <? } ?>
             </div>
         </div>
     </div>
