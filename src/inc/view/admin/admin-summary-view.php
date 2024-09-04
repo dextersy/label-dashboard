@@ -17,27 +17,65 @@
     $overallTotalDownloadEarnings = 0;
     $overallTotalPhysicalEarnings = 0;
 
-    if(isset($_POST['date_from']) && isset($_POST['date_to'])) {
-        $startDate = $_POST['date_from'];
-        $endDate = $_POST['date_to'];
+    if(isset($_POST['daterange'])) {
+        $tokens = explode(" - ", $_POST['daterange']);
+        $startDateDisplay = $tokens[0];
+        $endDateDisplay = $tokens[1];
+
+        $startDateObj = DateTime::createFromFormat('m/d/Y', $startDateDisplay);
+        $endDateObj = DateTime::createFromFormat('m/d/Y', $endDateDisplay);
+
+        $startDate = $startDateObj->format('Y-m-d');
+        $endDate = $endDateObj->format('Y-m-d');
     }
     else {
+        
         $startDate = date("Y-m-d", strtotime('-30 days'));
         $endDate = date("Y-m-d");
+
+        $startDateObj = DateTime::createFromFormat('Y-m-d', $startDate);
+        $endDateObj = DateTime::createFromFormat('Y-m-d', $endDate);
+
+        $startDateDisplay = $startDateObj->format('m/d/Y');
+        $endDateDisplay = $endDateObj->format('m/d/Y');
     }
 ?>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js" defer></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+<script type="text/javascript">
+    $(function() {
+        $('#datepicker_dateRange').daterangepicker({
+            ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            }
+        }); 
+    });
+</script>
+
+
 <div class="row" style="padding-top:10px;">
-    <div class="col-md-8">
-    <div class='picker'>
-        <form action="admin.php" method="POST">
-            <label for="fromperiod">From</label>
-            <input type="date" id="fromperiod" name="date_from" value="<?=$startDate;?>">
-            <label for="toperiod">to</label>
-            <input type="date" id="toperiod" name="date_to" value="<?=$endDate;?>">
-            <button class="btn btn-default" type="submit">Filter</button>
+    <div class="col-md-3">
+        <form action="admin.php#summary" method="POST">
+        <div class="form-group">
+            <label for="datepicker_dateRange">Select date range</label>
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="datepicker_dateRange" name="daterange" value="<?=$startDateDisplay;?> - <?=$endDateDisplay;?>" />
+                <div class="input-group-btn">
+                    <button class="btn btn-default" type="submit">Filter</button>
+                </div>
+            </div>
+        </div>
         </form>
     </div>
-</div>
 </div>
 <h3>Earnings Summary</h3>
 <? if ($releases) {

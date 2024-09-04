@@ -45,8 +45,15 @@
         </div>
         <form action="action.set-payout-point.php" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?=$artist->id;?>">
-        <input type="number" min="1000" step="1" class="form-control" name="payout_point" value="<?=$artist->payout_point;?>" required>
-        <button type="submit" class="btn btn-default">Save</button>
+        <div class="input-group">
+            <div class="input-group-addon">
+                Php
+            </div>
+            <input type="number" min="1000" step="1" class="form-control text-right" name="payout_point" value="<?=$artist->payout_point;?>" required>
+            <div class="input-group-btn">
+                <button type="submit" class="btn btn-default">Save</button>
+            </div>
+        </div>
         </form>
     </div>
     <div class="col-md-6">
