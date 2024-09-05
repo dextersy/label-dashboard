@@ -94,51 +94,56 @@
     } 
 ?>
 <div class="row">
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card">
-
-            <div class="header">
-                <i class="fa fa-shopping-bag header-icon"></i>
-                <h4 class="title">Physical Earnings</h4>
+            <div class="card-header">
+                <h4 class="title"><i class="fa fa-shopping-bag header-icon"></i> Physical Earnings</h4>
             </div>
-            <div class="content">
+            <div class="card-body">
+            <div class="card-text">
                 <h5>Php <?=number_format($overallTotalPhysicalEarnings,2);?></h5>
             </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card">
 
-            <div class="header">
-                <i class="fa fa-download header-icon"></i>
-                <h4 class="title">Download Earnings</h4>
+            <div class="card-header">
+                <h4 class="title"><i class="fa fa-download header-icon"></i> Download Earnings</h4>
             </div>
-            <div class="content">
+            <div class="card-body">
+            <div class="card-text">
                 <h5>Php <?=number_format($overallTotalDownloadEarnings,2);?></h5>
             </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card">
 
-            <div class="header">
-                <i class="fa fa-headphones header-icon"></i>
-                <h4 class="title">Streaming Earnings</h4>
+            <div class="card-header">
+                <h4 class="title"><i class="fa fa-headphones header-icon"></i>
+                 Streaming Earnings</h4>
             </div>
-            <div class="content">
+            <div class="card-body">
+            <div class="card-text">
                 <h5>Php <?=number_format($overallTotalStreamingEarnings,2);?></h5>
             </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card">
 
-            <div class="header">
-                <i class="fa fa-television header-icon"></i>
-                <h4 class="title">Sync Earnings</h4>
+            <div class="card-header">
+                <h4 class="title"><i class="fa fa-television header-icon"></i>
+                 Sync Earnings</h4>
             </div>
-            <div class="content">
+            <div class="card-body">
+            <div class="card-text">
                 <h5>Php <?=number_format($overallTotalSyncEarnings,2);?></h5>
+            </div>
             </div>
         </div>
     </div>
@@ -148,7 +153,7 @@
 <? } ?>
 
 <h3>Payments and Royalties Summary</h3>
-<div class="col-md-5">
+<div class="col-md-6">
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -179,51 +184,45 @@
 <?  } ?>
     </tbody>
     </table>
-    </div>
-    </div>
+</div>
+</div>
+<div class="col-md-6">
     <div class="row">
-        <div class="col-md-4">
             <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total Payments</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h5>Php <?=number_format($overallTotalPayments,2);?></h5>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
             <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total Royalties</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h5>Php <?=number_format($overallTotalRoyalties,2);?></h5>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
             <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total New Recuperable Expense</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h5>Php <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id']),2);?></h5>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
+           <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total Recuperated Expenses</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h5>Php <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id'])),2);?></h5>
                 </div>
             </div>
-        </div>
     </div>
+</div>

@@ -92,14 +92,18 @@
 <input type="hidden" name="artist_id" id="artist_id" value="<?=$_SESSION['current_artist'];?>" />
 <input type="hidden" name="date_uploaded" value="<?=Date("Y-m-d");?>">
 <div class="row">
-    <div class="card">
-        <div class="col-md-3">
-            <div class="form-group">
-            <label for="cover_art">Upload photos<br>
-            <em>You can add captions / credits later.</em></label>
-                <input type="file" class="form-control" id="gallery_image" name="gallery_image[]" accept=".jpg, .png" multiple>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h5>Upload Photos</h5></div>
+            <div class="card-body">
+                <em>You can add captions / credits later.</em>
+                <div class="input-group">
+                    <input type="file" class="form-control" id="gallery_image" name="gallery_image[]" accept=".jpg, .png" multiple>
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn btn-default">Upload</button>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-default">Upload</button>
         </div>
     </div>
 </div>

@@ -42,40 +42,46 @@
 <form action="action.update-release.php" method="POST" enctype="multipart/form-data">
 <input type="hidden" name="id" id="release_id" value="" />
 <div class="card" id="edit_release_form" style="display:none;">
-    <div class="col-md-3">
-        <div class="form-group">
-        <label for="cover_art">Cover art</label>
-            <input type="file" class="form-control" id="cover_art" name="cover_art" accept=".jpg, .png">
+    <div class="card-header"><h5>Edit this release</h5></div>
+    <div class="card-body"><div class="row">
+        <div class="col-md-3">
+            <div class="form-group">
+            <label for="cover_art">Cover art</label>
+                <input type="file" class="form-control" id="cover_art" name="cover_art" accept=".jpg, .png">
+            </div>
+            <div class="form-group">
+            <label for="description">Title</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+            </div>
+            <div class="form-group">
+                <label for="catalog_no">Catalog Number</label>
+                <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number">
+            </div>
+            
         </div>
-        <div class="form-group">
-        <label for="description">Title</label>
-            <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label for="UPC">UPC</label>
+                <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
+            </div>  
+            <div class="form-group">
+                <label for="amount">Release Date</label>
+                <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
+            </div> 
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
+                <label class="form-check-label" for="flexCheckDefault">Already released</label>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="catalog_no">Catalog Number</label>
-            <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number">
-        </div>
-        
-    </div>
-    <div class="col-md-3">
-        <div class="form-group">
-            <label for="UPC">UPC</label>
-            <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
-        </div>  
-        <div class="form-group">
-            <label for="amount">Release Date</label>
-            <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
-        </div> 
-        <div class="form-group">
-            <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
-            <label class="form-check-label" for="flexCheckDefault">Already released</label>
-        </div>
+    </div></div>
+    <div class="card-footer">
         <button type="submit" class="btn btn-default">Save Changes</button>
         <button type="button" class="btn btn-default" onclick="hideEditRelease();">Cancel</button>
-
     </div>
 </div>
 </form>
+
+
 <div class="table-responsive">
     <table class="table">
         <thead>

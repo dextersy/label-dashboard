@@ -57,10 +57,10 @@
     <div class="col-md-4">
         <div class="card">
 
-            <div class="header">
+            <div class="card-header">
                 <h4 class="title">Total Balance</h4>
             </div>
-            <div class="content">
+            <div class="card-body">
                 <h3>Php <?=number_format($overallTotalPayables,2);?></h3>
             </div>
         </div>

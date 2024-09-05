@@ -59,10 +59,10 @@
         <div class="col-md-4">
             <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total Balance</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h3>Php <?=number_format($overallBalance,2);?></h3>
                 </div>
             </div>
@@ -71,11 +71,12 @@
         <div class="col-md-4">
             <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total Due For Payment</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h3>Php <?=number_format($overallDueForPayment,2);?></h3>
+                    <button class="btn" style="width:100%" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
                 </div>
             </div>
         </div>
@@ -117,10 +118,10 @@
         <div class="col-md-4">
             <div class="card">
 
-                <div class="header">
+                <div class="card-header">
                     <h4 class="title">Total Recuperable Expense</h4>
                 </div>
-                <div class="content">
+                <div class="card-body">
                     <h3>Php <?=number_format($overallTotalRecuperableExpense,2);?></h3>
                 </div>
             </div>

@@ -26,17 +26,19 @@
 <input type="hidden" name="artist_id" id="artist_id" value="<?=$_SESSION['current_artist'];?>" />
 <input type="hidden" name="date_uploaded" value="<?=Date("Y-m-d");?>">
 <div class="row" id="upload_form" style="display:none">
-    <div class="card">
-        <div class="col-md-3">
-            <div class="form-group">
-            <label for="cover_art">Upload new</label>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h5><strong>Upload new</strong></h5></div>
+            <div class="card-body">
                 <input type="file" class="form-control" id="document" name="document" accept=".pdf" required>
+                <div class="form-group">
+                    <label for="description">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" placeholder="Title" required>
+                </div>
             </div>
-            <div class="form-group">
-            <label for="description">Title</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Title" required>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-default">Upload</button>
             </div>
-            <button type="submit" class="btn btn-default">Upload</button>
         </div>
     </div>
 </div>
