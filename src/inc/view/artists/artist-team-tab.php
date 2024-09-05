@@ -63,12 +63,16 @@
     </table>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <form action="action.invite.php" method="POST">
         <div class="form-group">
             <input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
-            <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
-            <input type="submit" class="btn btn-primary" value="Invite Team Member">
+            <div class="input-group">
+                <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
+                <div class="input-group-btn">
+                    <input type="submit" class="btn btn-primary" value="Invite Team Member">
+                </div>
+            </div>
         </div>                 
         </form>
     </div>
