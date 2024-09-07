@@ -20,7 +20,7 @@
             <div class="card-body">
                 <? if ($paymentViewItems) { ?>
                     <div class="table-responsive">
-                
+                    <table class="table">
                     <thead>
                         <tr><th>Date Paid</th>
                         <th>Description</th>
