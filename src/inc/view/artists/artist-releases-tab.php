@@ -7,14 +7,14 @@
     }
     function getReleaseStatusString($status) {
         if ( $status == 'Pending' ) {
-            $color = "gray";
+            $class = "badge-secondary";
         } else if ($status == 'Live' ) {
-            $color = "green";
+            $class = "badge-success";
         } else if ($status == 'Taken Down') {
-            $color = "red";
+            $class = "badge-light";
         }
 
-        return "<span style=\"color:" . $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status;
+        return "<span class=\"badge " . $class . "\">" . $status . "</span>";
     }
 ?>
 <? if ($isAdmin) { ?>
@@ -89,8 +89,8 @@
             <th>Catalog Number</th>
             <th>Title</th>
             <th>Date released</th>
-            <th>Links </th>
-            <th>Status <i class="fa fa-bandcamp"></th>
+            <!--<th>Links </th>-->
+            <th>Status</th>
             <th></th>
         </thead>
         <tbody>
@@ -101,12 +101,14 @@
                 <td><?=$release->catalog_no;?></td>
                 <td><?=$release->title;?></td>
                 <td><?=$release->release_date;?></td>
+                <!--
                 <td>
                     <a href="<?=$release->spotify_link!=""?$release->spotify_link:"#";?>" target="_blank"><i style="font-size: 1.5em;" class="fa fa-spotify"></i></a>
                     <a href="<?=$release->apple_link!=""?$release->apple_link:"#";;?>" target="_blank"><i style="font-size: 1.5em;"  class="fa fa-apple"></i></a>
                     <a href="<?=$release->youtube_link!=""?$release->youtube_link:"#";?>" target="_blank"><i style="font-size: 1.5em;"  class="fa fa-youtube"></i></a>
                     <a href="<?=$release->bandcamp_link!=""?$release->bandcamp_link:"#";?>" target="_blank"><i style="font-size: 1.5em;"  class="fa fa-bandcamp"></i></a>
                 </td>
+                -->
                 <td><?=getReleaseStatusString($release->status);?></a></td>
                 <td>
                 <? if ($isAdmin) { ?>

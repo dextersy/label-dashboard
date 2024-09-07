@@ -59,7 +59,7 @@
 <div class="row">
     <div class="card">
         <div class="card-header">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="btn-toolbar" role="toolbar">
                     <div class="btn-group" role="group" aria-label="Actions">
                         <a href="action.verify-ticket-payments.php">
@@ -81,12 +81,6 @@
                         </a>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6 text-right">
-                <i class="fa fa-circle" style="color:green;"></i> <?=$paid;?>
-                <i class="fa fa-circle" style="color:yellow;"></i> <?=$new;?>
-                <i class="fa fa-money"></i> Php<?=number_format($total_sold,2);?>
-                <i class="fa fa-credit-card"></i> -<?=number_format($total_processing_fee,2);?>
             </div>
         </div>
         <div class="card-body">
@@ -141,7 +135,14 @@
                     </tbody>
                 </table>
             </div>
-        </div>  
+        </div>
+        <div class="card-footer">
+            <strong>Totals </strong>&nbsp;&nbsp;
+                <i class="fa fa-circle" style="color:green;" title="Number of paid tickets"></i> <?=$paid;?>&nbsp;&nbsp;
+                <i class="fa fa-circle" style="color:yellow;" title="Number of pending tickets"></i> <?=$new;?>&nbsp;&nbsp;
+                <i class="fa fa-money" title="Total revenue"></i> Php<?=number_format($total_sold,2);?>&nbsp;&nbsp;
+                <i class="fa fa-credit-card" title="Total processing fee"></i> -<?=number_format($total_processing_fee,2);?>
+        </div>
     </div>
 </div>
 
@@ -156,10 +157,10 @@
             <div class="card-body">
                 <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
                 <input type="hidden" name="status" value="New">
-                <input type="name" class="form-control" id="name" name="name" placeholder="name">
-                <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
-                <input type="phone" class="form-control" id="contact_number" name="contact_number" placeholder="Contact number">
-                <input type="text" class="form-control" id="number_of_entries" name="number_of_entries" placeholder="Number of tickets">
+                <input type="name" class="form-control" id="name" name="name" placeholder="Name" required>
+                <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address" required>
+                <input type="phone" class="form-control" id="contact_number" name="contact_number" placeholder="Contact number" required>
+                <input type="text" class="form-control" id="number_of_entries" name="number_of_entries" placeholder="Number of tickets" required>
                 <input type="text" class="form-control" id="referral_code" name="referral_code" placeholder="Referral code (optional)">
                 <input class="form-check-input" type="checkbox" value="1" name="send_email" id="send_email"><label class="form-check-label" for="flexCheckDefault">Send payment email</label>
             </div>

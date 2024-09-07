@@ -97,16 +97,28 @@
                 <td>
                     <input type="hidden" name="artist_id_<?=$i;?>" value="<?=$_SESSION['current_artist'];?>">
                     <input type="hidden" name="release_id_<?=$i;?>" value="<?=$release->id;?>">
-                    <input id="sync_royalty_<?=$i;?>" name="sync_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->sync_royalty_percentage * 100;?>" disabled> <?=$sync_royalty;?>
+                    <div class="input-group">
+                        <input id="sync_royalty_<?=$i;?>" name="sync_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->sync_royalty_percentage * 100;?>" disabled> 
+                        <div class="input-group-addon"><?=$sync_royalty;?></div>
+                    </div>
                 </td>
                 <td>
-                    <input id="streaming_royalty_<?=$i;?>" name="streaming_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->streaming_royalty_percentage * 100;?>" disabled> <?=$streaming_royalty;?>
+                    <div class="input-group">
+                        <input id="streaming_royalty_<?=$i;?>" name="streaming_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->streaming_royalty_percentage * 100;?>" disabled> 
+                        <div class="input-group-addon"><?=$streaming_royalty;?></div>
+                    </div>
                 </td>
                 <td>
-                    <input id="download_royalty_<?=$i;?>" name="download_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->download_royalty_percentage * 100;?>" disabled> <?=$download_royalty;?>
+                    <div class="input-group">
+                        <input id="download_royalty_<?=$i;?>" name="download_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->download_royalty_percentage * 100;?>" disabled>
+                        <div class="input-group-addon"><?=$download_royalty;?></div>
+                    </div>
                 </td>
                 <td>
-                    <input id="physical_royalty_<?=$i;?>" name="physical_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->physical_royalty_percentage * 100;?>" disabled> <?=$physical_royalty;?>
+                    <div class="input-group">
+                        <input id="physical_royalty_<?=$i;?>" name="physical_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->physical_royalty_percentage * 100;?>" disabled>
+                        <div class="input-group-addon"><?=$physical_royalty;?></div>
+                    </div>
                 </td>
                 <td align="right"><?=number_format($recuperableExpense, 2);?>
                 <?php if ($isAdmin) { ?>

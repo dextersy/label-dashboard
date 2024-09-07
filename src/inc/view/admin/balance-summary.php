@@ -10,6 +10,8 @@
 
     $artists = getAllArtists($_SESSION['brand_id']);
     $releases = getAllReleases($_SESSION['brand_id']);
+
+    $currentBalance = getWalletBalance($_SESSION['brand_id']);
 ?>
 <h3>Balance Summary</h3>
 <div class="table-responsive">
@@ -76,7 +78,12 @@
                 </div>
                 <div class="card-body">
                     <h3>Php <?=number_format($overallDueForPayment,2);?></h3>
-                    <button class="btn" style="width:100%" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
+                    <button class="btn btn-block" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
+                </div>
+                <div class="card-footer">
+                    <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">
+                        Available balance: Php <?=number_format($currentBalance, 2);?>
+                    </div>
                 </div>
             </div>
         </div>
