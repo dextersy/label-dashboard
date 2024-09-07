@@ -326,3 +326,14 @@ ADD CONSTRAINT `fk_payment_payment_method`
   REFERENCES `payment_method` (`id`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+--- SEP 7, 2024
+CREATE TABLE `email_attempt` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `recipients` VARCHAR(1024) NOT NULL,
+  `subject` VARCHAR(1024) NOT NULL,
+  `body` LONGTEXT NOT NULL,
+  `timestamp` DATETIME NOT NULL,
+  PRIMARY KEY (`id`));
+ALTER TABLE `email_attempt` 
+ADD COLUMN `result` VARCHAR(45) NOT NULL AFTER `timestamp`;

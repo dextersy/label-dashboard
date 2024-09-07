@@ -6,8 +6,10 @@
 	require 'vendor/autoload.php';
 	
 	include_once './inc/controller/brand_check.php';
+	include_once './inc/util/MySQLConnection.php';
 
     function sendEmail($emailAddresses, $subject, $body) {
+		$result = true;
 		try {
 			//PHPMailer Object
 			$mail = new PHPMailer(true); //Argument true in constructor enables exceptions
@@ -39,8 +41,21 @@
 
 			$mail->send();
 		} catch (Exception $e) {
-			return false;
+			$result = false;
 		}
-		return true;
+
+		logEmailAttempt($emailAddresses, $subject, $body, $result);
+		return $result;
+
+	}
+
+	function logEmailAttempt($emailAddresses, $subject, $body, $result) {
+		$recipients = implode(",", $emailAddresses);
+		$sql = "INSERT INTO `email_attempt` (`recipients`, `subject`, `body`, `result`, `timestamp`) VALUES (".
+			"'" . MySQLConnection::escapeString($recipients) . "', " .
+			"'" . MySQLConnection::escapeString($subject) . "', " .
+			"'" . MySQLConnection::escapeString($body) . "', ".
+			"'" . ($result ? "Success":"Failed") . "', NOW())";
+		MySQLConnection::query($sql);
 	}
 ?>
