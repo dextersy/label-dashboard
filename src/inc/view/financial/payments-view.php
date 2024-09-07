@@ -10,20 +10,25 @@
 
     $banks = getSupportedBanksForTransfer();
 ?>
-
+&nbsp;
 <div class="row">
     <div class="col-md-6">
-        <h3>Payments and Advances <? if ($isAdmin) { ?><a data-toggle="tab" href="#new-payment"><i class="fa fa-plus"></i></a><? } ?></h3>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr><th>Date Paid</th>
-                    <th>Description</th>
-                    <th>Paid Through</th>
-                    <th style="text-align:right">Amount</th>
-                </thead>
-                <tbody>
-                <? if ($paymentViewItems) {
+        <div class="card">
+            <div class="card-header">
+            <h5><strong>Payments and Advances</strong> <? if ($isAdmin) { ?><a data-toggle="tab" href="#new-payment"><i class="fa fa-plus"></i></a><? } ?></h5>
+            </div>
+            <div class="card-body">
+                <? if ($paymentViewItems) { ?>
+                    <div class="table-responsive">
+                
+                    <thead>
+                        <tr><th>Date Paid</th>
+                        <th>Description</th>
+                        <th>Paid Through</th>
+                        <th style="text-align:right">Amount</th>
+                    </thead>
+                    <tbody>
+                <?php
                     foreach($paymentViewItems as $paymentViewItem) { ?>
                     <tr>
                         <td><?=$paymentViewItem->date_paid;?></td>
@@ -31,15 +36,24 @@
                         <td><?=$paymentViewItem->paid_thru_type;?> - <?=$paymentViewItem->paid_thru_account_name;?> - <?=$paymentViewItem->paid_thru_account_number;?></td>
                         <td align="right"><?=number_format($paymentViewItem->amount, 2);?></td>                
                     </tr>
-                <?  }
+                <?  } ?>
+
+                </tbody>
+                </table>
+
+                </div>
+                <?
                 } else {
                 ?>
-                    No payments and advances yet.
+                No payments and advances yet.
                 <? } ?>
-                </tbody>
-            </table>
+            </div>                  
         </div>
-        <h3>Payout point</h3>
+        <div class="card">
+        <div class="card-header">
+        <h5><strong>Payout point</strong></h5>
+        </div>
+        <div class="card-body">
         <div class="alert alert-info">
         <i class="fa fa-info-circle"></i> Set the minimum amount to send automatic payouts. Minimum is P1,000. Charge of P10.00 is deducted from each payout.
         </div>
@@ -55,9 +69,21 @@
             </div>
         </div>
         </form>
+        </div>
+        </div>
     </div>
     <div class="col-md-6">
-        <h3>Payment Methods</h3>
+
+    <div class="card">
+    <div class="card-header">
+        <h5><strong>Payment Methods</strong></h5>
+    </div>
+        <div class="card-body">
+            
+        <? 
+            $paymentMethods = getPaymentMethodsForArtist($_SESSION['current_artist']);
+            if ($paymentMethods) {
+        ?>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -67,9 +93,7 @@
                         <th></th>
                     </thead>
                     <tbody>
-        <? 
-            $paymentMethods = getPaymentMethodsForArtist($_SESSION['current_artist']);
-            if ($paymentMethods) {
+        <?php
                 foreach ($paymentMethods as $paymentMethod) { 
                 ?>
                     <tr>
@@ -81,15 +105,24 @@
                         </td>
                     </tr>
         <?          
-                } 
-            } else { ?>
-            No payment methods set.
-        <?  } ?>
-                    </tbody>
+                } ?>
+                </tbody>
                 </table>
             </div>
-            
-            <h4>Add bank details</h4>
+            <?php
+            } else { ?>
+            <div class="alert alert-warning">
+            <i class="fa fa-warning"></i> No payment methods set. Please add your bank information below.
+            </div>
+        <?  } ?>
+                    
+            </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+            <h5>Add bank details</h5>
+            </div>
+            <div class="card-body">
             
             <form action="action.add-payment-method.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="artist_id" value="<?=$_SESSION['current_artist'];?>">
@@ -110,9 +143,12 @@
             <div class="alert alert-info">
                 <i class="fa fa-warning"></i> Before submitting, please make sure the details are correct. Payments sent to wrong accounts may not be recoverable.
             </div>
+        </div>
+        <div class="card-footer">
             <button type="submit" class="btn btn-default">Add Payment Method</button>
             </form>
-
+        </div>
+        </div>
     </div>
 </div>
 <!---
