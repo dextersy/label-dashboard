@@ -54,85 +54,119 @@
     }
 ?>
 <div class="row">
-    <div class="col-md-6"><h3>Tickets</h3></div>
-    <div class="col-md-6">
-        <a href="action.verify-ticket-payments.php">
-            <button class="btn">Verify Payments</button>
-        </a>
-        &nbsp;
-        <a href="action.send-payment-reminders.php">
-            <button class="btn">Send Payment Reminder</button>
-        </a>
-        <br>
-        Total paid: <?=$paid;?>, total pending: <?=$new;?>, paid amount: <?=number_format($total_sold,2);?>, total fees: <?=number_format($total_processing_fee,2);?>
-    </div>
-</div>
-<div class="table-responsive">
-    <table class="table">
-        <thead>
-            <tr><th>Name</th>
-            <th>Email address</th>
-            <th>Contact number</th>
-            <th>No. of tickets</th>
-            <th>Ticket code</th>
-            <th>Payment Link</th>
-            <th>Total paid</th>
-            <th>Processing fee</th>
-            <th>Referred by</th>
-            <th>Time ordered</th>
-            <th>Status</th>
-        </thead>
-        <tbody>
-<?
-    if ($tickets) {
-        foreach($tickets as $ticket) {
-            if(isset($ticket->referrer_id)) {
-                $referrer = new EventReferrer;
-                $referrer->fromID($ticket->referrer_id);
-            }
-            else {
-                $referrer = null;
-            }
-?>
-            <tr>
-                <td><?=$ticket->name; ?></td>
-                <td><?=$ticket->email_address; ?></td>
-                <td><?=$ticket->contact_number; ?></td>
-                <td><?=$ticket->number_of_entries; ?></td>
-                <td><strong><?=$ticket->ticket_code; ?></strong></td>
-                <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
-                <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
-                <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
-                <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
-                <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
-                <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
-                <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
-            </tr>
-<?      }
-    } else {
-?>
-    No tickets yet.
-<?
-    } 
-?>
-        </tbody>
-    </table>
+    <div class="col-md-4"><h3>Tickets</h3></div>
 </div>
 <div class="row">
+    <div class="card">
+        <div class="card-header">
+            <div class="col-md-6">
+                <div class="btn-toolbar" role="toolbar">
+                    <div class="btn-group" role="group" aria-label="Actions">
+                        <a href="action.verify-ticket-payments.php">
+                            <button type="button" class="btn-link">
+                                <i class="fa fa-check"></i> Verify Payments
+                            </button>
+                        </a>
+                        &nbsp;
+                        <a href="action.send-payment-reminders.php">
+                            <button type="button" class="btn-link">
+                                <i class="fa fa-bell"></i> Send payment reminders
+                            </button>
+                        </a>
+                        &nbsp;
+                        <a href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>">
+                            <button type="button" class="btn-link">
+                                <i class="fa fa-download"></i> Download CSV
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-right">
+                <i class="fa fa-circle" style="color:green;"></i> <?=$paid;?>
+                <i class="fa fa-circle" style="color:yellow;"></i> <?=$new;?>
+                <i class="fa fa-money"></i> Php<?=number_format($total_sold,2);?>
+                <i class="fa fa-credit-card"></i> -<?=number_format($total_processing_fee,2);?>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr><th>Name</th>
+                        <th>Email address</th>
+                        <th>Contact number</th>
+                        <th>No. of tickets</th>
+                        <th>Ticket code</th>
+                        <th>Payment Link</th>
+                        <th>Total paid</th>
+                        <th>Processing fee</th>
+                        <th>Referred by</th>
+                        <th>Time ordered</th>
+                        <th>Status</th>
+                    </thead>
+                    <tbody>
+            <?
+                if ($tickets) {
+                    foreach($tickets as $ticket) {
+                        if(isset($ticket->referrer_id)) {
+                            $referrer = new EventReferrer;
+                            $referrer->fromID($ticket->referrer_id);
+                        }
+                        else {
+                            $referrer = null;
+                        }
+            ?>
+                        <tr>
+                            <td><?=$ticket->name; ?></td>
+                            <td><?=$ticket->email_address; ?></td>
+                            <td><?=$ticket->contact_number; ?></td>
+                            <td><?=$ticket->number_of_entries; ?></td>
+                            <td><strong><?=$ticket->ticket_code; ?></strong></td>
+                            <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
+                            <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
+                            <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
+                            <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
+                            <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
+                            <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
+                            <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
+                        </tr>
+            <?      }
+                } else {
+            ?>
+                No tickets yet.
+            <?
+                } 
+            ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>  
+    </div>
+</div>
+
+<div class="row">
     <div class="col-md-6">
-        <h4>Add ticket</h4>
-        <form action="action.add-ticket.php" method="POST">
-        <div class="form-group">
-            <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
-            <input type="hidden" name="status" value="New">
-            <input type="name" class="form-control" id="name" name="name" placeholder="name">
-            <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
-            <input type="phone" class="form-control" id="contact_number" name="contact_number" placeholder="Contact number">
-            <input type="text" class="form-control" id="number_of_entries" name="number_of_entries" placeholder="Number of tickets">
-            <input type="text" class="form-control" id="referral_code" name="referral_code" placeholder="Referral code (optional)">
-            <input class="form-check-input" type="checkbox" value="1" name="send_email" id="send_email"><label class="form-check-label" for="flexCheckDefault">Send payment email</label>
-            <input type="submit" class="btn btn-primary" value="Add Ticket">
-        </div>                 
-        </form>
+    <form action="action.add-ticket.php" method="POST">
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Add ticket</h5>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
+                <input type="hidden" name="status" value="New">
+                <input type="name" class="form-control" id="name" name="name" placeholder="name">
+                <input type="email" class="form-control" id="email_address" name="email_address" placeholder="Email address">
+                <input type="phone" class="form-control" id="contact_number" name="contact_number" placeholder="Contact number">
+                <input type="text" class="form-control" id="number_of_entries" name="number_of_entries" placeholder="Number of tickets">
+                <input type="text" class="form-control" id="referral_code" name="referral_code" placeholder="Referral code (optional)">
+                <input class="form-check-input" type="checkbox" value="1" name="send_email" id="send_email"><label class="form-check-label" for="flexCheckDefault">Send payment email</label>
+            </div>
+            <div class="card-footer">
+                <input type="submit" class="btn btn-primary" value="Add Ticket">
+            </div>
+        </div>
+    </form>
     </div>
 </div>
