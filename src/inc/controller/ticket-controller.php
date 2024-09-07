@@ -26,7 +26,8 @@
                 $row['payment_link_id'],
                 $row['price_per_ticket'],
                 $row['payment_processing_fee'],
-                $row['referrer_id']
+                $row['referrer_id'],
+                $row['order_timestamp']
             );
         }
         return $tickets;
@@ -103,7 +104,7 @@
     $GLOBALS['debugOutput'] = [];
 
     function __sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $numberOfEntries, $eventDate, $rsvpLink) {
-		$subject = "Here's your ticket to ". $eventName . " on " . $eventDate . "!";
+		$subject = "Here's your ticket to ". $eventName . "!";
 		$emailAddresses[0] = $emailAddress;
 		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink));
 	}

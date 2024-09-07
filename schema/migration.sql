@@ -337,3 +337,8 @@ CREATE TABLE `email_attempt` (
   PRIMARY KEY (`id`));
 ALTER TABLE `email_attempt` 
 ADD COLUMN `result` VARCHAR(45) NOT NULL AFTER `timestamp`;
+
+
+ALTER TABLE `ticket` 
+ADD COLUMN `order_timestamp` DATETIME NULL DEFAULT NULL AFTER `referrer_id`;
+
