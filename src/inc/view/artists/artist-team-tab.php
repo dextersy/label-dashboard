@@ -7,7 +7,7 @@
 
     function getUserStatusString($status) {
         if ( $status == "Pending" ) {
-            $class = 'badge-warning';
+            $class = 'badge-secondary';
         }
         else if ($status == "Accepted") {
             $class = 'badge-success';
