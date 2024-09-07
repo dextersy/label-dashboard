@@ -43,17 +43,37 @@
     <table class="table">
     <tr><th></th><th>Sync royalty</th><th>Download royalty</th><th>Streaming royalty</th><th>Physical royalty</th></tr>
             <tr>
-                <td width="60%"><?=$_SESSION['current_artist_name'];?></td>
-                <td width="10%"><input type="number" class="form-control" name="sync_royalty_1" id="sync_royalty_1" min="0" max="100" step="1" value="50">% of revenue</td>
-                <td width="10%"><input type="number" class="form-control" name="download_royalty_1" id="download_royalty_1" min="0" max="100" step="1" value="50">% of revenue</td>
-                <td width="10%"><input type="number" class="form-control" name="streaming_royalty_1" id="streaming_royalty_1" min="0" max="100" step="1" value="50">% of revenue</td>
-               <td width="10%"><input type="number" class="form-control" name="physical_royalty_1" id="physical_royalty_1" min="0" max="100" step="1" value="15">% of revenue</td>
+                <td width="40%"><?=$_SESSION['current_artist_name'];?></td>
+                <td width="15%">
+                <div class="input-group">
+                    <input type="number" class="form-control" name="sync_royalty_1" id="sync_royalty_1" min="0" max="100" step="1" value="50">
+                    <div class="input-group-addon">% of revenue</div>
+                </div>
+                </td>
+                <td width="15%">
+                <div class="input-group">
+                    <input type="number" class="form-control" name="download_royalty_1" id="download_royalty_1" min="0" max="100" step="1" value="50">
+                    <div class="input-group-addon">% of revenue</div>
+                </div>
+                </td>
+                <td width="15%">
+                    <div class="input-group">
+                    <input type="number" class="form-control" name="streaming_royalty_1" id="streaming_royalty_1" min="0" max="100" step="1" value="50">
+                    <div class="input-group-addon">% of revenue</div>
+                    </div>
+                </td>
+               <td width="15%">
+                    <div class="input-group">
+                    <input type="number" class="form-control" name="physical_royalty_1" id="physical_royalty_1" min="0" max="100" step="1" value="15">
+                    <div class="input-group-addon">% of revenue</div>
+                </div>
+                </td>
             </tr>
 <?php
     for ($i = 2; $i <= 6; $i++) { // Magic numbers are just artist numbers from 2 to 6 (meaning 5 rows)... Probably need to make this look better.
 ?>
             <tr>
-                <td width="60%">
+                <td width="40%">
                 <select class="form-control" name="artist_id_<?=$i;?>">
                 <option></option>
 <?
@@ -67,10 +87,30 @@
         } 
 ?>
                 </select></td>
-                <td width="10%"><input type="number" class="form-control" name="sync_royalty_<?=$i;?>" id="sync_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">% of revenue</td>
-                <td width="10%"><input type="number" class="form-control" name="download_royalty_<?=$i;?>" id="download_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">% of revenue</td>
-                <td width="10%"><input type="number" class="form-control" name="streaming_royalty_<?=$i;?>" id="streaming_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">% of revenue</td>
-               <td width="10%"><input type="number" class="form-control" name="physical_royalty_<?=$i;?>" id="physical_royalty_<?=$i;?>" min="0" max="100" step="1" value="15">% of revenue</td>
+                <td width="15%">
+                <div class="input-group">
+                    <input type="number" class="form-control" name="sync_royalty_<?=$i;?>" id="sync_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">
+                    <div class="input-group-addon">% of revenue</div>
+                </div>
+                </td>
+                <td width="15%">
+                <div class="input-group">
+                    <input type="number" class="form-control" name="download_royalty_<?=$i;?>" id="download_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">
+                    <div class="input-group-addon">% of revenue</div>
+                </div>
+                </td>
+                <td width="15%">
+                    <div class="input-group">
+                    <input type="number" class="form-control" name="streaming_royalty_<?=$i;?>" id="streaming_royalty_<?=$i;?>" min="0" max="100" step="1" value="50">
+                    <div class="input-group-addon">% of revenue</div>
+                    </div>
+                </td>
+               <td width="15%">
+                    <div class="input-group">
+                    <input type="number" class="form-control" name="physical_royalty_<?=$i;?>" id="physical_royalty_<?=$i;?>" min="0" max="100" step="1" value="15">
+                    <div class="input-group-addon">% of revenue</div>
+                </div>
+                </td>
             </tr>
 <?  } ?>
         </table>
