@@ -65,15 +65,20 @@
     </table>
 </div>
 <div class="row">
-    <div class="col-md-6">
-        <h4>Add referrer</h4>
+    <div class="col-md-4">
         <form action="action.add-event-referrer.php" method="POST">
-        <div class="form-group">
-            <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
-            <input type="text" class="form-control" id="referrer_name" name="name" placeholder="Referrer name" onchange="generateReferralCode();">
-            <input type="text" class="form-control" id="referral_code_text" name="referral_code" placeholder="Referral code" onchange="generateSlug();">
-            <input type="text" class="form-control" id="slug" name="slug" placeholder="URL slug">
-            <input type="submit" class="btn btn-primary" value="Add Referrer">
+    
+        <div class="card">
+            <div class="card-header"><h4>Add referrer</h4></div>
+            <div class="card-body">
+                <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
+                <input type="text" class="form-control" id="referrer_name" name="name" placeholder="Referrer name" onchange="generateReferralCode();">
+                <input type="text" class="form-control" id="referral_code_text" name="referral_code" placeholder="Referral code" onchange="generateSlug();">
+                <input type="text" class="form-control" id="slug" name="slug" placeholder="URL slug">
+            </div>
+            <div class="card-footer">
+                <input type="submit" class="btn btn-block" value="Add Referrer">
+            </div>
         </div>                 
         </form>
     </div>

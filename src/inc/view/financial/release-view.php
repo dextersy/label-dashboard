@@ -45,12 +45,108 @@
         }
     }
 </script>
-<h3>Release Information</h3>
-<p>This tab shows financial details regarding your release, including splits, recuperable expenses, earnings, and revenues.</p>
+<form action="action.update-royalties.php" method="POST" enctype="multipart/form-data">
+<div class="card">
+    <div class="card-header"><h3>Release Information</h3></div>
+    <div class="card-body">
+        <p class="card-text">This tab shows financial details regarding your release, including splits, recuperable expenses, earnings, and revenues.</p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr><th>For Release</th>
+                    <th>Sync royalty %</th>
+                    <th>Streaming royalty %</th>
+                    <th>Downloads royalty %</th>
+                    <th>Physical royalty %</th>
+                    <th>Remaining Recuperable Expense</th>
+                    <th>Total earnings 
+                    <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Data starts on April 2021.">
+                    </th>
+                    <th>Total royalties earned</th>
+                </thead>
+                <tbody>
+                <? if ($releases != null) {
+                        $i = 1;
+                        foreach($releases as $release) {
+                            $recuperableExpense = getRecuperableExpenseBalance($release->id);
+                            $royalties = getTotalRoyaltiesForArtistForRelease($_SESSION['current_artist'], $release->id);
+                            $earnings = getTotalEarningsForRelease($release->id);
+                            
+                            $artistRelease = new ReleaseArtist;
+                            $artistRelease->fromID($_SESSION['current_artist'], $release->id);
+                            $sync_royalty = "% of " . $artistRelease->sync_royalty_type;
+                            $streaming_royalty = "% of " . $artistRelease->streaming_royalty_type;
+                            $download_royalty = "% of " . $artistRelease->download_royalty_type;
+                            $physical_royalty = "% of " . $artistRelease->physical_royalty_type;
+                ?>
+                    <tr>
+                        <td width="15%"><strong><?=$release->title;?></strong></td>
+                        <td>
+                            <input type="hidden" name="artist_id_<?=$i;?>" value="<?=$_SESSION['current_artist'];?>">
+                            <input type="hidden" name="release_id_<?=$i;?>" value="<?=$release->id;?>">
+                            <div class="input-group">
+                                <input id="sync_royalty_<?=$i;?>" name="sync_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->sync_royalty_percentage * 100;?>" disabled> 
+                                <div class="input-group-addon"><?=$sync_royalty;?></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="streaming_royalty_<?=$i;?>" name="streaming_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->streaming_royalty_percentage * 100;?>" disabled> 
+                                <div class="input-group-addon"><?=$streaming_royalty;?></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="download_royalty_<?=$i;?>" name="download_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->download_royalty_percentage * 100;?>" disabled>
+                                <div class="input-group-addon"><?=$download_royalty;?></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="physical_royalty_<?=$i;?>" name="physical_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->physical_royalty_percentage * 100;?>" disabled>
+                                <div class="input-group-addon"><?=$physical_royalty;?></div>
+                            </div>
+                        </td>
+                        <td align="right"><?=number_format($recuperableExpense, 2);?>
+                        <?php if ($isAdmin) { ?>
+                        <a href="#" onclick="onClickAddRecuperableExpense(<?=$release->id;?>, '<?=str_replace("'","\'", $release->title);?>');"><i class="fa fa-plus"></i></a>
+                        <?php } ?> 
+                        </td>
+                        <td align="right"><?=number_format($earnings, 2);?></td>
+                        <td align="right"><?=number_format($royalties, 2);?></td>
+                    </tr>
+                <?
+                            $i++;
+                        }
+                    } else {
+                ?>
+                No releases yet.
+                <?
+                    }
+                ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<? if($isAdmin) { ?>
+    <div class="card-footer text-right">
+    <div id="edit_button" style="display:block">
+    <button type="button" class="btn btn-primary" onClick="toggleEdit();">Edit Royalties</button> 
+    </div>
+    <div id="save_changes_buttons" style="display:none">
+    <input type="submit" class="btn btn-primary" value="Save Changes"> 
+    </div>
+</div>
+<? } ?>
+        </div>
+    </div>
+</div>
+</form>
 <div id="add-recuperable-expense" class="row" style="display:none">
     <div class="col-md-4">
         <form action="action.add-recuperable-expense.php" method="POST">
             <input type="hidden" id="add_recuperable_expense_release_id" name="release_id" value="">
+            <input type="hidden" id="add_recuperable_expense_brand_id" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
                 <h4>Add recuperable expense for:</label> <span id="add_recuperable_expense_release"></span></h4>
                 <label for="expenseDate">Recorded Date</label>
                 <input type="date" class="form-control" id="expenseDate" name="date_recorded" value="<?=date("Y-m-d");?>">
@@ -62,90 +158,5 @@
         </form>
     </div>
 </div>
-<div class="table-responsive">
-    <form action="action.update-royalties.php" method="POST" enctype="multipart/form-data">
-    <table class="table">
-        <thead>
-            <tr><th>For Release</th>
-            <th>Sync royalty %</th>
-            <th>Streaming royalty %</th>
-            <th>Downloads royalty %</th>
-            <th>Physical royalty %</th>
-            <th>Remaining Recuperable Expense</th>
-            <th>Total earnings 
-            <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Data starts on April 2021.">
-            </th>
-            <th>Total royalties earned</th>
-        </thead>
-        <tbody>
-        <? if ($releases != null) {
-                $i = 1;
-                foreach($releases as $release) {
-                    $recuperableExpense = getRecuperableExpenseBalance($release->id);
-                    $royalties = getTotalRoyaltiesForArtistForRelease($_SESSION['current_artist'], $release->id);
-                    $earnings = getTotalEarningsForRelease($release->id);
-                    
-                    $artistRelease = new ReleaseArtist;
-                    $artistRelease->fromID($_SESSION['current_artist'], $release->id);
-                    $sync_royalty = "% of " . $artistRelease->sync_royalty_type;
-                    $streaming_royalty = "% of " . $artistRelease->streaming_royalty_type;
-                    $download_royalty = "% of " . $artistRelease->download_royalty_type;
-                    $physical_royalty = "% of " . $artistRelease->physical_royalty_type;
-        ?>
-            <tr>
-                <td width="25%"><strong><?=$release->title;?></strong></td>
-                <td>
-                    <input type="hidden" name="artist_id_<?=$i;?>" value="<?=$_SESSION['current_artist'];?>">
-                    <input type="hidden" name="release_id_<?=$i;?>" value="<?=$release->id;?>">
-                    <div class="input-group">
-                        <input id="sync_royalty_<?=$i;?>" name="sync_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->sync_royalty_percentage * 100;?>" disabled> 
-                        <div class="input-group-addon"><?=$sync_royalty;?></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="input-group">
-                        <input id="streaming_royalty_<?=$i;?>" name="streaming_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->streaming_royalty_percentage * 100;?>" disabled> 
-                        <div class="input-group-addon"><?=$streaming_royalty;?></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="input-group">
-                        <input id="download_royalty_<?=$i;?>" name="download_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->download_royalty_percentage * 100;?>" disabled>
-                        <div class="input-group-addon"><?=$download_royalty;?></div>
-                    </div>
-                </td>
-                <td>
-                    <div class="input-group">
-                        <input id="physical_royalty_<?=$i;?>" name="physical_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->physical_royalty_percentage * 100;?>" disabled>
-                        <div class="input-group-addon"><?=$physical_royalty;?></div>
-                    </div>
-                </td>
-                <td align="right"><?=number_format($recuperableExpense, 2);?>
-                <?php if ($isAdmin) { ?>
-                <a href="#" onclick="onClickAddRecuperableExpense(<?=$release->id;?>, '<?=str_replace("'","\'", $release->title);?>');"><i class="fa fa-plus"></i></a>
-                <?php } ?> 
-                </td>
-                <td align="right"><?=number_format($earnings, 2);?></td>
-                <td align="right"><?=number_format($royalties, 2);?></td>
-            </tr>
-        <?
-                    $i++;
-                }
-            } else {
-        ?>
-        No releases yet.
-        <?
-            }
-        ?>
-        </tbody>
-    </table>
-    <? if($isAdmin) { ?>
-    <div id="edit_button" style="display:block">
-    <button type="button" class="btn btn-primary" onClick="toggleEdit();">Edit Royalties</button> 
-    </div>
-    <div id="save_changes_buttons" style="display:none">
-    <input type="submit" class="btn btn-primary" value="Save Changes"> 
-    </div>
-    <? } ?>
-    </form>
+
 </div>

@@ -12,6 +12,10 @@
     else if ($action == 'addPayment') {
         $msg = ($status == "OK") ? "Payment request was successful." : "Failed to make payment request. Please try again or contact your administrator.";
     }   
+
+    else if ($action == 'updateRoyalties') {
+        $msg = ($status == "OK") ? "Successfully updated royalty information." : "Failed to update royalties. Please try again or contact your administrator.";
+    }   
     $alert_type = ($status == 'OK') ? 'alert-success' : 'alert-danger';
 
 

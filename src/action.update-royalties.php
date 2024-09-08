@@ -17,5 +17,5 @@
 
         $result = $releaseArtist->save();
     }
-    redirectTo("/financial.php?action=release&result=" . $result);
+    redirectTo("/financial.php?action=updateRoyalties&status=" . ($result ? "OK":"Failed") . "#release");
 ?>

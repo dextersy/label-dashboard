@@ -147,7 +147,7 @@
 </div>
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-5">
     <form action="action.add-ticket.php" method="POST">
 
         <div class="card">
@@ -165,7 +165,7 @@
                 <input class="form-check-input" type="checkbox" value="1" name="send_email" id="send_email"><label class="form-check-label" for="flexCheckDefault">Send payment email</label>
             </div>
             <div class="card-footer">
-                <input type="submit" class="btn btn-primary" value="Add Ticket">
+                <input type="submit" class="btn btn-block" value="Add Ticket">
             </div>
         </div>
     </form>
