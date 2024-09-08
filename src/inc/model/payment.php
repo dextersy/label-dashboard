@@ -53,11 +53,12 @@ class Payment {
         $this->amount = $post['amount'];
         $this->artist_id = $post['artist_id'];
         $this->date_paid = $post['date_paid'];
-        $this->payment_method_id = $post['payment_method_id'];
+        $this->payment_method_id = (isset($post['payment_method_id'])&&$post['payment_method_id']!='') ? $post['payment_method_id']:null;
         $this->reference_number = $post['reference_number'];
     }
 
     function save() {
+        $payment_method_id = (isset($this->payment_method_id) && $this->payment_method_id != null) ? ("'".MySQLConnection::escapeString($this->payment_method_id)."'") : "NULL";
 
         if ( $this->id == null ) {
             $sql = "INSERT INTO `payment` (`description`, `amount`, `artist_id`, `date_paid`, `payment_method_id`, `reference_number`) ".
@@ -65,8 +66,8 @@ class Payment {
                 "'" . MySQLConnection::escapeString($this->description) . "', ".
                 "'" . MySQLConnection::escapeString($this->amount) . "', ".
                 "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
-                "'" . MySQLConnection::escapeString($this->date_paid) . "', ".
-                "'" . MySQLConnection::escapeString($this->payment_method_id) . "', ".
+                "'" . MySQLConnection::escapeString($this->date_paid) . "', " .
+                $payment_method_id . ", " .
                 "'" . MySQLConnection::escapeString($this->reference_number) . "'".
                 ")";
         }
@@ -76,7 +77,7 @@ class Payment {
                 "`amount` = '" . MySQLConnection::escapeString($this->amount) . "', " .
                 "`artist_id` = '" . MySQLConnection::escapeString($this->artist_id) . "', " .
                 "`date_paid` = '" . MySQLConnection::escapeString($this->date_paid) . "', " .
-                "`payment_method_id` = '" . MySQLConnection::escapeString($this->payment_method_id) . "', " .
+                "`payment_method_id` = " . $payment_method_id . ", ".
                 "`reference_number` = '" . MySQLConnection::escapeString($this->reference_number) . "' " .
                 "WHERE `id` = " . $this->id;
         }
