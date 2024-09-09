@@ -17,6 +17,7 @@ class Ticket {
     public $payment_processing_fee;
     public $referrer_id;
     public $order_timestamp;
+    public $checkout_key;
 
     function __construct(
         $id = null, 
@@ -32,7 +33,8 @@ class Ticket {
         $price_per_ticket = null,
         $payment_processing_fee = null,
         $referrer_id = null,
-        $order_timestamp = null
+        $order_timestamp = null,
+        $checkout_key = null
     ) 
     {
         $this->id = $id;
@@ -49,6 +51,7 @@ class Ticket {
         $this->payment_processing_fee = $payment_processing_fee;
         $this->referrer_id = $referrer_id;
         $this->order_timestamp = $order_timestamp;
+        $this->checkout_key = $checkout_key;
     }
 
     function fromID($id) {
@@ -68,6 +71,7 @@ class Ticket {
             $this->payment_processing_fee = $row['payment_processing_fee'];
             $this->referrer_id = $row['referrer_id'];
             $this->order_timestamp = $row['order_timestamp'];
+            $this->checkout_key = $row['checkout_key'];
             return true;
         } else {
             return false;
@@ -75,6 +79,7 @@ class Ticket {
     }
 
     function fromPaymentLinkID($id) {
+        $this->id = null;
         $result = MySQLConnection::query("SELECT * FROM `ticket` WHERE `payment_link_id` = '" . $id . "'");
         if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
             $this->id = $row['id'];
@@ -91,6 +96,32 @@ class Ticket {
             $this->payment_processing_fee = $row['payment_processing_fee'];
             $this->referrer_id = $row['referrer_id'];
             $this->order_timestamp = $row['order_timestamp'];
+            $this->checkout_key = $row['checkout_key'];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function fromCheckoutKey($key) {
+        $this->id = null;
+        $result = MySQLConnection::query("SELECT * FROM `ticket` WHERE `checkout_key` = '" . $key . "'");
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+            $this->id = $row['id'];
+            $this->event_id = $row['event_id'];
+            $this->name = $row['name'];
+            $this->email_address = $row['email_address'];
+            $this->contact_number = $row['contact_number'];
+            $this->number_of_entries = $row['number_of_entries'];
+            $this->ticket_code = $row['ticket_code'];
+            $this->status = $row['status'];
+            $this->payment_link = $row['payment_link'];
+            $this->payment_link_id = $row['payment_link_id'];
+            $this->price_per_ticket = $row['price_per_ticket'];
+            $this->payment_processing_fee = $row['payment_processing_fee'];
+            $this->referrer_id = $row['referrer_id'];
+            $this->order_timestamp = $row['order_timestamp'];
+            $this->checkout_key = $row['checkout_key'];
             return true;
         } else {
             return false;
@@ -114,7 +145,7 @@ class Ticket {
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`, `referrer_id`, `order_timestamp`) ".
+            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`, `referrer_id`, `order_timestamp`, `checkout_key`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->event_id) . "', " .
                 "'" . MySQLConnection::escapeString($this->name) . "', " .
@@ -128,7 +159,8 @@ class Ticket {
                 (isset($this->price_per_ticket) ? ("'" . MySQLConnection::escapeString($this->price_per_ticket) . "'")  : "NULL") . ", " .
                 (isset($this->payment_processing_fee) ? ("'" . MySQLConnection::escapeString($this->payment_processing_fee) . "'")  : "NULL") . ", " .
                 (isset($this->referrer_id) ? ("'" . MySQLConnection::escapeString($this->referrer_id) . "'")  : "NULL") . ", " .
-                "NOW())";
+                "NOW(), " .
+                (isset($this->checkout_key) ? ("'" . MySQLConnection::escapeString($this->checkout_key) . "'") : "NULL") . ")";
         } else {
             $sql = "UPDATE `ticket` SET " .
                 "`event_id` = '" . MySQLConnection::escapeString($this->event_id) . "', " .
@@ -142,7 +174,8 @@ class Ticket {
                 (isset($this->payment_link_id) ? ", `payment_link_id` = '" . MySQLConnection::escapeString($this->payment_link_id)."'" : "") .
                 (isset($this->price_per_ticket) ? ", `price_per_ticket` = '" . MySQLConnection::escapeString($this->price_per_ticket)."'" : "") .
                 (isset($this->payment_processing_fee) ? ", `payment_processing_fee` = '" . MySQLConnection::escapeString($this->payment_processing_fee)."'" : "") .
-                (isset($this->referrer_id) ? ", `referrer_id` = '" . MySQLConnection::escapeString($this->referrer_id)."'" : " ") .
+                (isset($this->referrer_id) ? ", `referrer_id` = '" . MySQLConnection::escapeString($this->referrer_id)."'" : "") .
+                (isset($this->checkout_key) ? ", `checkout_key` = '" . MySQLConnection::escapeString($this->checkout_key) . "' " : " ") .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

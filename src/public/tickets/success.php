@@ -4,17 +4,14 @@
     include_once("./inc/model/event.php");
     include_once("./inc/model/ticket.php");
 
-    $ticket = new Ticket;
-    $ticket->fromID($_GET['id']);
-
     $event = new Event;
-    $event->fromID($ticket->event_id);
+    $event->fromID($_GET['id']);
 
     $brand = new Brand;
     $brand->fromID($event->brand_id);
 ?>
 <header>
-  <title>Buy tickets to <?=$event->title;?></title>
+  <title>Your ticket to <?=$event->title;?> has been sent!</title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
 </header>
@@ -25,6 +22,7 @@
 <link href="style.css?version=1.6" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
 <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v20.0&appId=1410610449395088" nonce="72nVyoPR"></script>
 <script>window.twttr = (function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0],
@@ -46,6 +44,10 @@
 
 <div class="wrapper">
     <div id="formHeader">
+<div class="card">
+
+<div class="card-header">
+
 <?php
   if (isset($event->poster_url) && $event->poster_url != '') {
 ?>
@@ -53,26 +55,28 @@
 <?php
   }
 ?>
-    <h1 style="color:black;">Thank you for your order!</strong></h1>
-    <p>Your tickets to <strong><?=$event->title;?></strong> are reserved. Please continue to the payment link below to finish your order.</p>
+<br>
+&nbsp;
+    <h3 style="color:black;font-weight:bold;text-transform:uppercase;">Congrats! You're in!</strong></h1>
 </div>
-  <div id="formContent">
-    &nbsp;
-    <p>The total amount for your order is </p>
-    <h1>Php <?=number_format($ticket->number_of_entries * $event->ticket_price,2)?></h1>
-    <!-- Tabs Titles -->
-    <!-- Login Form -->
-    <a href="<?=$ticket->payment_link;?>">
-      <button class="paymentLinkButton">Pay for Tickets</button>
-    </a>
-    <p style="font-size:12px"><em>This link has also been sent to your email.</em></p>
-    <!-- Remind Passowrd -->
-    <div id="formFooter">
-    <p style="font-size:12px">This link will redirect you to our external payment provider. The payee information should show as <b>Melt Records Music Publishing Inc.</b>.
-    <br>Upon completing your payment, you will receive your ticket in a separate email.</p>
-    <hr>
+
+<div class="card-body">
+    <p><i class="fa fa-check-circle" style="font-size:150px;color:green;"></i></p>
+    <h3>Thank you for your purchase!</h3>
+    <p>Your tickets to <strong><?=$event->title;?></strong> have been sent to your email address.</p>
+
+    <div class="alert alert-secondary field-description belowTitle text-dark text-left"><i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
+      <ul>
+        <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
+        <li>You may be required to provide identification to verify your ticket at the gate.</li>
+        <li>Didn't receive your ticket? Don't worry, we're ready help. Just send us an email at <a href="mailto:support@melt-records.com">support@melt-records.com</a> or message us on our Facebook page <a href="m.me/meltrecordsph"><u>here</u></a>.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="card-footer">
     <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 text-center">
       <p>
       <strong>Tell your friends about this show!</strong>
       <br>
@@ -86,6 +90,8 @@
       </p>
     </div>
   </div>
+</div>
+</div>
 </div>
 </div>
 </body>

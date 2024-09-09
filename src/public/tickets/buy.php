@@ -26,7 +26,7 @@
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
-<link href="style.css?version=1.5" rel="stylesheet">
+<link href="style.css?version=1.6" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
@@ -66,9 +66,17 @@
 <?php
   if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
 ?>
+
+<div class="alert alert-info field-description belowTitle text-dark"><i class="fa fa-info-circle"></i> <b>Important reminders</b><br>
+  <ul>
+    <li>Please use a name that is shown in any valid ID, as you may be requested to present identification at the gate.</li>
+    <li>Please make sure your email address is correct to make sure that you receive your ticket without any problem.</li>
+    <li>Tickets are non-refundable once paid.</li>
+  </ul>
+</div>
+
   <div id="formContent" style="background-color:<?=$brand->brand_color;?>;">
     <!-- Tabs Titles -->
-
 
     <!-- Alert -->
     
@@ -76,19 +84,18 @@
     <form action="action.buy.php" method="POST">
       <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
       <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name" required><br>
-      <div class="fadeIn second badge badge-pill badge-light"><i class="fa fa-info-circle"></i> Please use a name that appears on any valid ID.</div>
       <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address" required>
       <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number" required>
       <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?" required>
       <input type="text" id="referral_code" class="fadeIn fifth" name="referral_code" placeholder="Referral code (optional)" <?=isset($_GET['ref'])?'value="' . $_GET['ref'] . '" readonly':'';?>><br><br>
-      <input type="submit" class="fadeIn sixth" value="Order Tickets">
-      <div class="fadeIn sixth field-description">We respect your privacy and will use your information only for the purpose of validating your purchase.<br>By submitting this form, you agree to share your data with us.</div>
+      <button type="submit" class="fadeIn sixth"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
+      <div class="fadeIn sixth field-description text-white" style="font-size:12px;">Clicking "Proceed" will bring you to our checkout page. Payee information will be <strong>Melt Records</strong>.</div>
+      <div class="fadeIn sixth field-description text-white">We respect your privacy and will use your information only for the purpose of validating your purchase.<br>By submitting this form, you agree to share your data with us.</div>
       
     </form>
 
     <!-- Remind Passowrd -->
     <div id="formFooter">
-    <p style="font-size:12px;">Your payment link will be shown after placing your order.</p>
     <p style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard</p>
     </div>
   </div>

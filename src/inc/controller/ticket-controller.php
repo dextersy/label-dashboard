@@ -27,7 +27,8 @@
                 $row['price_per_ticket'],
                 $row['payment_processing_fee'],
                 $row['referrer_id'],
-                $row['order_timestamp']
+                $row['order_timestamp'],
+                $row['checkout_key']
             );
         }
         return $tickets;
@@ -82,19 +83,24 @@
         }
     }
 
-    function updateTicketPaymentStatus($id) {
+    function updateTicketPaymentStatus($id, $processing_fee = null) {
         $ticket = new Ticket;
         if (!$ticket->fromID($id)) {
             return false;
         }
         if ($ticket->status == 'New' ) {
-            $info = getPaymentInformation($ticket->payment_link_id);
-            if ($info != null) {
-                $ticket->payment_processing_fee = $info->payment_processing_fees;
-                $ticket->status = "Payment Confirmed";
-                $ticket->save();
-                return true;
+            if(!isset($processing_fee) && isset($ticket->payment_link_id)) {
+                // @TODO This assumes that the only scenario where processing fee is not passed 
+                // is from payment links verification
+                $info = getPaymentInformation($ticket->payment_link_id);
+                if ($info != null) {
+                    $processing_fee = $info->payment_processing_fees;
+                }
             }
+            $ticket->payment_processing_fee = $processing_fee;
+            $ticket->status = "Payment Confirmed";
+            $ticket->save();
+            return true;
         }
         return false;
     }

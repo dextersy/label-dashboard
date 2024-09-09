@@ -11,6 +11,65 @@
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/controller/users-controller.php');
 
+    function createCheckoutSession($event_id, $number_of_tickets, $price_per_ticket, $description) {
+        $curl = curl_init();
+
+        $params = json_encode([
+            'data' => [
+                'attributes' => [
+                        'send_email_receipt' => false,
+                        'show_description' => true,
+                        'show_line_items' => true,
+                        'line_items' => [
+                            [
+                                'currency' => 'PHP',
+                                'amount' => $price_per_ticket * 100,
+                                'name' => 'Tickets',
+                                'quantity' => intval($number_of_tickets)
+                            ]
+                        ],
+                        'payment_method_types' => [
+                                        'gcash',
+                                        'qrph',
+                                        'card',
+                                        'dob_ubp',
+                                        'dob',
+                                        'paymaya',
+                                        'grab_pay' // TODO Make this selectable in event settings
+                        ],
+                        'description' => $description,
+                        'success_url' => getProtocol() . $_SERVER['HTTP_HOST'] . "/public/tickets/success.php?id=" . $event_id
+                ]
+            ]
+        ]);
+        curl_setopt_array($curl, [
+                CURLOPT_URL => "https://api.paymongo.com/v1/checkout_sessions",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "POST",
+                CURLOPT_POSTFIELDS => $params,
+                  CURLOPT_HTTPHEADER => [
+                    "accept: application/json",
+                    "authorization: Basic " . PAYMONGO_SECRET_KEY,
+                    "content-type: application/json"
+                ],
+            ]);
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+            return $err;
+        } else {
+            return json_decode($response, false);
+        }
+    }
+
     function createPaymentLink($amount, $description) {
 
         $curl = curl_init();
@@ -126,30 +185,36 @@
 
     $amount = $event->ticket_price * $ticket->number_of_entries;
     $description = "Payment for " . $event->title . " - Ticket # " . $ticket->id;
-    $response = createPaymentLink($amount, $description);
+    //$response = createPaymentLink($amount, $description);
+    $response = createCheckoutSession($event->id, $ticket->number_of_entries, $ticket->price_per_ticket, $description);
 
     if(isset($response->data->attributes)) {
-        $ticket->payment_link = $response->data->attributes->checkout_url;
-        $ticket->payment_link_id = $response->data->id;
-        $ticket->save();
+        // $ticket->payment_link = $response->data->attributes->checkout_url;
+        // $ticket->payment_link_id = $response->data->id;
+        // $ticket->save();
 
-        $result = sendPaymentLink(
-            $ticket->email_address, 
-            $event->title, 
-            $ticket->name, 
-            $amount, 
-            $ticket->number_of_entries, 
-            $ticket->payment_link
-        );
+        // $result = sendPaymentLink(
+        //     $ticket->email_address, 
+        //     $event->title, 
+        //     $ticket->name, 
+        //     $amount, 
+        //     $ticket->number_of_entries, 
+        //     $ticket->payment_link
+        // );
+        $ticket->checkout_key = $response->data->attributes->client_key;
+        $ticket->save();
+        
+        $checkout_url = $response->data->attributes->checkout_url;
 
         sendAdminNotification($event->title, $ticket, $amount);
 
-        if($result) {
-            redirectTo("/public/tickets/pay.php?id=" . $ticket->id);
-        }
-        else {
-            redirectTo("/public/tickets/buy.php?err");
-        }
+        header('location: ' . $checkout_url);
+        // if($result) {
+        //     redirectTo("/public/tickets/pay.php?id=" . $ticket->id);
+        // }
+        // else {
+        //     redirectTo("/public/tickets/buy.php?err");
+        // }
     }
     else {
         redirectTo("/public/tickets/buy.php?err");

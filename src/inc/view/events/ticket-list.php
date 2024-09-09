@@ -17,10 +17,10 @@
         }
     } 
 
-    function getTicketStatusText($status, $payment_link) {
-        if(!isset($payment_link)) {
+    function getTicketStatusText($status, $payment_link, $checkout_key) {
+        if(!isset($payment_link) && !isset($checkout_key)) {
             $color = 'red';
-            $status = 'Error - no payment link';
+            $status = 'Error - no payment link nor checkout key';
         }
         else if ( $status == "New" ) {
             $color = 'black';
@@ -117,12 +117,15 @@
                             <td><?=$ticket->contact_number; ?></td>
                             <td><?=$ticket->number_of_entries; ?></td>
                             <td><strong><?=$ticket->ticket_code; ?></strong></td>
-                            <td><a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
+                            <td>
+                                <? if(isset($ticket->payment_link) && $ticket->payment_link != '') { ?> 
+                                <a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
+                                <? } ?>
                             <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
                             <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                             <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
                             <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
-                            <td><?=getTicketStatusText($ticket->status, $ticket->payment_link); ?></td>
+                            <td><?=getTicketStatusText($ticket->status, $ticket->payment_link, $ticket->checkout_key); ?></td>
                             <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
                         </tr>
             <?      }

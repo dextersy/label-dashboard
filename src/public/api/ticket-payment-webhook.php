@@ -36,16 +36,36 @@
     session_start();
 
     $jsonData = file_get_contents('php://input');
-
     $response = json_decode($jsonData, false);
 
     webhook_log('Received a webhook event : ' . $jsonData);
     
-    if (isset($response->data->attributes) && $response->data->attributes->data->type == 'link') {
-        webhook_log ('Valid JSON - type link.');
+    if (isset($response->data->attributes) && ($response->data->attributes->data->type == 'link' || $response->data->attributes->data->type == 'checkout_session')) {
+        webhook_log ('Valid JSON - type ' . $response->data->attributes->data->type);
+        $found = false;
+        $type = $response->data->attributes->data->type;
         $ticket = new Ticket;
-        if($ticket->fromPaymentLinkID($response->data->attributes->data->id)) {
-            webhook_log ('Valid payment link ID...');
+        
+        if($type == 'link') {
+            $found = $ticket->fromPaymentLinkID($response->data->attributes->data->id);
+        }
+        else if($type == 'checkout_session')  {
+            $found = $ticket->fromCheckoutKey($response->data->attributes->data->attributes->client_key);
+        }
+        $payments = $response->data->attributes->data->attributes->payments;
+
+        if($found) {
+            webhook_log ('Valid reference...');
+
+            $processing_fee = 0;
+            if($payments != null) {
+                webhook_log ('Payments data is available...');
+                foreach ($payments as $payment) {
+                    if($type == 'checkout_session') $processing_fee += $payment->attributes->fee / 100;
+                    else if($type == 'link') $processing_fee += $payment->data->attributes->fee / 100;
+                }
+            }
+
             // Set session brand based on ticket
             $event = new Event;
             $event->fromID($ticket->event_id);
@@ -63,7 +83,7 @@
                 webhook_log ('ERROR: Failed to send admin notification.');
                 sendAdminFailureNotification("Failed to send email.");
             }
-            if (!updateTicketPaymentStatus($ticket->id)) {
+            if (!updateTicketPaymentStatus($ticket->id, $processing_fee)) {
                 webhook_log ('ERROR: Failed to update ticket payment verification.');
                 sendAdminFailureNotification("Ticket payment verification failed.");
             }
@@ -76,8 +96,8 @@
             }
         }
         else {
-            webhook_log ('ERROR : payment link ID is not valid.');
-            sendAdminFailureNotification("Invalid payment link ID in JSON response - " . $response->data->attributes->data->id);
+            webhook_log ('ERROR : Reference is not valid.');
+            sendAdminFailureNotification("Invalid reference value in JSON response.");
         }
     } else {
         webhook_log ('ERROR : JSON data is not valid.');

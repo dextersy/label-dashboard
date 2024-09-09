@@ -342,3 +342,10 @@ ADD COLUMN `result` VARCHAR(45) NOT NULL AFTER `timestamp`;
 ALTER TABLE `ticket` 
 ADD COLUMN `order_timestamp` DATETIME NULL DEFAULT NULL AFTER `referrer_id`;
 
+---- SEP 9, 2024
+ALTER TABLE `ticket` 
+ADD COLUMN `checkout_key` VARCHAR(255) NULL DEFAULT NULL AFTER `order_timestamp`;
+ALTER TABLE `ticket` 
+ADD INDEX `checkout_key` (`checkout_key` ASC) VISIBLE;
+ALTER TABLE `ticket` 
+ADD INDEX `payment_link_id` (`payment_link_id` ASC) VISIBLE;
