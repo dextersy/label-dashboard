@@ -72,6 +72,14 @@
             <div class="col-md-12">
                 <div class="btn-toolbar" role="toolbar">
                     <div class="btn-group" role="group" aria-label="Actions">
+                        <button class="btn-link dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-download"></i> Download CSV <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>">With ticket</a></li>
+                                <li><a class="dropdown-item" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>&all=1">All</a></li>
+                            </ul>
+                            &nbsp;
                         <a href="action.verify-ticket-payments.php">
                             <button type="button" class="btn-link">
                                 <i class="fa fa-check"></i> Verify Payments
@@ -81,12 +89,6 @@
                         <a href="action.send-payment-reminders.php">
                             <button type="button" class="btn-link">
                                 <i class="fa fa-bell"></i> Send payment reminders
-                            </button>
-                        </a>
-                        &nbsp;
-                        <a href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>">
-                            <button type="button" class="btn-link">
-                                <i class="fa fa-download"></i> Download CSV
                             </button>
                         </a>
                     </div>

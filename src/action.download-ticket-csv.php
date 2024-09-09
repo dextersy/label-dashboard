@@ -10,6 +10,7 @@
         die();
     }
 
+    $all = ($_GET['all'] == '1') ? true : false;
     $event = new Event;
     $event->fromID($_GET['id']);
     
@@ -20,13 +21,16 @@
     fputcsv($file, ["Ticket list for " . $event->title]);
     fputcsv($file, ["-----"]);
     $headers = ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Notes'];
+    if($all) { array_push($headers, 'Status'); }
+
     fputcsv($file, $headers);
 
     $tickets = getTicketsForEvent($event->id);
 
     foreach ($tickets as $ticket) {
-        if($ticket->status == "Ticket sent.") {
+        if($all || $ticket->status == "Ticket sent.") {
             $line = [$ticket->name, $ticket->email_address, $ticket->contact_number, $ticket->number_of_entries, $ticket->ticket_code, ''];
+            if($all) { array_push($line, $ticket->status); }
             fputcsv($file, $line);
         }
     }
