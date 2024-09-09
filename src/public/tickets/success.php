@@ -69,7 +69,7 @@
       <ul>
         <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
         <li>You may be required to provide identification to verify your ticket at the gate.</li>
-        <li>Didn't receive your ticket? Don't worry, we're ready help. Just send us an email at <a href="mailto:support@melt-records.com">support@melt-records.com</a> or message us on our Facebook page <a href="https://m.me/meltrecordsph"><u>here</u></a>.</li>
+        <li>Didn't receive your ticket? Don't worry, we're ready help. Just send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or message us on our Facebook page <a href="https://m.me/meltrecordsph"><u>here</u></a>.</li>
       </ul>
     </div>
   </div>
