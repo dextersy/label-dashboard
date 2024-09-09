@@ -97,10 +97,12 @@
                     $processing_fee = $info->payment_processing_fees;
                 }
             }
-            $ticket->payment_processing_fee = $processing_fee;
-            $ticket->status = "Payment Confirmed";
-            $ticket->save();
-            return true;
+            if(isset($processing_fee)) {
+                $ticket->payment_processing_fee = $processing_fee;
+                $ticket->status = "Payment Confirmed";
+                $ticket->save();
+                return true;
+            }
         }
         return false;
     }
