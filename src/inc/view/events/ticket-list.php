@@ -37,9 +37,6 @@
         return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
     }
     function getTicketLink($id, $status, $payment_link) {
-        if (!isset($payment_link)) {
-            return "";
-        }
         if ( $status == "New" ) {
             $link = "<a href=\"action.mark-ticket-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a> " .
                         "<a href=\"action.cancel-ticket.php?ticket_id=" . $id . "\">[ Cancel ]</a> ";
