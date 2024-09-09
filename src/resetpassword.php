@@ -59,10 +59,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         The link you used is invalid. <a href="index.php">Please try again.</a>
       </div>
     <? } else {
-    ?>
+      if($_GET['err'] == 'mismatch') { ?>
+      <div class="alert alert-danger" role="alert">
+        The passwords you input were mismatched. Please try again.
+      </div>
+    <? } ?>
     <!-- Login Form -->
     <form action="action.init-user.php" method="POST">
       <input type="hidden" name="id" value="<?=$user->id;?>">
+      <input type="hidden" name="reset_hash" value="<?=$_GET['code'];?>">
       <input type="password" id="password" class="fadeIn second" name="password" placeholder="New Password" required>
       <input type="password" id="validation" class="fadeIn third" name="validation" placeholder="Verify New Password" required>
       <input type="submit" class="fadeIn fourth" value="Set New Password">

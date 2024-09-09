@@ -69,6 +69,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         Your account is locked due to too many failed logins. Try again in <?=LOCK_TIME_IN_SECONDS/60;?> minutes.
       </div>
     <?
+      }else if ($_GET['resetpass'] == '1') {
+    ?>
+      <div class="alert alert-success" role="alert">
+        Your password has been successfully reset. Please log in again.
+      </div>
+    <?
       }
     ?>
     <!-- Login Form -->
