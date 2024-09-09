@@ -137,6 +137,7 @@ class Ticket {
         $this->name = $post['name'];
         $this->email_address = $post['email_address'];
         $this->contact_number = $post['contact_number'];
+        $this->price_per_ticket = $post['price_per_ticket'];
         $this->number_of_entries = $post['number_of_entries'];
         $this->ticket_code = $post['ticket_code'];
         $this->status = $post['status'];

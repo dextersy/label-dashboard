@@ -38,10 +38,12 @@
     $event = new Event();
     $event->fromID($_SESSION['current_event']);
 
+    $number_of_sent = 0;
+
     foreach($tickets as $ticket) {
         
         //echo $ticket->id . " - " . $ticket->payment_link . "<br>";
-        if ($ticket->status == 'New') {
+        if ($ticket->status == 'New' && isset($ticket->payment_link) && $ticket->payment_link != '') {
             $amount = $event->ticket_price * $ticket->number_of_entries;
             $success = sendPaymentReminder(
                 $ticket->email_address, 
@@ -51,7 +53,10 @@
                 $ticket->number_of_entries, 
                 $ticket->payment_link
             );
+            if($success) {
+                $number_of_sent++;
+            }
         }
     }
-    redirectTo("/events.php?action=VerifyPayments&status=" . ($success ? "OK": "Failed"));
+    redirectTo("/events.php?action=paymentReminder&status=" . ($success ? "OK": "Failed") . "&count=" . $number_of_sent . "#tickets");
 ?>

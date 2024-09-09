@@ -79,11 +79,9 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
             <div class="form-group">
                 <label for="websiteURL">Ticket purchase link</label>
                 <em>Share this link to ticket buyers.</em>
-                <div class="row">
-                    <div class="col-md-11">
-                        <input type="text" class="form-control" id="buy_shortlink" name="buy_shortlink" value="<?=isset($event->id)? $event->buy_shortlink : "Save to see buy link";?>" readonly>
-                    </div>
-                    <div class="col-md-1">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="buy_shortlink" name="buy_shortlink" value="<?=isset($event->id)? $event->buy_shortlink : "Save to see buy link";?>" readonly>
+                    <div class="input-group-addon">
                         <a href="javascript:copyBuyLink();"><i class="fa fa-copy"></i></a>
                     </div>
                 </div>

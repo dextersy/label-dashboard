@@ -12,8 +12,10 @@
     $count = 0;
     $tickets = getTicketsForEvent($_SESSION['current_event']);
     foreach($tickets as $ticket) {
-        if(updateTicketPaymentStatus($ticket->id)) {
-            $count++;
+        if(isset($ticket->payment_link)) {
+            if(updateTicketPaymentStatus($ticket->id)) {
+                $count++;
+            }
         }
     }
     redirectTo("/events.php?action=VerifyPayments&count=" . $count ."#tickets");

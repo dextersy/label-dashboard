@@ -103,10 +103,12 @@
     $event = new Event;
     $event->fromID($ticket->event_id);
 
-    $ticket->price_per_ticket = $event->ticket_price;
-    $ticket->save();
+    if(!isset($_POST['price_per_ticket']) || $_POST['price_per_ticket'] == '') {
+        $ticket->price_per_ticket = $event->ticket_price;
+        $ticket->save();
+    }
 
-    $amount = $event->ticket_price * $ticket->number_of_entries;
+    $amount = $ticket->price_per_ticket * $ticket->number_of_entries;
     $description = "Payment for " . $event->title . " - Ticket # " . $ticket->id;
     $response = createPaymentLink($amount, $description);
 
