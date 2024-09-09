@@ -36,7 +36,7 @@
         }
         return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
     }
-    function getTicketLink($id, $status, $payment_link) {
+    function getTicketLink($id, $status) {
         if ( $status == "New" ) {
             $link = "<a href=\"action.mark-ticket-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a> " .
                         "<a href=\"action.cancel-ticket.php?ticket_id=" . $id . "\">[ Cancel ]</a> ";
@@ -123,7 +123,7 @@
                             <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
                             <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
                             <td><?=getTicketStatusText($ticket->status, $ticket->payment_link, $ticket->checkout_key); ?></td>
-                            <td><?=getTicketLink($ticket->id, $ticket->status, $ticket->payment_link); ?></td>
+                            <td><?=getTicketLink($ticket->id, $ticket->status); ?></td>
                         </tr>
             <?      }
                 } else {
