@@ -9,6 +9,7 @@
 
     $currentBalance = getWalletBalance($_SESSION['brand_id']);
 ?>
+<script src="/assets/js/jquery.3.2.1.min.js"></script>
 <script type="text/javascript">
     function checkBalance() {
         var errorMessageElement = document.getElementById('error-messages');
@@ -29,11 +30,19 @@
 
     function toggleManualPayment() {
         var isManualPayment = document.getElementById('checkbox_manualPayment').checked;
-        var referenceNumberDiv = document.getElementById('div_referenceNumber');
+        var manualPaymentFields = document.getElementById('div_manualPaymentFields');
         var availableBalanceDiv = document.getElementById('div_availableBalance');
+        var paidThroughField = $('#select_paymentMethod');
 
-        referenceNumberDiv.style.display = isManualPayment ? 'block': 'none';
+        manualPaymentFields.style.display = isManualPayment ? 'block': 'none';
         availableBalanceDiv.style.display = isManualPayment ? 'none': 'block';
+        
+        if(isManualPayment) {
+            paidThroughField.removeAttr('required');
+        }
+        else {
+            paidThroughField.attr('required');
+        }
         
         checkBalance();
     }
@@ -54,12 +63,15 @@
             <input type="text" class="form-control" id="description" name="description" placeholder="Description" required>
         </div>
         <div class="form-group">
-            <label for="amount">Amount (in PHP)</label>
-            <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>" onchange="checkBalance();" required min="1">
+            <label for="amount">Amount sent</label>
+            <div class="input-group">
+                <div class="input-group-addon">Php</div>
+                <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>" onchange="checkBalance();" required min="1">
+            </div>
         </div> 
         <div class="form-group">
             <label for="select_paymentMethod">Paid through</label>
-            <select name="payment_method_id" id="select_paymentMethod" class="form-control">
+            <select name="payment_method_id" id="select_paymentMethod" class="form-control" required>
     <?php   
         foreach($paymentMethods as $paymentMethod) {
     ?>
@@ -75,9 +87,18 @@
                 This is a manual payment.
             </label> 
         </div>
-        <div id="div_referenceNumber" class="form-group">
-            <label for="amount">Reference Number</label>
-            <input type="text" class="form-control" id="txt_referenceNumber" name="reference_number" placeholder="Reference Number">
+        <div id="div_manualPaymentFields">
+            <div class="form-group">
+                <label for="amount">Reference Number</label>
+                <input type="text" class="form-control" id="txt_referenceNumber" name="reference_number" placeholder="Reference Number">
+            </div>
+            <div class="form-group">
+                <label for="amount">Processing Fee</label>
+                <div class="input-group">
+                    <div class="input-group-addon">Php</div>
+                    <input type="text" class="form-control" id="number_processingFee" min="0" step="0.01" name="payment_processing_fee" placeholder="Payment Processing" value="0" required>
+                </div>
+            </div>
         </div>
     </div>
     <div class="card-footer"> 

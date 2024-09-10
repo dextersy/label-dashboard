@@ -11,6 +11,7 @@ class Payment {
     public $date_paid;
     public $payment_method_id;
     public $reference_number;
+    public $payment_processing_fee;
     
     function __construct(
         $id = null, 
@@ -19,7 +20,8 @@ class Payment {
         $artist_id= null, 
         $date_paid= null,
         $payment_method_id= null,
-        $reference_number= null
+        $reference_number= null,
+        $payment_processing_fee = null
     ) 
     {
         $this->id = $id;
@@ -29,7 +31,8 @@ class Payment {
         $this->date_paid = $date_paid;
         $this->payment_method_id = $payment_method_id;
         $this->reference_number = $reference_number;
-      }
+        $this->payment_processing_fee = $payment_processing_fee;
+    }
 
     function fromID($id) {
         $result = MySQLConnection::query("SELECT * FROM `payment` WHERE `id` = " . $id);
@@ -41,6 +44,7 @@ class Payment {
             $this->date_paid = $row['date_paid'];
             $this->payment_method_id = $row['payment_method_id'];
             $this->reference_number = $row['reference_number'];
+            $this->payment_processing_fee = $row['payment_processing_fee'];
         }
     }
 
@@ -55,20 +59,24 @@ class Payment {
         $this->date_paid = $post['date_paid'];
         $this->payment_method_id = (isset($post['payment_method_id'])&&$post['payment_method_id']!='') ? $post['payment_method_id']:null;
         $this->reference_number = $post['reference_number'];
+        if(isset($post['payment_processing_fee'])) {
+            $this->payment_processing_fee = $post['payment_processing_fee'];
+        }
     }
 
     function save() {
         $payment_method_id = (isset($this->payment_method_id) && $this->payment_method_id != null) ? ("'".MySQLConnection::escapeString($this->payment_method_id)."'") : "NULL";
 
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `payment` (`description`, `amount`, `artist_id`, `date_paid`, `payment_method_id`, `reference_number`) ".
+            $sql = "INSERT INTO `payment` (`description`, `amount`, `artist_id`, `date_paid`, `payment_method_id`, `reference_number`, `payment_processing_fee`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->description) . "', ".
                 "'" . MySQLConnection::escapeString($this->amount) . "', ".
                 "'" . MySQLConnection::escapeString($this->artist_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->date_paid) . "', " .
                 $payment_method_id . ", " .
-                "'" . MySQLConnection::escapeString($this->reference_number) . "'".
+                "'" . MySQLConnection::escapeString($this->reference_number) . "', " .
+                "'" . MySQLConnection::escapeString($this->payment_processing_fee) . "'".
                 ")";
         }
         else {
@@ -78,7 +86,8 @@ class Payment {
                 "`artist_id` = '" . MySQLConnection::escapeString($this->artist_id) . "', " .
                 "`date_paid` = '" . MySQLConnection::escapeString($this->date_paid) . "', " .
                 "`payment_method_id` = " . $payment_method_id . ", ".
-                "`reference_number` = '" . MySQLConnection::escapeString($this->reference_number) . "' " .
+                "`reference_number` = '" . MySQLConnection::escapeString($this->reference_number) . "', " .
+                "`payment_processing_fee` = '" . MySQLConnection::escapeString($this->payment_processing_fee) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

@@ -355,3 +355,5 @@ ALTER TABLE `brand`
 ADD COLUMN `payment_processing_fee_for_payouts` VARCHAR(45) NOT NULL DEFAULT '10' AFTER `paymongo_wallet_id`;
 ALTER TABLE `payment` 
 ADD COLUMN `payment_processing_fee` DECIMAL NOT NULL DEFAULT 0 AFTER `reference_number`;
+ALTER TABLE `payment` 
+CHANGE COLUMN `payment_processing_fee` `payment_processing_fee` DECIMAL(10,2) NOT NULL DEFAULT '0' ;

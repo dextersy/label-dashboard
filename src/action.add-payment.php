@@ -17,8 +17,12 @@
 
     if (isset($payment->payment_method_id) && $payment->payment_method_id != '' && $_POST['manualPayment'] != '1') {
         // Pay through Paymongo
-        $referenceNumber = sendPaymentThroughPaymongo($_SESSION['brand_id'], $payment->payment_method_id, $payment->amount, $payment->description);
+        $brand = new Brand;
+        $brand->fromID($_SESSION['brand_id']);
+        $processing_fee = $brand->payment_processing_fee_for_payouts;
+        $referenceNumber = sendPaymentThroughPaymongo($_SESSION['brand_id'], $payment->payment_method_id, $payment->amount - $processing_fee, $payment->description);
         if($referenceNumber != null) {
+            $payment->payment_processing_fee = $processing_fee;
             $payment->reference_number = $referenceNumber;
             $success = true;
         }
@@ -68,6 +72,8 @@
         $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST%', $artistName, $msg);
         $msg = str_replace('%AMOUNT%', "Php " . number_format($payment->amount, 2), $msg);
+        $msg = str_replace('%PROCESSING_FEE%', "Php " . number_format($payment->payment_processing_fee, 2), $msg);
+        $msg = str_replace('%NET_AMOUNT%', "Php " . number_format($payment->amount - $payment->payment_processing_fee, 2), $msg);
         $msg = str_replace('%DESCRIPTION%', $payment->description, $msg);
 		$msg = str_replace('%URL%', getProtocol() . $_SERVER['HTTP_HOST'], $msg);
 		
