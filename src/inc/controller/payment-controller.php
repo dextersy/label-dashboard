@@ -42,7 +42,7 @@ function getPaymentsForArtist($artist_id, $start=0, $limit=-1){
             $paymentViewItems[$i]->paid_thru_account_name = $paymentMethod->account_name;
             $paymentViewItems[$i]->paid_thru_account_number = $paymentMethod->account_number_or_email;
         }
-        $paymentViewItems[$i]->payment_processing_fee;
+        $paymentViewItems[$i]->payment_processing_fee = $payment->payment_processing_fee;
         $i++;
     }
     return $paymentViewItems;
