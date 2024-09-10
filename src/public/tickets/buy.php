@@ -20,6 +20,26 @@
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
   <meta property="og:image" content="<?="https://" . $_SERVER['SERVER_NAME'] . "/" . $event->poster_url;?>"/>
+
+    <script type="text/javascript">
+      function calculateTotal() {
+        var pricePerTicket = <?=$event->ticket_price;?>;
+        var numberOfTickets = document.getElementById('number_of_entries').value;
+        var divPaymentCalculation = document.getElementById('div_paymentCalculation');
+        var spanTotalAmount = document.getElementById('span_totalAmount');
+
+        if(numberOfTickets != '') {
+          var totalPrice = pricePerTicket * numberOfTickets;
+          spanTotalAmount.innerHTML = (Math.round(totalPrice * 100) / 100).toFixed(2);
+          divPaymentCalculation.style.display = 'block';
+        }
+        else {
+          spanTotalAmount.innerHTML = '0.00';
+          divPaymentCalculation.style.display = 'none';
+        }
+      }
+    </script>
+
 </header>
 
 <body>
@@ -86,8 +106,11 @@
       <input type="text" id="name" class="fadeIn second" name="name" placeholder="Your Name" required><br>
       <input type="email" id="email" class="fadeIn third" name="email_address" placeholder="Your Email Address" required>
       <input type="text" id="contact_number" class="fadeIn fourth" name="contact_number" placeholder="Contact Number" required>
-      <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?" required>
+      <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fifth" name="number_of_entries" placeholder="How many tickets?" onchange="calculateTotal();" required>
       <input type="text" id="referral_code" class="fadeIn fifth" name="referral_code" placeholder="Referral code (optional)" <?=isset($_GET['ref'])?'value="' . $_GET['ref'] . '" readonly':'';?>><br><br>
+      <div id="div_paymentCalculation" class="text-white" style="display:none;">
+        <h4>Your total purchase is <b>P<span id="span_totalAmount">0</span>.</h4>
+      </div>
       <button type="submit" class="fadeIn sixth"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth field-description text-white" style="font-size:12px;">Clicking "Proceed" will bring you to our checkout page. Payee information will be <strong>Melt Records</strong>.</div>
       <div class="fadeIn sixth field-description text-white">We respect your privacy and will use your information only for the purpose of validating your purchase.<br>By submitting this form, you agree to share your data with us.</div>
