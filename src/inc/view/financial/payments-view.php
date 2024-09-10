@@ -26,6 +26,7 @@
                         <th>Description</th>
                         <th>Paid Through</th>
                         <th style="text-align:right">Amount</th>
+                        <th style="text-align:right">Fee</th>
                     </thead>
                     <tbody>
                 <?php
@@ -34,7 +35,8 @@
                         <td><?=$paymentViewItem->date_paid;?></td>
                         <td><?=$paymentViewItem->description;?></td>
                         <td><?=$paymentViewItem->paid_thru_type;?> - <?=$paymentViewItem->paid_thru_account_name;?> - <?=$paymentViewItem->paid_thru_account_number;?></td>
-                        <td align="right"><?=number_format($paymentViewItem->amount, 2);?></td>                
+                        <td align="right"><?=number_format($paymentViewItem->amount, 2);?></td>   
+                        <td align="right"><?=number_format($paymentViewItem->payment_processing_fee, 2);?></td>               
                     </tr>
                 <?  } ?>
 
