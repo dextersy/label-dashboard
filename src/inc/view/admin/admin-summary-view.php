@@ -67,10 +67,10 @@
         <form action="admin.php#summary" method="POST">
         <div class="form-group">
             <label for="datepicker_dateRange">Select date range</label>
-            <div class="input-group input-group-sm">
+            <div class="input-group">
                 <input type="text" class="form-control" id="datepicker_dateRange" name="daterange" value="<?=$startDateDisplay;?> - <?=$endDateDisplay;?>" />
-                <div class="input-group-btn">
-                    <button class="btn btn-default" type="submit">Filter</button>
+                <div class="input-group-addon">
+                    <button class="btn-link" type="submit"><i class="fa fa-filter"></i></button>
                 </div>
             </div>
         </div>
