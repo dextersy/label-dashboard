@@ -9,6 +9,18 @@
         default:
             break;
     }
+    if ($_GET['action']=="update") {
+        switch($_GET['status']) {
+            case "OK":
+                $msg = "Successfully updated brand settings.";
+                break;
+            case "Failed":
+                $msg = "Failed to update brand settings.";
+                break;
+            default:
+                break;
+        }
+    }
     if ($_GET['action']=="addDomain") {
         switch($_GET['status']) {
             case "OK":

@@ -349,3 +349,9 @@ ALTER TABLE `ticket`
 ADD INDEX `checkout_key` (`checkout_key` ASC) VISIBLE;
 ALTER TABLE `ticket` 
 ADD INDEX `payment_link_id` (`payment_link_id` ASC) VISIBLE;
+
+---- SEP 10, 2024
+ALTER TABLE `brand` 
+ADD COLUMN `payment_processing_fee_for_payouts` VARCHAR(45) NOT NULL DEFAULT '10' AFTER `paymongo_wallet_id`;
+ALTER TABLE `payment` 
+ADD COLUMN `payment_processing_fee` DECIMAL NOT NULL DEFAULT 0 AFTER `reference_number`;
