@@ -357,3 +357,10 @@ ALTER TABLE `payment`
 ADD COLUMN `payment_processing_fee` DECIMAL NOT NULL DEFAULT 0 AFTER `reference_number`;
 ALTER TABLE `payment` 
 CHANGE COLUMN `payment_processing_fee` `payment_processing_fee` DECIMAL(10,2) NOT NULL DEFAULT '0' ;
+
+ALTER TABLE `release_artist` 
+CHANGE COLUMN `streaming_royalty_percentage` `streaming_royalty_percentage` DECIMAL(4,3) NOT NULL DEFAULT '0.500' ,
+CHANGE COLUMN `sync_royalty_percentage` `sync_royalty_percentage` DECIMAL(4,3) NOT NULL DEFAULT '0.500' ;
+ALTER TABLE `release_artist` 
+CHANGE COLUMN `download_royalty_percentage` `download_royalty_percentage` DECIMAL(4,3) NOT NULL DEFAULT '0.500' ,
+CHANGE COLUMN `physical_royalty_percentage` `physical_royalty_percentage` DECIMAL(4,3) NOT NULL DEFAULT '0.200' ;

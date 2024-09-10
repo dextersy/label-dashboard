@@ -74,36 +74,36 @@
                                 
                                 $artistRelease = new ReleaseArtist;
                                 $artistRelease->fromID($_SESSION['current_artist'], $release->id);
-                                $sync_royalty = "% of " . $artistRelease->sync_royalty_type;
-                                $streaming_royalty = "% of " . $artistRelease->streaming_royalty_type;
-                                $download_royalty = "% of " . $artistRelease->download_royalty_type;
-                                $physical_royalty = "% of " . $artistRelease->physical_royalty_type;
+                                $sync_royalty = "%";// of <br>" . $artistRelease->sync_royalty_type;
+                                $streaming_royalty = "%";// of <br>" . $artistRelease->streaming_royalty_type;
+                                $download_royalty = "%";// of <br>" . $artistRelease->download_royalty_type;
+                                $physical_royalty = "%";// of <br>" . $artistRelease->physical_royalty_type;
                     ?>
                         <tr>
-                            <td width="15%"><strong><?=$release->title;?></strong></td>
+                            <td width="25%"><strong><?=$release->title;?></strong></td>
                             <td>
                                 <input type="hidden" name="artist_id_<?=$i;?>" value="<?=$_SESSION['current_artist'];?>">
                                 <input type="hidden" name="release_id_<?=$i;?>" value="<?=$release->id;?>">
                                 <div class="input-group">
-                                    <input id="sync_royalty_<?=$i;?>" name="sync_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->sync_royalty_percentage * 100;?>" disabled> 
+                                    <input id="sync_royalty_<?=$i;?>" name="sync_royalty_<?=$i;?>" type="number" class="form-control" min="0" step="1" max="100" value="<?=$artistRelease->sync_royalty_percentage * 100;?>" disabled> 
                                     <div class="input-group-addon"><?=$sync_royalty;?></div>
                                 </div>
                             </td>
                             <td>
                                 <div class="input-group">
-                                    <input id="streaming_royalty_<?=$i;?>" name="streaming_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->streaming_royalty_percentage * 100;?>" disabled> 
+                                    <input id="streaming_royalty_<?=$i;?>" name="streaming_royalty_<?=$i;?>" type="number" class="form-control" min="0" step="1" max="100" value="<?=$artistRelease->streaming_royalty_percentage * 100;?>" disabled> 
                                     <div class="input-group-addon"><?=$streaming_royalty;?></div>
                                 </div>
                             </td>
                             <td>
                                 <div class="input-group">
-                                    <input id="download_royalty_<?=$i;?>" name="download_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->download_royalty_percentage * 100;?>" disabled>
+                                    <input id="download_royalty_<?=$i;?>" name="download_royalty_<?=$i;?>" type="number" class="form-control" min="0" step="1" max="100" value="<?=$artistRelease->download_royalty_percentage * 100;?>" disabled>
                                     <div class="input-group-addon"><?=$download_royalty;?></div>
                                 </div>
                             </td>
                             <td>
                                 <div class="input-group">
-                                    <input id="physical_royalty_<?=$i;?>" name="physical_royalty_<?=$i;?>" type="text" class="form-control" max="100" value="<?=$artistRelease->physical_royalty_percentage * 100;?>" disabled>
+                                    <input id="physical_royalty_<?=$i;?>" name="physical_royalty_<?=$i;?>" type="number" class="form-control" min="0" step="1" max="100" value="<?=$artistRelease->physical_royalty_percentage * 100;?>" disabled>
                                     <div class="input-group-addon"><?=$physical_royalty;?></div>
                                 </div>
                             </td>
