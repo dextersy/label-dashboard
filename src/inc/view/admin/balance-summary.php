@@ -29,6 +29,7 @@
     if ($artists) {
         $overallDueForPayment = 0;
         $overallBalance = 0;
+        $readyForPayment = 0;
         foreach ($artists as $artist) { 
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id);
             $totalPayments = getTotalPaymentsForArtist($artist->id);
@@ -38,6 +39,11 @@
 
                 if($totalBalance > $artist->payout_point) {
                     $overallDueForPayment += $totalBalance;
+
+                    $paymentMethodsForArtist = getPaymentMethodsForArtist($artist->id);
+                    if(isset($paymentMethodsForArtist) && count($paymentMethodsForArtist) > 0) {
+                        $readyForPayment += $totalBalance;
+                    }
                 }
         ?>
             <tr>
@@ -78,6 +84,18 @@
                 </div>
                 <div class="card-body">
                     <h3>Php <?=number_format($overallDueForPayment,2);?></h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+
+                <div class="card-header">
+                    <h4 class="title">Ready to Pay <i class="fa fa-info-circle" title="Due for payment and has bank account"></i></h4>
+                </div>
+                <div class="card-body">
+                    <h3>Php <?=number_format($readyForPayment,2);?></h3>
                     <button class="btn btn-block" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
                 </div>
                 <div class="card-footer">

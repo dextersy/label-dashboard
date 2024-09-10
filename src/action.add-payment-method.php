@@ -74,9 +74,9 @@
         $user->fromID($_SESSION['logged_in_user']);
         __sendNotification($artist, $payment, $user);
 
-        redirectTo("/financial.php?action=addPaymentMethod&status=OK");
+        redirectTo("/financial.php?action=addPaymentMethod&status=OK#payments");
     }
     else {
-        redirectTo("/financial.php?action=addPaymentMethod&status=Failed");
+        redirectTo("/financial.php?action=addPaymentMethod&status=Failed#payments");
     }
 ?>
