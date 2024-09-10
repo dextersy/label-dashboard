@@ -27,7 +27,7 @@
                 CURLOPT_POSTFIELDS => "{\"data\":{\"attributes\":{\"amount\":". $amount*100 . ",\"description\":\"" . $description . "\"}}}",
                 CURLOPT_HTTPHEADER => [
                     "accept: application/json",
-                    "authorization: Basic " . PAYMONGO_SECRET_KEY,
+                    "authorization: Basic " . base64_encode(PAYMONGO_SECRET_KEY),
                     "content-type: application/json"
                 ],
             ]);

@@ -18,7 +18,7 @@
                 CURLOPT_CUSTOMREQUEST => "POST",
                 CURLOPT_HTTPHEADER => [
                     "accept: application/json",
-                    "authorization: Basic " . PAYMONGO_SECRET_KEY,
+                    "authorization: Basic " . base64_encode(PAYMONGO_SECRET_KEY),
                     "content-type: application/json"
                 ],
             ]);
@@ -39,8 +39,10 @@
 		$ticket = new Ticket;
 		$ticket->fromID($_GET['ticket_id']);
 
-		cancelPaymentLink($ticket->payment_link_id);
-
+        if(isset($ticket->payment_link_id)) {
+    		cancelPaymentLink($ticket->payment_link_id);
+        }
+        
 		$ticket->status = "Canceled";
 		$ticket->save();
 	}

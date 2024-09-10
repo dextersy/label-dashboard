@@ -9,11 +9,11 @@
     if(isset($_FILES["logo_url"]["tmp_name"]) && $_FILES["logo_url"]["tmp_name"] != "") {
         $brand->logo_url = uploadImage($_FILES['logo_url']['name'], $_FILES['logo_url']['tmp_name']);
     }
-    $brand->save();
+    $result = $brand->save();
 
     $_SESSION['brand_name'] = $brand->name;
     $_SESSION['brand_logo'] = $brand->logo_url;
     $_SESSION['brand_color'] = $brand->brand_color;
     
-    redirectTo("/admin.php?action=update&status=" . $result);
+    redirectTo("/admin.php?action=update&status=" . ($result ? "OK":"Failed"));
 ?>

@@ -52,7 +52,7 @@
             CURLOPT_CUSTOMREQUEST => "GET",
             CURLOPT_HTTPHEADER => [
                 "accept: application/json",
-                "authorization: Basic " . PAYMONGO_SECRET_KEY
+                "authorization: Basic " . base64_encode(PAYMONGO_SECRET_KEY)
             ],
         ]);
 
