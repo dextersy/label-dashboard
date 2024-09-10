@@ -88,6 +88,8 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
         </div>
     </div>
 </form>
+
+
 <h3>Domains</h3>
 <p>These domains will resolve to your dashboard.</p>
 <div class="col-md-4">
@@ -125,6 +127,7 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
                 <div class="input-group-addon">
                     <button type="submit" class="btn-link">Add</button>
                 </div>
+            </div>
             </form>
         </div>
     </div>
