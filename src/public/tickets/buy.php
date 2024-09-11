@@ -39,7 +39,7 @@
 
         if(numberOfTickets != '') {
           var totalPrice = pricePerTicket * numberOfTickets;
-          spanTotalAmount.innerHTML = (Math.round(totalPrice * 100) / 100).toFixed(2);
+          spanTotalAmount.innerHTML = (Math.round(totalPrice * 100) / 100).toLocaleString('en-US', {minimumFractionDigits:2});
           divPaymentCalculation.style.display = 'block';
         }
         else {
@@ -193,11 +193,6 @@
             <label class="fadeIn fifth floating">Referral code (optional)</label>
           <? } ?>  
           </div>  
-          <div id="div_paymentCalculation" style="display:none;">
-          <hr>
-            <h5>Total amount is <b>P<span id="span_totalAmount">0</span></b>.</h5>
-          <hr>
-          </div>
     </div>
 
     <div class="col-md-5">
@@ -216,9 +211,16 @@
         I agree to share my data to <?=$brand->brand_name;?> and its affiliates for the sole purpose of processing my purchase of tickets.
         </label>
       </div>
+      <div id="div_paymentCalculation" style="display:none;">
+          <hr>
+            <h5>Total amount is <b>P<span id="span_totalAmount">0</span></b>.</h5>
+          <hr>
+      </div>
       <div class="alert alert-warning" id="divErrorMessage" style="font-size:14px;display:none;"></div>
+      
       <button id="btnSubmit" type="submit" class="btn btn-secondary btn-block" disabled onclick="showOverlay();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth" style="font-size:12px;">Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. Payee information will be <strong>Melt Records</strong>.</div>
+      
     </div>
   </div>
 </div>
