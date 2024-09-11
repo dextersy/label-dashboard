@@ -119,7 +119,7 @@
 
 <div class="wrapper fadeInDown">
 
-<div class="header-row">
+<div class="header-section">
   <div class="container">
   <div class="row align-items-center h-100">
 <?php
@@ -156,10 +156,13 @@
   if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
 ?>
 
+
+<div class="body-section">
 <form action="action.buy.php" method="POST">
 <div class="container">
-  <div class="row body-row h-50">
+  <div class="row h-50">
     <div class="col-md-7">
+      &nbsp;
       <h6><strong>Step 1.</strong> Please provide your details.</h6>
 
           <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
@@ -196,6 +199,7 @@
     </div>
 
     <div class="col-md-5">
+      &nbsp;
       <h6><i class="fa fa-info-circle"></i> <strong>Important reminders before submitting</strong></h6>
       <div class="alert alert-info field-description belowTitle text-dark">
         <ul>
@@ -225,6 +229,7 @@
   </div>
 </div>
 </form>
+</div>
 <?}?>
 
   <div id="poweredBy">
