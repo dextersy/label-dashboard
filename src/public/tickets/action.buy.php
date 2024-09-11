@@ -11,12 +11,17 @@
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/controller/users-controller.php');
 
-    function createCheckoutSession($event_id, $number_of_tickets, $price_per_ticket, $description) {
+    function createCheckoutSession($event_id, $number_of_tickets, $price_per_ticket, $description, $name, $email, $phone) {
         $curl = curl_init();
 
         $params = json_encode([
             'data' => [
                 'attributes' => [
+                        'billing' => [
+                            'name' => $name,
+                            'email' => $email,
+                            'phone' => $phone
+                        ],
                         'send_email_receipt' => false,
                         'show_description' => true,
                         'show_line_items' => true,
@@ -186,7 +191,7 @@
     $amount = $event->ticket_price * $ticket->number_of_entries;
     $description = "Payment for " . $event->title . " - Ticket # " . $ticket->id;
     //$response = createPaymentLink($amount, $description);
-    $response = createCheckoutSession($event->id, $ticket->number_of_entries, $ticket->price_per_ticket, $description);
+    $response = createCheckoutSession($event->id, $ticket->number_of_entries, $ticket->price_per_ticket, $description, $ticket->name, $ticket->email_address, $ticket->contact_number);
 
     if(isset($response->data->attributes)) {
         // $ticket->payment_link = $response->data->attributes->checkout_url;
