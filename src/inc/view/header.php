@@ -45,4 +45,15 @@
     <link href='https://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'>
     <link href="assets/css/pe-icon-7-stroke.css" rel="stylesheet" />
 
+    <script type="text/javascript">
+        window.onbeforeunload = function() {
+            var loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+        };
+    </script>
 </head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay" style="display:none;">
+  <div class="loading"></div>
+</div>

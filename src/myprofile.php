@@ -19,7 +19,7 @@ include_once("./inc/controller/access_check.php");
             $('#alert-box').fadeOut('fast');
         }, 2500); // <-- time in milliseconds
     </script>
-<body>
+
 <?php include('./inc/view/after-body.php'); ?>
 <div class="wrapper">
     <?php include_once('inc/view/sidebar.php'); ?>
