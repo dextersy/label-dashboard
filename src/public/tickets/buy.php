@@ -49,51 +49,72 @@
       }
 
       function validateFields() {
+        
         var error = "";
-        var hasError = false;
-
         var nameField = document.getElementById('name');
         var emailField = document.getElementById('email');
         var contactNumField = document.getElementById('contact_number');
         var numberOfTicketsField = document.getElementById('number_of_entries');
-
         var privacyConsentCheckbox = document.getElementById('checkbox_privacyConsent');
 
-        var submitButton = document.getElementById('btnSubmit');
-        var errorDisplay = document.getElementById('divErrorMessage');
-
         if(nameField.value.length < 1) {
-          hasError = true;
+          nameField.classList.add('error');
           error = error + "<li> Name cannot be empty.";
         }
-        if(emailField.value.length < 1) {
-          hasError = true;
-          error = error + "<li> Email address cannot be empty.";
-        }
-        if(contactNumField.value.length < 1) {
-          hasError = true;
-          error = error + "<li> Contact number cannot be empty.";
-        }
-        if(numberOfTicketsField.value.length < 1) {
-          hasError = true;
-          error = error + "<li> Number of tickets cannot be empty.";
-        }
-        if(!privacyConsentCheckbox.checked) {
-          hasError = true;
-          error = error + "<li> You need to accept the privacy agreement to proceed.";
+        else {
+          nameField.classList.remove('error');
         }
 
-        if (hasError) {
-          submitButton.disabled = true;
-          submitButton.title = 'Please see errors above.'
-          errorDisplay.innerHTML = error;
-          errorDisplay.style.display = 'block';
+        if(emailField.value.length < 1) {
+          emailField.classList.add('error');
+          error = error + "<li> Email address cannot be empty.";
         }
         else {
-          submitButton.disabled = false;
-          submitButton.title = '';
+          emailField.classList.remove('error');
+        }
+
+        if(contactNumField.value.length < 1) {
+          contactNumField.classList.add('error');
+          error = error + "<li> Contact number cannot be empty.";
+        }
+        else {
+          contactNumField.classList.remove('error');
+        }
+
+        if(numberOfTicketsField.value.length < 1) {
+          numberOfTicketsField.classList.add('error');
+          error = error + "<li> Number of tickets cannot be empty.";
+        }
+        else {
+          numberOfTicketsField.classList.remove('error');
+        }
+
+        if(!privacyConsentCheckbox.checked) {
+          privacyConsentCheckbox.classList.add('error');
+          error = error + "<li> You need to accept the privacy agreement to proceed.";
+        }
+        else {
+          privacyConsentCheckbox.classList.remove('error');
+        }
+        return error;
+      }
+
+      function validateAndSubmit() {
+        var errorDisplay = document.getElementById('divErrorMessage');
+        var error = validateFields();
+        var hasError = error.length > 1;
+        if(!hasError) { 
           errorDisplay.innerHTML = '';
           errorDisplay.style.display = 'none';
+          showOverlay();
+          var purchaseForm = document.getElementById('purchaseForm');
+          purchaseForm.submit();
+        }
+        else {
+          var errorFields = document.getElementsByClassName('error');
+          errorFields[0].focus();
+          errorDisplay.innerHTML = error;
+          errorDisplay.style.display = 'block';
         }
       }
 
@@ -158,7 +179,7 @@
 
 
 <div class="body-section">
-<form action="action.buy.php" method="POST">
+<form id="purchaseForm" action="action.buy.php" method="POST">
 <div class="container">
   <div class="row h-50">
     <div class="col-md-7">
@@ -223,7 +244,7 @@
       </div>
       <div class="alert alert-warning" id="divErrorMessage" style="font-size:14px;display:none;"></div>
       
-      <button id="btnSubmit" type="submit" class="btn btn-primary btn-block" disabled onclick="showOverlay();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
+      <button id="btnSubmit" type="button" class="btn btn-primary btn-block" onclick="validateAndSubmit();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth" style="font-size:12px;">Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. Payee information will be <strong>Melt Records</strong>.</div>
       </div>
     </div>
