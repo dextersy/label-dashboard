@@ -106,7 +106,7 @@ function getSupportedBanksForTransfer() {
     $curl = curl_init();
 
     curl_setopt_array($curl, [
-    CURLOPT_URL => "https://api.paymongo.com/v1/wallets/receiving_institutions?provider=pesonet", // @TODO consider if only Pesonet should be supported
+    CURLOPT_URL => "https://api.paymongo.com/v1/wallets/receiving_institutions?provider=instapay", // @TODO consider if only Instapay should be supported
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => "",
     CURLOPT_MAXREDIRS => 10,
@@ -187,7 +187,7 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
                                             'bank_account_number' => $paymentMethod->account_number_or_email,
                                             'bank_code' => $paymentMethod->bank_code
                             ],
-                            'provider' => 'pesonet',
+                            'provider' => 'instapay',
                             'type' => 'send_money',
                             'description' => $description
                     ]
