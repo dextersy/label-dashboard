@@ -79,6 +79,9 @@
   
   
   @media only screen and (max-device-width: 400px) {
+    .wrapper {
+      height: auto !important;
+    }
     .wrapper, .header-section, .container {
       padding: 0px;
     }
