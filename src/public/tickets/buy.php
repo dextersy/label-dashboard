@@ -215,6 +215,7 @@
         I agree to share my data to <?=$brand->brand_name;?> and its affiliates for the sole purpose of processing my purchase of tickets.
         </label>
       </div>
+      <div id="divPay">
       <div id="div_paymentCalculation" style="display:none;">
           <hr>
             <h5>Total amount is <b>P<span id="span_totalAmount">0</span></b>.</h5>
@@ -224,7 +225,7 @@
       
       <button id="btnSubmit" type="submit" class="btn btn-primary btn-block" disabled onclick="showOverlay();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth" style="font-size:12px;">Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. Payee information will be <strong>Melt Records</strong>.</div>
-      
+      </div>
     </div>
   </div>
 </div>

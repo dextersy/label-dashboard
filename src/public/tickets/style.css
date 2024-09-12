@@ -420,3 +420,14 @@
     }
   
   }
+
+  /* STICKY PANEL */
+  @media only screen and (max-device-width: 400px) {
+    #divPay {
+      padding: 10px 0px 10px 0px;
+      border-top: 1px solid #fdfdfd;
+      background-color:#ffffff;
+      position: sticky;
+      bottom: 0;
+    }
+  }
