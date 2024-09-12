@@ -42,38 +42,36 @@
 }(document, "script", "twitter-wjs"));</script>
 <!------ Include the above in your HEAD tag ---------->
 
-<div class="wrapper">
-    <div id="formHeader">
-<div class="card">
-
-<div class="card-header">
-
+<div class="wrapper h-100 d-flex justify-content-center">
+<div class="row">
+  <div class="col-md-3 d-flex justify-content-center">
 <?php
   if (isset($event->poster_url) && $event->poster_url != '') {
 ?>
-    <img src="../../<?=$event->poster_url;?>" width="30%">
+    <img src="../../<?=$event->poster_url;?>" class="event-poster">
 <?php
   }
 ?>
-<br>
-&nbsp;
-    <h3 style="color:black;font-weight:bold;text-transform:uppercase;">Congrats! You're in!</strong></h1>
+  </div>
+  <div class="col-md-9">
+<div class="card">
+
+<div class="card-header text-center">
+    <h3 style="color:black;font-weight:bold;text-transform:;">Thank you for your purchase!</strong></h1>
 </div>
 
-<div class="card-body">
+<div class="card-body text-center">
     <p><i class="fa fa-check-circle" style="font-size:150px;color:green;"></i></p>
-    <h3>Thank you for your purchase!</h3>
     <p>Your tickets to <strong><?=$event->title;?></strong> have been sent to your email address.</p>
 
-    <div class="alert alert-secondary field-description belowTitle text-dark text-left"><i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
+    <div class="alert alert-info field-description text-dark text-left"><i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
       <ul>
         <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
         <li>You may be required to provide identification to verify your ticket at the gate.</li>
-        <li>Didn't receive your ticket? Don't worry, we're ready help. Just send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or message us on our Facebook page <a href="https://m.me/meltrecordsph"><u>here</u></a>.</li>
+        <li>Didn't receive your ticket? Don't worry, we're ready help. Just send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or message us on our Facebook page <a href="https://m.me/meltrecordsph">here</a>.</li>
       </ul>
     </div>
   </div>
-</div>
 <div class="card-footer">
     <div class="row">
     <div class="col-md-12 text-center">
@@ -90,6 +88,8 @@
       </p>
     </div>
   </div>
+</div>
+</div>
 </div>
 </div>
 </div>

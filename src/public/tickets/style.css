@@ -1,5 +1,6 @@
 
 /* BASIC */
+
   body {
     background-color: #fafafa;
     font-family: "Poppins", sans-serif;
@@ -24,9 +25,6 @@
   }
   
   /* STRUCTURE */
-  .belowTitle {
-    margin:20px;
-  }
 
   .header-section {
     padding: 10px;
@@ -80,6 +78,11 @@
   }
   
   
+  @media only screen and (max-device-width: 400px) {
+    .wrapper, .header-section, .container {
+      padding: 0px;
+    }
+  }
   
   /* TABS */
   
@@ -226,7 +229,7 @@
 
   .field-description {
     font-size:14px;
-    padding:0px 10px 10px 10px;
+    padding-bottom:15px;
   }
 
   .text-white {
@@ -394,9 +397,23 @@
 
   /* FOR POSTER IMAGE */
   .event-poster {
-    object-fit: cover; /* Do not scale the image */
+    object-fit: contain; /* Do not scale the image */
     object-position: center; /* Center the image within the element */
     width:100%;
-    max-height: 450px;
     margin-bottom: 1rem;
+  }
+  @media only screen and (max-device-width: 400px) {
+
+    .event-poster {
+      object-fit: cover; /* Do not scale the image */
+      object-position: center; /* Center the image within the element */
+      width:100%;
+      max-height: 250px;
+      margin: 0px;
+    }
+
+    .event-poster-container {
+      padding: 0px;
+    }
+  
   }

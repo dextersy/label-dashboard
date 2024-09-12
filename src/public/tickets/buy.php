@@ -125,10 +125,10 @@
 <?php
   if (isset($event->poster_url) && $event->poster_url != '') {
 ?>
-      <div class="col-md-2">
+      <div class="col-md-3 event-poster-container">
         <img src="../../<?=$event->poster_url;?>" class="event-poster">
       </div>
-      <div class="col-md-10">
+      <div class="col-md-9" style="padding:30px;">
 <? } 
   else { 
 ?>
@@ -201,7 +201,7 @@
     <div class="col-md-5">
       &nbsp;
       <h6><i class="fa fa-info-circle"></i> <strong>Important reminders before submitting</strong></h6>
-      <div class="alert alert-info field-description belowTitle text-dark">
+      <div class="alert alert-info field-description text-dark">
         <ul>
           <li>Please use a name that is shown in any valid ID, as you may be requested to present identification at the gate.</li>
           <li>Please make sure your email address is correct to make sure that you receive your ticket without any problem.</li>
@@ -222,7 +222,7 @@
       </div>
       <div class="alert alert-warning" id="divErrorMessage" style="font-size:14px;display:none;"></div>
       
-      <button id="btnSubmit" type="submit" class="btn btn-secondary btn-block" disabled onclick="showOverlay();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
+      <button id="btnSubmit" type="submit" class="btn btn-primary btn-block" disabled onclick="showOverlay();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth" style="font-size:12px;">Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. Payee information will be <strong>Melt Records</strong>.</div>
       
     </div>
@@ -232,9 +232,12 @@
 </div>
 <?}?>
 
-  <div id="poweredBy">
+  <div class="text-center">
     <p>&nbsp;</p>
-    <p style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard</p>
+    <p>
+      <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+      <span style="font-size:12px; font-style:italic;">Having trouble? Contact us via email <a href="mailto:support@melt-records.com?subject=Issue with ticketing for <?=$event->title;?>">here</a> or <a href="https://m.me/meltrecordsph" target="_blank">chat with us</a> on Facebook.</span>
+    </p>
   </div>
 
 </div>
