@@ -50,14 +50,13 @@ session_start();
             </ul>
             */ ?>
             <ul class="nav navbar-nav navbar-right">
+                <li><a href="index.php"><p>Welcome, <strong><?=$_SESSION['logged_in_first_name'];?></strong>!</p></a></li>
                 <li>
-                    <a href="myprofile.php">
-                        <p><i class="fa fa-user"></i><?=$_SESSION['logged_in_username'];?></p>
-                    </a>
+                    <a href="myprofile.php"><p><i class="fa fa-edit"></i> Edit profile</p></a>
                 </li>
                 <li>
                     <a href="logout.php">
-                        <p>Log out</p>
+                        <p><i class="fa fa-sign-out"></i> Log out</p>
                     </a>
                 </li>
                 <li class="separator hidden-lg"></li>

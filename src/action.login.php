@@ -51,6 +51,7 @@
     if ($user->password_md5 == md5($_POST['password'])) {
         $_SESSION['logged_in_user'] = $user->id;
         $_SESSION['logged_in_username'] = $user->username;
+        $_SESSION['logged_in_first_name'] = $user->first_name;
 
         $loginattempt = new LoginAttempt(
                                 null, 
