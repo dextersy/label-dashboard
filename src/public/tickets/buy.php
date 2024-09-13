@@ -258,7 +258,7 @@
         </label>
         <div class="field-error-message" style="display:none;" id="error_checkbox_privacyConsent">You need to accept the privacy consent to proceed.</div>
       </div>
-      <button id="btnSubmit" type="submit" class="btn btn-primary btn-block"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
+      <button id="btnSubmit" type="submit" class="btn btn-primary btn-block btn-lg"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth" style="font-size:12px;">Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. Payee information will be <strong>Melt Records</strong>.</div>
       </div>
     </div>
