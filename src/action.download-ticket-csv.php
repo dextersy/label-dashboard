@@ -13,6 +13,7 @@
     $all = ($_GET['all'] == '1') ? true : false;
     $event = new Event;
     $event->fromID($_GET['id']);
+    $downloadToken = $_GET['token'];
     
     header('Content-Type: application/csv');
     header('Content-Disposition: attachment; filename="' . str_replace(' ', '_', $event->title) . '_tickets.csv";');
@@ -35,4 +36,13 @@
         }
     }
     
+    setcookie(
+        'downloadToken',
+        $downloadToken,
+        2147483647,            // expires January 1, 2038
+        "/",                   // your path
+        $_SERVER["HTTP_HOST"], // your domain
+        $secure,               // Use true over HTTPS
+        $httpOnly              // Set true for $AUTH_COOKIE_NAME
+    );
 ?>

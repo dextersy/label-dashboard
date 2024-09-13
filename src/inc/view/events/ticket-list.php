@@ -53,6 +53,8 @@
     $event = new Event;
     $event->fromID($_SESSION['current_event']);
 
+    // To wait for file download
+    $downloadToken = md5(random_int(111111,999999));
     
 ?>
 <script type="text/javascript">
@@ -61,6 +63,36 @@
         txtPrice.disabled = false;
         txtPrice.focus();
         txtPrice.select();
+    }
+
+    function getCookie( name ) {
+        var parts = document.cookie.split(name + "=");
+        if (parts.length == 2) return parts.pop().split(";").shift();
+    }
+    function expireCookie( cName ) {
+        document.cookie = 
+            encodeURIComponent(cName) + "=deleted; expires=" + new Date( 0 ).toUTCString();
+    }
+    var downloadTimer;
+    var attempts = 30;
+    function waitForFile() {
+        var downloadToken = '<?=$downloadToken;?>';
+
+        downloadTimer = window.setInterval( function() {
+            var token = getCookie( "downloadToken" );
+            if( (token == downloadToken) || (attempts == 0) ) {
+                hideOverlay();
+            }
+            attempts--;
+        }, 100 );
+    }
+
+    function hideOverlay() {
+        var overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = 'none';
+        window.clearInterval( downloadTimer );
+        expireCookie( "downloadToken" );
+        attempts = 30;
     }
 </script>
 <div class="row">
@@ -76,8 +108,8 @@
                             <i class="fa fa-download"></i> Download CSV <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <li><a class="dropdown-item" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>">With ticket</a></li>
-                                <li><a class="dropdown-item" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>&all=1">All</a></li>
+                                <li><a class="dropdown-item" onclick="waitForFile();" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>&token=<?=$downloadToken;?>">With ticket</a></li>
+                                <li><a class="dropdown-item" onclick="waitForFile();" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>&token=<?=$downloadToken;?>&all=1">All</a></li>
                             </ul>
                             &nbsp;
                         <a href="action.verify-ticket-payments.php">
