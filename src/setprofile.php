@@ -47,34 +47,51 @@
 
 <?php include('./inc/view/after-body.php'); ?>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="assets/css/login.css?version=1.2" rel="stylesheet">
+<link href="assets/css/login.css?version=1.3" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper fadeInDown">
-  <div id="formContent" style="background-color:<?=$_SESSION['brand_color'];?>;">
+  <div id="formHeader" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <!-- Tabs Titles -->
 
     <!-- Icon -->
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
+  </div>
+  <div id="formContent">
+    <form action="action.init-user.php" method="POST">
 
     <!-- Login Form -->
     <p><strong>Please update your profile.</strong></p>
-    <form action="action.init-user.php" method="POST">
       <input type="hidden" name="brand_id" value="<?=$user->brand_id;?>">
       <input type="hidden" name="id" value="<?=$user->id;?>">
       <input type="hidden" name="invite_hash" value="<?=$artistAccess->invite_hash;?>">
       <input type="hidden" name="is_admin" value="<?=$user->is_admin;?>">
       <? if (!isset($user->username) || $user->username == '') { ?> 
-        <input type="text" id="login" class="fadeIn second" name="username" placeholder="username" value="<?=$user->username;?>" required>
+      <div class="material-textfield">
+        <input type="text" id="txt_username" class="fadeIn second material" name="username" placeholder="" value="<?=$user->username;?>" required>
+        <label class="floating" for="txt_username">Username</label>
+      </div>
       <? } ?>
-      <input type="text" id="login" class="fadeIn second" name="first_name" placeholder="First name" value="<?=$user->first_name;?>" required>
-      <input type="text" id="login" class="fadeIn second" name="last_name" placeholder="Last name" value="<?=$user->last_name;?>" required>
-      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password" required>
-      <input type="submit" class="fadeIn fourth" value="Save Changes">
+      <div class="material-textfield">
+        <input type="text" id="txt_firstName" class="fadeIn second material" name="first_name" placeholder="" value="<?=$user->first_name;?>" required>
+        <label class="floating" for="txt_firstName">First name</label>
+      </div>
+
+      <div class="material-textfield">
+        <input type="text" id="txt_lastName" class="fadeIn second material" name="last_name" placeholder="" value="<?=$user->last_name;?>" required>
+        <label class="floating" for="txt_lastName">Last name</label>
+      </div>
+
+      <div class="material-textfield">
+        <input type="password" id="pass_password" class="fadeIn second material" name="password" placeholder="" required>
+        <label class="floating" for="pass_password">Password</label>
+      </div>
+
+      <input type="submit" class="fadeIn third btn btn-primary btn-block" value="Save Changes">
     </form>
   </div>
 </div>

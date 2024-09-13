@@ -26,20 +26,18 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="assets/css/login.css?version=1.2" rel="stylesheet">
+<link href="assets/css/login.css?version=1.3" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper fadeInDown">
-  <div id="formContent" style="background-color:<?=$_SESSION['brand_color'];?>;">
-    <!-- Tabs Titles -->
-
-    <!-- Icon -->
+  <div id="formHeader" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
-
+  </div>
+  <div id="formContent">
     <!-- Alert -->
     <?
       if ($_GET['err'] == 'no_user') {
@@ -51,22 +49,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       if ($_GET['err'] == 'sent' ) {
     ?>
-    <p style="color:#aaaaaa">Your password reset link has been sent to your email.<p>
+    <h5><strong>Password reset link sent!</strong></h5>
+    <p>Please check your email and access the link to reset your password. You may now close this window.</p>
     <?
       } else {
     ?>
-    <!-- Login Form -->
     <form action="action.send-reset-link.php" method="POST">
       <input type="email" id="email_address" class="fadeIn second" name="email_address" placeholder="Email address" required>
-      <input type="submit" class="fadeIn fourth" value="Send Password Reset Link">
+      <input type="submit" class="fadeIn fourth btn btn-primary btn-block" value="Send Password Reset Link">
     </form>
     <? } ?>
 
-    <!-- Remind Passowrd -->
-    <div id="formFooter">
-      <a class="underlineHover" href="index.php">Back to login</a>
-    </div>
-
   </div>
+  <div id="formFooter">
+    <a class="" href="index.php">Back to login</a>
+  </div>
+
 </div>
 </body>

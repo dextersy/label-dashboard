@@ -21,30 +21,28 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="assets/css/login.css?version=1.2" rel="stylesheet">
+<link href="assets/css/login.css?version=1.3" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper fadeInDown">
-  <div id="formContent" style="background-color:<?=$_SESSION['brand_color'];?>;">
-    <!-- Tabs Titles -->
-
-    <!-- Icon -->
+  <div id="formHeader" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
-    
-    <!-- Remind Passowrd -->
-    <div id="formFooter">
+  </div>
+  <div id="formContent">
       <h3><strong>You are not yet part of an artist team.</strong></h3>
       <p>Please ask your band or label administrator to invite you to your artist team.</p>
-      <a href="logout.php">
-        <input type="button" class="fadeIn fourth" value="Sign Out">
-        </a>
-    </div>
-
   </div>
+  <div id="formFooter">
+    <a href="logout.php">
+      <button type="button" class="fadeIn fourth btn btn-primary btn-block">Sign Out <i class="fa fa-sign-out"></i></button>
+    </a>
+  </div>
+
 </div>
 </body>
 </html>

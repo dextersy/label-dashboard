@@ -37,21 +37,18 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="assets/css/login.css?version=1.2" rel="stylesheet">
+<link href="assets/css/login.css?version=1.3" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper fadeInDown">
-  <div id="formContent" style="background-color:<?=$_SESSION['brand_color'];?>;">
-    <!-- Tabs Titles -->
-
-    <!-- Icon -->
+  <div id="formHeader" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
     </div>
-
-    <!-- Alert -->
+  </div>
+  <div id="formContent">
     <?
       if ($error) {
     ?>
@@ -64,21 +61,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         The passwords you input were mismatched. Please try again.
       </div>
     <? } ?>
-    <!-- Login Form -->
+    <p>Please set your new password.</p>
     <form action="action.init-user.php" method="POST">
       <input type="hidden" name="id" value="<?=$user->id;?>">
       <input type="hidden" name="reset_hash" value="<?=$_GET['code'];?>">
       <input type="password" id="password" class="fadeIn second" name="password" placeholder="New Password" required>
       <input type="password" id="validation" class="fadeIn third" name="validation" placeholder="Verify New Password" required>
-      <input type="submit" class="fadeIn fourth" value="Set New Password">
+      <input type="submit" class="fadeIn fourth btn btn-primary btn-block" value="Set New Password">
     </form>
     <? } ?>
 
-    <!-- Remind Passowrd -->
-    <div id="formFooter">
-      <a class="underlineHover" href="index.php">Back to login</a>
-    </div>
-
   </div>
+  <div id="formFooter">
+    <a class="" href="index.php">Back to login</a>
+  </div>
+
 </div>
 </body>
