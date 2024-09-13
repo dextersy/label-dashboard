@@ -199,6 +199,11 @@
     border: 1px solid red !important;
   }
 
+  .field-error-message {
+    font-size: 14px;
+    color: #ff0000;
+  }
+
   input.material {
     font-size: 1rem;
     outline: none;

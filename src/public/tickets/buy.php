@@ -49,78 +49,87 @@
       }
 
       function validateFields() {
-        
-        var error = "";
-        var nameField = document.getElementById('name');
-        var emailField = document.getElementById('email');
-        var contactNumField = document.getElementById('contact_number');
-        var numberOfTicketsField = document.getElementById('number_of_entries');
+        var hasError = false;
         var privacyConsentCheckbox = document.getElementById('checkbox_privacyConsent');
 
-        if(nameField.value.length < 1) {
-          nameField.classList.add('error');
-          error = error + "<li> Name cannot be empty.";
-        }
-        else {
-          nameField.classList.remove('error');
-        }
+        // Validate required fields
+        hasError = validateFieldHasInput('name') || hasError;
+        hasError = validateFieldHasInput('contact_number') || hasError;
+        hasError = validateFieldHasInput('number_of_entries') || hasError;
 
-        if(emailField.value.length < 1) {
+        // Validate email format
+        var emailField = document.getElementById('email');
+        if(!isValidEmail(emailField.value)) {
+          hasError = true;
           emailField.classList.add('error');
-          error = error + "<li> Email address cannot be empty.";
+          showErrorMessage('email');
         }
         else {
           emailField.classList.remove('error');
+          hideErrorMessage('email');
         }
 
-        if(contactNumField.value.length < 1) {
-          contactNumField.classList.add('error');
-          error = error + "<li> Contact number cannot be empty.";
-        }
-        else {
-          contactNumField.classList.remove('error');
-        }
-
-        if(numberOfTicketsField.value.length < 1) {
-          numberOfTicketsField.classList.add('error');
-          error = error + "<li> Number of tickets cannot be empty.";
-        }
-        else {
-          numberOfTicketsField.classList.remove('error');
-        }
-
+        // Validate privacy consent
         if(!privacyConsentCheckbox.checked) {
+          hasError = true;
           privacyConsentCheckbox.classList.add('error');
-          error = error + "<li> You need to accept the privacy agreement to proceed.";
+          showErrorMessage('checkbox_privacyConsent');
         }
         else {
           privacyConsentCheckbox.classList.remove('error');
+          hideErrorMessage('checkbox_privacyConsent');
         }
-        return error;
+        return hasError;
       }
 
-      function validateAndSubmit() {
-        var errorDisplay = document.getElementById('divErrorMessage');
-        var error = validateFields();
-        var hasError = error.length > 1;
+      function validatePurchaseForm() {
+        var hasError = validateFields();
         if(!hasError) { 
-          errorDisplay.innerHTML = '';
-          errorDisplay.style.display = 'none';
           showOverlay();
-          var purchaseForm = document.getElementById('purchaseForm');
-          purchaseForm.submit();
+          return true; // proceed submit
         }
         else {
+          // Focus first item with error
           var errorFields = document.getElementsByClassName('error');
           errorFields[0].focus();
-          errorDisplay.innerHTML = error;
-          errorDisplay.style.display = 'block';
+          return false; // stop submit
         }
       }
 
       function showOverlay() {
         document.getElementById('loadingOverlay').style.display = 'flex';
       }
+
+      function isValidEmail(email) 
+      {
+        var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        if(email.match(mailformat)) return true;
+        else return false;
+      }
+
+      function validateFieldHasInput(fieldName) {
+        var field = document.getElementById(fieldName);
+        if(field.value.length < 1) {
+          hasError = true;
+          field.classList.add('error');
+          showErrorMessage(fieldName);
+        }
+        else {
+          hasError = false;
+          field.classList.remove('error');
+          hideErrorMessage(fieldName);
+        }
+        return hasError;
+      }
+      function showErrorMessage(fieldName) {
+        var errorMessage = document.getElementById('error_' + fieldName);
+        errorMessage.style.display = 'block';
+      }
+      function hideErrorMessage(fieldName) {
+        var errorMessage = document.getElementById('error_' + fieldName);
+        errorMessage.style.display = 'none';
+      }
+
     </script>
 
 </header>
@@ -179,7 +188,7 @@
 
 
 <div class="body-section">
-<form id="purchaseForm" action="action.buy.php" method="POST">
+<form id="purchaseForm" action="action.buy.php" method="POST" onsubmit="return validatePurchaseForm();">
 <div class="container">
   <div class="row h-50">
     <div class="col-md-7">
@@ -189,24 +198,28 @@
           <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
           
           <div class="material-textfield">
-            <input type="text" id="name" class="fadeIn first material" name="name" placeholder="" onchange="validateFields();" required>
+            <input type="text" id="name" class="fadeIn first material" name="name" placeholder="" onchange="validateFields();">
             <label class="fadeIn first floating">Full name</label>
           </div>
+          <div class="field-error-message" style="display:none;" id="error_name">Full name is required.</div>
 
           <div class="material-textfield">
-          <input type="email" id="email" class="fadeIn second material" name="email_address" placeholder="" onchange="validateFields();" required>
+          <input type="email" id="email" class="fadeIn second material" name="email_address" placeholder="" onchange="validateFields();">
             <label class="fadeIn second floating">Email address</label>
           </div>
+          <div class="field-error-message" style="display:none;" id="error_email">Email address is not valid.</div>
 
           <div class="material-textfield">
-            <input type="text" id="contact_number" class="fadeIn third material" name="contact_number" placeholder="" onchange="validateFields();" required>        
+            <input type="text" id="contact_number" class="fadeIn third material" name="contact_number" placeholder="" onchange="validateFields();">        
             <label class="fadeIn third floating">Contact number</label>
           </div>
+          <div class="field-error-message" style="display:none;" id="error_contact_number">Contact number is required.</div>
 
           <div class="material-textfield">
-            <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fourth material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();" required>
+            <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fourth material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();">
             <label class="fadeIn fourth floating">Number of tickets</label>
           </div>
+          <div class="field-error-message" style="display:none;" id="error_number_of_entries">Number of tickets is required.</div>
 
           <div class="material-textfield">
           <? if (isset($_GET['ref'])) { ?>
@@ -230,21 +243,22 @@
         </ul>
       </div>
       
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="" id="checkbox_privacyConsent" onclick="validateFields();">
-        <label class="form-check-label field-description" for="checkbox_privacyConsent">
-        I agree to share my data to <?=$brand->brand_name;?> and its affiliates for the sole purpose of processing my purchase of tickets.
-        </label>
-      </div>
+      
       <div id="divPay">
       <div id="div_paymentCalculation" style="display:none;">
           <hr>
             <h5>Total amount is <b>P<span id="span_totalAmount">0</span></b>.</h5>
           <hr>
       </div>
-      <div class="alert alert-warning" id="divErrorMessage" style="font-size:14px;display:none;"></div>
-      
-      <button id="btnSubmit" type="button" class="btn btn-primary btn-block" onclick="validateAndSubmit();"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
+
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="" id="checkbox_privacyConsent" onclick="validateFields();">
+        <label class="form-check-label field-description" for="checkbox_privacyConsent">
+        I agree to share my data to <?=$brand->brand_name;?> and its affiliates for the sole purpose of processing my purchase of tickets.
+        </label>
+        <div class="field-error-message" style="display:none;" id="error_checkbox_privacyConsent">You need to accept the privacy consent to proceed.</div>
+      </div>
+      <button id="btnSubmit" type="submit" class="btn btn-primary btn-block"><i class="fa fa-credit-card"></i> Proceed to Payment</button>
       <div class="fadeIn sixth" style="font-size:12px;">Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. Payee information will be <strong>Melt Records</strong>.</div>
       </div>
     </div>
