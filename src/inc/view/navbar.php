@@ -1,5 +1,4 @@
 <?php 
-include_once('./inc/controller/page-check.php'); 
 session_start();
 ?>
 <nav class="navbar navbar-default navbar-fixed">
@@ -11,7 +10,7 @@ session_start();
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#"><i class="<?=$title_icon;?>" style="font-weight:bold;"></i> <?=$title_text;?></a>
+            <p class="navbar-brand"><i class="fa fa-user"></i> Welcome, <strong><?=$_SESSION['logged_in_first_name'];?></strong>!</a>
         </div>
         <div class="collapse navbar-collapse">
             <?php /*
@@ -50,7 +49,6 @@ session_start();
             </ul>
             */ ?>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="index.php"><p>Welcome, <strong><?=$_SESSION['logged_in_first_name'];?></strong>!</p></a></li>
                 <li>
                     <a href="myprofile.php"><p><i class="fa fa-edit"></i> Edit profile</p></a>
                 </li>

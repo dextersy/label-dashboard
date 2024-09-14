@@ -15,7 +15,7 @@ include_once('inc/controller/brand_check.php');
     	<div class="sidebar-wrapper">
             <div class="logo">
                 <a href="<?=$_SESSION['brand_website'];?>" class="simple-text">
-                    <img src="<?=$_SESSION['brand_logo'];?>" width="200">
+                    <img src="<?=$_SESSION['brand_logo'];?>" width="100">
                 </a>
             </div>
 
