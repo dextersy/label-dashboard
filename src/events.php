@@ -18,7 +18,7 @@
                 <?php include_once('./inc/view/event-selection.php'); ?>
                 <?php include_once('./inc/view/events/events-alert-message.php'); ?>
                 <div class="row" style="padding:20px;">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-pills">
                         <li class="active"><a data-toggle="tab" href="#details"><i class="fa fa-info"></i>Details</a></li>
                         <li><a data-toggle="tab" href="#tickets"><i class="fa fa-ticket"></i>Tickets</a></li>
                         <li><a data-toggle="tab" href="#referrers"><i class="fa fa-user-plus" aria-hidden="true"></i>Referrals</a></li>

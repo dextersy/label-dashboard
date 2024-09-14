@@ -18,7 +18,7 @@ include_once('./inc/view/header.php');
     
             <div class="container-fluid">
                 <div class="row" style="padding:20px;">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-pills">
                         <li class="active"><a data-toggle="tab" href="#brand">Brand Settings</a></li>
                         <li><a data-toggle="tab" href="#summary">Summary View</a></li>
                         <li><a data-toggle="tab" href="#balance">Balance Summary</a></li>

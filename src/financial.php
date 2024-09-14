@@ -12,7 +12,7 @@
             <?php include_once('./inc/view/notifications.php'); ?>
             <?php include_once('./inc/view/financial/financial-alert-message.php'); ?>
                 <div class="row" style="padding:20px;">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-pills">
                         <li class="active"><a data-toggle="tab" href="#summary"><i class="fa fa-info"></i> Summary</a></li>
                         <li><a data-toggle="tab" href="#documents"><i class="fa fa-file"></i> Documents</a></li>
                         <li><a data-toggle="tab" href="#earnings"><i class="fa fa-dollar"></i> Earnings</a></li>

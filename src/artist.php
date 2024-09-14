@@ -12,7 +12,7 @@
             <?php include_once('./inc/view/notifications.php'); ?>
             <?php include_once('./inc/view/artists/artist-alert-message.php'); ?>
                 <div class="row" style="padding:20px;">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-pills">
                         <li class="active"><a data-toggle="tab" href="#profile"><i class="fa fa-user"></i> Profile</a></li>
                         <li><a data-toggle="tab" href="#gallery"><i class="fa fa-photo"></i> Media</a></li>
                         <li><a data-toggle="tab" href="#releases"><i class="fa fa-music"></i> Releases</a></li>
