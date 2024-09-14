@@ -74,7 +74,7 @@
             encodeURIComponent(cName) + "=deleted; expires=" + new Date( 0 ).toUTCString();
     }
     var downloadTimer;
-    var attempts = 30;
+    var attempts = 300; // 30 seconds timeout
     function waitForFile() {
         var downloadToken = '<?=$downloadToken;?>';
 
@@ -92,7 +92,7 @@
         overlay.style.display = 'none';
         window.clearInterval( downloadTimer );
         expireCookie( "downloadToken" );
-        attempts = 30;
+        attempts = 300;
     }
 </script>
 <div class="row">
