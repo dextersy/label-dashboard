@@ -6,6 +6,9 @@
     if ($action == 'addPaymentMethod') {
         $msg = ($status == "OK") ? "Successfully added payment method." : "Failed to add payment method. Please try again or contact your administrator.";
     }
+    else if ($action == 'addEarnings') {
+        $msg = ($status == "OK") ? "Successfully saved new earning." : "Failed to save earnings. Please try again or contact your administrator.";
+    }
     else if ($action == 'payoutPoint') {
         $msg = ($status == "OK") ? "Successfully updated payout point." : "Failed to change payout point. Please try again or contact your administrator.";
     } 

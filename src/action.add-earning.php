@@ -14,5 +14,5 @@
 
     processNewEarning($earning, ($_POST['calculateRoyalties']=='1'));
 
-    redirectTo("/financial.php#earning");
+    redirectTo("/financial.php?action=addEarnings&status=OK#earnings");
 ?>

@@ -20,7 +20,7 @@
             $recuperatedAmount = $earning->amount;
         }
         $earningRemainingForRoyalties = $earning->amount - $recuperatedAmount; 
-        $recuperableExpense = new RecuperableExpense(null, $earning->release_id, "Recouped from earnings", $recuperatedAmount*-1, $earning->date_recorded);
+        $recuperableExpense = new RecuperableExpense(null, $earning->release_id, $_SESSION['brand_id'], "Recouped from earnings", $recuperatedAmount*-1, $earning->date_recorded);
         $recuperableExpense->save();
     
         $release = new Release;

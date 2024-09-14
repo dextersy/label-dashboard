@@ -21,7 +21,7 @@ class RecuperableExpenseViewItem {
 
 function getRecuperableExpensesForRelease($release_id, $start = 0, $limit = -1){
     $sql = "SELECT `id` FROM `recuperable_expense` " .
-            "WHERE `release_id` = '". $artist_id . "' ".
+            "WHERE `release_id` = '". $release_id . "' ".
             "ORDER BY id DESC";
     if ($limit >= 0) {
         $sql = $sql . " LIMIT ". $start .", " . $limit;
@@ -34,8 +34,8 @@ function getRecuperableExpensesForRelease($release_id, $start = 0, $limit = -1){
         $recuperable_expenses[$i]->fromID($row['id']);
 
         $recuperable_expense_view[$i] = new RecuperableExpenseViewItem;
-        $recuperable_expense_view[$i]->description = $recuperable_expenses[$i]->description;
-        $recuperable_expense_view[$i]->amount = $recuperable_expenses[$i]->expense_amount;
+        $recuperable_expense_view[$i]->description = $recuperable_expenses[$i]->expense_description;
+        $recuperable_expense_view[$i]->expense_amount = $recuperable_expenses[$i]->expense_amount;
 
         if ($recuperable_expenses[$i]->release_id != null) {            
             $release = new Release;
