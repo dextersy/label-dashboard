@@ -25,7 +25,7 @@
                         <li><a data-toggle="tab" href="#new-earning"><i class="fa fa-lock" aria-hidden="true"></i> New Earning</a></li>
                     <? } ?>
                     </ul>
-
+                    <hr>
                     <div class="tab-content">
                         <div id="summary" class="tab-pane fade in active">
                             <?php include_once('./inc/view/financial/summary-view.php'); ?>                                
