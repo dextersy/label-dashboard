@@ -82,14 +82,16 @@
                         $release, 
                         $earning, 
                         $recuperatedAmount,
-                        $royalty
+                        $royalty,
+                        $_SESSION['brand_name'],
+                        $_SESSION['brand_color']
                     );
                 }
             }
         }
     }
 
-    function sendEarningsNotification ( $emailAddress, $artist, $release, $earning, $recuperatedAmount, $royalty) 
+    function sendEarningsNotification ( $emailAddress, $artist, $release, $earning, $recuperatedAmount, $royalty, $brandName, $brandColor) 
     {
 		$subject = "New earnings posted for ". $artist->name . " - " . $release->title;
 		return sendEmail($emailAddress, $subject, 
@@ -100,13 +102,15 @@
                         number_format($earning->amount, 2),
                         number_format($recuperatedAmount, 2),
                         number_format(getRecuperableExpenseBalance($release->id), 2),
-                        isset($royalty)? number_format($royalty->amount, 2) : null
+                        isset($royalty)? number_format($royalty->amount, 2) : null,
+                        $brandName,
+                        $brandColor
                         )
                     );
 	}
 
     function generateEmailFromTemplate($artistName, $releaseName, $earningDescription, 
-            $earningAmount, $recuperatedAmount, $recuperableExpenseBalance, $royaltyAmount) {
+            $earningAmount, $recuperatedAmount, $recuperableExpenseBalance, $royaltyAmount, $brandName, $brandColor) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/earning_notification.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
@@ -121,6 +125,8 @@
         $msg = str_replace('%RECUPERABLE_BALANCE%', $recuperableExpenseBalance, $msg);
         $msg = str_replace('%ROYALTY%', $royaltyAmount!=null? $royaltyAmount: "(Not applied)", $msg);
 		$msg = str_replace('%URL%', "https://" . $_SERVER['SERVER_NAME'], $msg);
+        $msg = str_replace('%BRAND_NAME%', $brandName, $msg);
+        $msg = str_replace('%BRAND_COLOR%', $brandColor, $msg);
 		
 		return $msg;
 	}
