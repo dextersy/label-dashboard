@@ -56,9 +56,8 @@
         <h5><strong>Payout point</strong></h5>
         </div>
         <div class="card-body">
-        <div class="alert alert-info">
-        <i class="fa fa-info-circle"></i> Set the minimum amount to send automatic payouts. Minimum is P1,000. Charge of P10.00 is deducted from each payout.
-        </div>
+            When your balance reaches this amount, you will receive a payout through your default payment method. 
+
         <form action="action.set-payout-point.php" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?=$artist->id;?>">
         <div class="input-group">
@@ -67,10 +66,14 @@
             </div>
             <input type="number" min="1000" step="1" class="form-control text-right" name="payout_point" value="<?=$artist->payout_point;?>" required>
             <div class="input-group-btn">
-                <button type="submit" class="btn btn-default">Save</button>
+                <button type="submit" class="btn btn-primary">Save</button>
             </div>
         </div>
         </form>
+
+        <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i> Minimum value is P1,000. Charge of P10.00 is deducted from each payout.
+        </div>
         </div>
         </div>
     </div>
@@ -113,9 +116,7 @@
             </div>
             <?php
             } else { ?>
-            <div class="alert alert-warning">
             <i class="fa fa-warning"></i> No payment methods set. Please add your bank information below.
-            </div>
         <?  } ?>
                     
             </div>
@@ -147,7 +148,7 @@
             </div>
         </div>
         <div class="card-footer">
-            <button type="submit" class="btn btn-default">Add Payment Method</button>
+            <button type="submit" class="btn btn-primary btn-block">Add Payment Method</button>
             </form>
         </div>
         </div>

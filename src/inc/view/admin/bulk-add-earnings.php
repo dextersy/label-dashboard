@@ -115,5 +115,5 @@
         </tbody>
     </table>
 </div>
-<button type="submit" class="btn btn-default">Save All Earnings</button>
+<button type="submit" class="btn btn-primary">Save All Earnings</button>
 </form>

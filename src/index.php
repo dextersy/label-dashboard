@@ -54,8 +54,20 @@
     ?>
     <!-- Login Form -->
     <form action="action.login.php" method="POST">
-      <input type="text" id="login" class="fadeIn second" name="login" placeholder="login" required>
-      <input type="password" id="password" class="fadeIn third" name="password" placeholder="password" required>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;"><i class="fa fa-user"></i></span>
+        </div>
+        <input type="text" id="login" class="fadeIn second form-control" name="login" placeholder="login" required>
+      </div>
+      &nbsp;
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text fadeIn third" style="background-color:#f6f6f6;border:0px;"><i class="fa fa-unlock-alt"></i></span>
+        </div>
+        <input type="password" id="password" class="fadeIn third form-control" name="password" placeholder="password" required>
+      </div>
+      &nbsp;
       <button type="submit" class="fadeIn fourth btn btn-primary btn-block btn-md">Log In <i class="fa fa-sign-in"></i></button>
     </form>
   </div>
