@@ -38,7 +38,7 @@
 
     <!-- Custom CSS for artist dashboard -->
     <link href="assets/css/dashboard.css?version=54" rel="stylesheet"/>
-
+    <link href="assets/css/loading.css" rel="stylesheet"/>
 
     <!--     Fonts and icons     -->
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" rel="stylesheet">

@@ -187,18 +187,20 @@
     border-radius: 5px;
     background-color: #ffffff !important;
     border: 1px solid gray;
-    padding: 1rem 0.7rem !important;
+    padding: 1rem 0.5rem !important;
     color: rgb(0, 0, 0);
     transition: 0.1s ease-out;
     width: 100%;
   }
   
   input.material:focus {
+    background-color: #ffffff !important;
     border-color: #003059;
   }
   
   input.material:focus+label.floating {
     color: #003059;
+    background-color: #ffffff !important;
     top: 0;
     transform: translateY(-50%) scale(0.9) !important;
   }
