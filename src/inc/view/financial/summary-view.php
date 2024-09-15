@@ -22,7 +22,7 @@
                 <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3>
                 <? if ($isAdmin) { ?>
                 <a data-toggle="tab" href="#new-payment">
-                <button class="btn btn-block" <?=$currentBalance <= 0 ? "disabled":"";?>><i class="fa fa-credit-card"></i> Pay Now</button>
+                <button class="btn btn-primary btn-block" <?=$currentBalance <= 0 ? "disabled":"";?>><i class="fa fa-credit-card"></i> Pay Now</button>
                 </a>
                 <? } ?>
             </div>

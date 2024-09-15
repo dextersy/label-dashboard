@@ -628,8 +628,9 @@ fieldset[disabled] .btn-primary:focus,
 fieldset[disabled] .btn-primary.focus,
 fieldset[disabled] .btn-primary:active,
 fieldset[disabled] .btn-primary.active {
-    background-color: transparent;
-    border-color: #3472F7;
+    background-color: #F0F0F0;
+    border-color: #444444;
+    color: #444444;
 }
 
 .btn-primary.btn-fill {

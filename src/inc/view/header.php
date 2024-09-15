@@ -34,10 +34,10 @@
     <link href="assets/css/animate.min.css" rel="stylesheet"/>
 
     <!--  Light Bootstrap Table core CSS    -->
-    <link href="assets/css/light-bootstrap-dashboard.css?version=55" rel="stylesheet"/>
+    <link href="assets/css/light-bootstrap-dashboard.css" rel="stylesheet"/>
 
     <!-- Custom CSS for artist dashboard -->
-    <link href="assets/css/dashboard.css?version=54" rel="stylesheet"/>
+    <link href="assets/css/dashboard.css" rel="stylesheet"/>
     <link href="assets/css/loading.css" rel="stylesheet"/>
 
     <!--     Fonts and icons     -->

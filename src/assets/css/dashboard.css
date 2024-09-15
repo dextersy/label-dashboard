@@ -1,9 +1,7 @@
 * {
-    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 h1, h2, h3, h4 {
-    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     font-weight:bold;
 }
 
@@ -212,3 +210,24 @@ h1, h2, h3, h4 {
       border-bottom-left-radius: 0;
     }
   }
+
+.card-header {
+  padding: 10px !important;
+  text-align: center;
+  background-color: #fff !important;
+  border-radius: 10px !important;
+  border-bottom: 0px !important;
+}
+.card {
+  border-radius: 10px !important;
+  -webkit-box-shadow: 0 5px 5px 0 rgba(0,0,0,0.3) !important;
+  box-shadow: 0 5px 5px 0 rgba(0,0,0,0.3) !important;
+}
+.card-body, .card-footer {
+  padding: 20px !important;
+}
+
+h5, .h5 {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}

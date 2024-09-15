@@ -84,7 +84,7 @@
         <div class="form-group">
             <input class="form-check-input" type="checkbox" value="1" id="checkbox_manualPayment" name="manualPayment" onclick="toggleManualPayment();">
             <label class="form-check-label" for="manualPayment">
-                This is a manual payment.
+                This is an offline payment.
             </label> 
         </div>
         <div id="div_manualPaymentFields">
@@ -100,26 +100,22 @@
                 </div>
             </div>
         </div>
+        <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">
+            Available balance: Php <?=number_format($currentBalance, 2);?>
+        </div>
+        <input type="hidden" id="wallet_balance" value="<?=$currentBalance;?>">
     </div>
     <div class="card-footer"> 
-        <div class="row">
-            <div class="col-md-12">
-                <input type="submit" id="btn_submit" class="btn btn-default btn-block" value="Add Payment">
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">
-                    Available balance: Php <?=number_format($currentBalance, 2);?>
-                </div>
-                <input type="hidden" id="wallet_balance" value="<?=$currentBalance;?>">
-            </div>
-        </div>
         <div class="row">
             <div class="col-md-12">
             <div id="error-messages" class="alert alert-warning" role="alert">
             A simple warning alert—check it out!
             </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <input type="submit" id="btn_submit" class="btn btn-block btn-primary" value="Add Payment">
             </div>
         </div>
     </div>

@@ -99,7 +99,7 @@
             <div class="card-header">
                 <h4 class="title"><i class="fa fa-shopping-bag header-icon"></i> Physical Earnings</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body text-center">
             <div class="card-text">
                 <h5>Php <?=number_format($overallTotalPhysicalEarnings,2);?></h5>
             </div>
@@ -112,7 +112,7 @@
             <div class="card-header">
                 <h4 class="title"><i class="fa fa-download header-icon"></i> Download Earnings</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body text-center">
             <div class="card-text">
                 <h5>Php <?=number_format($overallTotalDownloadEarnings,2);?></h5>
             </div>
@@ -126,7 +126,7 @@
                 <h4 class="title"><i class="fa fa-headphones header-icon"></i>
                  Streaming Earnings</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body text-center">
             <div class="card-text">
                 <h5>Php <?=number_format($overallTotalStreamingEarnings,2);?></h5>
             </div>
@@ -140,7 +140,7 @@
                 <h4 class="title"><i class="fa fa-television header-icon"></i>
                  Sync Earnings</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body text-center">
             <div class="card-text">
                 <h5>Php <?=number_format($overallTotalSyncEarnings,2);?></h5>
             </div>
@@ -193,7 +193,7 @@
                 <div class="card-header">
                     <h4 class="title">Total Payments</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h5>Php <?=number_format($overallTotalPayments,2);?></h5>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                 <div class="card-header">
                     <h4 class="title">Total Royalties</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h5>Php <?=number_format($overallTotalRoyalties,2);?></h5>
                 </div>
             </div>
@@ -211,7 +211,7 @@
                 <div class="card-header">
                     <h4 class="title">Total New Recuperable Expense</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h5>Php <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id']),2);?></h5>
                 </div>
             </div>
@@ -220,7 +220,7 @@
                 <div class="card-header">
                     <h4 class="title">Total Recuperated Expenses</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h5>Php <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id'])),2);?></h5>
                 </div>
             </div>
