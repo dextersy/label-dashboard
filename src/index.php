@@ -54,6 +54,9 @@
     ?>
     <!-- Login Form -->
     <form action="action.login.php" method="POST">
+    <? if (isset($_GET['url'])) { ?>
+      <input type="hidden" name="redirectTo" value="<?=$_GET['url'];?>" />
+    <? } ?>
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;"><i class="fa fa-user"></i></span>

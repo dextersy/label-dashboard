@@ -8,7 +8,8 @@
     session_start();
 
     if ($_SESSION['logged_in_user'] == null ) {
-        redirectTo('/index.php');
+        $url = $_SERVER['REQUEST_URI'];
+        redirectTo('/index.php?url=' . $url);
     }
 
     $user = new User;

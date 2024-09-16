@@ -22,7 +22,7 @@
     function notifyAdminTooManyFailedLogins($user, $proxy_ip, $remote_ip) {
         $subject = "WARNING: Too many failed logins detected.";
 		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Maybe should be super admin or something...
-        $body = $body. "We've detected multiple login failures for user <b>" . $user->username . "</b>.<br>";
+        $body = "We've detected multiple login failures for user <b>" . $user->username . "</b>.<br>";
         $body = $body. "Remote login IP: " . $remote_ip . "<br>";
         $body = $body. "Proxy login IP: " . $proxy_ip . "<br><br>";
  		return sendEmail($emailAddresses, $subject, $body);
@@ -36,7 +36,7 @@
     $user = new User;
     if(!$user->fromUsername($_SESSION['brand_id'], $_POST['login'])) {
         if (!$user->fromEmailAddress($_SESSION['brand_id'], $_POST['login']) ) {
-            redirectTo("/index.php?err=no_user");
+            redirectTo("/index.php?err=no_user" . (isset($_POST['redirectTo']) ? "&url=" . $_POST['redirectTo'] : ""));
             die();
         }
     }
@@ -44,7 +44,7 @@
     // Check login lock
     if (checkLoginLock($user->id)) {
         notifyAdminTooManyFailedLogins($user, $proxy_ip, $remote_ip);
-        redirectTo("/index.php?err=lock");
+        redirectTo("/index.php?err=lock" . (isset($_POST['redirectTo']) ? "&url=" . $_POST['redirectTo'] : ""));
         die();
     }
 
@@ -64,7 +64,12 @@
                             );
         $loginattempt->save();
         notifySuccessfulLogin($user, $proxy_ip, $remote_ip);
-        redirectTo("/dashboard.php");
+        if(isset($_POST['redirectTo'])) {
+            redirectTo($_POST['redirectTo']);
+        }
+        else {
+            redirectTo("/dashboard.php");
+        }
     } else {
         $loginattempt = new LoginAttempt(
                                 null, 
@@ -77,7 +82,7 @@
                             );
         $loginattempt->save();
         
-        redirectTo("/index.php?err=pass");
+        redirectTo("/index.php?err=pass" . (isset($_POST['redirectTo']) ? "&url=" . $_POST['redirectTo'] : ""));
     }
 
 ?>
