@@ -9,6 +9,10 @@ class PaymentViewItem {
     public $date_paid;
     public $description;
     public $amount;
+    public $paid_thru_type;
+    public $paid_thru_account_name;
+    public $paid_thru_account_number;
+    public $payment_processing_fee;
 }
 
 function getPaymentsForArtist($artist_id, $start=0, $limit=-1){

@@ -75,7 +75,7 @@
         $msg = str_replace('%PROCESSING_FEE%', "Php " . number_format($payment->payment_processing_fee, 2), $msg);
         $msg = str_replace('%NET_AMOUNT%', "Php " . number_format($payment->amount - $payment->payment_processing_fee, 2), $msg);
         $msg = str_replace('%DESCRIPTION%', $payment->description, $msg);
-		$msg = str_replace('%URL%', getProtocol() . $_SERVER['HTTP_HOST'], $msg);
+		$msg = str_replace('%URL%', getProtocol() . $_SERVER['HTTP_HOST'] . "/financial.php#payments", $msg);
 		
 		return $msg;
 	}

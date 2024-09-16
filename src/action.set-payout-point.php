@@ -38,7 +38,7 @@
         $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST_NAME%', $artistName, $msg);
         $msg = str_replace('%PAYOUT_POINT%', $payoutPoint, $msg);
-		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'], $msg);
+		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/financial.php#payments", $msg);
 		
 		return $msg;
 	}

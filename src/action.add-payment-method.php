@@ -50,7 +50,7 @@
         $msg = str_replace('%MEMBER_NAME%', $memberName, $msg);
         $msg = str_replace('%BRAND%', $brandName, $msg);
 		
-		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'], $msg);
+		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/financial.php#payments", $msg);
 		
 		return $msg;
 	}

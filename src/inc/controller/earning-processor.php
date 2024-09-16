@@ -126,7 +126,7 @@
         $msg = str_replace('%RECUPERATED_EXPENSE%', $recuperatedAmount, $msg);
         $msg = str_replace('%RECUPERABLE_BALANCE%', $recuperableExpenseBalance, $msg);
         $msg = str_replace('%ROYALTY%', $royaltyAmount!=null? $royaltyAmount: "(Not applied)", $msg);
-		$msg = str_replace('%URL%', "https://" . $_SERVER['SERVER_NAME'], $msg);
+		$msg = str_replace('%URL%', "https://" . $_SERVER['SERVER_NAME'] . "/financial.php#earnings", $msg);
         $msg = str_replace('%BRAND_NAME%', $brandName, $msg);
         $msg = str_replace('%BRAND_COLOR%', $brandColor, $msg);
 		

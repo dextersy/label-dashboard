@@ -4,6 +4,7 @@
     include_once("./inc/model/brand.php");
     include_once("./inc/model/ticket.php");
     include_once("./inc/model/event.php");
+    include_once("./inc/model/domain.php");
     include_once("./inc/util/Redirect.php");
     include_once("./inc/controller/ticket-controller.php");
 
@@ -13,7 +14,7 @@
         fwrite($fp, $date . $msg . "\n");
     }
 
-    function sendAdminNotification($ticket) {
+    function sendAdminNotification($ticket, $domain) {
 		$subject = "Payment for ticket # " . $ticket->id . " successful.";
 		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Replace with actual administrators later
         $body = "Confirmed payment for the following ticket.<br><br>";
@@ -22,7 +23,7 @@
         $body = $body . "Email : " . $ticket->email_address . "<br>";
         $body = $body . "Code : " . $ticket->ticket_code . "<br>";
         $body = $body . "<br>";
-        $body = $body . "Go to <a href=\"https://" . $_SERVER['SERVER_NAME'] . "\" target=\"_blank\">dashboard</a>";
+        $body = $body . "Go to <a href=\"https://" . $domain . "/events.php#tickets\" target=\"_blank\">dashboard</a>";
 		return sendEmail($emailAddresses, $subject, $body);
 	}
 
@@ -78,8 +79,10 @@
             $_SESSION['brand_website'] = $brand->brand_website;
             webhook_log ('Set session brand = ' . $_SESSION['brand_name']);
 
+            $domains = Domain::getDomainsForBrand($brand->id);
+
             // SEnd email notifications
-            if(!sendAdminNotification($ticket)){
+            if(!sendAdminNotification($ticket, (count($domains) > 0) ? $domains[0]->domain_name : $_SERVER['SERVER_NAME'])){
                 webhook_log ('ERROR: Failed to send admin notification.');
                 sendAdminFailureNotification("Failed to send email.");
             }
