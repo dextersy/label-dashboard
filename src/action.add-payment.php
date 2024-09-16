@@ -48,7 +48,9 @@
             __sendPaymentNotification(
                 $emailAddresses, 
                 $artist->name, 
-                $payment
+                $payment,
+                $_SESSION['brand_name'],
+                $_SESSION['brand_color']
             );
         }
         redirectTo('/financial.php?action=addPayment&status=OK#payments');
@@ -58,18 +60,20 @@
     }
 
     /// HELPER FUNCTIONS BELOW
-    function __sendPaymentNotification($emailAddresses, $artistName, $payment) {
+    function __sendPaymentNotification($emailAddresses, $artistName, $payment, $brandName, $brandColor) {
 		$subject = "Payment made to ". $artistName . "!";
-		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment));
+		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor));
 	}
 
-    function __generateEmailFromTemplate($artistName, $payment) {
+    function __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/payment_notification_email.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
         $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
+        $msg = str_replace("%BRAND_NAME%", $brandName, $msg);
+        $msg = str_replace("%BRAND_COLOR%", $brandColor, $msg);
 		$msg = str_replace('%ARTIST%', $artistName, $msg);
         $msg = str_replace('%AMOUNT%', "Php " . number_format($payment->amount, 2), $msg);
         $msg = str_replace('%PROCESSING_FEE%', "Php " . number_format($payment->payment_processing_fee, 2), $msg);
