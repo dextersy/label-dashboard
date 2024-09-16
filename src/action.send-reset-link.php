@@ -14,7 +14,7 @@
 	$user->reset_hash = $resetHash;
 	$user->save();
 
-	$result = sendResetLink($user->email_address, $resetHash);
+	$result = sendResetLink($user->email_address, $resetHash, $_SESSION['brand_name'], $_SESSION['brand_color']);
 
 	$proxy_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
     $remote_ip = $_SERVER['REMOTE_ADDR'];
@@ -26,20 +26,22 @@
 		redirectTo('/forgotpassword.php?err=unknown');
 	}
     
-    function sendResetLink($emailAddress, $resetHash) {
-		$subject = "Here's the link to reset your password.";
+    function sendResetLink($emailAddress, $resetHash, $brandName, $brandColor) {
+		$subject = "Here's the link to reset your password!";
 		$emailAddresses[0] = $emailAddress;
-		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($artistName, $resetHash));
+		return sendEmail($emailAddresses, $subject, generateEmailFromTemplate($resetHash, $brandName, $brandColor));
 	}
 
-    function generateEmailFromTemplate($artistName, $resetHash) {
+    function generateEmailFromTemplate($resetHash, $brandName, $brandColor) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/reset_password_email.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
         $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
-		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/resetpassword.php?code=" . $resetHash, $msg);
+		$msg = str_replace('%URL%', getProtocol() . $_SERVER['HTTP_HOST'] . "/resetpassword.php?code=" . $resetHash, $msg);
+		$msg = str_replace('%BRAND_NAME%', $brandName, $msg);
+		$msg = str_replace('%BRAND_COLOR%', $brandColor, $msg);
 		
 		return $msg;
 	}
@@ -47,7 +49,7 @@
 	function sendAdminNotification($user, $remote_ip, $proxy_ip) {
 		$subject = "Password reset requested for user " . $user->username;
 		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Maybe should be super admin or something...
-        $body = $body. "We've detected a password reset request for user <b>" . $user->username . "</b>.<br>";
+        $body = "We've detected a password reset request for user <b>" . $user->username . "</b>.<br>";
         $body = $body. "Remote login IP: " . $remote_ip . "<br>";
         $body = $body. "Proxy login IP: " . $proxy_ip . "<br><br>";
  		return sendEmail($emailAddresses, $subject, $body);
