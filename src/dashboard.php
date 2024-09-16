@@ -50,7 +50,7 @@
                                         <i class="fa fa-circle text-info"></i> Tesla Model S
                                         <i class="fa fa-circle text-danger"></i> BMW 5 Series
                                     </div>
-                                    <hr>
+                                    &nbsp;
                                     <div class="stats">
                                         <i class="fa fa-check"></i> Data information certified
                                     </div>

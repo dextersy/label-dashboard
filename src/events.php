@@ -23,7 +23,7 @@
                         <li><a data-toggle="tab" href="#tickets"><i class="fa fa-ticket"></i>Tickets</a></li>
                         <li><a data-toggle="tab" href="#referrers"><i class="fa fa-user-plus" aria-hidden="true"></i>Referrals</a></li>
                     </ul>
-                    <hr>
+                    &nbsp;
                     <div class="tab-content">
                         <div id="details" class="tab-pane fade in active">
                             <?php include_once('./inc/view/events/event-info-tab.php'); ?>

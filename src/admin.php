@@ -26,7 +26,7 @@ include_once('./inc/view/header.php');
                         <li><a data-toggle="tab" href="#users"><i class="fa fa-user"></i> Users</a></li>
                         <li><a data-toggle="tab" href="#child-brands">Child Brands</a></li>
                     </ul>
-                    <hr>
+                    &nbsp;
                     <div class="tab-content">
                         <div id="brand" class="tab-pane fade in active">
                             <?php include_once('./inc/view/admin/brand-settings.php'); ?>                                

@@ -22,7 +22,7 @@
                     <? } ?>
                         <li><a data-toggle="tab" href="#submit-release"><i class="fa fa-upload" aria-hidden="true"></i> Submit A Release</a></li>
                     </ul>
-                    <hr>
+                    &nbsp;
                     <div class="tab-content">
                         <div id="profile" class="tab-pane fade in active">
                             <?php include_once('./inc/view/artists/artist-profile-tab.php'); ?>
