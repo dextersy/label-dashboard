@@ -10,26 +10,24 @@
         }
         
         $failures = 0;
-        $latest_login_time = null;
+        
+        $now = new DateTime();
+        $interval = new DateInterval("PT" . LOCK_TIME_IN_SECONDS . "S");
+        $interval->invert = 1;
+        $cutoff = $now->add($interval);
+
         while($row = $result->fetch_assoc()) {
-            if ($latest_login_time == null) {
-                $latest_login_time = datetime::createfromformat("Y-m-d H:i:s", $row['date_and_time']);
-            }
-            if ($row['status'] == 'Failed') {
+            $login_time = datetime::createfromformat("Y-m-d H:i:s", $row['date_and_time']);
+            if ($row['status'] == 'Failed' && $login_time > $cutoff) {
                 $failures++;
             }
         }
     
         if ($failures >= FAILED_LOGIN_LIMIT) {
-            // Check if lock is still on
-            $lock_expire_time = $latest_login_time->add(new DateInterval('PT' . LOCK_TIME_IN_SECONDS . 'S'));
-            $now = new DateTime('now');
-            if ($now > $lock_expire_time) {
-                return false;
-            }
-            else {
-                return true;
-            }
+            return true;
+        }
+        else {
+            return false;
         }
     }
 

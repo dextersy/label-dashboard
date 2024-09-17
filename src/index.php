@@ -41,7 +41,7 @@
       else if ($_GET['err'] == 'lock') {
     ?>
       <div class="alert alert-danger" role="alert">
-        Your account is locked due to too many failed logins. Try again in <?=LOCK_TIME_IN_SECONDS/60;?> minutes.
+        Your account is temporarily locked due to too many failed logins. Please try again in <?=LOCK_TIME_IN_SECONDS/60;?> minutes.
       </div>
     <?
       }else if ($_GET['resetpass'] == '1') {
