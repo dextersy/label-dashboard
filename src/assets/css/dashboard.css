@@ -231,3 +231,19 @@ h5, .h5 {
   font-size: 20px !important;
   font-weight: 700 !important;
 }
+
+table {
+  border-radius:10px 10px 0px 0px !important;
+}
+th {
+  background-color:#eeeeee;
+  color:black !important;
+}
+
+.save-panel {
+  background-color:#f6f6f6;
+  padding:10px;
+  position: sticky;
+  bottom: 0;
+  z-index: 999;
+}

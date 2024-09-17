@@ -129,12 +129,12 @@
             </div>
         </div>
     <? if($isAdmin) { ?>
-        <div class="card-footer text-right">
+        <div class="card-footer text-right save-panel">
             <div id="edit_button" style="display:block">
-                <button type="button" class="btn btn-primary" onClick="toggleEdit();">Edit Royalties</button> 
+                <button type="button" class="btn btn-primary btn-block" onClick="toggleEdit();">Edit Royalties</button> 
             </div>
             <div id="save_changes_buttons" style="display:none">
-                <input type="submit" class="btn btn-primary" value="Save Changes"> 
+                <input type="submit" class="btn btn-primary btn-block" value="Save Changes"> 
             </div>
         </div>
     <? } ?>
@@ -145,14 +145,27 @@
         <form action="action.add-recuperable-expense.php" method="POST">
             <input type="hidden" id="add_recuperable_expense_release_id" name="release_id" value="">
             <input type="hidden" id="add_recuperable_expense_brand_id" name="brand_id" value="<?=$_SESSION['brand_id'];?>">
-            <h4>Add recuperable expense for:</label> <span id="add_recuperable_expense_release"></span></h4>
-            <label for="expenseDate">Recorded Date</label>
-            <input type="date" class="form-control" id="expenseDate" name="date_recorded" value="<?=date("Y-m-d");?>">
-            <label for="description">Description</label>
-            <input type="text" class="form-control" id="add_recuperable_expense_description" name="expense_description" placeholder="Description">
-            <label for="amount">Amount (in PHP)</label>
-            <input type="text" class="form-control" id="add_recuperable_expense_amount" name="expense_amount" placeholder="Amount">
-            <button type="submit" class="btn btn-default">Add</button><button type="button" class="btn btn-default" onClick="onClickCancel()">Cancel</button>
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add recuperable expense for:</label> <span id="add_recuperable_expense_release"></span></h4>
+                </div>
+                <div class="card-body">
+                    <label for="expenseDate">Recorded Date</label>
+                    <input type="date" class="form-control" id="expenseDate" name="date_recorded" value="<?=date("Y-m-d");?>">
+                    <label for="description">Description</label>
+                    <input type="text" class="form-control" id="add_recuperable_expense_description" name="expense_description" placeholder="Description">
+                    <label for="amount">Amount (in PHP)</label>
+                    <input type="text" class="form-control" id="add_recuperable_expense_amount" name="expense_amount" placeholder="Amount">
+                </div>
+                <div class="card-footer">
+                    <div class="col-sm-6">
+                        <button type="submit" class="btn btn-primary btn-block">Add</button>
+                    </div>
+                    <div class="col-sm-6">
+                        <button type="button" class="btn btn-default btn-block" onClick="onClickCancel()">Cancel</button>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 </div>

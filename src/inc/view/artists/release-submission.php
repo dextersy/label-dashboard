@@ -6,12 +6,12 @@
     $brand->fromID($_SESSION['brand_id']);
     if(isset($brand->release_submission_url) && strlen($brand->release_submission_url) > 0 ) {
 ?>
-<p><a href="<?=$brand->release_submission_url;?>" target="_blank"><button class="btn"><i class="fa fa-arrow-right"></i> Go to Form</button></p>
+<p><a href="<?=$brand->release_submission_url;?>" target="_blank"><button class="btn btn-primary"><i class="fa fa-arrow-right"></i> Go to Form</button></p>
 <?
     }
     else {
 ?>
-<p style="color:red;"><em>No release submission URL set. Please contact your label.</em></p>
+<p style="color:red;"><em>No release submission URL set. Please contact your label representative.</em></p>
 <?
     }
 ?>
