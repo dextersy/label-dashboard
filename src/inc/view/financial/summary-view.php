@@ -9,11 +9,7 @@
     $totalEarnings = getTotalEarningsForArtist($_SESSION['current_artist']);
     $currentBalance = $totalRoyalties - $totalPayments;
 ?>
-<div class="card">
-    <div class="card-header">
-    <h4 class="title">Finance Summary</h4>
-    </div>
-    <div class="card-body">
+
         <div class="row">
             <div class="col-md-3">
                 <div class="card">
@@ -111,5 +107,3 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
