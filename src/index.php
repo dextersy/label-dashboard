@@ -61,7 +61,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;"><i class="fa fa-user"></i></span>
         </div>
-        <input type="text" id="login" class="fadeIn second form-control" name="login" placeholder="Username or email address" required>
+        <input type="text" id="login" class="fadeIn second form-control" name="login" placeholder="Username / email" required>
       </div>
       &nbsp;
       <div class="input-group">
