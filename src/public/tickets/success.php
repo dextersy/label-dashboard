@@ -17,6 +17,19 @@
 </header>
 
 <body>
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+  var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/66e83bc3ea492f34bc148d81/1i7tiitgd';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+  })();
+</script>
+<!--End of Tawk.to Script-->
 <div id="fb-root"></div>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <link href="style.css?version=1.6" rel="stylesheet">
@@ -57,7 +70,7 @@
 <div class="card">
 
 <div class="card-header text-center">
-    <h3 style="color:black;font-weight:bold;text-transform:;">Thank you for your purchase!</strong></h1>
+    <h3 style="color:black;font-weight:bold;">Thank you for your purchase!</strong></h1>
 </div>
 
 <div class="card-body text-center">
@@ -69,7 +82,7 @@
         <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
         <li>You may be required to provide identification to verify your ticket at the gate.</li>
         <li>Please do not share your ticket with anyone else to avoid unauthorized use of the ticket at the event.</li>
-        <li>Didn't receive your ticket? Don't worry, we're ready to help. Just send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or message us on our Facebook page <a href="https://m.me/meltrecordsph">here</a>.</li>
+        <li>Didn't receive your ticket? Don't worry, we're ready to help. Send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or use the chat widget on the lower right.</li>
       </ul>
     </div>
   </div>
