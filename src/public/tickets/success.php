@@ -94,7 +94,7 @@
       <br>
       <span class="fb-share-button" data-href="<?=$event->buy_shortlink;?>" data-layout="button" data-size="large">
         <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<?=urlencode($event->buy_shortlink);?>&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Share</a>
-      </span>&nbsp;
+      </span>
       <a class="twitter-share-button"
           href="https://twitter.com/intent/tweet?text=<?=urlencode("Join me at " . $event->title . "! You can get your ticket here: " . $event->buy_shortlink);?>"
           data-size="large">
