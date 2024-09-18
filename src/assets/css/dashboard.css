@@ -238,6 +238,13 @@ table {
 th {
   background-color:#eeeeee;
   color:black !important;
+  border:none;
+}
+.table td {
+  border:none !important;
+}
+.table tr:nth-child(even) {
+  background-color:#fafafa;
 }
 
 .save-panel {
