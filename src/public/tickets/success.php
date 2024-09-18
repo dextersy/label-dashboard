@@ -32,7 +32,7 @@
 <!--End of Tawk.to Script-->
 <div id="fb-root"></div>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="style.css?version=1.6" rel="stylesheet">
+<link href="style.css?version=1.7" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
@@ -56,56 +56,51 @@
 <!------ Include the above in your HEAD tag ---------->
 
 <div class="wrapper h-100 d-flex justify-content-center">
-<div class="row">
-  <div class="col-md-3 d-flex justify-content-center">
+
+<div class="card mb-3">
 <?php
-  if (isset($event->poster_url) && $event->poster_url != '') {
-?>
-    <img src="../../<?=$event->poster_url;?>" class="event-poster">
-<?php
-  }
-?>
-  </div>
-  <div class="col-md-9">
-<div class="card">
+      if (isset($event->poster_url) && $event->poster_url != '') {
+    ?>
+        <img src="../../<?=$event->poster_url;?>" class="card-img-top" style="max-height:250px;object-fit:cover;">
+    <?php
+      }
+    ?>
 
-<div class="card-header text-center">
-    <h3 style="color:black;font-weight:bold;">Thank you for your purchase!</strong></h1>
-</div>
+      
+    <div class="card-header text-center text-white bg-success">
+      <h1><strong>Thank you for your purchase!</strong></h1>
+    </div>
 
-<div class="card-body text-center">
-    <p><i class="fa fa-check-circle" style="font-size:150px;color:green;"></i></p>
-    <p>Your tickets to <strong><?=$event->title;?></strong> have been sent to your email address.</p>
+    <div class="card-body text-center">
+        <p><i class="fa fa-check-circle" style="font-size:150px;color:green;"></i></p>
+        <p>Your tickets to <strong><?=$event->title;?></strong> have been sent to your email address.</p>
 
-    <div class="alert alert-info field-description text-dark text-left"><i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
-      <ul>
-        <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
-        <li>You may be required to provide identification to verify your ticket at the gate.</li>
-        <li>Please do not share your ticket with anyone else to avoid unauthorized use of the ticket at the event.</li>
-        <li>Didn't receive your ticket? Don't worry, we're ready to help. Send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or use the chat widget on the lower right.</li>
-      </ul>
+        <div class="alert alert-info field-description text-dark text-left"><i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
+          <ul>
+            <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
+            <li>You may be required to provide identification to verify your ticket at the gate.</li>
+            <li>Please do not share your ticket with anyone else to avoid unauthorized use of the ticket at the event.</li>
+            <li>Didn't receive your ticket? Don't worry, we're ready to help. Send us an email at <a href="mailto:support@melt-records.com?subject=Problem with my ticket to <?=$event->title;?>">support@melt-records.com</a> or use the chat widget on the lower right.</li>
+          </ul>
+        </div>
+      </div>
+    <div class="card-footer bg-light text-center text-dark">
+        <p>
+        <strong>Tell your friends about this show!</strong>
+        <br>
+        <span class="fb-share-button" data-href="<?=$event->buy_shortlink;?>" data-layout="button" data-size="large">
+          <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<?=urlencode($event->buy_shortlink);?>&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Share</a>
+        </span>
+        <a class="twitter-share-button"
+            href="https://twitter.com/intent/tweet?text=<?=urlencode("Join me at " . $event->title . "! You can get your ticket here: " . $event->buy_shortlink);?>"
+            data-size="large">
+        Tweet</a>
+        </p>
+    </div>
     </div>
   </div>
-<div class="card-footer">
-    <div class="row">
-    <div class="col-md-12 text-center">
-      <p>
-      <strong>Tell your friends about this show!</strong>
-      <br>
-      <span class="fb-share-button" data-href="<?=$event->buy_shortlink;?>" data-layout="button" data-size="large">
-        <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<?=urlencode($event->buy_shortlink);?>&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Share</a>
-      </span>
-      <a class="twitter-share-button"
-          href="https://twitter.com/intent/tweet?text=<?=urlencode("Join me at " . $event->title . "! You can get your ticket here: " . $event->buy_shortlink);?>"
-          data-size="large">
-      Tweet</a>
-      </p>
-    </div>
-  </div>
-</div>
-</div>
-</div>
-</div>
+
+
 </div>
 </div>
 </body>
