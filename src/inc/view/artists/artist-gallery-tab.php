@@ -30,7 +30,7 @@
 ?>
 <div class="col-md-2">
     <div class="artist-gallery-container">
-        <img src="<?=$photo->path;?>" class="artist-gallery-image"><br>
+        <img src="<?=$photo->path;?>" class="artist-gallery-image img-thumbnail"><br>
         <span id="span_caption_<?=$i;?>">
             <?=($photo->credits != '' && isset($photo->credits)) ? $photo->credits : "<em>Add a caption</em>";?> 
             <a href="javascript:toggleEditCaption('<?=$i;?>');"><i class="fa fa-pencil"></i></a>
@@ -38,9 +38,13 @@
         <div id="form_editCaption_<?=$i;?>" style="display:none;">
             <form action="action.update-photo-caption.php" method="POST">
                 <input type="hidden" name="id" value="<?=$photo->id;?>">
-                <input type="text" name="credits" value="<?=$photo->credits;?>">
-                <button type="submit"><i class="fa fa-save"></i></button>
-                <a href="javascript:toggleEditCaption('<?=$i;?>');"><i class="fa fa-close"></i></a>
+                <div class="input-group">
+                    <input type="text" class="form-control" name="credits" value="<?=$photo->credits;?>">
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn"><i class="fa fa-save"></i></button>
+                        <button type="button" class="btn btn-link" onclick="javascript:toggleEditCaption('<?=$i;?>');"><i class="fa fa-close"></i></button>
+                    </div>
+                </div>
             </form>
         </div>
         <div class="artist-gallery-delete-button-container">
