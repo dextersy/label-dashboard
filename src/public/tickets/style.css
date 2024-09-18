@@ -194,6 +194,9 @@
     transform-origin: left top;
     pointer-events: none;
   }
+  label.indent {
+    margin: 0 5rem !important;
+  }
   
   input.error {
     border: 1px solid red !important;
@@ -223,6 +226,7 @@
     color: #003059;
     top: 0;
     transform: translateY(-50%) scale(0.9) !important;
+    z-index: 999;
   }
   
   input.material:not(:placeholder-shown)+label {
@@ -439,4 +443,10 @@
       position: sticky;
       bottom: 0;
     }
+  }
+
+  /* Contact number field */
+  .contact-number-prefix {
+    background-color:white !important;
+    border-color:gray;
   }

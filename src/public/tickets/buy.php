@@ -231,8 +231,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="field-error-message" style="display:none;" id="error_email">Email address is not valid.</div>
 
           <div class="material-textfield">
-            <input type="text" id="contact_number" class="fadeIn third material" name="contact_number" placeholder="" onchange="validateFields();">        
-            <label class="fadeIn third floating">Contact number</label>
+            <div class="input-group mb-3">
+              <div class="input-group-prepend fadeIn third">
+                <span class="input-group-text contact-number-prefix">🇵🇭 +63</span>
+              </div>
+              <input type="text" id="contact_number" class="fadeIn third form-control material " name="contact_number" placeholder="" onchange="validateFields();">        
+              <label class="fadeIn third floating indent">Contact number</label>
+            </div>
           </div>
           <div class="field-error-message" style="display:none;" id="error_contact_number">Contact number is required.</div>
 
