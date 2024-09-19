@@ -41,7 +41,6 @@
     var downloadTimer;
     var attempts = 300; // 30 seconds timeout
     function waitForFileSent() {
-        alert('Waiting for download token = <?=$downloadToken;?>')
         var downloadToken = '<?=$downloadToken;?>';
 
         downloadTimer = window.setInterval( function() {

@@ -36,7 +36,7 @@
 
     function getPendingTicketsForEvent($event){
         $sql = "SELECT * FROM `ticket` ".
-            "WHERE `event_id` = '" . $event . "' AND `status` <> 'Ticket sent.'";
+            "WHERE `event_id` = '" . $event . "' AND `status` <> 'Ticket sent.' AND `status` <> 'Canceled'";
         $result = MySQLConnection::query($sql);
         if ($result->num_rows < 1) {
             return null;
