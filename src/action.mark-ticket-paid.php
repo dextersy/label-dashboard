@@ -18,6 +18,6 @@
 		// logic for sending to unsent
 	}
 
-	redirectTo('/events.php?action=paid');
+	redirectTo('/events.php?action=paid#pending');
     
 ?>

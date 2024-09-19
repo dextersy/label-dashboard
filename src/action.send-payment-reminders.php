@@ -58,5 +58,5 @@
             }
         }
     }
-    redirectTo("/events.php?action=paymentReminder&status=" . ($success ? "OK": "Failed") . "&count=" . $number_of_sent . "#tickets");
+    redirectTo("/events.php?action=paymentReminder&status=" . ($success ? "OK": "Failed") . "&count=" . $number_of_sent . "#pending");
 ?>

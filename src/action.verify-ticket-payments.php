@@ -18,5 +18,5 @@
             }
         }
     }
-    redirectTo("/events.php?action=VerifyPayments&count=" . $count ."#tickets");
+    redirectTo("/events.php?action=VerifyPayments&count=" . $count ."#pending");
 ?>

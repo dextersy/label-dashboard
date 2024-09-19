@@ -3,18 +3,43 @@
 
     include_once('./inc/controller/brand_check.php');
     include_once('./inc/model/eventreferrer.php');
-    
-    $tickets = getTicketsForEvent($_SESSION['current_event']);
-    $count = 0;
-    if ($tickets) {
-        $total_sold = 0;
-        $total_processing_fee = 0;
-        foreach($tickets as $ticket) {
-            if($ticket->status == 'Ticket sent.') $count += $ticket->number_of_entries;
-            $total_processing_fee += (isset($ticket->payment_processing_fee) ? $ticket->payment_processing_fee : 0);
-            $total_sold += ($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed') ? ($ticket->number_of_entries * $ticket->price_per_ticket) : 0;
+
+    function getTicketStatusText($status, $payment_link, $checkout_key) {
+        if(!isset($payment_link) && !isset($checkout_key)) {
+            $color = 'red';
+            $status = 'Error - no payment link nor checkout key';
         }
-    } 
+        else if ( $status == "New" ) {
+            $color = 'black';
+        }
+        else if ($status == "Payment Confirmed") {
+            $color = 'orange';
+        }
+        else if ($status == "Ticket sent.") {
+            $color = 'green';
+        }
+        else if ($status == "Canceled") {
+            $color = 'grey';
+        }
+        return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
+    }
+    function getTicketLink($id, $status) {
+        if ( $status == "New" ) {
+            $link = "<a href=\"action.mark-ticket-paid.php?ticket_id=" . $id . "\">[ Mark as paid ]</a> " .
+                        "<a href=\"action.cancel-ticket.php?ticket_id=" . $id . "\">[ Cancel ]</a> ";
+        }
+        else if ($status == "Payment Confirmed") {
+            $link = "<a href=\"action.send-tickets.php?ticket_id=" . $id . "\">[ Send Ticket ]</a>";
+        }
+        return $link;
+    }
+
+    
+    $tickets = getPendingTicketsForEvent($_SESSION['current_event']);
+    $count = 0;
+    foreach($tickets as $ticket) {
+        $count += $ticket->number_of_entries;
+    }
     $event = new Event;
     $event->fromID($_SESSION['current_event']);
 
@@ -40,8 +65,7 @@
     }
     var downloadTimer;
     var attempts = 300; // 30 seconds timeout
-    function waitForFileSent() {
-        alert('Waiting for download token = <?=$downloadToken;?>')
+    function waitForFile() {
         var downloadToken = '<?=$downloadToken;?>';
 
         downloadTimer = window.setInterval( function() {
@@ -70,9 +94,20 @@
             <div class="col-md-12">
                 <div class="btn-toolbar" role="toolbar">
                     <div class="btn-group" role="group" aria-label="Actions">
-                        <a onclick="waitForFileSent();" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>&token=<?=$downloadToken;?>">
+                        <a onclick="waitForFile();" href="action.download-ticket-csv.php?id=<?=$_SESSION['current_event'];?>&token=<?=$downloadToken;?>&pending">
                             <button type="button" class="btn-link">
                                 <i class="fa fa-download"></i> Download CSV
+                            </button>
+                        </a>
+                        <a href="action.verify-ticket-payments.php">
+                            <button type="button" class="btn-link">
+                                <i class="fa fa-check"></i> Verify Payments
+                            </button>
+                        </a>
+                        &nbsp;
+                        <a href="action.send-payment-reminders.php">
+                            <button type="button" class="btn-link">
+                                <i class="fa fa-bell"></i> Send payment reminders
                             </button>
                         </a>
                     </div>
@@ -93,6 +128,7 @@
                         <th>Processing fee</th>
                         <th>Referred by</th>
                         <th>Time ordered</th>
+                        <th>Status</th>
                     </thead>
                     <tbody>
             <?
@@ -120,7 +156,8 @@
                             <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                             <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
                             <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
-                            <td><a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Resend Ticket ]</a></td>
+                            <td><?=getTicketStatusText($ticket->status, $ticket->payment_link, $ticket->checkout_key); ?></td>
+                            <td><?=getTicketLink($ticket->id, $ticket->status); ?></td>
                         </tr>
             <?      }
                 } else {
@@ -135,9 +172,7 @@
         </div>
         <div class="card-footer" style="position:sticky;bottom:0;background-color:#f6f6f6;">
             <strong>Totals </strong>&nbsp;&nbsp;
-                <i class="fa fa-dot-circle-o" style="color:green;" title="Number of paid tickets"></i> <?=$count;?>&nbsp;&nbsp;
-                <i class="fa fa-money" title="Total revenue"></i> Php<?=number_format($total_sold,2);?>&nbsp;&nbsp;
-                <i class="fa fa-credit-card" title="Total processing fee"></i> -<?=number_format($total_processing_fee,2);?>
+                <i class="fa fa-dot-circle-o" style="color:gray;" title="Number of paid tickets"></i> <?=$count;?>&nbsp;&nbsp;
         </div>
     </div>
 </div>
