@@ -176,10 +176,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <?php
   if (isset($event->poster_url) && $event->poster_url != '') {
 ?>
-      <div class="col-md-3 event-poster-container">
+      <div class="col-md-4 event-poster-container">
         <img src="../../<?=$event->poster_url;?>" class="event-poster">
       </div>
-      <div class="col-md-9" style="padding:30px;">
+      <div class="col-md-8" style="padding:30px;">
 <? } 
   else { 
 ?>
