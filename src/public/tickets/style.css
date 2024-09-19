@@ -413,7 +413,7 @@
 
   /* FOR POSTER IMAGE */
   .event-poster {
-    object-fit: contain; /* Do not scale the image */
+    object-fit: cover; /* Do not scale the image */
     object-position: center; /* Center the image within the element */
     width:300px;
     height:300px;
