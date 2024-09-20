@@ -104,10 +104,14 @@
                                 <i class="fa fa-check"></i> Verify Payments
                             </button>
                         </a>
-                        &nbsp;
                         <a href="action.send-payment-reminders.php">
                             <button type="button" class="btn-link">
                                 <i class="fa fa-bell"></i> Send payment reminders
+                            </button>
+                        </a>
+                        <a href="action.cancel-ticket.php?all">
+                            <button type="button" class="btn-link text-danger">
+                                <i class="fa fa-times"></i> Cancel all unpaid
                             </button>
                         </a>
                     </div>

@@ -184,7 +184,7 @@ class Ticket {
             if (!isset($this->id)) {
                 $this->id = MySQLConnection::$lastInsertID;
             }
-            return MySQLConnection::$lastInsertID;
+            return $this->id;
         } else {
             return false;
         }

@@ -4,48 +4,29 @@
     require_once('./inc/util/Redirect.php');
 	require_once('./inc/controller/access_check.php');
 	require_once('./inc/controller/brand_check.php');
+    require_once('./inc/controller/ticket-controller.php');
 
-	function cancelPaymentLink($link_id) {
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-                CURLOPT_URL => "https://api.paymongo.com/v1/links/" . $link_id . "/archive",
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "POST",
-                CURLOPT_HTTPHEADER => [
-                    "accept: application/json",
-                    "authorization: Basic " . base64_encode(PAYMONGO_SECRET_KEY),
-                    "content-type: application/json"
-                ],
-            ]);
-
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-
-        curl_close($curl);
-
-        if ($err) {
-            return $err;
-        } else {
-            return json_decode($response, false);
+    if(isset($_GET['all'])) {
+        $count = 0;
+        $tickets = getPendingTicketsForEvent($_SESSION['current_event']);
+        foreach ($tickets as $ticket) {
+            if(archiveTicket($ticket->id)) {
+                $count++;
+            }
+        }
+       	redirectTo('/events.php?action=cancelTicket&count='.$count.'&result=OK#pending');
+    }
+    else {
+        $ticket_id = $_GET['ticket_id'];
+        $result = archiveTicket($ticket_id);
+        if(!$result) {
+        	redirectTo('/events.php?action=cancelTicket&count=1&result=Failed#pending');
+        }
+        else {
+        	redirectTo('/events.php?action=cancelTicket&count=1&result=OK#pending');
         }
     }
-
-	if (isset($_GET['ticket_id'])){
-		$ticket = new Ticket;
-		$ticket->fromID($_GET['ticket_id']);
-
-        if(isset($ticket->payment_link_id)) {
-    		cancelPaymentLink($ticket->payment_link_id);
-        }
-        
-		$ticket->status = "Canceled";
-		$ticket->save();
-	}
-	redirectTo('/events.php?action=canceled#tickets');
+	
+    if($archive)
     
 ?>

@@ -22,11 +22,12 @@
             Ticket mark as paid.
         </div>
     <? 
-    } else if ($_GET['action']=='canceled') { ?>
-        <div class="alert alert-success" id="alert-box" role="alert">
-                Successfully canceled ticket.
-            </div>
-        <? }
+    } else if ($_GET['action']=='cancelTicket') { ?>
+        <div class="alert <?=$_GET['result']=='OK'?'alert-success':'alert-danger';?>" id="alert-box" role="alert">
+            <?=$_GET['result']=='OK'?'Successfully canceled ' . $_GET['count']. ' ticket(s).':'Something went wrong. Please try again';?>
+        </div>
+    <? 
+    }
     ?>
     </div>
 <? } ?>
