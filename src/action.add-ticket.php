@@ -130,12 +130,12 @@
             sendAdminNotification($event->title, $ticket->name, $amount, $ticket->number_of_entries);
         
             if(!$result) {
-                redirectTo("/events.php?err#tickets");
+                redirectTo("/events.php?err#pending");
             }
         }
     }
     else {
         // todo Add error message
     }
-    redirectTo("/events.php#tickets");
+    redirectTo("/events.php#pending");
 ?>

@@ -194,8 +194,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
   else {
 ?>
-  <h1 style="color:black;">Sorry, ticket sales for this event are closed.</h1>
-  <h4>Walk-in may still be available at the show.<br>Check our social media for more details.</h4>
+  <h1 style="color:black;">Sorry, ticket sales for <b><?=$event->title;?></b> are closed.</h1>
+  <hr>
+  <h5>
+    Don't worry! Walk-in tickets may still be available at the show.<br>
+    Check out <strong><?=$brand->brand_name;?></strong> social media for more information.
+  </h5>
 <?php 
   }
 ?>
