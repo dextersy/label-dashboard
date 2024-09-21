@@ -183,7 +183,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <? } 
   else { 
 ?>
-      <div class="col-md-12">
+      <div class="col-md-12 text-center">
 <?
   }
   if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
@@ -194,12 +194,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
   else {
 ?>
-  <h1 style="color:black;">Sorry, ticket sales for <b><?=$event->title;?></b> are closed.</h1>
-  <hr>
-  <h5>
-    Don't worry! Walk-in tickets may still be available at the show.<br>
-    Check out <strong><?=$brand->brand_name;?></strong> social media for more information.
+  <h1 style="font-size:4rem;font-weight:bold;">Just missed it. 🥲</h1>
+  <h5>Online ticket sales for <b><?=$event->title;?></b> are now closed.<br>
+  But don't worry! Walk-in tickets may still be available at the show.<br>
   </h5>
+  <p>
+    Please check <strong><?=$brand->brand_name;?></strong> social media for more information.
+  </p>
 <?php 
   }
 ?>
