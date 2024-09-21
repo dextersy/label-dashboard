@@ -56,7 +56,7 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                     <div class="form-group">
                         <label for="amount">Date</label>
                         <div class="input-group">
-                            <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$event->date_and_time;?>" required>
+                            <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$eventDateTime->format("Y-m-d H:i:s");?>" required>
                             <div class="input-group-addon">GMT+8 (PH)</div>
                         </div>
                     </div> 
@@ -102,7 +102,7 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                     <div class="form-group">
                         <label for="amount">Close ticket sales on</label>
                         <div class="input-group">
-                            <input type="datetime-local" class="form-control" id="close_time" name="close_time" placeholder="Date" value="<?=$event->close_time;?>">
+                            <input type="datetime-local" class="form-control" id="close_time" name="close_time" placeholder="Date" value="<?=$closeDateTime->format("Y-m-d H:i:s");?>">
                             <div class="input-group-addon">GMT+8 (PH)</div>
                         </div>
                     </div> 
