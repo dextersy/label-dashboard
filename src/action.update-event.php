@@ -56,6 +56,17 @@
     if(isset($_FILES["poster_url"]["tmp_name"]) && $_FILES["poster_url"]["tmp_name"] != "") {
         $event->poster_url = uploadImage($_FILES['poster_url']['name'], $_FILES['poster_url']['tmp_name']);
     }
+
+    // Convert to system local time
+    $dateTime = new DateTime($_POST['date_and_time'], new DateTimeZone("Asia/Manila"));
+    $closeTime = new DateTime($_POST['close_time'], new DateTimeZone("Asia/Manila"));
+
+    $dateTime->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    $closeTime->setTimezone(new DateTimeZone(date_default_timezone_get()));
+
+    $event->date_and_time = $dateTime->format("Y-m-d H:i:s");
+    $event->close_time = $closeTime->format("Y-m-d H:i:s");
+
     $event->save();
 
     if (!isset($event->buy_shortlink) || $event->buy_shortlink == '' || substr($event->buy_shortlink, 0, 4) != 'http' ) {
