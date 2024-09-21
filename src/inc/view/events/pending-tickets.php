@@ -21,7 +21,7 @@
         else if ($status == "Canceled") {
             $color = 'grey';
         }
-        return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span> " . $link;
+        return "<span style=\"color:". $color . ";\"><i class=\"fa fa-circle\" aria-hidden=\"true\"></i> " . $status . "</span>";
     }
     function getTicketLink($id, $status) {
         if ( $status == "New" ) {

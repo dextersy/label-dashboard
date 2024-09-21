@@ -127,7 +127,8 @@
                 $ticket->payment_link
             );
 
-            sendAdminNotification($event->title, $ticket->name, $amount, $ticket->number_of_entries);
+            // Decided not to send admin notifications anymore for pending orders, only upon payment
+//            sendAdminNotification($event->title, $ticket->name, $amount, $ticket->number_of_entries);
         
             if(!$result) {
                 redirectTo("/events.php?err#pending");

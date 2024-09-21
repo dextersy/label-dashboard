@@ -7,6 +7,7 @@
     include_once("./inc/model/domain.php");
     include_once("./inc/util/Redirect.php");
     include_once("./inc/controller/ticket-controller.php");
+    //include_once("./inc/controller/users-controller.php");
 
     function webhook_log($msg) {
         $fp = fopen('webhook.log', 'a');
@@ -14,14 +15,33 @@
         fwrite($fp, $date . $msg . "\n");
     }
 
-    function sendAdminNotification($ticket, $domain) {
-		$subject = "Payment for ticket # " . $ticket->id . " successful.";
-		$emailAddresses[0] = "sy.dexter@gmail.com"; // TODO Replace with actual administrators later
-        $body = "Confirmed payment for the following ticket.<br><br>";
+    function __getAdminEmails($brand_id){
+        $sql = "SELECT `email_address` FROM `user` ".
+            "WHERE `is_admin` IS TRUE and `brand_id` = '" . $brand_id . "'";
+        $result = MySQLConnection::query($sql);
+        if ($result->num_rows < 1) {
+            return null;
+        }
+        
+        $i = 0;
+        while($row = $result->fetch_assoc()) {
+            $emails[$i] = $row['email_address'];
+            $i++;
+        }
+        return $emails;
+    }
+    function sendAdminNotification($event, $ticket, $domain) {
+        $i = 0;
+        $emailAddresses = __getAdminEmails($_SESSION['brand_id']);
+        $subject = "New ticket order for " . $event->title . " completed.";
+		$body = "Confirmed payment for the following ticket.<br><br>";
         $body = $body . "Ticket ID : " . $ticket->id . "<br>";
         $body = $body . "Name : " . $ticket->name . "<br>";
         $body = $body . "Email : " . $ticket->email_address . "<br>";
         $body = $body . "Code : " . $ticket->ticket_code . "<br>";
+        $body = $body . "Number of entries : " . $ticket->number_of_entries . "<br>";
+        $body = $body . "Payment : " . number_format($ticket->price_per_ticket * $ticket->number_of_entries, 2) . "<br>";
+        $body = $body . "Processing fee : -" . number_format($ticket->payment_processing_fee, 2) . "<br>";
         $body = $body . "<br>";
         $body = $body . "Go to <a href=\"https://" . $domain . "/events.php#tickets\" target=\"_blank\">dashboard</a>";
 		return sendEmail($emailAddresses, $subject, $body);
@@ -79,13 +99,7 @@
             $_SESSION['brand_website'] = $brand->brand_website;
             webhook_log ('Set session brand = ' . $_SESSION['brand_name']);
 
-            $domains = Domain::getDomainsForBrand($brand->id);
-
             // SEnd email notifications
-            if(!sendAdminNotification($ticket, (count($domains) > 0) ? $domains[0]->domain_name : $_SERVER['SERVER_NAME'])){
-                webhook_log ('ERROR: Failed to send admin notification.');
-                sendAdminFailureNotification("Failed to send email.");
-            }
             if (!updateTicketPaymentStatus($ticket->id, $processing_fee)) {
                 webhook_log ('ERROR: Failed to update ticket payment verification.');
                 sendAdminFailureNotification("Ticket payment verification failed.");
@@ -95,6 +109,14 @@
                 if (!sendTicket($ticket->id)) {
                     webhook_log ('ERROR: Failed to send ticket...');
                     sendAdminFailureNotification("Failed to send ticket to customer.");
+                }
+                else {
+                    $domains = Domain::getDomainsForBrand($brand->id);
+                    $ticket->fromID($ticket->id);
+                    if(!sendAdminNotification($event, $ticket, (count($domains) > 0) ? $domains[0]->domain_name : $_SERVER['SERVER_NAME'])){
+                        webhook_log ('ERROR: Failed to send admin notification.');
+                        sendAdminFailureNotification("Failed to send email.");
+                    }
                 }
             }
         }

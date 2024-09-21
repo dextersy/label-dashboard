@@ -32,7 +32,7 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
                         <input type="text" class="form-control" id="brand_website" name="brand_website" placeholder="Brand Website" value="<?=$brand->brand_website;?>">
                     </div>
                     <div class="form-group">
-                        <label for="name">Brand color <?=$brand->color;?></label>
+                        <label for="name">Brand color <span style="color:<?=$brand->brand_color;?>;"><i class="fa fa-square"></i></span></label>
                         <select class="form-control" name="brand_color">
                             <option <?=$brand->brand_color=='purple'?"selected":"";?> value="purple">Purple</option>
                             <option <?=$brand->brand_color=='red'?"selected":"";?> value="red">Red</option>

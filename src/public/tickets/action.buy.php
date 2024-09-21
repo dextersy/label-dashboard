@@ -211,7 +211,8 @@
         
         $checkout_url = $response->data->attributes->checkout_url;
 
-        sendAdminNotification($event->title, $ticket, $amount);
+        // Decided not to send admin notifications anymore for pending orders, only upon payment
+        //sendAdminNotification($event->title, $ticket, $amount);
 
         header('location: ' . $checkout_url);
         // if($result) {
