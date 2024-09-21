@@ -15,6 +15,9 @@ if ($_SESSION['current_event'] != NULL) {
 }
 else {
     $title = "New Event";
+
+    $eventDateTime = new DateTime('now', new DateTimeZone("Asia/Manila"));
+    $closeDateTime = new DateTime('now', new DateTimeZone("Asia/Manila"));
 }
 
 $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
