@@ -194,9 +194,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
   else {
 ?>
-  <h1 style="font-size:4rem;font-weight:bold;">Just missed it. 🥲</h1>
-  <h5>Online ticket sales for <b><?=$event->title;?></b> are now closed.<br>
-  But don't worry! Walk-in tickets may still be available at the show.<br>
+  <h1 style="font-size:3rem;font-weight:bold;">Ticket sales closed</h1>
+  <h5>Online ticket sales for <b><?=$event->title;?></b> are now closed. 🥲<br>
+  You just missed it but don't worry! <br>
+  <span class="text-success">Walk-in tickets may still be available at the show.</span><br>
   </h5>
   <p>
     Please check <strong><?=$brand->brand_name;?></strong> social media for more information.
