@@ -61,7 +61,7 @@
         $msg = str_replace("%BRAND_NAME%", $_SESSION['brand_name'], $msg);
 		$msg = str_replace('%EVENT_NAME%', $eventName, $msg);
 		$msg = str_replace('%NAME%', $name, $msg);
-		$msg = str_replace('%PAYMENT_AMOUNT%', $amount, $msg);
+		$msg = str_replace('%PAYMENT_AMOUNT%', number_format($amount, 2), $msg);
 		$msg = str_replace('%NO_OF_ENTRIES%', $numberOfEntries, $msg);
 		$msg = str_replace('%PAYMENT_LINK%', $paymentLink, $msg);
 		
