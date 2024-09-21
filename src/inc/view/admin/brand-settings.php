@@ -83,7 +83,7 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
         <button type="submit" class="btn btn-block btn-primary"><i class="fa fa-save"></i> Save Changes</button>
     </div>
 </form>
-
+<hr>
 <div class="row">
 <div class="col-md-4">
 <div class="card">
