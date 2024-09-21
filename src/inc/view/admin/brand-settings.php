@@ -84,46 +84,51 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
     </div>
 </form>
 
-
-<h3>Domains</h3>
-<p>These domains will resolve to your dashboard.</p>
+<div class="row">
 <div class="col-md-4">
-    <div class="table-responsive">
-        <table class="table">
-            <tbody>
-<? 
-    $domains = Domain::getDomainsForBrand($_SESSION['brand_id']);
-    if ($domains) {
-        foreach ($domains as $domain) { 
-        ?>
-            <tr>
-                <td><?=$domain->domain_name;?></td>
-                <td>
-                    <?=$domain->status == "Verified" ? "<i class=\"fa fa-check\" alt=\"Verified\"></i>" : "<a href=\"action.verify-domain.php?brand_id=" . $_SESSION['brand_id'] . "&domain_name=" . $domain->domain_name . "\">[ Verify ]</as>";?>
-                    <a href="action.delete-domain.php?brand_id=<?=$_SESSION['brand_id'];?>&domain_name=<?=$domain->domain_name;?>">
-                    <i class="fa fa-trash"></i></a>
-                </td>
-            </tr>
+<div class="card">
+    <div class="card-header"><h3>Domains</h3></div>
+    <div class="card-body">
+        <p>These domains will resolve to your dashboard.</p>
+    <? 
+        $domains = Domain::getDomainsForBrand($_SESSION['brand_id']);
+        if ($domains) {
+    ?>
+        <div class="table-responsive">
+            <table class="table">
+                <tbody>
+    <?
+            foreach ($domains as $domain) { 
+            ?>
+                <tr>
+                    <td><?=$domain->domain_name;?></td>
+                    <td>
+                        <?=$domain->status == "Verified" ? "<i class=\"fa fa-check\" alt=\"Verified\"></i>" : "<a href=\"action.verify-domain.php?brand_id=" . $_SESSION['brand_id'] . "&domain_name=" . $domain->domain_name . "\">[ Verify ]</as>";?>
+                        <a href="action.delete-domain.php?brand_id=<?=$_SESSION['brand_id'];?>&domain_name=<?=$domain->domain_name;?>">
+                        <i class="fa fa-trash"></i></a>
+                    </td>
+                </tr>
 <?          
-        } 
-    } else { ?>
-    No domains configured.
-<?  } ?>
-            </tbody>
-        </table>
-    </div>
-    <div class="card">
-        <div class="card-header"><h4>Add domain</h4></div>
-        <div class="card-body">
-            <form action="action.add-domain.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="brand_id" value="<?=$brand->id;?>">
-            <div class="input-group">
-                <input type="text" class="form-control" name="domain_name">
-                <div class="input-group-addon">
-                    <button type="submit" class="btn-link">Add</button>
-                </div>
-            </div>
-            </form>
+            } ?>
+                </tbody>
+            </table>
+<?
+        } else { ?>
+        No domains configured.
+    <?  } ?>
         </div>
+        <h4>Add domain</h4>
+        <form action="action.add-domain.php" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="brand_id" value="<?=$brand->id;?>">
+        <div class="input-group">
+            <input type="text" class="form-control" name="domain_name">
+            <div class="input-group-addon">
+                <button type="submit" class="btn-link">Add</button>
+            </div>
+        </div>
+        </form>
+
     </div>
+</div>
+</div>
 </div>
