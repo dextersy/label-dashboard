@@ -128,8 +128,6 @@
                         <th>No. of tickets</th>
                         <th>Ticket code</th>
                         <th>Payment Link</th>
-                        <th>Total paid</th>
-                        <th>Processing fee</th>
                         <th>Referred by</th>
                         <th>Time ordered</th>
                         <th>Status</th>
@@ -156,8 +154,6 @@
                                 <? if(isset($ticket->payment_link) && $ticket->payment_link != '') { ?> 
                                 <a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
                                 <? } ?>
-                            <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
-                            <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                             <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
                             <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
                             <td><?=getTicketStatusText($ticket->status, $ticket->payment_link, $ticket->checkout_key); ?></td>
