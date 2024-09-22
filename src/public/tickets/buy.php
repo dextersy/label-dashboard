@@ -168,7 +168,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="loading"></div>
 </div>
 
-<div class="wrapper fadeInDown">
+<div class="wrapper fadeInDown h-100">
 
 <div class="header-section">
   <div class="container">
@@ -194,8 +194,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
   else {
 ?>
-  <h1 style="font-size:3rem;font-weight:bold;">Sorry, we're closed.</h1>
-  <h5>We're no longer selling tickets for <b><?=$event->title;?></b>. 🥲</h5>
+  <h1 style="font-size:2.5rem;font-weight:bold;">Sorry, we're closed...</h1>
+  <h1 style="font-size:1.5rem;font-style:italic;">— but the door's still open!</h1>
+  <h3>&nbsp;</h3>
+  <h5>Online ticket sales for <b><?=$event->title;?></b> has already ended. 🥲</h5>
   <h5>But don't worry! <span class="text-success">Walk-in tickets may still be available at the show.</span></h5>
   <p>
     Please check <strong><?=$brand->brand_name;?></strong> social media for more information.

@@ -68,12 +68,12 @@
 
       
     <div class="card-header text-center text-white bg-success">
-      <h1><strong>Thank you for your purchase!</strong></h1>
+      <h1><strong>Thank you! 🙌</strong></h1>
     </div>
 
     <div class="card-body text-center">
         <p><i class="fa fa-check-circle" style="font-size:150px;color:green;"></i></p>
-        <p>Your tickets to <strong><?=$event->title;?></strong> have been sent to your email address.</p>
+        <p>All set! ✨ Your tickets to <strong><?=$event->title;?></strong> have been sent to your email address.</p>
 
         <div class="alert alert-info field-description text-dark text-left"><i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
           <ul>
@@ -87,15 +87,20 @@
     <div class="card-footer bg-light text-center text-dark">
         <p>
         <strong>Tell your friends about this show!</strong>
-        <br>
+        </p>
+        <div class="row">
+        <div class="col-6 text-right">
         <span class="fb-share-button" data-href="<?=$event->buy_shortlink;?>" data-layout="button" data-size="large">
           <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<?=urlencode($event->buy_shortlink);?>&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">Share</a>
         </span>
+        </div>
+        <div class="col-6 text-left">
         <a class="twitter-share-button"
             href="https://twitter.com/intent/tweet?text=<?=urlencode("Join me at " . $event->title . "! You can get your ticket here: " . $event->buy_shortlink);?>"
             data-size="large">
         Tweet</a>
-        </p>
+        </div>
+        </div>
     </div>
     </div>
   </div>
