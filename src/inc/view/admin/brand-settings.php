@@ -43,6 +43,13 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
                             <option <?=$brand->brand_color=='white'?"selected":"";?> value="white">White</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="favicon_url">Favicon</label><br>
+                        <div class="input-group">
+                            <div class="input-group-addon"><img src="<?=($brand->favicon_url!="") ? $brand->favicon_url : "assets/img/placeholder.jpg";?>" width="10" style="background-color:#cccccc;"></div>
+                            <input type="file" class="form-control" id="favicon_url" name="favicon_url" accept=".png" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

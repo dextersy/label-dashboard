@@ -17,7 +17,7 @@
     <!-- End Google Tag Manager -->
 <? } ?>
 	<meta charset="utf-8" />
-	<link rel="icon" type="image/png" href="assets/img/favicon.ico">
+	<link rel="icon" href="<?=$_SESSION['brand_favicon']!=''?$_SESSION['brand_favicon']:'../assets/img/favicon.ico';?>">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
 	<title><?=$title_text;?> | <?=$_SESSION['brand_name'];?></title>

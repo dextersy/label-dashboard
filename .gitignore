@@ -7,3 +7,4 @@ jobs
 blocklist
 db_api
 src/webhook.log
+phpinfo.php

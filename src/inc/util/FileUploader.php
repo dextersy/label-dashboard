@@ -1,5 +1,7 @@
 <?php
 
+require_once( './inc/util/class-php-ico.php' );
+
 function uploadImage($filename, $tempname) {
     $target_dir = "uploads/";
     $target_file = $target_dir . basename($filename);
@@ -39,6 +41,19 @@ function uploadDocument($file) {
     }
     else {
         return null;
+    }
+}
+
+function convertPngToIco($filename) {
+    $source = $filename;
+    $destination = "uploads/" . basename($filename, '.png') . '.ico';
+
+    $ico_lib = new PHP_ICO( $source );
+    if($ico_lib->save_ico( $destination )) {
+        return $destination;
+    }
+    else {
+        return "";
     }
 }
 ?>

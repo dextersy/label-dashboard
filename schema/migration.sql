@@ -364,3 +364,9 @@ CHANGE COLUMN `sync_royalty_percentage` `sync_royalty_percentage` DECIMAL(4,3) N
 ALTER TABLE `release_artist` 
 CHANGE COLUMN `download_royalty_percentage` `download_royalty_percentage` DECIMAL(4,3) NOT NULL DEFAULT '0.500' ,
 CHANGE COLUMN `physical_royalty_percentage` `physical_royalty_percentage` DECIMAL(4,3) NOT NULL DEFAULT '0.200' ;
+
+--- SEPT 22, 2024
+ALTER TABLE `ticket` 
+ADD COLUMN `number_of_claimed_entries` VARCHAR(45) NOT NULL DEFAULT 0 AFTER `checkout_key`;
+ALTER TABLE `brand` 
+ADD COLUMN `favicon_url` VARCHAR(1024) NULL DEFAULT NULL AFTER `payment_processing_fee_for_payouts`;
