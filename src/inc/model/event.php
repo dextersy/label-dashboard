@@ -15,6 +15,8 @@ class Event {
     public $ticket_price;
     public $buy_shortlink;
     public $close_time;
+    public $verification_pin;
+    public $verification_link;
 
     function __construct(
         $id = null, 
@@ -27,7 +29,9 @@ class Event {
         $rsvp_link = null,
         $ticket_price = null,
         $buy_shortlink = null,
-        $close_time = null
+        $close_time = null,
+        $verification_pin = null,
+        $verification_link = null
     ) 
     {
         $this->id = $id;
@@ -41,6 +45,8 @@ class Event {
         $this->ticket_price = $ticket_price;
         $this->buy_shortlink = $buy_shortlink;
         $this->close_time = $close_time;
+        $this->verification_pin = $verification_pin;
+        $this->verification_link = $verification_link;
     }
 
     function fromID($id) {
@@ -57,6 +63,8 @@ class Event {
             $this->ticket_price = $row['ticket_price'];
             $this->buy_shortlink = $row['buy_shortlink']; 
             $this->close_time = $row['close_time'];
+            $this->verification_pin = $row['verification_pin'];
+            $this->verification_link = $row['verification_link'];
             return true;
         }
         else {
@@ -82,11 +90,17 @@ class Event {
         if(isset($post['close_time'])) {
             $this->close_time = $post['close_time'];
         }
+        if(isset($post['verification_pin'])) {
+            $this->verification_pin = $post['verification_pin'];
+        }
+        if(isset($post['verification_link'])) {
+            $this->verification_link = $post['verification_link'];
+        }
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`) ".
+            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`, `verification_pin`, `verification_link`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
@@ -97,7 +111,9 @@ class Event {
                 "'" . MySQLConnection::escapeString($this->rsvp_link) . "', ".
                 "'" . MySQLConnection::escapeString($this->ticket_price) . "', ".
                 "'" . MySQLConnection::escapeString($this->buy_shortlink) . "', ".
-                "'" . MySQLConnection::escapeString($this->close_time) . "'" .
+                "'" . MySQLConnection::escapeString($this->close_time) . "', ".
+                "'" . MySQLConnection::escapeString($this->verification_pin) . "', ".
+                "'" . MySQLConnection::escapeString($this->verification_link) . "'" .
                 ")";
         }
         else {
@@ -111,7 +127,9 @@ class Event {
                 "`rsvp_link` = '" . MySQLConnection::escapeString($this->rsvp_link) . "', " .
                 "`ticket_price` = '" . MySQLConnection::escapeString($this->ticket_price) . "', " .
                 "`buy_shortlink` = '" . MySQLConnection::escapeString($this->buy_shortlink) . "', " .
-                "`close_time` = '" . MySQLConnection::escapeString($this->close_time) . "' " .
+                "`close_time` = '" . MySQLConnection::escapeString($this->close_time) . "', " .
+                "`verification_pin` = '" . MySQLConnection::escapeString($this->verification_pin) . "', " .
+                "`verification_link` = '" . MySQLConnection::escapeString($this->verification_link) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

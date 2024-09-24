@@ -20,6 +20,8 @@ else {
     $closeDateTime = new DateTime('now', new DateTimeZone("Asia/Manila"));
 }
 
+$verificationPIN = (isset($event->verification_pin) && $event->verification_pin != '') ? $event->verification_pin : random_int(100000, 999999);
+
 $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
 
 $status = (!isset($event->close_time) || time() <= strtotime($event->close_time))?"Open":"Closed";
@@ -36,10 +38,30 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
         navigator.clipboard.writeText(copyText.value);
     }
 
+    function copyVerificationPIN() {
+        var copyText = document.getElementById("verification_pin");
+        copyText.select();
+        copyText.setSelectionRange(0, 999999);
+        navigator.clipboard.writeText(copyText.value);
+    }
+
+    function copyVerificationLink() {
+        var copyText = document.getElementById("verification_link");
+        copyText.select();
+        copyText.setSelectionRange(0, 999999);
+        navigator.clipboard.writeText(copyText.value);
+    }
+
     function generateSlug() {
         var eventName = document.getElementById('title').value;
         var slug = "Buy" + eventName.replace(/[^A-Z0-9]/ig, "");
         document.getElementById('slug').value = slug;
+    }
+
+    function resetPIN () {
+        var newPIN = Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('verification_pin').value = newPIN;
+        document.getElementById('labelResetPIN').style.display = 'block';
     }
 </script>
 <h3><?=$title;?></h3>
@@ -117,14 +139,38 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                 <? } ?>
                     <div class="form-group">
                         <label for="websiteURL">Ticket purchase link</label>
-                        <em>Share this link to ticket buyers.</em>
                         <div class="input-group">
                             <input type="text" class="form-control" id="buy_shortlink" name="buy_shortlink" value="<?=isset($event->id)? $event->buy_shortlink : "Save to see buy link";?>" readonly>
                             <div class="input-group-addon">
                                 <a href="javascript:copyBuyLink();"><i class="fa fa-copy"></i></a>
                             </div>
                         </div>
+                        <small class="form-text text-muted">Share this link to ticket buyers.</small>
                     </div>
+
+                    <div class="form-group">
+                        <label for="websiteURL">Ticket verification link</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="verification_link" name="verification_link" value="<?=isset($event->id)? $event->verification_link : "Save to get link";?>" readonly>
+                            <div class="input-group-addon">
+                                <a href="javascript:copyVerificationLink();"><i class="fa fa-copy"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="websiteURL">Verification PIN</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="verification_pin" name="verification_pin" value="<?=$verificationPIN;?>" readonly>
+                            <div class="input-group-addon">
+                                <a href="javascript:copyVerificationPIN();"><i class="fa fa-copy"></i></a>
+                            </div>
+                            <div class="input-group-addon">
+                                <a href="javascript:resetPIN();"><i class="fa fa-refresh"></i></a>
+                            </div>
+                        </div>
+                        <small id="labelResetPIN" class="form-text text-danger" style="display:none"><strong>Please save the event to finish resetting PIN.</strong></small>
+                    </div>
+                    <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>
                 </div>
             </div>
             

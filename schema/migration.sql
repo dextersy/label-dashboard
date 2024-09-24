@@ -370,3 +370,9 @@ ALTER TABLE `ticket`
 ADD COLUMN `number_of_claimed_entries` VARCHAR(45) NOT NULL DEFAULT 0 AFTER `checkout_key`;
 ALTER TABLE `brand` 
 ADD COLUMN `favicon_url` VARCHAR(1024) NULL DEFAULT NULL AFTER `payment_processing_fee_for_payouts`;
+
+---
+ALTER TABLE `event` 
+ADD COLUMN `verification_pin` VARCHAR(6) NOT NULL AFTER `close_time`;
+ALTER TABLE `event` 
+ADD COLUMN `verification_link` VARCHAR(1024) NOT NULL AFTER `verification_pin`;

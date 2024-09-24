@@ -9,6 +9,7 @@ class Ticket {
     public $email_address;
     public $contact_number;
     public $number_of_entries;
+    public $number_of_claimed_entries;
     public $ticket_code;
     public $status;
     public $payment_link;
@@ -26,6 +27,7 @@ class Ticket {
         $email_address = null,
         $contact_number = null,
         $number_of_entries = null,
+        $number_of_claimed_entries = null,
         $ticket_code = null,
         $status = null,
         $payment_link = null,
@@ -43,6 +45,7 @@ class Ticket {
         $this->email_address = $email_address;
         $this->contact_number = $contact_number;
         $this->number_of_entries = $number_of_entries;
+        $this->number_of_claimed_entries = $number_of_claimed_entries;
         $this->ticket_code = $ticket_code;
         $this->status = $status;
         $this->payment_link = $payment_link;
@@ -63,6 +66,7 @@ class Ticket {
             $this->email_address = $row['email_address'];
             $this->contact_number = $row['contact_number'];
             $this->number_of_entries = $row['number_of_entries'];
+            $this->number_of_claimed_entries = $row['number_of_claimed_entries'];
             $this->ticket_code = $row['ticket_code'];
             $this->status = $row['status'];
             $this->payment_link = $row['payment_link'];
@@ -88,6 +92,7 @@ class Ticket {
             $this->email_address = $row['email_address'];
             $this->contact_number = $row['contact_number'];
             $this->number_of_entries = $row['number_of_entries'];
+            $this->number_of_claimed_entries = $row['number_of_claimed_entries'];
             $this->ticket_code = $row['ticket_code'];
             $this->status = $row['status'];
             $this->payment_link = $row['payment_link'];
@@ -113,6 +118,33 @@ class Ticket {
             $this->email_address = $row['email_address'];
             $this->contact_number = $row['contact_number'];
             $this->number_of_entries = $row['number_of_entries'];
+            $this->number_of_claimed_entries = $row['number_of_claimed_entries'];
+            $this->ticket_code = $row['ticket_code'];
+            $this->status = $row['status'];
+            $this->payment_link = $row['payment_link'];
+            $this->payment_link_id = $row['payment_link_id'];
+            $this->price_per_ticket = $row['price_per_ticket'];
+            $this->payment_processing_fee = $row['payment_processing_fee'];
+            $this->referrer_id = $row['referrer_id'];
+            $this->order_timestamp = $row['order_timestamp'];
+            $this->checkout_key = $row['checkout_key'];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function fromEventIdAndTicketCode($event_id, $code) {
+        $this->id = null;
+        $result = MySQLConnection::query("SELECT * FROM `ticket` WHERE `event_id` = '" . $event_id . "' AND `ticket_code` = '" . $code . "'");
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+            $this->id = $row['id'];
+            $this->event_id = $row['event_id'];
+            $this->name = $row['name'];
+            $this->email_address = $row['email_address'];
+            $this->contact_number = $row['contact_number'];
+            $this->number_of_entries = $row['number_of_entries'];
+            $this->number_of_claimed_entries = $row['number_of_claimed_entries'];
             $this->ticket_code = $row['ticket_code'];
             $this->status = $row['status'];
             $this->payment_link = $row['payment_link'];
@@ -139,20 +171,27 @@ class Ticket {
         $this->contact_number = $post['contact_number'];
         $this->price_per_ticket = $post['price_per_ticket'];
         $this->number_of_entries = $post['number_of_entries'];
+        if(isset($post['number_of_claimed_entries'])) {
+            $this->number_of_claimed_entries = $post['number_of_claimed_entries'];
+        }
+        else {
+            $this->number_of_claimed_entries = 0;
+        }
         $this->ticket_code = $post['ticket_code'];
-        $this->status = $post['status'];
+        $this->status = $post['status'];    
         $this->referrer_id = $post['referrer_id'];
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`, `referrer_id`, `order_timestamp`, `checkout_key`) ".
+            $sql = "INSERT INTO `ticket` (`event_id`, `name`, `email_address`, `contact_number`, `number_of_entries`, `number_of_claimed_entries`, `ticket_code`, `status`, `payment_link`, `payment_link_id`, `price_per_ticket`, `payment_processing_fee`, `referrer_id`, `order_timestamp`, `checkout_key`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->event_id) . "', " .
                 "'" . MySQLConnection::escapeString($this->name) . "', " .
                 "'" . MySQLConnection::escapeString($this->email_address) . "', " .
                 "'" . MySQLConnection::escapeString($this->contact_number) . "', " .
                 "'" . MySQLConnection::escapeString($this->number_of_entries) . "', " .
+                "'" . MySQLConnection::escapeString($this->number_of_claimed_entries) . "', " .
                 "'" . MySQLConnection::escapeString($this->ticket_code) . "', " .
                 "'" . MySQLConnection::escapeString($this->status) . "', " .
                 (isset($this->payment_link) ? ("'" . MySQLConnection::escapeString($this->payment_link) . "'") : "NULL") . ", " .
@@ -169,6 +208,7 @@ class Ticket {
                 "`email_address` = '" . MySQLConnection::escapeString($this->email_address) . "', " .
                 "`contact_number` = '" . MySQLConnection::escapeString($this->contact_number) . "', " .
                 "`number_of_entries` = '" . MySQLConnection::escapeString($this->number_of_entries) . "', " .
+                "`number_of_claimed_entries` = '" . MySQLConnection::escapeString($this->number_of_claimed_entries) . "', " .
                 "`ticket_code` = '" . MySQLConnection::escapeString($this->ticket_code) . "', " .
                 "`status` = '" . MySQLConnection::escapeString($this->status) . "' " .
                 (isset($this->payment_link) ? ", `payment_link` = '" . MySQLConnection::escapeString($this->payment_link) ."'" : "") .
@@ -179,6 +219,7 @@ class Ticket {
                 (isset($this->checkout_key) ? ", `checkout_key` = '" . MySQLConnection::escapeString($this->checkout_key) . "' " : " ") .
                 "WHERE `id` = " . $this->id;
         }
+
         $result = MySQLConnection::query($sql);
         if ($result) {
             if (!isset($this->id)) {

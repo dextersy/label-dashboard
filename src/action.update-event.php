@@ -47,6 +47,46 @@
         }
     }
 
+    function createVerificationShortlink($event, $shortlinkPath) {
+        $fullUrl = "https://" . $_SERVER['SERVER_NAME'] . "/public/tickets/verify.php?id=" . $event->id;
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.short.io/links",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => json_encode([
+                'domain' => SHORT_IO_DOMAIN,
+                'originalURL' => $fullUrl,
+                'path' => $shortlinkPath
+            ]),
+            CURLOPT_HTTPHEADER => [
+                "Authorization: " . SHORT_IO_KEY,
+                "accept: application/json",
+                "content-type: application/json"
+            ],
+        ]);
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+            echo $err;
+            // TODO log error
+            return null;
+        } else {
+            $data = json_decode($response, false);
+            return $data->secureShortURL;
+        }
+    }
+
     if(isset($_POST['id']) && $_POST['id'] != '') {
         $eventOld = new Event;
         $eventOld->fromID($_POST['id']);
@@ -75,6 +115,15 @@
             $shortlinkPath = $_POST['slug'];
         }
         $event->buy_shortlink = createBuyShortlink($event, $shortlinkPath);
+        $event->save();
+    }
+
+    if (!isset($event->verification_link) || $event->verification_link == '' || substr($event->verification_link, 0, 4) != 'http' ) {
+        $shortlinkPath = "Verify" . preg_replace('/[^a-z\d]+/i', '', $event->title); // Default value
+        if (isset($_POST['slug']) && $_POST['slug'] != '') {
+            $shortlinkPath = "Verify" . $_POST['slug'];
+        }
+        $event->verification_link = createVerificationShortlink($event, $shortlinkPath);
         $event->save();
     }
 
