@@ -453,3 +453,35 @@
     background-color:white !important;
     border-color:gray;
   }
+
+
+  /* QR Code button for Verify */
+  #btnScanQR {
+    font-size:24px;
+    border-top: 1px solid #ced4da;
+    border-right: 1px solid #ced4da;
+    border-bottom: 1px solid #ced4da;
+    border-left:0px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-color:#ced4da;
+
+    background-color: white;
+    padding: 13px 10px 12px 10px;
+  }
+
+  #txtTicketCode {
+    border-right:0px;
+  }
+
+  #cameraContainer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: black;
+    z-index: 999;
+  }

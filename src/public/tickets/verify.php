@@ -21,17 +21,29 @@
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" href="<?=$brand->favicon_url;?>">
-</header>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  </header>
 
 <body>
-
 <div id="loadingOverlay" class="loading-overlay" style="display:none;">
   <div class="loading"></div>
 </div>
 
+<!--- Camera container --->
+<div id="cameraContainer" style="display:none;">
+<div class="h-100 d-flex justify-content-center">
+  <div class="w-100" style="height:auto;">
+    <div id="reader" height="600"></div>
+    <div>
+    <button type="button" id="btnCancelScan" class="btn btn-primary btn-block"><i class="fa fa-x"></i> Cancel Scanning</i></button> 
+    </div>
+  </div>
+</div>
+</div>
+
 <div id="fb-root"></div>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<link href="style.css?version=1.7" rel="stylesheet">
+<link href="style.css?version=1.8" rel="stylesheet">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
@@ -93,7 +105,9 @@
     }
     else if (isset($_GET['success'])) {
   ?>
-  <div class="alert alert-success" role="alert" id="alert-box"><i class="fa fa-check-circle"></i> Ticket verified! Please allow entry.</div>
+  <div class="alert alert-success" role="alert" id="alert-box"><i class="fa fa-check-circle" style="font-size:40px;"></i><br>
+  <h4><strong>Ticket verified!</strong></h4>
+  <p>Please allow entry.</p></div>
   <? 
     } else {
   ?>
@@ -103,7 +117,12 @@
     <input id="hiddenEventID" type="hidden" name="event_id" value="<?=$_GET['id'];?>" />
     <div class="form-group">
       <label for="labelPIN"><strong>Input ticket code</strong></label>
-      <input type="text" class="form-control form-control-lg text-center" name="ticket_code" id="txtTicketCode" placeholder="Ticket code" />
+      <div class="input-group">
+        <input type="text" class="form-control form-control-lg text-center" name="ticket_code" id="txtTicketCode" placeholder="Ticket code" />
+        <div class="input-group-addon">
+          <button type="button" id="btnScanQR" class="btn btn-default btn-lg"><i class="fa fa-qrcode"></i></button>
+        </div>
+      </div>
     </div>
     <div id="divTicketCheck" class="alert alert-success" style="display:none;">
       Please confirm ticket details:<br>
@@ -207,6 +226,41 @@
   setTimeout(function() {
       $('#alert-box').fadeOut('fast');
   }, 2500); // <-- time in milliseconds
+</script>
+
+<!-- QRCode Scanner -->
+<script type="text/javascript">
+
+  const html5QrCode = new Html5Qrcode("reader");
+  $('#btnScanQR').on('click', function() {
+    $('#cameraContainer').show();
+    
+    // This method will trigger user permissions
+    html5QrCode.start(
+      { facingMode: "environment" }, 
+      {
+        fps: 10,    // Optional, frame per seconds for qr code scanning
+        qrbox: { width: 250, height: 250 }
+      },
+      (decodedText, decodedResult) => {
+        $('#txtTicketCode').val(decodedText); getTicketDetails();
+        $('#cameraContainer').hide();
+        html5QrCode.stop();
+      },
+      (errorMessage) => {
+        // Don't do anything
+      })
+    .catch((err) => {
+      // Start failed, handle it.
+    });
+  });
+
+  $('#btnCancelScan').on('click', function() {
+    $('#cameraContainer').hide();
+    html5QrCode.stop();
+  });
+
+
   
 </script>
 </body>
