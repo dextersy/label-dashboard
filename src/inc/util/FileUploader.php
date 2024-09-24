@@ -1,6 +1,6 @@
 <?php
 
-require_once( './inc/util/class-php-ico.php' );
+require_once( './vendor/class-php-ico.php' );
 
 function uploadImage($filename, $tempname) {
     $target_dir = "uploads/";

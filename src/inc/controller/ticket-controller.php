@@ -2,6 +2,7 @@
     include_once('./inc/model/ticket.php');
     include_once('./inc/model/event.php');
 	require_once('./inc/util/Mailer.php');
+    require_once('./vendor/phpqrcode.php');
 
     function getTicketsForEvent($event){
         $sql = "SELECT * FROM `ticket` ".
@@ -144,13 +145,18 @@
     // Sending tickets
     $GLOBALS['debugOutput'] = [];
 
-    function __sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $numberOfEntries, $eventDate, $rsvpLink) {
+    function __generateQRCode($ticketCode) {
+        $path = "tmp/qrcode/" . $ticketCode . ".png";
+        QRcode::png($ticketCode, $path);
+        return "https://" . $_SERVER['SERVER_NAME'] . '/' . $path;
+    }
+    function __sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $eventDate, $rsvpLink) {
 		$subject = "Here's your ticket to ". $eventName . "!";
 		$emailAddresses[0] = $emailAddress;
-		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink));
+		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $rsvpLink));
 	}
 
-    function __generateEmailFromTemplate($eventName, $name, $ticketCode, $numberOfEntries, $rsvpLink) {
+    function __generateEmailFromTemplate($eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $rsvpLink) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/event_ticket_email.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
@@ -159,6 +165,7 @@
         $msg = str_replace("%BRAND_NAME%", $_SESSION['brand_name'], $msg);
 		$msg = str_replace('%EVENT_NAME%', $eventName, $msg);
 		$msg = str_replace('%NAME%', $name, $msg);
+        $msg = str_replace('%QR_CODE%', $qrCode, $msg);
 		$msg = str_replace('%TICKET_CODE%', $ticketCode, $msg);
 		$msg = str_replace('%NO_OF_ENTRIES%', $numberOfEntries, $msg);
 		$msg = str_replace('%RSVP_LINK%', $rsvpLink, $msg);
@@ -172,19 +179,26 @@
 		$event = new Event;
 		$event->fromID($ticket->event_id);
 
-		$result = __sendTicketToEmail(
-			$ticket->email_address,
-			$event->title,
-			$ticket->name,
-			$ticket->ticket_code,
-			$ticket->number_of_entries,
-			$event->date_and_time,
-			$event->rsvp_link
-		);
-		if ($result) {
-			$ticket->status = "Ticket sent.";
-			$ticket->save();
-		}
+        $qrCode = __generateQRCode($ticket->ticket_code);
+        if($qrCode != null) {
+            $result = __sendTicketToEmail(
+                $ticket->email_address,
+                $event->title,
+                $ticket->name,
+                $ticket->ticket_code,
+                $qrCode,
+                $ticket->number_of_entries,
+                $event->date_and_time,
+                $event->rsvp_link
+            );
+            if ($result) {
+                $ticket->status = "Ticket sent.";
+                $ticket->save();
+            }
+        }
+        else {
+            $result = false;
+        }
         return $result;
     }
 
