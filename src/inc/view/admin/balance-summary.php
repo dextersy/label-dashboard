@@ -48,10 +48,10 @@
         ?>
             <tr>
                 <td><?=$artist->name;?></td>
-                <td style="text-align:right;">Php<?=number_format($totalRoyalties,2);?></td>
-                <td style="text-align:right;">Php<?=number_format($totalPayments,2);?></td>
-                <td style="text-align:right;"><strong>Php<?=number_format($totalBalance,2);?></strong></td>
-                <td style="text-align:right;">Php<?=number_format($artist->payout_point,0);?></td>
+                <td style="text-align:right;">₱<?=number_format($totalRoyalties,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($totalPayments,2);?></td>
+                <td style="text-align:right;"><strong>₱<?=number_format($totalBalance,2);?></strong></td>
+                <td style="text-align:right;">₱<?=number_format($artist->payout_point,0);?></td>
                 <td style="text-align:right;"><?=($totalBalance > $artist->payout_point)?"✓":"";?></td>
 
             </tr>
@@ -71,7 +71,7 @@
                     <h4 class="title">Total Balance</h4>
                 </div>
                 <div class="card-body">
-                    <h3>Php <?=number_format($overallBalance,2);?></h3>
+                    <h3>₱ <?=number_format($overallBalance,2);?></h3>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                     <h4 class="title">Total Due For Payment</h4>
                 </div>
                 <div class="card-body">
-                    <h3>Php <?=number_format($overallDueForPayment,2);?></h3>
+                    <h3>₱ <?=number_format($overallDueForPayment,2);?></h3>
                 </div>
             </div>
         </div>
@@ -95,12 +95,12 @@
                     <h4 class="title">Ready to Pay <i class="fa fa-info-circle" title="Due for payment and has bank account"></i></h4>
                 </div>
                 <div class="card-body">
-                    <h3>Php <?=number_format($readyForPayment,2);?></h3>
+                    <h3>₱ <?=number_format($readyForPayment,2);?></h3>
                     <button class="btn btn-block" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
                 </div>
                 <div class="card-footer">
                     <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">
-                        Available balance: Php <?=number_format($currentBalance, 2);?>
+                        Available balance: ₱ <?=number_format($currentBalance, 2);?>
                     </div>
                 </div>
             </div>
@@ -127,7 +127,7 @@
         ?>
             <tr>
                 <td><?=$release->catalog_no;?>: <?=$release->title;?></td>
-                <td style="text-align:right;">Php<?=number_format($recuperableExpense,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($recuperableExpense,2);?></td>
             </tr>
 <?          }
          } 
@@ -147,7 +147,7 @@
                     <h4 class="title">Total Recuperable Expense</h4>
                 </div>
                 <div class="card-body">
-                    <h3>Php <?=number_format($overallTotalRecuperableExpense,2);?></h3>
+                    <h3>₱ <?=number_format($overallTotalRecuperableExpense,2);?></h3>
                 </div>
             </div>
         </div>

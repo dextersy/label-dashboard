@@ -279,7 +279,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="divPay">
       <div id="div_paymentCalculation" style="display:none;">
           <hr>
-            <h5>Total amount is <b>P<span id="span_totalAmount">0</span></b>.</h5>
+            <h5>Total amount is <b>₱<span id="span_totalAmount">0</span></b>.</h5>
           <hr>
       </div>
 

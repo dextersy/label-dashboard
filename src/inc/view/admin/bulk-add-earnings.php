@@ -108,7 +108,12 @@
                 </select>
                 </td>
                 <td><input type="text" class="form-control" id="description_<?=$i;?>" name="description_<?=$i;?>" placeholder="Description"></td>
-                <td><input type="text" class="form-control" id="amount_<?=$i;?>" name="amount_<?=$i;?>" placeholder="Amount" onChange="onInputAmount();"></td>
+                <td>
+                    <div class="input-group">
+                        <div class="input-group-addon">₱</div>
+                        <input type="number" class="form-control" step=".01" min="0" id="amount_<?=$i;?>" name="amount_<?=$i;?>" placeholder="Amount" onChange="onInputAmount();">
+                    </div>
+                </td>    
                 <td><input class="form-check-input" type="checkbox" value="1" name="calculateRoyalties_<?=$i;?>" id="calculateRoyalties_<?=$i;?>" checked></td>
             </tr>
 <?      } ?>

@@ -135,9 +135,9 @@
         <div class="card-footer" style="position:sticky;bottom:0;background-color:#f6f6f6;">
             <strong>Totals </strong>&nbsp;&nbsp;
                 <i class="fa fa-dot-circle-o" style="color:green;" title="Number of paid tickets"></i> <?=$count;?>&nbsp;&nbsp;
-                <i class="fa fa-money" title="Total revenue"></i> Php<?=number_format($total_sold,2);?>&nbsp;&nbsp;
+                <i class="fa fa-money" title="Total revenue"></i> ₱<?=number_format($total_sold,2);?>&nbsp;&nbsp;
                 <i class="fa fa-credit-card" title="Total processing fee"></i> -<?=number_format($total_processing_fee,2);?>&nbsp;&nbsp;
-                <i class="fa fa-plus-square" title="Net amount"></i> <strong>Php<?=number_format($total_sold - $total_processing_fee,2);?></strong>
+                <i class="fa fa-plus-square" title="Net amount"></i> <strong>₱<?=number_format($total_sold - $total_processing_fee,2);?></strong>
 
         </div>
     </div>
@@ -173,7 +173,7 @@
                 <div class="form-group">
                     <label for="txt_email_address">Price per ticket</label>
                         <div class="input-group">
-                            <div class="input-group-addon">Php</div>
+                            <div class="input-group-addon">₱</div>
                             <input type="text" class="form-control" id="txt_price_per_ticket" name="price_per_ticket" placeholder="Price per ticket" value="<?=$event->ticket_price;?>" disabled>
                             <div class="input-group-btn"><button type="button" class="btn" onclick="enablePriceOverride();"><i class="fa fa-pencil"></i></div>
                         </div>

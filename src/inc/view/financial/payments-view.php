@@ -62,7 +62,7 @@
         <input type="hidden" name="id" value="<?=$artist->id;?>">
         <div class="input-group">
             <div class="input-group-addon">
-                Php
+                ₱
             </div>
             <input type="number" min="1000" step="1" class="form-control text-right" name="payout_point" value="<?=$artist->payout_point;?>" required>
             <div class="input-group-btn">

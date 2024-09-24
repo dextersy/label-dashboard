@@ -19,7 +19,7 @@
                     </div>
                     <div class="card-body">
                         Your current balance is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="This is what we owe you."></i><br>
-                        <h3><strong>P<?=number_format($currentBalance, 2);?></strong></h3>
+                        <h3><strong>₱<?=number_format($currentBalance, 2);?></strong></h3>
                         <? if ($isAdmin) { ?>
                         <a data-toggle="tab" href="#new-payment">
                         <button class="btn btn-primary btn-block" <?=$currentBalance <= 0 ? "disabled":"";?>><i class="fa fa-credit-card"></i> Pay Now</button>
@@ -36,7 +36,7 @@
                     </div>
                     <div class="card-body">
                     Your current total earnings* are
-                        <h5><strong>P<?=number_format($totalEarnings, 2);?></strong></h5>
+                        <h5><strong>₱<?=number_format($totalEarnings, 2);?></strong></h5>
                         <em>* Starting April 2021</em><br>
                     </div>
                     <div class="card-footer">
@@ -54,7 +54,7 @@
                     </div>
                     <div class="card-body">
                         Your current total royalties is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="These are the royalties you've earned from all merch, digital, and streaming sales."></i><br>
-                        <h5><strong>P<?=number_format($totalRoyalties, 2);?></strong></h5>
+                        <h5><strong>₱<?=number_format($totalRoyalties, 2);?></strong></h5>
                     </div>
                     <div class="card-footer">
                         <a data-toggle="tab" href="#royalties">
@@ -72,7 +72,7 @@
                     </div>
                     <div class="card-body">
                         Your current total payments and advances is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="These are payments we've made to you in the form of royalty payouts, cash advances, and consigned merch sales."></i><br>
-                        <h5><strong>P<?=number_format($totalPayments, 2);?></strong></h5>
+                        <h5><strong>₱<?=number_format($totalPayments, 2);?></strong></h5>
                     </div>
                     <div class="card-footer">
                         <a data-toggle="tab" href="#payments">

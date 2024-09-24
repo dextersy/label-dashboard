@@ -59,7 +59,7 @@
   <div id="formContent">
     &nbsp;
     <p>The total amount for your order is </p>
-    <h1>Php <?=number_format($ticket->number_of_entries * $event->ticket_price,2)?></h1>
+    <h1>₱ <?=number_format($ticket->number_of_entries * $event->ticket_price,2)?></h1>
     <!-- Tabs Titles -->
     <!-- Login Form -->
     <a href="<?=$ticket->payment_link;?>">

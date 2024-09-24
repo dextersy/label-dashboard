@@ -207,7 +207,7 @@
                 <div class="form-group">
                     <label for="txt_email_address">Price per ticket</label>
                         <div class="input-group">
-                            <div class="input-group-addon">Php</div>
+                            <div class="input-group-addon">₱</div>
                             <input type="text" class="form-control" id="txt_price_per_ticket" name="price_per_ticket" placeholder="Price per ticket" value="<?=$event->ticket_price;?>" disabled>
                             <div class="input-group-btn"><button type="button" class="btn" onclick="enablePriceOverride();"><i class="fa fa-pencil"></i></div>
                         </div>

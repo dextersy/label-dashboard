@@ -154,8 +154,11 @@
                     <input type="date" class="form-control" id="expenseDate" name="date_recorded" value="<?=date("Y-m-d");?>">
                     <label for="description">Description</label>
                     <input type="text" class="form-control" id="add_recuperable_expense_description" name="expense_description" placeholder="Description">
-                    <label for="amount">Amount (in PHP)</label>
-                    <input type="text" class="form-control" id="add_recuperable_expense_amount" name="expense_amount" placeholder="Amount">
+                    <label for="amount">Amount</label>
+                    <div class="input-group">
+                        <div class="input-group-addon">₱</div>
+                        <input type="text" class="form-control" id="add_recuperable_expense_amount" name="expense_amount" placeholder="Amount">
+                    </div>
                 </div>
                 <div class="card-footer">
                     <div class="col-sm-6">

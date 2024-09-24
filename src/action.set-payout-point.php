@@ -37,7 +37,7 @@
 
         $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST_NAME%', $artistName, $msg);
-        $msg = str_replace('%PAYOUT_POINT%', 'Php ' . number_format($payoutPoint, 2, '.', ','), $msg);
+        $msg = str_replace('%PAYOUT_POINT%', '₱ ' . number_format($payoutPoint, 2, '.', ','), $msg);
         $msg = str_replace('%BRAND_NAME%', $brandName, $msg);
         $msg = str_replace('%BRAND_COLOR%', $brandColor, $msg);
         $msg = str_replace('%MEMBER_NAME%', $memberName, $msg);

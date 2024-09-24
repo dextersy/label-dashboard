@@ -50,8 +50,8 @@
                 <td><?=$referrer->name; ?></td>
                 <td><?=$referrer->referral_code; ?></td>
                 <td><?=$sales->tickets_sold; ?></td>
-                <td style="text-align:right;"><?="Php ". number_format($sales->gross_amount_sold,2); ?></td>
-                <td style="text-align:right;"><?="Php ". number_format($sales->net_amount_sold, 2); ?></td>
+                <td style="text-align:right;"><?="₱ ". number_format($sales->gross_amount_sold,2); ?></td>
+                <td style="text-align:right;"><?="₱ ". number_format($sales->net_amount_sold, 2); ?></td>
                 <td><a href="javascript:copyText('<?=$referrer->referral_shortlink;?>');"><i class="fa fa-copy"></i></a></div></td>
             </tr>
 <?      }

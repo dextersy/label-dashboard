@@ -37,11 +37,11 @@
             <tr>
                 <td><?=$brand->brand_id;?></td>
                 <td><?=$brand->brand_name;?></td>
-                <td style="text-align:right;">Php<?=number_format($brand->music_earnings,2);?></td>
-                <td style="text-align:right;">Php<?=number_format($brand->event_earnings,2);?></td>
-                <td style="text-align:right;">Php<?=number_format($commission,2);?></td>
-                <td style="text-align:right;">Php<?=number_format($brand->payments,2);?></td>
-                <td style="text-align:right;"><strong>Php<?=number_format($balance,2);?></strong></td>
+                <td style="text-align:right;">₱<?=number_format($brand->music_earnings,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($brand->event_earnings,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($commission,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($brand->payments,2);?></td>
+                <td style="text-align:right;"><strong>₱<?=number_format($balance,2);?></strong></td>
             </tr>
 <?
         }
@@ -61,7 +61,7 @@
                 <h4 class="title">Total Balance</h4>
             </div>
             <div class="card-body">
-                <h3>Php <?=number_format($overallTotalPayables,2);?></h3>
+                <h3>₱ <?=number_format($overallTotalPayables,2);?></h3>
             </div>
         </div>
     </div>

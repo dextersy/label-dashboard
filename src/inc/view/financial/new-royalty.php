@@ -36,8 +36,11 @@ $releases = getReleaseListForArtist($_SESSION['current_artist']);
                 <input type="text" class="form-control" id="description" name="description" placeholder="Description" required>
             </div> 
             <div class="form-group">
-                <label for="amount">Amount (in PHP)</label>
-                <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount" required>
+                <label for="amount">Amount</label>
+                <div class="input-group">
+                    <div class="input-group-addon">₱</div>
+                    <input type="text" class="form-control" id="amount" name="amount" placeholder="Amount" required>
+                </div>
             </div> 
         </div>
     </div>

@@ -75,9 +75,9 @@
         $msg = str_replace("%BRAND_NAME%", $brandName, $msg);
         $msg = str_replace("%BRAND_COLOR%", $brandColor, $msg);
 		$msg = str_replace('%ARTIST%', $artistName, $msg);
-        $msg = str_replace('%AMOUNT%', "Php " . number_format($payment->amount, 2), $msg);
-        $msg = str_replace('%PROCESSING_FEE%', "Php " . number_format($payment->payment_processing_fee, 2), $msg);
-        $msg = str_replace('%NET_AMOUNT%', "Php " . number_format($payment->amount - $payment->payment_processing_fee, 2), $msg);
+        $msg = str_replace('%AMOUNT%', "₱ " . number_format($payment->amount, 2), $msg);
+        $msg = str_replace('%PROCESSING_FEE%', "₱ " . number_format($payment->payment_processing_fee, 2), $msg);
+        $msg = str_replace('%NET_AMOUNT%', "₱ " . number_format($payment->amount - $payment->payment_processing_fee, 2), $msg);
         $msg = str_replace('%DESCRIPTION%', $payment->description, $msg);
 		$msg = str_replace('%URL%', getProtocol() . $_SERVER['HTTP_HOST'] . "/financial.php#payments", $msg);
 		

@@ -101,7 +101,7 @@
             </div>
             <div class="card-body text-center">
             <div class="card-text">
-                <h5>Php <?=number_format($overallTotalPhysicalEarnings,2);?></h5>
+                <h5>₱ <?=number_format($overallTotalPhysicalEarnings,2);?></h5>
             </div>
             </div>
         </div>
@@ -114,7 +114,7 @@
             </div>
             <div class="card-body text-center">
             <div class="card-text">
-                <h5>Php <?=number_format($overallTotalDownloadEarnings,2);?></h5>
+                <h5>₱ <?=number_format($overallTotalDownloadEarnings,2);?></h5>
             </div>
             </div>
         </div>
@@ -128,7 +128,7 @@
             </div>
             <div class="card-body text-center">
             <div class="card-text">
-                <h5>Php <?=number_format($overallTotalStreamingEarnings,2);?></h5>
+                <h5>₱ <?=number_format($overallTotalStreamingEarnings,2);?></h5>
             </div>
             </div>
         </div>
@@ -142,7 +142,7 @@
             </div>
             <div class="card-body text-center">
             <div class="card-text">
-                <h5>Php <?=number_format($overallTotalSyncEarnings,2);?></h5>
+                <h5>₱ <?=number_format($overallTotalSyncEarnings,2);?></h5>
             </div>
             </div>
         </div>
@@ -174,8 +174,8 @@
         ?>
             <tr>
                 <td><?=$artist->name;?></td>
-                <td style="text-align:right;">Php<?=number_format($totalPayments,2);?></td>
-                <td style="text-align:right;">Php<?=number_format($totalRoyalties,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($totalPayments,2);?></td>
+                <td style="text-align:right;">₱<?=number_format($totalRoyalties,2);?></td>
             </tr>
 <?          }
          } 
@@ -194,7 +194,7 @@
                     <h4 class="title">Total Payments</h4>
                 </div>
                 <div class="card-body text-center">
-                    <h5>Php <?=number_format($overallTotalPayments,2);?></h5>
+                    <h5>₱ <?=number_format($overallTotalPayments,2);?></h5>
                 </div>
             </div>
             <div class="card">
@@ -203,7 +203,7 @@
                     <h4 class="title">Total Royalties</h4>
                 </div>
                 <div class="card-body text-center">
-                    <h5>Php <?=number_format($overallTotalRoyalties,2);?></h5>
+                    <h5>₱ <?=number_format($overallTotalRoyalties,2);?></h5>
                 </div>
             </div>
             <div class="card">
@@ -212,7 +212,7 @@
                     <h4 class="title">Total New Recuperable Expense</h4>
                 </div>
                 <div class="card-body text-center">
-                    <h5>Php <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id']),2);?></h5>
+                    <h5>₱ <?=number_format(getTotalNewRecuperableExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id']),2);?></h5>
                 </div>
             </div>
            <div class="card">
@@ -221,7 +221,7 @@
                     <h4 class="title">Total Recuperated Expenses</h4>
                 </div>
                 <div class="card-body text-center">
-                    <h5>Php <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id'])),2);?></h5>
+                    <h5>₱ <?=number_format(abs(getTotalRecuperatedExpenseForPeriod($startDate, $endDate, $_SESSION['brand_id'])),2);?></h5>
                 </div>
             </div>
     </div>

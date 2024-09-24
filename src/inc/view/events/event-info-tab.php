@@ -122,7 +122,10 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                     </div>
                     <div class="form-group">
                         <label for="websiteURL">Ticket price</label>
-                        <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>" required>
+                        <div class="input-group">
+                            <div class="input-group-addon">₱</div>
+                            <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>" required>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="amount">Close ticket sales on</label>

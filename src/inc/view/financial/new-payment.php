@@ -65,7 +65,7 @@
         <div class="form-group">
             <label for="amount">Amount sent</label>
             <div class="input-group">
-                <div class="input-group-addon">Php</div>
+                <div class="input-group-addon">₱</div>
                 <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>" onchange="checkBalance();" required min="1">
             </div>
         </div> 
@@ -95,13 +95,13 @@
             <div class="form-group">
                 <label for="amount">Processing Fee</label>
                 <div class="input-group">
-                    <div class="input-group-addon">Php</div>
+                    <div class="input-group-addon">₱</div>
                     <input type="text" class="form-control" id="number_processingFee" min="0" step="0.01" name="payment_processing_fee" placeholder="Payment Processing" value="0" required>
                 </div>
             </div>
         </div>
         <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">
-            Available balance: Php <?=number_format($currentBalance, 2);?>
+            Available balance: ₱ <?=number_format($currentBalance, 2);?>
         </div>
         <input type="hidden" id="wallet_balance" value="<?=$currentBalance;?>">
     </div>

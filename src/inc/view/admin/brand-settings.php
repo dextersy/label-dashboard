@@ -78,7 +78,7 @@ include_once("./inc/view/admin/brand-setting-alert-message.php");
                     <div class="form-group">
                         <label for="name">Processing fee for payouts</label>
                         <div class="input-group">
-                            <div class="input-group-addon">Php</div>
+                            <div class="input-group-addon">₱</div>
                             <input type="text" class="form-control" id="txt_processingFeeForPayouts" name="payment_processing_fee_for_payouts" placeholder="Payment processing fee" value="<?=$brand->payment_processing_fee_for_payouts;?>">
                         </div>
                     </div>
