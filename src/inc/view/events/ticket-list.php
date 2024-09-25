@@ -92,6 +92,8 @@
                         <th>Processing fee</th>
                         <th>Referred by</th>
                         <th>Time ordered</th>
+                        <th>Claimed</th>
+                        <th>Actions</th>
                     </thead>
                     <tbody>
             <?
@@ -105,7 +107,7 @@
                             $referrer = null;
                         }
             ?>
-                        <tr>
+                        <tr<?=$ticket->number_of_claimed_entries == $ticket->number_of_entries ? ' class="text-muted"':"";?>>
                             <td><?=$ticket->name; ?></td>
                             <td><?=$ticket->email_address; ?></td>
                             <td><?=$ticket->contact_number; ?></td>
@@ -119,7 +121,12 @@
                             <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                             <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
                             <td><?=isset($ticket->order_timestamp) ? $ticket->order_timestamp : "-";?></td>
-                            <td><a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Resend Ticket ]</a></td>
+                            <td><?=$ticket->number_of_claimed_entries . " / " . $ticket->number_of_entries;?></td>
+                            <td>
+                                <? if ($ticket->number_of_claimed_entries < $ticket->number_of_entries) { ?>
+                                    <a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Resend Ticket ]</a>
+                                <? } ?>
+                            </td>
                         </tr>
             <?      }
                 } else {

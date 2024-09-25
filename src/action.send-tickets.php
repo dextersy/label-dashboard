@@ -18,10 +18,10 @@
 	}
 
 	if($result) {
-		redirectTo('/events.php?action=send');
+		redirectTo('/events.php?action=send#tickets');
 	}
 	else {
-		redirectTo('/events.php?action=send&status=email_failed');
+		redirectTo('/events.php?action=send&status=email_failed#tickets');
 	}
 
     
