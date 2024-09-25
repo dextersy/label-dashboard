@@ -77,8 +77,9 @@
       }
     ?>
 
-    <div class="card-header">
-    <h5>Verify tickets for <strong><?=$event->title;?></strong></h5>
+    <div class="card-header text-center bg-primary text-white">
+    <h6>Verify tickets for</h6>
+    <h5><strong><?=$event->title;?></strong></h5>
     </div>
     <div class="card-body text-center">
 <?
@@ -148,7 +149,16 @@
 <? } ?>
   </div>
 </div>
+
+<div class="text-center">
+    <p>&nbsp;</p>
+    <p>
+      <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+    </p>
+  </div>
 </div>
+
+
 <script type="text/javascript">
   //setup before functions
   var typingTimer;                //timer identifier
@@ -234,7 +244,7 @@
   const html5QrCode = new Html5Qrcode("reader");
   $('#btnScanQR').on('click', function() {
     $('#cameraContainer').show();
-    
+
     // This method will trigger user permissions
     html5QrCode.start(
       { facingMode: "environment" }, 
