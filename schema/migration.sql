@@ -376,3 +376,15 @@ ALTER TABLE `event`
 ADD COLUMN `verification_pin` VARCHAR(6) NOT NULL AFTER `close_time`;
 ALTER TABLE `event` 
 ADD COLUMN `verification_link` VARCHAR(1024) NOT NULL AFTER `verification_pin`;
+
+----
+ALTER TABLE `email_attempt` 
+ADD COLUMN `brand_id` INT NOT NULL DEFAULT 1 AFTER `result`,
+ADD INDEX `fk_email_attempt_brand_id_idx` (`brand_id` ASC) VISIBLE;
+;
+ALTER TABLE `email_attempt` 
+ADD CONSTRAINT `fk_email_attempt_brand_id`
+  FOREIGN KEY (`brand_id`)
+  REFERENCES `brand` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;

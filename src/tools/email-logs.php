@@ -9,23 +9,24 @@
     if($isAdmin) {
         $limit = isset($_GET['count']) ? $_GET['count'] : '20';
 
-        $query = "SELECT * FROM `email_attempt` ORDER BY `timestamp` DESC ";
+        $query = "SELECT * FROM `email_attempt` WHERE `brand_id` = '" . $_SESSION['brand_id'] . "' ORDER BY `timestamp` DESC ";
 
         if($limit != null) {
             $query = $query . "LIMIT 0, " . $limit . " "; 
         }
 ?>
 <table>
-    <throw><th>Time</th><th>Recipients</th><th>Subject</th></throw>
+    <throw><th>Time</th><th>Recipients</th><th>Subject</th><th>Status</th></throw>
 
 <?
         $result = MySQLConnection::query($query);
         while($result->num_rows > 0 && $row = $result->fetch_assoc()) {
 ?>
     <tr>
-        <td><?=$row['timestamp'];?></td>
-        <td><?=$row['recipients'];?></td>
-        <td><?=$row['subject'];?></td>
+        <td style="border: 1px solid black;"><?=$row['timestamp'];?></td>
+        <td style="border: 1px solid black;"><?=$row['recipients'];?></td>
+        <td style="border: 1px solid black;"><?=$row['subject'];?></td>
+        <td style="border: 1px solid black;"><?=$row['result'];?></td>
     </tr>
 <?
         }

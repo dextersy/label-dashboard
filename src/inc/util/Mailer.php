@@ -51,10 +51,11 @@
 
 	function logEmailAttempt($emailAddresses, $subject, $body, $result) {
 		$recipients = implode(",", $emailAddresses);
-		$sql = "INSERT INTO `email_attempt` (`recipients`, `subject`, `body`, `result`, `timestamp`) VALUES (".
+		$sql = "INSERT INTO `email_attempt` (`recipients`, `subject`, `body`, `brand_id`, `result`, `timestamp`) VALUES (".
 			"'" . MySQLConnection::escapeString($recipients) . "', " .
 			"'" . MySQLConnection::escapeString($subject) . "', " .
 			"'" . MySQLConnection::escapeString($body) . "', ".
+			"'" . MySQLConnection::escapeString($_SESSION['brand_id']) . "', " .
 			"'" . ($result ? "Success":"Failed") . "', NOW())";
 		MySQLConnection::query($sql);
 	}
