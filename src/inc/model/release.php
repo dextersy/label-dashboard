@@ -12,6 +12,7 @@ class Release{
     public $youtube_link;
     public $release_date;
     public $status;
+    public $cover_art;
     public $brand_id;
 
     function __construct(
@@ -110,7 +111,8 @@ class Release{
         }
         $result = MySQLConnection::query($sql);
         if ($result) {
-            return MySQLConnection::$lastInsertID;
+            if(!isset($this->id)) { $this->id = MySQLConnection::$lastInsertID; }
+            return $this->id;
         }
         else {
             return false;

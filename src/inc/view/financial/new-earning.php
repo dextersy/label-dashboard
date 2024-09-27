@@ -58,9 +58,10 @@ $releases = getReleaseListForArtist($_SESSION['current_artist']);
         </div> 
 
         <div class="form-group">
+        <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" value="1" name="calculateRoyalties" id="calculateRoyalties" checked>
-            <label class="form-check-label" for="flexCheckDefault">
-                Calculate Royalties
+            <label class="form-check-label" for="flexCheckDefault">Calculate Royalties</label>
+        </div>
         </div> 
         </div>
     </div>

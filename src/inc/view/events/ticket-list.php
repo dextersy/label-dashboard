@@ -190,7 +190,9 @@
                     <input type="text" class="form-control" id="txt_referral_code" name="referral_code" placeholder="Referral code (optional)">
                 </div>
                 <div class="form-group">
+                <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" value="1" name="send_email" id="checkbox_send_email"><label class="form-check-label" for="checkbox_send_email">Send payment email</label>
+                </div>
                 </div>
             </div>
             <div class="card-footer">

@@ -28,16 +28,23 @@
         $release->cover_art = uploadImage($_FILES['cover_art']['name'], $_FILES['cover_art']['tmp_name']);
     }
     
+    $result = true;
     $release_id = $release->save();
+    echo $release_id; 
 
-    for ($i = 1; $_POST['artist_id_'.$i] != ""; $i++) {
-        $artistRelease = new ReleaseArtist($_POST['artist_id_'.$i], $release_id);
-        $artistRelease->streaming_royalty_percentage = $_POST['streaming_royalty_'.$i] / 100;
-        $artistRelease->sync_royalty_percentage = $_POST['sync_royalty_'.$i] / 100;
-        $artistRelease->download_royalty_percentage = $_POST['download_royalty_'.$i] / 100;
-        $artistRelease->physical_royalty_percentage = $_POST['physical_royalty_'.$i] / 100;
-        $artistRelease->saveNew();
+    if($release_id) {
+        for ($i = 1; $_POST['artist_id_'.$i] != ""; $i++) {
+            $artistRelease = new ReleaseArtist($_POST['artist_id_'.$i], $release_id);
+            $artistRelease->streaming_royalty_percentage = $_POST['streaming_royalty_'.$i] / 100;
+            $artistRelease->sync_royalty_percentage = $_POST['sync_royalty_'.$i] / 100;
+            $artistRelease->download_royalty_percentage = $_POST['download_royalty_'.$i] / 100;
+            $artistRelease->physical_royalty_percentage = $_POST['physical_royalty_'.$i] / 100;
+            if ( !$artistRelease->saveNew() ) { $result = false; }
+        }
+    }
+    else {
+        $result = false;
     }
 
-    redirectTo("/artist.php?action=release&result=" . $result);
+    redirectTo("/artist.php?action=updateRelease&status=" . ($result ? "OK": "Failed") . "#releases");
 ?>

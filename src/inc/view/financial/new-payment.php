@@ -82,10 +82,12 @@
             </select>
         </div>
         <div class="form-group">
-            <input class="form-check-input" type="checkbox" value="1" id="checkbox_manualPayment" name="manualPayment" onclick="toggleManualPayment();">
-            <label class="form-check-label" for="manualPayment">
-                This is an offline payment.
-            </label> 
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" value="1" id="checkbox_manualPayment" name="manualPayment" onclick="toggleManualPayment();">
+                <label class="form-check-label" for="manualPayment">
+                    This is an offline payment.
+                </label> 
+            </div>
         </div>
         <div id="div_manualPaymentFields">
             <div class="form-group">

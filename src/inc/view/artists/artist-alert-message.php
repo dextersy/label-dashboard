@@ -18,6 +18,9 @@
     else if ($action == 'updatePhotoCaption') {
         $msg = ($status == "OK") ? "Captions have been saved." : "Something went wrong. Please try again or contact your administrator.";
     }
+    else if ($action == 'updateRelease') {
+        $msg = ($status == "OK") ? "Release information has been saved successfully." : "Something went wrong. Please try again or contact your administrator.";
+    }
     $alert_type = ($status == 'OK') ? 'alert-success' : 'alert-danger';
 
 

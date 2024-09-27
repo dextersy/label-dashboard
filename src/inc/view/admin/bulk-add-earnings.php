@@ -83,7 +83,11 @@
                 </select></td>
             <td><input type="text" class="form-control" id="applyAllDescription" name="applyAllDescription" placeholder="Description" onchange="onInputApplyAllDescription();"></td>
             <td></td>
-            <td><input class="form-check-input" type="checkbox" value="1" name="applyAllCalculateRoyalties" id="applyAllCalculateRoyalties" onclick="onCheckApplyAllCalculateRoyalties();" checked></td>
+            <td>
+                <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" value="1" name="applyAllCalculateRoyalties" id="applyAllCalculateRoyalties" onclick="onCheckApplyAllCalculateRoyalties();" checked>
+                </div>
+            </td>
 
         </tr>
 <? 
@@ -114,7 +118,11 @@
                         <input type="number" class="form-control" step=".01" min="0" id="amount_<?=$i;?>" name="amount_<?=$i;?>" placeholder="Amount" onChange="onInputAmount();">
                     </div>
                 </td>    
-                <td><input class="form-check-input" type="checkbox" value="1" name="calculateRoyalties_<?=$i;?>" id="calculateRoyalties_<?=$i;?>" checked></td>
+                <td>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="1" name="calculateRoyalties_<?=$i;?>" id="calculateRoyalties_<?=$i;?>" checked>
+                </div>
+                </td>
             </tr>
 <?      } ?>
         </tbody>

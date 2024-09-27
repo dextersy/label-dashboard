@@ -41,6 +41,7 @@
 <h3>Releases</h3>
 <form action="action.update-release.php" method="POST" enctype="multipart/form-data">
 <input type="hidden" name="id" id="release_id" value="" />
+<input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>" />
 <div class="card" id="edit_release_form" style="display:none;">
     <div class="card-header"><h5>Edit this release</h5></div>
     <div class="card-body"><div class="row">
@@ -69,8 +70,10 @@
                 <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
             </div> 
             <div class="form-group">
-                <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
-                <label class="form-check-label" for="flexCheckDefault">Already released</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
+                    <label class="form-check-label" for="live">Already released</label>
+                </div>
             </div>
         </div>
     </div></div>

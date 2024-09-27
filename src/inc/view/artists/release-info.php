@@ -39,8 +39,10 @@
                         <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
                     </div> 
                     <div class="form-group">
-                        <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
-                        <label class="form-check-label" for="flexCheckDefault">Already released</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
+                            <label class="form-check-label" for="flexCheckDefault">Already released</label>
+                        </div>
                     </div>
                 </div>
             </div>
