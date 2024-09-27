@@ -69,17 +69,11 @@
 <div class="wrapper h-100 d-flex justify-content-center">
 
 <div class="card mb-3">
-<?php
-      if (isset($event->poster_url) && $event->poster_url != '') {
-    ?>
-        <img src="../../<?=$event->poster_url;?>" class="card-img-top" style="max-height:250px;object-fit:cover;">
-    <?php
-      }
-    ?>
-
     <div class="card-header text-center bg-primary text-white">
+      <h3>&nbsp;</h3>
     <h6>Verify tickets for</h6>
-    <h5><strong><?=$event->title;?></strong></h5>
+    <h4><strong><?=$event->title;?></strong></h4>
+    <h5>&nbsp;</h5>
     </div>
     <div class="card-body text-center">
 <?
@@ -148,6 +142,17 @@
 
 <? } ?>
   </div>
+  <div class="card-footer" style="padding:0px">
+  <?php
+      if (isset($event->poster_url) && $event->poster_url != '') {
+    ?>
+        <img src="../../<?=$event->poster_url;?>" class="card-img-top" style="max-height:120px;object-fit:cover;filter:blur(2px) brightness(0.8);">
+    <?php
+      }
+    ?>
+
+  </div>
+  
 </div>
 
 <div class="text-center">
