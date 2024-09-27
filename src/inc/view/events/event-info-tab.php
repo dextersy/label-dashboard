@@ -15,6 +15,7 @@ if ($_SESSION['current_event'] != NULL) {
 }
 else {
     $title = "New Event";
+    $event = new Event;
 
     $eventDateTime = new DateTime('now', new DateTimeZone("Asia/Manila"));
     $closeDateTime = new DateTime('now', new DateTimeZone("Asia/Manila"));
@@ -151,6 +152,37 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                         <small class="form-text text-muted">Share this link to ticket buyers.</small>
                     </div>
 
+
+                    <h6>Payment methods</h6>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchGCash" name="supports_gcash" value="1" <?=$event->supports_gcash ? "checked": "";?>>
+                            <label class="form-check-label" for="switchGCash">GCash</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchQRPH" name="supports_qrph" value="1" <?=$event->supports_qrph ? "checked": "";?>>
+                            <label class="form-check-label" for="switchQRPH">QRPh</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchCreditCard" name="supports_card" value="1" <?=$event->supports_card ? "checked": "";?>>
+                            <label class="form-check-label" for="switchCreditCard">Credit card</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchUbp" name="supports_ubp" value="1" <?=$event->supports_ubp ? "checked": "";?>>
+                            <label class="form-check-label" for="switchUbp">Unionbank Transfer</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchDob" name="supports_dob" value="1" <?=$event->supports_dob ? "checked": "";?>>
+                            <label class="form-check-label" for="switchDob">BPI</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchMaya" name="supports_maya" value="1" <?=$event->supports_maya ? "checked": "";?>>
+                            <label class="form-check-label" for="switchMaya">Maya</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="switchGrabPay" name="supports_grabpay" value="1" <?=$event->supports_grabpay ? "checked": "";?>>
+                            <label class="form-check-label" for="switchGrabPay">Grab Pay</label>
+                        </div>
+                    
                     <div class="form-group">
                         <label for="websiteURL">Ticket verification link</label>
                         <div class="input-group">

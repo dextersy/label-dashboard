@@ -17,6 +17,13 @@ class Event {
     public $close_time;
     public $verification_pin;
     public $verification_link;
+    public $supports_gcash;
+    public $supports_qrph;
+    public $supports_card;
+    public $supports_ubp;
+    public $supports_dob;
+    public $supports_maya;
+    public $supports_grabpay;
 
     function __construct(
         $id = null, 
@@ -31,7 +38,14 @@ class Event {
         $buy_shortlink = null,
         $close_time = null,
         $verification_pin = null,
-        $verification_link = null
+        $verification_link = null,
+        $supports_gcash = 1,
+        $supports_qrph = 1,
+        $supports_card = 1,
+        $supports_ubp = 1,
+        $supports_dob = 1,
+        $supports_maya = 1,
+        $supports_grabpay = 1
     ) 
     {
         $this->id = $id;
@@ -47,6 +61,13 @@ class Event {
         $this->close_time = $close_time;
         $this->verification_pin = $verification_pin;
         $this->verification_link = $verification_link;
+        $this->supports_gcash = $supports_gcash;
+        $this->supports_qrph = $supports_qrph;
+        $this->supports_card = $supports_card;
+        $this->supports_ubp = $supports_ubp;
+        $this->supports_dob = $supports_dob;
+        $this->supports_maya = $supports_maya;
+        $this->supports_grabpay = $supports_grabpay;
     }
 
     function fromID($id) {
@@ -65,6 +86,13 @@ class Event {
             $this->close_time = $row['close_time'];
             $this->verification_pin = $row['verification_pin'];
             $this->verification_link = $row['verification_link'];
+            $this->supports_gcash = $row['supports_gcash'];
+            $this->supports_qrph = $row['supports_qrph'];
+            $this->supports_card = $row['supports_card'];
+            $this->supports_ubp = $row['supports_ubp'];
+            $this->supports_dob = $row['supports_dob'];
+            $this->supports_maya = $row['supports_maya'];
+            $this->supports_grabpay = $row['supports_grabpay'];
             return true;
         }
         else {
@@ -96,11 +124,18 @@ class Event {
         if(isset($post['verification_link'])) {
             $this->verification_link = $post['verification_link'];
         }
+        $this->supports_gcash = (isset($post['supports_gcash']) && $post['supports_gcash'] == '1') ? '1' : '0';
+        $this->supports_qrph = (isset($post['supports_qrph']) && $post['supports_qrph'] == '1') ? '1' : '0';
+        $this->supports_card = (isset($post['supports_card']) && $post['supports_card'] == '1') ? '1' : '0';
+        $this->supports_ubp = (isset($post['supports_ubp']) && $post['supports_ubp'] == '1') ? '1' : '0';
+        $this->supports_dob = (isset($post['supports_dob']) && $post['supports_dob'] == '1') ? '1' : '0';
+        $this->supports_maya = (isset($post['supports_maya']) && $post['supports_maya'] == '1') ? '1' : '0';
+        $this->supports_grabpay = (isset($post['supports_grabpay']) && $post['supports_grabpay'] == '1') ? '1' : '0';
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`, `verification_pin`, `verification_link`) ".
+            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`, `verification_pin`, `verification_link`, `supports_gcash`, `supports_qrph`, `supports_card`, `supports_ubp`, `supports_dob`, `supports_maya`, `supports_grabpay`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
@@ -113,7 +148,14 @@ class Event {
                 "'" . MySQLConnection::escapeString($this->buy_shortlink) . "', ".
                 "'" . MySQLConnection::escapeString($this->close_time) . "', ".
                 "'" . MySQLConnection::escapeString($this->verification_pin) . "', ".
-                "'" . MySQLConnection::escapeString($this->verification_link) . "'" .
+                "'" . MySQLConnection::escapeString($this->verification_link) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_gcash) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_qrph) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_card) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_ubp) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_dob) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_maya) . "', ".
+                "'" . MySQLConnection::escapeString($this->supports_grabpay) . "'" .
                 ")";
         }
         else {
@@ -129,7 +171,14 @@ class Event {
                 "`buy_shortlink` = '" . MySQLConnection::escapeString($this->buy_shortlink) . "', " .
                 "`close_time` = '" . MySQLConnection::escapeString($this->close_time) . "', " .
                 "`verification_pin` = '" . MySQLConnection::escapeString($this->verification_pin) . "', " .
-                "`verification_link` = '" . MySQLConnection::escapeString($this->verification_link) . "' " .
+                "`verification_link` = '" . MySQLConnection::escapeString($this->verification_link) . "', " .
+                "`supports_gcash` = '" . MySQLConnection::escapeString($this->supports_gcash) . "', " .
+                "`supports_qrph` = '" . MySQLConnection::escapeString($this->supports_qrph) . "', " .
+                "`supports_card` = '" . MySQLConnection::escapeString($this->supports_card) . "', " .
+                "`supports_ubp` = '" . MySQLConnection::escapeString($this->supports_ubp) . "', " .
+                "`supports_dob` = '" . MySQLConnection::escapeString($this->supports_dob) . "', " .
+                "`supports_maya` = '" . MySQLConnection::escapeString($this->supports_maya) . "', " .
+                "`supports_grabpay` = '" . MySQLConnection::escapeString($this->supports_grabpay) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

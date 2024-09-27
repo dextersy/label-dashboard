@@ -11,7 +11,7 @@
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/controller/users-controller.php');
 
-    function createCheckoutSession($event_id, $number_of_tickets, $price_per_ticket, $description, $name, $email, $phone) {
+    function createCheckoutSession($event_id, $number_of_tickets, $price_per_ticket, $description, $name, $email, $phone, $paymentMethods) {
         $curl = curl_init();
 
         $params = json_encode([
@@ -33,15 +33,7 @@
                                 'quantity' => intval($number_of_tickets)
                             ]
                         ],
-                        'payment_method_types' => [
-                                        'gcash',
-                                        'qrph',
-                                        'card',
-                                        'dob_ubp',
-                                        'dob',
-                                        'paymaya',
-                                        'grab_pay' // TODO Make this selectable in event settings
-                        ],
+                        'payment_method_types' => $paymentMethods,
                         'description' => $description,
                         'success_url' => getProtocol() . $_SERVER['HTTP_HOST'] . "/public/tickets/success.php?id=" . $event_id
                 ]
@@ -191,7 +183,17 @@
     $amount = $event->ticket_price * $ticket->number_of_entries;
     $description = "Payment for " . $event->title . " - Ticket # " . $ticket->id;
     //$response = createPaymentLink($amount, $description);
-    $response = createCheckoutSession($event->id, $ticket->number_of_entries, $ticket->price_per_ticket, $description, $ticket->name, $ticket->email_address, $ticket->contact_number);
+    $paymentMethods = [];
+    if ($event->supports_card) array_push($paymentMethods,'card');
+    if ($event->supports_gcash) array_push($paymentMethods, 'gcash');
+    if ($event->supports_ubp) array_push($paymentMethods, 'dob_ubp');
+    if ($event->supports_dob) array_push($paymentMethods, 'dob');
+    if ($event->supports_qrph) array_push($paymentMethods, 'qrph');
+    if ($event->supports_maya) array_push($paymentMethods, 'paymaya');
+    if ($event->supports_grabpay) array_push($paymentMethods, 'grab_pay');
+    
+
+    $response = createCheckoutSession($event->id, $ticket->number_of_entries, $ticket->price_per_ticket, $description, $ticket->name, $ticket->email_address, $ticket->contact_number, $paymentMethods);
 
     if(isset($response->data->attributes)) {
         // $ticket->payment_link = $response->data->attributes->checkout_url;

@@ -388,3 +388,13 @@ ADD CONSTRAINT `fk_email_attempt_brand_id`
   REFERENCES `brand` (`id`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+
+--- SEPT 27
+ALTER TABLE `event` 
+ADD COLUMN `supports_gcash` TINYINT NOT NULL DEFAULT 1 AFTER `verification_link`,
+ADD COLUMN `supports_qrph` TINYINT NOT NULL DEFAULT 1 AFTER `supports_gcash`,
+ADD COLUMN `supports_card` TINYINT NOT NULL DEFAULT 1 AFTER `supports_qrph`,
+ADD COLUMN `supports_ubp` TINYINT NOT NULL DEFAULT 1 AFTER `supports_card`,
+ADD COLUMN `supports_dob` TINYINT NOT NULL DEFAULT 1 AFTER `supports_ubp`,
+ADD COLUMN `supports_maya` TINYINT NOT NULL DEFAULT 1 AFTER `supports_dob`,
+ADD COLUMN `supports_grabpay` TINYINT NOT NULL DEFAULT 1 AFTER `supports_maya`;
