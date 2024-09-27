@@ -246,6 +246,18 @@
 <!-- QRCode Scanner -->
 <script type="text/javascript">
 
+  function beep() {
+    var context = new AudioContext();
+    var oscillator = context.createOscillator();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 800;
+    oscillator.connect(context.destination);
+    oscillator.start();
+    // Beep for 500 milliseconds
+    setTimeout(function () {
+        oscillator.stop();
+    }, 200);
+  }
   const html5QrCode = new Html5Qrcode("reader");
   $('#btnScanQR').on('click', function() {
     $('#cameraContainer').show();
@@ -258,6 +270,7 @@
         qrbox: { width: 250, height: 250 }
       },
       (decodedText, decodedResult) => {
+        beep();
         $('#txtTicketCode').val(decodedText); getTicketDetails();
         $('#cameraContainer').hide();
         html5QrCode.stop();
