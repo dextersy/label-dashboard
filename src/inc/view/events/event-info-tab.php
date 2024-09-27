@@ -154,6 +154,8 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
 
 
                     <h6>Payment methods</h6>
+                    <div class="row">
+                    <div class="col-md-6">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="switchGCash" name="supports_gcash" value="1" <?=$event->supports_gcash ? "checked": "";?>>
                             <label class="form-check-label" for="switchGCash">GCash</label>
@@ -170,6 +172,8 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                             <input class="form-check-input" type="checkbox" id="switchUbp" name="supports_ubp" value="1" <?=$event->supports_ubp ? "checked": "";?>>
                             <label class="form-check-label" for="switchUbp">Unionbank Transfer</label>
                         </div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="switchDob" name="supports_dob" value="1" <?=$event->supports_dob ? "checked": "";?>>
                             <label class="form-check-label" for="switchDob">BPI</label>
@@ -182,6 +186,10 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                             <input class="form-check-input" type="checkbox" id="switchGrabPay" name="supports_grabpay" value="1" <?=$event->supports_grabpay ? "checked": "";?>>
                             <label class="form-check-label" for="switchGrabPay">Grab Pay</label>
                         </div>
+                    </div>
+                    </div>
+                    <small class="form-text text-muted"><i class="fa fa-info-circle"></i> Click <a href="https://www.paymongo.com/pricing" target="_blank">here</a> for information on processing fees for each payment method.</small>
+                    <br>&nbsp;<br>
                     
                     <div class="form-group">
                         <label for="websiteURL">Ticket verification link</label>
