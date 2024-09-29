@@ -123,11 +123,19 @@
       }
       function showErrorMessage(fieldName) {
         var errorMessage = document.getElementById('error_' + fieldName);
+        var reminderMessage = document.getElementById('reminder_' + fieldName);
         errorMessage.style.display = 'block';
+        if(reminderMessage) {
+          reminderMessage.style.display = 'none';
+        }
       }
       function hideErrorMessage(fieldName) {
         var errorMessage = document.getElementById('error_' + fieldName);
+        var reminderMessage = document.getElementById('reminder_' + fieldName);
         errorMessage.style.display = 'none';
+        if(reminderMessage) {
+          reminderMessage.style.display = 'block';
+        }
       }
 
     </script>
@@ -229,12 +237,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <label class="fadeIn first floating">Full name</label>
           </div>
           <div class="field-error-message" style="display:none;" id="error_name">Full name is required.</div>
+          <small class="text-form text-success" style="display:none;" id="reminder_name"><i class="fa fa-check-circle"></i> Please make sure your full name is as it appears on your identification.</small>
 
           <div class="material-textfield">
           <input type="email" id="email" class="fadeIn second material" name="email_address" placeholder="" onchange="validateFields();">
             <label class="fadeIn second floating">Email address</label>
           </div>
           <div class="field-error-message" style="display:none;" id="error_email">Email address is not valid.</div>
+          <small class="text-form text-success" style="display:none;" id="reminder_email"><i class="fa fa-check-circle"></i> Please make sure your email address is correct.</small>
 
           <div class="material-textfield">
             <div class="input-group mb-3">
