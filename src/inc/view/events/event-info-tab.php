@@ -91,6 +91,12 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                         <label for="websiteURL">Venue</label>
                         <input type="text" class="form-control" id="venue" name="venue" placeholder="Venue" value="<?=$event->venue;?>" required>
                     </div>
+
+                    <div class="form-group">
+                        <label for="websiteURL">RSVP or social media link</label>
+                        <input type="text" class="form-control" id="rsvp_link" name="rsvp_link" placeholder="RSVP or Social Media Link" value="<?=$event->rsvp_link;?>" required>
+                        <small class="text-form text-muted"><i class="fa fa-info-circle"></i> Add your Facebook event page link, or your preferred social media page where guests can find info. This will be included as a link in tickets.</small>
+                    </div>
                 </div>
             </div>
 
@@ -115,11 +121,6 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                 <div class="card-body">
                     <div class="form-group">
                         <strong>Ticket sales: </strong><span class="badge badge-pill <?=$statusBadgeClass;?>"><?=$status;?></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="websiteURL">RSVP link</label>
-                        <input type="text" class="form-control" id="rsvp_link" name="rsvp_link" placeholder="RSVP Link" value="<?=$event->rsvp_link;?>">
                     </div>
                     <div class="form-group">
                         <label for="websiteURL">Ticket price</label>

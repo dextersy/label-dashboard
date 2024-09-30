@@ -30,6 +30,9 @@
 <div class="row">
     <div class="col-md-6"><h3>Referrers</h3></div>
 </div>
+<p class="text-form"><strong>Get those tickets moving! 🎫🎟️🚀 </strong><br>
+Create referral links for lineup artists or other promoters to share your event. <br>
+Purchases made through referral links will be logged under the referrer, so you can give them incentives (or not — up to you, really)!</p>
 <div class="table-responsive">
     <table class="table">
         <thead>

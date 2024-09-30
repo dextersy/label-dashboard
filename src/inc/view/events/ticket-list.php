@@ -151,54 +151,8 @@
 </div>
 
 <div class="row">
-    <div class="col-md-5">
-    <form action="action.add-ticket.php" method="POST">
-
-        <div class="card">
-            <div class="card-header">
-                <h5>Add ticket</h5>
-            </div>
-            <div class="card-body">
-                <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
-                <input type="hidden" name="status" value="New">
-                <div class="form-group">
-                    <label for="txt_name">Name</label>
-                    <input type="name" class="form-control" id="txt_name" name="name" placeholder="Name" required>
-                </div>
-                <div class="form-group">
-                    <label for="txt_email_address">Email address</label>
-                    <input type="email" class="form-control" id="txt_email_address" name="email_address" placeholder="Email address" required>
-                </div>
-                <div class="form-group">
-                    <label for="txt_contact_number">Contact number</label>
-                    <input type="phone" class="form-control" id="txt_contact_number" name="contact_number" placeholder="Contact number" required>
-                </div>
-                <div class="form-group">
-                    <label for="txt_number_of_entries">Number of entries</label>
-                    <input type="text" class="form-control" id="txt_number_of_entries" name="number_of_entries" placeholder="Number of tickets" required>
-                </div>
-                <div class="form-group">
-                    <label for="txt_email_address">Price per ticket</label>
-                        <div class="input-group">
-                            <div class="input-group-addon">₱</div>
-                            <input type="text" class="form-control" id="txt_price_per_ticket" name="price_per_ticket" placeholder="Price per ticket" value="<?=$event->ticket_price;?>" disabled>
-                            <div class="input-group-btn"><button type="button" class="btn" onclick="enablePriceOverride();"><i class="fa fa-pencil"></i></div>
-                        </div>
-                </div>
-                <div class="form-group">
-                    <label for="txt_email_address">Referral code (optional)</label>
-                    <input type="text" class="form-control" id="txt_referral_code" name="referral_code" placeholder="Referral code (optional)">
-                </div>
-                <div class="form-group">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" value="1" name="send_email" id="checkbox_send_email"><label class="form-check-label" for="checkbox_send_email">Send payment email</label>
-                </div>
-                </div>
-            </div>
-            <div class="card-footer">
-                <input type="submit" class="btn btn-block" value="Add Ticket">
-            </div>
-        </div>
-    </form>
+    <div class="alert alert-info">
+    <h6>Want to invite someone?</h6>
+    <p class="text-form">Click <a data-toggle="tab" href="#pending">here</a> to create a custom ticket.</p>
     </div>
 </div>

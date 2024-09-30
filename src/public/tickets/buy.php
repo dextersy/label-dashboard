@@ -206,9 +206,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <h1 style="font-size:1.5rem;font-style:italic;">— but the door's still open!</h1>
   <h3>&nbsp;</h3>
   <h5>Online ticket sales for <b><?=$event->title;?></b> has already ended. 🥲</h5>
-  <h5>But don't worry! <span class="text-success">Walk-in tickets may still be available at the show.</span></h5>
+  <h5>But don't worry — tickets or walk-in may still be available at the show!</h5>
   <p>
-    Please check <strong><?=$brand->brand_name;?></strong> social media for more information.
+    Please check <a href="<?=$event->rsvp_link;?>"><strong><?=$brand->brand_name;?></strong> social media or the event page</a> for more information.
   </p>
 <?php 
   }

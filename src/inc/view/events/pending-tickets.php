@@ -183,9 +183,10 @@
 
         <div class="card">
             <div class="card-header">
-                <h5>Add ticket</h5>
+                <h5>Create custom ticket</h5>
             </div>
             <div class="card-body">
+                <span class="text-form">Use this for special invites. Submitting this form will create a custom ticket for someone and optionally send them a link to pay for the ticket. You can also override the ticket price for this payment.</span>
                 <input type="hidden" name="event_id" value="<?=$_SESSION['current_event'];?>">
                 <input type="hidden" name="status" value="New">
                 <div class="form-group">
