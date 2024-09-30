@@ -14,8 +14,13 @@ class ArtistListItem {
     }
 }
 
-function getAllArtists($brand_id){
-    $result = MySQLConnection::query("SELECT * FROM `artist` WHERE `brand_id`='" . $brand_id ."' ORDER BY `name` ASC");
+function getAllArtists($brand_id, $limit = null){
+    $query = "SELECT * FROM `artist` WHERE `brand_id`='" . $brand_id ."' ORDER BY `name` ASC";
+    if (isset($limit)) {
+        $query = $query . " LIMIT 0, " . $limit;
+    }
+    $result = MySQLConnection::query($query);
+    
     if ($result->num_rows < 1) {
         return null;
     }
