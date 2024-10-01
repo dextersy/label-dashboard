@@ -247,6 +247,12 @@ th {
   background-color:#fafafa;
 }
 
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
 .save-panel {
   background-color:#f6f6f6;
   padding:10px;
