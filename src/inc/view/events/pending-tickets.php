@@ -126,11 +126,11 @@
                         <th>Email address</th>
                         <th>Contact number</th>
                         <th>No. of tickets</th>
-                        <th>Ticket code</th>
                         <th>Payment Link</th>
                         <th>Referred by</th>
                         <th>Time ordered</th>
                         <th>Status</th>
+                        <th></th>
                     </thead>
                     <tbody>
             <?
@@ -149,7 +149,6 @@
                             <td><?=$ticket->email_address; ?></td>
                             <td><?=$ticket->contact_number; ?></td>
                             <td><?=$ticket->number_of_entries; ?></td>
-                            <td><strong><?=$ticket->ticket_code; ?></strong></td>
                             <td>
                                 <? if(isset($ticket->payment_link) && $ticket->payment_link != '') { ?> 
                                 <a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
