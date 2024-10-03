@@ -9,6 +9,7 @@
 
     function __sendNotification($artist, $paymentMethod, $user) {
         $brandName = $_SESSION['brand_name'];
+        $brandColor = $_SESSION['brand_color'];
         $i = 0;
         
         $admins = getAllAdmins($_SESSION['brand_id']);
@@ -30,13 +31,14 @@
                                                             $paymentMethod->account_name, 
                                                             $paymentMethod->account_number_or_email,
                                                             $user->first_name . " " . $user->last_name,
-                                                            $brandName
+                                                            $brandName,
+                                                            $brandColor
                                                     )
                         );
 	}
 
 
-    function __generateEmailFromTemplate($artistName, $bankName, $accountName, $accountNumber, $memberName, $brandName) {
+    function __generateEmailFromTemplate($artistName, $bankName, $accountName, $accountNumber, $memberName, $brandName, $brandColor) {
 		define ('TEMPLATE_LOCATION', 'assets/templates/add_payment_method_email.html', false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
@@ -49,6 +51,7 @@
         $msg = str_replace('%ACCOUNT_NUMBER%', $accountNumber, $msg);
         $msg = str_replace('%MEMBER_NAME%', $memberName, $msg);
         $msg = str_replace('%BRAND%', $brandName, $msg);
+        $msg = str_replace('%BRAND_COLOR%', $brandColor, $msg);
 		
 		$msg = str_replace('%LINK%', getProtocol() . $_SERVER['HTTP_HOST'] . "/financial.php#payments", $msg);
 		
