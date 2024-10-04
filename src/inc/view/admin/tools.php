@@ -45,14 +45,24 @@
         </table>
     </div>
     </div>
-    <iframe id="iframeEmailPreview" src="#" style="display:none"></iframe>
+    <div class="card" id="divFrameEmailPreview" style="display:none">
+        <div class="card-header"><b>Email preview</b> <a href="javascript:closePreview();">[ Close ]</a></div>
+        <div class="card-body">
+        <iframe id="iframeEmailPreview" src="#" height="800" width="100%"></iframe>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
     function showEmail(id) {
         var url = "/inc/view/admin/preview-email.php?id=" + id;
-        var frame = document.getElementById('iframeEmailPreview');
+        var frame = document.getElementById('divFrameEmailPreview');
         frame.src = url;
         frame.style.display = 'block';
+    }
+
+    function closePreview() {
+        var frame = document.getElementById('divFrameEmailPreview');
+        frame.style.display = 'none';
     }
 </script>
