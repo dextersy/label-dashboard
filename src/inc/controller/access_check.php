@@ -27,6 +27,7 @@
     if (!isset($_SESSION['current_artist'])) {
         if(isset($availableArtists[0]->id)) {
             $_SESSION['current_artist'] = $availableArtists[0]->id;
+            $_SESSION['current_artist_name'] = $availableArtists[0]->name;
         }
         else {
             if($isAdmin && !str_contains($_SERVER['REQUEST_URI'],"newartist.php")) {

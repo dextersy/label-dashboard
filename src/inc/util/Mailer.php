@@ -7,6 +7,7 @@
 	
 	include_once './inc/controller/brand_check.php';
 	include_once './inc/util/MySQLConnection.php';
+	include_once('./inc/model/emailattempt.php');
 
     function sendEmail($emailAddresses, $subject, $body) {
 		$result = true;
@@ -51,12 +52,12 @@
 
 	function logEmailAttempt($emailAddresses, $subject, $body, $result) {
 		$recipients = implode(",", $emailAddresses);
-		$sql = "INSERT INTO `email_attempt` (`recipients`, `subject`, `body`, `brand_id`, `result`, `timestamp`) VALUES (".
-			"'" . MySQLConnection::escapeString($recipients) . "', " .
-			"'" . MySQLConnection::escapeString($subject) . "', " .
-			"'" . MySQLConnection::escapeString($body) . "', ".
-			"'" . MySQLConnection::escapeString($_SESSION['brand_id']) . "', " .
-			"'" . ($result ? "Success":"Failed") . "', NOW())";
-		MySQLConnection::query($sql);
+		$emailAttempt = new EmailAttempt;
+		$emailAttempt->recipients = $recipients;
+		$emailAttempt->subject = $subject;
+		$emailAttempt->body = $body;
+		$emailAttempt->brand_id = $_SESSION['brand_id'];
+		$emailAttempt->result = ($result ? "Success": "Failed");
+		$emailAttempt->save();
 	}
 ?>

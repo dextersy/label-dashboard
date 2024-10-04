@@ -24,7 +24,8 @@ include_once('./inc/view/header.php');
                         <li><a data-toggle="tab" href="#balance">Balance Summary</a></li>
                         <li><a data-toggle="tab" href="#bulk-add-earnings">Bulk Add Earnings</a></li>
                         <li><a data-toggle="tab" href="#users"><i class="fa fa-user"></i> Users</a></li>
-                        <li><a data-toggle="tab" href="#child-brands">Child Brands</a></li>
+                        <li><a data-toggle="tab" href="#child-brands">Sublabels</a></li>
+                        <li><a data-toggle="tab" href="#tools"><i class="fa fa-gear"></i> Tools</a></li>
                     </ul>
                     &nbsp;
                     <div class="tab-content">
@@ -45,6 +46,9 @@ include_once('./inc/view/header.php');
                         </div>
                         <div id="child-brands" class="tab-pane fade">
                             <?php include_once('./inc/view/admin/child-brands.php'); ?>                                
+                        </div>
+                        <div id="tools" class="tab-pane fade">
+                            <?php include_once('./inc/view/admin/tools.php'); ?>                                
                         </div>
                     </div>
                 </div>
