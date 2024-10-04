@@ -12,6 +12,7 @@
         $releases = getReleaseListForUser($_SESSION['logged_in_user'], $RELEASE_LIMIT);
     }
 ?>
+<div class="col-md-4">
 <div class="card">
     <div class="card-header"><h5>Latest releases</h5></div>
     <div class="card-body">
@@ -46,4 +47,5 @@
     <div class="card-footer text-right">
         <a href="artist.php#releases">Go to releases <i class="fa fa-arrow-circle-o-right"></i></a>
     </div>
+</div>
 </div>

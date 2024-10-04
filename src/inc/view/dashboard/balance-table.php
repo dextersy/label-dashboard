@@ -12,6 +12,7 @@
         $artists = getArtistListForUser($_SESSION['logged_in_user']);
     }
 ?>
+<div class="col-md-4">
 <div class="card">
     <div class="card-header"><h5>Balance Summary</h5></div>
     <div class="card-body">
@@ -41,4 +42,5 @@
     <div class="card-footer text-right">
         <a href="financial.php">Go to financial overview <i class="fa fa-arrow-circle-o-right"></i></a>
     </div>
+</div>
 </div>

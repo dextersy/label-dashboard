@@ -12,7 +12,7 @@
     define('EVENT_COUNT_LIMIT', 5);
     $events = getAllEvents($_SESSION['brand_id'], EVENT_COUNT_LIMIT);
 ?>
-
+<div class="col-md-6">
 <div class="card">
     <div class="card-header"><h5>Event Sales</h5></div>
     <div class="card-body">
@@ -22,6 +22,8 @@
         <a href="events.php">Go to events <i class="fa fa-arrow-circle-o-right"></i></a>
     </div>
 </div>
+</div>
+
 <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 

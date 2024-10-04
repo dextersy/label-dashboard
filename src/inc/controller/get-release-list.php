@@ -18,6 +18,7 @@ function getReleaseListForArtist($artist_id){
 }
 
 class UserReleaseViewItem {
+    public $id;
     public $catalog_no;
     public $cover_art;
     public $artist_name;
@@ -29,7 +30,7 @@ function getReleaseListForAdmin($brand_id, $limit) {
     return getReleaseListForUser(null, $limit, $brand_id);
 }
 function getReleaseListForUser($user_id, $limit = null, $brand_id = null){
-    $sql = "SELECT DISTINCT r.catalog_no, r.cover_art, r.title, a.name, r.release_date
+    $sql = "SELECT DISTINCT r.id, r.catalog_no, r.cover_art, r.title, a.name, r.release_date
             FROM `release` r
             JOIN `release_artist` ra ON r.id = ra.release_id
             JOIN `artist` a ON ra.artist_id = a.id
@@ -51,6 +52,7 @@ function getReleaseListForUser($user_id, $limit = null, $brand_id = null){
     $i = 0;
     while($row = $result->fetch_assoc()) {
         $releases[$i] = new UserReleaseViewItem;
+        $releases[$i]->id = $row['id'];
         $releases[$i]->catalog_no = $row['catalog_no'];
         $releases[$i]->cover_art = $row['cover_art'];
         $releases[$i]->artist_name = $row['name'];
@@ -65,7 +67,7 @@ function getReleaseEarningsListForAdmin($brand_id, $limit) {
     return getReleaseEarningsListForUser(null, $limit, $brand_id);
 }
 function getReleaseEarningsListForUser($user_id, $limit = null, $brand_id = null){
-    $sql = "SELECT r.catalog_no, r.title, a.name, SUM(DISTINCT e.amount) as total_earnings
+    $sql = "SELECT r.id, r.catalog_no, r.title, a.name, SUM(DISTINCT e.amount) as total_earnings
             FROM `release` r
             JOIN `release_artist` ra ON r.id = ra.release_id
             JOIN `artist` a ON ra.artist_id = a.id
@@ -89,6 +91,7 @@ function getReleaseEarningsListForUser($user_id, $limit = null, $brand_id = null
     $i = 0;
     while($row = $result->fetch_assoc()) {
         $releases[$i] = new UserReleaseViewItem;
+        $releases[$i]->id = $row['id'];
         $releases[$i]->catalog_no = $row['catalog_no'];
         $releases[$i]->artist_name = $row['name'];
         $releases[$i]->title = $row['title'];

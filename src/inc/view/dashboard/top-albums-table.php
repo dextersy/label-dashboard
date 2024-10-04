@@ -12,6 +12,7 @@
         $releases = getReleaseEarningsListForUser($_SESSION['logged_in_user'], $RELEASE_LIMIT);
     }
 ?>
+<div class="col-md-4">
 <div class="card">
     <div class="card-header"><h5>Top earning releases (all-time)</h5></div>
     <div class="card-body">
@@ -44,4 +45,5 @@
     <div class="card-footer text-right">
         <a href="financial.php#release">Go to release earnings <i class="fa fa-arrow-circle-o-right"></i></a>
     </div>
+</div>
 </div>
