@@ -7,6 +7,14 @@
 
     $emailAttempts = getAllEmailAttempts($_SESSION['brand_id'], 10);
 ?>
+<div class="overlay" id="divEmailPreview" style="display:none">
+<div class="card">
+    <div class="card-header"><b>Email preview</b> <a href="javascript:closePreview();">[ Close ]</a></div>
+    <div class="card-body">
+    <iframe id="iframeEmailPreview" src="#" height="600" width="100%"></iframe>
+    </div>
+</div>
+</div>
 <h3>Other tools</h3>
 <div class="card">
     <div class="card-header"><h5>Email logs</h5></div>
@@ -45,12 +53,7 @@
         </table>
     </div>
     </div>
-    <div class="card" id="divEmailPreview" style="display:none">
-        <div class="card-header"><b>Email preview</b> <a href="javascript:closePreview();">[ Close ]</a></div>
-        <div class="card-body">
-        <iframe id="iframeEmailPreview" src="#" height="800" width="100%"></iframe>
-        </div>
-    </div>
+
 </div>
 
 <script type="text/javascript">
