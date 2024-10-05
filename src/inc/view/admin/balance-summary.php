@@ -70,8 +70,8 @@
                 <div class="card-header">
                     <h4 class="title">Total Balance</h4>
                 </div>
-                <div class="card-body">
-                    <h3>₱ <?=number_format($overallBalance,2);?></h3>
+                <div class="card-body text-center">
+                    <h3><strong>₱ <?=number_format($overallBalance,2);?></strong></h3>
                 </div>
             </div>
         </div>
@@ -82,8 +82,8 @@
                 <div class="card-header">
                     <h4 class="title">Total Due For Payment</h4>
                 </div>
-                <div class="card-body">
-                    <h3>₱ <?=number_format($overallDueForPayment,2);?></h3>
+                <div class="card-body text-center">
+                    <h3><strong>₱ <?=number_format($overallDueForPayment,2);?></strong></h3>
                 </div>
             </div>
         </div>
@@ -94,11 +94,11 @@
                 <div class="card-header">
                     <h4 class="title">Ready to Pay <i class="fa fa-info-circle" title="Due for payment and has bank account"></i></h4>
                 </div>
-                <div class="card-body">
-                    <h3>₱ <?=number_format($readyForPayment,2);?></h3>
+                <div class="card-body text-center">
+                    <h3><strong>₱ <?=number_format($readyForPayment,2);?></strong></h3>
                     <button class="btn btn-block" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
                 </div>
-                <div class="card-footer">
+                <div class="card-footer text-center">
                     <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">
                         Available balance: ₱ <?=number_format($currentBalance, 2);?>
                     </div>
@@ -146,8 +146,8 @@
                 <div class="card-header">
                     <h4 class="title">Total Recuperable Expense</h4>
                 </div>
-                <div class="card-body">
-                    <h3>₱ <?=number_format($overallTotalRecuperableExpense,2);?></h3>
+                <div class="card-body text-center">
+                    <h3><strong>₱ <?=number_format($overallTotalRecuperableExpense,2);?></strong></h3>
                 </div>
             </div>
         </div>

@@ -214,8 +214,7 @@ h1, h2, h3, h4 {
 .card-header {
   padding: 10px !important;
   text-align: center;
-  background-color: #fff !important;
-  border-radius: 10px !important;
+  border-radius: 10px 10px 0 0 !important;
   border-bottom: 0px !important;
 }
 .card {
@@ -224,7 +223,7 @@ h1, h2, h3, h4 {
   box-shadow: 0 5px 5px 0 rgba(0,0,0,0.3) !important;
 }
 .card-body, .card-footer {
-  padding: 20px !important;
+  padding: 15px !important;
 }
 
 h5, .h5 {
@@ -273,4 +272,14 @@ thead th {
   padding: 20px;
   background-color: rgba(0,0,0,0.5); /* Black background with opacity */
   z-index: 99999; /* Specify a stack order in case you're using a different order for other elements */
+}
+
+.title {
+  font-size:12px !important;
+  text-transform: uppercase;
+}
+
+h1, h2, h3, h4, h5 {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
 }
