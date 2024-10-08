@@ -49,14 +49,27 @@
     $result = false;
     $artist = new Artist;
     if ($artist->fromID($_POST['id'])) {
-        $artist->payout_point = $_POST['payout_point'];
+        $payoutPointUpdated = false;
+        $paymentHoldUpdated = false;
+
+        if($artist->payout_point != $_POST['payout_point']) {
+            $artist->payout_point = $_POST['payout_point'];
+            $payoutPointUpdated = true;
+        }
+
+        if(!isset($_POST['hold_payouts'])) { $_POST['hold_payouts'] = '0'; }
+        if($artist->hold_payouts != $_POST['hold_payouts']) {
+            $artist->hold_payouts = $_POST['hold_payouts'];
+            $paymentHoldUpdated = true;
+        }
+
         $result = $artist->save();
 
         // Get user details for audit trail
         $user = new User;
         $user->fromID($_SESSION['logged_in_user']);
 
-        if ($result) {
+        if ($result && $payoutPointUpdated) {
             __sendNotification($artist, $_SESSION['brand_name'], $_SESSION['brand_color'], $user);
         }
     }

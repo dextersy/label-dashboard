@@ -11,6 +11,14 @@
     $banks = getSupportedBanksForTransfer();
 ?>
 &nbsp;
+<? if($artist->hold_payouts) { ?>
+    <div class="alert alert-warning">
+        <strong><i class="fa fa-pause-circle-o"></i> Automatic payouts are currently paused for this artist.</strong><br>
+        <small>If you're not sure why, please contact your label representative.</small>
+    </div>
+
+<? } ?>
+
 <div class="row">
     <div class="col-md-6">
         <div class="card">
@@ -58,8 +66,14 @@
         <div class="card-body">
             When your balance reaches this amount, you will receive a payout through your default payment method. 
 
-        <form action="action.set-payout-point.php" method="POST" enctype="multipart/form-data">
+        <form action="action.update-payout-settings.php" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?=$artist->id;?>">
+        <? if($isAdmin) { ?>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="switchHoldPayout" name="hold_payouts" value="1" <?=$artist->hold_payouts ? "checked": "";?>>
+                <label class="form-check-label" for="switchHoldPayout">Pause automatic payouts for this artist</label>
+            </div>
+        <? } ?>
         <div class="input-group">
             <div class="input-group-addon">
                 ₱

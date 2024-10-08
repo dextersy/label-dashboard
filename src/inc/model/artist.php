@@ -16,6 +16,7 @@ class Artist {
     public $band_members;
     public $youtube_channel;
     public $payout_point;
+    public $hold_payouts;
 
     function __construct(
         $id = null, 
@@ -30,7 +31,8 @@ class Artist {
         $tiktok_handle = null,
         $band_members = null,
         $youtube_channel = null,
-        $payout_point = null
+        $payout_point = 1000,
+        $hold_payouts = 0
     ) 
     {
         $this->id = $id;
@@ -46,6 +48,7 @@ class Artist {
         $this->band_members = $band_members;
         $this->youtube_channel = $youtube_channel;
         $this->payout_point = $payout_point;
+        $this->hold_payouts = $hold_payouts;
     }
 
     function fromID($id) {
@@ -65,6 +68,7 @@ class Artist {
             $this->band_members = $row['band_members'];
             $this->youtube_channel = $row['youtube_channel'];
             $this->payout_point = $row['payout_point'];
+            $this->hold_payouts = $row['hold_payouts'];
 
             return true;
         }
@@ -74,28 +78,31 @@ class Artist {
     }
 
     function fromFormPOST($post) {
-        if (isset($_POST['id']) && strlen($_POST['id'] > 0)) {
-            $this->id = $_POST['id'];
+        if (isset($post['id']) && strlen($post['id'] > 0)) {
+            $this->id = $post['id'];
             $this->fromID($this->id);
         }
-        $this->name = $_POST['name'];
-        $this->website_page_url = $_POST['websiteURL'];
-        $this->facebook_handle = $_POST['facebookHandle'];
-        $this->instagram_handle = $_POST['instagramHandle'];
-        $this->twitter_handle = $_POST['twitterHandle'];
-        $this->bio = $_POST['bio'];
-        $this->brand_id = $_POST['brand_id'];
-        $this->tiktok_handle = $_POST['tiktokHandle'];
-        $this->band_members = $_POST['bandMembers'];
-        $this->youtube_channel = $_POST['youtubeChannel'];
-        if (isset($post['payoutPoint']) && $post['payoutPoint'] != '') {
-            $this->payout_point = $_POST['payoutPoint'];
+        $this->name = $post['name'];
+        $this->website_page_url = $post['websiteURL'];
+        $this->facebook_handle = $post['facebookHandle'];
+        $this->instagram_handle = $post['instagramHandle'];
+        $this->twitter_handle = $post['twitterHandle'];
+        $this->bio = $post['bio'];
+        $this->brand_id = $post['brand_id'];
+        $this->tiktok_handle = $post['tiktokHandle'];
+        $this->band_members = $post['bandMembers'];
+        $this->youtube_channel = $post['youtubeChannel'];
+        if (isset($post['payout_point']) && $post['payout_point'] != '') {
+            $this->payout_point = $post['payout_point'];
+        }
+        if (isset($post['hold_payouts']) && $post['hold_payouts'] != '') {
+            $this->hold_payouts = $post['hold_payouts'];
         }
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`, `profile_photo`, `brand_id`, `tiktok_handle`, `band_members`, `youtube_channel`, `payout_point`) " .
+            $sql = "INSERT INTO `artist` (`name`, `website_page_url`, `facebook_handle`, `instagram_handle`, `twitter_handle`, `bio`, `profile_photo`, `brand_id`, `tiktok_handle`, `band_members`, `youtube_channel`, `payout_point`, `hold_payouts`) " .
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->name) . "', " .
                 "'" . MySQLConnection::escapeString($this->website_page_url) . "', " .
@@ -108,7 +115,8 @@ class Artist {
                 "'" . MySQLConnection::escapeString($this->tiktok_handle) . "', " .
                 "'" . MySQLConnection::escapeString($this->band_members) . "', " .
                 "'" . MySQLConnection::escapeString($this->youtube_channel) . "', " .
-                "'" . MySQLConnection::escapeString($this->payout_point) . "'" .
+                "'" . MySQLConnection::escapeString($this->payout_point) . "', " .
+                "'" . MySQLConnection::escapeString($this->hold_payouts) . "'" .
                 ")";
         } else {
             $sql = "UPDATE `artist` SET " .
@@ -123,7 +131,8 @@ class Artist {
                 "`tiktok_handle` = '" . MySQLConnection::escapeString($this->tiktok_handle) . "', " .
                 "`band_members` = '" . MySQLConnection::escapeString($this->band_members) . "', " .
                 "`youtube_channel` = '" . MySQLConnection::escapeString($this->youtube_channel) . "', " .
-                "`payout_point` = '" . MySQLConnection::escapeString($this->payout_point) . "' " .
+                "`payout_point` = '" . MySQLConnection::escapeString($this->payout_point) . "', " .
+                "`hold_payouts` = '" . MySQLConnection::escapeString($this->hold_payouts) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
