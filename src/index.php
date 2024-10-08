@@ -9,7 +9,6 @@
 
   include_once('./inc/view/login/header.php');
 ?>
-<div class="wrapper fadeInDown">
   <div id="formHeader" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
@@ -59,14 +58,13 @@
     <? } ?>
       <div class="input-group">
         <div class="input-group-prepend">
-          <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;"><i class="fa fa-user"></i></span>
+          <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;margin-top:10px;"><i class="fa fa-user"></i></span>
         </div>
         <input type="text" id="login" class="fadeIn second form-control" name="login" placeholder="Username / email" required>
       </div>
-      &nbsp;
       <div class="input-group">
         <div class="input-group-prepend">
-          <span class="input-group-text fadeIn third" style="background-color:#f6f6f6;border:0px;"><i class="fa fa-unlock-alt"></i></span>
+          <span class="input-group-text fadeIn third" style="background-color:#f6f6f6;border:0px;margin-top:10px;"><i class="fa fa-unlock-alt"></i></span>
         </div>
         <input type="password" id="password" class="fadeIn third form-control" name="password" placeholder="Password" required>
       </div>
@@ -78,5 +76,4 @@
   <div id="formFooter">
     <a class="" href="forgotpassword.php">Forgot Password?</a>
   </div>
-</div>
 <? include_once('./inc/view/login/footer.php'); ?>

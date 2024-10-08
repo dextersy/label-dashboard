@@ -485,3 +485,9 @@
     background-color: black;
     z-index: 999;
   }
+
+  .btn:disabled {
+    border: 1px solid #999999;
+    background-color: #cccccc;
+    color: #666666;
+  }

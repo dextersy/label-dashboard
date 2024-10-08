@@ -131,7 +131,7 @@
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
-    margin: 0px 0px 20px 0px;
+    margin: 10px 0px 0px 0px;
     width: 100%;
     border: 2px solid #f6f6f6;
     -webkit-transition: all 0.5s ease-in-out;
@@ -155,13 +155,13 @@
   /* For floating input labels */
   .material-textfield {
     position: relative;
-    margin: 5 0 0 0;
+    margin: 15 0 0 0;
   }
   label.floating {
     position: absolute;
     font-size: 1rem;
     left: 0;
-    top: 40%;
+    top: 58%;
     transform: translateY(-50%);
     background-color: #ffffff;
     color: gray;
@@ -177,6 +177,7 @@
   }
 
   .field-error-message {
+    text-align: left;
     font-size: 14px;
     color: #ff0000;
   }
@@ -202,12 +203,12 @@
     color: #003059;
     background-color: #ffffff !important;
     top: 0;
-    transform: translateY(-50%) scale(0.9) !important;
+    transform: translateY(-0.5%) scale(0.9) !important;
   }
   
   input.material:not(:placeholder-shown)+label {
     top: 0;
-    transform: translateY(-50%) scale(0.9) !important;
+    transform: translateY(-0.5%) scale(0.9) !important;
   }
   
   input.material:not(:focus)::placeholder {
@@ -332,4 +333,10 @@
     #icon {
       width:50%;
     }
+  }
+
+  .btn:disabled {
+    border: 1px solid #999999;
+    background-color: #cccccc;
+    color: #666666;
   }

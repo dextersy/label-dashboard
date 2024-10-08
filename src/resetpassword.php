@@ -19,8 +19,6 @@
 
   include_once('./inc/view/login/header.php');
 ?>
-
-<div class="wrapper fadeInDown">
   <div id="formHeader" style="background-color:<?=$_SESSION['brand_color'];?>;">
     <div class="fadeIn first">
       <img src="<?=$_SESSION['brand_logo'];?>" id="icon" alt="<?=$_SESSION['brand_name'];?>" />
@@ -39,13 +37,14 @@
         The passwords you input were mismatched. Please try again.
       </div>
     <? } ?>
-    <p>Please set your new password.</p>
+    <h3><strong>New Password, New You! ✨</strong></h3>
+    <small class="text-muted">Please set your new password to complete your account recovery.</small>
     <form action="action.init-user.php" method="POST">
       <input type="hidden" name="id" value="<?=$user->id;?>">
       <input type="hidden" name="reset_hash" value="<?=$_GET['code'];?>">
       <input type="password" id="password" class="fadeIn second" name="password" placeholder="New Password" required>
       <input type="password" id="validation" class="fadeIn third" name="validation" placeholder="Verify New Password" required>
-      <input type="submit" class="fadeIn fourth btn btn-primary btn-block" value="Set New Password">
+      <input type="submit" class="fadeIn fourth btn btn-primary btn-block" style="margin-top:20px;" value="Set New Password">
     </form>
     <? } ?>
 
@@ -53,6 +52,4 @@
   <div id="formFooter">
     <a class="" href="index.php">Back to login</a>
   </div>
-
-</div>
 <? include_once('./inc/view/login/footer.php'); ?>

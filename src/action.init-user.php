@@ -42,6 +42,15 @@
             $user->password_md5 = md5($_POST['password']);
         }
     }
+    else { // assume this is from first login / set profile
+
+        // Check if user exists and stop processing if so
+        $existingUser = new User;
+        if($existingUser->fromUsername($_POST['brand_id'], $_POST['username'])) {
+            redirectTo('/setprofile.php?err=user_exists&u=' . $_POST['invite_hash']);
+            die();
+        }
+    }
     
     unset($user->reset_hash);
     $user->save();
