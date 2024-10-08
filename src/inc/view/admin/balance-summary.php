@@ -22,7 +22,8 @@
             <th style="text-align:right;">Total payments</th>
             <th style="text-align:right;">Total balance</th>
             <th style="text-align:right;">Payout point</th>
-            <th style="text-align:right;">Due for payment</th>
+            <th style="text-align:center;">Due for payment</th>
+            <th style="text-align:center;">Payouts paused</th>
         </thead>
         <tbody>
 <? 
@@ -30,6 +31,7 @@
         $overallDueForPayment = 0;
         $overallBalance = 0;
         $readyForPayment = 0;
+        $pausedPayouts = 0;
         foreach ($artists as $artist) { 
             $totalRoyalties = getTotalRoyaltiesForArtist($artist->id);
             $totalPayments = getTotalPaymentsForArtist($artist->id);
@@ -42,7 +44,8 @@
 
                     $paymentMethodsForArtist = getPaymentMethodsForArtist($artist->id);
                     if(isset($paymentMethodsForArtist) && count($paymentMethodsForArtist) > 0) {
-                        $readyForPayment += $totalBalance;
+                        if($artist->hold_payouts) { $pausedPayouts += $totalBalance; }
+                        else { $readyForPayment += $totalBalance; }
                     }
                 }
         ?>
@@ -52,8 +55,8 @@
                 <td style="text-align:right;">₱<?=number_format($totalPayments,2);?></td>
                 <td style="text-align:right;"><strong>₱<?=number_format($totalBalance,2);?></strong></td>
                 <td style="text-align:right;">₱<?=number_format($artist->payout_point,0);?></td>
-                <td style="text-align:right;"><?=($totalBalance > $artist->payout_point)?"✓":"";?></td>
-
+                <td class="text-center"><?=($totalBalance > $artist->payout_point)?"✓":"";?></td>
+                <td class="text-center"><?=($artist->hold_payouts)?"<i class=\"fa fa-pause-circle-o\"></i>":"";?></td>
             </tr>
 <?          }
          } 
@@ -97,6 +100,7 @@
                 <div class="card-body text-center">
                     <h3><strong>₱ <?=number_format($readyForPayment,2);?></strong></h3>
                     <button class="btn btn-block" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
+                    <small><strong>On hold:</strong> ₱ <?=number_format($pausedPayouts,2);?></small>
                 </div>
                 <div class="card-footer text-center">
                     <div class="badge badge-pill badge-info align-self-center" id="div_availableBalance">

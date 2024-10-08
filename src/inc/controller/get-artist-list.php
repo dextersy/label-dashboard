@@ -6,11 +6,13 @@ class ArtistListItem {
     public $id;
     public $name;
     public $payout_point;
+    public $hold_payouts;
 
-    function __construct($id, $name, $payout_point) {
+    function __construct($id, $name, $payout_point, $hold_payouts) {
         $this->id = $id;
         $this->name = $name;
         $this->payout_point = $payout_point;
+        $this->hold_payouts = $hold_payouts;
     }
 }
 
@@ -30,7 +32,8 @@ function getAllArtists($brand_id, $limit = null){
         $artists[$i++] = new ArtistListItem(
             $row['id'],
             $row['name'],
-            $row['payout_point']
+            $row['payout_point'],
+            $row['hold_payouts']
         );
     }
     return $artists;
@@ -50,7 +53,8 @@ function getArtistListForUser($user){
         $artists[$i++] = new Artist(
             $row['id'],
             $row['name'],
-            $row['payout_point']
+            $row['payout_point'],
+            $row['hold_payouts']
         );
     }
     return $artists;
@@ -70,7 +74,8 @@ function getArtistListForRelease($release_id) {
         $artists[$i++] = new Artist(
             $row['id'],
             $row['name'],
-            $row['payout_point']
+            $row['payout_point'],
+            $row['hold_payouts']
         );
     }
     return $artists;
