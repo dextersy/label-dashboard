@@ -168,9 +168,12 @@
     // Generate ticket code
     $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $randomString = '';
-    for ($i = 0; $i < 5; $i++) {
-        $randomString .= $characters[rand(0, strlen($characters) - 1)];
-    }
+    $existingTicket = new Ticket;
+    do {
+        for ($i = 0; $i < 5; $i++) {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+    } while ($existingTicket->fromEventIdAndTicketCode($ticket->event_id, $randomString)); // Check if ticket code exists
     $ticket->ticket_code = $randomString;
     $ticket->save();
 
