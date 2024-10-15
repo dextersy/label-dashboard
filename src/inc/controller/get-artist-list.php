@@ -41,7 +41,7 @@ function getAllArtists($brand_id, $limit = null){
 function getArtistListForUser($user){
     $result = MySQLConnection::query($sql = "SELECT * FROM `artist` " .
         "WHERE `id` IN (" .
-            "SELECT `artist_id` FROM `artist_access` WHERE `user_id` = '" . $user . "'".
+            "SELECT `artist_id` FROM `artist_access` WHERE `user_id` = '" . $user . "' AND `status` = 'Accepted'".
             ") ".
         "ORDER BY `name` ASC");
     if ($result->num_rows < 1) {
