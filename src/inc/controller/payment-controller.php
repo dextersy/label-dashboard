@@ -205,8 +205,9 @@ function __addPayment($payment, $isManualPayment, $brand) {
                 $emailAddresses, 
                 $artist->name, 
                 $payment,
-                $brand->name,
-                $brand->color
+                $brand->brand_name,
+                $brand->brand_color,
+                $brand->logo_url
             );
         }
     }
@@ -216,18 +217,18 @@ function __addPayment($payment, $isManualPayment, $brand) {
 
 
 /// HELPER FUNCTIONS BELOW
-function __sendPaymentNotification($emailAddresses, $artistName, $payment, $brandName, $brandColor) {
+function __sendPaymentNotification($emailAddresses, $artistName, $payment, $brandName, $brandColor, $brandLogo) {
     $subject = "Payment made to ". $artistName . "!";
-    return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor));
+    return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor, $brandLogo));
 }
 
-function __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor) {
+function __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor, $brandLogo) {
     define ('TEMPLATE_LOCATION', 'assets/templates/payment_notification_email.html', false);
     $file = fopen(TEMPLATE_LOCATION, 'r');
     $msg = fread($file, filesize(TEMPLATE_LOCATION));
     fclose($file);
 
-    $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
+    $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $brandLogo, $msg);
     $msg = str_replace("%BRAND_NAME%", $brandName, $msg);
     $msg = str_replace("%BRAND_COLOR%", $brandColor, $msg);
     $msg = str_replace('%ARTIST%', $artistName, $msg);
