@@ -219,10 +219,10 @@ function __addPayment($payment, $isManualPayment, $brand) {
 /// HELPER FUNCTIONS BELOW
 function __sendPaymentNotification($emailAddresses, $artistName, $payment, $brandName, $brandColor, $brandLogo) {
     $subject = "Payment made to ". $artistName . "!";
-    return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor, $brandLogo));
+    return sendEmail($emailAddresses, $subject, __generatePaymentEmailFromTemplate($artistName, $payment, $brandName, $brandColor, $brandLogo));
 }
 
-function __generateEmailFromTemplate($artistName, $payment, $brandName, $brandColor, $brandLogo) {
+function __generatePaymentEmailFromTemplate($artistName, $payment, $brandName, $brandColor, $brandLogo) {
     define ('TEMPLATE_LOCATION', 'assets/templates/payment_notification_email.html', false);
     $file = fopen(TEMPLATE_LOCATION, 'r');
     $msg = fread($file, filesize(TEMPLATE_LOCATION));
