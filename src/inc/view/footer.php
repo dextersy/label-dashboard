@@ -1,3 +1,9 @@
+<!--  Light Bootstrap Table core CSS    -->
+<link href="assets/css/light-bootstrap-dashboard.css" rel="stylesheet"/>
+
+<!-- Custom CSS for artist dashboard -->
+<link href="assets/css/dashboard.css" rel="stylesheet"/>
+<link href="assets/css/loading.css" rel="stylesheet"/>
 <!--   Core JS Files   -->
 <script src="assets/js/jquery.3.2.1.min.js" type="text/javascript"></script>
 <script src="assets/js/bootstrap.min.js" type="text/javascript"></script>

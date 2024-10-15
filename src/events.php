@@ -23,6 +23,7 @@
                         <li><a data-toggle="tab" href="#tickets"><i class="fa fa-ticket"></i>Tickets</a></li>
                         <li><a data-toggle="tab" href="#pending"><i class="fa fa-clock-o"></i>Pending Orders</a></li>
                         <li><a data-toggle="tab" href="#referrers"><i class="fa fa-user-plus" aria-hidden="true"></i>Referrals</a></li>
+                        <li><a data-toggle="tab" href="#emails"><i class="fa fa-envelope" aria-hidden="true"></i>Emails</a></li>
                     </ul>
                     &nbsp;
                     <div class="tab-content">
@@ -37,6 +38,9 @@
                         </div>
                         <div id="referrers" class="tab-pane fade">
                             <?php include_once('./inc/view/events/referrers-list.php'); ?>
+                        </div>
+                        <div id="emails" class="tab-pane fade">
+                            <?php include_once('./inc/view/events/emails.php'); ?>
                         </div>
                     </div>
                 </div>

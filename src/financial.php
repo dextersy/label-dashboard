@@ -23,6 +23,9 @@
                         <li><a data-toggle="tab" href="#new-royalty"><i class="fa fa-lock" aria-hidden="true"></i> New Royalty</a></li>
                         <li><a data-toggle="tab" href="#new-payment"><i class="fa fa-lock" aria-hidden="true"></i> New Payment</a></li>
                         <li><a data-toggle="tab" href="#new-earning"><i class="fa fa-lock" aria-hidden="true"></i> New Earning</a></li>
+                        <li><a data-toggle="tab" href="#admin-summary"><i class="fa fa-lock" aria-hidden="true"></i> Admin Summary</a></li>
+                        <li><a data-toggle="tab" href="#balance"><i class="fa fa-lock" aria-hidden="true"></i> Balance Summary</a></li>
+                        <li><a data-toggle="tab" href="#bulk-add-earnings"><i class="fa fa-lock" aria-hidden="true"></i> Bulk Add Earnings</a></li>
                     <? } ?>
                     </ul>
                     &nbsp;
@@ -55,6 +58,15 @@
                         </div>
                         <div id="new-earning" class="tab-pane fade">
                             <?php include_once('./inc/view/financial/new-earning.php'); ?>
+                        </div>
+                        <div id="admin-summary" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/admin-summary-view.php'); ?>                                
+                        </div>
+                        <div id="balance" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/balance-summary.php'); ?>                                
+                        </div>
+                        <div id="bulk-add-earnings" class="tab-pane fade">
+                            <?php include_once('./inc/view/financial/bulk-add-earnings.php'); ?>                                
                         </div>
                     <? } ?>
                     </div>
