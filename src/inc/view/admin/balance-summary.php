@@ -27,6 +27,8 @@
         </thead>
         <tbody>
 <? 
+    $displayPayoutList = "";
+
     if ($artists) {
         $overallDueForPayment = 0;
         $overallBalance = 0;
@@ -45,7 +47,10 @@
                     $paymentMethodsForArtist = getPaymentMethodsForArtist($artist->id);
                     if(isset($paymentMethodsForArtist) && count($paymentMethodsForArtist) > 0) {
                         if($artist->hold_payouts) { $pausedPayouts += $totalBalance; }
-                        else { $readyForPayment += $totalBalance; }
+                        else { 
+                            $readyForPayment += $totalBalance;
+                            $displayPayoutList = $displayPayoutList . "<li> " . $artist->name . " : " . number_format($totalBalance, 2) . "</li>"; 
+                        }
                     }
                 }
         ?>
@@ -99,7 +104,7 @@
                 </div>
                 <div class="card-body text-center">
                     <h3><strong>₱ <?=number_format($readyForPayment,2);?></strong></h3>
-                    <button class="btn btn-block" disabled><i class="fa fa-credit-card"></i> Pay Now</button>
+                    <button id="btnPayAll" class="btn btn-primary btn-block"<?=($readyForPayment>0 && $currentBalance >= $readyForPayment) ? "" : " disabled";?>><i class="fa fa-credit-card"></i> Pay Now</button>
                     <small><strong>On hold:</strong> ₱ <?=number_format($pausedPayouts,2);?></small>
                 </div>
                 <div class="card-footer text-center">
@@ -156,3 +161,34 @@
             </div>
         </div>
     </div>
+
+<!--- Confirm pay all dialog -->
+<div class="modal" id="confirm-payAll" role="dialog" aria-labelledby="confirmPayAllLabel" aria-hidden="true" data-backdrop="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="title">Confirm payment</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to pay the following balances?<br>
+                <ul>
+                    <?=$displayPayoutList;?>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <a href="/action.pay-all-balances.php" id="submit" class="btn btn-primary">Yes</a>
+                <button id="btnCancelPayAll" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+$('#btnPayAll').on("click", function() {
+    $('#confirm-payAll').show();
+});
+$('#btnCancelPayAll').on("click", function() {
+    $('#confirm-payAll').hide();
+})
+</script>

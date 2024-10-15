@@ -21,7 +21,7 @@ class Payment {
         $date_paid= null,
         $payment_method_id= null,
         $reference_number= null,
-        $payment_processing_fee = null
+        $payment_processing_fee = 0
     ) 
     {
         $this->id = $id;
