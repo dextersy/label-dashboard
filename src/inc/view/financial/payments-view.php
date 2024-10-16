@@ -33,8 +33,8 @@
                         <tr><th>Date Paid</th>
                         <th>Description</th>
                         <th>Paid Through</th>
-                        <th style="text-align:right">Amount</th>
-                        <th style="text-align:right">Fee</th>
+                        <th style="text-align:right" data-sortas="numeric">Amount</th>
+                        <th style="text-align:right" data-sortas="numeric">Fee</th>
                     </thead>
                     <tbody>
                 <?php
@@ -169,6 +169,7 @@
     </div>
 </div>
 
+<script type="text/javascript" src="/assets/js/custom-sort-for-fancyTable.js"></script>
 <script type="text/javascript">
 $("#tblPayments").fancyTable({
   sortColumn:0, // column number for initial sorting
@@ -181,6 +182,7 @@ $("#tblPayments").fancyTable({
   pagination: true, // default: false
   searchable: true,
   globalSearch: true,
-  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;",
+  sortFunction: customSort
 });
 </script>

@@ -18,10 +18,10 @@
     <table class="table" id="tblBalanceSummary">
         <thead>
             <tr><th>Artist</th>
-            <th style="text-align:right;">Total royalties</th>
-            <th style="text-align:right;">Total payments</th>
-            <th style="text-align:right;">Total balance</th>
-            <th style="text-align:right;">Payout point</th>
+            <th style="text-align:right;" data-sortas="numeric">Total royalties (₱)</th>
+            <th style="text-align:right;" data-sortas="numeric">Total payments (₱)</th>
+            <th style="text-align:right;" data-sortas="numeric">Total balance (₱)</th>
+            <th style="text-align:right;" data-sortas="numeric">Payout point (₱)</th>
             <th style="text-align:center;">Due for payment</th>
             <th style="text-align:center;">Payouts paused</th>
         </thead>
@@ -56,10 +56,10 @@
         ?>
             <tr>
                 <td><?=$artist->name;?></td>
-                <td style="text-align:right;">₱<?=number_format($totalRoyalties,2);?></td>
-                <td style="text-align:right;">₱<?=number_format($totalPayments,2);?></td>
-                <td style="text-align:right;"><strong>₱<?=number_format($totalBalance,2);?></strong></td>
-                <td style="text-align:right;">₱<?=number_format($artist->payout_point,0);?></td>
+                <td style="text-align:right;"><?=number_format($totalRoyalties,2);?></td>
+                <td style="text-align:right;"><?=number_format($totalPayments,2);?></td>
+                <td style="text-align:right; font-weight:bold;"><?=number_format($totalBalance,2);?></td>
+                <td style="text-align:right;"><?=number_format($artist->payout_point,0);?></td>
                 <td class="text-center"><?=($totalBalance > $artist->payout_point)?"✓":"";?></td>
                 <td class="text-center"><?=($artist->hold_payouts)?"<i class=\"fa fa-pause-circle-o\"></i>":"";?></td>
             </tr>
@@ -123,7 +123,7 @@
         <table class="table" id="tblRecuperableExpense">
             <thead>
                 <tr><th>Release</th>
-                <th style="text-align:right;">Remaining Recuperable Expense</th>
+                <th style="text-align:right;" data-sortas="numeric">Remaining Recuperable Expense (₱)</th>
             </thead>
             <tbody>
 <? if ($releases) {
@@ -136,7 +136,7 @@
         ?>
             <tr>
                 <td><?=$release->catalog_no;?>: <?=$release->title;?></td>
-                <td style="text-align:right;">₱<?=number_format($recuperableExpense,2);?></td>
+                <td style="text-align:right;"><?=number_format($recuperableExpense,2);?></td>
             </tr>
 <?          }
          } 
@@ -195,6 +195,7 @@ $('#btnCancelPayAll').on("click", function() {
 })
 </script>
 
+<script type="text/javascript" src="/assets/js/custom-sort-for-fancyTable.js"></script>
 <script type="text/javascript">
 $("#tblBalanceSummary").fancyTable({
   sortColumn:0, // column number for initial sorting
@@ -207,7 +208,8 @@ $("#tblBalanceSummary").fancyTable({
   pagination: true, // default: false
   searchable: true,
   globalSearch: true,
-  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;",
+  sortFunction: customSort
 });
 
 $("#tblRecuperableExpense").fancyTable({
@@ -221,6 +223,7 @@ $("#tblRecuperableExpense").fancyTable({
   pagination: true, // default: false
   searchable: true,
   globalSearch: true,
-  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;",
+  sortFunction: customSort
 });
 </script>

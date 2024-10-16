@@ -22,7 +22,7 @@
                     <tr><th>Date Recorded</th>
                     <th>For Release</th>
                     <th>Description</th>
-                    <th style="text-align:right;">Amount</th>
+                    <th style="text-align:right;" data-sortas="numeric">Amount</th>
                 </thead>
                 <tbody>
                 <? if ($earningViewItems != null) {
@@ -47,7 +47,7 @@
         </div>
     </div>
 </div>
-
+<script type="text/javascript" src="/assets/js/custom-sort-for-fancyTable.js"></script>
 <script type="text/javascript">
 $("#tblEarnings").fancyTable({
   sortColumn:0, // column number for initial sorting
@@ -60,6 +60,7 @@ $("#tblEarnings").fancyTable({
   pagination: true, // default: false
   searchable: true,
   globalSearch: true,
-  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;",
+  sortFunction: customSort
 });
 </script>

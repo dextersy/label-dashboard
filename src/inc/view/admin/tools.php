@@ -23,9 +23,10 @@
 
         <table class="table" id="tblEmailLogs">
             <thead>
-            <tr><th>Recipients</th>
-                <th>Subject</th>
+            <tr>
                 <th>Timestamp</th>
+                <th>Recipients</th>
+                <th>Subject</th>
                 <th>Result</th>
                 <th>Actions</th>
             </thead>
@@ -34,9 +35,9 @@
     foreach ($emailAttempts as $emailAttempt) { 
     ?>
         <tr>
+            <td><?=date_format(date_create($emailAttempt->timestamp),'Y-m-d H:i:s');?></td>
             <td><?=$emailAttempt->recipients;?></td>
             <td><?=$emailAttempt->subject;?></td>
-            <td><?=date_format(date_create($emailAttempt->timestamp),'M d, Y \a\t h:i:sA');?></td>
             <td>
                 <? if($emailAttempt->result == 'Success') { ?>
                 <div class="badge" style="background-color:green">Success</div>
@@ -75,7 +76,7 @@ function closePreview() {
 
 $("#tblEmailLogs").fancyTable({
   sortColumn:0, // column number for initial sorting
-  sortOrder: 'ascending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
+  sortOrder: 'descending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
   paginationClass:"btn-link",
   paginationClassActive:"active",
   pageClosest: 3,

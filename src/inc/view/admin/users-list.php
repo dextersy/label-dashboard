@@ -27,7 +27,7 @@
                 <td><?=$user->first_name;?></td>
                 <td><?=$user->last_name;?></td>
                 <td><?=$user->email_address;?></td>
-                <td><?=isset($user->last_logged_in)?date_format(date_create($user->last_logged_in),'M d, Y \a\t h:i:sA'):"Never";?></td>
+                <td><?=isset($user->last_logged_in)?date_format(date_create($user->last_logged_in),'Y-m-d H:i:s'):"Never";?></td>
                 <td><?=$user->is_admin ? "✔️": "";?></td>
                 <td><a href="action.toggle-admin.php?id=<?=$user->id;?>"><?=$user->is_admin?"Remove admin":"Make admin";?></a>
             </tr>
@@ -62,7 +62,7 @@
             <tr>
                 <td><?=$login_attempt->username;?></td>
                 <td><?=$login_attempt->name;?></td>
-                <td><?=date_format(date_create($login_attempt->date_and_time),'M d, Y \a\t h:i:sA');?></td>
+                <td><?=date_format(date_create($login_attempt->date_and_time),'Y-m-d H:i:s');?></td>
                 <td><?=$login_attempt->result;?></td>
                 <td><?=$login_attempt->remote_ip;?></td>
             </tr>

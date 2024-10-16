@@ -125,7 +125,7 @@
                         <tr><th>Name</th>
                         <th>Email address</th>
                         <th>Contact number</th>
-                        <th>No. of tickets</th>
+                        <th data-sortas="numeric">No. of tickets</th>
                         <th>Payment Link</th>
                         <th>Referred by</th>
                         <th>Time ordered</th>
@@ -229,10 +229,10 @@
     </form>
     </div>
 </div>
-
+<script type="text/javascript" src="/assets/js/custom-sort-for-fancyTable.js"></script>
 <script type="text/javascript">
 $("#tblPendingOrders").fancyTable({
-  sortColumn:0, // column number for initial sorting
+  sortColumn: 6, // column number for initial sorting
   sortOrder: 'descending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
   paginationClass:"btn-link",
   paginationClassActive:"active",
@@ -242,6 +242,7 @@ $("#tblPendingOrders").fancyTable({
   pagination: true, // default: false
   searchable: true,
   globalSearch: true,
-  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;",
+  sortFunction: customSort
 });
 </script>
