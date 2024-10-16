@@ -15,7 +15,7 @@
 ?>
 <h3>Balance Summary</h3>
 <div class="table-responsive">
-    <table class="table">
+    <table class="table" id="tblBalanceSummary">
         <thead>
             <tr><th>Artist</th>
             <th style="text-align:right;">Total royalties</th>
@@ -120,7 +120,7 @@
 <div class="row">
     <div class="col-md-5">
     <div class="table-responsive">
-        <table class="table">
+        <table class="table" id="tblRecuperableExpense">
             <thead>
                 <tr><th>Release</th>
                 <th style="text-align:right;">Remaining Recuperable Expense</th>
@@ -183,7 +183,9 @@
     </div>
 </div>
 
-
+<!-- FancyTable -->
+<script src="/assets/js/jquery.3.2.1.min.js"></script>
+<script src="/assets/js/fancyTable.min.js"></script>
 <script type="text/javascript">
 $('#btnPayAll').on("click", function() {
     $('#confirm-payAll').show();
@@ -191,4 +193,34 @@ $('#btnPayAll').on("click", function() {
 $('#btnCancelPayAll').on("click", function() {
     $('#confirm-payAll').hide();
 })
+</script>
+
+<script type="text/javascript">
+$("#tblBalanceSummary").fancyTable({
+  sortColumn:0, // column number for initial sorting
+  sortOrder: 'ascending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
+  paginationClass:"btn-link",
+  paginationClassActive:"active",
+  pageClosest: 3,
+  perPage: 10,
+  sortable: true,
+  pagination: true, // default: false
+  searchable: true,
+  globalSearch: true,
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+});
+
+$("#tblRecuperableExpense").fancyTable({
+  sortColumn:0, // column number for initial sorting
+  sortOrder: 'ascending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
+  paginationClass:"btn-link",
+  paginationClassActive:"active",
+  pageClosest: 3,
+  perPage: 10,
+  sortable: true,
+  pagination: true, // default: false
+  searchable: true,
+  globalSearch: true,
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+});
 </script>

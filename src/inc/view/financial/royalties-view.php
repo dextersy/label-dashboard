@@ -11,7 +11,7 @@
 
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table">
+            <table class="table" id="tblRoyalties">
                 <thead>
                     <tr><th>Date Recorded</th>
                     <th>For Release</th>
@@ -41,3 +41,19 @@
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+$("#tblRoyalties").fancyTable({
+  sortColumn:0, // column number for initial sorting
+  sortOrder: 'descending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
+  paginationClass:"btn-link",
+  paginationClassActive:"active",
+  pageClosest: 3,
+  perPage: 10,
+  sortable: true,
+  pagination: true, // default: false
+  searchable: true,
+  globalSearch: true,
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+});
+</script>

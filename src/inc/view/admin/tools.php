@@ -5,7 +5,7 @@
 
     if(!$isAdmin) { redirectTo('/index.php'); die(); }
 
-    $emailAttempts = getAllEmailAttempts($_SESSION['brand_id'], 10);
+    $emailAttempts = getAllEmailAttempts($_SESSION['brand_id'], 500);
 ?>
 <div class="overlay" id="divEmailPreview" style="display:none">
 <div class="card">
@@ -21,7 +21,7 @@
     <div class="card-body">
     <div class="table-responsive">
 
-        <table class="table">
+        <table class="table" id="tblEmailLogs">
             <thead>
             <tr><th>Recipients</th>
                 <th>Subject</th>
@@ -56,17 +56,34 @@
 
 </div>
 
-<script type="text/javascript">
-    function showEmail(id) {
-        var url = "/inc/view/admin/preview-email.php?id=" + id;
-        var frame = document.getElementById('iframeEmailPreview');
-        var div = document.getElementById('divEmailPreview');
-        frame.src = url;
-        div.style.display = 'block';
-    }
 
-    function closePreview() {
-        var div = document.getElementById('divEmailPreview');
-        div.style.display = 'none';
-    }
+<script src="/assets/js/jquery.3.2.1.min.js"></script>
+<script src="/assets/js/fancyTable.min.js"></script>
+<script type="text/javascript">
+function showEmail(id) {
+    var url = "/inc/view/admin/preview-email.php?id=" + id;
+    var frame = document.getElementById('iframeEmailPreview');
+    var div = document.getElementById('divEmailPreview');
+    frame.src = url;
+    div.style.display = 'block';
+}
+
+function closePreview() {
+    var div = document.getElementById('divEmailPreview');
+    div.style.display = 'none';
+}
+
+$("#tblEmailLogs").fancyTable({
+  sortColumn:0, // column number for initial sorting
+  sortOrder: 'ascending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
+  paginationClass:"btn-link",
+  paginationClassActive:"active",
+  pageClosest: 3,
+  perPage: 10,
+  sortable: true,
+  pagination: true, // default: false
+  searchable: true,
+  globalSearch: true,
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+});
 </script>

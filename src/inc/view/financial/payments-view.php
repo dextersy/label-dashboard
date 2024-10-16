@@ -28,7 +28,7 @@
             <div class="card-body">
                 <? if ($paymentViewItems) { ?>
                     <div class="table-responsive">
-                    <table class="table">
+                    <table class="table" id="tblPayments">
                     <thead>
                         <tr><th>Date Paid</th>
                         <th>Description</th>
@@ -168,9 +168,19 @@
         </div>
     </div>
 </div>
-<!---
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
---->
+
+<script type="text/javascript">
+$("#tblPayments").fancyTable({
+  sortColumn:0, // column number for initial sorting
+  sortOrder: 'descending', // 'desc', 'descending', 'asc', 'ascending', -1 (descending) and 1 (ascending)
+  paginationClass:"btn-link",
+  paginationClassActive:"active",
+  pageClosest: 3,
+  perPage: 5,
+  sortable: true,
+  pagination: true, // default: false
+  searchable: true,
+  globalSearch: true,
+  inputStyle: "border: 1px solid lightgray; padding:10px; border-radius:5px; font-size: 14px;"
+});
+</script>
