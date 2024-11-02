@@ -7,8 +7,9 @@
 
     $GLOBALS['debugOutput'] = [];
 	$user = new User;
-	if (!$user->fromEmailAddress($_SESSION['brand_id'], $_POST['email_address'])) {
+	if (!isset($_POST['email_address']) || !$user->fromEmailAddress($_SESSION['brand_id'], $_POST['email_address'])) {
 		redirectTo("/forgotpassword.php?err=no_user");
+		die();
 	}
 	$resetHash = md5(time());
 	$user->reset_hash = $resetHash;
