@@ -17,6 +17,17 @@
         var walletBalance = Number(document.getElementById('wallet_balance').value);
         var paymentAmount = Number(document.getElementById('payment_amount').value);
 
+        if(paymentAmount < 0) {
+            document.getElementById('checkbox_manualPayment').checked = true;
+            document.getElementById('checkbox_manualPayment').disabled = true;
+            document.getElementById('select_paymentMethod').value = "-1";
+            document.getElementById('select_paymentMethod').disabled = true;
+        }
+        else {
+            document.getElementById('checkbox_manualPayment').disabled = false;
+            document.getElementById('select_paymentMethod').disabled = false;
+        }
+
         if (isManualPayment || walletBalance >= paymentAmount) {
             document.getElementById('btn_submit').disabled = false;
             errorMessageElement.style.display = 'none';
@@ -66,12 +77,13 @@
             <label for="amount">Amount sent</label>
             <div class="input-group">
                 <div class="input-group-addon">₱</div>
-                <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>" onchange="checkBalance();" required min="1">
+                <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount" placeholder="Amount" value="<?=$totalBalance;?>" onchange="checkBalance();" required>
             </div>
         </div> 
         <div class="form-group">
             <label for="select_paymentMethod">Paid through</label>
             <select name="payment_method_id" id="select_paymentMethod" class="form-control" required>
+                <option value="-1">Non-cash / adjustment</option>
     <?php   
         foreach($paymentMethods as $paymentMethod) {
     ?>

@@ -11,6 +11,9 @@
 
     $success = true;
     $payment = new Payment;
+    if($_POST['payment_method_id'] == '-1') {
+        unset($_POST['payment_method_id']);
+    }
     $payment->fromFormPOST($_POST);
 
     $brand = new Brand;

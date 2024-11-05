@@ -38,11 +38,18 @@
                     </thead>
                     <tbody>
                 <?php
-                    foreach($paymentViewItems as $paymentViewItem) { ?>
+                    foreach($paymentViewItems as $paymentViewItem) { 
+                        if($paymentViewItem->paid_thru_type != '') {
+                            $paymentMethod = $paymentViewItem->paid_thru_type . ' - ' . $paymentViewItem->paid_thru_account_name . ' - ' . $paymentViewItem->paid_thru_account_number;
+                        }
+                        else {
+                            $paymentMethod = "<span class=\"text-muted\"><em>Non-cash / adjustment</em></span>";
+                        }
+                ?>
                     <tr>
                         <td><?=$paymentViewItem->date_paid;?></td>
                         <td><?=$paymentViewItem->description;?></td>
-                        <td><?=$paymentViewItem->paid_thru_type;?> - <?=$paymentViewItem->paid_thru_account_name;?> - <?=$paymentViewItem->paid_thru_account_number;?></td>
+                        <td><?=$paymentMethod;?></td>
                         <td align="right"><?=number_format($paymentViewItem->amount, 2);?></td>   
                         <td align="right"><?=number_format($paymentViewItem->payment_processing_fee, 2);?></td>               
                     </tr>
