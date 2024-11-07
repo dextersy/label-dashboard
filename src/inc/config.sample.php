@@ -25,4 +25,10 @@ define('LOCK_TIME_IN_SECONDS', 120);
 // Input Short.io key for events shortlinking
 define('SHORT_IO_KEY', '');
 define('SHORT_IO_DOMAIN', '');
+
+// S3 details -- get this from your AWS account
+define('S3_BUCKET', '');
+define('S3_ACCESS_KEY', '');
+define('S3_SECRET_KEY', '');
+define('S3_REGION', ''); // e.g. 'ap-southeast-1'
 ?>
