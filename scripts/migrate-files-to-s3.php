@@ -12,7 +12,7 @@
     $count = 0; $failed = 0;
     while($row = mysqli_fetch_assoc($result)) {
         $error = false;
-        $target_file = __DIR__ . "/../src/" . $row['path'];
+        $target_file = UPLOADS_PATH . $row['path'];
         $newPath = uploadFileToS3AndDeleteLocal($target_file);
 
         if($newPath != null) {
@@ -35,7 +35,7 @@
     $count = 0; $failed = 0;
     while($row = mysqli_fetch_assoc($result)) {
         $error = false;
-        $target_file = __DIR__ . "/../src/" . $row['profile_photo'];
+        $target_file = UPLOADS_PATH . $row['profile_photo'];
         $newPath = uploadFileToS3AndDeleteLocal($target_file);
 
         if($newPath != null) {
@@ -58,7 +58,7 @@
     $count = 0; $failed = 0;
     while($row = mysqli_fetch_assoc($result)) {
         $error = false;
-        $target_file = __DIR__ . "/../src/" . $row['path'];
+        $target_file = UPLOADS_PATH . $row['path'];
         $newPath = uploadFileToS3AndDeleteLocal($target_file);
 
         if($newPath != null) {
@@ -81,7 +81,7 @@
     $count = 0; $failed = 0;
     while($row = mysqli_fetch_assoc($result)) {
         $error = false;
-        $target_file = __DIR__ . "/../src/" . $row['cover_art'];
+        $target_file = UPLOADS_PATH . $row['cover_art'];
         $newPath = uploadFileToS3AndDeleteLocal($target_file);
 
         if($newPath != null) {
@@ -105,7 +105,7 @@
     while($row = mysqli_fetch_assoc($result)) {
         $error = false;
         if(str_starts_with($row['logo_url'], 'uploads/')) {
-            $target_file = __DIR__ . "/../src/" . $row['logo_url'];
+            $target_file = UPLOADS_PATH . $row['logo_url'];
             $newLogoPath = uploadFileToS3AndDeleteLocal($target_file);
         }
         else {
@@ -113,7 +113,7 @@
         }
 
         if(str_starts_with($row['favicon_url'], 'uploads/')) {
-            $target_file = __DIR__ . "/../src/" . $row['favicon_url'];
+            $target_file = UPLOADS_PATH . $row['favicon_url'];
             $newFaviconPath = uploadFileToS3AndDeleteLocal($target_file);
         }
         else {
