@@ -49,7 +49,7 @@
 <?php
   if (isset($event->poster_url) && $event->poster_url != '') {
 ?>
-    <img src="../../<?=$event->poster_url;?>" width="30%">
+    <img src="<?=$event->poster_url;?>" width="30%">
 <?php
   }
 ?>

@@ -146,7 +146,7 @@
   <?php
       if (isset($event->poster_url) && $event->poster_url != '') {
     ?>
-        <img src="../../<?=$event->poster_url;?>" class="card-img-top" style="max-height:120px;object-fit:cover;filter:blur(2px) brightness(0.8);">
+        <img src="<?=$event->poster_url;?>" class="card-img-top" style="max-height:120px;object-fit:cover;filter:blur(2px) brightness(0.8);">
     <?php
       }
     ?>

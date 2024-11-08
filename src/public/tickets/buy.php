@@ -28,7 +28,7 @@
   <title>Buy tickets to <?=$event->title;?></title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
-  <meta property="og:image" content="<?="https://" . $_SERVER['SERVER_NAME'] . "/" . $event->poster_url;?>"/>
+  <meta property="og:image" content="<?=$event->poster_url;?>"/>
 
     <script type="text/javascript">
       function calculateTotal() {
@@ -185,7 +185,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   if (isset($event->poster_url) && $event->poster_url != '') {
 ?>
       <div class="col-md-4 event-poster-container">
-        <img src="../../<?=$event->poster_url;?>" class="event-poster">
+        <img src="<?=$event->poster_url;?>" class="event-poster">
       </div>
       <div class="col-md-8" style="padding:30px;">
 <? } 
