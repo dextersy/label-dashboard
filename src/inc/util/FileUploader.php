@@ -4,10 +4,10 @@ require_once( './vendor/class-php-ico.php' );
 require_once('./vendor/aws/aws-autoloader.php');
 
 function uploadImage($filename, $tempname) {
-    $target_dir = "uploads/";
-    $target_file = $target_dir . basename($filename);
-    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-    
+    $path_parts = pathinfo($filename);
+    $target_dir = "tmp/";
+    $target_file = $target_dir . $path_parts['filename'] . '_' . uniqid() . '.' . $path_parts['extension'];
+        
     $check = getimagesize($tempname);
     if($check !== false) {
         $i = 0;
@@ -47,14 +47,11 @@ function uploadImage($filename, $tempname) {
 }
 
 function uploadDocument($file) {
-    $target_dir = "uploads/";
-    $target_file = $target_dir . basename($file["name"]);
+    $path_parts = pathinfo($file["name"]);
+
+    $target_dir = "tmp/";
+    $target_file = $target_dir . $path_parts['filename'] . '_' . uniqid() . '.' . $path_parts['extension'];
     
-    $i = 0;
-    while(file_exists($target_file)) {
-        $target_file = $target_dir . basename($file["name"]) . "_" . $i;
-        $i++;
-    }
     if(move_uploaded_file($file["tmp_name"], $target_file)) {
         $s3client = new Aws\S3\S3Client([
             'region' => S3_REGION,
@@ -84,7 +81,7 @@ function uploadDocument($file) {
 
 function convertPngToIco($filename) {
     $source = $filename;
-    $destination = "uploads/" . basename($filename, '.png') . '.ico';
+    $destination = "tmp/" . basename($filename, '.png') . '.ico';
 
     $ico_lib = new PHP_ICO( $source );
     if($ico_lib->save_ico( $destination )) {
