@@ -9,3 +9,4 @@ db_api
 src/webhook.log
 phpinfo.php
 src/tmp/qrcode/*
+scripts/inc/config.php
