@@ -97,6 +97,29 @@
     }
     echo "Completed migration of release cover art. " . $count . " files moved successfully. " . $failed . " transfers failed.\n";
 
+    // Migrate event posters
+    echo "*********\nStarting migration of event posters...\n";
+    $sql = "SELECT `id`, `poster_url` FROM `event` WHERE `poster_url` LIKE 'uploads/%'";
+    $result = MySQLConnection::query($sql);
+    $count = 0; $failed = 0;
+    while($row = mysqli_fetch_assoc($result)) {
+        $error = false;
+        $target_file = UPLOADS_PATH . $row['poster_url'];
+        $newPath = uploadFileToS3AndDeleteLocal($target_file);
+
+        if($newPath != null) {
+            $sql = "UPDATE `event` SET `poster_url` = '" . MySQLConnection::escapeString($newPath) . "' WHERE `id` = '" . $row['id'] . "'";
+            MySQLConnection::query($sql);
+            echo $target_file . " -- uploaded to " . $newPath . "\n";
+            $count++;
+        }
+        else {
+            echo $target_file . " -- UPLOAD FAILED!!!\n";
+            $failed++;
+        }
+    }
+    echo "Completed migration of event posters. " . $count . " files moved successfully. " . $failed . " transfers failed.\n";
+
     // Migrate brand logos and favicons
     echo "*********\nStarting migration of brand logos and favicons...\n";
     $sql = "SELECT `id`, `logo_url`, `favicon_url` FROM `brand` WHERE `logo_url` LIKE 'uploads/%' OR `favicon_url` LIKE 'uploads/%'";
