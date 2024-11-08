@@ -127,7 +127,7 @@
     $count = 0; $failed = 0;
     while($row = mysqli_fetch_assoc($result)) {
         $error = false;
-        if(str_starts_with($row['logo_url'], 'uploads/')) {
+        if(substr($row['logo_url'], 0, 8) == 'uploads/') {
             $target_file = UPLOADS_PATH . $row['logo_url'];
             $newLogoPath = uploadFileToS3AndDeleteLocal($target_file);
         }
@@ -135,7 +135,7 @@
             $newLogoPath = $row['logo_url'];
         }
 
-        if(str_starts_with($row['favicon_url'], 'uploads/')) {
+        if(substr($row['favicon_url'], 0, 8) == 'uploads/') {
             $target_file = UPLOADS_PATH . $row['favicon_url'];
             $newFaviconPath = uploadFileToS3AndDeleteLocal($target_file);
         }
