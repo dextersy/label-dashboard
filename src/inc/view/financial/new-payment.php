@@ -24,7 +24,9 @@
             document.getElementById('select_paymentMethod').disabled = true;
         }
         else {
-            document.getElementById('checkbox_manualPayment').disabled = false;
+            if(document.getElementById('select_paymentMethod').value != "-1") {
+                document.getElementById('checkbox_manualPayment').disabled = false;
+            }
             document.getElementById('select_paymentMethod').disabled = false;
         }
 
@@ -37,6 +39,18 @@
             errorMessageElement.style.display = 'block';
             errorMessageElement.innerHTML = "Not enough money in your balance.";
         }
+    }
+
+    function onChangePaymentMethod() {
+        if(document.getElementById('select_paymentMethod').value == -1) {
+            document.getElementById('checkbox_manualPayment').checked = true;
+            document.getElementById('checkbox_manualPayment').disabled = true;
+        }
+        else {
+            document.getElementById('checkbox_manualPayment').checked = false;
+            document.getElementById('checkbox_manualPayment').disabled = false;
+        }
+        toggleManualPayment();
     }
 
     function toggleManualPayment() {
@@ -54,7 +68,6 @@
         else {
             paidThroughField.attr('required');
         }
-        
         checkBalance();
     }
 </script>
@@ -82,7 +95,7 @@
         </div> 
         <div class="form-group">
             <label for="select_paymentMethod">Paid through</label>
-            <select name="payment_method_id" id="select_paymentMethod" class="form-control" required>
+            <select name="payment_method_id" id="select_paymentMethod" class="form-control" onchange="onChangePaymentMethod();" required>
                 <option value="-1">Non-cash / adjustment</option>
     <?php   
         foreach($paymentMethods as $paymentMethod) {
