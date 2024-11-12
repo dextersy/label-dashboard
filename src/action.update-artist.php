@@ -164,7 +164,7 @@
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
-        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
+        $msg = str_replace("%LOGO%", $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%ARTIST_NAME%', $artistName, $msg);
         $msg = str_replace('%CHANGED_ITEMS%', $changeHistory, $msg);
         $msg = str_replace('%BRAND_NAME%', $brandName, $msg);

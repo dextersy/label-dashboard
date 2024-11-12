@@ -39,7 +39,7 @@
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
 
-        $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $_SESSION['brand_logo'], $msg);
+        $msg = str_replace("%LOGO%", $_SESSION['brand_logo'], $msg);
 		$msg = str_replace('%URL%', getProtocol() . $_SERVER['HTTP_HOST'] . "/resetpassword.php?code=" . $resetHash, $msg);
 		$msg = str_replace('%BRAND_NAME%', $brandName, $msg);
 		$msg = str_replace('%BRAND_COLOR%', $brandColor, $msg);

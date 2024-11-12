@@ -228,7 +228,7 @@ function __generatePaymentEmailFromTemplate($artistName, $payment, $brandName, $
     $msg = fread($file, filesize(TEMPLATE_LOCATION));
     fclose($file);
 
-    $msg = str_replace("%LOGO%", getProtocol() . $_SERVER['HTTP_HOST'] . "/" . $brandLogo, $msg);
+    $msg = str_replace("%LOGO%", $brandLogo, $msg);
     $msg = str_replace("%BRAND_NAME%", $brandName, $msg);
     $msg = str_replace("%BRAND_COLOR%", $brandColor, $msg);
     $msg = str_replace('%ARTIST%', $artistName, $msg);
