@@ -198,6 +198,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 ?>
    <h5>Get tickets to</h5>
    <h1><strong><?=$event->title;?></strong></h1>
+   <?
+      $eventDate = date_create($event->date_and_time);
+   ?>
+   <h5><strong><?=date_format($eventDate, "F d, Y");?></strong> at <strong><?=$event->venue;?></strong></h5>
 <?php
   }
   else {
@@ -257,9 +261,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
           <div class="field-error-message" style="display:none;" id="error_contact_number">Contact number is required.</div>
 
-          <div class="material-textfield">
-            <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fourth material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();">
-            <label class="fadeIn fourth floating">Number of tickets</label>
+          <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend fadeIn fourth">
+              <span class="input-group-text">Regular - <strong>₱<?=number_format($event->ticket_price, 2);?></strong></span>
+            </div>
+            <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fourth form-control material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();">
           </div>
           <div class="field-error-message" style="display:none;" id="error_number_of_entries">Number of tickets is required.</div>
 
