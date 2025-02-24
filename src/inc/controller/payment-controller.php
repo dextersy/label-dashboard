@@ -252,6 +252,8 @@ function __generatePaymentEmailFromTemplate($artistName, $payment, $brandName, $
 
 // @return Reference number, if successful. null if failed.
 function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $description = '') {
+
+    payment_log("sendPaymentThroughPaymongo: Amount = " . $amount);
     $brand = new Brand;
     $brand->fromID($brand_id);
     $walletID = $brand->paymongo_wallet_id;
