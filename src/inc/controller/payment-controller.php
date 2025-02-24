@@ -17,6 +17,12 @@ class PaymentViewItem {
     public $payment_processing_fee;
 }
 
+function payment_log($msg) {
+    $fp = fopen('payments.log', 'a');
+    $date = "[" . date("Y/m/d h:i:sa") . "] ";
+    fwrite($fp, $date . $msg . "\n");
+}
+
 function getPaymentsForArtist($artist_id, $start=0, $limit=-1){
     $sql = "SELECT `id` FROM `payment` " .
             "WHERE `artist_id` = ". $artist_id . " ".
@@ -290,10 +296,12 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
         curl_close($curl);
 
         if ($err) {
+            payment_log("Error occurred in CURL to Paymongo: " . $err);
             return null;
         } else {
             // Return reference number
             $json = json_decode($response);
+            payment_log("JSON paymongo response: " . $response);
             return $json->data->attributes->reference_number;
         }
     }
