@@ -288,7 +288,7 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
             ]),
             CURLOPT_HTTPHEADER => [
                 "accept: application/json",
-                "authorization: Basic c2tfbGl2ZV9MUHhxU3hSU2p1bU1vRDZhUW1SeTVaTEo6",
+                "authorization: Basic " . base64_encode(PAYMONGO_SECRET_KEY),
                 "content-type: application/json"
             ],
         ]);
