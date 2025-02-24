@@ -177,6 +177,7 @@ function saveManualPayment($payment, $brand) {
     return __addPayment($payment, true, $brand);
 }
 function __addPayment($payment, $isManualPayment, $brand) {
+    payment_log("__addPayment: Payment details " . json_encode($payment));
     $success = true;
 
     if (isset($payment->payment_method_id) && $payment->payment_method_id != '' && !$isManualPayment) {
