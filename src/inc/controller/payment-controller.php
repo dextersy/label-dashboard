@@ -258,7 +258,7 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
     $paymentMethod->fromID($paymentMethodId);
 
     if (isset($paymentMethod->bank_code) && isset($paymentMethod->account_name) && isset($paymentMethod->account_number_or_email)) {
-        payment_log("JSON request : " . json_decode(json_encode([
+        payment_log("JSON request : " . json_encode([
                         'data' => [
                             'attributes' => [
                                     'amount' => $amount * 100,
@@ -272,7 +272,7 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
                                     'description' => $description
                             ]
                         ]
-                    ])));
+                    ]));
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => "https://api.paymongo.com/v1/wallets/" . $walletID . "/transactions",
