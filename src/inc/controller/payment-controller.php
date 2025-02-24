@@ -183,6 +183,7 @@ function __addPayment($payment, $isManualPayment, $brand) {
     if (isset($payment->payment_method_id) && $payment->payment_method_id != '' && !$isManualPayment) {
         // Pay through Paymongo
         $processing_fee = $brand->payment_processing_fee_for_payouts;
+        payment_log("__addPayment: Processing fee " . json_encode($processing_fee));
         $referenceNumber = sendPaymentThroughPaymongo($brand->id, $payment->payment_method_id, $payment->amount - $processing_fee, $payment->description);
         if($referenceNumber != null) {
             $payment->payment_processing_fee = $processing_fee;
