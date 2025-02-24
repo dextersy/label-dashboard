@@ -265,7 +265,7 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
         payment_log("JSON request : " . json_encode([
                         'data' => [
                             'attributes' => [
-                                    'amount' => $amount * 100.00,
+                                    'amount' => round($amount * 100.00, 0),
                                     'receiver' => [
                                                     'bank_account_name' => $paymentMethod->account_name,
                                                     'bank_account_number' => $paymentMethod->account_number_or_email,
