@@ -258,7 +258,22 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
     $paymentMethod->fromID($paymentMethodId);
 
     if (isset($paymentMethod->bank_code) && isset($paymentMethod->account_name) && isset($paymentMethod->account_number_or_email)) {
-  
+        $post_fields = json_encode([
+                        'data' => [
+                            'attributes' => [
+                                    'amount' => $amount * 100,
+                                    'receiver' => [
+                                                    'bank_account_name' => $paymentMethod->account_name,
+                                                    'bank_account_number' => $paymentMethod->account_number_or_email,
+                                                    'bank_code' => $paymentMethod->bank_code
+                                    ],
+                                    'provider' => 'instapay',
+                                    'type' => 'send_money',
+                                    'description' => $description
+                            ]
+                        ]
+                    ]);
+        payment_log("JSON parameters : " . json_decode($post_fields));
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => "https://api.paymongo.com/v1/wallets/" . $walletID . "/transactions",
@@ -268,21 +283,7 @@ function sendPaymentThroughPaymongo($brand_id, $paymentMethodId, $amount, $descr
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => json_encode([
-                'data' => [
-                    'attributes' => [
-                            'amount' => $amount * 100,
-                            'receiver' => [
-                                            'bank_account_name' => $paymentMethod->account_name,
-                                            'bank_account_number' => $paymentMethod->account_number_or_email,
-                                            'bank_code' => $paymentMethod->bank_code
-                            ],
-                            'provider' => 'instapay',
-                            'type' => 'send_money',
-                            'description' => $description
-                    ]
-                ]
-            ]),
+            CURLOPT_POSTFIELDS => $post_fields,
             CURLOPT_HTTPHEADER => [
                 "accept: application/json",
                 "authorization: Basic c2tfbGl2ZV9MUHhxU3hSU2p1bU1vRDZhUW1SeTVaTEo6",
