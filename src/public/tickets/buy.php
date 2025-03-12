@@ -2,6 +2,7 @@
     chdir("../..");
     include_once("./inc/controller/brand_check.php");
     include_once("./inc/controller/get_referrers.php");
+    include_once("./inc/controller/events-controller.php");
     include_once("./inc/model/brand.php");
     include_once("./inc/model/event.php");
 
@@ -22,6 +23,13 @@
       if($referrer == null) {
         unset($_GET['ref']);
       }
+    }
+
+    // Check tickets remaining
+    if($event->max_tickets > 0) {
+      $max_tickets = $event->max_tickets;
+      $total_tickets_sold = getTotalTicketsSold($event->id);
+      $remaining_tickets = $max_tickets - $total_tickets_sold;
     }
 ?>
 <header>
@@ -194,7 +202,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="col-md-12 text-center">
 <?
   }
-  if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
+  if ((!isset($event->close_time) || time() <= strtotime($event->close_time)) && (!isset($remaining_tickets) || $remaining_tickets > 0)) {
 ?>
    <h5>Get tickets to</h5>
    <h1><strong><?=$event->title;?></strong></h1>
@@ -222,7 +230,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </div>
 <?php
-  if (!isset($event->close_time) || time() <= strtotime($event->close_time)) {
+  if ((!isset($event->close_time) || time() <= strtotime($event->close_time)) && (!isset($remaining_tickets) || $remaining_tickets > 0)) {
 ?>
 
 
@@ -231,7 +239,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="container">
   <div class="row h-50">
     <div class="col-md-7">
-      &nbsp;
       <h6><strong>Step 1.</strong> Please provide your details.</h6>
 
           <input type="hidden" id="event_id" name="event_id" value="<?=$event->id;?>">
@@ -260,13 +267,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </div>
           <div class="field-error-message" style="display:none;" id="error_contact_number">Contact number is required.</div>
-
           <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
+<?php
+    if(isset($remaining_tickets)) {
+?>
+          <small class="fadeIn fourth"><strong><?=$remaining_tickets;?></strong> tickets available.</small>
+<?php
+    }
+?>
           <div class="input-group mb-3">
             <div class="input-group-prepend fadeIn fourth">
               <span class="input-group-text">Regular - <strong>₱<?=number_format($event->ticket_price, 2);?></strong></span>
             </div>
-            <input type="number" min="1" step="1" id="number_of_entries" class="fadeIn fourth form-control material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();">
+            <input type="number" min="1" max="<?=$remaining_tickets;?>" step="1" id="number_of_entries" class="fadeIn fourth form-control material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();">
           </div>
           <div class="field-error-message" style="display:none;" id="error_number_of_entries">Number of tickets is required.</div>
 

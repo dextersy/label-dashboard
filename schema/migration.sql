@@ -402,3 +402,7 @@ ADD COLUMN `supports_grabpay` TINYINT NOT NULL DEFAULT 1 AFTER `supports_maya`;
 --- OCT 8
 ALTER TABLE `artist` 
 ADD COLUMN `hold_payouts` TINYINT NOT NULL DEFAULT 0 AFTER `payout_point`;
+
+--- MAR 12 2025
+ALTER TABLE `event` 
+ADD COLUMN `max_tickets` INT NULL DEFAULT 0 AFTER `supports_grabpay`;

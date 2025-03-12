@@ -1,5 +1,6 @@
 <?php
 require_once('./inc/model/event.php');
+require_once('./inc/controller/events-controller.php');
 $event = new Event;
 
 if ($_SESSION['current_event'] != NULL) {
@@ -25,8 +26,12 @@ $verificationPIN = (isset($event->verification_pin) && $event->verification_pin 
 
 $formAction = "action.update-event.php?from=" . $_SERVER['REQUEST_URI'];
 
-$status = (!isset($event->close_time) || time() <= strtotime($event->close_time))?"Open":"Closed";
-$statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->close_time))?"badge-success":"badge-danger";
+if (isset($event->max_tickets) && $event->max_tickets > 0) {
+    $remaining_tickets = $event->max_tickets - getTotalTicketsSold($event->id);
+}
+
+$status = (!isset($event->close_time) || time() <= strtotime($event->close_time)) && (!isset($remaining_tickets) || $remaining_tickets > 0) ?"Open":"Closed";
+$statusBadgeClass = ($status == 'Open')?"badge-success":"badge-danger";
 
 
 
@@ -82,7 +87,7 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                     <div class="form-group">
                         <label for="amount">Date</label>
                         <div class="input-group">
-                            <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$eventDateTime->format("Y-m-d H:i:s");?>" required>
+                            <input type="datetime-local" class="form-control" id="date_and_time" name="date_and_time" placeholder="Date" value="<?=$eventDateTime->format("Y-m-d H:i:s");?>" required  step="1">
                             <div class="input-group-addon">GMT+8 (PH)</div>
                         </div>
                     </div> 
@@ -123,16 +128,21 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                         <strong>Ticket sales: </strong><span class="badge badge-pill <?=$statusBadgeClass;?>"><?=$status;?></span>
                     </div>
                     <div class="form-group">
-                        <label for="websiteURL">Ticket price</label>
+                        <label for="ticket_price">Ticket price</label>
                         <div class="input-group">
                             <div class="input-group-addon">₱</div>
                             <input type="text" class="form-control" id="ticket_price" name="ticket_price" placeholder="Ticket Price" value="<?=$event->ticket_price;?>" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="amount">Close ticket sales on</label>
+                        <label for="maximumTickets">Maximum number of tickets</label>
+                        <small class="form-text text-muted">Set "0" for unlimited tickets.</small>
+                        <input type="text" class="form-control" id="maximumTickets" name="max_tickets" placeholder="Maximum number of tickets" value="<?=$event->max_tickets;?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="close_time">Close ticket sales on</label>
                         <div class="input-group">
-                            <input type="datetime-local" class="form-control" id="close_time" name="close_time" placeholder="Date" value="<?=$closeDateTime->format("Y-m-d H:i:s");?>">
+                            <input type="datetime-local" class="form-control" id="close_time" name="close_time" placeholder="Date" value="<?=$closeDateTime->format("Y-m-d H:i:s");?>" step="1">
                             <div class="input-group-addon">GMT+8 (PH)</div>
                         </div>
                     </div> 
@@ -143,7 +153,7 @@ $statusBadgeClass = (!isset($event->close_time) || time() <= strtotime($event->c
                     </div>
                 <? } ?>
                     <div class="form-group">
-                        <label for="websiteURL">Ticket purchase link</label>
+                        <label for="buy_shortlink">Ticket purchase link</label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="buy_shortlink" name="buy_shortlink" value="<?=isset($event->id)? $event->buy_shortlink : "Save to see buy link";?>" readonly>
                             <div class="input-group-addon">
