@@ -10,6 +10,7 @@
     include_once("./inc/controller/get_referrers.php");
     require_once('./inc/controller/get_team_members.php');
     require_once('./inc/controller/users-controller.php');
+    require_once('./inc/controller/events-controller.php');
 
     function createCheckoutSession($event_id, $number_of_tickets, $price_per_ticket, $description, $name, $email, $phone, $paymentMethods) {
         $curl = curl_init();
@@ -152,6 +153,17 @@
 
 		return sendEmail($emailAddresses, $subject, $body);
 	}
+
+    // Check if there are still available tickets
+    $event = new Event;
+    $event->fromID($_POST['event_id']);
+    if(isset($event->max_tickets) && $event->max_tickets > 0) {
+        $remaining_tickets = $event->max_tickets - getTotalTicketsSold($event->id);
+        if ($_POST['number_of_entries'] > $remaining_tickets) {
+            redirectTo('/public/tickets/buy.php?id=' . $event->id);
+            die();
+        }
+    }
 
     $ticket = new Ticket;
     $ticket->fromFormPOST($_POST);
