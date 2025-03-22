@@ -142,9 +142,11 @@
         <div class="card-footer" style="position:sticky;bottom:0;background-color:#f6f6f6;">
             <strong>Totals </strong>&nbsp;&nbsp;
                 <i class="fa fa-dot-circle-o" style="color:green;" title="Number of paid tickets"></i> <?=$count;?>&nbsp;&nbsp;
-                <i class="fa fa-money" title="Total revenue"></i> ₱<?=number_format($total_sold,2);?>&nbsp;&nbsp;
+                <i class="fa fa-money" title="Total revenue"></i> <?=number_format($total_sold,2);?>&nbsp;&nbsp;
                 <i class="fa fa-credit-card" title="Total processing fee"></i> -<?=number_format($total_processing_fee,2);?>&nbsp;&nbsp;
-                <i class="fa fa-plus-square" title="Net amount"></i> <strong>₱<?=number_format($total_sold - $total_processing_fee,2);?></strong>
+                <i class="fa fa-plus" title="Net amount"></i> <?=number_format($total_sold - $total_processing_fee,2);?>&nbsp;&nbsp;
+                <i class="fa fa-percent" title="Tax"></i> -<?=number_format(($total_sold - $total_processing_fee)*.005,2);?>&nbsp;&nbsp;
+                <i class="fa fa-plus-square" title="Grand total"></i> -<strong>₱<?=number_format(($total_sold - $total_processing_fee)*.995,2);?></strong>
 
         </div>
     </div>

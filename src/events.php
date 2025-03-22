@@ -21,7 +21,7 @@
                     <ul class="nav nav-pills">
                         <li class="active"><a data-toggle="tab" href="#details"><i class="fa fa-info-circle"></i>Details</a></li>
                         <li><a data-toggle="tab" href="#tickets"><i class="fa fa-ticket"></i>Tickets</a></li>
-                        <li><a data-toggle="tab" href="#pending"><i class="fa fa-clock-o"></i>Pending Orders</a></li>
+                        <li><a data-toggle="tab" href="#pending"><i class="fa fa-clock-o"></i>Abandoned Orders</a></li>
                         <li><a data-toggle="tab" href="#referrers"><i class="fa fa-user-plus" aria-hidden="true"></i>Referrals</a></li>
                     </ul>
                     &nbsp;
