@@ -117,7 +117,6 @@
                         <th>Contact number</th>
                         <th data-sortas="numeric">No. of tickets</th>
                         <th>Ticket code</th>
-                        <th>Payment Link</th>
                         <th data-sortas="numeric">Total paid</th>
                         <th data-sortas="numeric">Processing fee</th>
                         <th>Referred by</th>
@@ -143,10 +142,6 @@
                             <td><?=$ticket->contact_number; ?></td>
                             <td><?=$ticket->number_of_entries; ?></td>
                             <td><strong><?=$ticket->ticket_code; ?></strong></td>
-                            <td>
-                                <? if(isset($ticket->payment_link) && $ticket->payment_link != '') { ?> 
-                                <a href="<?=$ticket->payment_link; ?>"><i class="fa fa-copy"></i></a></td>
-                                <? } ?>
                             <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->price_per_ticket*$ticket->number_of_entries, 2) : "-";?></td>
                             <td style="text-align:right;"><?=($ticket->status == 'Ticket sent.' || $ticket->status == 'Payment Confirmed')? number_format($ticket->payment_processing_fee, 2) : "-";?></td>
                             <td><?=isset($referrer) ? $referrer->name : ""; ?></td>
