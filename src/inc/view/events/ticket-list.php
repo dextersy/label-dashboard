@@ -60,6 +60,36 @@
         attempts = 300;
     }
 </script>
+<div class="modal fade" id="confirm-cancel" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm deletion
+            </div>
+            <div class="modal-body">
+                <strong>WARNING: </strong>This ticket is already paid and sent to the customer.<br>
+                Are you sure you want to cancel this ticket?<br>
+                <input type="hidden" name="ticketId" id="ticketId" value=""/>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="submit" class="btn btn-primary">Yes</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).on("click", ".ticket-list-cancel-button", function () {
+       var ticketId = $(this).data('id');
+       $(".modal-body #ticketId").val( ticketId );
+    });
+    $('#submit').click(function(){
+        var ticketId = $(".modal-body #ticketId").val();
+        window.location.href = "/action.cancel-ticket.php?ticket_id=" + ticketId;
+    });
+</script>
+
+
 <div class="row">
     <div class="col-md-4"><h3>Confirmed Orders</h3></div>
 </div>
@@ -124,7 +154,10 @@
                             <td><?=$ticket->number_of_claimed_entries . " / " . $ticket->number_of_entries;?></td>
                             <td>
                                 <? if ($ticket->number_of_claimed_entries < $ticket->number_of_entries) { ?>
-                                    <a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Resend Ticket ]</a>
+                                    <a href="action.send-tickets.php?ticket_id=<?=$ticket->id;?>">[ Resend ]</a>
+                                <? } ?>
+                                <? if ($ticket->number_of_claimed_entries == 0) { ?>
+                                    <a class="ticket-list-cancel-button" data-toggle="modal" data-id="<?=$ticket->id;?>" title="Delete this photo" href="#confirm-cancel">[ Cancel ]</a>
                                 <? } ?>
                             </td>
                         </tr>

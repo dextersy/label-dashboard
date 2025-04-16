@@ -18,12 +18,17 @@
     }
     else {
         $ticket_id = $_GET['ticket_id'];
+        $ticket = new Ticket;
+        $ticket->fromID($ticket_id);
+        if($ticket->status != 'New') {
+            $ticket_is_paid = true;
+        }
         $result = archiveTicket($ticket_id);
         if(!$result) {
-        	redirectTo('/events.php?action=cancelTicket&count=1&result=Failed#pending');
+        	redirectTo('/events.php?action=cancelTicket&count=1&result=Failed' . ($ticket_is_paid ? '#tickets' : '#pending'));
         }
         else {
-        	redirectTo('/events.php?action=cancelTicket&count=1&result=OK#pending');
+        	redirectTo('/events.php?action=cancelTicket&count=1&result=OK' . ($ticket_is_paid ? '#tickets' : '#pending'));
         }
     }
 	

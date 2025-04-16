@@ -153,11 +153,16 @@
     function __sendTicketToEmail($emailAddress, $eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $eventDate, $rsvpLink) {
 		$subject = "Here's your ticket to ". $eventName . "!";
 		$emailAddresses[0] = $emailAddress;
-		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate($eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $rsvpLink));
+		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate('assets/templates/event_ticket_email.html', $eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $rsvpLink));
+	}
+    function __sendTicketCanceledEmail($emailAddress, $eventName, $ticketCode) {
+		$subject = "Ticket to ". $eventName . " has been canceled.";
+		$emailAddresses[0] = $emailAddress;
+		return sendEmail($emailAddresses, $subject, __generateEmailFromTemplate('assets/templates/event_ticket_canceled_email.html', $eventName, null, $ticketCode, null, null, null));
 	}
 
-    function __generateEmailFromTemplate($eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $rsvpLink) {
-		define ('TEMPLATE_LOCATION', 'assets/templates/event_ticket_email.html', false);
+    function __generateEmailFromTemplate($template, $eventName, $name, $ticketCode, $qrCode, $numberOfEntries, $rsvpLink) {
+		define ('TEMPLATE_LOCATION', $template, false);
 		$file = fopen(TEMPLATE_LOCATION, 'r');
 		$msg = fread($file, filesize(TEMPLATE_LOCATION));
 		fclose($file);
@@ -234,12 +239,25 @@
     function archiveTicket($id) {
         $ticket = new Ticket;
         $ticket->fromID($id);
+
+        if($ticket->status != 'New') {
+            $ticket_is_paid = true;
+            $event = new Event;
+            $event->fromID($ticket->event_id);
+        }
     
         if(isset($ticket->payment_link_id)) {
             __cancelPaymentLink($ticket->payment_link_id);
         }
         
         $ticket->status = "Canceled";
-        return $ticket->save();
+        if($ticket->save()) {
+            if($ticket_is_paid) {
+                __sendTicketCanceledEmail($ticket->email_address, $event->title, $ticket->ticket_code);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 ?>

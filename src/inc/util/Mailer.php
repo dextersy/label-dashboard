@@ -31,7 +31,7 @@
 			}
 
 			//Address to which recipient will reply
-			$mail->addReplyTo("hi@melt-records.com", "Reply");
+			$mail->addReplyTo("support@melt-records.com", "Reply");
 
 			//Send HTML or Plain Text email
 			$mail->isHTML(true);
