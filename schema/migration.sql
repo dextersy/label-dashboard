@@ -406,3 +406,34 @@ ADD COLUMN `hold_payouts` TINYINT NOT NULL DEFAULT 0 AFTER `payout_point`;
 --- MAR 12 2025
 ALTER TABLE `event` 
 ADD COLUMN `max_tickets` INT NULL DEFAULT 0 AFTER `supports_grabpay`;
+
+--- APR 16 2025
+CREATE TABLE `song` (
+  `id` INT NOT NULL,
+  `brand_id` INT NOT NULL,
+  `release_id` INT NOT NULL,
+  `title_language` VARCHAR(45) CHARACTER SET 'armscii8' NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `isrc` VARCHAR(45) NULL,
+  `master_url` VARCHAR(1024) NULL,
+  `lyrics_language` VARCHAR(45) NULL,
+  `lyrics` LONGTEXT NULL,
+  `is_instrumental` TINYINT NULL,
+  `is_cover` TINYINT NULL,
+  `is_studio_recording` TINYINT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_song_brand_id_idx` (`brand_id` ASC) VISIBLE,
+  INDEX `fk_song_release_id_idx` (`release_id` ASC) VISIBLE,
+  CONSTRAINT `fk_song_brand_id`
+    FOREIGN KEY (`brand_id`)
+    REFERENCES `brand` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_song_release_id`
+    FOREIGN KEY (`release_id`)
+    REFERENCES `release` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+ALTER TABLE `release` 
+ADD COLUMN `liner_notes` MEDIUMTEXT NULL AFTER `brand_id`,
+ADD COLUMN `description` MEDIUMTEXT NULL AFTER `liner_notes`;

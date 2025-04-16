@@ -19,13 +19,15 @@
 ?>
 <? if ($isAdmin) { ?>
 <script type="text/javascript">
-    function activateEditRelease(id, title, cat_no, upc, release_date, status) {
+    function activateEditRelease(id, title, cat_no, upc, release_date, status, liner_notes, description) {
         document.getElementById('edit_release_form').style.display = "block";
         document.getElementById('release_id').value = id;
         document.getElementById('title').value = title;
         document.getElementById('catalog_no').value = cat_no;
         document.getElementById('UPC').value = upc;
         document.getElementById('release_date').value = release_date;
+        document.getElementById('txt_liner_notes').value = liner_notes;
+        document.getElementById('txt_description').value = description;
         if(status=="Live") {
             document.getElementById('live').checked = true;
         }
@@ -52,22 +54,25 @@
             </div>
             <div class="form-group">
             <label for="description">Title</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+                <input type="text" class="form-control" id="title" name="title" placeholder="Title" required>
             </div>
             <div class="form-group">
                 <label for="catalog_no">Catalog Number</label>
-                <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number">
+                <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number" required>
             </div>
-            
+            <div class="form-group">
+                <label for="bio">Liner notes</label><br>
+                <textarea class="form-control" id="txt_liner_notes" name="liner_notes" style="height:250px;"><?=$release->liner_notes;?></textarea>
+            </div>
         </div>
         <div class="col-md-3">
             <div class="form-group">
                 <label for="UPC">UPC</label>
-                <input type="text" class="form-control" id="UPC" name="UPC" placeholder="Catalog Number">
+                <input type="text" class="form-control" id="UPC" name="UPC" placeholder="UPC">
             </div>  
             <div class="form-group">
                 <label for="amount">Release Date</label>
-                <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date">
+                <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date" required>
             </div> 
             <div class="form-group">
                 <div class="form-check form-switch">
@@ -75,6 +80,10 @@
                     <label class="form-check-label" for="live">Already released</label>
                 </div>
             </div>
+            <div class="form-group">
+                <label for="bio">Tell us something about this release.</label><br>
+                <textarea class="form-control" id="txt_description" name="description" style="height:250px;"><?=$release->description;?></textarea>
+            </div> 
         </div>
     </div></div>
     <div class="card-footer">
@@ -117,8 +126,13 @@
                 <? if ($isAdmin) { ?>
                     <a href="#" 
                     onclick="activateEditRelease('<?=$release->id;?>', 
-                        '<?=addslashes($release->title);?>', '<?=$release->catalog_no;?>', '<?=$release->UPC;?>', 
-                        '<?=$release->release_date;?>', '<?=$release->status;?>')">
+                        '<?=addslashes($release->title);?>', 
+                        '<?=$release->catalog_no;?>', 
+                        '<?=$release->UPC;?>', 
+                        '<?=$release->release_date;?>', 
+                        '<?=$release->status;?>', 
+                        '<?=preg_replace("/\r\n/", '\n', $release->liner_notes);?>', 
+                        '<?=preg_replace("/\r\n/", '\n', $release->description);?>')">
                     <i class="fa fa-pencil"></i>
                 </a>
                 <? } ?>

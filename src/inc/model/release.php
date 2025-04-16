@@ -14,6 +14,8 @@ class Release{
     public $status;
     public $cover_art;
     public $brand_id;
+    public $liner_notes;
+    public $description;
 
     function __construct(
         $id = null, 
@@ -26,7 +28,9 @@ class Release{
         $release_date = null,
         $cover_art = null,
         $status = null,
-        $brand_id = null
+        $brand_id = null,
+        $liner_notes = null,
+        $description = null
     ) 
     {
         $this->id = $id;
@@ -40,6 +44,8 @@ class Release{
         $this->cover_art = $cover_art;
         $this->status = $status;
         $this->brand_id = $brand_id;
+        $this->liner_notes = $liner_notes;
+        $this->description = $description;
     }
 
     function fromID($id) {
@@ -56,6 +62,8 @@ class Release{
             $this->cover_art = $row['cover_art'];
             $this->status = $row['status'];
             $this->brand_id = $row['brand_id'];
+            $this->liner_notes = $row['liner_notes'];
+            $this->description = $row['description'];
             return true;
         }
         else {
@@ -77,11 +85,13 @@ class Release{
         $this->release_date = $post['release_date'];
         $this->status = ($post['live'] == '1') ? "Live" : "Pending";
         $this->brand_id = $post['brand_id'];
+        $this->liner_notes = $post['liner_notes'];
+        $this->description = $post['description'];
     }
 
     function save() {
         if ( $this->id == null ) {
-            $sql = "INSERT INTO `release` (`title`, `catalog_no`, `UPC`, `spotify_link`, `apple_music_link`, `youtube_link`, `release_date`, `cover_art`, `status`, `brand_id`) ".
+            $sql = "INSERT INTO `release` (`title`, `catalog_no`, `UPC`, `spotify_link`, `apple_music_link`, `youtube_link`, `release_date`, `cover_art`, `status`, `brand_id`, `liner_notes`, `description`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
                 "'" . MySQLConnection::escapeString($this->catalog_no) . "', ".
@@ -92,7 +102,9 @@ class Release{
                 "'" . MySQLConnection::escapeString($this->release_date) . "', " .
                 "'" . MySQLConnection::escapeString($this->cover_art) . "', " .
                 "'" . MySQLConnection::escapeString($this->status) . "', " .
-                "'" . MySQLConnection::escapeString($this->brand_id) . "'" .
+                "'" . MySQLConnection::escapeString($this->brand_id) . "', " .
+                "'" . MySQLConnection::escapeString($this->liner_notes) . "', " .
+                "'" . MySQLConnection::escapeString($this->description) . "'" .
                 ")";
         }
         else {
@@ -106,7 +118,9 @@ class Release{
                 "`release_date` = '" . MySQLConnection::escapeString($this->release_date) . "', " .
                 "`cover_art` = '" . MySQLConnection::escapeString($this->cover_art) . "', " .
                 "`status` = '" . MySQLConnection::escapeString($this->status) . "', " .
-                "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "' " .
+                "`brand_id` = '" . MySQLConnection::escapeString($this->brand_id) . "', " .
+                "`liner_notes` = '" . MySQLConnection::escapeString($this->liner_notes) . "', " .
+                "`description` = '" . MySQLConnection::escapeString($this->description) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);
