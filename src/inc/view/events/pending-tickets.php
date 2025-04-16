@@ -5,12 +5,14 @@
     include_once('./inc/model/eventreferrer.php');
 
     function getTicketStatusText($status, $payment_link, $checkout_key) {
-        if(!isset($payment_link) && !isset($checkout_key)) {
-            $color = 'red';
-            $status = 'Error - no payment link nor checkout key';
-        }
-        else if ( $status == "New" ) {
-            $color = 'black';
+        if ( $status == "New" ) {
+            if(!isset($payment_link) && !isset($checkout_key)) {
+                $color = 'red';
+                $status = 'Error - no payment link nor checkout key';
+            }
+            else {
+                $color = 'black';
+            }
         }
         else if ($status == "Payment Confirmed") {
             $color = 'orange';
@@ -53,6 +55,23 @@
         txtPrice.disabled = false;
         txtPrice.focus();
         txtPrice.select();
+    }
+
+    function onToggleMarkAsPaid() {
+        var checkboxMarkAsPaid = document.getElementById('checkbox_ticket_paid');
+        var divPaymentProcessingFee = document.getElementById('div_payment_processing_fee');
+        var divSendPaymentLink = document.getElementById('div_send_payment_link');
+        var checkboxSendPaymentLink = document.getElementById('checkbox_send_email');
+        
+        if(checkboxMarkAsPaid.checked) {
+            divPaymentProcessingFee.style.display = 'block';
+            checkboxSendPaymentLink.checked = false;
+            divSendPaymentLink.style.display = 'none';
+        }
+        else {
+            divPaymentProcessingFee.style.display = 'none';
+            divSendPaymentLink.style.display = 'block';
+        }
     }
 
     function getCookie( name ) {
@@ -218,7 +237,14 @@
                 </div>
                 <div class="form-group">
                     <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" value="1" name="send_email" id="checkbox_send_email"><label class="form-check-label" for="checkbox_send_email">Send payment email</label>
+                        <input class="form-check-input" type="checkbox" value="1" name="ticket_paid" id="checkbox_ticket_paid" onclick="onToggleMarkAsPaid();"><label class="form-check-label" for="checkbox_ticket_paid">Mark as paid</label>
+                    </div>
+                    <div class="form-group" id="div_payment_processing_fee" style="display:none;">
+                        <label for="txt_payment_processing_fee">Payment Processing Fee</label>
+                        <input type="text" class="form-control" id="txt_payment_processing_fee" name="payment_processing_fee" placeholder="Processing Fee" value="0">
+                    </div>
+                    <div class="form-check form-switch" id="div_send_payment_link">    
+                        <input class="form-check-input" type="checkbox" value="1" name="send_email" id="checkbox_send_email"><label class="form-check-label" for="checkbox_send_email">Send payment email</label>    
                     </div>
                 </div>
             </div>

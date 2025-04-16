@@ -110,17 +110,22 @@
         $ticket->price_per_ticket = $event->ticket_price;
         $ticket->save();
     }
-
-    $amount = $ticket->price_per_ticket * $ticket->number_of_entries;
-    $description = "Payment for " . $event->title . " - Ticket # " . $ticket->id;
-    $response = createPaymentLink($amount, $description);
-
-    if(isset($response->data->attributes)) {
-        $ticket->payment_link = $response->data->attributes->checkout_url;
-        $ticket->payment_link_id = $response->data->id;
+    if(isset($_POST['ticket_paid']) && $_POST['ticket_paid'] == '1') {
+        $ticket->payment_processing_fee = $_POST['payment_processing_fee'];
+        $ticket->status = 'Payment Confirmed';
         $ticket->save();
+    }
 
-        if($_POST['send_email']=='1') {
+    if($_POST['send_email']=='1') {
+        $amount = $ticket->price_per_ticket * $ticket->number_of_entries;
+        $description = "Payment for " . $event->title . " - Ticket # " . $ticket->id;
+        $response = createPaymentLink($amount, $description);
+
+        if(isset($response->data->attributes)) {
+            $ticket->payment_link = $response->data->attributes->checkout_url;
+            $ticket->payment_link_id = $response->data->id;
+            $ticket->save();
+
             $result = sendPaymentLink(
                 $ticket->email_address, 
                 $event->title, 
@@ -137,9 +142,10 @@
                 redirectTo("/events.php?err#pending");
             }
         }
-    }
-    else {
-        // todo Add error message
+
+        else {
+            // todo Add error message
+        }
     }
     redirectTo("/events.php#pending");
 ?>
