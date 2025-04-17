@@ -35,8 +35,14 @@
 ?>
                 <input type="hidden" name="artist_id_1" value="<?=$_SESSION['current_artist'];?>">
                     <div class="form-group">
-                        <label for="cover_art">Cover art</label>
-                        <?=$is_editing ? "<img src=\"" . $release->cover_art . "\">" : ""; ?>
+                        <label for="cover_art">Cover art</label><br>
+<?
+    if($is_editing) {
+?>
+                        <img src="<?=($release->cover_art!="") ? $release->cover_art : "assets/img/placeholder.jpg";?>" width="40%" style="border:#cccccc 1px solid; padding:5px;">
+<?
+    }
+?>
                         <input type="file" class="form-control" id="cover_art" name="cover_art" accept=".jpg, .png">
                     </div>
                     <div class="form-group">
