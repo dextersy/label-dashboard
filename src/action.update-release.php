@@ -30,7 +30,6 @@
     
     $result = true;
     $release_id = $release->save();
-    echo $release_id; 
 
     if($release_id) {
         for ($i = 1; $_POST['artist_id_'.$i] != ""; $i++) {

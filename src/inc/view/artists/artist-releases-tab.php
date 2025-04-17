@@ -2,97 +2,28 @@
     require_once('./inc/model/artist.php');
     require_once('./inc/controller/get-release-list.php');
 
-    if ($_SESSION['current_artist']) {
-        $releases = getReleaseListForArtist($_SESSION['current_artist']);
+    if (isset($_GET['edit_release']) && isset($_GET['id'])) {
+        // For editing
+        require_once('./inc/view/artists/release-info.php');
     }
-    function getReleaseStatusString($status) {
-        if ( $status == 'Pending' ) {
-            $class = "badge-secondary";
-        } else if ($status == 'Live' ) {
-            $class = "badge-success";
-        } else if ($status == 'Taken Down') {
-            $class = "badge-light";
+    else {
+        if ($_SESSION['current_artist']) {
+            $releases = getReleaseListForArtist($_SESSION['current_artist']);
         }
+        function getReleaseStatusString($status) {
+            if ( $status == 'Pending' ) {
+                $class = "badge-secondary";
+            } else if ($status == 'Live' ) {
+                $class = "badge-success";
+            } else if ($status == 'Taken Down') {
+                $class = "badge-light";
+            }
 
-        return "<span class=\"badge " . $class . "\">" . $status . "</span>";
-    }
+            return "<span class=\"badge " . $class . "\">" . $status . "</span>";
+        }
 ?>
-<? if ($isAdmin) { ?>
-<script type="text/javascript">
-    function activateEditRelease(id, title, cat_no, upc, release_date, status, liner_notes, description) {
-        document.getElementById('edit_release_form').style.display = "block";
-        document.getElementById('release_id').value = id;
-        document.getElementById('title').value = title;
-        document.getElementById('catalog_no').value = cat_no;
-        document.getElementById('UPC').value = upc;
-        document.getElementById('release_date').value = release_date;
-        document.getElementById('txt_liner_notes').value = liner_notes;
-        document.getElementById('txt_description').value = description;
-        if(status=="Live") {
-            document.getElementById('live').checked = true;
-        }
-        else {
-            document.getElementById('live').checked = false;
-        }
-    }
-    function hideEditRelease() {
-        document.getElementById('edit_release_form').style.display = "none";
-    }
-</script>
-<? } ?>
-<h3>Releases</h3>
-<form action="action.update-release.php" method="POST" enctype="multipart/form-data">
-<input type="hidden" name="id" id="release_id" value="" />
-<input type="hidden" name="brand_id" value="<?=$_SESSION['brand_id'];?>" />
-<div class="card" id="edit_release_form" style="display:none;">
-    <div class="card-header"><h5>Edit this release</h5></div>
-    <div class="card-body"><div class="row">
-        <div class="col-md-3">
-            <div class="form-group">
-            <label for="cover_art">Cover art</label>
-                <input type="file" class="form-control" id="cover_art" name="cover_art" accept=".jpg, .png">
-            </div>
-            <div class="form-group">
-            <label for="description">Title</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Title" required>
-            </div>
-            <div class="form-group">
-                <label for="catalog_no">Catalog Number</label>
-                <input type="text" class="form-control" id="catalog_no" name="catalog_no" placeholder="Catalog Number" required>
-            </div>
-            <div class="form-group">
-                <label for="bio">Liner notes</label><br>
-                <textarea class="form-control" id="txt_liner_notes" name="liner_notes" style="height:250px;"><?=$release->liner_notes;?></textarea>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="form-group">
-                <label for="UPC">UPC</label>
-                <input type="text" class="form-control" id="UPC" name="UPC" placeholder="UPC">
-            </div>  
-            <div class="form-group">
-                <label for="amount">Release Date</label>
-                <input type="date" class="form-control" id="release_date" name="release_date" placeholder="Release Date" required>
-            </div> 
-            <div class="form-group">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" value="1" name="live" id="live">
-                    <label class="form-check-label" for="live">Already released</label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="bio">Tell us something about this release.</label><br>
-                <textarea class="form-control" id="txt_description" name="description" style="height:250px;"><?=$release->description;?></textarea>
-            </div> 
-        </div>
-    </div></div>
-    <div class="card-footer">
-        <button type="submit" class="btn btn-default">Save Changes</button>
-        <button type="button" class="btn btn-default" onclick="hideEditRelease();">Cancel</button>
-    </div>
-</div>
-</form>
 
+<h3>Releases</h3>
 
 <div class="table-responsive">
     <table class="table">
@@ -124,24 +55,17 @@
                 <td><?=getReleaseStatusString($release->status);?></a></td>
                 <td>
                 <? if ($isAdmin) { ?>
-                    <a href="#" 
-                    onclick="activateEditRelease('<?=$release->id;?>', 
-                        '<?=addslashes($release->title);?>', 
-                        '<?=$release->catalog_no;?>', 
-                        '<?=$release->UPC;?>', 
-                        '<?=$release->release_date;?>', 
-                        '<?=$release->status;?>', 
-                        '<?=preg_replace("/\r\n/", '\n', $release->liner_notes);?>', 
-                        '<?=preg_replace("/\r\n/", '\n', $release->description);?>')">
-                    <i class="fa fa-pencil"></i>
-                </a>
+                    <a href="artist.php?edit_release&id=<?=$release->id;?>#releases"><i class="fa fa-pencil"></i></a>
                 <? } ?>
                 </td>
             </tr>
 <?      } 
-    } else { ?>
+        } else { ?>
     No releases yet.
-<?  } ?>
+<?      } ?>
         </tbody>
     </table>
 </div>
+<?
+    }
+?>
