@@ -129,7 +129,7 @@ $statusBadgeClass = ($status == 'Open')?"badge-success":"badge-danger";
                     </div>
                     <div class="form-group">
                         <label for="ticket_naming">Ticket naming</label>
-                        <small>E.g. "Early bird", "Promo", etc.</small>
+                        <small class="form-text text-muted">E.g. "Early bird", "Promo", etc.</small>
                         <input type="text" class="form-control" id="ticket_naming" name="ticket_naming" placeholder="Ticket Naming" value="<?=$event->ticket_naming;?>" required>
                     </div>
                     <div class="form-group">
