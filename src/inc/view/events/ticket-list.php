@@ -171,11 +171,24 @@
             <strong>Totals </strong>&nbsp;&nbsp;
                 <i class="fa fa-dot-circle-o" style="color:green;" title="Number of paid tickets"></i> <?=$count;?>&nbsp;&nbsp;
                 <i class="fa fa-money" title="Total revenue"></i> <?=number_format($total_sold,2);?>&nbsp;&nbsp;
+<? 
+
+    // TODO Need to use a "super admin" user type for this one instead of specific to me
+    $user = new User;
+    $user->fromID($_SESSION['logged_in_user']);
+    if ($user->email_address == 'sy.dexter@gmail.com') { ?>
+            <span class="text-muted">
                 <i class="fa fa-credit-card" title="Total processing fee"></i> -<?=number_format($total_processing_fee,2);?>&nbsp;&nbsp;
                 <i class="fa fa-plus" title="Net amount"></i> <?=number_format($total_sold - $total_processing_fee,2);?>&nbsp;&nbsp;
                 <i class="fa fa-percent" title="Tax"></i> -<?=number_format(($total_sold - $total_processing_fee)*.005,2);?>&nbsp;&nbsp;
                 <i class="fa fa-plus-square" title="Grand total"></i> <strong>₱<?=number_format(($total_sold - $total_processing_fee)*.995,2);?></strong>
-
+                &nbsp;&nbsp;&nbsp;
+            </span>
+<?  } 
+            // TODO Make platform fee customizable
+?>
+                <i class="fa fa-money" title="Platform fee"></i> -<?=number_format($total_sold * .05, 2);?>&nbsp;&nbsp;
+                <i class="fa fa-plus-square" title="Grand total"></i> <strong>₱<?=number_format($total_sold * .95,2);?>
         </div>
     </div>
 </div>
