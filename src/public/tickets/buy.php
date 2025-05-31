@@ -210,6 +210,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       $eventDate = date_create($event->date_and_time);
    ?>
    <h5><strong><?=date_format($eventDate, "F d, Y");?></strong> at <strong><?=$event->venue;?></strong></h5>
+   <small><?=$event->description;?></small>
 <?php
   }
   else {
@@ -277,7 +278,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 ?>
           <div class="input-group mb-3">
             <div class="input-group-prepend fadeIn fourth">
-              <span class="input-group-text">Regular - <strong>₱<?=number_format($event->ticket_price, 2);?></strong></span>
+              <span class="input-group-text"><?=isset($event->ticket_naming)?$event->ticket_naming:"Regular";?> - <strong>₱<?=number_format($event->ticket_price, 2);?></strong></span>
             </div>
             <input type="number" min="1" max="<?=$remaining_tickets;?>" step="1" id="number_of_entries" class="fadeIn fourth form-control material" name="number_of_entries" placeholder="" onchange="validateFields();calculateTotal();" onkeyup="validateFields();calculateTotal();">
           </div>

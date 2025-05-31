@@ -25,6 +25,7 @@ class Event {
     public $supports_maya;
     public $supports_grabpay;
     public $max_tickets;
+    public $ticket_naming;
 
     function __construct(
         $id = null, 
@@ -47,7 +48,8 @@ class Event {
         $supports_dob = 1,
         $supports_maya = 1,
         $supports_grabpay = 1,
-        $max_tickets = 0
+        $max_tickets = 0,
+        $ticket_naming = null
     ) 
     {
         $this->id = $id;
@@ -71,6 +73,7 @@ class Event {
         $this->supports_maya = $supports_maya;
         $this->supports_grabpay = $supports_grabpay;
         $this->max_tickets = $max_tickets;
+        $this->ticket_naming = $ticket_naming;
     }
 
     function fromID($id) {
@@ -97,6 +100,7 @@ class Event {
             $this->supports_maya = $row['supports_maya'];
             $this->supports_grabpay = $row['supports_grabpay'];
             $this->max_tickets = $row['max_tickets'];
+            $this->ticket_naming = $row['ticket_naming'];
             return true;
         }
         else {
@@ -138,11 +142,14 @@ class Event {
         if(isset($post['max_tickets'])) {
             $this->max_tickets = $post['max_tickets'];
         }
+        if(isset($post['ticket_naming'])) {
+            $this->ticket_naming = $post['ticket_naming'];
+        }
     }
 
     function save() {
         if ($this->id == null) {
-            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`, `verification_pin`, `verification_link`, `supports_gcash`, `supports_qrph`, `supports_card`, `supports_ubp`, `supports_dob`, `supports_maya`, `supports_grabpay`, `max_tickets`) ".
+            $sql = "INSERT INTO `event` (`brand_id`, `title`, `date_and_time`, `description`, `poster_url`, `venue`, `rsvp_link`, `ticket_price`, `buy_shortlink`, `close_time`, `verification_pin`, `verification_link`, `supports_gcash`, `supports_qrph`, `supports_card`, `supports_ubp`, `supports_dob`, `supports_maya`, `supports_grabpay`, `max_tickets`, `ticket_naming`) ".
                 "VALUES(" .
                 "'" . MySQLConnection::escapeString($this->brand_id) . "', ".
                 "'" . MySQLConnection::escapeString($this->title) . "', ".
@@ -163,7 +170,8 @@ class Event {
                 "'" . MySQLConnection::escapeString($this->supports_dob) . "', ".
                 "'" . MySQLConnection::escapeString($this->supports_maya) . "', ".
                 "'" . MySQLConnection::escapeString($this->supports_grabpay) . "', ".
-                "'" . MySQLConnection::escapeString($this->max_tickets) . "'" .
+                "'" . MySQLConnection::escapeString($this->max_tickets) . "', ".
+                "'" . MySQLConnection::escapeString($this->ticket_naming) . "'" .
                 ")";
         }
         else {
@@ -187,7 +195,8 @@ class Event {
                 "`supports_dob` = '" . MySQLConnection::escapeString($this->supports_dob) . "', " .
                 "`supports_maya` = '" . MySQLConnection::escapeString($this->supports_maya) . "', " .
                 "`supports_grabpay` = '" . MySQLConnection::escapeString($this->supports_grabpay) . "', " .
-                "`max_tickets` = '" . MySQLConnection::escapeString($this->max_tickets) . "' " .
+                "`max_tickets` = '" . MySQLConnection::escapeString($this->max_tickets) . "', " .
+                "`ticket_naming` = '" . MySQLConnection::escapeString($this->ticket_naming) . "' " .
                 "WHERE `id` = " . $this->id;
         }
         $result = MySQLConnection::query($sql);

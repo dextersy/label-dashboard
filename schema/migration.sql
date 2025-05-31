@@ -437,3 +437,7 @@ CREATE TABLE `song` (
 ALTER TABLE `release` 
 ADD COLUMN `liner_notes` MEDIUMTEXT NULL AFTER `brand_id`,
 ADD COLUMN `description` MEDIUMTEXT NULL AFTER `liner_notes`;
+
+--- 5/31/2025
+ALTER TABLE `event` 
+ADD COLUMN `ticket_naming` VARCHAR(45) NOT NULL DEFAULT 'Regular' AFTER `max_tickets`;

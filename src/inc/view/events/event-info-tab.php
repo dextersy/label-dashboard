@@ -128,6 +128,11 @@ $statusBadgeClass = ($status == 'Open')?"badge-success":"badge-danger";
                         <strong>Ticket sales: </strong><span class="badge badge-pill <?=$statusBadgeClass;?>"><?=$status;?></span>
                     </div>
                     <div class="form-group">
+                        <label for="ticket_naming">Ticket naming</label>
+                        <small>E.g. "Early bird", "Promo", etc.</small>
+                        <input type="text" class="form-control" id="ticket_naming" name="ticket_naming" placeholder="Ticket Naming" value="<?=$event->ticket_naming;?>" required>
+                    </div>
+                    <div class="form-group">
                         <label for="ticket_price">Ticket price</label>
                         <div class="input-group">
                             <div class="input-group-addon">₱</div>
