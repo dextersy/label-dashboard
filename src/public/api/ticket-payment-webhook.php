@@ -101,8 +101,8 @@
 
             // SEnd email notifications
             if (!updateTicketPaymentStatus($ticket->id, $processing_fee)) {
-                webhook_log ('ERROR: Failed to update ticket payment verification.');
-                sendAdminFailureNotification("Ticket payment verification failed.");
+                webhook_log ('ERROR: Failed to update ticket payment verification. id = ' . $ticket->id . ", processing_fee = " . $processing_fee);
+                sendAdminFailureNotification("Ticket payment verification failed. Ticket id = " . $ticket->id);
             }
             else {
                 webhook_log ('Attempting to send ticket...');
