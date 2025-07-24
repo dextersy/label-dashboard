@@ -1,0 +1,121 @@
+<div class="artist-gallery-tab">
+  
+  <!-- Upload Section -->
+  <div class="card upload-section">
+    <div class="card-header">
+      <h5>Upload Photos</h5>
+    </div>
+    <div class="card-body">
+      <div class="upload-area">
+        <input type="file" 
+               id="photoUpload" 
+               class="form-control-file" 
+               multiple 
+               accept="image/jpeg,image/jpg,image/png,image/gif"
+               (change)="onFilesSelected($event)">
+        <label for="photoUpload" class="upload-label">
+          <i class="fa fa-cloud-upload fa-3x"></i>
+          <p>Click to select photos or drag and drop</p>
+          <small>Supported formats: JPEG, PNG, GIF (Max 10MB each)</small>
+        </label>
+      </div>
+      
+      <div *ngIf="selectedFiles && selectedFiles.length > 0" class="selected-files">
+        <h6>Selected Files:</h6>
+        <ul>
+          <li *ngFor="let file of getSelectedFilesArray(); let i = index">
+            {{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }}MB)
+          </li>
+        </ul>
+      </div>
+      
+      <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress">
+        <div class="progress-bar" 
+             role="progressbar" 
+             [style.width.%]="uploadProgress">
+          {{ uploadProgress }}%
+        </div>
+      </div>
+      
+      <button type="button" 
+              class="btn btn-primary upload-btn" 
+              (click)="uploadPhotos()"
+              [disabled]="!selectedFiles || selectedFiles.length === 0 || uploading">
+        <i class="fa fa-spinner fa-spin" *ngIf="uploading"></i>
+        <i class="fa fa-upload" *ngIf="!uploading"></i>
+        {{ uploading ? 'Uploading...' : 'Upload Photos' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Gallery Section -->
+  <div class="card gallery-section">
+    <div class="card-header">
+      <h5>Photo Gallery</h5>
+    </div>
+    <div class="card-body">
+      
+      <div *ngIf="loading" class="text-center">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p>Loading photos...</p>
+      </div>
+      
+      <div *ngIf="!loading && photos.length === 0" class="text-center text-muted empty-gallery">
+        <i class="fa fa-camera fa-3x"></i>
+        <p>No photos uploaded yet</p>
+        <small>Upload your first photo to get started!</small>
+      </div>
+      
+      <div *ngIf="!loading && photos.length > 0" class="photo-grid">
+        <div class="photo-item" *ngFor="let photo of photos">
+          <div class="photo-container">
+            <img [src]="getPhotoUrl(photo.filename)" 
+                 [alt]="photo.caption || 'Artist photo'"
+                 class="photo-image">
+            
+            <div class="photo-overlay">
+              <div class="photo-actions">
+                <button class="btn btn-sm btn-light" 
+                        (click)="startEditingCaption(photo)"
+                        *ngIf="!editingCaptions[photo.id]">
+                  <i class="fa fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" 
+                        (click)="deletePhoto(photo)">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="photo-caption">
+            <div *ngIf="!editingCaptions[photo.id]" class="caption-display">
+              <p *ngIf="photo.caption" class="caption-text">{{ photo.caption }}</p>
+              <p *ngIf="!photo.caption" class="caption-empty">No caption</p>
+              <small class="caption-date">{{ formatDate(photo.upload_date) }}</small>
+            </div>
+            
+            <div *ngIf="editingCaptions[photo.id]" class="caption-edit">
+              <textarea class="form-control caption-input" 
+                        [(ngModel)]="editingCaptionTexts[photo.id]"
+                        placeholder="Enter photo caption..."
+                        rows="2"></textarea>
+              <div class="caption-actions">
+                <button class="btn btn-sm btn-success" 
+                        (click)="saveCaption(photo)">
+                  <i class="fa fa-check"></i> Save
+                </button>
+                <button class="btn btn-sm btn-secondary" 
+                        (click)="cancelEditingCaption(photo.id)">
+                  <i class="fa fa-times"></i> Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>

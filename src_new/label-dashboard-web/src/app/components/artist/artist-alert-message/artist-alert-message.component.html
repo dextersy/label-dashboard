@@ -1,0 +1,8 @@
+<div *ngIf="alert" class="alert" [class]="getAlertClass()" role="alert">
+  <button type="button" class="close" (click)="closeAlert()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <i class="fa" [class]="getAlertIcon()"></i>
+  <strong>{{ alert.type === 'success' ? 'Success!' : 'Error!' }}</strong>
+  {{ alert.message }}
+</div>

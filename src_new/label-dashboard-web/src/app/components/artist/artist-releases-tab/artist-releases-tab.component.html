@@ -1,0 +1,73 @@
+<div class="artist-releases-tab">
+  <div class="card">
+    <div class="card-header">
+      <h5>Artist Releases</h5>
+    </div>
+    <div class="card-body">
+      
+      <div *ngIf="loading" class="text-center loading">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p>Loading releases...</p>
+      </div>
+      
+      <div *ngIf="!loading && releases.length === 0" class="text-center text-muted empty-releases">
+        <i class="fa fa-music fa-3x"></i>
+        <p>No releases found</p>
+        <small>This artist hasn't released any music yet.</small>
+      </div>
+      
+      <div *ngIf="!loading && releases.length > 0" class="releases-table-container">
+        <div class="table-responsive">
+          <table class="table table-striped releases-table">
+            <thead>
+              <tr>
+                <th>Cover</th>
+                <th>Catalog #</th>
+                <th>Title</th>
+                <th>Release Date</th>
+                <th>Status</th>
+                <th *ngIf="isAdmin">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let release of releases">
+                <td class="cover-cell">
+                  <img [src]="getCoverArtUrl(release.cover_art)" 
+                       [alt]="release.title + ' cover'"
+                       class="cover-thumbnail">
+                </td>
+                <td class="catalog-cell">
+                  <span class="catalog-number">{{ release.catalog_number }}</span>
+                </td>
+                <td class="title-cell">
+                  <div class="release-title">{{ release.title }}</div>
+                  <div *ngIf="release.description" class="release-description">
+                    {{ release.description }}
+                  </div>
+                </td>
+                <td class="date-cell">
+                  {{ formatDate(release.release_date) }}
+                </td>
+                <td class="status-cell">
+                  <span class="badge" [class]="getStatusClass(release.status)">
+                    <i class="fa" [class]="getStatusIcon(release.status)"></i>
+                    {{ release.status }}
+                  </span>
+                </td>
+                <td *ngIf="isAdmin" class="actions-cell">
+                  <button class="btn btn-sm btn-primary" 
+                          (click)="onEditRelease(release)"
+                          title="Edit Release">
+                    <i class="fa fa-edit"></i>
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

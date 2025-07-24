@@ -1,0 +1,50 @@
+<div class="artist-selection-container">
+  <div class="dropdown" [class.open]="isDropdownOpen">
+    <button class="btn btn-default dropdown-toggle" type="button" (click)="toggleDropdown()" [disabled]="loading">
+      <div class="artist-info" *ngIf="selectedArtist">
+        <img [src]="getProfilePhotoUrl(selectedArtist.profile_photo)" 
+             class="artist-photo" 
+             [alt]="selectedArtist.name">
+        <div class="artist-details">
+          <div class="artist-name">{{ selectedArtist.name }}</div>
+          <div class="artist-members" *ngIf="selectedArtist.band_members">
+            {{ selectedArtist.band_members }}
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!selectedArtist && !loading" class="no-artist">
+        Select an Artist
+      </div>
+      <div *ngIf="loading" class="loading">
+        <i class="fa fa-spinner fa-spin"></i> Loading...
+      </div>
+      <span class="caret"></span>
+    </button>
+    
+    <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+      <li *ngFor="let artist of artists" 
+          [class.active]="selectedArtist?.id === artist.id">
+        <a (click)="selectArtist(artist)">
+          <img [src]="getProfilePhotoUrl(artist.profile_photo)" 
+               class="dropdown-artist-photo" 
+               [alt]="artist.name">
+          <div class="dropdown-artist-info">
+            <div class="dropdown-artist-name">{{ artist.name }}</div>
+            <div class="dropdown-artist-members" *ngIf="artist.band_members">
+              {{ artist.band_members }}
+            </div>
+          </div>
+        </a>
+      </li>
+      
+      <li class="divider" *ngIf="isAdmin && artists.length > 0"></li>
+      
+      <li *ngIf="isAdmin">
+        <a (click)="addNewArtist()" class="add-new-artist">
+          <i class="fa fa-plus"></i>
+          Add New Artist
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
