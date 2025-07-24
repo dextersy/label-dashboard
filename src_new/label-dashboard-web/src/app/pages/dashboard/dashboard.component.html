@@ -1,1 +1,49 @@
-<p>dashboard works!</p>
+<div class="container-fluid">
+  <!-- Loading state -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+    <p class="mt-2">Loading dashboard...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fa fa-exclamation-triangle"></i> {{ error }}
+    <button class="btn btn-sm btn-outline-danger ml-2" (click)="loadDashboardData()">
+      <i class="fa fa-refresh"></i> Retry
+    </button>
+  </div>
+
+  <!-- Dashboard content -->
+  <div *ngIf="!loading && !error && dashboardData">
+    <!-- Welcome header -->
+    <h3 style="font-weight:normal;" class="text-secondary">
+      Welcome to your dashboard, <strong>{{ userFirstName }}</strong>! ✨
+    </h3>
+    <hr>
+
+    <!-- Dashboard widgets -->
+    <div class="row">
+      <!-- Latest releases -->
+      <div class="col-md-4">
+        <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
+      </div>
+
+      <!-- Top earning releases -->
+      <div class="col-md-4">
+        <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
+      </div>
+
+      <!-- Balance summary -->
+      <div class="col-md-4">
+        <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
+      </div>
+
+      <!-- Event sales (admin only) -->
+      <div *ngIf="isAdmin && dashboardData.eventSales" class="col-md-6">
+        <app-event-sales-chart [eventSales]="dashboardData.eventSales"></app-event-sales-chart>
+      </div>
+    </div>
+  </div>
+</div>

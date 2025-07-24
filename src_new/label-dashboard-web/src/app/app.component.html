@@ -1,1 +1,17 @@
-<router-outlet />
+<div *ngIf="isLoginPage(); else layoutTemplate">
+  <router-outlet />
+</div>
+
+<ng-template #layoutTemplate>
+  <div class="wrapper">
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-panel">
+      <app-navbar></app-navbar>
+      
+      <div class="content">
+        <router-outlet />
+      </div>
+    </div>
+  </div>
+</ng-template>

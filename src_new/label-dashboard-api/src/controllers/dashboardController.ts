@@ -1,0 +1,417 @@
+import { Request, Response } from 'express';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess } from '../models';
+
+interface AuthRequest extends Request {
+  user?: any;
+}
+
+// Get latest releases for dashboard
+export const getLatestReleases = async (req: AuthRequest, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || undefined;
+    
+    const releases = await Release.findAll({
+      where: { brand_id: req.user.brand_id },
+      include: [
+        {
+          model: ReleaseArtist,
+          as: 'releaseArtists',
+          include: [
+            {
+              model: Artist,
+              as: 'artist'
+            }
+          ]
+        }
+      ],
+      order: [['release_date', 'DESC']],
+      limit: limit
+    });
+
+    // Transform data to match PHP structure
+    const transformedReleases = releases.map(release => ({
+      id: release.id,
+      catalog_no: release.catalog_no,
+      title: release.title,
+      release_date: release.release_date,
+      cover_art: release.cover_art,
+      artist_name: release.releaseArtists && release.releaseArtists.length > 0 
+        ? release.releaseArtists[0].artist?.name 
+        : 'Unknown Artist'
+    }));
+
+    res.json({ releases: transformedReleases });
+  } catch (error) {
+    console.error('Get latest releases error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get top earning releases for dashboard
+export const getTopEarningReleases = async (req: AuthRequest, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || undefined;
+    
+    // Get all releases with their earnings (no initial limit to ensure proper sorting)
+    const releases = await Release.findAll({
+      where: { brand_id: req.user.brand_id },
+      include: [
+        {
+          model: ReleaseArtist,
+          as: 'releaseArtists',
+          include: [
+            {
+              model: Artist,
+              as: 'artist'
+            }
+          ]
+        },
+        {
+          model: Earning,
+          as: 'earnings',
+          required: false
+        }
+      ]
+      // Remove order and limit here since we need to calculate totals first
+    });
+
+    // Calculate total earnings for each release and sort by total earnings
+    const releasesWithEarnings = releases.map(release => {
+      const totalEarnings = release.earnings?.reduce((sum, earning) => {
+        return sum + (parseFloat(earning.amount?.toString() || '0'));
+      }, 0) || 0;
+
+      return {
+        id: release.id,
+        catalog_no: release.catalog_no,
+        title: release.title,
+        total_earnings: totalEarnings,
+        artist_name: release.releaseArtists && release.releaseArtists.length > 0 
+          ? release.releaseArtists[0].artist?.name 
+          : 'Unknown Artist'
+      };
+    }).sort((a, b) => b.total_earnings - a.total_earnings) // Sort by total earnings descending
+      .slice(0, limit); // Apply limit after sorting
+
+    res.json({ releases: releasesWithEarnings });
+  } catch (error) {
+    console.error('Get top earning releases error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get balance summary for dashboard
+export const getBalanceSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || undefined;
+    
+    let artists;
+    if (req.user.is_admin) {
+      artists = await Artist.findAll({
+        where: { brand_id: req.user.brand_id },
+        limit: limit
+      });
+    } else {
+      // For non-admin users, get only their accessible artists
+      artists = await Artist.findAll({
+        where: { brand_id: req.user.brand_id },
+        include: [
+          {
+            model: ArtistAccess,
+            as: 'artistAccess',
+            where: { user_id: req.user.id },
+            required: true
+          }
+        ],
+        limit: limit
+      });
+    }
+
+    // Calculate balance for each artist
+    const artistBalances = await Promise.all(
+      artists.map(async (artist) => {
+        // Get total royalties for artist
+        const totalRoyalties = await Royalty.sum('amount', {
+          where: { artist_id: artist.id }
+        }) || 0;
+
+        // Get total payments for artist
+        const totalPayments = await Payment.sum('amount', {
+          where: { artist_id: artist.id }
+        }) || 0;
+
+        const balance = totalRoyalties - totalPayments;
+
+        return {
+          id: artist.id,
+          name: artist.name,
+          balance: balance
+        };
+      })
+    );
+
+    res.json({ artists: artistBalances });
+  } catch (error) {
+    console.error('Get balance summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get event sales data for chart (admin only)
+export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    const events = await Event.findAll({
+      where: { brand_id: req.user.brand_id },
+      order: [['id', 'DESC']],
+      limit: limit
+    });
+
+    // Calculate sales data for each event
+    const eventSales = await Promise.all(
+      events.map(async (event) => {
+        // Get all tickets for event
+        const tickets = await Ticket.findAll({
+          where: { 
+            event_id: event.id
+          },
+          attributes: ['price_per_ticket', 'number_of_entries', 'status']
+        });
+        
+        // Calculate total sales from confirmed tickets
+        const confirmedTickets = tickets.filter(ticket => ticket.status === 'Payment Confirmed');
+        const totalSales = confirmedTickets.reduce((sum, ticket) => {
+          const price = parseFloat(ticket.price_per_ticket?.toString() || '0');
+          const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+          const ticketAmount = price * entries;
+          return sum + (isNaN(ticketAmount) ? 0 : ticketAmount);
+        }, 0);
+
+        // Calculate ticket counts
+        const ticketsSold = confirmedTickets.reduce((sum, ticket) => {
+          const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+          return sum + (isNaN(entries) ? 0 : entries);
+        }, 0);
+        
+        const totalTickets = tickets.reduce((sum, ticket) => {
+          const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+          return sum + (isNaN(entries) ? 0 : entries);
+        }, 0);
+
+        return {
+          id: event.id,
+          name: event.title || 'Untitled Event',
+          location: event.location || 'TBA',
+          date: event.event_date || event.created_at,
+          total_sales: isNaN(totalSales) ? 0 : totalSales,
+          tickets_sold: isNaN(ticketsSold) ? 0 : ticketsSold,
+          total_tickets: isNaN(totalTickets) ? 0 : totalTickets
+        };
+      })
+    );
+
+    res.json({ events: eventSales });
+  } catch (error) {
+    console.error('Get event sales chart error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get complete dashboard data
+export const getDashboardData = async (req: AuthRequest, res: Response) => {
+  try {
+    const [latestReleases, topEarningReleases, balanceSummary] = await Promise.all([
+      getLatestReleasesData(req),
+      getTopEarningReleasesData(req),
+      getBalanceSummaryData(req)
+    ]);
+
+    const dashboardData: any = {
+      user: {
+        firstName: req.user.first_name,
+        isAdmin: req.user.is_admin
+      },
+      latestReleases,
+      topEarningReleases,
+      balanceSummary
+    };
+
+    // Add event sales for admin users
+    if (req.user.is_admin) {
+      const eventSales = await getEventSalesData(req);
+      dashboardData.eventSales = eventSales;
+    }
+
+    res.json(dashboardData);
+  } catch (error) {
+    console.error('Get dashboard data error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Helper functions to get data without response
+async function getLatestReleasesData(req: AuthRequest) {
+  const releases = await Release.findAll({
+    where: { brand_id: req.user.brand_id },
+    include: [
+      {
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        include: [
+          {
+            model: Artist,
+            as: 'artist'
+          }
+        ]
+      }
+    ],
+    order: [['release_date', 'DESC']],
+    limit: 5
+  });
+
+  return releases.map(release => ({
+    id: release.id,
+    catalog_no: release.catalog_no,
+    title: release.title,
+    release_date: release.release_date,
+    cover_art: release.cover_art,
+    artist_name: release.releaseArtists && release.releaseArtists.length > 0 
+      ? release.releaseArtists[0].artist?.name 
+      : 'Unknown Artist'
+  }));
+}
+
+async function getTopEarningReleasesData(req: AuthRequest) {
+  // Get all releases without limiting first, so we can sort by total earnings
+  const releases = await Release.findAll({
+    where: { brand_id: req.user.brand_id },
+    include: [
+      {
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        include: [
+          {
+            model: Artist,
+            as: 'artist'
+          }
+        ]
+      },
+      {
+        model: Earning,
+        as: 'earnings',
+        required: false
+      }
+    ]
+    // Remove order and limit here since we need to calculate totals first
+  });
+
+  // Calculate total earnings for each release and sort by total earnings
+  return releases.map(release => {
+    const totalEarnings = release.earnings?.reduce((sum, earning) => {
+      return sum + (parseFloat(earning.amount?.toString() || '0'));
+    }, 0) || 0;
+
+    return {
+      id: release.id,
+      catalog_no: release.catalog_no,
+      title: release.title,
+      total_earnings: totalEarnings,
+      artist_name: release.releaseArtists && release.releaseArtists.length > 0 
+        ? release.releaseArtists[0].artist?.name 
+        : 'Unknown Artist'
+    };
+  }).sort((a, b) => b.total_earnings - a.total_earnings)
+    .slice(0, 5); // Take top 5 after sorting by total earnings
+}
+
+async function getBalanceSummaryData(req: AuthRequest) {
+  let artists;
+  if (req.user.is_admin) {
+    artists = await Artist.findAll({
+      where: { brand_id: req.user.brand_id },
+      limit: 5
+    });
+  } else {
+    // For non-admin users, get only their accessible artists
+    artists = await Artist.findAll({
+      where: { brand_id: req.user.brand_id },
+      include: [
+        {
+          model: ArtistAccess,
+          as: 'artistAccess',
+          where: { user_id: req.user.id },
+          required: true
+        }
+      ],
+      limit: 5
+    });
+  }
+
+  return await Promise.all(
+    artists.map(async (artist) => {
+      const totalRoyalties = await Royalty.sum('amount', {
+        where: { artist_id: artist.id }
+      }) || 0;
+
+      const totalPayments = await Payment.sum('amount', {
+        where: { artist_id: artist.id }
+      }) || 0;
+
+      const balance = totalRoyalties - totalPayments;
+
+      return {
+        id: artist.id,
+        name: artist.name,
+        balance: balance
+      };
+    })
+  );
+}
+
+async function getEventSalesData(req: AuthRequest) {
+  const events = await Event.findAll({
+    where: { brand_id: req.user.brand_id },
+    order: [['id', 'DESC']],
+    limit: 5
+  });
+
+  return await Promise.all(
+    events.map(async (event) => {
+      const tickets = await Ticket.findAll({
+        where: { 
+          event_id: event.id
+        },
+        attributes: ['price_per_ticket', 'number_of_entries', 'status']
+      });
+      
+      // Calculate total sales from confirmed tickets
+      const confirmedTickets = tickets.filter(ticket => (ticket.status === 'Payment Confirmed' || ticket.status==='Ticket sent.'));
+      const totalSales = confirmedTickets.reduce((sum, ticket) => {
+        const price = parseFloat(ticket.price_per_ticket?.toString() || '0');
+        const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+        const ticketAmount = price * entries;
+        return sum + (isNaN(ticketAmount) ? 0 : ticketAmount);
+      }, 0);
+
+      // Calculate ticket counts
+      const ticketsSold = confirmedTickets.reduce((sum, ticket) => {
+        const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+        return sum + (isNaN(entries) ? 0 : entries);
+      }, 0);
+      
+      return {
+        id: event.id,
+        name: event.title || 'Untitled Event',
+        venue: event.venue,
+        date: event.date_and_time,
+        total_sales: isNaN(totalSales) ? 0 : totalSales,
+        total_tickets: isNaN(ticketsSold) ? 0: ticketsSold
+      };
+    })
+  );
+}

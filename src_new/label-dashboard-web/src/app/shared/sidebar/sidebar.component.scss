@@ -3,16 +3,14 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: 240px;
+  width: 260px;
   overflow-y: auto;
   background: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
 
-.sidebar[data-color="blue"] {
-  background-image: linear-gradient(to bottom, #4c84ff, #4c84ff);
-}
+// Removed hardcoded data-color styles - now using dynamic brand color
 
 .sidebar-wrapper {
   position: relative;
@@ -100,4 +98,30 @@
 .nav li.active a i,
 .nav li a:hover i {
   color: #fff;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 991px) {
+  .sidebar {
+    transform: translateX(260px);
+    transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0px);
+  }
+}
+
+/* Global styles for nav-open state */
+:global(html.nav-open) {
+  @media (max-width: 991px) {
+    .sidebar {
+      transform: translateX(0px);
+    }
+    
+    body {
+      position: relative;
+      overflow-x: hidden;
+    }
+  }
 }

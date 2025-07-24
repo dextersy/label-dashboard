@@ -50,7 +50,7 @@ export class BrandService {
           const defaultSettings: BrandSettings = {
             id: null,
             name: 'Label Dashboard',
-            logo: 'assets/img/default-logo.png',
+            logo: 'assets/img/new_logo.png',
             color: '#667eea',
             favicon: 'assets/img/default.ico',
             website: currentDomain

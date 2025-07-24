@@ -1,0 +1,53 @@
+// Dashboard layout styles
+.wrapper {
+  position: relative;
+  top: 0;
+  height: 100vh;
+  min-height: 100vh;
+  
+  // Override any login page wrapper styles for dashboard layout
+  display: block;
+  align-items: unset;
+  flex-direction: unset;
+  justify-content: unset;
+  padding: 0;
+}
+
+.main-panel {
+  position: relative;
+  z-index: 2;
+  float: right;
+  width: calc(100% - 260px);
+  min-height: 100vh;
+}
+
+.content {
+  padding: 30px 15px;
+  min-height: calc(100vh - 123px);
+}
+
+// Navbar positioning for fixed layout
+.navbar.fixed {
+  width: calc(100% - 260px);
+  right: 0;
+  left: auto;
+  border-radius: 0;
+}
+
+// Responsive layout
+@media (max-width: 991px) {
+  .main-panel {
+    width: 100%;
+    float: none;
+  }
+  
+  .navbar.fixed {
+    width: 100%;
+    left: 0;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+}

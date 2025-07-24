@@ -1,0 +1,35 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Top earning releases (all-time)</h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Catalog Number</th>
+            <th>Artist</th>
+            <th>Title</th>
+            <th>Total earnings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let release of releases">
+            <td>{{ release.catalog_no }}</td>
+            <td>{{ release.artist_name }}</td>
+            <td>{{ release.title }}</td>
+            <td class="text-right">{{ formatCurrency(release.total_earnings) }}</td>
+          </tr>
+          <tr *ngIf="releases.length === 0">
+            <td colspan="4" class="text-center text-muted">No earnings data found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-right">
+    <a (click)="goToFinancial()" class="btn-link" style="cursor: pointer;">
+      Go to release earnings <i class="fa fa-arrow-circle-o-right"></i>
+    </a>
+  </div>
+</div>

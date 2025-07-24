@@ -6,6 +6,11 @@
 /* Import Font Awesome */
 @import url('https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css');
 
+/* Bootstrap 4.0.0 is already loaded in index.html - no need to import again */
+
+/* Import Light Bootstrap Dashboard Theme */
+@import './assets/css/light-bootstrap-dashboard.css';
+
 /* ================================= */
 /* LOGIN STYLES FROM ORIGINAL PHP   */
 /* ================================= */
@@ -35,8 +40,9 @@ h2 {
   color: #cccccc;
 }
 
-/* STRUCTURE */
-.wrapper {
+/* STRUCTURE - Login page specific */
+.login-wrapper,
+app-login .wrapper {
   display: flex;
   align-items: center;
   flex-direction: column; 
@@ -346,4 +352,41 @@ input.material:not(:focus)::placeholder {
 app-root {
   display: block;
   height: 100vh;
+}
+
+/* ================================= */
+/* MOBILE SIDEBAR RESPONSIVE STYLES */
+/* ================================= */
+
+/* Main panel adjustment for mobile sidebar */
+@media (max-width: 991px) {
+  .main-panel {
+    transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
+  }
+  
+  html.nav-open {
+    .main-panel {
+      transform: translateX(-260px);
+    }
+    
+    body {
+      position: relative;
+      overflow-x: hidden;
+    }
+  }
+}
+
+/* Ensure sidebar is properly positioned on larger screens */
+@media (min-width: 992px) {
+  .sidebar {
+    transform: translateX(0px) !important;
+  }
+  
+  .main-panel {
+    transform: translateX(0px) !important;
+  }
+  
+  #bodyClick {
+    display: none !important;
+  }
 }

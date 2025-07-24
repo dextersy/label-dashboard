@@ -1,0 +1,43 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Latest releases</h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Catalog Number</th>
+            <th>Cover art</th>
+            <th>Artist</th>
+            <th>Title</th>
+            <th>Release Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let release of releases">
+            <td>{{ release.catalog_no }}</td>
+            <td>
+              <img 
+                [src]="getImageSrc(release.cover_art)" 
+                width="50" 
+                [alt]="release.title"
+                class="img-thumbnail">
+            </td>
+            <td>{{ release.artist_name }}</td>
+            <td>{{ release.title }}</td>
+            <td>{{ release.release_date | date:'shortDate' }}</td>
+          </tr>
+          <tr *ngIf="releases.length === 0">
+            <td colspan="5" class="text-center text-muted">No releases found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-right">
+    <a (click)="goToReleases()" class="btn-link" style="cursor: pointer;">
+      Go to releases <i class="fa fa-arrow-circle-o-right"></i>
+    </a>
+  </div>
+</div>

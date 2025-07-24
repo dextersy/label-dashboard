@@ -1,4 +1,4 @@
-<div class="sidebar" [attr.data-color]="brandColor" data-image="assets/img/sidebar-5.jpg">
+<div class="sidebar" [class.open]="isOpen" [style.background]="brandColor" data-image="assets/img/sidebar-5.jpg">
   <div class="sidebar-wrapper">
     <div class="logo">
       <a [href]="brandWebsite" class="simple-text">
@@ -8,9 +8,8 @@
 
     <ul class="nav">
       <li *ngFor="let item of menuItems" 
-          [class.active]="isActiveRoute(item.route)"
-          *ngIf="shouldShowMenuItem(item)">
-        <a [routerLink]="item.route">
+          [class.active]="isActiveRoute(item.route)">
+        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route">
           <i [class]="item.icon"></i>
           <p>{{ item.title }}</p>
         </a>

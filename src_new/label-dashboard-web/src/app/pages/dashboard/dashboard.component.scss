@@ -1,0 +1,46 @@
+/* Dashboard page styles */
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header h5 {
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+.table td {
+  font-size: 0.875rem;
+}
+
+.btn-link {
+  font-size: 0.875rem;
+  padding: 0;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}

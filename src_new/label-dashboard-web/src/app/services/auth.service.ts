@@ -44,7 +44,7 @@ export class AuthService {
       password,
       brand_id: brandId
     }).pipe(map(response => {
-      localStorage.setItem('token', response.token);
+      localStorage.setItem('auth_token', response.token);
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       this.currentUserSubject.next(response.user);
       return response;
@@ -52,13 +52,13 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem('auth_token');
   }
 
   isLoggedIn(): boolean {

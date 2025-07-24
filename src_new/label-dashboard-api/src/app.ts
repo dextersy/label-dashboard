@@ -26,6 +26,7 @@ import eventRoutes from './routes/events';
 import financialRoutes from './routes/financial';
 import publicRoutes from './routes/public';
 import brandRoutes from './routes/brand';
+import dashboardRoutes from './routes/dashboard';
 
 // API Routes (protected)
 app.use('/api/auth', authRoutes);
@@ -35,6 +36,7 @@ app.use('/api/releases', releaseRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/brands', brandRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Public API Routes (no authentication required)
 app.use('/api/public', publicRoutes);

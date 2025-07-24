@@ -65,6 +65,7 @@ Release.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 Release.hasMany(Earning, { foreignKey: 'release_id', as: 'earnings' });
 Release.hasMany(Royalty, { foreignKey: 'release_id', as: 'royalties' });
 Release.hasMany(RecuperableExpense, { foreignKey: 'release_id', as: 'expenses' });
+Release.hasMany(ReleaseArtist, { foreignKey: 'release_id', as: 'releaseArtists' });
 Release.belongsToMany(Artist, { 
   through: ReleaseArtist, 
   foreignKey: 'release_id', 

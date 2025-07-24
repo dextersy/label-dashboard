@@ -1,0 +1,33 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Balance Summary</h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Artist</th>
+            <th>Current balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let artist of artists">
+            <td>{{ artist.name }}</td>
+            <td class="text-right" style="font-weight:bold;" [ngClass]="getBalanceClass(artist.balance)">
+              {{ formatCurrency(artist.balance) }}
+            </td>
+          </tr>
+          <tr *ngIf="artists.length === 0">
+            <td colspan="2" class="text-center text-muted">No artists found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-right">
+    <a (click)="goToFinancial()" class="btn-link" style="cursor: pointer;">
+      Go to financial overview <i class="fa fa-arrow-circle-o-right"></i>
+    </a>
+  </div>
+</div>
