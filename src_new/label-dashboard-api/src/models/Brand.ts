@@ -1,0 +1,51 @@
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../config/database';
+
+interface BrandAttributes {
+  id: number;
+  brand_name: string;
+  logo_url?: string;
+  brand_color: string;
+}
+
+interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
+
+class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements BrandAttributes {
+  public id!: number;
+  public brand_name!: string;
+  public logo_url?: string;
+  public brand_color!: string;
+
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+Brand.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    brand_name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    logo_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    brand_color: {
+      type: DataTypes.STRING(45),
+      allowNull: false,
+      defaultValue: '#ffffff',
+    },
+  },
+  {
+    sequelize,
+    tableName: 'brand',
+    timestamps: false,
+  }
+);
+
+export default Brand;

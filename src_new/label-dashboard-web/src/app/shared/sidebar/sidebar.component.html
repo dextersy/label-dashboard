@@ -1,0 +1,20 @@
+<div class="sidebar" [attr.data-color]="brandColor" data-image="assets/img/sidebar-5.jpg">
+  <div class="sidebar-wrapper">
+    <div class="logo">
+      <a [href]="brandWebsite" class="simple-text">
+        <img [src]="brandLogo" width="100" alt="Brand Logo">
+      </a>
+    </div>
+
+    <ul class="nav">
+      <li *ngFor="let item of menuItems" 
+          [class.active]="isActiveRoute(item.route)"
+          *ngIf="shouldShowMenuItem(item)">
+        <a [routerLink]="item.route">
+          <i [class]="item.icon"></i>
+          <p>{{ item.title }}</p>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

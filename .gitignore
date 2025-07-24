@@ -10,3 +10,6 @@ src/webhook.log
 phpinfo.php
 src/tmp/qrcode/*
 scripts/inc/config.php
+src_new/label-dashboard-api/.env
+src_new/label-dashboard-api/dist
+src_new/label-dashboard-api/node_modules

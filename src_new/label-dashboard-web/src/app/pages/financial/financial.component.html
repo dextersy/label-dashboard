@@ -1,0 +1,96 @@
+<div class="row">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-money header-icon"></i> <strong>Current Balance</strong></h4>
+      </div>
+      <div class="card-body">
+        Your current balance is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="This is what we owe you."></i><br>
+        <h3><strong>{{ formatCurrency(currentBalance) }}</strong></h3>
+        <div *ngIf="isAdmin">
+          <button class="btn btn-primary btn-block" [disabled]="currentBalance <= 0">
+            <i class="fa fa-credit-card"></i> Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-dollar header-icon"></i> <strong>Total Earnings</strong></h4>
+      </div>
+      <div class="card-body">
+        Your current total earnings* are
+        <h5><strong>{{ formatCurrency(totalEarnings) }}</strong></h5>
+        <em>* Starting April 2021</em><br>
+      </div>
+      <div class="card-footer">
+        <button class="btn-link text-left" style="width:100%">
+          <i class="fa fa-search-plus"></i>View earning details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-star header-icon"></i> <strong>Total Royalties</strong></h4>
+      </div>
+      <div class="card-body">
+        Your current total royalties is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="These are the royalties you've earned from all merch, digital, and streaming sales."></i><br>
+        <h5><strong>{{ formatCurrency(totalRoyalties) }}</strong></h5>
+      </div>
+      <div class="card-footer">
+        <button class="btn-link text-left" style="width:100%">
+          <i class="fa fa-search-plus"></i>View royalty details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><strong><i class="fa fa-credit-card header-icon"></i> Total Payments</strong></h4>
+      </div>
+      <div class="card-body">
+        Your current total payments and advances is <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="These are payments we've made to you in the form of royalty payouts, cash advances, and consigned merch sales."></i><br>
+        <h5><strong>{{ formatCurrency(totalPayments) }}</strong></h5>
+      </div>
+      <div class="card-footer">
+        <button class="btn-link text-left" style="width:100%">
+          <i class="fa fa-search-plus"></i>View payment details
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><strong>Latest Earnings</strong></h4>
+      </div>
+      <div class="card-body">
+        <!-- TODO: Add earnings table component -->
+        <p>Earnings table will be displayed here</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><strong>Latest Royalties</strong></h4>
+      </div>
+      <div class="card-body">
+        <!-- TODO: Add royalties table component -->
+        <p>Royalties table will be displayed here</p>
+      </div>
+    </div>
+  </div>
+</div>

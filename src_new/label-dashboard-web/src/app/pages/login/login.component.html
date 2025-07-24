@@ -1,0 +1,96 @@
+<!-- Login page structure exactly matching the original PHP version -->
+<div class="wrapper fadeInDown">
+  <!-- Form Header with Brand Logo -->
+  <div id="formHeader" [style.background-color]="brandColor">
+    <div class="fadeIn first">
+      <img [src]="brandLogo" id="icon" [alt]="brandName" />
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <div id="formContent">
+    <!-- Error Alerts (matching original PHP conditions) -->
+    <div *ngIf="errorType === 'no_user'" class="alert alert-danger" role="alert">
+      User not found. Please try again or ask admin to invite you.
+    </div>
+    <div *ngIf="errorType === 'pass'" class="alert alert-danger" role="alert">
+      Wrong password. Please try again.
+    </div>
+    <div *ngIf="errorType === 'invalid_hash'" class="alert alert-danger" role="alert">
+      Invalid code. Please request invite again.
+    </div>
+    <div *ngIf="errorType === 'lock'" class="alert alert-danger" role="alert">
+      Your account is temporarily locked due to too many failed logins. Please try again in {{lockTimeMinutes}} minutes.
+    </div>
+    <div *ngIf="showResetSuccess" class="alert alert-success" role="alert">
+      Your password has been successfully reset. Please log in again.
+    </div>
+    <div *ngIf="errorMessage && !errorType" class="alert alert-danger" role="alert">
+      {{errorMessage}}
+    </div>
+
+    <!-- Login Form (matching original structure) -->
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <input type="hidden" name="redirectTo" [value]="redirectUrl" *ngIf="redirectUrl" />
+
+      <!-- Username/Email Input -->
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;margin-top:10px;">
+            <i class="fa fa-user"></i>
+          </span>
+        </div>
+        <input 
+          type="text" 
+          id="login" 
+          class="fadeIn second form-control" 
+          name="login" 
+          placeholder="Username / email" 
+          [(ngModel)]="loginField"
+          required>
+      </div>
+
+      <!-- Password Input -->
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <span class="input-group-text fadeIn third" style="background-color:#f6f6f6;border:0px;margin-top:10px;">
+            <i class="fa fa-unlock-alt"></i>
+          </span>
+        </div>
+        <input 
+          type="password" 
+          id="password" 
+          class="fadeIn third form-control" 
+          name="password" 
+          placeholder="Password" 
+          [(ngModel)]="password"
+          required>
+      </div>
+
+      &nbsp;
+
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="fadeIn fourth btn btn-primary btn-block btn-md"
+        [disabled]="loading || loginForm.invalid">
+        <span *ngIf="!loading">Log In <i class="fa fa-sign-in"></i></span>
+        <span *ngIf="loading">Logging in... <i class="fa fa-spinner fa-spin"></i></span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Form Footer -->
+  <div id="formFooter">
+    <a class="" href="/forgot-password">Forgot Password?</a>
+  </div>
+
+  <!-- Footer Text -->
+  &nbsp;
+  <div class="text-center">
+    <p>
+      <small class="text-muted">Powered by <strong>Melt Records Dashboard</strong>.</small><br>
+      <small class="text-muted"><em>Having trouble? <a href="mailto:support@melt-records.com">Contact us here</a> or use the chat widget.</em></small>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,166 @@
+import { sequelize } from '../config/database';
+
+// Import all models
+import User from './User';
+import Brand from './Brand';
+import Artist from './Artist';
+import Release from './Release';
+import ReleaseArtist from './ReleaseArtist';
+import Event from './Event';
+import EventReferrer from './EventReferrer';
+import Ticket from './Ticket';
+import Payment from './Payment';
+import PaymentMethod from './PaymentMethod';
+import Earning from './Earning';
+import Royalty from './Royalty';
+import RecuperableExpense from './RecuperableExpense';
+import ArtistImage from './ArtistImage';
+import ArtistDocument from './ArtistDocument';
+import ArtistAccess from './ArtistAccess';
+import Domain from './Domain';
+import LoginAttempt from './LoginAttempt';
+
+// Define relationships
+// Brand relationships
+Brand.hasMany(User, { foreignKey: 'brand_id', as: 'users' });
+Brand.hasMany(Artist, { foreignKey: 'brand_id', as: 'artists' });
+Brand.hasMany(Event, { foreignKey: 'brand_id', as: 'events' });
+Brand.hasMany(Release, { foreignKey: 'brand_id', as: 'releases' });
+Brand.hasMany(RecuperableExpense, { foreignKey: 'brand_id', as: 'expenses' });
+Brand.hasMany(LoginAttempt, { foreignKey: 'brand_id', as: 'loginAttempts' });
+Brand.hasMany(Domain, { foreignKey: 'brand_id', as: 'domains' });
+
+// User relationships
+User.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+User.hasMany(LoginAttempt, { foreignKey: 'user_id', as: 'loginAttempts' });
+User.belongsToMany(Artist, { 
+  through: ArtistAccess, 
+  foreignKey: 'user_id', 
+  otherKey: 'artist_id',
+  as: 'artistAccess' 
+});
+
+// Artist relationships
+Artist.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Artist.hasMany(Payment, { foreignKey: 'artist_id', as: 'payments' });
+Artist.hasMany(PaymentMethod, { foreignKey: 'artist_id', as: 'paymentMethods' });
+Artist.hasMany(Royalty, { foreignKey: 'artist_id', as: 'royalties' });
+Artist.hasMany(ArtistImage, { foreignKey: 'artist_id', as: 'images' });
+Artist.hasMany(ArtistDocument, { foreignKey: 'artist_id', as: 'documents' });
+Artist.belongsToMany(User, { 
+  through: ArtistAccess, 
+  foreignKey: 'artist_id', 
+  otherKey: 'user_id',
+  as: 'userAccess' 
+});
+Artist.belongsToMany(Release, { 
+  through: ReleaseArtist, 
+  foreignKey: 'artist_id', 
+  otherKey: 'release_id',
+  as: 'releases' 
+});
+
+// Release relationships
+Release.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Release.hasMany(Earning, { foreignKey: 'release_id', as: 'earnings' });
+Release.hasMany(Royalty, { foreignKey: 'release_id', as: 'royalties' });
+Release.hasMany(RecuperableExpense, { foreignKey: 'release_id', as: 'expenses' });
+Release.belongsToMany(Artist, { 
+  through: ReleaseArtist, 
+  foreignKey: 'release_id', 
+  otherKey: 'artist_id',
+  as: 'artists' 
+});
+
+// ReleaseArtist relationships
+ReleaseArtist.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+ReleaseArtist.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+
+// Event relationships
+Event.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Event.hasMany(Ticket, { foreignKey: 'event_id', as: 'tickets' });
+Event.hasMany(EventReferrer, { foreignKey: 'event_id', as: 'referrers' });
+
+// EventReferrer relationships
+EventReferrer.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+EventReferrer.hasMany(Ticket, { foreignKey: 'referrer_id', as: 'tickets' });
+
+// Ticket relationships
+Ticket.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+Ticket.belongsTo(EventReferrer, { foreignKey: 'referrer_id', as: 'referrer' });
+
+// Payment relationships
+Payment.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+
+// PaymentMethod relationships
+PaymentMethod.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+
+// Earning relationships
+Earning.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+Earning.hasMany(Royalty, { foreignKey: 'earning_id', as: 'royalties' });
+
+// Royalty relationships
+Royalty.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+Royalty.belongsTo(Earning, { foreignKey: 'earning_id', as: 'earning' });
+Royalty.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+
+// RecuperableExpense relationships
+RecuperableExpense.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+RecuperableExpense.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+
+// ArtistImage relationships
+ArtistImage.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+
+// ArtistDocument relationships
+ArtistDocument.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+
+// ArtistAccess relationships
+ArtistAccess.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+ArtistAccess.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// Domain relationships
+Domain.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+
+// LoginAttempt relationships
+LoginAttempt.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+LoginAttempt.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+
+// Export all models
+export {
+  sequelize,
+  User,
+  Brand,
+  Artist,
+  Release,
+  ReleaseArtist,
+  Event,
+  EventReferrer,
+  Ticket,
+  Payment,
+  PaymentMethod,
+  Earning,
+  Royalty,
+  RecuperableExpense,
+  ArtistImage,
+  ArtistDocument,
+  ArtistAccess,
+  Domain,
+  LoginAttempt,
+};
+
+// Initialize database connection
+export const initializeDatabase = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Database connection established successfully.');
+    
+    // Sync all models (use force: false in production)
+    await sequelize.sync({ force: false });
+    console.log('✅ Database models synchronized.');
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Unable to connect to the database:', error);
+    return false;
+  }
+};
