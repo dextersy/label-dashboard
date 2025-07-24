@@ -182,7 +182,10 @@ export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestro
         plugins: {
           title: {
             display: true,
-            text: 'Ticket Sales'
+            text: 'Tickets Sold'
+          },
+          legend: {
+            display: false
           }
         },
         scales: {
