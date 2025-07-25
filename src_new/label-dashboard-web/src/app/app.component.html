@@ -9,6 +9,20 @@
     <div class="main-panel">
       <app-navbar></app-navbar>
       
+      <!-- Artist Selection - Top Level -->
+      <div class="artist-selection-container" *ngIf="shouldShowArtistSelection()">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-12">
+              <app-artist-selection 
+                [currentArtist]="selectedArtist"
+                (artistSelected)="onArtistSelected($event)">
+              </app-artist-selection>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div class="content">
         <router-outlet />
       </div>

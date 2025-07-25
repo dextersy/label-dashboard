@@ -1,11 +1,12 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ArtistSelectionComponent, Artist } from '../../components/artist/artist-selection/artist-selection.component';
+import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artist/artist-profile-tab/artist-profile-tab.component';
 import { ArtistGalleryTabComponent } from '../../components/artist/artist-gallery-tab/artist-gallery-tab.component';
 import { ArtistReleasesTabComponent, ArtistRelease } from '../../components/artist/artist-releases-tab/artist-releases-tab.component';
 import { ArtistTeamTabComponent } from '../../components/artist/artist-team-tab/artist-team-tab.component';
 import { NotificationService } from '../../services/notification.service';
+import { ArtistStateService } from '../../services/artist-state.service';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release';
 
@@ -14,7 +15,6 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
   standalone: true,
   imports: [
     CommonModule,
-    ArtistSelectionComponent,
     ArtistProfileTabComponent,
     ArtistGalleryTabComponent,
     ArtistReleasesTabComponent,
@@ -24,13 +24,15 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
   styleUrl: './artist.component.scss'
 })
 export class ArtistComponent implements OnInit {
-  @ViewChild(ArtistSelectionComponent) artistSelection!: ArtistSelectionComponent;
   
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
 
-  constructor(private notificationService: NotificationService) {}
+  constructor(
+    private notificationService: NotificationService,
+    private artistStateService: ArtistStateService
+  ) {}
 
   tabs = [
     { id: 'profile' as TabType, label: 'Profile', icon: 'fa-user' },
@@ -52,6 +54,11 @@ export class ArtistComponent implements OnInit {
         console.error('Error parsing user data:', e);
       }
     }
+
+    // Subscribe to artist state changes
+    this.artistStateService.selectedArtist$.subscribe(artist => {
+      this.selectedArtist = artist;
+    });
   }
 
   onArtistSelected(artist: Artist): void {
@@ -70,13 +77,11 @@ export class ArtistComponent implements OnInit {
 
   onArtistUpdated(artist: ArtistProfile): void {
     if (this.selectedArtist) {
-      // Update the selected artist with new profile data
-      this.selectedArtist = { ...this.selectedArtist, ...artist };
-      
-      // Refresh the artist list to get updated data while preserving selection
-      if (this.artistSelection) {
-        this.artistSelection.refreshArtists();
-      }
+      // Update the global artist state with new profile data
+      this.artistStateService.updateSelectedArtist({
+        name: artist.name,
+        profile_photo: artist.profile_photo
+      });
     }
   }
 

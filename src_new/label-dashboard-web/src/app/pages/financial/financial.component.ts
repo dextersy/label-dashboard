@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { FinancialSummaryTabComponent } from '../../components/financial/financial-summary-tab/financial-summary-tab.component';
 import { FinancialDocumentsTabComponent } from '../../components/financial/financial-documents-tab/financial-documents-tab.component';
@@ -14,6 +13,7 @@ import { NewPaymentFormComponent } from '../../components/financial/new-payment-
 import { NewEarningFormComponent } from '../../components/financial/new-earning-form/new-earning-form.component';
 import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../services/notification.service';
+import { ArtistStateService } from '../../services/artist-state.service';
 
 export type FinancialTabType = 'summary' | 'documents' | 'earnings' | 'royalties' | 'payments' | 'release' | 'new-royalty' | 'new-payment' | 'new-earning';
 
@@ -70,7 +70,6 @@ export interface PayoutSettings {
   imports: [
     CommonModule, 
     FormsModule, 
-    ArtistSelectionComponent, 
     FinancialSummaryTabComponent,
     FinancialDocumentsTabComponent,
     FinancialEarningsTabComponent,
@@ -158,7 +157,8 @@ export class FinancialComponent implements OnInit {
 
   constructor(
     private financialService: FinancialService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private artistStateService: ArtistStateService
   ) {}
 
   ngOnInit(): void {
@@ -172,12 +172,16 @@ export class FinancialComponent implements OnInit {
         console.error('Error parsing user data:', e);
       }
     }
+
+    // Subscribe to artist state changes
+    this.artistStateService.selectedArtist$.subscribe(artist => {
+      this.selectedArtist = artist;
+      if (artist) {
+        this.loadFinancialData();
+      }
+    });
   }
 
-  onArtistSelected(artist: Artist): void {
-    this.selectedArtist = artist;
-    this.loadFinancialData();
-  }
 
   onAlertMessage(alert: { type: 'success' | 'error', message: string }): void {
     if (alert.type === 'success') {

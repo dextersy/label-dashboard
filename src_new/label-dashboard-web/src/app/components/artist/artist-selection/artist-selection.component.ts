@@ -34,11 +34,16 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(): void {
-    if (this.currentArtist && this.artists.length > 0) {
-      // Find and select the current artist from the loaded list
-      const foundArtist = this.artists.find(artist => artist.id === this.currentArtist!.id);
-      if (foundArtist) {
-        this.selectedArtist = foundArtist;
+    if (this.currentArtist) {
+      // Update selected artist with current artist data (including updated profile info)
+      this.selectedArtist = this.currentArtist;
+      
+      // Also update the artist in the artists array if it exists
+      if (this.artists.length > 0) {
+        const index = this.artists.findIndex(artist => artist.id === this.currentArtist!.id);
+        if (index !== -1) {
+          this.artists[index] = { ...this.artists[index], ...this.currentArtist };
+        }
       }
     }
   }
