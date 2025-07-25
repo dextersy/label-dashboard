@@ -1,0 +1,8 @@
+<div *ngIf="currentNotification" class="global-notification" [class]="getNotificationClass()">
+  <button type="button" class="close" (click)="closeNotification()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <i class="fa" [class]="getNotificationIcon()"></i>
+  <strong>{{ currentNotification.type === 'success' ? 'Success!' : 'Error!' }}</strong>
+  {{ currentNotification.message }}
+</div>

@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ArtistSelectionComponent, Artist } from '../../components/artist/artist-selection/artist-selection.component';
-import { ArtistAlertMessageComponent, AlertMessage } from '../../components/artist/artist-alert-message/artist-alert-message.component';
 import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artist/artist-profile-tab/artist-profile-tab.component';
 import { ArtistGalleryTabComponent } from '../../components/artist/artist-gallery-tab/artist-gallery-tab.component';
 import { ArtistReleasesTabComponent, ArtistRelease } from '../../components/artist/artist-releases-tab/artist-releases-tab.component';
 import { ArtistTeamTabComponent } from '../../components/artist/artist-team-tab/artist-team-tab.component';
+import { NotificationService } from '../../services/notification.service';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release';
 
@@ -15,7 +15,6 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
   imports: [
     CommonModule,
     ArtistSelectionComponent,
-    ArtistAlertMessageComponent,
     ArtistProfileTabComponent,
     ArtistGalleryTabComponent,
     ArtistReleasesTabComponent,
@@ -26,9 +25,10 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
 })
 export class ArtistComponent implements OnInit {
   selectedArtist: Artist | null = null;
-  currentAlert: AlertMessage | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
+
+  constructor(private notificationService: NotificationService) {}
 
   tabs = [
     { id: 'profile' as TabType, label: 'Profile', icon: 'fa-user' },
@@ -58,8 +58,12 @@ export class ArtistComponent implements OnInit {
     this.activeTab = 'profile';
   }
 
-  onAlertMessage(alert: AlertMessage): void {
-    this.currentAlert = alert;
+  onAlertMessage(alert: { type: 'success' | 'error', message: string }): void {
+    if (alert.type === 'success') {
+      this.notificationService.showSuccess(alert.message);
+    } else {
+      this.notificationService.showError(alert.message);
+    }
   }
 
   onArtistUpdated(artist: ArtistProfile): void {
