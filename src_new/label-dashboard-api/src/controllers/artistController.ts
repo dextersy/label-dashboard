@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod } from '../models';
-import { sendTeamInviteEmail, sendArtistUpdateEmail } from '../utils/emailService';
+import { sendTeamInviteEmail, sendArtistUpdateEmail, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -415,34 +415,32 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
 
     // Notify artist of payout settings change if payout point changed
     if (payout_point !== undefined && payout_point !== oldPayoutPoint) {
-      const artistAccess = await ArtistAccess.findAll({
-        where: { artist_id: id },
-        include: [{ model: User, as: 'user' }]
-      });
+      try {
+        const artistAccess = await ArtistAccess.findAll({
+          where: { artist_id: id },
+          include: [{ model: User, as: 'user' }]
+        });
 
-      const recipients = artistAccess
-        .filter(access => access.user?.email_address)
-        .map(access => access.user!.email_address);
+        const recipients = artistAccess
+          .filter(access => access.user?.email_address)
+          .map(access => access.user!.email_address);
 
-      if (recipients.length > 0) {
-        await sendBrandedEmail(
-          recipients,
-          `Payout Settings Updated: ${artist.name}`,
-          'payout_update',
-          {
-            body: `
-              <h2>Payout Settings Updated</h2>
-              <p>Hi there!</p>
-              <p>The payout threshold for ${artist.name} has been updated:</p>
-              <ul>
-                <li><strong>Previous threshold:</strong> $${oldPayoutPoint}</li>
-                <li><strong>New threshold:</strong> $${payout_point}</li>
-              </ul>
-              <p>Payouts will now be processed when your balance reaches $${payout_point}.</p>
-            `
-          },
-          artist.brand
-        );
+        if (recipients.length > 0) {
+          const updaterName = req.user.first_name && req.user.last_name 
+            ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+            : req.user.email_address;
+
+          await sendPayoutPointNotification(
+            recipients,
+            artist.name,
+            payout_point,
+            updaterName,
+            artist.brand
+          );
+        }
+      } catch (emailError) {
+        console.error('Failed to send payout point notification:', emailError);
+        // Continue with the process even if email fails
       }
     }
 
@@ -1113,6 +1111,43 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
       bank_code: bank_code || 'N/A',
       is_default_for_artist: is_default
     });
+
+    // Send email notification to team members
+    try {
+      // Get brand info
+      const brand = await Brand.findByPk(req.user.brand_id);
+      
+      // Get all team members for this artist
+      const artistAccess = await ArtistAccess.findAll({
+        where: { artist_id: id },
+        include: [{ model: User, as: 'user' }]
+      });
+
+      const recipients = artistAccess
+        .filter(access => access.user?.email_address)
+        .map(access => access.user!.email_address);
+
+      if (recipients.length > 0) {
+        const updaterName = req.user.first_name && req.user.last_name 
+          ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+          : req.user.email_address;
+
+        await sendPaymentMethodNotification(
+          recipients,
+          artist.name,
+          {
+            type,
+            account_name,
+            account_number_or_email
+          },
+          updaterName,
+          brand
+        );
+      }
+    } catch (emailError) {
+      console.error('Failed to send payment method notification:', emailError);
+      // Continue with the process even if email fails
+    }
 
     res.status(201).json({
       message: 'Payment method added successfully',

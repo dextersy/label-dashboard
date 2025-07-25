@@ -21,7 +21,7 @@ export const sendEmail = async (
 ): Promise<boolean> => {
   try {
     const mailOptions = {
-      from: process.env.SMTP_USER,
+      from: process.env.FROM_EMAIL,
       to: recipients.join(', '),
       subject,
       html: htmlBody,
@@ -232,4 +232,68 @@ export const sendArtistUpdateEmail = async (
   };
 
   return await sendBrandedEmail(email, 'artist_update_email', templateData);
+};
+
+// Send payment method update notification
+export const sendPaymentMethodNotification = async (
+  recipients: string[],
+  artistName: string,
+  paymentMethodData: {
+    type: string;
+    account_name: string;
+    account_number_or_email: string;
+  },
+  updaterName: string,
+  brand: any
+): Promise<boolean> => {
+  try {
+    const templatePath = path.join(__dirname, '../../src/assets/templates/add_payment_method_email.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Replace template variables
+    template = template.replace(/%LOGO%/g, brand?.logo_url || '');
+    template = template.replace(/%ARTIST_NAME%/g, artistName);
+    template = template.replace(/%BANK_NAME%/g, paymentMethodData.type);
+    template = template.replace(/%ACCOUNT_NAME%/g, paymentMethodData.account_name);
+    template = template.replace(/%ACCOUNT_NUMBER%/g, paymentMethodData.account_number_or_email);
+    template = template.replace(/%MEMBER_NAME%/g, updaterName);
+    template = template.replace(/%BRAND%/g, brand?.name || 'Your Label');
+    template = template.replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
+    template = template.replace(/%LINK%/g, `${process.env.FRONTEND_URL}/financial#payments`);
+
+    const subject = `A new payment method has been added to ${artistName}`;
+    return await sendEmail(recipients, subject, template);
+  } catch (error) {
+    console.error('Error sending payment method notification:', error);
+    return false;
+  }
+};
+
+// Send payout point update notification
+export const sendPayoutPointNotification = async (
+  recipients: string[],
+  artistName: string,
+  newPayoutPoint: number,
+  updaterName: string,
+  brand: any
+): Promise<boolean> => {
+  try {
+    const templatePath = path.join(__dirname, '../../src/assets/templates/artist_update_payout_point.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Replace template variables
+    template = template.replace(/%LOGO%/g, brand?.logo_url || '');
+    template = template.replace(/%ARTIST_NAME%/g, artistName);
+    template = template.replace(/%PAYOUT_POINT%/g, `₱ ${newPayoutPoint.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%BRAND_NAME%/g, brand?.name || 'Your Label');
+    template = template.replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
+    template = template.replace(/%MEMBER_NAME%/g, updaterName);
+    template = template.replace(/%URL%/g, `${process.env.FRONTEND_URL}/financial#payments`);
+
+    const subject = `Payout point for ${artistName} updated.`;
+    return await sendEmail(recipients, subject, template);
+  } catch (error) {
+    console.error('Error sending payout point notification:', error);
+    return false;
+  }
 };
