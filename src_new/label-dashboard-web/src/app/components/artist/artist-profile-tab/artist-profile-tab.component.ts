@@ -111,8 +111,8 @@ export class ArtistProfileTabComponent {
       formData.append('profile_photo', this.selectedFile);
     }
 
-    this.http.post<{success: boolean, message: string, artist: ArtistProfile}>(
-      `${environment.apiUrl}/artists/${this.artist.id}/profile`, 
+    this.http.put<{message: string, artist: ArtistProfile}>(
+      `${environment.apiUrl}/artists/${this.artist.id}`, 
       formData,
       {
         headers: this.getAuthHeaders(),
@@ -123,7 +123,7 @@ export class ArtistProfileTabComponent {
       next: (event: any) => {
         if (event.type === 4) { // HttpEventType.Response
           const response = event.body;
-          if (response.success) {
+          if (response && response.artist) {
             this.artistUpdated.emit(response.artist);
             this.alertMessage.emit({
               type: 'success',
@@ -133,7 +133,7 @@ export class ArtistProfileTabComponent {
           } else {
             this.alertMessage.emit({
               type: 'error',
-              message: response.message || 'Failed to update artist profile.'
+              message: response?.message || 'Failed to update artist profile.'
             });
           }
           this.saving = false;

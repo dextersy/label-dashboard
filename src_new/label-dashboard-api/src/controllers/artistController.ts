@@ -138,6 +138,46 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    // Handle profile photo upload if provided
+    let profilePhotoUrl = artist.profile_photo;
+    if (req.file) {
+      // Generate unique filename for S3
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(req.file.originalname);
+      const fileName = `artist-profile-${id}-${uniqueSuffix}${extension}`;
+
+      try {
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+
+        const result = await s3.upload(uploadParams).promise();
+        profilePhotoUrl = result.Location;
+
+        // Delete old profile photo from S3 if it exists
+        if (artist.profile_photo && artist.profile_photo.startsWith('https://')) {
+          try {
+            const oldUrl = new URL(artist.profile_photo);
+            const oldKey = oldUrl.pathname.substring(1);
+            
+            await s3.deleteObject({
+              Bucket: process.env.S3_BUCKET!,
+              Key: oldKey
+            }).promise();
+          } catch (deleteError) {
+            console.error('Error deleting old profile photo:', deleteError);
+          }
+        }
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload profile photo' });
+      }
+    }
+
     // Store original values for change notification
     const originalValues = {
       name: artist.name,
@@ -159,7 +199,8 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       website_page_url,
       band_members,
       youtube_channel,
-      payout_point: payout_point || artist.payout_point
+      payout_point: payout_point || artist.payout_point,
+      profile_photo: profilePhotoUrl
     });
 
     // Send notification email if requested and there are changes

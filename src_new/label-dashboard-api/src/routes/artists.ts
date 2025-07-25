@@ -25,7 +25,7 @@ router.use(authenticateToken);
 router.get('/', getArtists);
 router.get('/:id', getArtist);
 router.post('/', requireAdmin, createArtist);
-router.put('/:id', updateArtist);
+router.put('/:id', upload.single('profile_photo'), updateArtist);
 router.delete('/:id', requireAdmin, deleteArtist);
 
 // Artist management operations
