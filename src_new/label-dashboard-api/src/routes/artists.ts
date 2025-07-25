@@ -7,6 +7,9 @@ import {
   deleteArtist,
   setSelectedArtist,
   updatePayoutSettings,
+  getPayoutSettings,
+  getPaymentMethods,
+  addPaymentMethod,
   getArtistBalance,
   getArtistPhotos,
   uploadArtistPhotos,
@@ -35,8 +38,13 @@ router.delete('/:id', requireAdmin, deleteArtist);
 
 // Artist management operations
 router.post('/set-selected', setSelectedArtist);
+router.get('/:id/payout-settings', getPayoutSettings);
 router.put('/:id/payout-settings', updatePayoutSettings);
 router.get('/:id/balance', getArtistBalance);
+
+// Payment methods
+router.get('/:id/payment-methods', getPaymentMethods);
+router.post('/:id/payment-methods', addPaymentMethod);
 
 // Photo gallery operations
 router.get('/:id/photos', getArtistPhotos);

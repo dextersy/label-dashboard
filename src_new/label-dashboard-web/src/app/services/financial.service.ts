@@ -19,52 +19,84 @@ export class FinancialService {
   }
 
   async getFinancialSummary(artistId: number): Promise<FinancialSummary> {
-    const response = await this.http.get<any>(`${environment.apiUrl}/financial/summary/${artistId}`, {
+    const response = await this.http.get<any>(`${environment.apiUrl}/financial/summary?artist_id=${artistId}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
+    const summary = response.summary;
     return {
-      currentBalance: response.current_balance,
-      totalEarnings: response.total_earnings,
-      totalRoyalties: response.total_royalties,
-      totalPayments: response.total_payments
+      currentBalance: summary.current_balance,
+      totalEarnings: summary.total_earnings,
+      totalRoyalties: summary.total_royalties,
+      totalPayments: summary.total_payments
     };
   }
 
   async getEarnings(artistId: number): Promise<Earning[]> {
-    const response = await this.http.get<{earnings: any[]}>(`${environment.apiUrl}/financial/earnings/${artistId}`, {
+    const response = await this.http.get<{earnings: any[]}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
-    return response?.earnings || [];
+    const earnings = response?.earnings || [];
+    return earnings.map(earning => ({
+      id: earning.id,
+      date_recorded: earning.date_recorded,
+      release_title: earning.release?.title || '(No release)',
+      description: earning.description || earning.type || 'Earning',
+      amount: earning.amount
+    }));
   }
 
   async getRoyalties(artistId: number): Promise<Royalty[]> {
-    const response = await this.http.get<{royalties: any[]}>(`${environment.apiUrl}/financial/royalties/${artistId}`, {
+    const response = await this.http.get<{royalties: any[]}>(`${environment.apiUrl}/financial/royalties?artist_id=${artistId}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
-    return response?.royalties || [];
+    const royalties = response?.royalties || [];
+    return royalties.map(royalty => ({
+      id: royalty.id,
+      date_recorded: royalty.date_recorded,
+      release_title: royalty.release?.title || '(No release)',
+      description: royalty.description || 'Royalty',
+      amount: royalty.amount
+    }));
   }
 
   async getPayments(artistId: number): Promise<Payment[]> {
-    const response = await this.http.get<{payments: any[]}>(`${environment.apiUrl}/financial/payments/${artistId}`, {
+    const response = await this.http.get<{payments: any[]}>(`${environment.apiUrl}/financial/artists/${artistId}/payments`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
-    return response?.payments || [];
+    const payments = response?.payments || [];
+    return payments.map(payment => ({
+      id: payment.id,
+      date_paid: payment.date_paid,
+      description: payment.description || 'Payment',
+      paid_thru_type: payment.paid_thru_type || '',
+      paid_thru_account_name: payment.paid_thru_account_name || '',
+      paid_thru_account_number: payment.paid_thru_account_number || '',
+      amount: payment.amount,
+      payment_processing_fee: payment.payment_processing_fee || 0
+    }));
   }
 
   async getPaymentMethods(artistId: number): Promise<PaymentMethod[]> {
-    const response = await this.http.get<{paymentMethods: any[]}>(`${environment.apiUrl}/financial/payment-methods/${artistId}`, {
+    const response = await this.http.get<{paymentMethods: any[]}>(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
-    return response?.paymentMethods || [];
+    const paymentMethods = response?.paymentMethods || [];
+    return paymentMethods.map(method => ({
+      id: method.id,
+      type: method.type,
+      account_name: method.account_name,
+      account_number_or_email: method.account_number_or_email,
+      is_default_for_artist: method.is_default_for_artist
+    }));
   }
 
   async getPayoutSettings(artistId: number): Promise<PayoutSettings> {
-    const response = await this.http.get<any>(`${environment.apiUrl}/financial/payout-settings/${artistId}`, {
+    const response = await this.http.get<any>(`${environment.apiUrl}/artists/${artistId}/payout-settings`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
@@ -102,8 +134,7 @@ export class FinancialService {
   }
 
   async addPaymentMethod(artistId: number, paymentMethodData: any): Promise<void> {
-    await this.http.post(`${environment.apiUrl}/financial/payment-methods`, {
-      artist_id: artistId,
+    await this.http.post(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
       ...paymentMethodData
     }, {
       headers: this.getAuthHeaders()
@@ -111,7 +142,7 @@ export class FinancialService {
   }
 
   async updatePayoutSettings(artistId: number, payoutSettings: PayoutSettings): Promise<void> {
-    await this.http.put(`${environment.apiUrl}/financial/payout-settings/${artistId}`, payoutSettings, {
+    await this.http.put(`${environment.apiUrl}/artists/${artistId}/payout-settings`, payoutSettings, {
       headers: this.getAuthHeaders()
     }).toPromise();
   }

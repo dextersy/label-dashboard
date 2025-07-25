@@ -226,7 +226,8 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
 
     const where: any = {};
     const includeConditions: any[] = [
-      { model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } }
+      { model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } },
+      { model: Release, as: 'release' } // Always include release information
     ];
 
     if (artist_id) {
@@ -235,7 +236,6 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
 
     if (release_id) {
       where.release_id = release_id;
-      includeConditions.push({ model: Release, as: 'release' });
     }
 
     const royalties = await Royalty.findAll({
@@ -561,62 +561,7 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// PAYMENT METHODS MANAGEMENT
-export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
-  try {
-    const {
-      artist_id,
-      type,
-      account_name,
-      account_number_or_email,
-      bank_code,
-      is_default = false
-    } = req.body;
-
-    if (!artist_id || !type || !account_name || !account_number_or_email) {
-      return res.status(400).json({ 
-        error: 'Artist ID, type, account name, and account number/email are required' 
-      });
-    }
-
-    // Verify artist belongs to user's brand
-    const artist = await Artist.findOne({
-      where: { 
-        id: artist_id,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!artist) {
-      return res.status(404).json({ error: 'Artist not found' });
-    }
-
-    // If this is set as default, remove default from other methods
-    if (is_default) {
-      await PaymentMethod.update(
-        { is_default_for_artist: false },
-        { where: { artist_id } }
-      );
-    }
-
-    const paymentMethod = await PaymentMethod.create({
-      artist_id,
-      type,
-      account_name,
-      account_number_or_email,
-      bank_code: bank_code || 'N/A',
-      is_default_for_artist: is_default
-    });
-
-    res.status(201).json({
-      message: 'Payment method added successfully',
-      payment_method: paymentMethod
-    });
-  } catch (error) {
-    console.error('Add payment method error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+// Note: Payment methods management moved to artistController.ts
 
 // EXPENSES MANAGEMENT
 export const addRecuperableExpense = async (req: AuthRequest, res: Response) => {
@@ -695,9 +640,30 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         where: { artist_id }
       }) || 0;
 
+      // Calculate total earnings for this artist by first finding releases, then summing earnings
+      const artistReleases = await ReleaseArtist.findAll({
+        where: { artist_id: artist_id },
+        attributes: ['release_id'],
+        include: [{
+          model: Release,
+          as: 'release',
+          where: { brand_id: req.user.brand_id },
+          attributes: ['id']
+        }]
+      });
+
+      const releaseIds = artistReleases.map(ra => ra.release_id);
+      
+      const totalEarnings = releaseIds.length > 0 ? await Earning.sum('amount', {
+        where: {
+          release_id: releaseIds
+        }
+      }) || 0 : 0;
+
       summary = {
         artist_id,
         artist_name: artist.name,
+        total_earnings: totalEarnings,
         total_royalties: totalRoyalties,
         total_payments: totalPayments,
         current_balance: totalRoyalties - totalPayments,
@@ -744,3 +710,5 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Note: Payout settings management moved to artistController.ts

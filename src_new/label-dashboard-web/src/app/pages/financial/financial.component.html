@@ -30,7 +30,10 @@
                 [summary]="summary"
                 [latestEarnings]="latestEarnings"
                 [latestRoyalties]="latestRoyalties"
-                [onPayNow]="onPayNow.bind(this)">
+                [onPayNow]="onPayNow.bind(this)"
+                (viewEarningsDetails)="setActiveTab('earnings')"
+                (viewRoyaltiesDetails)="setActiveTab('royalties')"
+                (viewPaymentsDetails)="setActiveTab('payments')">
               </app-financial-summary-tab>
             </div>
             

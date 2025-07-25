@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EarningsTableComponent } from '../earnings-table/earnings-table.component';
 import { RoyaltiesTableComponent } from '../royalties-table/royalties-table.component';
@@ -16,6 +16,10 @@ export class FinancialSummaryTabComponent {
   @Input() latestEarnings: Earning[] = [];
   @Input() latestRoyalties: Royalty[] = [];
   @Input() onPayNow: () => Promise<void> = async () => {};
+  
+  @Output() viewEarningsDetails = new EventEmitter<void>();
+  @Output() viewRoyaltiesDetails = new EventEmitter<void>();
+  @Output() viewPaymentsDetails = new EventEmitter<void>();
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {

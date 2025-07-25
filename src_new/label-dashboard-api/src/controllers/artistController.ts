@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist } from '../models';
+import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateEmail } from '../utils/emailService';
 import multer from 'multer';
 import path from 'path';
@@ -361,14 +361,36 @@ export const setSelectedArtist = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist belongs to user's brand
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    res.json({ 
+      payout_point: artist.payout_point || 1000,
+      hold_payouts: artist.hold_payouts || false
+    });
+  } catch (error) {
+    console.error('Get payout settings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { payout_point } = req.body;
-
-    if (!payout_point || payout_point < 0) {
-      return res.status(400).json({ error: 'Valid payout point is required' });
-    }
+    const { payout_point, hold_payouts } = req.body;
 
     const artist = await Artist.findOne({
       where: { 
@@ -383,42 +405,51 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
     }
 
     const oldPayoutPoint = artist.payout_point;
-    await artist.update({ payout_point });
+    const oldHoldPayouts = artist.hold_payouts;
 
-    // Notify artist of payout point change
-    const artistAccess = await ArtistAccess.findAll({
-      where: { artist_id: id },
-      include: [{ model: User, as: 'user' }]
+    // Update the artist with new settings
+    await artist.update({ 
+      payout_point: payout_point !== undefined ? payout_point : artist.payout_point,
+      hold_payouts: hold_payouts !== undefined ? hold_payouts : artist.hold_payouts
     });
 
-    const recipients = artistAccess
-      .filter(access => access.user?.email_address)
-      .map(access => access.user!.email_address);
+    // Notify artist of payout settings change if payout point changed
+    if (payout_point !== undefined && payout_point !== oldPayoutPoint) {
+      const artistAccess = await ArtistAccess.findAll({
+        where: { artist_id: id },
+        include: [{ model: User, as: 'user' }]
+      });
 
-    if (recipients.length > 0) {
-      await sendBrandedEmail(
-        recipients,
-        `Payout Settings Updated: ${artist.name}`,
-        'payout_update',
-        {
-          body: `
-            <h2>Payout Settings Updated</h2>
-            <p>Hi there!</p>
-            <p>The payout threshold for ${artist.name} has been updated:</p>
-            <ul>
-              <li><strong>Previous threshold:</strong> $${oldPayoutPoint}</li>
-              <li><strong>New threshold:</strong> $${payout_point}</li>
-            </ul>
-            <p>Payouts will now be processed when your balance reaches $${payout_point}.</p>
-          `
-        },
-        artist.brand
-      );
+      const recipients = artistAccess
+        .filter(access => access.user?.email_address)
+        .map(access => access.user!.email_address);
+
+      if (recipients.length > 0) {
+        await sendBrandedEmail(
+          recipients,
+          `Payout Settings Updated: ${artist.name}`,
+          'payout_update',
+          {
+            body: `
+              <h2>Payout Settings Updated</h2>
+              <p>Hi there!</p>
+              <p>The payout threshold for ${artist.name} has been updated:</p>
+              <ul>
+                <li><strong>Previous threshold:</strong> $${oldPayoutPoint}</li>
+                <li><strong>New threshold:</strong> $${payout_point}</li>
+              </ul>
+              <p>Payouts will now be processed when your balance reaches $${payout_point}.</p>
+            `
+          },
+          artist.brand
+        );
+      }
     }
 
     res.json({
       message: 'Payout settings updated successfully',
-      payout_point
+      payout_point: artist.payout_point,
+      hold_payouts: artist.hold_payouts
     });
   } catch (error) {
     console.error('Update payout settings error:', error);
@@ -998,6 +1029,97 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Remove team member error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// PAYMENT METHODS MANAGEMENT
+export const getPaymentMethods = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist belongs to user's brand
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    const paymentMethods = await PaymentMethod.findAll({
+      where: { artist_id: id },
+      order: [['is_default_for_artist', 'DESC'], ['created_at', 'DESC']]
+    });
+
+    res.json({ 
+      paymentMethods,
+      artist: {
+        id: artist.id,
+        name: artist.name
+      }
+    });
+  } catch (error) {
+    console.error('Get payment methods error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const {
+      type,
+      account_name,
+      account_number_or_email,
+      bank_code,
+      is_default = false
+    } = req.body;
+
+    if (!type || !account_name || !account_number_or_email) {
+      return res.status(400).json({ 
+        error: 'Type, account name, and account number/email are required' 
+      });
+    }
+
+    // Verify artist belongs to user's brand
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // If this is set as default, remove default from other methods
+    if (is_default) {
+      await PaymentMethod.update(
+        { is_default_for_artist: false },
+        { where: { artist_id: id } }
+      );
+    }
+
+    const paymentMethod = await PaymentMethod.create({
+      artist_id: id,
+      type,
+      account_name,
+      account_number_or_email,
+      bank_code: bank_code || 'N/A',
+      is_default_for_artist: is_default
+    });
+
+    res.status(201).json({
+      message: 'Payment method added successfully',
+      payment_method: paymentMethod
+    });
+  } catch (error) {
+    console.error('Add payment method error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
