@@ -4,7 +4,10 @@
     <!-- Artist Selection -->
     <div class="row">
       <div class="col-12">
-        <app-artist-selection (artistSelected)="onArtistSelected($event)"></app-artist-selection>
+        <app-artist-selection 
+          [currentArtist]="selectedArtist"
+          (artistSelected)="onArtistSelected($event)">
+        </app-artist-selection>
       </div>
     </div>
     

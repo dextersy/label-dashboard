@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ArtistSelectionComponent, Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artist/artist-profile-tab/artist-profile-tab.component';
@@ -24,6 +24,8 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
   styleUrl: './artist.component.scss'
 })
 export class ArtistComponent implements OnInit {
+  @ViewChild(ArtistSelectionComponent) artistSelection!: ArtistSelectionComponent;
+  
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
@@ -70,6 +72,11 @@ export class ArtistComponent implements OnInit {
     if (this.selectedArtist) {
       // Update the selected artist with new profile data
       this.selectedArtist = { ...this.selectedArtist, ...artist };
+      
+      // Refresh the artist list to get updated data while preserving selection
+      if (this.artistSelection) {
+        this.artistSelection.refreshArtists();
+      }
     }
   }
 
