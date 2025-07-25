@@ -1,6 +1,6 @@
 <div class="artist-selection-container">
   <div class="dropdown" [class.open]="isDropdownOpen">
-    <button class="btn btn-default dropdown-toggle" type="button" (click)="toggleDropdown()" [disabled]="loading">
+    <button class="btn btn-default artist-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
       <div class="artist-info" *ngIf="selectedArtist">
         <img [src]="getProfilePhotoUrl(selectedArtist.profile_photo)" 
              class="artist-photo" 
