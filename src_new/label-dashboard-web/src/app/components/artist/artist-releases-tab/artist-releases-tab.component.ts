@@ -2,7 +2,6 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
-import { AlertMessage } from '../artist-alert-message/artist-alert-message.component';
 import { environment } from 'environments/environment';
 
 export interface ArtistRelease {
@@ -25,7 +24,7 @@ export interface ArtistRelease {
 })
 export class ArtistReleasesTabComponent {
   @Input() artist: Artist | null = null;
-  @Output() alertMessage = new EventEmitter<AlertMessage>();
+  @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() editRelease = new EventEmitter<ArtistRelease>();
 
   releases: ArtistRelease[] = [];

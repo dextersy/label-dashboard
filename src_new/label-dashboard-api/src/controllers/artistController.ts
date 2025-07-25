@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User } from '../models';
+import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist } from '../models';
 import { sendBrandedEmail } from '../utils/emailService';
 import multer from 'multer';
 import path from 'path';
@@ -679,6 +679,58 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Delete artist photo error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get artist releases
+export const getArtistReleases = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Get releases for this artist
+    const releases = await Release.findAll({
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          where: { id },
+          through: { attributes: [] }
+        }
+      ],
+      order: [['release_date', 'DESC']]
+    });
+
+    // Transform releases to match frontend interface
+    const transformedReleases = releases.map(release => ({
+      id: release.id,
+      catalog_number: release.catalog_no,
+      title: release.title,
+      cover_art: release.cover_art || '',
+      release_date: release.release_date,
+      status: release.status,
+      description: release.description || '',
+      liner_notes: release.liner_notes || ''
+    }));
+
+    res.json({ 
+      releases: transformedReleases,
+      isAdmin: req.user.is_admin || false 
+    });
+  } catch (error) {
+    console.error('Get artist releases error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

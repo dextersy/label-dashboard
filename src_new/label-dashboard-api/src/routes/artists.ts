@@ -12,6 +12,7 @@ import {
   uploadArtistPhotos,
   updatePhotoCaption,
   deleteArtistPhoto,
+  getArtistReleases,
   upload
 } from '../controllers/artistController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -38,5 +39,8 @@ router.get('/:id/photos', getArtistPhotos);
 router.post('/:id/photos', upload.array('photos', 10), uploadArtistPhotos);
 router.put('/:id/photos/:photoId/caption', updatePhotoCaption);
 router.delete('/:id/photos/:photoId', deleteArtistPhoto);
+
+// Release operations
+router.get('/:id/releases', getArtistReleases);
 
 export default router;
