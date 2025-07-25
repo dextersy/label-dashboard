@@ -13,6 +13,10 @@ import {
   updatePhotoCaption,
   deleteArtistPhoto,
   getArtistReleases,
+  getArtistTeam,
+  inviteTeamMember,
+  resendTeamInvite,
+  removeTeamMember,
   upload
 } from '../controllers/artistController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -42,5 +46,11 @@ router.delete('/:id/photos/:photoId', deleteArtistPhoto);
 
 // Release operations
 router.get('/:id/releases', getArtistReleases);
+
+// Team management operations
+router.get('/:id/team', getArtistTeam);
+router.post('/:id/team/invite', inviteTeamMember);
+router.post('/:id/team/:memberId/resend', resendTeamInvite);
+router.delete('/:id/team/:memberId', removeTeamMember);
 
 export default router;

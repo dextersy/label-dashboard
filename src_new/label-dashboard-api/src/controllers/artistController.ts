@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import AWS from 'aws-sdk';
+import crypto from 'crypto';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -731,6 +732,206 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Get artist releases error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get artist team members
+export const getArtistTeam = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Get team members for this artist
+    const teamMembers = await ArtistAccess.findAll({
+      where: { artist_id: id },
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'first_name', 'last_name', 'email_address']
+        }
+      ]
+    });
+
+    // Transform team members to match frontend interface
+    const transformedTeamMembers = teamMembers.map(access => ({
+      id: access.user_id,
+      name: access.user ? `${access.user.first_name || ''} ${access.user.last_name || ''}`.trim() || 'Unknown' : 'Unknown',
+      email: access.user?.email_address || 'Unknown',
+      status: access.status,
+      invited_date: access.createdAt ? access.createdAt.toISOString() : new Date().toISOString()
+    }));
+
+    res.json({ teamMembers: transformedTeamMembers });
+  } catch (error) {
+    console.error('Get artist team error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Invite team member
+export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Check if user exists
+    let user = await User.findOne({ where: { email_address: email } });
+    
+    if (!user) {
+      // Create a new user with pending status
+      user = await User.create({
+        email_address: email,
+        brand_id: req.user.brand_id,
+        is_admin: false
+      });
+    }
+
+    // Check if team member already exists
+    const existingAccess = await ArtistAccess.findOne({
+      where: { artist_id: id, user_id: user.id }
+    });
+
+    if (existingAccess) {
+      return res.status(409).json({ error: 'User is already a team member' });
+    }
+
+    // Generate random invite hash
+    const inviteHash = crypto.randomBytes(32).toString('hex');
+
+    // Create artist access
+    const access = await ArtistAccess.create({
+      artist_id: parseInt(id),
+      user_id: user.id,
+      status: 'Pending',
+      invite_hash: inviteHash
+    });
+
+    // Send invitation email (implementation would go here)
+    // await sendBrandedEmail(user.email, 'team-invite', { artistName: artist.name });
+
+    const teamMember = {
+      id: user.id,
+      name: user.first_name && user.last_name ? `${user.first_name} ${user.last_name}`.trim() : '',
+      email: user.email_address,
+      status: access.status,
+      invited_date: access.createdAt ? access.createdAt.toISOString() : new Date().toISOString(),
+      invite_hash: inviteHash
+    };
+
+    res.json({
+      success: true,
+      message: 'Team member invited successfully',
+      teamMember
+    });
+  } catch (error) {
+    console.error('Invite team member error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Resend team member invitation
+export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, memberId } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find the team member
+    const access = await ArtistAccess.findOne({
+      where: { artist_id: id, user_id: memberId },
+      include: [{ model: User, as: 'user' }]
+    });
+
+    if (!access) {
+      return res.status(404).json({ error: 'Team member not found' });
+    }
+
+    // Send invitation email (implementation would go here)
+    // await sendBrandedEmail(access.user.email, 'team-invite', { artistName: artist.name });
+
+    res.json({
+      success: true,
+      message: 'Invitation resent successfully'
+    });
+  } catch (error) {
+    console.error('Resend team invite error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Remove team member
+export const removeTeamMember = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, memberId } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find and remove the team member access
+    const access = await ArtistAccess.findOne({
+      where: { artist_id: id, user_id: memberId }
+    });
+
+    if (!access) {
+      return res.status(404).json({ error: 'Team member not found' });
+    }
+
+    await access.destroy();
+
+    res.json({
+      success: true,
+      message: 'Team member removed successfully'
+    });
+  } catch (error) {
+    console.error('Remove team member error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
