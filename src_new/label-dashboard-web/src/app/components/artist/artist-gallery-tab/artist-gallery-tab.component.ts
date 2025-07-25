@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
-import { AlertMessage } from '../artist-alert-message/artist-alert-message.component';
 import { environment } from 'environments/environment';
 
 export interface ArtistPhoto {
@@ -23,7 +22,7 @@ export interface ArtistPhoto {
 })
 export class ArtistGalleryTabComponent {
   @Input() artist: Artist | null = null;
-  @Output() alertMessage = new EventEmitter<AlertMessage>();
+  @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
   photos: ArtistPhoto[] = [];
   loading = false;
