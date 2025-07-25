@@ -1,0 +1,62 @@
+<div class="row" *ngIf="summary">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title">Current Balance</h5>
+        <h2 class="text-primary">{{ formatCurrency(summary.currentBalance) }}</h2>
+        <button class="btn btn-success" 
+                (click)="onPayNow()"
+                [disabled]="summary.currentBalance <= 0">
+          Pay Now
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title">Total Earnings</h5>
+        <h2 class="text-success">{{ formatCurrency(summary.totalEarnings) }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title">Total Royalties</h5>
+        <h2 class="text-info">{{ formatCurrency(summary.totalRoyalties) }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title">Total Payments</h5>
+        <h2 class="text-warning">{{ formatCurrency(summary.totalPayments) }}</h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5>Latest Earnings</h5>
+      </div>
+      <div class="card-body">
+        <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5>Latest Royalties</h5>
+      </div>
+      <div class="card-body">
+        <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>
+      </div>
+    </div>
+  </div>
+</div>

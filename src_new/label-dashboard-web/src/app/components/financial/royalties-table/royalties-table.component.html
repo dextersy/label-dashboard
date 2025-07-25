@@ -1,1 +1,23 @@
-<p>royalties-table works!</p>
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead *ngIf="showHeader">
+      <tr>
+        <th>Date Recorded</th>
+        <th>For Release</th>
+        <th>Description</th>
+        <th style="text-align:right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let royalty of royalties">
+        <td>{{ formatDate(royalty.date_recorded) }}</td>
+        <td>{{ royalty.release_title || '(None)' }}</td>
+        <td>{{ royalty.description }}</td>
+        <td style="text-align:right">{{ formatCurrency(royalty.amount) }}</td>
+      </tr>
+      <tr *ngIf="royalties.length === 0">
+        <td [attr.colspan]="showHeader ? 4 : 1" class="text-center">No recorded royalties yet.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

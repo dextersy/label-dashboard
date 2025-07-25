@@ -1,22 +1,22 @@
 <div class="table-responsive">
   <table class="table table-striped">
-    <thead>
+    <thead *ngIf="showHeader">
       <tr>
-        <th>Date</th>
-        <th>Source</th>
-        <th>Platform</th>
-        <th>Amount</th>
+        <th>Date Recorded</th>
+        <th>For Release</th>
+        <th>Description</th>
+        <th style="text-align:right">Amount</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let earning of earnings">
-        <td>{{ earning.date }}</td>
-        <td>{{ earning.source }}</td>
-        <td>{{ earning.platform }}</td>
-        <td>{{ formatCurrency(earning.amount) }}</td>
+        <td>{{ formatDate(earning.date_recorded) }}</td>
+        <td>{{ earning.release_title || '(None)' }}</td>
+        <td>{{ earning.description }}</td>
+        <td style="text-align:right">{{ formatCurrency(earning.amount) }}</td>
       </tr>
       <tr *ngIf="earnings.length === 0">
-        <td colspan="4" class="text-center">No earnings found</td>
+        <td [attr.colspan]="showHeader ? 4 : 1" class="text-center">No recorded earnings yet.</td>
       </tr>
     </tbody>
   </table>

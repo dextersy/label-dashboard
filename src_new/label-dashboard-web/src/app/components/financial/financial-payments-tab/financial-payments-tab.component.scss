@@ -1,0 +1,40 @@
+.card {
+  margin-bottom: 20px;
+}
+
+.payment-method-item {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.payment-method-type {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.payment-method-details {
+  font-size: 0.9em;
+  color: #6c757d;
+}
+
+.badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 0.7em;
+}
+
+.badge-primary {
+  background-color: #007bff;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  margin-bottom: 5px;
+}
