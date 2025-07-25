@@ -6,21 +6,23 @@
       <div class="col-12">
         
         <!-- Tab Navigation -->
-        <div class="card tab-navigation" style="padding: 20px;">
-          <ul class="nav nav-pills">
-            <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
-              <a class="nav-link" 
-                 [class]="getTabClass(tab.id)"
-                 (click)="setActiveTab(tab.id)"
-                 role="tab">
-                <i class="fa" [class]="tab.icon"></i>
-                {{ tab.label }}
-              </a>
-            </li>
-          </ul>
+        <div class="card tab-navigation">
+          <div class="card-header p-0">
+            <ul class="nav nav-tabs financial-tabs" role="tablist">
+              <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
+                <a class="nav-link" 
+                   [class]="getTabClass(tab.id)"
+                   (click)="setActiveTab(tab.id)"
+                   role="tab">
+                  <i class="fa" [class]="tab.icon"></i>
+                  {{ tab.label }}
+                </a>
+              </li>
+            </ul>
+          </div>
           
           <!-- Tab Content -->
-          <div class="tab-content">
+          <div class="card-body tab-content p-0">
             
             <!-- Summary Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'summary'" *ngIf="activeTab === 'summary'">

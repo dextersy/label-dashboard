@@ -1,0 +1,210 @@
+.financial-page {
+  padding: 20px 0;
+  min-height: calc(100vh - 80px);
+  
+  .container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  // Tab Navigation
+  .tab-navigation {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+      
+      .financial-tabs {
+        border-bottom: none;
+        margin: 0;
+        
+        .nav-item {
+          margin-bottom: 0;
+          
+          .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 15px 20px;
+            color: #666;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            
+            &:hover {
+              background-color: #e9ecef;
+              color: #333;
+              border-bottom-color: #dee2e6;
+            }
+            
+            &.active {
+              color: #337ab7;
+              background-color: #fff;
+              border-bottom-color: #337ab7;
+            }
+            
+            i {
+              margin-right: 8px;
+              font-size: 14px;
+            }
+          }
+        }
+      }
+    }
+    
+    .card-body {
+      padding: 0;
+      
+      .tab-content {
+        .tab-pane {
+          display: none;
+          
+          &.active {
+            display: block;
+          }
+        }
+      }
+    }
+  }
+  
+  // Placeholder content for unimplemented tabs
+  .placeholder-content {
+    padding: 40px 20px;
+    
+    .text-center {
+      text-align: center;
+      
+      i {
+        color: #ccc;
+      }
+      
+      h4 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      
+      .text-muted {
+        color: #666;
+        font-size: 16px;
+      }
+    }
+  }
+  
+  // No artist selected state
+  .card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    .card-body {
+      padding: 20px;
+      
+      &.text-center {
+        text-align: center;
+        
+        i {
+          color: #ccc;
+        }
+        
+        h4 {
+          color: #333;
+          margin-bottom: 10px;
+        }
+        
+        .text-muted {
+          color: #666;
+          font-size: 16px;
+        }
+      }
+    }
+  }
+  
+  // Bootstrap row/col spacing
+  .row {
+    margin-left: -15px;
+    margin-right: -15px;
+    
+    [class*="col-"] {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .financial-page {
+    padding: 10px 0;
+    
+    .tab-navigation {
+      .card-header {
+        .financial-tabs {
+          flex-wrap: wrap;
+          
+          .nav-item {
+            flex: 1;
+            min-width: calc(50% - 1px);
+            
+            .nav-link {
+              padding: 12px 10px;
+              font-size: 12px;
+              text-align: center;
+              
+              i {
+                margin-right: 5px;
+                font-size: 12px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .financial-page {
+    .tab-navigation {
+      .card-header {
+        .financial-tabs {
+          .nav-item {
+            min-width: 100%;
+            border-bottom: 1px solid #dee2e6;
+            
+            &:last-child {
+              border-bottom: none;
+            }
+            
+            .nav-link {
+              padding: 15px;
+              text-align: left;
+              border-bottom: none;
+              
+              &.active {
+                background-color: #337ab7;
+                color: #fff;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .placeholder-content {
+      padding: 30px 15px;
+      
+      .text-center {
+        h4 {
+          font-size: 18px;
+        }
+        
+        .text-muted {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
