@@ -11,6 +11,7 @@ export interface ArtistPhoto {
   filename: string;
   caption: string;
   upload_date: string;
+  url: string;
 }
 
 @Component({
@@ -248,8 +249,14 @@ export class ArtistGalleryTabComponent {
     });
   }
 
-  getPhotoUrl(filename: string): string {
-    return `${environment.apiUrl}/uploads/artist-photos/${filename}`;
+  getPhotoUrl(photo: ArtistPhoto): string {
+    // Same approach as profile photo - check if URL is absolute or relative
+    if (photo.url.startsWith('http')) {
+      return photo.url; // Already absolute URL (S3 or external)
+    }
+    
+    // For relative URLs, prepend the API base URL
+    return `${environment.apiUrl}${photo.url}`;
   }
 
   formatDate(dateString: string): string {

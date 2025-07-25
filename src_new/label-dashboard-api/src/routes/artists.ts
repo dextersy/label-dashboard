@@ -7,7 +7,12 @@ import {
   deleteArtist,
   setSelectedArtist,
   updatePayoutSettings,
-  getArtistBalance
+  getArtistBalance,
+  getArtistPhotos,
+  uploadArtistPhotos,
+  updatePhotoCaption,
+  deleteArtistPhoto,
+  upload
 } from '../controllers/artistController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -27,5 +32,11 @@ router.delete('/:id', requireAdmin, deleteArtist);
 router.post('/set-selected', setSelectedArtist);
 router.put('/:id/payout-settings', updatePayoutSettings);
 router.get('/:id/balance', getArtistBalance);
+
+// Photo gallery operations
+router.get('/:id/photos', getArtistPhotos);
+router.post('/:id/photos', upload.array('photos', 10), uploadArtistPhotos);
+router.put('/:id/photos/:photoId/caption', updatePhotoCaption);
+router.delete('/:id/photos/:photoId', deleteArtistPhoto);
 
 export default router;

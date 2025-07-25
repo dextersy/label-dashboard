@@ -69,7 +69,7 @@
       <div *ngIf="!loading && photos.length > 0" class="photo-grid">
         <div class="photo-item" *ngFor="let photo of photos">
           <div class="photo-container">
-            <img [src]="getPhotoUrl(photo.filename)" 
+            <img [src]="getPhotoUrl(photo)" 
                  [alt]="photo.caption || 'Artist photo'"
                  class="photo-image">
             

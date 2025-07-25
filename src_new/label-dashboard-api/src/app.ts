@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import { initializeDatabase } from './models';
 
 dotenv.config();
@@ -16,6 +17,10 @@ app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Static file serving for uploads (legacy local uploads)
+app.use('/api/uploads/artist-photos', express.static(path.join(__dirname, '../uploads/artist-photos')));
+
 
 // Import routes
 import authRoutes from './routes/auth';

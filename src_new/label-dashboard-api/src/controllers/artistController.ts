@@ -1,6 +1,13 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User } from '../models';
 import { sendBrandedEmail } from '../utils/emailService';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { promisify } from 'util';
+import AWS from 'aws-sdk';
+
+const unlinkAsync = promisify(fs.unlink);
 
 interface AuthRequest extends Request {
   user?: any;
@@ -371,6 +378,266 @@ export const getArtistBalance = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Get artist balance error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Configure AWS S3
+AWS.config.update({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  region: process.env.S3_REGION
+});
+
+const s3 = new AWS.S3();
+
+// Multer configuration for memory storage (for S3 upload)
+const storage = multer.memoryStorage();
+
+const fileFilter = (req: any, file: any, cb: any) => {
+  // Accept only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'), false);
+  }
+};
+
+export const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
+
+// Get artist photos
+export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    const photos = await ArtistImage.findAll({
+      where: { artist_id: id },
+      order: [['date_uploaded', 'DESC']],
+      attributes: ['id', 'path', 'credits', 'date_uploaded']
+    });
+
+    // Transform the response to match frontend expectations
+    const transformedPhotos = photos.map(photo => {
+      // Extract filename from S3 URL or use the path directly if it's already a filename
+      let filename;
+      let photoUrl;
+      
+      try {
+        const url = new URL(photo.path);
+        filename = path.basename(url.pathname);
+        // For S3 URLs, use the direct S3 URL
+        photoUrl = photo.path;
+      } catch (e) {
+        filename = path.basename(photo.path);
+        // For local files (legacy), use relative path
+        photoUrl = photo.path;
+      }
+      
+      return {
+        id: photo.id,
+        filename: filename,
+        caption: photo.credits || '',
+        upload_date: photo.date_uploaded,
+        url: photoUrl
+      };
+    });
+
+    res.json({ photos: transformedPhotos });
+  } catch (error) {
+    console.error('Get artist photos error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Upload artist photos
+export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    const uploadedPhotos = [];
+
+    for (const file of req.files as Express.Multer.File[]) {
+      // Generate unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(file.originalname);
+      const fileName = `artist-${id}-${uniqueSuffix}${extension}`;
+
+      try {
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: file.buffer,
+          ContentType: file.mimetype
+        };
+
+        const result = await s3.upload(uploadParams).promise();
+
+        // Save to database with S3 URL
+        const artistImage = await ArtistImage.create({
+          path: result.Location,
+          credits: '', // Empty caption initially
+          artist_id: parseInt(id),
+          date_uploaded: new Date()
+        });
+
+        uploadedPhotos.push({
+          id: artistImage.id,
+          filename: fileName,
+          caption: '',
+          upload_date: artistImage.date_uploaded,
+          url: result.Location
+        });
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload photo to S3' });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `${uploadedPhotos.length} photo(s) uploaded successfully`,
+      photos: uploadedPhotos
+    });
+  } catch (error) {
+    console.error('Upload artist photos error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update photo caption
+export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, photoId } = req.params;
+    const { caption } = req.body;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find and update the photo
+    const photo = await ArtistImage.findOne({
+      where: { 
+        id: photoId,
+        artist_id: id 
+      }
+    });
+
+    if (!photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    await photo.update({ 
+      credits: caption || '' 
+    });
+
+    res.json({
+      success: true,
+      message: 'Photo caption updated successfully'
+    });
+  } catch (error) {
+    console.error('Update photo caption error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete artist photo
+export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, photoId } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find the photo
+    const photo = await ArtistImage.findOne({
+      where: { 
+        id: photoId,
+        artist_id: id 
+      }
+    });
+
+    if (!photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    // Delete the file from S3
+    try {
+      // Extract the key from the S3 URL
+      const url = new URL(photo.path);
+      const key = url.pathname.substring(1); // Remove leading '/'
+      
+      const deleteParams = {
+        Bucket: process.env.S3_BUCKET!,
+        Key: key
+      };
+
+      await s3.deleteObject(deleteParams).promise();
+    } catch (fileError) {
+      console.error('Error deleting file from S3:', fileError);
+      // Continue with database deletion even if S3 deletion fails
+    }
+
+    // Delete from database
+    await photo.destroy();
+
+    res.json({
+      success: true,
+      message: 'Photo deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete artist photo error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
