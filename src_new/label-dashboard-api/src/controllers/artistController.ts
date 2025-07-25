@@ -1052,7 +1052,7 @@ export const getPaymentMethods = async (req: AuthRequest, res: Response) => {
 
     const paymentMethods = await PaymentMethod.findAll({
       where: { artist_id: id },
-      order: [['is_default_for_artist', 'DESC'], ['created_at', 'DESC']]
+      order: [['is_default_for_artist', 'DESC']]
     });
 
     res.json({ 
