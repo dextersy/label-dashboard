@@ -105,6 +105,7 @@ export class ArtistProfileTabComponent {
     formData.append('twitter_handle', this.editingProfile.twitter_handle || '');
     formData.append('tiktok_handle', this.editingProfile.tiktok_handle || '');
     formData.append('youtube_channel', this.editingProfile.youtube_channel || '');
+    formData.append('notify_changes', 'true');
 
     if (this.selectedFile) {
       formData.append('profile_photo', this.selectedFile);

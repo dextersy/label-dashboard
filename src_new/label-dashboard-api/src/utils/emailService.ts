@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -93,32 +95,141 @@ export const sendNotificationEmail = async (
   return await sendEmail(recipients, subject, body);
 };
 
-export const sendBrandedEmail = async (
-  recipients: string[],
-  subject: string,
-  templateName: string,
-  templateData: any,
-  brandInfo?: any
-): Promise<boolean> => {
-  // In a full implementation, you would load email templates
-  // For now, we'll use a simple template system
-  let htmlBody = templateData.body || '';
-
-  if (brandInfo) {
-    htmlBody = `
-      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-        <div style="background-color: ${brandInfo.brand_color}; padding: 20px; text-align: center;">
-          <img src="${brandInfo.logo_url}" alt="${brandInfo.brand_name}" style="max-height: 60px;">
-        </div>
-        <div style="padding: 20px;">
-          ${htmlBody}
-        </div>
-        <div style="background-color: #f5f5f5; padding: 10px; text-align: center; font-size: 12px; color: #666;">
-          <p>© ${new Date().getFullYear()} ${brandInfo.brand_name}. All rights reserved.</p>
-        </div>
-      </div>
-    `;
+// Load email template from file
+const loadEmailTemplate = (templateName: string): string => {
+  try {
+    const templatePath = path.join(__dirname, '../assets/templates', `${templateName}.html`);
+    return fs.readFileSync(templatePath, 'utf8');
+  } catch (error) {
+    console.error(`Failed to load email template ${templateName}:`, error);
+    return '';
   }
+};
 
-  return await sendEmail(recipients, subject, htmlBody);
+// Replace template variables with actual values
+const processTemplate = (template: string, data: Record<string, any>): string => {
+  let processedTemplate = template;
+  
+  // Replace all %VARIABLE% placeholders with actual values
+  for (const [key, value] of Object.entries(data)) {
+    const placeholder = `%${key.toUpperCase()}%`;
+    processedTemplate = processedTemplate.replace(new RegExp(placeholder, 'g'), String(value || ''));
+  }
+  
+  return processedTemplate;
+};
+
+export const sendBrandedEmail = async (
+  email: string,
+  templateName: string,
+  templateData: Record<string, any>
+): Promise<boolean> => {
+  try {
+    // Load the email template
+    const template = loadEmailTemplate(templateName);
+    if (!template) {
+      console.error(`Template ${templateName} not found`);
+      return false;
+    }
+
+    // Process template with data
+    const htmlBody = processTemplate(template, templateData);
+    
+    // Determine subject based on template
+    let subject = '';
+    switch (templateName) {
+      case 'invite_email':
+        subject = `You've been invited to join ${templateData.artist || 'the team'}!`;
+        break;
+      case 'artist_update_email':
+        subject = `${templateData.artist_name || 'Artist'} profile has been updated`;
+        break;
+      case 'reset_password_email':
+        subject = 'Reset your password';
+        break;
+      default:
+        subject = 'Notification';
+    }
+
+    const mailOptions = {
+      from: process.env.FROM_EMAIL,
+      to: email,
+      subject,
+      html: htmlBody,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Branded email sent successfully:', result.messageId);
+    return true;
+  } catch (error) {
+    console.error('Branded email sending failed:', error);
+    return false;
+  }
+};
+
+// Send team invitation email
+export const sendTeamInviteEmail = async (
+  email: string,
+  artistName: string,
+  inviterName: string,
+  inviteUrl: string,
+  brandInfo: any
+): Promise<boolean> => {
+  const templateData = {
+    artist: artistName,
+    member_name: inviterName,
+    url: inviteUrl,
+    brand_color: brandInfo?.brand_color || '#1595e7',
+    logo: brandInfo?.logo_url || ''
+  };
+
+  return await sendBrandedEmail(email, 'invite_email', templateData);
+};
+
+// Send artist update notification email
+export const sendArtistUpdateEmail = async (
+  email: string,
+  artistName: string,
+  updaterName: string,
+  changes: Array<{field: string, oldValue: string, newValue: string}>,
+  dashboardUrl: string,
+  brandInfo: any
+): Promise<boolean> => {
+  // Generate changed items HTML
+  const changedItemsHtml = changes.map(change => {
+    return `
+      <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td align="left" valign="top" style="padding: 10px 0;">
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+              <tr>
+                <td valign="top" align="left" style="width: 30%; padding-right: 10px;">
+                  <div class="pc-font-alt" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; color: #333333;">
+                    ${change.field}:
+                  </div>
+                </td>
+                <td valign="top" align="left" style="width: 70%;">
+                  <div class="pc-font-alt" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333;">
+                    <div style="color: #999999; text-decoration: line-through;">${change.oldValue || '(empty)'}</div>
+                    <div style="color: #000000; font-weight: bold;">${change.newValue || '(empty)'}</div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    `;
+  }).join('');
+
+  const templateData = {
+    artist_name: artistName,
+    member_name: updaterName,
+    changed_items: changedItemsHtml,
+    url: dashboardUrl,
+    brand_color: brandInfo?.brand_color || '#1595e7',
+    logo: brandInfo?.logo_url || ''
+  };
+
+  return await sendBrandedEmail(email, 'artist_update_email', templateData);
 };

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist } from '../models';
-import { sendBrandedEmail } from '../utils/emailService';
+import { sendTeamInviteEmail, sendArtistUpdateEmail } from '../utils/emailService';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -187,7 +187,10 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       facebook_handle: artist.facebook_handle,
       instagram_handle: artist.instagram_handle,
       twitter_handle: artist.twitter_handle,
-      tiktok_handle: artist.tiktok_handle
+      tiktok_handle: artist.tiktok_handle,
+      band_members: artist.band_members,
+      youtube_channel: artist.youtube_channel,
+      profile_photo: artist.profile_photo
     };
 
     await artist.update({
@@ -204,16 +207,44 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       profile_photo: profilePhotoUrl
     });
 
+    // Refresh artist data to get updated values
+    await artist.reload();
+
     // Send notification email if requested and there are changes
     if (notify_changes) {
       const changes = [];
-      if (originalValues.name !== artist.name) changes.push(`Name: ${originalValues.name} → ${artist.name}`);
-      if (originalValues.bio !== artist.bio) changes.push('Bio updated');
-      if (originalValues.website_page_url !== artist.website_page_url) changes.push('Website updated');
-      if (originalValues.facebook_handle !== artist.facebook_handle) changes.push('Facebook handle updated');
-      if (originalValues.instagram_handle !== artist.instagram_handle) changes.push('Instagram handle updated');
-      if (originalValues.twitter_handle !== artist.twitter_handle) changes.push('Twitter handle updated');
-      if (originalValues.tiktok_handle !== artist.tiktok_handle) changes.push('TikTok handle updated');
+      
+      // Compare old vs new values
+      if (originalValues.name !== artist.name) {
+        changes.push({ field: 'Name', oldValue: originalValues.name || '', newValue: artist.name || '' });
+      }
+      if (originalValues.bio !== artist.bio) {
+        changes.push({ field: 'Bio', oldValue: originalValues.bio || '', newValue: artist.bio || '' });
+      }
+      if (originalValues.website_page_url !== artist.website_page_url) {
+        changes.push({ field: 'Website', oldValue: originalValues.website_page_url || '', newValue: artist.website_page_url || '' });
+      }
+      if (originalValues.facebook_handle !== artist.facebook_handle) {
+        changes.push({ field: 'Facebook', oldValue: originalValues.facebook_handle || '', newValue: artist.facebook_handle || '' });
+      }
+      if (originalValues.instagram_handle !== artist.instagram_handle) {
+        changes.push({ field: 'Instagram', oldValue: originalValues.instagram_handle || '', newValue: artist.instagram_handle || '' });
+      }
+      if (originalValues.twitter_handle !== artist.twitter_handle) {
+        changes.push({ field: 'Twitter', oldValue: originalValues.twitter_handle || '', newValue: artist.twitter_handle || '' });
+      }
+      if (originalValues.tiktok_handle !== artist.tiktok_handle) {
+        changes.push({ field: 'TikTok', oldValue: originalValues.tiktok_handle || '', newValue: artist.tiktok_handle || '' });
+      }
+      if (originalValues.band_members !== artist.band_members) {
+        changes.push({ field: 'Band Members', oldValue: originalValues.band_members || '', newValue: artist.band_members || '' });
+      }
+      if (originalValues.youtube_channel !== artist.youtube_channel) {
+        changes.push({ field: 'YouTube', oldValue: originalValues.youtube_channel || '', newValue: artist.youtube_channel || '' });
+      }
+      if (originalValues.profile_photo !== artist.profile_photo) {
+        changes.push({ field: 'Profile Photo', oldValue: 'Previous photo', newValue: 'New photo uploaded' });
+      }
 
       if (changes.length > 0) {
         // Get all users with access to this artist
@@ -222,25 +253,36 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
           include: [{ model: User, as: 'user' }]
         });
 
-        const recipients = artistAccess.map(access => access.user.email_address);
+        // Get brand info for email branding
+        const brand = await Brand.findByPk(req.user.brand_id);
+        
+        // Generate dashboard URL
+        const dashboardUrl = `${process.env.FRONTEND_URL}/artist`;
+        
+        // Get updater name
+        const updaterName = req.user.first_name && req.user.last_name 
+          ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+          : req.user.email_address;
 
-        if (recipients.length > 0) {
-          await sendBrandedEmail(
-            recipients,
-            `Artist Profile Updated: ${artist.name}`,
-            'artist_update',
-            {
-              body: `
-                <h2>Artist Profile Updated</h2>
-                <p>The profile for ${artist.name} has been updated with the following changes:</p>
-                <ul>
-                  ${changes.map(change => `<li>${change}</li>`).join('')}
-                </ul>
-                <p>Updated by: ${req.user.first_name} ${req.user.last_name}</p>
-              `
-            },
-            artist.brand
-          );
+        // Send email to each team member
+        for (const access of artistAccess) {
+          if (access.user && access.user.email_address) {
+            try {
+              await sendArtistUpdateEmail(
+                access.user.email_address,
+                artist.name,
+                updaterName,
+                changes,
+                dashboardUrl,
+                {
+                  brand_color: brand?.brand_color || '#1595e7',
+                  logo_url: brand?.logo_url || ''
+                }
+              );
+            } catch (emailError) {
+              console.error('Failed to send artist update email:', emailError);
+            }
+          }
         }
       }
     }
@@ -349,7 +391,9 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
       include: [{ model: User, as: 'user' }]
     });
 
-    const recipients = artistAccess.map(access => access.user.email_address);
+    const recipients = artistAccess
+      .filter(access => access.user?.email_address)
+      .map(access => access.user!.email_address);
 
     if (recipients.length > 0) {
       await sendBrandedEmail(
@@ -835,8 +879,30 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       invite_hash: inviteHash
     });
 
-    // Send invitation email (implementation would go here)
-    // await sendBrandedEmail(user.email, 'team-invite', { artistName: artist.name });
+    // Get brand info for email branding
+    const brand = await Brand.findByPk(req.user.brand_id);
+    
+    // Generate invitation URL
+    const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/accept?hash=${inviteHash}`;
+    
+    // Send invitation email
+    try {
+      await sendTeamInviteEmail(
+        user.email_address,
+        artist.name,
+        req.user.first_name && req.user.last_name 
+          ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+          : req.user.email_address,
+        inviteUrl,
+        {
+          brand_color: brand?.brand_color || '#1595e7',
+          logo_url: brand?.logo_url || ''
+        }
+      );
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      // Continue with the process even if email fails
+    }
 
     const teamMember = {
       id: user.id,
