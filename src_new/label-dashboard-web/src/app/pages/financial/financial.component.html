@@ -44,12 +44,20 @@
             
             <!-- Earnings Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'earnings'" *ngIf="activeTab === 'earnings'">
-              <app-financial-earnings-tab [earnings]="earnings"></app-financial-earnings-tab>
+              <app-financial-earnings-tab 
+                [earnings]="earnings"
+                [pagination]="earningsPagination"
+                [loading]="earningsLoading"
+                (pageChange)="loadEarningsPage($event)"></app-financial-earnings-tab>
             </div>
             
             <!-- Royalties Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'royalties'" *ngIf="activeTab === 'royalties'">
-              <app-financial-royalties-tab [royalties]="royalties"></app-financial-royalties-tab>
+              <app-financial-royalties-tab 
+                [royalties]="royalties"
+                [pagination]="royaltiesPagination"
+                [loading]="royaltiesLoading"
+                (pageChange)="loadRoyaltiesPage($event)"></app-financial-royalties-tab>
             </div>
             
             <!-- Payments Tab -->

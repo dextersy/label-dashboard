@@ -1,12 +1,12 @@
-<div class="row">
-  <div class="col-md-12">
-    <div class="card">
-      <div class="card-header">
-        <h5>Earnings History</h5>
-      </div>
-      <div class="card-body">
-        <app-earnings-table [earnings]="earnings" [showHeader]="true"></app-earnings-table>
-      </div>
-    </div>
-  </div>
-</div>
+<app-paginated-table 
+  title="Earnings History"
+  [data]="earnings"
+  [pagination]="pagination"
+  [loading]="loading"
+  (pageChange)="onPageChange($event)">
+  
+  <ng-template #tableContent let-data>
+    <app-earnings-table [earnings]="data" [showHeader]="true"></app-earnings-table>
+  </ng-template>
+  
+</app-paginated-table>

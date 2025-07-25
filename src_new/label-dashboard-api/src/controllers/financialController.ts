@@ -222,7 +222,7 @@ export const addRoyalty = async (req: AuthRequest, res: Response) => {
 
 export const getRoyalties = async (req: AuthRequest, res: Response) => {
   try {
-    const { artist_id, release_id } = req.query;
+    const { artist_id, release_id, page = '1', limit = '20' } = req.query;
 
     const where: any = {};
     const includeConditions: any[] = [
@@ -238,13 +238,31 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
       where.release_id = release_id;
     }
 
-    const royalties = await Royalty.findAll({
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    const { count, rows: royalties } = await Royalty.findAndCountAll({
       where,
       include: includeConditions,
-      order: [['date_recorded', 'DESC']]
+      order: [['date_recorded', 'DESC']],
+      limit: pageSize,
+      offset: offset
     });
 
-    res.json({ royalties });
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.json({ 
+      royalties,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      }
+    });
   } catch (error) {
     console.error('Get royalties error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -254,7 +272,7 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
 // Get all earnings
 export const getEarnings = async (req: AuthRequest, res: Response) => {
   try {
-    const { release_id, type } = req.query;
+    const { release_id, type, page = '1', limit = '20' } = req.query;
 
     const where: any = {};
     if (release_id) {
@@ -264,7 +282,11 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
       where.type = type;
     }
 
-    const earnings = await Earning.findAll({
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    const { count, rows: earnings } = await Earning.findAndCountAll({
       where,
       include: [
         { 
@@ -273,10 +295,24 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
           where: { brand_id: req.user.brand_id }
         }
       ],
-      order: [['date_recorded', 'DESC']]
+      order: [['date_recorded', 'DESC']],
+      limit: pageSize,
+      offset: offset
     });
 
-    res.json({ earnings });
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.json({ 
+      earnings,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      }
+    });
   } catch (error) {
     console.error('Get earnings error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -314,7 +350,7 @@ export const getEarningById = async (req: AuthRequest, res: Response) => {
 export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.params;
-    const { type } = req.query;
+    const { type, page = '1', limit = '20' } = req.query;
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -334,8 +370,12 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
       earningsWhere.type = type;
     }
 
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
     // Get earnings for releases associated with this artist
-    const earnings = await Earning.findAll({
+    const { count, rows: earnings } = await Earning.findAndCountAll({
       where: earningsWhere,
       include: [
         {
@@ -357,14 +397,26 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
           ]
         }
       ],
-      order: [['date_recorded', 'DESC']]
+      order: [['date_recorded', 'DESC']],
+      limit: pageSize,
+      offset: offset
     });
+
+    const totalPages = Math.ceil(count / pageSize);
 
     res.json({ 
       earnings,
       artist: {
         id: artist.id,
         name: artist.name
+      },
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
       }
     });
   } catch (error) {

@@ -32,34 +32,40 @@ export class FinancialService {
     };
   }
 
-  async getEarnings(artistId: number): Promise<Earning[]> {
-    const response = await this.http.get<{earnings: any[]}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings`, {
+  async getEarnings(artistId: number, page: number = 1, limit: number = 20): Promise<{earnings: Earning[], pagination: any}> {
+    const response = await this.http.get<{earnings: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings?page=${page}&limit=${limit}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
     const earnings = response?.earnings || [];
-    return earnings.map(earning => ({
-      id: earning.id,
-      date_recorded: earning.date_recorded,
-      release_title: earning.release?.title || '(No release)',
-      description: earning.description || earning.type || 'Earning',
-      amount: earning.amount
-    }));
+    return {
+      earnings: earnings.map(earning => ({
+        id: earning.id,
+        date_recorded: earning.date_recorded,
+        release_title: earning.release?.title || '(No release)',
+        description: earning.description || earning.type || 'Earning',
+        amount: earning.amount
+      })),
+      pagination: response?.pagination || {}
+    };
   }
 
-  async getRoyalties(artistId: number): Promise<Royalty[]> {
-    const response = await this.http.get<{royalties: any[]}>(`${environment.apiUrl}/financial/royalties?artist_id=${artistId}`, {
+  async getRoyalties(artistId: number, page: number = 1, limit: number = 20): Promise<{royalties: Royalty[], pagination: any}> {
+    const response = await this.http.get<{royalties: any[], pagination: any}>(`${environment.apiUrl}/financial/royalties?artist_id=${artistId}&page=${page}&limit=${limit}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
     const royalties = response?.royalties || [];
-    return royalties.map(royalty => ({
-      id: royalty.id,
-      date_recorded: royalty.date_recorded,
-      release_title: royalty.release?.title || '(No release)',
-      description: royalty.description || 'Royalty',
-      amount: royalty.amount
-    }));
+    return {
+      royalties: royalties.map(royalty => ({
+        id: royalty.id,
+        date_recorded: royalty.date_recorded,
+        release_title: royalty.release?.title || '(No release)',
+        description: royalty.description || 'Royalty',
+        amount: royalty.amount
+      })),
+      pagination: response?.pagination || {}
+    };
   }
 
   async getPayments(artistId: number): Promise<Payment[]> {

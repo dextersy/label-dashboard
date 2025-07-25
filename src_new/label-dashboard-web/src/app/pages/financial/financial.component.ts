@@ -101,6 +101,12 @@ export class FinancialComponent implements OnInit {
   latestEarnings: Earning[] = [];
   latestRoyalties: Royalty[] = [];
 
+  // Pagination data
+  earningsPagination: any = null;
+  royaltiesPagination: any = null;
+  earningsLoading = false;
+  royaltiesLoading = false;
+
   // Form data for new entries
   newRoyaltyForm = {
     release_id: '',
@@ -220,20 +226,55 @@ export class FinancialComponent implements OnInit {
       // Load summary data
       this.summary = await this.financialService.getFinancialSummary(this.selectedArtist.id);
       
-      // Load earnings and royalties
-      this.earnings = await this.financialService.getEarnings(this.selectedArtist.id);
-      this.royalties = await this.financialService.getRoyalties(this.selectedArtist.id);
+      // Load payments (still not paginated)
       this.payments = await this.financialService.getPayments(this.selectedArtist.id);
-
-      // Get latest entries for summary view
-      this.latestEarnings = this.earnings.slice(0, 5);
-      this.latestRoyalties = this.royalties.slice(0, 5);
+      
+      // Load first page of earnings and royalties for summary view
+      const earningsResult = await this.financialService.getEarnings(this.selectedArtist.id, 1, 5);
+      const royaltiesResult = await this.financialService.getRoyalties(this.selectedArtist.id, 1, 5);
+      
+      this.latestEarnings = earningsResult.earnings;
+      this.latestRoyalties = royaltiesResult.royalties;
+      
+      // Initialize earnings and royalties data for tabs
+      await this.loadEarningsPage(1);
+      await this.loadRoyaltiesPage(1);
 
     } catch (error) {
       console.error('Error loading financial data:', error);
       this.notificationService.showError('Failed to load financial data');
     } finally {
       this.loading = false;
+    }
+  }
+
+  async loadEarningsPage(page: number): Promise<void> {
+    if (!this.selectedArtist) return;
+    this.earningsLoading = true;
+    try {
+      const result = await this.financialService.getEarnings(this.selectedArtist.id, page, 20);
+      this.earnings = result.earnings;
+      this.earningsPagination = result.pagination;
+    } catch (error) {
+      console.error('Error loading earnings page:', error);
+      this.notificationService.showError('Failed to load earnings');
+    } finally {
+      this.earningsLoading = false;
+    }
+  }
+
+  async loadRoyaltiesPage(page: number): Promise<void> {
+    if (!this.selectedArtist) return;
+    this.royaltiesLoading = true;
+    try {
+      const result = await this.financialService.getRoyalties(this.selectedArtist.id, page, 20);
+      this.royalties = result.royalties;
+      this.royaltiesPagination = result.pagination;
+    } catch (error) {
+      console.error('Error loading royalties page:', error);
+      this.notificationService.showError('Failed to load royalties');
+    } finally {
+      this.royaltiesLoading = false;
     }
   }
 
