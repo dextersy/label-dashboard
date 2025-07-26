@@ -1,18 +1,23 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Payment, PaymentMethod, PayoutSettings } from '../../../pages/financial/financial.component';
+import { PaymentsTableComponent } from '../payments-table/payments-table.component';
+import { PaginatedTableComponent, PaginationInfo } from '../../shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-financial-payments-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaymentsTableComponent, PaginatedTableComponent],
   templateUrl: './financial-payments-tab.component.html',
   styleUrl: './financial-payments-tab.component.scss'
 })
 export class FinancialPaymentsTabComponent {
   @Input() payments: Payment[] = [];
+  @Input() paymentsPagination: PaginationInfo | null = null;
+  @Input() paymentsLoading: boolean = false;
   @Input() paymentMethods: PaymentMethod[] = [];
+  @Output() paymentsPageChange = new EventEmitter<number>();
   @Input() payoutSettings: PayoutSettings | null = null;
   @Input() supportedBanks: { bank_code: string; bank_name: string }[] = [];
   @Input() addPaymentMethodForm: any = {};
@@ -41,5 +46,9 @@ export class FinancialPaymentsTabComponent {
 
   async setDefaultPaymentMethod(paymentMethodId: number): Promise<void> {
     await this.onSetDefaultPaymentMethod(paymentMethodId);
+  }
+
+  onPaymentsPageChange(page: number): void {
+    this.paymentsPageChange.emit(page);
   }
 }

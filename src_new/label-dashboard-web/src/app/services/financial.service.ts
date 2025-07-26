@@ -68,22 +68,25 @@ export class FinancialService {
     };
   }
 
-  async getPayments(artistId: number): Promise<Payment[]> {
-    const response = await this.http.get<{payments: any[]}>(`${environment.apiUrl}/financial/artists/${artistId}/payments`, {
+  async getPayments(artistId: number, page: number = 1, limit: number = 10): Promise<{payments: Payment[], pagination: any}> {
+    const response = await this.http.get<{payments: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/payments?page=${page}&limit=${limit}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
     const payments = response?.payments || [];
-    return payments.map(payment => ({
-      id: payment.id,
-      date_paid: payment.date_paid,
-      description: payment.description || 'Payment',
-      paid_thru_type: payment.paid_thru_type || '',
-      paid_thru_account_name: payment.paid_thru_account_name || '',
-      paid_thru_account_number: payment.paid_thru_account_number || '',
-      amount: payment.amount,
-      payment_processing_fee: payment.payment_processing_fee || 0
-    }));
+    return {
+      payments: payments.map(payment => ({
+        id: payment.id,
+        date_paid: payment.date_paid,
+        description: payment.description || 'Payment',
+        paid_thru_type: payment.paid_thru_type || '',
+        paid_thru_account_name: payment.paid_thru_account_name || '',
+        paid_thru_account_number: payment.paid_thru_account_number || '',
+        amount: payment.amount,
+        payment_processing_fee: payment.payment_processing_fee || 0
+      })),
+      pagination: response?.pagination || {}
+    };
   }
 
   async getPaymentMethods(artistId: number): Promise<PaymentMethod[]> {

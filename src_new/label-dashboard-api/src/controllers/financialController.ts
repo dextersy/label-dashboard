@@ -574,6 +574,7 @@ export const getPaymentById = async (req: AuthRequest, res: Response) => {
 export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.params;
+    const { page = '1', limit = '10' } = req.query;
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -587,8 +588,12 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    // Get payments for this artist
-    const payments = await Payment.findAll({
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    // Get payments for this artist with pagination
+    const { count, rows: payments } = await Payment.findAndCountAll({
       where: { artist_id: artist_id },
       include: [
         { 
@@ -597,11 +602,23 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
           where: { brand_id: req.user.brand_id }
         }
       ],
-      order: [['date_paid', 'DESC']]
+      order: [['date_paid', 'DESC']],
+      limit: pageSize,
+      offset: offset
     });
+
+    const totalPages = Math.ceil(count / pageSize);
 
     res.json({ 
       payments,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      },
       artist: {
         id: artist.id,
         name: artist.name

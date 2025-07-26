@@ -71,6 +71,8 @@
             <div class="tab-pane" [class.active]="activeTab === 'payments'" *ngIf="activeTab === 'payments'">
               <app-financial-payments-tab
                 [payments]="payments"
+                [paymentsPagination]="paymentsPagination"
+                [paymentsLoading]="paymentsLoading"
                 [paymentMethods]="paymentMethods"
                 [payoutSettings]="payoutSettings"
                 [supportedBanks]="supportedBanks"
@@ -79,7 +81,8 @@
                 [onSubmitPaymentMethod]="onSubmitPaymentMethod.bind(this)"
                 [onUpdatePayoutSettings]="onUpdatePayoutSettings.bind(this)"
                 [onDeletePaymentMethod]="onDeletePaymentMethod.bind(this)"
-                [onSetDefaultPaymentMethod]="onSetDefaultPaymentMethod.bind(this)">
+                [onSetDefaultPaymentMethod]="onSetDefaultPaymentMethod.bind(this)"
+                (paymentsPageChange)="loadPaymentsPage($event)">
               </app-financial-payments-tab>
             </div>
             

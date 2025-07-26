@@ -1,0 +1,25 @@
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead *ngIf="showHeader">
+      <tr>
+        <th>Date Paid</th>
+        <th>Description</th>
+        <th>Paid Through</th>
+        <th style="text-align:right">Amount</th>
+        <th style="text-align:right">Processing Fee</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let payment of payments">
+        <td>{{ formatDate(payment.date_paid) }}</td>
+        <td>{{ payment.description }}</td>
+        <td>{{ payment.paid_thru_type }} - {{ payment.paid_thru_account_name }}</td>
+        <td style="text-align:right">{{ formatCurrency(payment.amount) }}</td>
+        <td style="text-align:right">{{ formatCurrency(payment.payment_processing_fee) }}</td>
+      </tr>
+      <tr *ngIf="payments.length === 0">
+        <td colspan="5" class="text-center">No payments recorded yet.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

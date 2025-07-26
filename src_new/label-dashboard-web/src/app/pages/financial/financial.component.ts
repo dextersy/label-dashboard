@@ -106,6 +106,10 @@ export class FinancialComponent implements OnInit {
   payoutSettings: PayoutSettings | null = null;
   documents: Document[] = [];
 
+  // Pagination data
+  paymentsPagination: any = null;
+  paymentsLoading = false;
+
   // Latest data for summary view
   latestEarnings: Earning[] = [];
   latestRoyalties: Royalty[] = [];
@@ -246,8 +250,8 @@ export class FinancialComponent implements OnInit {
       // Load summary data
       this.summary = await this.financialService.getFinancialSummary(this.selectedArtist.id);
       
-      // Load payments (still not paginated)
-      this.payments = await this.financialService.getPayments(this.selectedArtist.id);
+      // Load first page of payments
+      await this.loadPaymentsPage(1);
       
       // Load first page of earnings and royalties for summary view
       const earningsResult = await this.financialService.getEarnings(this.selectedArtist.id, 1, 5);
@@ -298,6 +302,21 @@ export class FinancialComponent implements OnInit {
       this.notificationService.showError('Failed to load royalties');
     } finally {
       this.royaltiesLoading = false;
+    }
+  }
+
+  async loadPaymentsPage(page: number): Promise<void> {
+    if (!this.selectedArtist) return;
+    this.paymentsLoading = true;
+    try {
+      const result = await this.financialService.getPayments(this.selectedArtist.id, page, 10);
+      this.payments = result.payments;
+      this.paymentsPagination = result.pagination;
+    } catch (error) {
+      console.error('Error loading payments page:', error);
+      this.notificationService.showError('Failed to load payments');
+    } finally {
+      this.paymentsLoading = false;
     }
   }
 
