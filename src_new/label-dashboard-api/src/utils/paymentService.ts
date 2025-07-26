@@ -1,4 +1,6 @@
 import axios from 'axios';
+import Brand from '../models/Brand';
+import PaymentMethod from '../models/PaymentMethod';
 
 interface PayMongoLinkData {
   amount: number; // in cents
@@ -144,6 +146,101 @@ export class PaymentService {
     } catch (error) {
       console.error('PayMongo webhook processing error:', error);
       return false;
+    }
+  }
+
+  async getWalletBalance(walletId: string): Promise<number> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/wallets/${walletId}`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': this.getAuthHeader()
+          }
+        }
+      );
+
+      return response.data.data.attributes.available_balance / 100; // Convert from cents to pesos
+    } catch (error) {
+      console.error('PayMongo get wallet balance error:', error);
+      return -1;
+    }
+  }
+
+  async sendMoneyTransfer(
+    brandId: number,
+    paymentMethodId: number,
+    amount: number,
+    description: string = ''
+  ): Promise<string | null> {
+    try {
+      // Get brand details
+      const brand = await Brand.findByPk(brandId);
+      if (!brand || !brand.paymongo_wallet_id) {
+        console.error('Brand or wallet ID not found');
+        return null;
+      }
+
+      // Get payment method details
+      const paymentMethod = await PaymentMethod.findByPk(paymentMethodId);
+      if (!paymentMethod || !paymentMethod.bank_code || !paymentMethod.account_name || !paymentMethod.account_number_or_email) {
+        console.error('Payment method details incomplete');
+        return null;
+      }
+
+      const response = await axios.post(
+        `${this.baseUrl}/wallets/${brand.paymongo_wallet_id}/transactions`,
+        {
+          data: {
+            attributes: {
+              amount: Math.round(amount * 100), // Convert to cents
+              receiver: {
+                bank_account_name: paymentMethod.account_name,
+                bank_account_number: paymentMethod.account_number_or_email,
+                bank_code: paymentMethod.bank_code
+              },
+              provider: 'instapay',
+              type: 'send_money',
+              description: description
+            }
+          }
+        },
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': this.getAuthHeader()
+          }
+        }
+      );
+
+      return response.data.data.attributes.reference_number;
+    } catch (error) {
+      console.error('PayMongo send money transfer error:', error);
+      return null;
+    }
+  }
+
+  async getSupportedBanks(): Promise<Array<{bank_code: string, bank_name: string}> | null> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/wallets/receiving_institutions?provider=instapay`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': this.getAuthHeader()
+          }
+        }
+      );
+
+      return response.data.data.map((bank: any) => ({
+        bank_code: bank.attributes.provider_code,
+        bank_name: bank.attributes.name
+      }));
+    } catch (error) {
+      console.error('PayMongo get supported banks error:', error);
+      return null;
     }
   }
 }

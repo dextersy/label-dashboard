@@ -10,6 +10,9 @@ interface PaymentAttributes {
   paid_thru_type?: string;
   paid_thru_account_name?: string;
   paid_thru_account_number?: string;
+  payment_method_id?: number;
+  reference_number?: string;
+  payment_processing_fee?: number;
 }
 
 interface PaymentCreationAttributes extends Optional<PaymentAttributes, 'id'> {}
@@ -23,6 +26,9 @@ class Payment extends Model<PaymentAttributes, PaymentCreationAttributes> implem
   public paid_thru_type?: string;
   public paid_thru_account_name?: string;
   public paid_thru_account_number?: string;
+  public payment_method_id?: number;
+  public reference_number?: string;
+  public payment_processing_fee?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -62,6 +68,19 @@ Payment.init(
     paid_thru_account_number: {
       type: DataTypes.STRING(45),
       allowNull: true,
+    },
+    payment_method_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    reference_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    payment_processing_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
     },
   },
   {

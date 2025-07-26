@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
@@ -111,6 +111,12 @@ export interface ReleaseInfo {
   styleUrl: './financial.component.scss'
 })
 export class FinancialComponent implements OnInit {
+  @ViewChild('newPaymentFormComponent') newPaymentFormComponent?: NewPaymentFormComponent;
+  
+  private static getTodaysDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+  
   selectedArtist: Artist | null = null;
   activeTab: FinancialTabType = 'summary';
   isAdmin = false;
@@ -125,6 +131,7 @@ export class FinancialComponent implements OnInit {
   payoutSettings: PayoutSettings | null = null;
   documents: Document[] = [];
   releases: ReleaseInfo[] = [];
+  walletBalance: number = 0;
 
   // Pagination data
   paymentsPagination: any = null;
@@ -155,7 +162,10 @@ export class FinancialComponent implements OnInit {
     paid_thru_type: '',
     paid_thru_account_name: '',
     paid_thru_account_number: '',
-    date_paid: new Date().toISOString().split('T')[0]
+    payment_method_id: null,
+    reference_number: '',
+    manualPayment: '0',
+    date_paid: ''  // Will be set in ngOnInit
   };
 
   newEarningForm = {
@@ -226,6 +236,11 @@ export class FinancialComponent implements OnInit {
     // Check if user is admin
     this.isAdmin = this.authService.isAdmin();
 
+    // Initialize payment form with today's date only if not already set
+    if (!this.newPaymentForm.date_paid) {
+      this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate();
+    }
+
     // Subscribe to artist state changes
     this.artistStateService.selectedArtist$.subscribe(artist => {
       this.selectedArtist = artist;
@@ -255,6 +270,10 @@ export class FinancialComponent implements OnInit {
       this.loadDocuments();
     } else if (tab === 'release' && this.selectedArtist) {
       this.loadReleases();
+    } else if (tab === 'new-payment' && this.isAdmin) {
+      this.loadWalletBalance();
+      // Don't initialize form here - it would clear user input
+      // Form should only be initialized on first load and after successful submission
     }
   }
 
@@ -296,6 +315,10 @@ export class FinancialComponent implements OnInit {
       
       // Load releases
       await this.loadReleases();
+      
+      // Load payment methods and payout settings
+      await this.loadPaymentMethods();
+      await this.loadPayoutSettings();
 
     } catch (error) {
       console.error('Error loading financial data:', error);
@@ -389,8 +412,10 @@ export class FinancialComponent implements OnInit {
     if (!this.selectedArtist || !this.summary || this.summary.currentBalance <= 0) return;
     
     this.setActiveTab('new-payment');
+    // Pre-fill form with royalty payout details
     this.newPaymentForm.description = 'Royalty payout';
     this.newPaymentForm.amount = this.summary.currentBalance;
+    this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate(); // Ensure today's date
   }
 
   async onSubmitRoyalty(): Promise<void> {
@@ -510,15 +535,22 @@ export class FinancialComponent implements OnInit {
   }
 
   private resetPaymentForm(): void {
-    this.newPaymentForm = {
-      description: '',
-      amount: 0,
-      payment_processing_fee: 0,
-      paid_thru_type: '',
-      paid_thru_account_name: '',
-      paid_thru_account_number: '',
-      date_paid: new Date().toISOString().split('T')[0]
-    };
+    // Update existing object properties instead of replacing the entire object to maintain reference binding
+    this.newPaymentForm.description = '';
+    this.newPaymentForm.amount = 0;
+    this.newPaymentForm.payment_processing_fee = 0;
+    this.newPaymentForm.paid_thru_type = '';
+    this.newPaymentForm.paid_thru_account_name = '';
+    this.newPaymentForm.paid_thru_account_number = '';
+    this.newPaymentForm.payment_method_id = null;
+    this.newPaymentForm.reference_number = '';
+    this.newPaymentForm.manualPayment = '0';
+    this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate();
+    
+    // Reset the payment method selection to default
+    if (this.newPaymentFormComponent) {
+      this.newPaymentFormComponent.resetToDefault();
+    }
   }
 
   private resetEarningForm(): void {
@@ -617,6 +649,40 @@ export class FinancialComponent implements OnInit {
       if (this.activeTab === 'release') {
         this.notificationService.showError('Failed to load release information');
       }
+    }
+  }
+
+  private async loadWalletBalance(): Promise<void> {
+    if (!this.isAdmin) return;
+
+    try {
+      this.walletBalance = await this.financialService.getWalletBalance();
+    } catch (error) {
+      console.error('Error loading wallet balance:', error);
+      this.walletBalance = 0;
+    }
+  }
+
+  private initializeNewPaymentForm(resetPaymentMethod: boolean = true): void {
+    // Update existing object properties instead of replacing the entire object to maintain reference binding
+    this.newPaymentForm.description = '';
+    this.newPaymentForm.amount = 0;
+    this.newPaymentForm.payment_processing_fee = 0;
+    this.newPaymentForm.paid_thru_type = '';
+    this.newPaymentForm.paid_thru_account_name = '';
+    this.newPaymentForm.paid_thru_account_number = '';
+    this.newPaymentForm.payment_method_id = null;
+    this.newPaymentForm.reference_number = '';
+    this.newPaymentForm.manualPayment = '0';
+    this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate();
+    
+    // Reset the payment method selection to default if requested and component is ready
+    if (resetPaymentMethod) {
+      setTimeout(() => {
+        if (this.newPaymentFormComponent) {
+          this.newPaymentFormComponent.resetToDefault();
+        }
+      }, 100); // Slightly longer delay to ensure component is fully ready
     }
   }
 

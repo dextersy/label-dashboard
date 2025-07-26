@@ -11,7 +11,8 @@ import {
   getPayments,
   getPaymentById,
   getPaymentsByArtist,
-  getFinancialSummary
+  getFinancialSummary,
+  getWalletBalance
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -40,5 +41,8 @@ router.get('/artists/:artist_id/payments', getPaymentsByArtist);
 
 // Financial summary
 router.get('/summary', getFinancialSummary);
+
+// Wallet balance
+router.get('/wallet/balance', requireAdmin, getWalletBalance);
 
 export default router;

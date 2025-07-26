@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand } from '../models';
 import { sendBrandedEmail } from '../utils/emailService';
+import { PaymentService } from '../utils/paymentService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -440,12 +441,15 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       paid_thru_type,
       paid_thru_account_name,
       paid_thru_account_number,
+      payment_method_id,
+      reference_number,
+      payment_processing_fee,
       send_notification = true
     } = req.body;
 
-    if (!artist_id || !amount || !date_paid) {
+    if (!artist_id || amount === undefined || amount === null || amount <= 0 || !date_paid) {
       return res.status(400).json({ 
-        error: 'Artist ID, amount, and date are required' 
+        error: 'Artist ID, amount (greater than 0), and date are required' 
       });
     }
 
@@ -462,14 +466,55 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    let finalAmount = amount;
+    let finalProcessingFee = payment_processing_fee || 0;
+    let finalReferenceNumber = reference_number;
+
+    // Handle Paymongo payment processing for non-manual payments
+    if (payment_method_id && payment_method_id !== '-1' && req.body.manualPayment !== '1') {
+      try {
+        const paymentService = new PaymentService();
+        const brand = artist.brand;
+        
+        if (!brand || !brand.paymongo_wallet_id) {
+          return res.status(400).json({ error: 'Brand wallet not configured for payments' });
+        }
+
+        // Calculate processing fee
+        const processingFee = brand.payment_processing_fee_for_payouts || 0;
+        const transferAmount = amount - processingFee;
+
+        // Send money through Paymongo
+        const referenceNumber = await paymentService.sendMoneyTransfer(
+          brand.id,
+          payment_method_id,
+          transferAmount,
+          description
+        );
+
+        if (!referenceNumber) {
+          return res.status(400).json({ error: 'Payment processing failed' });
+        }
+
+        finalProcessingFee = processingFee;
+        finalReferenceNumber = referenceNumber;
+      } catch (error) {
+        console.error('Paymongo payment error:', error);
+        return res.status(500).json({ error: 'Payment processing failed' });
+      }
+    }
+
     const payment = await Payment.create({
       artist_id,
-      amount,
+      amount: finalAmount,
       description,
       date_paid: new Date(date_paid),
       paid_thru_type,
       paid_thru_account_name,
-      paid_thru_account_number
+      paid_thru_account_number,
+      payment_method_id: payment_method_id && payment_method_id !== '-1' ? payment_method_id : null,
+      reference_number: finalReferenceNumber,
+      payment_processing_fee: finalProcessingFee
     });
 
     // Send payment notification if requested
@@ -728,6 +773,32 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
     res.json({ summary });
   } catch (error) {
     console.error('Get financial summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// WALLET BALANCE
+export const getWalletBalance = async (req: AuthRequest, res: Response) => {
+  try {
+    // Get brand information
+    const brand = await Brand.findOne({
+      where: { id: req.user.brand_id }
+    });
+
+    if (!brand || !brand.paymongo_wallet_id) {
+      return res.status(400).json({ error: 'Brand wallet not configured' });
+    }
+
+    const paymentService = new PaymentService();
+    const balance = await paymentService.getWalletBalance(brand.paymongo_wallet_id);
+
+    if (balance === -1) {
+      return res.status(500).json({ error: 'Failed to fetch wallet balance' });
+    }
+
+    res.json({ balance });
+  } catch (error) {
+    console.error('Get wallet balance error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

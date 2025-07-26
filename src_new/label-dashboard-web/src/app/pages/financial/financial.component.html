@@ -113,7 +113,10 @@
 
             <div class="tab-pane" [class.active]="activeTab === 'new-payment'" *ngIf="activeTab === 'new-payment' && isAdmin">
               <app-new-payment-form
+                #newPaymentFormComponent
                 [newPaymentForm]="newPaymentForm"
+                [paymentMethods]="paymentMethods"
+                [walletBalance]="walletBalance"
                 [onSubmitPayment]="onSubmitPayment.bind(this)">
               </app-new-payment-form>
             </div>

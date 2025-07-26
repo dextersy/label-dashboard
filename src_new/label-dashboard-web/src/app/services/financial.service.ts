@@ -223,4 +223,12 @@ export class FinancialService {
 
     return response;
   }
+
+  async getWalletBalance(): Promise<number> {
+    const response = await this.http.get<{balance: number}>(`${environment.apiUrl}/financial/wallet/balance`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+
+    return response?.balance || 0;
+  }
 }
