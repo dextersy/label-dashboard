@@ -21,7 +21,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let document of documents">
+              <tr *ngFor="let document of documents" 
+                  (dblclick)="openDocument(document)" 
+                  style="cursor: pointer;"
+                  title="Double-click to view document">
                 <td class="text-center">
                   <i [class]="'fa ' + getFileIcon(document.filename)"></i>
                 </td>
@@ -35,7 +38,7 @@
                     <button 
                       type="button" 
                       class="btn btn-outline-primary btn-sm"
-                      (click)="openDocument(document.url)"
+                      (click)="openDocument(document)"
                       title="View document">
                       <i class="fa fa-eye"></i>
                     </button>
@@ -102,3 +105,10 @@
     </div>
   </div>
 </div>
+
+<!-- Document Viewer Lightbox -->
+<app-document-viewer
+  [document]="selectedDocument"
+  [isVisible]="showDocumentViewer"
+  (close)="closeDocumentViewer()">
+</app-document-viewer>

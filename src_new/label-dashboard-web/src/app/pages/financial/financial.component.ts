@@ -259,6 +259,9 @@ export class FinancialComponent implements OnInit {
       // Initialize earnings and royalties data for tabs
       await this.loadEarningsPage(1);
       await this.loadRoyaltiesPage(1);
+      
+      // Load documents
+      await this.loadDocuments();
 
     } catch (error) {
       console.error('Error loading financial data:', error);
@@ -325,7 +328,11 @@ export class FinancialComponent implements OnInit {
       this.documents = await this.financialService.getDocuments(this.selectedArtist.id);
     } catch (error) {
       console.error('Error loading documents:', error);
-      this.notificationService.showError('Failed to load documents');
+      // Don't show error notification here since loadFinancialData will handle it
+      // Only show specific error if called directly from setActiveTab
+      if (this.activeTab === 'documents') {
+        this.notificationService.showError('Failed to load documents');
+      }
     }
   }
 
