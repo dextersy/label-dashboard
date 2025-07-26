@@ -526,6 +526,36 @@ export const upload = multer({
   }
 });
 
+// Multer configuration for document uploads (allows various file types)
+const documentFileFilter = (req: any, file: any, cb: any) => {
+  // Accept documents: PDF, DOC, DOCX, XLS, XLSX, TXT
+  const allowedMimeTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'image/jpeg',
+    'image/png',
+    'image/gif'
+  ];
+  
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only document and image files are allowed'), false);
+  }
+};
+
+export const documentUpload = multer({
+  storage: storage,
+  fileFilter: documentFileFilter,
+  limits: {
+    fileSize: 25 * 1024 * 1024 // 25MB limit for documents
+  }
+});
+
 // Get artist photos
 export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
   try {
@@ -1266,6 +1296,192 @@ export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) =
     });
   } catch (error) {
     console.error('Set default payment method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get artist documents
+export const getArtistDocuments = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    const documents = await ArtistDocument.findAll({
+      where: { artist_id: id },
+      order: [['date_uploaded', 'DESC']],
+      attributes: ['id', 'title', 'path', 'date_uploaded']
+    });
+
+    // Transform the response to match frontend expectations
+    const transformedDocuments = documents.map(doc => {
+      // Extract filename from S3 URL or use the path directly if it's already a filename
+      let filename;
+      let documentUrl;
+      
+      try {
+        const url = new URL(doc.path);
+        filename = path.basename(url.pathname);
+        // For S3 URLs, use the direct S3 URL
+        documentUrl = doc.path;
+      } catch (e) {
+        filename = path.basename(doc.path);
+        // For local files (legacy), use relative path
+        documentUrl = doc.path;
+      }
+      
+      return {
+        id: doc.id,
+        title: doc.title || filename,
+        filename: filename,
+        upload_date: doc.date_uploaded,
+        url: documentUrl
+      };
+    });
+
+    res.json({ documents: transformedDocuments });
+  } catch (error) {
+    console.error('Get artist documents error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Upload artist document
+export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No document uploaded' });
+    }
+
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ error: 'Document title is required' });
+    }
+
+    // Generate unique filename
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(req.file.originalname);
+    const fileName = `artist-document-${id}-${uniqueSuffix}${extension}`;
+
+    try {
+      // Upload to S3
+      const uploadParams = {
+        Bucket: process.env.S3_BUCKET!,
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype
+      };
+
+      const result = await s3.upload(uploadParams).promise();
+
+      // Save to database with S3 URL
+      const artistDocument = await ArtistDocument.create({
+        title: title.trim(),
+        path: result.Location,
+        artist_id: parseInt(id),
+        date_uploaded: new Date()
+      });
+
+      res.json({
+        success: true,
+        message: 'Document uploaded successfully',
+        document: {
+          id: artistDocument.id,
+          title: artistDocument.title,
+          filename: fileName,
+          upload_date: artistDocument.date_uploaded,
+          url: result.Location
+        }
+      });
+    } catch (uploadError) {
+      console.error('S3 upload error:', uploadError);
+      return res.status(500).json({ error: 'Failed to upload document to S3' });
+    }
+  } catch (error) {
+    console.error('Upload artist document error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete artist document
+export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, documentId } = req.params;
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find the document
+    const document = await ArtistDocument.findOne({
+      where: { 
+        id: documentId,
+        artist_id: id 
+      }
+    });
+
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    // Delete the file from S3
+    try {
+      // Extract the key from the S3 URL
+      const url = new URL(document.path);
+      const key = url.pathname.substring(1); // Remove leading '/'
+      
+      const deleteParams = {
+        Bucket: process.env.S3_BUCKET!,
+        Key: key
+      };
+
+      await s3.deleteObject(deleteParams).promise();
+    } catch (fileError) {
+      console.error('Error deleting file from S3:', fileError);
+      // Continue with database deletion even if S3 deletion fails
+    }
+
+    // Delete from database
+    await document.destroy();
+
+    res.json({
+      success: true,
+      message: 'Document deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete artist document error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

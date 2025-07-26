@@ -64,6 +64,14 @@ export interface PayoutSettings {
   hold_payouts: boolean;
 }
 
+export interface Document {
+  id: number;
+  title: string;
+  filename: string;
+  upload_date: string;
+  url: string;
+}
+
 @Component({
   selector: 'app-financial',
   standalone: true,
@@ -96,6 +104,7 @@ export class FinancialComponent implements OnInit {
   payments: Payment[] = [];
   paymentMethods: PaymentMethod[] = [];
   payoutSettings: PayoutSettings | null = null;
+  documents: Document[] = [];
 
   // Latest data for summary view
   latestEarnings: Earning[] = [];
@@ -140,6 +149,13 @@ export class FinancialComponent implements OnInit {
   };
   
   addingPaymentMethod = false;
+  
+  // Document upload form
+  uploadingDocument = false;
+  documentUploadForm = {
+    title: '',
+    file: null as File | null
+  };
 
   supportedBanks = [
     { bank_code: 'BPI', bank_name: 'Bank of the Philippine Islands' },
@@ -206,6 +222,8 @@ export class FinancialComponent implements OnInit {
     if (tab === 'payments' && this.selectedArtist) {
       this.loadPaymentMethods();
       this.loadPayoutSettings();
+    } else if (tab === 'documents' && this.selectedArtist) {
+      this.loadDocuments();
     }
   }
 
@@ -297,6 +315,17 @@ export class FinancialComponent implements OnInit {
       this.payoutSettings = await this.financialService.getPayoutSettings(this.selectedArtist.id);
     } catch (error) {
       console.error('Error loading payout settings:', error);
+    }
+  }
+
+  private async loadDocuments(): Promise<void> {
+    if (!this.selectedArtist) return;
+
+    try {
+      this.documents = await this.financialService.getDocuments(this.selectedArtist.id);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      this.notificationService.showError('Failed to load documents');
     }
   }
 
@@ -451,6 +480,74 @@ export class FinancialComponent implements OnInit {
       account_name: '',
       account_number_or_email: ''
     };
+  }
+
+  async onUploadDocument(): Promise<void> {
+    if (!this.selectedArtist || this.uploadingDocument) return;
+
+    if (!this.documentUploadForm.file) {
+      this.notificationService.showError('Please select a file to upload');
+      return;
+    }
+
+    if (!this.documentUploadForm.title.trim()) {
+      this.notificationService.showError('Please enter a document title');
+      return;
+    }
+
+    this.uploadingDocument = true;
+    try {
+      await this.financialService.uploadDocument(
+        this.selectedArtist.id,
+        this.documentUploadForm.file,
+        this.documentUploadForm.title.trim()
+      );
+
+      this.notificationService.showSuccess('Document uploaded successfully');
+      this.resetDocumentUploadForm();
+      this.loadDocuments();
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      this.notificationService.showError('Failed to upload document');
+    } finally {
+      this.uploadingDocument = false;
+    }
+  }
+
+  async onDeleteDocument(documentId: number): Promise<void> {
+    if (!this.selectedArtist) return;
+
+    if (!confirm('Are you sure you want to delete this document?')) {
+      return;
+    }
+
+    try {
+      await this.financialService.deleteDocument(this.selectedArtist.id, documentId);
+      this.notificationService.showSuccess('Document deleted successfully');
+      this.loadDocuments();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      this.notificationService.showError('Failed to delete document');
+    }
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.documentUploadForm.file = file;
+    }
+  }
+
+  private resetDocumentUploadForm(): void {
+    this.documentUploadForm = {
+      title: '',
+      file: null
+    };
+    // Reset file input
+    const fileInput = document.getElementById('documentFile') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   formatCurrency(amount: number): string {

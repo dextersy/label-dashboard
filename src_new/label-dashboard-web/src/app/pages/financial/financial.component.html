@@ -39,7 +39,14 @@
             
             <!-- Documents Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'documents'" *ngIf="activeTab === 'documents'">
-              <app-financial-documents-tab></app-financial-documents-tab>
+              <app-financial-documents-tab
+                [documents]="documents"
+                [documentUploadForm]="documentUploadForm"
+                [uploadingDocument]="uploadingDocument"
+                [onUploadDocument]="onUploadDocument.bind(this)"
+                [onDeleteDocument]="onDeleteDocument.bind(this)"
+                [onFileSelected]="onFileSelected.bind(this)">
+              </app-financial-documents-tab>
             </div>
             
             <!-- Earnings Tab -->

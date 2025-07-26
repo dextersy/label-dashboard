@@ -22,7 +22,11 @@ import {
   inviteTeamMember,
   resendTeamInvite,
   removeTeamMember,
-  upload
+  getArtistDocuments,
+  uploadArtistDocument,
+  deleteArtistDocument,
+  upload,
+  documentUpload
 } from '../controllers/artistController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -64,5 +68,10 @@ router.get('/:id/team', getArtistTeam);
 router.post('/:id/team/invite', inviteTeamMember);
 router.post('/:id/team/:memberId/resend', resendTeamInvite);
 router.delete('/:id/team/:memberId', removeTeamMember);
+
+// Document operations
+router.get('/:id/documents', getArtistDocuments);
+router.post('/:id/documents', documentUpload.single('document'), uploadArtistDocument);
+router.delete('/:id/documents/:documentId', deleteArtistDocument);
 
 export default router;

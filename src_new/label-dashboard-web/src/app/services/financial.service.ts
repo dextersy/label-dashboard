@@ -164,4 +164,34 @@ export class FinancialService {
       headers: this.getAuthHeaders()
     }).toPromise();
   }
+
+  async getDocuments(artistId: number): Promise<any[]> {
+    const response = await this.http.get<{documents: any[]}>(`${environment.apiUrl}/artists/${artistId}/documents`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+
+    return response?.documents || [];
+  }
+
+  async uploadDocument(artistId: number, file: File, title: string): Promise<any> {
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('title', title);
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+    });
+
+    const response = await this.http.post<any>(`${environment.apiUrl}/artists/${artistId}/documents`, formData, {
+      headers: headers
+    }).toPromise();
+
+    return response;
+  }
+
+  async deleteDocument(artistId: number, documentId: number): Promise<void> {
+    await this.http.delete(`${environment.apiUrl}/artists/${artistId}/documents/${documentId}`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
 }
