@@ -16,8 +16,11 @@ export class FinancialPaymentsTabComponent {
   @Input() payoutSettings: PayoutSettings | null = null;
   @Input() supportedBanks: { bank_code: string; bank_name: string }[] = [];
   @Input() addPaymentMethodForm: any = {};
+  @Input() addingPaymentMethod: boolean = false;
   @Input() onSubmitPaymentMethod: () => Promise<void> = async () => {};
   @Input() onUpdatePayoutSettings: () => Promise<void> = async () => {};
+  @Input() onDeletePaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
+  @Input() onSetDefaultPaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
@@ -28,5 +31,15 @@ export class FinancialPaymentsTabComponent {
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-PH');
+  }
+
+  async deletePaymentMethod(paymentMethodId: number): Promise<void> {
+    if (confirm('Are you sure you want to delete this payment method?')) {
+      await this.onDeletePaymentMethod(paymentMethodId);
+    }
+  }
+
+  async setDefaultPaymentMethod(paymentMethodId: number): Promise<void> {
+    await this.onSetDefaultPaymentMethod(paymentMethodId);
   }
 }

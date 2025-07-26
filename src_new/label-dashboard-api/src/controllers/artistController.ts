@@ -1158,3 +1158,114 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deletePaymentMethod = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, paymentMethodId } = req.params;
+
+    // Verify artist belongs to user's brand
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find the payment method
+    const paymentMethod = await PaymentMethod.findOne({
+      where: { 
+        id: paymentMethodId,
+        artist_id: id 
+      }
+    });
+
+    if (!paymentMethod) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+
+    // Check if this is the only payment method
+    const paymentMethodCount = await PaymentMethod.count({
+      where: { artist_id: id }
+    });
+
+    if (paymentMethodCount === 1) {
+      return res.status(400).json({ 
+        error: 'Cannot delete the only payment method. Add another payment method first.' 
+      });
+    }
+
+    // If this was the default payment method, set another one as default
+    if (paymentMethod.is_default_for_artist) {
+      const otherPaymentMethod = await PaymentMethod.findOne({
+        where: { 
+          artist_id: id,
+          id: { [require('sequelize').Op.ne]: paymentMethodId }
+        }
+      });
+
+      if (otherPaymentMethod) {
+        await otherPaymentMethod.update({ is_default_for_artist: true });
+      }
+    }
+
+    await paymentMethod.destroy();
+
+    res.json({
+      message: 'Payment method deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete payment method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, paymentMethodId } = req.params;
+
+    // Verify artist belongs to user's brand
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find the payment method
+    const paymentMethod = await PaymentMethod.findOne({
+      where: { 
+        id: paymentMethodId,
+        artist_id: id 
+      }
+    });
+
+    if (!paymentMethod) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+
+    // Remove default from all other payment methods for this artist
+    await PaymentMethod.update(
+      { is_default_for_artist: false },
+      { where: { artist_id: id } }
+    );
+
+    // Set this payment method as default
+    await paymentMethod.update({ is_default_for_artist: true });
+
+    res.json({
+      message: 'Default payment method updated successfully',
+      payment_method: paymentMethod
+    });
+  } catch (error) {
+    console.error('Set default payment method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

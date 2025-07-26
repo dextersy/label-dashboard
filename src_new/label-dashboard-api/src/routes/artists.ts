@@ -10,6 +10,8 @@ import {
   getPayoutSettings,
   getPaymentMethods,
   addPaymentMethod,
+  deletePaymentMethod,
+  setDefaultPaymentMethod,
   getArtistBalance,
   getArtistPhotos,
   uploadArtistPhotos,
@@ -45,6 +47,8 @@ router.get('/:id/balance', getArtistBalance);
 // Payment methods
 router.get('/:id/payment-methods', getPaymentMethods);
 router.post('/:id/payment-methods', addPaymentMethod);
+router.delete('/:id/payment-methods/:paymentMethodId', deletePaymentMethod);
+router.put('/:id/payment-methods/:paymentMethodId/set-default', setDefaultPaymentMethod);
 
 // Photo gallery operations
 router.get('/:id/photos', getArtistPhotos);

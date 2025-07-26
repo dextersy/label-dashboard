@@ -46,7 +46,27 @@
             {{ method.account_name }}<br>
             <small>{{ method.account_number_or_email }}</small>
           </div>
-          <div *ngIf="method.is_default_for_artist" class="badge badge-primary">Default</div>
+          <div class="payment-method-actions">
+            <div *ngIf="method.is_default_for_artist" class="badge badge-primary">Default</div>
+            <div class="btn-group btn-group-sm mt-1" role="group">
+              <button 
+                type="button" 
+                class="btn btn-outline-primary btn-sm"
+                [disabled]="method.is_default_for_artist"
+                (click)="setDefaultPaymentMethod(method.id)"
+                title="Set as default">
+                <i class="fa fa-star" [class.fa-solid]="method.is_default_for_artist" [class.fa-regular]="!method.is_default_for_artist"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-danger btn-sm"
+                [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
+                (click)="deletePaymentMethod(method.id)"
+                [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
         </div>
         
         <div *ngIf="paymentMethods.length === 0" class="text-center text-muted">
@@ -77,7 +97,10 @@
             <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_number_or_email" name="account_number_or_email" required>
           </div>
           
-          <button type="submit" class="btn btn-primary btn-sm">Add Payment Method</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="addingPaymentMethod">
+            <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            {{ addingPaymentMethod ? 'Adding...' : 'Add Payment Method' }}
+          </button>
         </form>
       </div>
     </div>

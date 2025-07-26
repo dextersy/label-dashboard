@@ -138,6 +138,8 @@ export class FinancialComponent implements OnInit {
     account_name: '',
     account_number_or_email: ''
   };
+  
+  addingPaymentMethod = false;
 
   supportedBanks = [
     { bank_code: 'BPI', bank_name: 'Bank of the Philippine Islands' },
@@ -352,8 +354,9 @@ export class FinancialComponent implements OnInit {
   }
 
   async onSubmitPaymentMethod(): Promise<void> {
-    if (!this.selectedArtist) return;
+    if (!this.selectedArtist || this.addingPaymentMethod) return;
 
+    this.addingPaymentMethod = true;
     try {
       const [bankCode, bankName] = this.addPaymentMethodForm.bank_selection.split(',');
       const paymentMethodData = {
@@ -369,6 +372,8 @@ export class FinancialComponent implements OnInit {
     } catch (error) {
       console.error('Error adding payment method:', error);
       this.notificationService.showError('Failed to add payment method');
+    } finally {
+      this.addingPaymentMethod = false;
     }
   }
 
@@ -381,6 +386,32 @@ export class FinancialComponent implements OnInit {
     } catch (error) {
       console.error('Error updating payout settings:', error);
       this.notificationService.showError('Failed to update payout settings');
+    }
+  }
+
+  async onDeletePaymentMethod(paymentMethodId: number): Promise<void> {
+    if (!this.selectedArtist) return;
+
+    try {
+      await this.financialService.deletePaymentMethod(this.selectedArtist.id, paymentMethodId);
+      this.notificationService.showSuccess('Payment method deleted successfully');
+      this.loadPaymentMethods();
+    } catch (error) {
+      console.error('Error deleting payment method:', error);
+      this.notificationService.showError('Failed to delete payment method');
+    }
+  }
+
+  async onSetDefaultPaymentMethod(paymentMethodId: number): Promise<void> {
+    if (!this.selectedArtist) return;
+
+    try {
+      await this.financialService.setDefaultPaymentMethod(this.selectedArtist.id, paymentMethodId);
+      this.notificationService.showSuccess('Default payment method updated successfully');
+      this.loadPaymentMethods();
+    } catch (error) {
+      console.error('Error setting default payment method:', error);
+      this.notificationService.showError('Failed to set default payment method');
     }
   }
 

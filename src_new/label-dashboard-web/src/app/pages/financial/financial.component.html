@@ -68,8 +68,11 @@
                 [payoutSettings]="payoutSettings"
                 [supportedBanks]="supportedBanks"
                 [addPaymentMethodForm]="addPaymentMethodForm"
+                [addingPaymentMethod]="addingPaymentMethod"
                 [onSubmitPaymentMethod]="onSubmitPaymentMethod.bind(this)"
-                [onUpdatePayoutSettings]="onUpdatePayoutSettings.bind(this)">
+                [onUpdatePayoutSettings]="onUpdatePayoutSettings.bind(this)"
+                [onDeletePaymentMethod]="onDeletePaymentMethod.bind(this)"
+                [onSetDefaultPaymentMethod]="onSetDefaultPaymentMethod.bind(this)">
               </app-financial-payments-tab>
             </div>
             

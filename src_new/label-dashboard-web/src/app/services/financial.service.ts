@@ -152,4 +152,16 @@ export class FinancialService {
       headers: this.getAuthHeaders()
     }).toPromise();
   }
+
+  async deletePaymentMethod(artistId: number, paymentMethodId: number): Promise<void> {
+    await this.http.delete(`${environment.apiUrl}/artists/${artistId}/payment-methods/${paymentMethodId}`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
+
+  async setDefaultPaymentMethod(artistId: number, paymentMethodId: number): Promise<void> {
+    await this.http.put(`${environment.apiUrl}/artists/${artistId}/payment-methods/${paymentMethodId}/set-default`, {}, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+  }
 }
