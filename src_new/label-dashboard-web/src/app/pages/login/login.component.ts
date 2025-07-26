@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +32,8 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -115,12 +117,9 @@ export class LoginComponent implements OnInit {
     // Show loading overlay (matching original behavior)
     this.showLoadingOverlay();
 
-    this.apiService.login(this.loginField, this.password).subscribe({
+    this.authService.login(this.loginField, this.password).subscribe({
       next: (response) => {
         if (response.token) {
-          localStorage.setItem('auth_token', response.token);
-          localStorage.setItem('user_data', JSON.stringify(response.user));
-          
           const redirectTo = this.redirectUrl || '/dashboard';
           this.router.navigate([redirectTo]);
         }

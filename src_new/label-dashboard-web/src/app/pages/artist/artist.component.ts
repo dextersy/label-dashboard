@@ -7,6 +7,7 @@ import { ArtistReleasesTabComponent, ArtistRelease } from '../../components/arti
 import { ArtistTeamTabComponent } from '../../components/artist/artist-team-tab/artist-team-tab.component';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
+import { AuthService } from '../../services/auth.service';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release';
 
@@ -31,7 +32,8 @@ export class ArtistComponent implements OnInit {
 
   constructor(
     private notificationService: NotificationService,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private authService: AuthService
   ) {}
 
   tabs = [
@@ -44,16 +46,8 @@ export class ArtistComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    // Check if user is admin (this would typically come from auth service)
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        this.isAdmin = user.isAdmin || false;
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-      }
-    }
+    // Check if user is admin
+    this.isAdmin = this.authService.isAdmin();
 
     // Subscribe to artist state changes
     this.artistStateService.selectedArtist$.subscribe(artist => {

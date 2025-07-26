@@ -26,7 +26,10 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
       order: [['name', 'ASC']]
     });
 
-    res.json({ artists });
+    res.json({ 
+      artists,
+      isAdmin: req.user.is_admin || false 
+    });
   } catch (error) {
     console.error('Get artists error:', error);
     res.status(500).json({ error: 'Internal server error' });

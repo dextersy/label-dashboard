@@ -14,6 +14,7 @@ import { NewEarningFormComponent } from '../../components/financial/new-earning-
 import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
+import { AuthService } from '../../services/auth.service';
 
 export type FinancialTabType = 'summary' | 'documents' | 'earnings' | 'royalties' | 'payments' | 'release' | 'new-royalty' | 'new-payment' | 'new-earning';
 
@@ -217,20 +218,13 @@ export class FinancialComponent implements OnInit {
   constructor(
     private financialService: FinancialService,
     private notificationService: NotificationService,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     // Check if user is admin
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        this.isAdmin = user.isAdmin || false;
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-      }
-    }
+    this.isAdmin = this.authService.isAdmin();
 
     // Subscribe to artist state changes
     this.artistStateService.selectedArtist$.subscribe(artist => {
