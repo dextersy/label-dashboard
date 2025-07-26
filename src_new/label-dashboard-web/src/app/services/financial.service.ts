@@ -197,4 +197,30 @@ export class FinancialService {
       headers: this.getAuthHeaders()
     }).toPromise();
   }
+
+  async getReleaseInformation(artistId: number): Promise<any> {
+    const response = await this.http.get<any>(`${environment.apiUrl}/artists/${artistId}/releases`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+
+    return response;
+  }
+
+  async updateRoyalties(artistId: number, releases: any[]): Promise<any> {
+    const response = await this.http.put<any>(`${environment.apiUrl}/artists/${artistId}/royalties`, {
+      releases
+    }, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+
+    return response;
+  }
+
+  async addRecuperableExpense(releaseId: number, expenseData: any): Promise<any> {
+    const response = await this.http.post<any>(`${environment.apiUrl}/releases/${releaseId}/expenses`, expenseData, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+
+    return response;
+  }
 }

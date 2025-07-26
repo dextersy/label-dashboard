@@ -632,55 +632,7 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
 
 // Note: Payment methods management moved to artistController.ts
 
-// EXPENSES MANAGEMENT
-export const addRecuperableExpense = async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const {
-      release_id,
-      expense_description,
-      expense_amount,
-      date_recorded
-    } = req.body;
-
-    if (!release_id || !expense_description || !expense_amount) {
-      return res.status(400).json({ 
-        error: 'Release ID, description, and amount are required' 
-      });
-    }
-
-    // Verify release belongs to user's brand
-    const release = await Release.findOne({
-      where: { 
-        id: release_id,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
-    }
-
-    const expense = await RecuperableExpense.create({
-      release_id,
-      expense_description,
-      expense_amount,
-      date_recorded: date_recorded ? new Date(date_recorded) : new Date(),
-      brand_id: req.user.brand_id
-    });
-
-    res.status(201).json({
-      message: 'Recuperable expense added successfully',
-      expense
-    });
-  } catch (error) {
-    console.error('Add recuperable expense error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+// EXPENSES MANAGEMENT - moved to release information section
 
 export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
   try {
@@ -781,3 +733,5 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
 };
 
 // Note: Payout settings management moved to artistController.ts
+
+// Note: Release information management moved to artistController.ts

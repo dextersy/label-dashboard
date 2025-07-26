@@ -1,18 +1,197 @@
-<div class="row">
-  <div class="col-md-12">
+<div class="card">
+  <div class="card-header">
+    <h3>Release Information</h3>
+  </div>
+  <div class="card-body">
+    <p class="card-text">This tab shows financial details regarding your releases, including splits, recuperable expenses, earnings, and revenues.</p>
+    
+    <div class="table-responsive" *ngIf="releases.length > 0">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>For Release</th>
+            <th>Sync royalty %</th>
+            <th>Streaming royalty %</th>
+            <th>Downloads royalty %</th>
+            <th>Physical royalty %</th>
+            <th>Remaining Recuperable Expense</th>
+            <th>Total earnings 
+              <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Data starts on April 2021."></i>
+            </th>
+            <th>Total royalties earned</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let release of releases; let i = index">
+            <td style="width: 25%"><strong>{{ release.title }}</strong></td>
+            <td>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.sync_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)"> 
+                <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
+              </div>
+            </td>
+            <td>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.streaming_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)"> 
+                <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
+              </div>
+            </td>
+            <td>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.download_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
+                <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
+              </div>
+            </td>
+            <td>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.physical_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
+                <div class="input-group-addon">% of {{ release.physical_royalty_type }}</div>
+              </div>
+            </td>
+            <td class="text-right">
+              {{ formatCurrency(release.recuperable_expense_balance) }}
+              <a 
+                *ngIf="isAdmin" 
+                href="#" 
+                (click)="openAddExpenseForm(release.id, release.title)"
+                class="ml-2"
+                title="Add recuperable expense">
+                <i class="fa fa-plus"></i>
+              </a>
+            </td>
+            <td class="text-right">{{ formatCurrency(release.total_earnings) }}</td>
+            <td class="text-right">{{ formatCurrency(release.total_royalties) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="releases.length === 0" class="text-center py-5">
+      <i class="fa fa-music fa-3x text-muted mb-3"></i>
+      <p class="text-muted">No releases yet.</p>
+    </div>
+  </div>
+
+  <div *ngIf="isAdmin" class="card-footer text-right save-panel">
+    <div *ngIf="!editingRoyalties" class="edit-button">
+      <button type="button" class="btn btn-primary btn-block" (click)="toggleEditRoyalties()">
+        Edit Royalties
+      </button> 
+    </div>
+    <div *ngIf="editingRoyalties" class="save-changes-buttons">
+      <button 
+        type="button" 
+        class="btn btn-primary btn-block" 
+        (click)="updateRoyalties()"
+        [disabled]="updatingRoyalties">
+        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        {{ updatingRoyalties ? 'Saving...' : 'Save Changes' }}
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary btn-block mt-2" 
+        (click)="toggleEditRoyalties()"
+        [disabled]="updatingRoyalties">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Recuperable Expense Modal -->
+<div class="row mt-4" *ngIf="addingExpense">
+  <div class="col-md-4">
     <div class="card">
       <div class="card-header">
-        <h5>Release Information</h5>
+        <h4>Add recuperable expense for: <span>{{ expenseForm.release_title }}</span></h4>
       </div>
       <div class="card-body">
-        <p class="text-muted text-center">
-          <i class="fa fa-music fa-3x mb-3"></i><br>
-          Release financial information will be displayed here.
-        </p>
-        <div class="text-center">
-          <button class="btn btn-primary" disabled>
-            <i class="fa fa-refresh"></i> Load Release Data
-          </button>
+        <div class="form-group">
+          <label for="expenseDate">Recorded Date</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            id="expenseDate" 
+            [(ngModel)]="expenseForm.date_recorded"
+            name="date_recorded">
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="add_recuperable_expense_description" 
+            [(ngModel)]="expenseForm.expense_description"
+            name="expense_description" 
+            placeholder="Description">
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <div class="input-group">
+            <div class="input-group-addon">₱</div>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="add_recuperable_expense_amount" 
+              [(ngModel)]="expenseForm.expense_amount"
+              name="expense_amount" 
+              placeholder="Amount"
+              step="0.01"
+              min="0">
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="row">
+          <div class="col-sm-6">
+            <button 
+              type="button" 
+              class="btn btn-primary btn-block" 
+              (click)="addExpense()"
+              [disabled]="!expenseForm.expense_description || !expenseForm.expense_amount">
+              Add
+            </button>
+          </div>
+          <div class="col-sm-6">
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-block" 
+              (click)="closeAddExpenseForm()">
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>

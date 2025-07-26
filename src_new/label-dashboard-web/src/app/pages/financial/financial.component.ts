@@ -72,6 +72,24 @@ export interface Document {
   url: string;
 }
 
+export interface ReleaseInfo {
+  id: number;
+  title: string;
+  catalog_no: string;
+  release_date: string;
+  sync_royalty_percentage: number;
+  sync_royalty_type: string;
+  streaming_royalty_percentage: number;
+  streaming_royalty_type: string;
+  download_royalty_percentage: number;
+  download_royalty_type: string;
+  physical_royalty_percentage: number;
+  physical_royalty_type: string;
+  recuperable_expense_balance: number;
+  total_earnings: number;
+  total_royalties: number;
+}
+
 @Component({
   selector: 'app-financial',
   standalone: true,
@@ -105,6 +123,7 @@ export class FinancialComponent implements OnInit {
   paymentMethods: PaymentMethod[] = [];
   payoutSettings: PayoutSettings | null = null;
   documents: Document[] = [];
+  releases: ReleaseInfo[] = [];
 
   // Pagination data
   paymentsPagination: any = null;
@@ -159,6 +178,18 @@ export class FinancialComponent implements OnInit {
   documentUploadForm = {
     title: '',
     file: null as File | null
+  };
+
+  // Release information form
+  editingRoyalties = false;
+  updatingRoyalties = false;
+  addingExpense = false;
+  expenseForm = {
+    release_id: '',
+    release_title: '',
+    expense_description: '',
+    expense_amount: '',
+    date_recorded: new Date().toISOString().split('T')[0]
   };
 
   supportedBanks = [
@@ -228,6 +259,8 @@ export class FinancialComponent implements OnInit {
       this.loadPayoutSettings();
     } else if (tab === 'documents' && this.selectedArtist) {
       this.loadDocuments();
+    } else if (tab === 'release' && this.selectedArtist) {
+      this.loadReleases();
     }
   }
 
@@ -266,6 +299,9 @@ export class FinancialComponent implements OnInit {
       
       // Load documents
       await this.loadDocuments();
+      
+      // Load releases
+      await this.loadReleases();
 
     } catch (error) {
       console.error('Error loading financial data:', error);
@@ -573,6 +609,93 @@ export class FinancialComponent implements OnInit {
     const fileInput = document.getElementById('documentFile') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
+    }
+  }
+
+  private async loadReleases(): Promise<void> {
+    if (!this.selectedArtist) return;
+
+    try {
+      const response = await this.financialService.getReleaseInformation(this.selectedArtist.id);
+      this.releases = response.releases || [];
+    } catch (error) {
+      console.error('Error loading releases:', error);
+      if (this.activeTab === 'release') {
+        this.notificationService.showError('Failed to load release information');
+      }
+    }
+  }
+
+  toggleEditRoyalties(): void {
+    this.editingRoyalties = !this.editingRoyalties;
+  }
+
+  async onUpdateRoyalties(): Promise<void> {
+    if (!this.selectedArtist || this.updatingRoyalties) return;
+
+    this.updatingRoyalties = true;
+    try {
+      const releases = this.releases.map(release => ({
+        release_id: release.id,
+        sync_royalty_percentage: release.sync_royalty_percentage * 100,
+        streaming_royalty_percentage: release.streaming_royalty_percentage * 100,
+        download_royalty_percentage: release.download_royalty_percentage * 100,
+        physical_royalty_percentage: release.physical_royalty_percentage * 100
+      }));
+
+      await this.financialService.updateRoyalties(this.selectedArtist.id, releases);
+      this.notificationService.showSuccess('Royalties updated successfully');
+      this.editingRoyalties = false;
+      this.loadReleases();
+    } catch (error) {
+      console.error('Error updating royalties:', error);
+      this.notificationService.showError('Failed to update royalties');
+    } finally {
+      this.updatingRoyalties = false;
+    }
+  }
+
+  openAddExpenseForm(releaseId: number, releaseTitle: string): void {
+    this.expenseForm = {
+      release_id: releaseId.toString(),
+      release_title: releaseTitle,
+      expense_description: '',
+      expense_amount: '',
+      date_recorded: new Date().toISOString().split('T')[0]
+    };
+    this.addingExpense = true;
+  }
+
+  closeAddExpenseForm(): void {
+    this.addingExpense = false;
+    this.expenseForm = {
+      release_id: '',
+      release_title: '',
+      expense_description: '',
+      expense_amount: '',
+      date_recorded: new Date().toISOString().split('T')[0]
+    };
+  }
+
+  async onAddExpense(): Promise<void> {
+    if (!this.selectedArtist || !this.expenseForm.expense_description || !this.expenseForm.expense_amount) {
+      this.notificationService.showError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await this.financialService.addRecuperableExpense(parseInt(this.expenseForm.release_id), {
+        expense_description: this.expenseForm.expense_description,
+        expense_amount: parseFloat(this.expenseForm.expense_amount),
+        date_recorded: this.expenseForm.date_recorded
+      });
+
+      this.notificationService.showSuccess('Recuperable expense added successfully');
+      this.closeAddExpenseForm();
+      this.loadReleases();
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      this.notificationService.showError('Failed to add expense');
     }
   }
 

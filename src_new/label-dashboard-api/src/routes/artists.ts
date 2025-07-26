@@ -18,6 +18,7 @@ import {
   updatePhotoCaption,
   deleteArtistPhoto,
   getArtistReleases,
+  updateRoyalties,
   getArtistTeam,
   inviteTeamMember,
   resendTeamInvite,
@@ -62,6 +63,7 @@ router.delete('/:id/photos/:photoId', deleteArtistPhoto);
 
 // Release operations
 router.get('/:id/releases', getArtistReleases);
+router.put('/:id/royalties', requireAdmin, updateRoyalties);
 
 // Team management operations
 router.get('/:id/team', getArtistTeam);

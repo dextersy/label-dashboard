@@ -11,7 +11,6 @@ import {
   getPayments,
   getPaymentById,
   getPaymentsByArtist,
-  addRecuperableExpense,
   getFinancialSummary
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -38,9 +37,6 @@ router.get('/payments', getPayments);
 router.get('/payments/:id', getPaymentById);
 router.get('/artists/:artist_id/payments', getPaymentsByArtist);
 
-
-// Expenses management
-router.post('/expenses', requireAdmin, addRecuperableExpense);
 
 // Financial summary
 router.get('/summary', getFinancialSummary);

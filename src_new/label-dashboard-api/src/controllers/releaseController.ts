@@ -352,3 +352,53 @@ export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Add release expense
+export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { 
+      expense_description,
+      expense_amount,
+      date_recorded
+    } = req.body;
+
+    if (!expense_description || !expense_amount) {
+      return res.status(400).json({ 
+        error: 'Description and amount are required' 
+      });
+    }
+
+    // Verify release belongs to user's brand
+    const release = await Release.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const expense = await RecuperableExpense.create({
+      release_id: id,
+      expense_description,
+      expense_amount: parseFloat(expense_amount),
+      date_recorded: date_recorded ? new Date(date_recorded) : new Date(),
+      brand_id: req.user.brand_id
+    });
+
+    res.status(201).json({
+      message: 'Recuperable expense added successfully',
+      expense
+    });
+  } catch (error) {
+    console.error('Add release expense error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

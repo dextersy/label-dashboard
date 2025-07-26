@@ -6,7 +6,8 @@ import {
   updateRelease,
   deleteRelease,
   getReleaseEarnings,
-  getReleaseExpenses
+  getReleaseExpenses,
+  addReleaseExpense
 } from '../controllers/releaseController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -25,5 +26,6 @@ router.delete('/:id', requireAdmin, deleteRelease);
 // Release-specific data
 router.get('/:id/earnings', getReleaseEarnings);
 router.get('/:id/expenses', getReleaseExpenses);
+router.post('/:id/expenses', requireAdmin, addReleaseExpense);
 
 export default router;

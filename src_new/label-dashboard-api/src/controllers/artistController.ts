@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod } from '../models';
+import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateEmail, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import multer from 'multer';
 import path from 'path';
@@ -804,33 +804,75 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    // Get releases for this artist
+    // Get releases for this artist with royalty information
     const releases = await Release.findAll({
       include: [
         {
-          model: Artist,
-          as: 'artists',
-          where: { id },
-          through: { attributes: [] }
+          model: ReleaseArtist,
+          as: 'releaseArtists',
+          where: { artist_id: id },
+          required: true
         }
       ],
+      where: { brand_id: req.user.brand_id },
       order: [['release_date', 'DESC']]
     });
 
-    // Transform releases to match frontend interface
-    const transformedReleases = releases.map(release => ({
-      id: release.id,
-      catalog_number: release.catalog_no,
-      title: release.title,
-      cover_art: release.cover_art || '',
-      release_date: release.release_date,
-      status: release.status,
-      description: release.description || '',
-      liner_notes: release.liner_notes || ''
+    // Build response with all needed financial data
+    const releaseInfo = await Promise.all(releases.map(async (release: any) => {
+      const releaseArtist = release.releaseArtists[0];
+
+      // Get recuperable expense balance
+      const recuperableExpenseSum = await RecuperableExpense.sum('expense_amount', {
+        where: { 
+          release_id: release.id,
+          brand_id: req.user.brand_id 
+        }
+      }) || 0;
+
+      // Get total earnings for this release
+      const totalEarnings = await Earning.sum('amount', {
+        where: { release_id: release.id }
+      }) || 0;
+
+      // Get total royalties for this artist for this release
+      const totalRoyalties = await Royalty.sum('amount', {
+        where: { 
+          artist_id: id,
+          release_id: release.id 
+        }
+      }) || 0;
+
+      return {
+        id: release.id,
+        catalog_number: release.catalog_no,
+        title: release.title,
+        cover_art: release.cover_art || '',
+        release_date: release.release_date,
+        status: release.status,
+        description: release.description || '',
+        liner_notes: release.liner_notes || '',
+        catalog_no: release.catalog_no,
+        sync_royalty_percentage: releaseArtist.sync_royalty_percentage,
+        sync_royalty_type: releaseArtist.sync_royalty_type,
+        streaming_royalty_percentage: releaseArtist.streaming_royalty_percentage,
+        streaming_royalty_type: releaseArtist.streaming_royalty_type,
+        download_royalty_percentage: releaseArtist.download_royalty_percentage,
+        download_royalty_type: releaseArtist.download_royalty_type,
+        physical_royalty_percentage: releaseArtist.physical_royalty_percentage,
+        physical_royalty_type: releaseArtist.physical_royalty_type,
+        recuperable_expense_balance: recuperableExpenseSum,
+        total_earnings: totalEarnings,
+        total_royalties: totalRoyalties
+      };
     }));
 
     res.json({ 
-      releases: transformedReleases,
+      releases: releaseInfo,
+      artist: {
+        id: artist.id,
+        name: artist.name
+      },
       isAdmin: req.user.is_admin || false 
     });
   } catch (error) {
@@ -838,6 +880,52 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Update royalty percentages for releases
+export const updateRoyalties = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { releases } = req.body;
+
+    // Verify artist belongs to user's brand
+    const artist = await Artist.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Update each release's royalty percentages
+    for (const releaseData of releases) {
+      await ReleaseArtist.update({
+        sync_royalty_percentage: releaseData.sync_royalty_percentage / 100, // Convert from percentage
+        streaming_royalty_percentage: releaseData.streaming_royalty_percentage / 100,
+        download_royalty_percentage: releaseData.download_royalty_percentage / 100,
+        physical_royalty_percentage: releaseData.physical_royalty_percentage / 100
+      }, {
+        where: {
+          artist_id: id,
+          release_id: releaseData.release_id
+        }
+      });
+    }
+
+    res.json({ message: 'Royalties updated successfully' });
+  } catch (error) {
+    console.error('Update royalties error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Note: addRecuperableExpense moved to releaseController.ts
 
 // Get artist team members
 export const getArtistTeam = async (req: AuthRequest, res: Response) => {
