@@ -11,5 +11,10 @@ import { FormsModule } from '@angular/forms';
 })
 export class NewEarningFormComponent {
   @Input() newEarningForm: any = {};
+  @Input() releases: any[] = [];
   @Input() onSubmitEarning: () => Promise<void> = async () => {};
+
+  formatReleaseOption(release: any): string {
+    return `${release.catalog_no} : ${release.title}`;
+  }
 }

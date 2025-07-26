@@ -11,5 +11,10 @@ import { FormsModule } from '@angular/forms';
 })
 export class NewRoyaltyFormComponent {
   @Input() newRoyaltyForm: any = {};
+  @Input() releases: any[] = [];
   @Input() onSubmitRoyalty: () => Promise<void> = async () => {};
+
+  formatReleaseOption(release: any): string {
+    return `${release.catalog_no} : ${release.title}`;
+  }
 }

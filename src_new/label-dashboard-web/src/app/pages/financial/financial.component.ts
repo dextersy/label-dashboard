@@ -172,7 +172,8 @@ export class FinancialComponent implements OnInit {
     release_id: '',
     description: '',
     amount: 0,
-    date_recorded: new Date().toISOString().split('T')[0]
+    date_recorded: new Date().toISOString().split('T')[0],
+    calculate_royalties: false
   };
 
   // Add payment method form
@@ -558,7 +559,8 @@ export class FinancialComponent implements OnInit {
       release_id: '',
       description: '',
       amount: 0,
-      date_recorded: new Date().toISOString().split('T')[0]
+      date_recorded: new Date().toISOString().split('T')[0],
+      calculate_royalties: false
     };
   }
 

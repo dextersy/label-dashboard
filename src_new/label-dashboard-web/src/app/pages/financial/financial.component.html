@@ -107,6 +107,7 @@
             <div class="tab-pane" [class.active]="activeTab === 'new-royalty'" *ngIf="activeTab === 'new-royalty' && isAdmin">
               <app-new-royalty-form
                 [newRoyaltyForm]="newRoyaltyForm"
+                [releases]="releases"
                 [onSubmitRoyalty]="onSubmitRoyalty.bind(this)">
               </app-new-royalty-form>
             </div>
@@ -124,6 +125,7 @@
             <div class="tab-pane" [class.active]="activeTab === 'new-earning'" *ngIf="activeTab === 'new-earning' && isAdmin">
               <app-new-earning-form
                 [newEarningForm]="newEarningForm"
+                [releases]="releases"
                 [onSubmitEarning]="onSubmitEarning.bind(this)">
               </app-new-earning-form>
             </div>
