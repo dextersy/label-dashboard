@@ -91,9 +91,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   private applyBrandSettings(settings: BrandSettings): void {
-    this.brandLogo = settings.logo;
-    this.brandWebsite = settings.website.startsWith('http') ? settings.website : `https://${settings.website}`;
-    this.brandColor = settings.color; // Use the actual hex color from the API
+    this.brandLogo = settings.logo_url || 'assets/img/placeholder.jpg';
+    this.brandWebsite = settings.brand_website || '#';
+    this.brandColor = settings.brand_color; // Use the actual hex color from the API
   }
 
   // Removed mapColorToDataColor method - no longer needed

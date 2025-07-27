@@ -52,9 +52,8 @@ export class ApiService {
   }
 
   // Brand Settings
-  getBrandByDomain(domain?: string): Observable<any> {
-    const params = domain ? { domain } : undefined;
-    return this.http.get(`${this.baseUrl}/brands/by-domain`, { params });
+  getBrandByDomain(domain: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/public/brand/domain/${domain}`);
   }
 
   getBrandSettings(brandId: string): Observable<any> {

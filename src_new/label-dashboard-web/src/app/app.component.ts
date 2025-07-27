@@ -7,6 +7,7 @@ import { GlobalNotificationComponent } from './components/global-notification/gl
 import { ArtistSelectionComponent } from './components/artist/artist-selection/artist-selection.component';
 import { Artist } from './components/artist/artist-selection/artist-selection.component';
 import { ArtistStateService } from './services/artist-state.service';
+import { BrandService } from './services/brand.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -23,10 +24,22 @@ export class AppComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private brandService: BrandService
   ) {}
 
   ngOnInit(): void {
+    // Initialize brand information before anything else
+    this.brandService.loadBrandByDomain().subscribe({
+      next: (brandSettings) => {
+        console.log('Brand settings loaded:', brandSettings);
+        this.applyBrandStyling(brandSettings);
+      },
+      error: (error) => {
+        console.error('Failed to load brand settings:', error);
+      }
+    });
+
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -37,6 +50,36 @@ export class AppComponent implements OnInit {
     this.artistStateService.selectedArtist$.subscribe(artist => {
       this.selectedArtist = artist;
     });
+  }
+
+  private applyBrandStyling(brandSettings: any): void {
+    // Apply brand color as CSS custom property
+    if (brandSettings.brand_color) {
+      document.documentElement.style.setProperty('--brand-color', brandSettings.brand_color);
+    }
+
+    // Update page title
+    if (brandSettings.name) {
+      document.title = `${brandSettings.name} - Label Dashboard`;
+    }
+
+    // Update favicon if provided
+    if (brandSettings.favicon_url) {
+      // Check if favicon link exists, if not create it
+      let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+      }
+      favicon.href = brandSettings.favicon_url;
+      
+      // Also update shortcut icon if it exists
+      const shortcutIcon = document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement;
+      if (shortcutIcon) {
+        shortcutIcon.href = brandSettings.favicon_url;
+      }
+    }
   }
 
   isLoginPage(): boolean {

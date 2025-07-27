@@ -3,12 +3,25 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { ApiService } from './api.service';
 
 export interface BrandSettings {
-  id: string | null;
+  id: number | null;
   name: string;
-  logo: string;
-  color: string;
-  favicon: string;
-  website: string;
+  logo_url?: string;
+  brand_color: string;
+  brand_website?: string;
+  favicon_url?: string;
+  domain?: string;
+}
+
+export interface BrandApiResponse {
+  domain: string;
+  brand: {
+    id: number;
+    name: string;
+    logo_url?: string;
+    brand_color: string;
+    brand_website?: string;
+    favicon_url?: string;
+  };
 }
 
 @Injectable({
@@ -39,7 +52,16 @@ export class BrandService {
     
     return new Observable(observer => {
       this.apiService.getBrandByDomain(currentDomain).subscribe({
-        next: (brandSettings) => {
+        next: (response: BrandApiResponse) => {
+          const brandSettings: BrandSettings = {
+            id: response.brand.id,
+            name: response.brand.name,
+            logo_url: response.brand.logo_url,
+            brand_color: response.brand.brand_color,
+            brand_website: response.brand.brand_website,
+            favicon_url: response.brand.favicon_url,
+            domain: response.domain
+          };
           localStorage.setItem('brand_settings', JSON.stringify(brandSettings));
           this.brandSettingsSubject.next(brandSettings);
           observer.next(brandSettings);
@@ -50,10 +72,11 @@ export class BrandService {
           const defaultSettings: BrandSettings = {
             id: null,
             name: 'Label Dashboard',
-            logo: 'assets/img/new_logo.png',
-            color: '#667eea',
-            favicon: 'assets/img/default.ico',
-            website: currentDomain
+            logo_url: 'assets/img/placeholder.jpg',
+            brand_color: '#667eea',
+            brand_website: '#',
+            favicon_url: undefined,
+            domain: currentDomain
           };
           this.brandSettingsSubject.next(defaultSettings);
           observer.next(defaultSettings);

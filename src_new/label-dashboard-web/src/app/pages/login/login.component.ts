@@ -25,7 +25,7 @@ export class LoginComponent implements OnInit {
   
   // Brand settings (matching original PHP defaults)
   brandLogo: string = 'assets/img/Melt Records-logo-WHITE.png';
-  brandName: string = 'Melt Records';
+  brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
 
   constructor(
@@ -69,16 +69,24 @@ export class LoginComponent implements OnInit {
   loadBrandSettings(): void {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo;
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Melt Records-logo-WHITE.png';
         this.brandName = brandSettings.name;
-        this.brandColor = brandSettings.color;
+        this.brandColor = brandSettings.brand_color;
+        
+        // Apply brand styling to the page
+        document.documentElement.style.setProperty('--brand-color', this.brandColor);
+        document.title = `${this.brandName} - Login`;
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
         // Use defaults if brand service fails
         this.brandLogo = 'assets/img/Melt Records-logo-WHITE.png';
-        this.brandName = 'Melt Records';
+        this.brandName = 'Label Dashboard';
         this.brandColor = '#667eea';
+        
+        // Apply default styling
+        document.documentElement.style.setProperty('--brand-color', this.brandColor);
+        document.title = `${this.brandName} - Login`;
       }
     });
   }

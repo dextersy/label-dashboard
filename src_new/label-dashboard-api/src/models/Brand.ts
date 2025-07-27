@@ -6,6 +6,8 @@ interface BrandAttributes {
   brand_name: string;
   logo_url?: string;
   brand_color: string;
+  brand_website?: string;
+  favicon_url?: string;
   paymongo_wallet_id?: string;
   payment_processing_fee_for_payouts?: number;
 }
@@ -17,6 +19,8 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public brand_name!: string;
   public logo_url?: string;
   public brand_color!: string;
+  public brand_website?: string;
+  public favicon_url?: string;
   public paymongo_wallet_id?: string;
   public payment_processing_fee_for_payouts?: number;
 
@@ -43,6 +47,14 @@ Brand.init(
       type: DataTypes.STRING(45),
       allowNull: false,
       defaultValue: '#ffffff',
+    },
+    brand_website: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    favicon_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
     paymongo_wallet_id: {
       type: DataTypes.STRING(100),

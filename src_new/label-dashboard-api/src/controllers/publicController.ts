@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import crypto from 'crypto';
@@ -305,6 +305,48 @@ export const checkPin = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Check PIN error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get brand information by domain
+export const getBrandByDomain = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.params;
+
+    if (!domain) {
+      return res.status(400).json({ error: 'Domain is required' });
+    }
+
+    // Find domain and include brand information
+    const domainRecord = await Domain.findOne({
+      where: { 
+        domain_name: domain
+      },
+      include: [{
+        model: Brand,
+        as: 'brand',
+        attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 'favicon_url']
+      }]
+    });
+
+    if (!domainRecord || !domainRecord.brand) {
+      return res.status(404).json({ error: 'Brand not found for this domain' });
+    }
+
+    res.json({
+      domain: domainRecord.domain_name,
+      brand: {
+        id: domainRecord.brand.id,
+        name: domainRecord.brand.brand_name,
+        logo_url: domainRecord.brand.logo_url,
+        brand_color: domainRecord.brand.brand_color,
+        brand_website: domainRecord.brand.brand_website,
+        favicon_url: domainRecord.brand.favicon_url
+      }
+    });
+  } catch (error) {
+    console.error('Get brand by domain error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
