@@ -241,8 +241,8 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
         return {
           id: event.id,
           name: event.title || 'Untitled Event',
-          location: event.location || 'TBA',
-          date: event.event_date || event.created_at,
+          location: event.venue || 'TBA',
+          date: event.date_and_time || event.createdAt,
           total_sales: isNaN(totalSales) ? 0 : totalSales,
           tickets_sold: isNaN(ticketsSold) ? 0 : ticketsSold,
           total_tickets: isNaN(totalTickets) ? 0 : totalTickets

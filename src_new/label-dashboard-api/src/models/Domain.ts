@@ -17,6 +17,9 @@ class Domain extends Model<DomainAttributes, DomainCreationAttributes> implement
   public domain_name!: string;
   public status!: DomainStatus;
 
+  // Association properties
+  public brand?: any;
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }

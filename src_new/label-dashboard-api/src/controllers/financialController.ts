@@ -224,6 +224,8 @@ export const addRoyalty = async (req: AuthRequest, res: Response) => {
 export const getRoyalties = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id, release_id, page = '1', limit = '20' } = req.query;
+    const artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
+    const releaseIdNum = release_id ? parseInt(release_id as string, 10) : undefined;
 
     const where: any = {};
     const includeConditions: any[] = [
@@ -232,11 +234,11 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
     ];
 
     if (artist_id) {
-      where.artist_id = artist_id;
+      where.artist_id = artistIdNum;
     }
 
     if (release_id) {
-      where.release_id = release_id;
+      where.release_id = releaseIdNum;
     }
 
     const pageNum = parseInt(page as string);
@@ -274,10 +276,11 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
 export const getEarnings = async (req: AuthRequest, res: Response) => {
   try {
     const { release_id, type, page = '1', limit = '20' } = req.query;
+    const releaseIdNum = release_id ? parseInt(release_id as string, 10) : undefined;
 
     const where: any = {};
     if (release_id) {
-      where.release_id = release_id;
+      where.release_id = releaseIdNum;
     }
     if (type) {
       where.type = type;
@@ -351,12 +354,18 @@ export const getEarningById = async (req: AuthRequest, res: Response) => {
 export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.params;
-    const { type, page = '1', limit = '20' } = req.query;
+    let artistIdNum = parseInt(artist_id, 10);
+    
+    if (isNaN(artistIdNum)) {
+      return res.status(400).json({ error: 'Invalid artist ID' });
+    }
 
+    const { type, page = '1', limit = '20' } = req.query;
+    
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
       where: { 
-        id: artist_id,
+        id: artistIdNum,
         brand_id: req.user.brand_id 
       }
     });
@@ -387,7 +396,7 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
             {
               model: ReleaseArtist,
               as: 'releaseArtists',
-              where: { artist_id: artist_id },
+              where: { artist_id: artistIdNum },
               include: [
                 {
                   model: Artist,
@@ -446,6 +455,8 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       payment_processing_fee,
       send_notification = true
     } = req.body;
+    
+    const artistIdNum = parseInt(artist_id, 10);
 
     if (!artist_id || amount === undefined || amount === null || amount <= 0 || !date_paid) {
       return res.status(400).json({ 
@@ -505,7 +516,7 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
     }
 
     const payment = await Payment.create({
-      artist_id,
+      artist_id: artistIdNum,
       amount: finalAmount,
       description,
       date_paid: new Date(date_paid),
@@ -522,31 +533,26 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       // Get artist team members
       const { ArtistAccess, User } = require('../models');
       const artistAccess = await ArtistAccess.findAll({
-        where: { artist_id },
+        where: { artist_id: artistIdNum },
         include: [{ model: User, as: 'user' }]
       });
 
       const recipients = artistAccess.map(access => access.user.email_address);
 
       if (recipients.length > 0) {
-        await sendBrandedEmail(
-          recipients,
-          `Payment Processed - ${artist.name}`,
-          'payment_notification',
-          {
-            body: `
-              <h2>Payment Processed</h2>
-              <p>A payment has been processed for ${artist.name}:</p>
-              <div style="background: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 8px;">
-                <p><strong>Amount:</strong> ₱${amount}</p>
-                <p><strong>Date:</strong> ${new Date(date_paid).toLocaleDateString()}</p>
-                <p><strong>Method:</strong> ${paid_thru_type || 'Not specified'}</p>
-                <p><strong>Description:</strong> ${description || 'Payment'}</p>
-              </div>
-            `
-          },
-          artist.brand
-        );
+        for (const recipient of recipients) {
+          await sendBrandedEmail(
+            recipient,
+            'payment_notification',
+            {
+              artistName: artist.name,
+              amount: amount,
+              datePaid: new Date(date_paid).toLocaleDateString(),
+              method: paid_thru_type || 'Not specified',
+              description: description || 'Payment'
+            }
+          );
+        }
       }
     }
 
@@ -563,10 +569,11 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
 export const getPayments = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.query;
+    const artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
 
     const where: any = {};
     if (artist_id) {
-      where.artist_id = artist_id;
+      where.artist_id = artistIdNum;
     }
 
     const payments = await Payment.findAll({
@@ -682,6 +689,7 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
 export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.query;
+    const artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
 
     let summary: any = {};
 
@@ -689,7 +697,7 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       // Artist-specific summary
       const artist = await Artist.findOne({
         where: { 
-          id: artist_id,
+          id: artistIdNum,
           brand_id: req.user.brand_id 
         }
       });
@@ -699,16 +707,16 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       }
 
       const totalRoyalties = await Royalty.sum('amount', {
-        where: { artist_id }
+        where: { artist_id: artistIdNum }
       }) || 0;
 
       const totalPayments = await Payment.sum('amount', {
-        where: { artist_id }
+        where: { artist_id: artistIdNum }
       }) || 0;
 
       // Calculate total earnings for this artist by first finding releases, then summing earnings
       const artistReleases = await ReleaseArtist.findAll({
-        where: { artist_id: artist_id },
+        where: { artist_id: artistIdNum },
         attributes: ['release_id'],
         include: [{
           model: Release,
@@ -737,29 +745,44 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       };
     } else {
       // Brand-wide summary
-      const totalEarnings = await Earning.sum('amount', {
+      const earningsResult = await Earning.findAll({
         include: [{
           model: Release,
           as: 'release',
           where: { brand_id: req.user.brand_id }
-        }]
-      }) || 0;
+        }],
+        attributes: [
+          [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
+        ],
+        raw: true
+      });
+      const totalEarnings = (earningsResult[0] as any)?.total || 0;
 
-      const totalRoyalties = await Royalty.sum('amount', {
+      const royaltiesResult = await Royalty.findAll({
         include: [{
           model: Artist,
           as: 'artist',
           where: { brand_id: req.user.brand_id }
-        }]
-      }) || 0;
+        }],
+        attributes: [
+          [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
+        ],
+        raw: true
+      });
+      const totalRoyalties = (royaltiesResult[0] as any)?.total || 0;
 
-      const totalPayments = await Payment.sum('amount', {
+      const paymentsResult = await Payment.findAll({
         include: [{
           model: Artist,
           as: 'artist',
           where: { brand_id: req.user.brand_id }
-        }]
-      }) || 0;
+        }],
+        attributes: [
+          [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
+        ],
+        raw: true
+      });
+      const totalPayments = (paymentsResult[0] as any)?.total || 0;
 
       summary = {
         brand_id: req.user.brand_id,

@@ -30,6 +30,9 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public buy_shortlink?: string;
   public close_time?: Date;
 
+  // Association properties
+  public brand?: any;
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }

@@ -15,6 +15,7 @@ interface ArtistAttributes {
   band_members?: string;
   youtube_channel?: string;
   payout_point: number;
+  hold_payouts?: boolean;
 }
 
 interface ArtistCreationAttributes extends Optional<ArtistAttributes, 'id' | 'brand_id' | 'payout_point'> {}
@@ -33,6 +34,10 @@ class Artist extends Model<ArtistAttributes, ArtistCreationAttributes> implement
   public band_members?: string;
   public youtube_channel?: string;
   public payout_point!: number;
+  public hold_payouts?: boolean;
+
+  // Association properties
+  public brand?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -94,6 +99,11 @@ Artist.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1000,
+    },
+    hold_payouts: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

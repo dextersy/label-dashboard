@@ -36,6 +36,10 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public payment_processing_fee?: number;
   public referrer_id?: number;
 
+  // Association properties
+  public event?: any;
+  public referrer?: any;
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }

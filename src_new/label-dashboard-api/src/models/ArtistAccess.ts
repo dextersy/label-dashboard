@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 import User from './User';
+import Artist from './Artist';
 
 type AccessStatus = 'Pending' | 'Accepted';
 
@@ -28,6 +29,7 @@ class ArtistAccess extends Model<ArtistAccessAttributes, ArtistAccessCreationAtt
 
   // Association properties
   public user?: User;
+  public artist?: Artist;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;

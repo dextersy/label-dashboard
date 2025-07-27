@@ -32,10 +32,15 @@ export const getReleases = async (req: AuthRequest, res: Response) => {
 export const getRelease = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+    
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
 
     const release = await Release.findOne({
       where: { 
-        id,
+        id: releaseId,
         brand_id: req.user.brand_id 
       },
       include: [
@@ -157,6 +162,11 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
 export const updateRelease = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+    
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
     const {
       title,
       UPC,
@@ -170,7 +180,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     const release = await Release.findOne({
       where: { 
-        id,
+        id: releaseId,
         brand_id: req.user.brand_id 
       }
     });
@@ -203,13 +213,13 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
       // Remove existing artist associations
       await ReleaseArtist.destroy({
-        where: { release_id: id }
+        where: { release_id: releaseId }
       });
 
       // Add updated artist associations
       for (const artistData of artists) {
         await ReleaseArtist.create({
-          release_id: id,
+          release_id: releaseId,
           artist_id: artistData.artist_id,
           streaming_royalty_percentage: artistData.streaming_royalty_percentage || 0.5,
           streaming_royalty_type: artistData.streaming_royalty_type || 'Revenue',
@@ -262,10 +272,15 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+    
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
 
     const release = await Release.findOne({
       where: { 
-        id,
+        id: releaseId,
         brand_id: req.user.brand_id 
       }
     });
@@ -286,10 +301,15 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
 export const getReleaseEarnings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+    
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
 
     const release = await Release.findOne({
       where: { 
-        id,
+        id: releaseId,
         brand_id: req.user.brand_id 
       }
     });
@@ -299,14 +319,14 @@ export const getReleaseEarnings = async (req: AuthRequest, res: Response) => {
     }
 
     const earnings = await Earning.findAll({
-      where: { release_id: id },
+      where: { release_id: releaseId },
       order: [['date_recorded', 'DESC']]
     });
 
     const totalEarnings = earnings.reduce((sum, earning) => sum + (earning.amount || 0), 0);
 
     res.json({
-      release_id: id,
+      release_id: releaseId,
       release_title: release.title,
       catalog_no: release.catalog_no,
       total_earnings: totalEarnings,
@@ -321,13 +341,18 @@ export const getReleaseEarnings = async (req: AuthRequest, res: Response) => {
 export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+    
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
     const release = await Release.findOne({
       where: { 
-        id,
+        id: releaseId,
         brand_id: req.user.brand_id 
       }
     });
@@ -338,25 +363,25 @@ export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
 
     // Get total count for pagination
     const totalCount = await RecuperableExpense.count({
-      where: { release_id: id }
+      where: { release_id: releaseId }
     });
 
     // Get paginated expenses
     const expenses = await RecuperableExpense.findAll({
-      where: { release_id: id },
+      where: { release_id: releaseId },
       order: [['date_recorded', 'DESC']],
       limit,
       offset
     });
 
     const totalExpenses = await RecuperableExpense.sum('expense_amount', {
-      where: { release_id: id }
+      where: { release_id: releaseId }
     });
 
     const totalPages = Math.ceil(totalCount / limit);
 
     res.json({
-      release_id: id,
+      release_id: releaseId,
       release_title: release.title,
       catalog_no: release.catalog_no,
       total_expenses: totalExpenses || 0,
@@ -384,6 +409,11 @@ export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+    
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
     const { 
       expense_description,
       expense_amount,
@@ -399,7 +429,7 @@ export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
     // Verify release belongs to user's brand
     const release = await Release.findOne({
       where: { 
-        id,
+        id: releaseId,
         brand_id: req.user.brand_id 
       }
     });
@@ -409,7 +439,7 @@ export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
     }
 
     const expense = await RecuperableExpense.create({
-      release_id: id,
+      release_id: releaseId,
       expense_description,
       expense_amount: parseFloat(expense_amount),
       date_recorded: date_recorded ? new Date(date_recorded) : new Date(),

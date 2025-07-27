@@ -247,28 +247,16 @@ export const ticketPaymentWebhook = async (req: Request, res: Response) => {
 
         // Send confirmation email
         await sendBrandedEmail(
-          [ticket.email_address],
-          `Payment Confirmed - ${ticket.event.title}`,
+          ticket.email_address,
           'payment_confirmed',
           {
-            body: `
-              <h2>Payment Confirmed!</h2>
-              <p>Hi ${ticket.name}!</p>
-              <p>Your payment for <strong>${ticket.event.title}</strong> has been confirmed.</p>
-              
-              <div style="background: #f0f8f0; padding: 20px; margin: 20px 0; border-radius: 8px;">
-                <h3>Your Ticket Details</h3>
-                <p><strong>Ticket Code:</strong> ${ticket.ticket_code}</p>
-                <p><strong>Event:</strong> ${ticket.event.title}</p>
-                <p><strong>Date:</strong> ${ticket.event.date_and_time}</p>
-                <p><strong>Venue:</strong> ${ticket.event.venue}</p>
-                <p><strong>Entries:</strong> ${ticket.number_of_entries}</p>
-              </div>
-
-              <p>Please save this email as your proof of purchase. You may be asked to present this ticket or your ticket code at the venue.</p>
-            `
-          },
-          ticket.event.brand
+            name: ticket.name,
+            eventTitle: ticket.event.title,
+            ticketCode: ticket.ticket_code,
+            eventDate: ticket.event.date_and_time,
+            eventVenue: ticket.event.venue,
+            numberOfEntries: ticket.number_of_entries
+          }
         );
 
         // Update ticket status to sent

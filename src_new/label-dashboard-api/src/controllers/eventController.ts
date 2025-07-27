@@ -32,10 +32,15 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
 export const getEvent = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const eventId = parseInt(id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
 
     const event = await Event.findOne({
       where: { 
-        id,
+        id: eventId,
         brand_id: req.user.brand_id 
       },
       include: [
@@ -108,6 +113,12 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
+    const eventId = parseInt(id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+    
     const {
       title,
       date_and_time,
@@ -121,7 +132,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
 
     const event = await Event.findOne({
       where: { 
-        id,
+        id: eventId,
         brand_id: req.user.brand_id 
       }
     });
@@ -159,9 +170,11 @@ export const setSelectedEvent = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
+    const eventIdNum = parseInt(event_id, 10);
+
     const event = await Event.findOne({
       where: { 
-        id: event_id,
+        id: eventIdNum,
         brand_id: req.user.brand_id 
       }
     });
@@ -206,10 +219,12 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const eventIdNum = parseInt(event_id, 10);
+
     // Get event details
     const event = await Event.findOne({
       where: { 
-        id: event_id,
+        id: eventIdNum,
         brand_id: req.user.brand_id 
       },
       include: [{ model: Brand, as: 'brand' }]
@@ -255,7 +270,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
 
     // Create ticket record
     const ticket = await Ticket.create({
-      event_id,
+      event_id: eventIdNum,
       name,
       email_address,
       contact_number,
@@ -271,42 +286,20 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
 
     // Send ticket email with payment link
     await sendBrandedEmail(
-      [email_address],
-      `Your ticket for ${event.title}`,
+      email_address,
       'ticket_created',
       {
-        body: `
-          <h2>Your Ticket Details</h2>
-          <p>Hi ${name}!</p>
-          <p>Thank you for your interest in <strong>${event.title}</strong>!</p>
-          
-          <div style="background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px;">
-            <h3>Event Details</h3>
-            <p><strong>Event:</strong> ${event.title}</p>
-            <p><strong>Date:</strong> ${event.date_and_time}</p>
-            <p><strong>Venue:</strong> ${event.venue}</p>
-            <p><strong>Tickets:</strong> ${number_of_entries}</p>
-            <p><strong>Ticket Code:</strong> ${ticketCode}</p>
-          </div>
-
-          <div style="background: #e3f2fd; padding: 20px; margin: 20px 0; border-radius: 8px;">
-            <h3>Payment Information</h3>
-            <p><strong>Amount per ticket:</strong> ₱${event.ticket_price}</p>
-            <p><strong>Processing fee:</strong> ₱${processingFee}</p>
-            <p><strong>Total amount:</strong> ₱${totalAmount + processingFee}</p>
-          </div>
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${paymentLink.attributes.checkout_url}" 
-               style="background: #4caf50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-               Pay Now
-            </a>
-          </div>
-
-          <p><em>Please complete your payment to secure your tickets. You will receive your official tickets via email once payment is confirmed.</em></p>
-        `
-      },
-      event.brand
+        name,
+        eventTitle: event.title,
+        eventDate: event.date_and_time,
+        eventVenue: event.venue,
+        numberOfEntries: number_of_entries,
+        ticketCode: ticketCode,
+        ticketPrice: event.ticket_price,
+        processingFee: processingFee,
+        totalAmount: totalAmount + processingFee,
+        paymentUrl: paymentLink.attributes.checkout_url
+      }
     );
 
     res.status(201).json({
@@ -327,13 +320,14 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
 export const getTickets = async (req: AuthRequest, res: Response) => {
   try {
     const { event_id } = req.query;
+    const eventIdNum = event_id ? parseInt(event_id as string, 10) : undefined;
 
     const where: any = {};
     if (event_id) {
       // Verify user has access to this event
       const event = await Event.findOne({
         where: { 
-          id: event_id,
+          id: eventIdNum,
           brand_id: req.user.brand_id 
         }
       });
@@ -342,7 +336,7 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ error: 'Event not found' });
       }
 
-      where.event_id = event_id;
+      where.event_id = eventIdNum;
     }
 
     const tickets = await Ticket.findAll({
@@ -397,19 +391,13 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
 
     // Send confirmation email
     await sendBrandedEmail(
-      [ticket.email_address],
-      `Payment Confirmed - ${ticket.event.title}`,
+      ticket.email_address,
       'payment_confirmed',
       {
-        body: `
-          <h2>Payment Confirmed!</h2>
-          <p>Hi ${ticket.name}!</p>
-          <p>Your payment for <strong>${ticket.event.title}</strong> has been confirmed.</p>
-          <p><strong>Ticket Code:</strong> ${ticket.ticket_code}</p>
-          <p>You will receive your official tickets shortly.</p>
-        `
-      },
-      ticket.event.brand
+        name: ticket.name,
+        eventTitle: ticket.event.title,
+        ticketCode: ticket.ticket_code
+      }
     );
 
     res.json({ 
