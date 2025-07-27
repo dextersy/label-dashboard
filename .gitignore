@@ -13,3 +13,5 @@ scripts/inc/config.php
 src_new/label-dashboard-api/.env
 src_new/label-dashboard-api/dist
 **/node_modules
+**/.env.prod
+**/dist-prod

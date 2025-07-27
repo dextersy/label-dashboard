@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api'
+  apiUrl: 'https://beta-dashboard.melt-records.com:3001/api'
 };
