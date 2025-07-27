@@ -89,14 +89,14 @@
                 title="View expenses">
                 <i class="fa fa-eye"></i>
               </button>
-              <a 
+              <button 
                 *ngIf="isAdmin" 
-                href="#" 
-                (click)="openAddExpenseForm(release.id, release.title); $event.preventDefault()"
-                class="ml-2"
+                type="button"
+                class="btn btn-link btn-sm p-0 ml-2"
+                (click)="openAddExpenseDialog(release.id, release.title)"
                 title="Add recuperable expense">
                 <i class="fa fa-plus"></i>
-              </a>
+              </button>
             </td>
             <td class="text-right">{{ formatCurrency(release.total_earnings) }}</td>
             <td class="text-right">{{ formatCurrency(release.total_royalties) }}</td>
@@ -137,73 +137,6 @@
   </div>
 </div>
 
-<!-- Add Recuperable Expense Modal -->
-<div class="row mt-4" *ngIf="addingExpense">
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header">
-        <h4>Add recuperable expense for: <span>{{ expenseForm.release_title }}</span></h4>
-      </div>
-      <div class="card-body">
-        <div class="form-group">
-          <label for="expenseDate">Recorded Date</label>
-          <input 
-            type="date" 
-            class="form-control" 
-            id="expenseDate" 
-            [(ngModel)]="expenseForm.date_recorded"
-            name="date_recorded">
-        </div>
-        <div class="form-group">
-          <label for="description">Description</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="add_recuperable_expense_description" 
-            [(ngModel)]="expenseForm.expense_description"
-            name="expense_description" 
-            placeholder="Description">
-        </div>
-        <div class="form-group">
-          <label for="amount">Amount</label>
-          <div class="input-group">
-            <div class="input-group-addon">₱</div>
-            <input 
-              type="number" 
-              class="form-control" 
-              id="add_recuperable_expense_amount" 
-              [(ngModel)]="expenseForm.expense_amount"
-              name="expense_amount" 
-              placeholder="Amount"
-              step="0.01"
-              min="0">
-          </div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <div class="row">
-          <div class="col-sm-6">
-            <button 
-              type="button" 
-              class="btn btn-primary btn-block" 
-              (click)="addExpense()"
-              [disabled]="!expenseForm.expense_description || !expenseForm.expense_amount">
-              Add
-            </button>
-          </div>
-          <div class="col-sm-6">
-            <button 
-              type="button" 
-              class="btn btn-secondary btn-block" 
-              (click)="closeAddExpenseForm()">
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Release Expenses Dialog -->
 <app-release-expenses-dialog
@@ -212,3 +145,13 @@
   [isVisible]="expensesDialogVisible"
   (close)="closeExpensesDialog()">
 </app-release-expenses-dialog>
+
+<!-- Add Expense Dialog -->
+<app-add-expense-dialog
+  [releaseId]="addExpenseReleaseId"
+  [releaseTitle]="addExpenseReleaseTitle"
+  [isVisible]="addExpenseDialogVisible"
+  [isSubmitting]="isSubmittingExpense"
+  (close)="closeAddExpenseDialog()"
+  (submit)="onSubmitExpense($event)">
+</app-add-expense-dialog>

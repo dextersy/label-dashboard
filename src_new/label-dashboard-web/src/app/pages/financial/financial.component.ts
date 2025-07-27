@@ -195,14 +195,6 @@ export class FinancialComponent implements OnInit {
   // Release information form
   editingRoyalties = false;
   updatingRoyalties = false;
-  addingExpense = false;
-  expenseForm = {
-    release_id: '',
-    release_title: '',
-    expense_description: '',
-    expense_amount: '',
-    date_recorded: new Date().toISOString().split('T')[0]
-  };
 
   supportedBanks = [
     { bank_code: 'BPI', bank_name: 'Bank of the Philippine Islands' },
@@ -717,47 +709,25 @@ export class FinancialComponent implements OnInit {
     }
   }
 
-  openAddExpenseForm(releaseId: number, releaseTitle: string): void {
-    this.expenseForm = {
-      release_id: releaseId.toString(),
-      release_title: releaseTitle,
-      expense_description: '',
-      expense_amount: '',
-      date_recorded: new Date().toISOString().split('T')[0]
-    };
-    this.addingExpense = true;
-  }
-
-  closeAddExpenseForm(): void {
-    this.addingExpense = false;
-    this.expenseForm = {
-      release_id: '',
-      release_title: '',
-      expense_description: '',
-      expense_amount: '',
-      date_recorded: new Date().toISOString().split('T')[0]
-    };
-  }
-
-  async onAddExpense(): Promise<void> {
-    if (!this.selectedArtist || !this.expenseForm.expense_description || !this.expenseForm.expense_amount) {
-      this.notificationService.showError('Please fill in all required fields');
+  async onAddExpense(expenseData: any): Promise<void> {
+    if (!this.selectedArtist) {
+      this.notificationService.showError('No artist selected');
       return;
     }
 
     try {
-      await this.financialService.addRecuperableExpense(parseInt(this.expenseForm.release_id), {
-        expense_description: this.expenseForm.expense_description,
-        expense_amount: parseFloat(this.expenseForm.expense_amount),
-        date_recorded: this.expenseForm.date_recorded
+      await this.financialService.addRecuperableExpense(expenseData.release_id, {
+        expense_description: expenseData.expense_description,
+        expense_amount: parseFloat(expenseData.expense_amount),
+        date_recorded: expenseData.date_recorded
       });
 
       this.notificationService.showSuccess('Recuperable expense added successfully');
-      this.closeAddExpenseForm();
       this.loadReleases();
     } catch (error) {
       console.error('Error adding expense:', error);
       this.notificationService.showError('Failed to add expense');
+      throw error; // Re-throw to allow dialog to handle loading state
     }
   }
 
