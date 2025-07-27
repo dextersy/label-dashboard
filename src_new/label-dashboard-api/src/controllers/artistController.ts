@@ -14,17 +14,77 @@ interface AuthRequest extends Request {
   user?: any;
 }
 
+// Helper function to check if user has access to an artist
+const checkArtistAccess = async (artistId: number, userId: number, brandId: number, isAdmin: boolean): Promise<Artist | null> => {
+  // First check if artist exists and belongs to user's brand
+  const artist = await Artist.findOne({
+    where: { 
+      id: artistId,
+      brand_id: brandId 
+    }
+  });
+
+  if (!artist) {
+    return null;
+  }
+
+  // For non-admin users, check if they have access to this artist
+  if (!isAdmin) {
+    const hasAccess = await ArtistAccess.findOne({
+      where: {
+        artist_id: artistId,
+        user_id: userId,
+        status: 'Accepted'
+      }
+    });
+
+    if (!hasAccess) {
+      return null;
+    }
+  }
+
+  return artist;
+};
+
 export const getArtists = async (req: AuthRequest, res: Response) => {
   try {
-    const artists = await Artist.findAll({
-      where: { brand_id: req.user.brand_id },
-      include: [
-        { model: Brand, as: 'brand' },
-        { model: Release, as: 'releases' },
-        { model: ArtistImage, as: 'images' }
-      ],
-      order: [['name', 'ASC']]
-    });
+    let artists;
+
+    if (req.user.is_admin) {
+      // Admin can see all artists in the brand
+      artists = await Artist.findAll({
+        where: { brand_id: req.user.brand_id },
+        include: [
+          { model: Brand, as: 'brand' },
+          { model: Release, as: 'releases' },
+          { model: ArtistImage, as: 'images' }
+        ],
+        order: [['name', 'ASC']]
+      });
+    } else {
+      // Non-admin users can only see artists they have access to
+      const artistAccess = await ArtistAccess.findAll({
+        where: { 
+          user_id: req.user.id,
+          status: 'Accepted'
+        },
+        include: [
+          {
+            model: Artist,
+            as: 'artist',
+            where: { brand_id: req.user.brand_id },
+            include: [
+              { model: Brand, as: 'brand' },
+              { model: Release, as: 'releases' },
+              { model: ArtistImage, as: 'images' }
+            ]
+          }
+        ],
+        order: [[{ model: Artist, as: 'artist' }, 'name', 'ASC']]
+      });
+
+      artists = artistAccess.map(access => access.artist);
+    }
 
     res.json({ 
       artists,
@@ -40,6 +100,7 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    // First check if artist exists and belongs to user's brand
     const artist = await Artist.findOne({
       where: { 
         id,
@@ -57,6 +118,21 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // For non-admin users, check if they have access to this artist
+    if (!req.user.is_admin) {
+      const hasAccess = await ArtistAccess.findOne({
+        where: {
+          artist_id: id,
+          user_id: req.user.id,
+          // status: 'Accepted' // Temporarily removing for debug
+        }
+      });
+
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied to this artist' });
+      }
     }
 
     res.json({ artist });
@@ -129,6 +205,12 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       payout_point,
       notify_changes = false
     } = req.body;
+
+    // Check if user has access to this artist
+    const artistAccess = await checkArtistAccess(parseInt(id), req.user.id, req.user.brand_id, req.user.is_admin);
+    if (!artistAccess) {
+      return res.status(404).json({ error: 'Artist not found or access denied' });
+    }
 
     const artist = await Artist.findOne({
       where: { 

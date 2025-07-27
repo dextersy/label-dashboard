@@ -3,6 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -33,7 +34,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private brandService: BrandService,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -84,8 +86,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       }
     });
 
-    // TODO: Get isAdmin from user service or auth service
-    this.isAdmin = true;
+    // Get admin status from auth service
+    this.isAdmin = this.authService.isAdmin();
   }
 
   private applyBrandSettings(settings: BrandSettings): void {

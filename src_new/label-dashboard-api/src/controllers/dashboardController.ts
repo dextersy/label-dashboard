@@ -10,7 +10,7 @@ export const getLatestReleases = async (req: AuthRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || undefined;
     
-    const releases = await Release.findAll({
+    let releaseQuery: any = {
       where: { brand_id: req.user.brand_id },
       include: [
         {
@@ -26,7 +26,33 @@ export const getLatestReleases = async (req: AuthRequest, res: Response) => {
       ],
       order: [['release_date', 'DESC']],
       limit: limit
-    });
+    };
+
+    // For non-admin users, only show releases where they have access to the artist
+    if (!req.user.is_admin) {
+      // Get accessible artist IDs first
+      const artistAccess = await ArtistAccess.findAll({
+        where: { 
+          user_id: req.user.id,
+          status: 'Accepted'
+        },
+        attributes: ['artist_id']
+      });
+      
+      const accessibleArtistIds = artistAccess.map(access => access.artist_id);
+      
+      if (accessibleArtistIds.length === 0) {
+        return res.json({ releases: [] }); // No accessible artists, return empty array
+      }
+
+      // Filter releases to only include those with accessible artists
+      releaseQuery.include[0].where = {
+        artist_id: accessibleArtistIds
+      };
+      releaseQuery.include[0].required = true;
+    }
+
+    const releases = await Release.findAll(releaseQuery);
 
     // Transform data to match PHP structure
     const transformedReleases = releases.map(release => ({
@@ -112,17 +138,26 @@ export const getBalanceSummary = async (req: AuthRequest, res: Response) => {
         limit: limit
       });
     } else {
-      // For non-admin users, get only their accessible artists
+      // For non-admin users, get accessible artist IDs first
+      const artistAccess = await ArtistAccess.findAll({
+        where: { 
+          user_id: req.user.id,
+          status: 'Accepted'
+        },
+        attributes: ['artist_id']
+      });
+      
+      const accessibleArtistIds = artistAccess.map(access => access.artist_id);
+      
+      if (accessibleArtistIds.length === 0) {
+        return res.json({ artists: [] }); // No accessible artists, return empty array
+      }
+
       artists = await Artist.findAll({
-        where: { brand_id: req.user.brand_id },
-        include: [
-          {
-            model: ArtistAccess,
-            as: 'artistAccess',
-            where: { user_id: req.user.id },
-            required: true
-          }
-        ],
+        where: { 
+          brand_id: req.user.brand_id,
+          id: accessibleArtistIds
+        },
         limit: limit
       });
     }
@@ -256,7 +291,7 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
 
 // Helper functions to get data without response
 async function getLatestReleasesData(req: AuthRequest) {
-  const releases = await Release.findAll({
+  let releaseQuery: any = {
     where: { brand_id: req.user.brand_id },
     include: [
       {
@@ -272,7 +307,33 @@ async function getLatestReleasesData(req: AuthRequest) {
     ],
     order: [['release_date', 'DESC']],
     limit: 5
-  });
+  };
+
+  // For non-admin users, only show releases where they have access to the artist
+  if (!req.user.is_admin) {
+    // Get accessible artist IDs first
+    const artistAccess = await ArtistAccess.findAll({
+      where: { 
+        user_id: req.user.id,
+        status: 'Accepted'
+      },
+      attributes: ['artist_id']
+    });
+    
+    const accessibleArtistIds = artistAccess.map(access => access.artist_id);
+    
+    if (accessibleArtistIds.length === 0) {
+      return []; // No accessible artists, return empty array
+    }
+
+    // Filter releases to only include those with accessible artists
+    releaseQuery.include[0].where = {
+      artist_id: accessibleArtistIds
+    };
+    releaseQuery.include[0].required = true;
+  }
+
+  const releases = await Release.findAll(releaseQuery);
 
   return releases.map(release => ({
     id: release.id,
@@ -287,8 +348,7 @@ async function getLatestReleasesData(req: AuthRequest) {
 }
 
 async function getTopEarningReleasesData(req: AuthRequest) {
-  // Get all releases without limiting first, so we can sort by total earnings
-  const releases = await Release.findAll({
+  let releaseQuery: any = {
     where: { brand_id: req.user.brand_id },
     include: [
       {
@@ -307,8 +367,33 @@ async function getTopEarningReleasesData(req: AuthRequest) {
         required: false
       }
     ]
-    // Remove order and limit here since we need to calculate totals first
-  });
+  };
+
+  // For non-admin users, only show releases where they have access to the artist
+  if (!req.user.is_admin) {
+    // Get accessible artist IDs first
+    const artistAccess = await ArtistAccess.findAll({
+      where: { 
+        user_id: req.user.id,
+        status: 'Accepted'
+      },
+      attributes: ['artist_id']
+    });
+    
+    const accessibleArtistIds = artistAccess.map(access => access.artist_id);
+    
+    if (accessibleArtistIds.length === 0) {
+      return []; // No accessible artists, return empty array
+    }
+
+    // Filter releases to only include those with accessible artists
+    releaseQuery.include[0].where = {
+      artist_id: accessibleArtistIds
+    };
+    releaseQuery.include[0].required = true;
+  }
+
+  const releases = await Release.findAll(releaseQuery);
 
   // Calculate total earnings for each release and sort by total earnings
   return releases.map(release => {
@@ -337,17 +422,26 @@ async function getBalanceSummaryData(req: AuthRequest) {
       limit: 5
     });
   } else {
-    // For non-admin users, get only their accessible artists
+    // For non-admin users, get accessible artist IDs first
+    const artistAccess = await ArtistAccess.findAll({
+      where: { 
+        user_id: req.user.id,
+        status: 'Accepted'
+      },
+      attributes: ['artist_id']
+    });
+    
+    const accessibleArtistIds = artistAccess.map(access => access.artist_id);
+    
+    if (accessibleArtistIds.length === 0) {
+      return []; // No accessible artists, return empty array
+    }
+
     artists = await Artist.findAll({
-      where: { brand_id: req.user.brand_id },
-      include: [
-        {
-          model: ArtistAccess,
-          as: 'artistAccess',
-          where: { user_id: req.user.id },
-          required: true
-        }
-      ],
+      where: { 
+        brand_id: req.user.brand_id,
+        id: accessibleArtistIds
+      },
       limit: 5
     });
   }
