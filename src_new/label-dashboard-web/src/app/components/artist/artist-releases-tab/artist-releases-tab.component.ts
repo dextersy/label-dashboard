@@ -82,7 +82,7 @@ export class ArtistReleasesTabComponent {
 
   getCoverArtUrl(coverArt: string): string {
     if (!coverArt) {
-      return 'assets/img/default-cover.jpg';
+      return 'assets/img/placeholder.jpg';
     }
     return coverArt.startsWith('http') ? coverArt : `${environment.apiUrl}/uploads/covers/${coverArt}`;
   }

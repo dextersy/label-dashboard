@@ -136,7 +136,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
 
   getProfilePhotoUrl(photo: string): string {
     if (!photo) {
-      return 'assets/img/default-artist.jpg';
+      return 'assets/img/placeholder.jpg';
     }
     return photo.startsWith('http') ? photo : `${environment.apiUrl}/uploads/artists/${photo}`;
   }
