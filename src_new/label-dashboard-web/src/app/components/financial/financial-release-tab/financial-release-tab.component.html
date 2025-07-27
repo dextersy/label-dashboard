@@ -82,10 +82,17 @@
             </td>
             <td class="text-right">
               {{ formatCurrency(release.recuperable_expense_balance) }}
+              <button 
+                type="button"
+                class="btn btn-link btn-sm p-0 ml-2"
+                (click)="openExpensesDialog(release.id, release.title)"
+                title="View expenses">
+                <i class="fa fa-eye"></i>
+              </button>
               <a 
                 *ngIf="isAdmin" 
                 href="#" 
-                (click)="openAddExpenseForm(release.id, release.title)"
+                (click)="openAddExpenseForm(release.id, release.title); $event.preventDefault()"
                 class="ml-2"
                 title="Add recuperable expense">
                 <i class="fa fa-plus"></i>
@@ -197,3 +204,11 @@
     </div>
   </div>
 </div>
+
+<!-- Release Expenses Dialog -->
+<app-release-expenses-dialog
+  [releaseId]="selectedReleaseId"
+  [releaseTitle]="selectedReleaseTitle"
+  [isVisible]="expensesDialogVisible"
+  (close)="closeExpensesDialog()">
+</app-release-expenses-dialog>

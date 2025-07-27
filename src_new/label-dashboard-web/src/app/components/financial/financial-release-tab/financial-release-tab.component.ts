@@ -2,11 +2,12 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReleaseInfo } from '../../../pages/financial/financial.component';
+import { ReleaseExpensesDialogComponent } from '../release-expenses-dialog/release-expenses-dialog.component';
 
 @Component({
   selector: 'app-financial-release-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReleaseExpensesDialogComponent],
   templateUrl: './financial-release-tab.component.html',
   styleUrl: './financial-release-tab.component.scss'
 })
@@ -22,6 +23,10 @@ export class FinancialReleaseTabComponent {
   @Input() openAddExpenseForm: (releaseId: number, releaseTitle: string) => void = () => {};
   @Input() closeAddExpenseForm: () => void = () => {};
   @Input() onAddExpense: () => Promise<void> = async () => {};
+
+  expensesDialogVisible = false;
+  selectedReleaseId = 0;
+  selectedReleaseTitle = '';
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
@@ -49,5 +54,17 @@ export class FinancialReleaseTabComponent {
 
   async addExpense(): Promise<void> {
     await this.onAddExpense();
+  }
+
+  openExpensesDialog(releaseId: number, releaseTitle: string): void {
+    this.selectedReleaseId = releaseId;
+    this.selectedReleaseTitle = releaseTitle;
+    this.expensesDialogVisible = true;
+  }
+
+  closeExpensesDialog(): void {
+    this.expensesDialogVisible = false;
+    this.selectedReleaseId = 0;
+    this.selectedReleaseTitle = '';
   }
 }

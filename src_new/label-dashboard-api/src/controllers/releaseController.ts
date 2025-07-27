@@ -321,6 +321,9 @@ export const getReleaseEarnings = async (req: AuthRequest, res: Response) => {
 export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
 
     const release = await Release.findOne({
       where: { 
@@ -333,19 +336,39 @@ export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    const expenses = await RecuperableExpense.findAll({
-      where: { release_id: id },
-      order: [['date_recorded', 'DESC']]
+    // Get total count for pagination
+    const totalCount = await RecuperableExpense.count({
+      where: { release_id: id }
     });
 
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.expense_amount, 0);
+    // Get paginated expenses
+    const expenses = await RecuperableExpense.findAll({
+      where: { release_id: id },
+      order: [['date_recorded', 'DESC']],
+      limit,
+      offset
+    });
+
+    const totalExpenses = await RecuperableExpense.sum('expense_amount', {
+      where: { release_id: id }
+    });
+
+    const totalPages = Math.ceil(totalCount / limit);
 
     res.json({
       release_id: id,
       release_title: release.title,
       catalog_no: release.catalog_no,
-      total_expenses: totalExpenses,
-      expenses
+      total_expenses: totalExpenses || 0,
+      expenses,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_count: totalCount,
+        per_page: limit,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      }
     });
   } catch (error) {
     console.error('Get release expenses error:', error);

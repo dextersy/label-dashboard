@@ -231,4 +231,15 @@ export class FinancialService {
 
     return response?.balance || 0;
   }
+
+  async getReleaseExpenses(releaseId: number, page: number = 1, limit: number = 10): Promise<{expenses: any[], pagination: any}> {
+    const response = await this.http.get<{expenses: any[], pagination: any}>(`${environment.apiUrl}/releases/${releaseId}/expenses?page=${page}&limit=${limit}`, {
+      headers: this.getAuthHeaders()
+    }).toPromise();
+
+    return {
+      expenses: response?.expenses || [],
+      pagination: response?.pagination || {}
+    };
+  }
 }

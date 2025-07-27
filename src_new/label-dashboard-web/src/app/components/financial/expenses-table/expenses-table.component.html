@@ -1,0 +1,23 @@
+<div *ngIf="expenses.length > 0" class="table-responsive">
+  <table class="table table-striped">
+    <thead *ngIf="showHeader">
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th class="text-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let expense of expenses">
+        <td>{{ formatDate(expense.date_recorded) }}</td>
+        <td>{{ expense.expense_description }}</td>
+        <td class="text-right">{{ formatCurrency(expense.expense_amount) }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="expenses.length === 0" class="text-center py-5">
+  <i class="fa fa-receipt fa-3x text-muted mb-3"></i>
+  <p class="text-muted">No expenses recorded.</p>
+</div>
