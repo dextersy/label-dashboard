@@ -59,4 +59,47 @@ export class ApiService {
   getBrandSettings(brandId: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/brands/${brandId}`, { headers: this.getAuthHeaders() });
   }
+
+  // Password Reset
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/auth/reset-password`, { token, password });
+  }
+
+  validateResetHash(hash: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/auth/validate-reset-hash/${hash}`);
+  }
+
+  // Profile Management
+  getProfile(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/profile`, { headers: this.getAuthHeaders() });
+  }
+
+  updateProfile(profileData: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/profile`, profileData, { headers: this.getAuthHeaders() });
+  }
+
+  changePassword(passwordData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/profile/change-password`, passwordData, { headers: this.getAuthHeaders() });
+  }
+
+  checkUsernameExists(username: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/profile/check-username`, { username }, { headers: this.getAuthHeaders() });
+  }
+
+  // Invite handling (matching setprofile.php functionality)
+  processInvite(inviteHash: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invite/process`, { invite_hash: inviteHash });
+  }
+
+  getInviteData(inviteHash: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/invite/data/${inviteHash}`);
+  }
+
+  setupUserProfile(setupData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invite/setup-profile`, setupData);
+  }
 }

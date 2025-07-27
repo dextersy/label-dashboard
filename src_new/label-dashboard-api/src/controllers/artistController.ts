@@ -1210,13 +1210,36 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Team member not found' });
     }
 
-    // Send invitation email (implementation would go here)
-    // await sendBrandedEmail(access.user.email, 'team-invite', { artistName: artist.name });
+    // Get brand info for email branding
+    const brand = await Brand.findByPk(req.user.brand_id);
 
-    res.json({
-      success: true,
-      message: 'Invitation resent successfully'
-    });
+    // Generate invitation URL
+    const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/accept?hash=${access.invite_hash}`;
+    
+    // Send invitation email
+    try {
+      await sendTeamInviteEmail(
+        access.user.email_address,
+        artist.name,
+        req.user.first_name && req.user.last_name 
+          ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+          : req.user.email_address,
+        inviteUrl,
+        {
+          brand_color: brand?.brand_color || '#1595e7',
+          logo_url: brand?.logo_url || ''
+        }
+      );
+      res.json({
+        success: true,
+        message: 'Invitation resent successfully'
+      });
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      // Continue with the process even if email fails
+      console.error('Resend team invite error:', emailError);
+      res.status(500).json({ error: 'Internal server error' });
+    }
   } catch (error) {
     console.error('Resend team invite error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -1,0 +1,262 @@
+// Styles for set-profile component matching reset-password design
+
+// Override specific styles for set-profile
+.text-muted {
+  color: #6c757d !important;
+}
+
+.alert {
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  
+  &.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+  }
+
+  &.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+  }
+}
+
+#formContent {
+  h3 {
+    color: #343a40;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  small {
+    color: #6c757d;
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+}
+
+#formFooter {
+  a {
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Message Styles
+.field-error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 5px;
+}
+
+.field-success-message {
+  color: #198754;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 5px;
+}
+
+.field-info-message {
+  color: #0dcaf0;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 5px;
+}
+
+input[type="text"], input[type="password"] {
+  background-color: #f6f6f6;
+  border: none;
+  color: #0d0d0d;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 10px 0px 0px 0px;
+  width: 100%;
+  border: 2px solid #f6f6f6;
+  border-radius: 5px 5px 5px 5px;
+  transition: all 0.5s ease-in-out;
+  
+  &:focus {
+    background-color: #fff;
+    border-bottom: 2px solid var(--brand-color, #5fbae9);
+    outline: none;
+  }
+  
+  &:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+  }
+
+  &[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    color: #6c757d;
+  }
+}
+
+input[type="submit"] {
+  background-color: var(--brand-color, #56baed);
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  text-transform: uppercase;
+  font-size: 13px;
+  box-shadow: 0 10px 30px 0 rgba(95,186,233,0.4);
+  border-radius: 5px 5px 5px 5px;
+  margin: 10px 0px 40px 0px;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  width: 100%;
+  
+  &:hover:not(:disabled) {
+    background-color: #39ace7;
+  }
+  
+  &:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+// Login wrapper styles matching reset password
+.login-wrapper {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 0;
+  text-align: center;
+  box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
+  border-radius: 5px;
+  background-color: #FFFFFF;
+}
+
+#formHeader {
+  border-radius: 5px 5px 0 0;
+  padding: 35px;
+}
+
+#formContent {
+  padding: 30px;
+}
+
+#formFooter {
+  border-radius: 0 0 5px 5px;
+  padding: 25px;
+  text-align: center;
+  background-color: #f6f6f6;
+}
+
+#icon {
+  max-width: 100%;
+  max-height: 60px;
+  margin: 0 auto;
+}
+
+// Loading State
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--brand-color, #667eea);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Animations */
+.fadeInDown {
+  animation-name: fadeInDown;
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fadeIn {
+  opacity: 0;
+  animation: fadeIn ease-in 1;
+  animation-fill-mode: forwards;
+  animation-duration: 1s;
+}
+
+.fadeIn.first {
+  animation-delay: 0.4s;
+}
+
+.fadeIn.second {
+  animation-delay: 0.6s;
+}
+
+.fadeIn.third {
+  animation-delay: 0.8s;
+}
+
+.fadeIn.fourth {
+  animation-delay: 1s;
+}
+
+.fadeIn.fifth {
+  animation-delay: 1.2s;
+}
+
+.fadeIn.sixth {
+  animation-delay: 1.4s;
+}
+
+.fadeIn.seventh {
+  animation-delay: 1.6s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

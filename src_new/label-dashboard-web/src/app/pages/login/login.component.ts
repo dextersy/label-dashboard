@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -14,6 +14,8 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
+  @ViewChild('passwordField', { static: false }) passwordField!: ElementRef<HTMLInputElement>;
+  
   loginField: string = '';
   password: string = '';
   loading: boolean = false;
@@ -135,6 +137,13 @@ export class LoginComponent implements OnInit {
           this.errorType = 'no_user';
         } else if (error.status === 401) {
           this.errorType = 'pass';
+          // Clear password field and focus it for wrong password
+          this.password = '';
+          setTimeout(() => {
+            if (this.passwordField) {
+              this.passwordField.nativeElement.focus();
+            }
+          }, 100);
         } else if (error.status === 423) {
           this.errorType = 'lock';
           this.lockTimeMinutes = error.error.lockTime || 2; // Default 2 minutes like original

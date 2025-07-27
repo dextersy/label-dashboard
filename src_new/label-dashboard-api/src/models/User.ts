@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
+import Brand from './Brand';
 
 interface UserAttributes {
   id: number;
@@ -29,6 +30,8 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public brand_id!: number;
   public reset_hash?: string;
   public last_logged_in?: Date;
+
+  public brand?:Brand;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;

@@ -36,6 +36,8 @@ import financialRoutes from './routes/financial';
 import publicRoutes from './routes/public';
 import brandRoutes from './routes/brand';
 import dashboardRoutes from './routes/dashboard';
+import profileRoutes from './routes/profile';
+import inviteRoutes from './routes/invite';
 
 // API Routes (protected)
 app.use('/api/auth', authRoutes);
@@ -46,6 +48,8 @@ app.use('/api/events', eventRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/brands', brandRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/invite', inviteRoutes);
 
 // Public API Routes (no authentication required)
 app.use('/api/public', publicRoutes);

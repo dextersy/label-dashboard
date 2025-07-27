@@ -8,6 +8,7 @@ import { ArtistSelectionComponent } from './components/artist/artist-selection/a
 import { Artist } from './components/artist/artist-selection/artist-selection.component';
 import { ArtistStateService } from './services/artist-state.service';
 import { BrandService } from './services/brand.service';
+import { AuthService } from './services/auth.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -25,7 +26,8 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     private artistStateService: ArtistStateService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -84,7 +86,21 @@ export class AppComponent implements OnInit {
   }
 
   isStandalonePage(): boolean {
-    return this.router.url === '/login' || this.router.url === '/domain-not-found' || this.router.url === '/';
+    const standaloneRoutes = ['/login', '/domain-not-found', '/forgot-password', '/reset-password', '/set-profile'];
+    const standaloneRoutePrefixes = ['/invite'];
+    
+    // Check exact matches
+    if (standaloneRoutes.includes(this.router.url) || this.router.url === '/') {
+      return true;
+    }
+    
+    // Check route prefixes (for routes like /invite/accept)
+    if (standaloneRoutePrefixes.some(prefix => this.router.url.startsWith(prefix))) {
+      return true;
+    }
+    
+    // Check auth status
+    return !this.authService.isLoggedIn();
   }
 
   shouldShowArtistSelection(): boolean {
