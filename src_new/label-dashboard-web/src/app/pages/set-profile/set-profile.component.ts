@@ -273,4 +273,8 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.message = message;
     this.messageType = type;
   }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
 }
