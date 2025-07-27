@@ -12,6 +12,9 @@
   font-size: 18px;
   margin: 0;
   color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Hamburger menu button - only visible on mobile */
@@ -73,6 +76,34 @@
       transform: rotate(-45deg) translate(7px, -6px);
     }
   }
+}
+
+/* Admin chip styling */
+.admin-chip {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  i {
+    font-size: 10px;
+  }
+  
+  &:hover {
+    background: linear-gradient(135deg, #0056b3, #004085);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 123, 255, 0.4);
+  }
+  
+  transition: all 0.2s ease-in-out;
 }
 
 /* Standard navbar items */

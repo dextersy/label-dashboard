@@ -8,6 +8,9 @@
     
     <span class="navbar-brand">
       <i class="fa fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!
+      <span *ngIf="isAdmin" class="admin-chip">
+        <i class="fa fa-shield"></i> Admin
+      </span>
     </span>
     
     <div class="collapse navbar-collapse" id="navigation-example-2">

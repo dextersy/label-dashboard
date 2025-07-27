@@ -13,6 +13,7 @@ import { SidebarService } from '../../services/sidebar.service';
 })
 export class NavbarComponent implements OnInit {
   userFirstName: string = 'User';
+  isAdmin: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -24,13 +25,20 @@ export class NavbarComponent implements OnInit {
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
       this.userFirstName = currentUser.first_name || 'User';
+      this.isAdmin = currentUser.is_admin || false;
     } else {
       // Fallback to localStorage if auth service doesn't have user data
       const userData = localStorage.getItem('user_data');
       if (userData) {
         const user = JSON.parse(userData);
         this.userFirstName = user.first_name || 'User';
+        this.isAdmin = user.is_admin || false;
       }
+    }
+
+    // Also check via auth service method as fallback
+    if (!this.isAdmin) {
+      this.isAdmin = this.authService.isAdmin();
     }
   }
 
