@@ -4,6 +4,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ArtistComponent } from './pages/artist/artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
+import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-found.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -13,5 +14,6 @@ export const routes: Routes = [
   { path: 'artist', component: ArtistComponent, canActivate: [authGuard] },
   { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },
   { path: 'events', component: EventsComponent, canActivate: [authGuard] },
+  { path: 'domain-not-found', component: DomainNotFoundComponent },
   { path: '**', redirectTo: '/login' }
 ];

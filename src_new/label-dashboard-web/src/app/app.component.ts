@@ -37,6 +37,7 @@ export class AppComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load brand settings:', error);
+        this.router.navigate(['/domain-not-found']);
       }
     });
 
@@ -82,13 +83,13 @@ export class AppComponent implements OnInit {
     }
   }
 
-  isLoginPage(): boolean {
-    return this.router.url === '/login' || this.router.url === '/';
+  isStandalonePage(): boolean {
+    return this.router.url === '/login' || this.router.url === '/domain-not-found' || this.router.url === '/';
   }
 
   shouldShowArtistSelection(): boolean {
     const hiddenRoutes = ['/dashboard', '/events', '/admin'];
-    return !this.isLoginPage() && !hiddenRoutes.some(route => this.currentRoute.startsWith(route));
+    return !this.isStandalonePage() && !hiddenRoutes.some(route => this.currentRoute.startsWith(route));
   }
 
   onArtistSelected(artist: Artist): void {

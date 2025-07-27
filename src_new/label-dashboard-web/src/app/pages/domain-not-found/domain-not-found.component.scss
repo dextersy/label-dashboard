@@ -1,0 +1,151 @@
+.domain-not-found-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.content-wrapper {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 60px 40px;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.error-icon {
+  margin-bottom: 30px;
+  
+  i {
+    font-size: 80px;
+    color: #ff6b6b;
+  }
+}
+
+.error-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.error-message {
+  font-size: 18px;
+  color: #7f8c8d;
+  margin-bottom: 40px;
+  line-height: 1.6;
+  
+  strong {
+    color: #2c3e50;
+    font-weight: 600;
+  }
+}
+
+.suggestions {
+  text-align: left;
+  margin-bottom: 40px;
+  
+  h3 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    
+    li {
+      padding: 8px 0;
+      color: #7f8c8d;
+      font-size: 16px;
+      position: relative;
+      padding-left: 25px;
+      
+      &:before {
+        content: '•';
+        color: var(--brand-color, #667eea);
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+      }
+    }
+  }
+}
+
+.action-buttons {
+  margin-bottom: 30px;
+  
+  .btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    
+    &.btn-primary {
+      background: var(--brand-color, #667eea);
+      color: white;
+      
+      &:hover {
+        background: #5a6fd8;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+    }
+    
+    &.btn-secondary {
+      background: #ecf0f1;
+      color: #7f8c8d;
+      
+      &:hover {
+        background: #bdc3c7;
+        color: #2c3e50;
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+.help-text {
+  p {
+    font-size: 14px;
+    color: #95a5a6;
+    margin: 0;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 40px 20px;
+  }
+  
+  .error-title {
+    font-size: 26px;
+  }
+  
+  .error-message {
+    font-size: 16px;
+  }
+  
+  .action-buttons {
+    .btn {
+      display: block;
+      margin: 10px 0;
+      width: 100%;
+    }
+  }
+}

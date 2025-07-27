@@ -69,18 +69,7 @@ export class BrandService {
         },
         error: (error) => {
           console.error('Error loading brand settings:', error);
-          const defaultSettings: BrandSettings = {
-            id: null,
-            name: 'Label Dashboard',
-            logo_url: 'assets/img/placeholder.jpg',
-            brand_color: '#667eea',
-            brand_website: '#',
-            favicon_url: undefined,
-            domain: currentDomain
-          };
-          this.brandSettingsSubject.next(defaultSettings);
-          observer.next(defaultSettings);
-          observer.complete();
+          observer.error(error);
         }
       });
     });

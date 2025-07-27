@@ -79,14 +79,7 @@ export class LoginComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
-        // Use defaults if brand service fails
-        this.brandLogo = 'assets/img/Melt Records-logo-WHITE.png';
-        this.brandName = 'Label Dashboard';
-        this.brandColor = '#667eea';
-        
-        // Apply default styling
-        document.documentElement.style.setProperty('--brand-color', this.brandColor);
-        document.title = `${this.brandName} - Login`;
+        this.router.navigate(['/domain-not-found']);
       }
     });
   }
