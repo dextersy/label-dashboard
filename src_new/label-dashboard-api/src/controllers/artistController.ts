@@ -1048,14 +1048,15 @@ export const getArtistTeam = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    // Get team members for this artist
+    // Get team members for this artist, validate brand
     const teamMembers = await ArtistAccess.findAll({
       where: { artist_id: artistId },
       include: [
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'first_name', 'last_name', 'email_address']
+          attributes: ['id', 'first_name', 'last_name', 'email_address'],
+          where: { brand_id: req.user.brand_id }
         }
       ]
     });
@@ -1100,7 +1101,7 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if user exists
-    let user = await User.findOne({ where: { email_address: email } });
+    let user = await User.findOne({ where: { email_address: email, brand_id: req.user.brand_id } });
     
     if (!user) {
       // Create a new user with pending status
@@ -1195,10 +1196,14 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    // Find the team member
+    // Find the team member and validate brand
     const access = await ArtistAccess.findOne({
       where: { artist_id: artistId, user_id: memberIdNum },
-      include: [{ model: User, as: 'user' }]
+      include: [{ 
+        model: User, 
+        as: 'user',
+        where: { brand_id: req.user.brand_id }
+      }]
     });
 
     if (!access) {
@@ -1237,9 +1242,14 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    // Find and remove the team member access
+    // Find and remove the team member access, validate brand
     const access = await ArtistAccess.findOne({
-      where: { artist_id: artistId, user_id: memberIdNum }
+      where: { artist_id: artistId, user_id: memberIdNum },
+      include: [{ 
+        model: User, 
+        as: 'user',
+        where: { brand_id: req.user.brand_id }
+      }]
     });
 
     if (!access) {
