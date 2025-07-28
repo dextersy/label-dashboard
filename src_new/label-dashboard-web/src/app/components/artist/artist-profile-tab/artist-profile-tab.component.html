@@ -23,12 +23,12 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="bandMembers">Band Members</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="bandMembers"
-                     name="bandMembers"
-                     [(ngModel)]="editingProfile.band_members"
-                     placeholder="e.g., John Doe, Jane Smith">
+              <textarea class="form-control" 
+                        id="bandMembers"
+                        name="bandMembers"
+                        rows="3"
+                        [(ngModel)]="editingProfile.band_members"
+                        placeholder="Enter band members, one per line or separated by commas"></textarea>
             </div>
           </div>
         </div>
