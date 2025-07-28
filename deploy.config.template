@@ -1,0 +1,18 @@
+# Deployment Configuration Template
+# Copy this file to deploy.config and update with your production server details
+
+# SFTP Configuration
+SFTP_KEY_PATH="/path/to/your/ssh-key.pem"
+PRODUCTION_HOST="your-production-server.com"
+SFTP_USER="ubuntu"
+
+# Server Paths
+BACKEND_DEPLOY_PATH="/var/www/label-dashboard-api"
+FRONTEND_DEPLOY_PATH="/var/www/label-dashboard-web"
+
+# Build Configuration
+API_BUILD_COMMAND="npm run build"
+WEB_BUILD_COMMAND="npm run build -- --configuration production"
+
+# PM2 Configuration
+PM2_APP_NAME="app"

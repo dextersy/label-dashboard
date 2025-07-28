@@ -15,3 +15,6 @@ src_new/label-dashboard-api/dist
 **/node_modules
 **/.env.prod
 **/dist-prod
+
+# Deployment configuration (contains sensitive server details)
+deploy.config
