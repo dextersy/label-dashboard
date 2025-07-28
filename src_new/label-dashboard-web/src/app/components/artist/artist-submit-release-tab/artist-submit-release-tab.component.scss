@@ -1,0 +1,241 @@
+.submit-release-tab {
+  .submission-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .instructions {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+
+    h5 {
+      color: #495057;
+      margin-bottom: 1rem;
+      font-weight: 600;
+
+      i {
+        margin-right: 0.5rem;
+      }
+    }
+
+    p {
+      color: #6c757d;
+      line-height: 1.6;
+    }
+  }
+
+  .form-action-card {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    background-color: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      border-color: #007bff;
+    }
+
+    .card-icon {
+      flex-shrink: 0;
+      width: 60px;
+      height: 60px;
+      background-color: #007bff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1.5rem;
+
+      i {
+        font-size: 1.5rem;
+        color: white;
+      }
+    }
+
+    .card-content {
+      flex: 1;
+
+      h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  .info-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    height: 100%;
+
+    .info-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      background-color: #6c757d;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+
+      i {
+        font-size: 1rem;
+        color: white;
+      }
+    }
+
+    .info-content {
+      flex: 1;
+
+      h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        margin-bottom: 0;
+        line-height: 1.5;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .alert {
+    border: none;
+    border-radius: 8px;
+    padding: 1.5rem;
+
+    &.alert-warning {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+
+    &.alert-info {
+      background-color: #d1ecf1;
+      border-left: 4px solid #17a2b8;
+    }
+
+    .alert-content {
+      display: flex;
+      align-items: flex-start;
+
+      i {
+        flex-shrink: 0;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        margin-top: 0.2rem;
+      }
+
+      .alert-text {
+        flex: 1;
+
+        h6 {
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: #495057;
+        }
+
+        p {
+          line-height: 1.6;
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+
+  .btn {
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+
+    &.btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+
+      &:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+      }
+    }
+
+    &.btn-lg {
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+    }
+
+    i {
+      margin-right: 0.5rem;
+    }
+  }
+
+  .card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1.5rem;
+
+      .title {
+        margin: 0;
+        color: #495057;
+        font-size: 1.25rem;
+        font-weight: 600;
+
+        i {
+          margin-right: 0.5rem;
+          color: #007bff;
+        }
+      }
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+  }
+}
+
+// Mobile responsiveness
+@media (max-width: 768px) {
+  .submit-release-tab {
+    .form-action-card {
+      flex-direction: column;
+      text-align: center;
+      padding: 1.5rem;
+
+      .card-icon {
+        margin-right: 0;
+        margin-bottom: 1rem;
+      }
+    }
+
+    .info-card {
+      margin-bottom: 1rem;
+    }
+
+    .card .card-body {
+      padding: 1rem;
+    }
+  }
+}

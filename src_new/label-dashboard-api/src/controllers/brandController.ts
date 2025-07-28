@@ -24,31 +24,34 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
       where: { domain_name: cleanDomain },
       include: [{
         model: Brand,
-        as: 'brand'
+        as: 'brand',
+        attributes: [
+          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 
+          'favicon_url', 'paymongo_wallet_id', 'payment_processing_fee_for_payouts',
+          'release_submission_url', 'catalog_prefix'
+        ]
       }]
     });
 
     const brand = domainRecord?.brand;
 
     if (!brand) {
-      // Return default brand settings if no brand found
-      return res.json({
-        id: null,
-        name: 'Label Dashboard',
-        logo: 'assets/img/default-logo.png',
-        color: '#667eea',
-        favicon: 'assets/img/default.ico',
-        website: cleanDomain
-      });
+      return res.status(404).json({ error: 'Brand not found for this domain' });
     }
 
+    
     res.json({
-      id: brand.id,
-      name: brand.brand_name,
-      logo: brand.logo_url || 'assets/img/default-logo.png',
-      color: brand.brand_color || '#667eea',
-      favicon: 'assets/img/default.ico',
-      website: cleanDomain
+      domain: cleanDomain,
+      brand: {
+        id: brand.id,
+        name: brand.brand_name,
+        logo_url: brand.logo_url,
+        brand_color: brand.brand_color || '#667eea',
+        brand_website: brand.brand_website,
+        favicon_url: brand.favicon_url,
+        release_submission_url: brand.release_submission_url,
+        catalog_prefix: brand.catalog_prefix || 'REL'
+      }
     });
 
   } catch (error) {
@@ -70,10 +73,12 @@ export const getBrandSettings = async (req: Request, res: Response) => {
     res.json({
       id: brand.id,
       name: brand.brand_name,
-      logo: brand.logo_url,
-      color: brand.brand_color,
-      favicon: 'assets/img/default.ico',
-      website: null
+      logo_url: brand.logo_url,
+      brand_color: brand.brand_color,
+      brand_website: brand.brand_website,
+      favicon_url: brand.favicon_url,
+      release_submission_url: brand.release_submission_url,
+      catalog_prefix: brand.catalog_prefix || 'REL'
     });
 
   } catch (error) {

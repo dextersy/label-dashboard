@@ -10,6 +10,8 @@ export interface BrandSettings {
   brand_website?: string;
   favicon_url?: string;
   domain?: string;
+  release_submission_url?: string;
+  catalog_prefix?: string;
 }
 
 export interface BrandApiResponse {
@@ -21,6 +23,8 @@ export interface BrandApiResponse {
     brand_color: string;
     brand_website?: string;
     favicon_url?: string;
+    release_submission_url?: string;
+    catalog_prefix?: string;
   };
 }
 
@@ -60,7 +64,9 @@ export class BrandService {
             brand_color: response.brand.brand_color,
             brand_website: response.brand.brand_website,
             favicon_url: response.brand.favicon_url,
-            domain: response.domain
+            domain: response.domain,
+            release_submission_url: response.brand.release_submission_url,
+            catalog_prefix: response.brand.catalog_prefix
           };
           localStorage.setItem('brand_settings', JSON.stringify(brandSettings));
           this.brandSettingsSubject.next(brandSettings);

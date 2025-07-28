@@ -1,8 +1,20 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, sequelize } from '../models';
+import AWS from 'aws-sdk';
+import path from 'path';
+
+// Configure AWS S3
+AWS.config.update({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  region: process.env.S3_REGION
+});
+
+const s3 = new AWS.S3();
 
 interface AuthRequest extends Request {
   user?: any;
+  file?: Express.Multer.File;
 }
 
 export const getReleases = async (req: AuthRequest, res: Response) => {
@@ -43,6 +55,11 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
         id: releaseId,
         brand_id: req.user.brand_id 
       },
+      attributes: [
+        'id', 'title', 'catalog_no', 'UPC', 'spotify_link', 'apple_music_link', 
+        'youtube_link', 'release_date', 'status', 'cover_art', 'description', 
+        'liner_notes', 'brand_id'
+      ],
       include: [
         { model: Brand, as: 'brand' },
         { 
@@ -83,6 +100,11 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Validate request body exists
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+
     const {
       title,
       catalog_no,
@@ -92,8 +114,35 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       youtube_link,
       release_date,
       status,
+      description,
+      liner_notes,
       artists // Array of { artist_id, royalty_percentages }
     } = req.body;
+
+    // Handle cover art file upload to S3
+    let coverArtUrl = null;
+    if (req.file) {
+      try {
+        // Generate unique filename for S3
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(req.file.originalname);
+        const fileName = `cover-art/${catalog_no}-${uniqueSuffix}${extension}`;
+        
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+        
+        const result = await s3.upload(uploadParams).promise();
+        coverArtUrl = result.Location;
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload cover art' });
+      }
+    }
 
     if (!catalog_no) {
       return res.status(400).json({ error: 'Catalog number is required' });
@@ -117,12 +166,24 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       youtube_link,
       release_date,
       status: status || 'Pending',
+      cover_art: coverArtUrl,
+      description,
+      liner_notes,
       brand_id: req.user.brand_id
     });
 
     // Add artist associations if provided
-    if (artists && Array.isArray(artists)) {
-      for (const artistData of artists) {
+    let parsedArtists = artists;
+    if (typeof artists === 'string') {
+      try {
+        parsedArtists = JSON.parse(artists);
+      } catch (error) {
+        parsedArtists = null;
+      }
+    }
+
+    if (parsedArtists && Array.isArray(parsedArtists)) {
+      for (const artistData of parsedArtists) {
         await ReleaseArtist.create({
           release_id: release.id,
           artist_id: artistData.artist_id,
@@ -167,6 +228,12 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
+
+    // Validate request body exists
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+
     const {
       title,
       UPC,
@@ -175,8 +242,35 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       youtube_link,
       release_date,
       status,
+      description,
+      liner_notes,
       artists // Array of { artist_id, royalty_percentages } for updating splits
     } = req.body;
+
+    // Handle cover art file upload to S3
+    let coverArtUrl = null;
+    if (req.file) {
+      try {
+        // Generate unique filename for S3
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(req.file.originalname);
+        const fileName = `cover-art/${releaseId}-${uniqueSuffix}${extension}`;
+        
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+        
+        const result = await s3.upload(uploadParams).promise();
+        coverArtUrl = result.Location;
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload cover art' });
+      }
+    }
 
     const release = await Release.findOne({
       where: { 
@@ -189,20 +283,47 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // Delete old cover art from S3 if new one is uploaded
+    if (coverArtUrl && release.cover_art && release.cover_art.startsWith('https://')) {
+      try {
+        const oldUrl = new URL(release.cover_art);
+        const oldKey = oldUrl.pathname.substring(1);
+        
+        await s3.deleteObject({
+          Bucket: process.env.S3_BUCKET!,
+          Key: oldKey
+        }).promise();
+      } catch (deleteError) {
+        console.error('Error deleting old cover art:', deleteError);
+      }
+    }
+
     await release.update({
       title: title || release.title,
-      UPC,
-      spotify_link,
-      apple_music_link,
-      youtube_link,
-      release_date,
-      status: status || release.status
+      UPC: UPC !== undefined ? UPC : release.UPC,
+      spotify_link: spotify_link !== undefined ? spotify_link : release.spotify_link,
+      apple_music_link: apple_music_link !== undefined ? apple_music_link : release.apple_music_link,
+      youtube_link: youtube_link !== undefined ? youtube_link : release.youtube_link,
+      release_date: release_date !== undefined ? release_date : release.release_date,
+      status: status || release.status,
+      cover_art: coverArtUrl || release.cover_art,
+      description: description !== undefined ? description : release.description,
+      liner_notes: liner_notes !== undefined ? liner_notes : release.liner_notes
     });
 
     // Update artist royalty splits if provided
-    if (artists && Array.isArray(artists)) {
+    let parsedArtists = artists;
+    if (typeof artists === 'string') {
+      try {
+        parsedArtists = JSON.parse(artists);
+      } catch (error) {
+        parsedArtists = null;
+      }
+    }
+
+    if (parsedArtists && Array.isArray(parsedArtists)) {
       // Validate that royalty percentages add up correctly
-      const totalStreamingRoyalty = artists.reduce((sum, artist) => 
+      const totalStreamingRoyalty = parsedArtists.reduce((sum, artist) => 
         sum + (artist.streaming_royalty_percentage || 0), 0);
       
       if (totalStreamingRoyalty > 1.0) {
@@ -217,7 +338,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       });
 
       // Add updated artist associations
-      for (const artistData of artists) {
+      for (const artistData of parsedArtists) {
         await ReleaseArtist.create({
           release_id: releaseId,
           artist_id: artistData.artist_id,
@@ -414,6 +535,12 @@ export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
+
+    // Validate request body exists
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+
     const { 
       expense_description,
       expense_amount,
@@ -452,6 +579,55 @@ export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Add release expense error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const generateCatalogNumber = async (req: AuthRequest, res: Response) => {
+  try {
+    const brandId = req.user.brand_id;
+    
+    if (!brandId) {
+      return res.status(400).json({ error: 'Brand ID is required' });
+    }
+
+    // Get brand settings to retrieve catalog prefix
+    const brand = await Brand.findByPk(brandId);
+    const prefix = brand?.catalog_prefix || 'REL';
+
+    // Find all releases with catalog numbers starting with the prefix for this brand
+    const releases = await Release.findAll({
+      where: {
+        brand_id: brandId,
+        catalog_no: {
+          [require('sequelize').Op.like]: `${prefix}%`
+        }
+      },
+      attributes: ['catalog_no'],
+      order: [['catalog_no', 'DESC']]
+    });
+
+    let highestNumber = 0;
+    
+    // Extract numeric parts and find the highest
+    for (const release of releases) {
+      const catalogNo = release.catalog_no;
+      if (catalogNo && catalogNo.startsWith(prefix)) {
+        const numericPart = catalogNo.substring(prefix.length);
+        const number = parseInt(numericPart, 10);
+        if (!isNaN(number) && number > highestNumber) {
+          highestNumber = number;
+        }
+      }
+    }
+
+    const nextCatalogNumber = `${prefix}${String(highestNumber + 1).padStart(3, '0')}`;
+    
+    res.json({ 
+      catalog_number: nextCatalogNumber
+    });
+  } catch (error) {
+    console.error('Generate catalog number error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

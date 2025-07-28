@@ -5,6 +5,8 @@ import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artis
 import { ArtistGalleryTabComponent } from '../../components/artist/artist-gallery-tab/artist-gallery-tab.component';
 import { ArtistReleasesTabComponent, ArtistRelease } from '../../components/artist/artist-releases-tab/artist-releases-tab.component';
 import { ArtistTeamTabComponent } from '../../components/artist/artist-team-tab/artist-team-tab.component';
+import { ArtistNewReleaseTabComponent } from '../../components/artist/artist-new-release-tab/artist-new-release-tab.component';
+import { ArtistSubmitReleaseTabComponent } from '../../components/artist/artist-submit-release-tab/artist-submit-release-tab.component';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
@@ -19,7 +21,9 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
     ArtistProfileTabComponent,
     ArtistGalleryTabComponent,
     ArtistReleasesTabComponent,
-    ArtistTeamTabComponent
+    ArtistTeamTabComponent,
+    ArtistNewReleaseTabComponent,
+    ArtistSubmitReleaseTabComponent
   ],
   templateUrl: './artist.component.html',
   styleUrl: './artist.component.scss'
@@ -29,6 +33,7 @@ export class ArtistComponent implements OnInit {
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
+  editingRelease: ArtistRelease | null = null;
 
   constructor(
     private notificationService: NotificationService,
@@ -80,13 +85,27 @@ export class ArtistComponent implements OnInit {
   }
 
   onEditRelease(release: ArtistRelease): void {
-    // TODO: Implement release editing functionality
-    // This would typically navigate to a release editing form
-    console.log('Edit release:', release);
+    this.editingRelease = release;
     this.activeTab = 'new-release';
   }
 
+  onReleaseCreated(release: any): void {
+    // Switch back to releases tab to show the updated list
+    this.activeTab = 'releases';
+    this.editingRelease = null;
+  }
+
+  onReleaseFormCancelled(): void {
+    // Switch back to releases tab and clear editing state
+    this.activeTab = 'releases';
+    this.editingRelease = null;
+  }
+
   setActiveTab(tab: TabType): void {
+    // Clear editing state when switching tabs
+    if (tab !== 'new-release') {
+      this.editingRelease = null;
+    }
     this.activeTab = tab;
   }
 

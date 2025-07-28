@@ -60,24 +60,21 @@
             
             <!-- New Release Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'new-release'" *ngIf="activeTab === 'new-release' && isAdmin">
-              <div class="placeholder-content">
-                <div class="text-center p-5">
-                  <i class="fa fa-plus-circle fa-3x text-muted mb-3"></i>
-                  <h4>New Release</h4>
-                  <p class="text-muted">Release creation form will be implemented here.</p>
-                </div>
-              </div>
+              <app-artist-new-release-tab 
+                [artist]="selectedArtist" 
+                [editingRelease]="editingRelease"
+                (alertMessage)="onAlertMessage($event)"
+                (releaseCreated)="onReleaseCreated($event)"
+                (cancelled)="onReleaseFormCancelled()">
+              </app-artist-new-release-tab>
             </div>
             
             <!-- Submit Release Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'submit-release'" *ngIf="activeTab === 'submit-release'">
-              <div class="placeholder-content">
-                <div class="text-center p-5">
-                  <i class="fa fa-upload fa-3x text-muted mb-3"></i>
-                  <h4>Submit A Release</h4>
-                  <p class="text-muted">External submission form integration will be implemented here.</p>
-                </div>
-              </div>
+              <app-artist-submit-release-tab 
+                [artist]="selectedArtist"
+                (alertMessage)="onAlertMessage($event)">
+              </app-artist-submit-release-tab>
             </div>
             
           </div>

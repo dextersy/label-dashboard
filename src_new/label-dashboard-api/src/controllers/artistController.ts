@@ -419,6 +419,11 @@ export const deleteArtist = async (req: AuthRequest, res: Response) => {
 
 export const setSelectedArtist = async (req: AuthRequest, res: Response) => {
   try {
+    // Validate request body exists
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+    
     const { artist_id } = req.body;
 
     if (!artist_id) {
@@ -787,6 +792,12 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
     const { id, photoId } = req.params;
     const artistId = parseInt(id, 10);
     const photoIdNum = parseInt(photoId, 10);
+    
+    // Validate request body exists
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+    
     const { caption } = req.body;
 
     // Verify artist exists and user has access
@@ -914,6 +925,22 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
           as: 'releaseArtists',
           where: { artist_id: artistId },
           required: true
+        },
+        {
+          model: Artist,
+          as: 'artists',
+          through: { 
+            attributes: [
+              'streaming_royalty_percentage', 
+              'streaming_royalty_type',
+              'sync_royalty_percentage', 
+              'sync_royalty_type',
+              'download_royalty_percentage', 
+              'download_royalty_type',
+              'physical_royalty_percentage', 
+              'physical_royalty_type'
+            ] 
+          }
         }
       ],
       where: { brand_id: req.user.brand_id },
@@ -949,6 +976,10 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
         id: release.id,
         catalog_number: release.catalog_no,
         title: release.title,
+        UPC: release.UPC || '',
+        spotify_link: release.spotify_link || '',
+        apple_music_link: release.apple_music_link || '',
+        youtube_link: release.youtube_link || '',
         cover_art: release.cover_art || '',
         release_date: release.release_date,
         status: release.status,
@@ -965,7 +996,19 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
         physical_royalty_type: releaseArtist.physical_royalty_type,
         recuperable_expense_balance: recuperableExpenseSum,
         total_earnings: totalEarnings,
-        total_royalties: totalRoyalties
+        total_royalties: totalRoyalties,
+        artists: release.artists?.map((artist: any) => ({
+          artist_id: artist.id,
+          name: artist.name,
+          streaming_royalty_percentage: artist.ReleaseArtist?.streaming_royalty_percentage || 0,
+          streaming_royalty_type: artist.ReleaseArtist?.streaming_royalty_type || 'Revenue',
+          sync_royalty_percentage: artist.ReleaseArtist?.sync_royalty_percentage || 0,
+          sync_royalty_type: artist.ReleaseArtist?.sync_royalty_type || 'Revenue',
+          download_royalty_percentage: artist.ReleaseArtist?.download_royalty_percentage || 0,
+          download_royalty_type: artist.ReleaseArtist?.download_royalty_type || 'Revenue',
+          physical_royalty_percentage: artist.ReleaseArtist?.physical_royalty_percentage || 0,
+          physical_royalty_type: artist.ReleaseArtist?.physical_royalty_type || 'Revenue'
+        })) || []
       };
     }));
 
@@ -1598,6 +1641,12 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const artistId = parseInt(id, 10);
+    
+    // Validate request body exists
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Request body is required' });
+    }
+    
     const { title } = req.body;
 
     // Verify artist exists and user has access

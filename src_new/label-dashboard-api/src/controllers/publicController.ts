@@ -326,7 +326,10 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
       include: [{
         model: Brand,
         as: 'brand',
-        attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 'favicon_url']
+        attributes: [
+          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 
+          'favicon_url', 'release_submission_url', 'catalog_prefix'
+        ]
       }]
     });
 
@@ -342,7 +345,9 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         logo_url: domainRecord.brand.logo_url,
         brand_color: domainRecord.brand.brand_color,
         brand_website: domainRecord.brand.brand_website,
-        favicon_url: domainRecord.brand.favicon_url
+        favicon_url: domainRecord.brand.favicon_url,
+        release_submission_url: domainRecord.brand.release_submission_url,
+        catalog_prefix: domainRecord.brand.catalog_prefix
       }
     });
   } catch (error) {

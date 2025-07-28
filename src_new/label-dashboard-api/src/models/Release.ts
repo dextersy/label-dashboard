@@ -14,6 +14,8 @@ interface ReleaseAttributes {
   release_date?: Date;
   status: ReleaseStatus;
   cover_art?: string;
+  description?: string;
+  liner_notes?: string;
   brand_id: number;
 }
 
@@ -30,6 +32,8 @@ class Release extends Model<ReleaseAttributes, ReleaseCreationAttributes> implem
   public release_date?: Date;
   public status!: ReleaseStatus;
   public cover_art?: string;
+  public description?: string;
+  public liner_notes?: string;
   public brand_id!: number;
 
   // Association properties
@@ -85,6 +89,14 @@ Release.init(
     },
     cover_art: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    liner_notes: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     brand_id: {
