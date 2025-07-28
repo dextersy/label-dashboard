@@ -7,9 +7,9 @@
     </button>
     
     <span class="navbar-brand">
-      <i class="fa fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!
+      <i class="fa-solid fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!
       <span *ngIf="isAdmin" class="admin-chip">
-        <i class="fa fa-shield"></i> Admin
+        <i class="fa-solid fa-shield"></i> Admin
       </span>
     </span>
     
@@ -17,12 +17,12 @@
       <ul class="navbar-nav ml-auto">
         <li class="nav-item">
           <a class="nav-link" routerLink="/profile">
-            <i class="fa fa-edit"></i> Edit profile
+            <i class="fa-solid fa-edit"></i> Edit profile
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" (click)="logout()" style="cursor: pointer;">
-            <i class="fa fa-sign-out"></i> Log out
+            <i class="fa-solid fa-right-from-bracket"></i> Log out
           </a>
         </li>
       </ul>

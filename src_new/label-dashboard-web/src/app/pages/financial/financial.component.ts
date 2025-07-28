@@ -207,15 +207,15 @@ export class FinancialComponent implements OnInit {
   ];
 
   tabs = [
-    { id: 'summary' as FinancialTabType, label: 'Summary', icon: 'fa-info' },
-    { id: 'documents' as FinancialTabType, label: 'Documents', icon: 'fa-file' },
-    { id: 'earnings' as FinancialTabType, label: 'Earnings', icon: 'fa-dollar' },
-    { id: 'royalties' as FinancialTabType, label: 'Royalties', icon: 'fa-star' },
-    { id: 'payments' as FinancialTabType, label: 'Payments and Advances', icon: 'fa-credit-card' },
-    { id: 'release' as FinancialTabType, label: 'Release Information', icon: 'fa-play' },
-    { id: 'new-royalty' as FinancialTabType, label: 'New Royalty', icon: 'fa-lock', adminOnly: true },
-    { id: 'new-payment' as FinancialTabType, label: 'New Payment', icon: 'fa-lock', adminOnly: true },
-    { id: 'new-earning' as FinancialTabType, label: 'New Earning', icon: 'fa-lock', adminOnly: true }
+    { id: 'summary' as FinancialTabType, label: 'Summary', icon: 'fa-solid fa-info' },
+    { id: 'documents' as FinancialTabType, label: 'Documents', icon: 'fa-solid fa-file' },
+    { id: 'earnings' as FinancialTabType, label: 'Earnings', icon: 'fa-solid fa-dollar-sign' },
+    { id: 'royalties' as FinancialTabType, label: 'Royalties', icon: 'fa-solid fa-star' },
+    { id: 'payments' as FinancialTabType, label: 'Payments and Advances', icon: 'fa-solid fa-credit-card' },
+    { id: 'release' as FinancialTabType, label: 'Release Information', icon: 'fa-solid fa-play' },
+    { id: 'new-royalty' as FinancialTabType, label: 'New Royalty', icon: 'fa-solid fa-lock', adminOnly: true },
+    { id: 'new-payment' as FinancialTabType, label: 'New Payment', icon: 'fa-solid fa-lock', adminOnly: true },
+    { id: 'new-earning' as FinancialTabType, label: 'New Earning', icon: 'fa-solid fa-lock', adminOnly: true }
   ];
 
   constructor(

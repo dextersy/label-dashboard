@@ -35,7 +35,7 @@
                 [disabled]="method.is_default_for_artist"
                 (click)="setDefaultPaymentMethod(method.id)"
                 title="Set as default">
-                <i class="fa fa-star" [class.fa-solid]="method.is_default_for_artist" [class.fa-regular]="!method.is_default_for_artist"></i>
+                <i class="fa-solid fa-star" [class.text-warning]="method.is_default_for_artist" [class.text-muted]="!method.is_default_for_artist"></i>
               </button>
               <button 
                 type="button" 

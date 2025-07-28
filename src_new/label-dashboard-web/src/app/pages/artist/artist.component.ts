@@ -37,12 +37,12 @@ export class ArtistComponent implements OnInit {
   ) {}
 
   tabs = [
-    { id: 'profile' as TabType, label: 'Profile', icon: 'fa-user' },
-    { id: 'gallery' as TabType, label: 'Media', icon: 'fa-camera' },
-    { id: 'releases' as TabType, label: 'Releases', icon: 'fa-music' },
-    { id: 'team' as TabType, label: 'Team', icon: 'fa-users' },
-    { id: 'new-release' as TabType, label: 'New Release', icon: 'fa-plus', adminOnly: true },
-    { id: 'submit-release' as TabType, label: 'Submit A Release', icon: 'fa-upload' }
+    { id: 'profile' as TabType, label: 'Profile', icon: 'fa-solid fa-user' },
+    { id: 'gallery' as TabType, label: 'Media', icon: 'fa-solid fa-camera' },
+    { id: 'releases' as TabType, label: 'Releases', icon: 'fa-solid fa-music' },
+    { id: 'team' as TabType, label: 'Team', icon: 'fa-solid fa-users' },
+    { id: 'new-release' as TabType, label: 'New Release', icon: 'fa-solid fa-plus', adminOnly: true },
+    { id: 'submit-release' as TabType, label: 'Submit A Release', icon: 'fa-solid fa-upload' }
   ];
 
   ngOnInit(): void {

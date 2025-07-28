@@ -25,11 +25,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private authSubscription: Subscription = new Subscription();
 
   menuItems = [
-    { route: '/dashboard', icon: 'pe-7s-graph', title: 'Dashboard', adminOnly: false },
-    { route: '/artist', icon: 'pe-7s-headphones', title: 'Artist', adminOnly: false },
-    { route: '/financial', icon: 'pe-7s-note2', title: 'Financial', adminOnly: false },
-    { route: '/events', icon: 'pe-7s-date', title: 'Events', adminOnly: true },
-    { route: '/admin', icon: 'pe-7s-lock', title: 'Admin', adminOnly: true }
+    { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
+    { route: '/artist', icon: 'fas fa-headphones', title: 'Artist', adminOnly: false },
+    { route: '/financial', icon: 'fas fa-dollar-sign', title: 'Financial', adminOnly: false },
+    { route: '/events', icon: 'fas fa-calendar', title: 'Events', adminOnly: true }
   ];
 
   constructor(

@@ -122,26 +122,26 @@ export class DocumentViewerComponent implements OnInit, OnChanges {
     const extension = this.document?.filename.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return 'fa-file-pdf text-danger';
+        return 'fa-solid fa-file-pdf text-danger';
       case 'doc':
       case 'docx':
-        return 'fa-file-word text-primary';
+        return 'fa-solid fa-file-word text-primary';
       case 'xls':
       case 'xlsx':
-        return 'fa-file-excel text-success';
+        return 'fa-solid fa-file-excel text-success';
       case 'ppt':
       case 'pptx':
-        return 'fa-file-powerpoint text-warning';
+        return 'fa-solid fa-file-powerpoint text-warning';
       case 'txt':
-        return 'fa-file-text text-muted';
+        return 'fa-solid fa-file-lines text-muted';
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
       case 'webp':
-        return 'fa-file-image text-info';
+        return 'fa-solid fa-file-image text-info';
       default:
-        return 'fa-file text-muted';
+        return 'fa-solid fa-file text-muted';
     }
   }
 }
