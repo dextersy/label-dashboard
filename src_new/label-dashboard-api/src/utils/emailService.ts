@@ -297,3 +297,87 @@ export const sendPayoutPointNotification = async (
     return false;
   }
 };
+
+// Send earnings notification (matching PHP logic)
+export const sendEarningsNotification = async (
+  recipients: string[],
+  artistName: string,
+  releaseTitle: string,
+  earningDescription: string,
+  earningAmount: string,
+  recuperatedExpense: string,
+  recuperableBalance: string,
+  royaltyAmount: string | null,
+  brandName: string,
+  brandColor: string,
+  brandLogo: string,
+  dashboardUrl: string
+): Promise<boolean> => {
+  try {
+    const templatePath = path.join(__dirname, '../assets/templates/earning_notification.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Replace template variables (matching PHP logic)
+    template = template.replace(/%LOGO%/g, brandLogo);
+    template = template.replace(/%ARTIST_NAME%/g, artistName);
+    template = template.replace(/%RELEASE_TITLE%/g, releaseTitle);
+    template = template.replace(/%EARNING_DESC%/g, earningDescription);
+    template = template.replace(/%EARNING_AMOUNT%/g, earningAmount);
+    template = template.replace(/%RECUPERATED_EXPENSE%/g, recuperatedExpense);
+    template = template.replace(/%RECUPERABLE_BALANCE%/g, recuperableBalance);
+    template = template.replace(/%ROYALTY%/g, royaltyAmount || '(Not applied)');
+    template = template.replace(/%BRAND_NAME%/g, brandName);
+    template = template.replace(/%BRAND_COLOR%/g, brandColor);
+    template = template.replace(/%URL%/g, dashboardUrl);
+
+    const subject = `New earnings posted for ${artistName} - ${releaseTitle}`;
+    return await sendEmail(recipients, subject, template);
+  } catch (error) {
+    console.error('Error sending earnings notification:', error);
+    return false;
+  }
+};
+
+// Send login success notification (matching PHP logic)
+export const sendLoginNotification = async (
+  userEmail: string,
+  firstName: string,
+  remoteIp: string,
+  proxyIp: string
+): Promise<boolean> => {
+  const subject = 'Successful login to your account.';
+  
+  // Using simple HTML template matching PHP logic
+  const body = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h3>Hi ${firstName}!</h3>
+      <p>We've detected a successful login from your account just now.</p>
+      <p>If this was you, you can safely ignore this notification.</p>
+      <p>If you didn't log in to your account, please notify your administrator or reply to this email.</p>
+      <br>
+      <p><strong>Remote login IP:</strong> ${remoteIp}</p>
+      <p><strong>Proxy login IP:</strong> ${proxyIp}</p>
+      <br>
+      <p style="color: #666; font-size: 12px;">
+        This is an automated message. Please do not reply to this email.
+      </p>
+    </div>
+  `;
+
+  return await sendEmail([userEmail], subject, body);
+};
+
+// Send admin failed login alert (matching PHP logic)
+export const sendAdminFailedLoginAlert = async (
+  username: string,
+  remoteIp: string,
+  proxyIp: string
+): Promise<boolean> => {
+  const subject = 'WARNING: Too many failed logins detected.';
+  
+  // Match exact PHP email format
+  const body = `We've detected multiple login failures for user <b>${username}</b>.<br>Remote login IP: ${remoteIp}<br>Proxy login IP: ${proxyIp}<br><br>`;
+
+  const adminEmail = process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com'; // Matching PHP default
+  return await sendEmail([adminEmail], subject, body);
+};

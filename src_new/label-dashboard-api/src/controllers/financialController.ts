@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand } from '../models';
-import { sendBrandedEmail } from '../utils/emailService';
+import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
+import { sendBrandedEmail, sendEarningsNotification } from '../utils/emailService';
 import { PaymentService } from '../utils/paymentService';
 
 interface AuthRequest extends Request {
@@ -55,6 +55,9 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       await processEarningRoyalties(earning);
     }
 
+    // Send earning notification emails (matching PHP logic)
+    await sendEarningNotifications(earning, req.user.brand_id);
+
     res.status(201).json({
       message: 'Earning added successfully',
       earning
@@ -108,6 +111,9 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
         if (earningData.calculate_royalties) {
           await processEarningRoyalties(earning);
         }
+
+        // Send earning notification emails (matching PHP logic)
+        await sendEarningNotifications(earning, req.user.brand_id);
 
         createdEarnings.push(earning);
       } catch (error) {
@@ -829,3 +835,107 @@ export const getWalletBalance = async (req: AuthRequest, res: Response) => {
 // Note: Payout settings management moved to artistController.ts
 
 // Note: Release information management moved to artistController.ts
+
+// Helper function to send earning notifications (matching PHP logic)
+async function sendEarningNotifications(earning: any, brandId: number) {
+  try {
+    // Get release with associated artists and brand
+    const release = await Release.findByPk(earning.release_id, {
+      include: [
+        {
+          model: ReleaseArtist,
+          as: 'releaseArtists',
+          include: [
+            {
+              model: Artist,
+              as: 'artist'
+            }
+          ]
+        },
+        {
+          model: Brand,
+          as: 'brand'
+        }
+      ]
+    });
+
+    if (!release || !release.releaseArtists || release.releaseArtists.length === 0) {
+      return;
+    }
+
+    // Process each artist (matching PHP logic)
+    for (const releaseArtist of release.releaseArtists) {
+      if (!releaseArtist.artist) {
+        continue;
+      }
+
+      // Get artist access (team members with email addresses)
+      const artistAccess = await ArtistAccess.findAll({
+        where: { artist_id: releaseArtist.artist.id },
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['email_address', 'first_name', 'last_name']
+          }
+        ]
+      });
+
+      if (!artistAccess || artistAccess.length === 0) {
+        continue;
+      }
+
+      // Get email addresses for team members
+      const emailAddresses = artistAccess
+        .map((access: any) => access.user?.email_address)
+        .filter((email: string) => email); // Remove any undefined emails
+
+      if (emailAddresses.length === 0) {
+        continue;
+      }
+
+      // Calculate recuperable expenses and royalties (simplified for now)
+      const recuperatedAmount = 0; // TODO: Implement recuperable expense calculation
+      const recuperableBalance = 0; // TODO: Implement recuperable balance calculation
+      
+      // Get royalty amount for this artist if it exists
+      const royalty = await Royalty.findOne({
+        where: { 
+          earning_id: earning.id,
+          artist_id: releaseArtist.artist.id
+        }
+      });
+      const royaltyAmount = royalty ? royalty.amount : null;
+
+      // Get brand settings
+      const brandName = release.brand?.brand_name || 'Label Dashboard';
+      const brandColor = release.brand?.brand_color || '#667eea';
+      const brandLogo = release.brand?.logo_url || '';
+      
+      // Generate dashboard URL
+      const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
+      const host = process.env.FRONTEND_HOST || 'localhost:4200';
+      const dashboardUrl = `${protocol}://${host}/financial#earnings`;
+
+      // Send earnings notification email
+      await sendEarningsNotification(
+        emailAddresses,
+        releaseArtist.artist.name,
+        release.title || 'Unknown Release',
+        earning.description || `${earning.type} earnings`,
+        earning.amount.toString(),
+        recuperatedAmount.toString(),
+        recuperableBalance.toString(),
+        royaltyAmount ? royaltyAmount.toString() : null,
+        brandName,
+        brandColor,
+        brandLogo,
+        dashboardUrl
+      );
+    }
+
+  } catch (error) {
+    console.error('Error sending earning notifications:', error);
+    // Don't throw error - email failures shouldn't block earning creation
+  }
+}

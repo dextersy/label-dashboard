@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User, Brand } from '../models';
-import { sendEmail } from '../utils/emailService';
+import { User, Brand, LoginAttempt } from '../models';
+import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import fs from 'fs';
 import path from 'path';
+import { Op } from 'sequelize';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -14,22 +15,63 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Find user by username and brand_id
-    const user = await User.findOne({
+    const remoteIp = req.ip || 'unknown';
+    const proxyIp = req.get('X-Forwarded-For') || 'unknown';
+
+    // Find user by username or email and brand_id (matching PHP logic)
+    let user = await User.findOne({
       where: { username, brand_id: brand_id || 1 },
       include: [{ model: Brand, as: 'brand' }]
     });
 
     if (!user) {
+      // Try by email if username lookup failed (matching PHP logic)
+      user = await User.findOne({
+        where: { email_address: username, brand_id: brand_id || 1 },
+        include: [{ model: Brand, as: 'brand' }]
+      });
+    }
+
+    if (!user) {
       return res.status(404).json({ error: 'User does not exist' });
+    }
+
+    // Check login lock (matching PHP logic)
+    const isLocked = await checkLoginLock(user.id);
+    if (isLocked) {
+      await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp);
+      const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
+      return res.status(423).json({ 
+        error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.` 
+      });
     }
 
     // Verify password (PHP uses MD5, but we should migrate to bcrypt)
     const isValidPassword = user.password_md5 === crypto.createHash('md5').update(password).digest('hex');
     
     if (!isValidPassword) {
+      // Record failed login attempt (matching PHP logic)
+      await LoginAttempt.create({
+        user_id: user.id,
+        status: 'Failed',
+        date_and_time: new Date(),
+        brand_id: user.brand_id,
+        proxy_ip: proxyIp,
+        remote_ip: remoteIp
+      });
+
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    // Record successful login attempt (matching PHP logic)
+    await LoginAttempt.create({
+      user_id: user.id,
+      status: 'Successful',
+      date_and_time: new Date(),
+      brand_id: user.brand_id,
+      proxy_ip: proxyIp,
+      remote_ip: remoteIp
+    });
 
     // Update last login time
     await user.update({ last_logged_in: new Date() });
@@ -44,6 +86,17 @@ export const login = async (req: Request, res: Response) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
+
+    // Send login success notification (matching PHP logic)
+    sendLoginNotification(
+      user.email_address,
+      user.first_name || '',
+      remoteIp,
+      proxyIp
+    ).catch(error => {
+      console.error('Failed to send login notification:', error);
+      // Don't fail login if email fails
+    });
 
     res.json({
       message: 'Login successful',
@@ -260,3 +313,38 @@ export const validateResetHash = async (req: Request, res: Response) => {
     res.status(500).json({ valid: false, error: 'Internal server error' });
   }
 };
+
+// Helper function to check login lock (matching PHP logic)
+async function checkLoginLock(userId: number): Promise<boolean> {
+  try {
+    const FAILED_LOGIN_LIMIT = parseInt(process.env.FAILED_LOGIN_LIMIT || '3');
+    const LOCK_TIME_IN_SECONDS = parseInt(process.env.LOCK_TIME_IN_SECONDS || '120');
+
+    // Get recent login attempts (matching PHP query)
+    const recentAttempts = await LoginAttempt.findAll({
+      where: { user_id: userId },
+      order: [['date_and_time', 'DESC']],
+      limit: FAILED_LOGIN_LIMIT
+    });
+
+    if (recentAttempts.length < FAILED_LOGIN_LIMIT) {
+      return false;
+    }
+
+    // Check if we have enough failed attempts within the lock time window
+    let failures = 0;
+    const now = new Date();
+    const cutoffTime = new Date(now.getTime() - LOCK_TIME_IN_SECONDS * 1000);
+
+    for (const attempt of recentAttempts) {
+      if (attempt.status === 'Failed' && attempt.date_and_time > cutoffTime) {
+        failures++;
+      }
+    }
+
+    return failures >= FAILED_LOGIN_LIMIT;
+  } catch (error) {
+    console.error('Error checking login lock:', error);
+    return false;
+  }
+}
