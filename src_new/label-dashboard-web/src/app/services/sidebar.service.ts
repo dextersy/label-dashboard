@@ -17,15 +17,23 @@ export class SidebarService {
 
   private getInitialState(): boolean {
     // Always start closed on mobile
-    if (typeof window !== 'undefined') {
-      return window.innerWidth > 991;
-    }
-    return false;
+    return !this.isMobile();
   }
 
   private handleResize(): void {
-    if (typeof window !== 'undefined' && window.innerWidth <= 991) {
+    if (this.isMobile()) {
       // Close sidebar when switching to mobile view
+      this.closeSidebar();
+    }
+  }
+
+  private isMobile(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth <= 991;
+  }
+
+  closeOnMobileNavigation(): void {
+    // Helper method to close sidebar when navigating on mobile
+    if (this.isMobile()) {
       this.closeSidebar();
     }
   }
@@ -51,7 +59,7 @@ export class SidebarService {
 
   private addBodyClickHandler(): void {
     // Only add overlay on mobile devices
-    if (typeof window !== 'undefined' && window.innerWidth > 991) {
+    if (!this.isMobile()) {
       return;
     }
 

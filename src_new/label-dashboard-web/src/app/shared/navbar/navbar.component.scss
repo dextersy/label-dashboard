@@ -45,6 +45,13 @@
   }
 }
 
+/* Container layout */
+.container-fluid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* Show hamburger menu on mobile */
 @media (max-width: 991px) {
   .navbar-toggle {
@@ -56,14 +63,36 @@
     flex: 1;
   }
   
-  .container-fluid {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .navbar-collapse {
+    display: none !important; // Hide regular menu items on mobile
+  }
+}
+
+/* Desktop navbar layout */
+@media (min-width: 992px) {
+  .navbar-toggle {
+    display: none; // Hide hamburger on desktop
   }
   
   .navbar-collapse {
-    display: none !important; // Hide regular menu items on mobile
+    display: flex !important;
+    flex: none;
+  }
+  
+  .navbar-nav {
+    display: flex;
+    margin-left: auto; // Push to the right
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+    
+    .nav-item {
+      margin-left: 15px;
+      
+      &:first-child {
+        margin-left: 0;
+      }
+    }
   }
 }
 
@@ -130,3 +159,4 @@
     }
   }
 }
+

@@ -112,10 +112,32 @@
   }
 }
 
+/* Mobile-only sidebar items */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .separator.mobile-only {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 15px 15px 10px 15px;
+    display: block;
+  }
+}
+
 /* Desktop styles - sidebar always visible */
 @media (min-width: 992px) {
   .sidebar {
     transform: translateX(0px) !important;
+  }
+  
+  .mobile-only {
+    display: none !important;
   }
 }
 

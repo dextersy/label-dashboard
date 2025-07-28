@@ -112,4 +112,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
   shouldShowMenuItem(item: any): boolean {
     return !item.adminOnly || this.isAdmin;
   }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  onMenuItemClick(): void {
+    // Close sidebar on mobile when menu item is clicked
+    this.sidebarService.closeOnMobileNavigation();
+  }
 }

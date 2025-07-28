@@ -9,9 +9,24 @@
     <ul class="nav">
       <li *ngFor="let item of menuItems" 
           [class.active]="isActiveRoute(item.route)">
-        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route">
+        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route" (click)="onMenuItemClick()">
           <i [class]="item.icon"></i>
           <p>{{ item.title }}</p>
+        </a>
+      </li>
+      
+      <!-- Mobile-only profile/logout links -->
+      <li class="separator mobile-only"></li>
+      <li class="mobile-only">
+        <a routerLink="/profile" (click)="onMenuItemClick()">
+          <i class="fa fa-edit"></i>
+          <p>Edit Profile</p>
+        </a>
+      </li>
+      <li class="mobile-only">
+        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;">
+          <i class="fa fa-sign-out"></i>
+          <p>Log Out</p>
         </a>
       </li>
     </ul>
