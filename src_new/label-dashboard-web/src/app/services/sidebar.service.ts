@@ -5,8 +5,30 @@ import { BehaviorSubject, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class SidebarService {
-  private isOpenSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private isOpenSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.getInitialState());
   public isOpen$: Observable<boolean> = this.isOpenSubject.asObservable();
+
+  constructor() {
+    // Handle window resize to auto-close sidebar on mobile
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', () => this.handleResize());
+    }
+  }
+
+  private getInitialState(): boolean {
+    // Always start closed on mobile
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 991;
+    }
+    return false;
+  }
+
+  private handleResize(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= 991) {
+      // Close sidebar when switching to mobile view
+      this.closeSidebar();
+    }
+  }
 
   toggleSidebar(): void {
     const currentState = this.isOpenSubject.value;
@@ -28,6 +50,11 @@ export class SidebarService {
   }
 
   private addBodyClickHandler(): void {
+    // Only add overlay on mobile devices
+    if (typeof window !== 'undefined' && window.innerWidth > 991) {
+      return;
+    }
+
     const bodyClick = document.createElement('div');
     bodyClick.id = 'bodyClick';
     bodyClick.style.position = 'fixed';

@@ -103,7 +103,7 @@
 /* Mobile responsive styles */
 @media (max-width: 991px) {
   .sidebar {
-    transform: translateX(260px);
+    transform: translateX(-100%);
     transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
   }
   
@@ -112,11 +112,18 @@
   }
 }
 
+/* Desktop styles - sidebar always visible */
+@media (min-width: 992px) {
+  .sidebar {
+    transform: translateX(0px) !important;
+  }
+}
+
 /* Global styles for nav-open state */
 :global(html.nav-open) {
   @media (max-width: 991px) {
     .sidebar {
-      transform: translateX(0px);
+      transform: translateX(0px) !important;
     }
     
     body {

@@ -53,11 +53,17 @@
   
   .navbar-brand {
     margin-left: 0;
+    flex: 1;
   }
   
   .container-fluid {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+  }
+  
+  .navbar-collapse {
+    display: none !important; // Hide regular menu items on mobile
   }
 }
 
