@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -11,9 +12,10 @@ import { SidebarService } from '../../services/sidebar.service';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   userFirstName: string = 'User';
   isAdmin: boolean = false;
+  private authSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -22,24 +24,22 @@ export class NavbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const currentUser = this.authService.currentUserValue;
-    if (currentUser) {
-      this.userFirstName = currentUser.first_name || 'User';
-      this.isAdmin = currentUser.is_admin || false;
-    } else {
-      // Fallback to localStorage if auth service doesn't have user data
-      const userData = localStorage.getItem('user_data');
-      if (userData) {
-        const user = JSON.parse(userData);
-        this.userFirstName = user.first_name || 'User';
-        this.isAdmin = user.is_admin || false;
-      }
-    }
+    // Subscribe to current user changes
+    this.authSubscription.add(
+      this.authService.currentUser.subscribe(user => {
+        if (user) {
+          this.userFirstName = user.first_name || 'User';
+          this.isAdmin = user.is_admin || false;
+        } else {
+          this.userFirstName = 'User';
+          this.isAdmin = false;
+        }
+      })
+    );
+  }
 
-    // Also check via auth service method as fallback
-    if (!this.isAdmin) {
-      this.isAdmin = this.authService.isAdmin();
-    }
+  ngOnDestroy(): void {
+    this.authSubscription.unsubscribe();
   }
 
   logout(): void {

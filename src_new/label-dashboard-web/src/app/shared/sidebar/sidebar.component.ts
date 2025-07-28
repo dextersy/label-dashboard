@@ -22,6 +22,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isOpen: boolean = false;
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
+  private authSubscription: Subscription = new Subscription();
 
   menuItems = [
     { route: '/dashboard', icon: 'pe-7s-graph', title: 'Dashboard', adminOnly: false },
@@ -52,11 +53,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.isOpen = isOpen;
       })
     );
+
+    // Subscribe to auth state changes
+    this.authSubscription.add(
+      this.authService.currentUser.subscribe(user => {
+        this.isAdmin = user ? user.is_admin : false;
+      })
+    );
   }
 
   ngOnDestroy(): void {
     this.brandSubscription.unsubscribe();
     this.sidebarSubscription.unsubscribe();
+    this.authSubscription.unsubscribe();
   }
 
   loadBrandSettings(): void {
@@ -86,8 +95,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Get admin status from auth service
-    this.isAdmin = this.authService.isAdmin();
+    // Initial admin status will be set via auth subscription
   }
 
   private applyBrandSettings(settings: BrandSettings): void {

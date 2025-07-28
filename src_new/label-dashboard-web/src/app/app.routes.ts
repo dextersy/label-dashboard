@@ -10,6 +10,7 @@ import { ResetPasswordComponent } from './pages/reset-password/reset-password.co
 import { SetProfileComponent } from './pages/set-profile/set-profile.component';
 import { InviteComponent } from './pages/invite/invite.component';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -21,7 +22,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'artist', component: ArtistComponent, canActivate: [authGuard] },
   { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },
-  { path: 'events', component: EventsComponent, canActivate: [authGuard] },
+  { path: 'events', component: EventsComponent, canActivate: [adminGuard] }, // Admin only
   { path: 'domain-not-found', component: DomainNotFoundComponent },
   { path: '**', redirectTo: '/login' }
 ];

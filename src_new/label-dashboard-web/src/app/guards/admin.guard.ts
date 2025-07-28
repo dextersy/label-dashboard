@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
-export const authGuard: CanActivateFn = (route, state) => {
+export const adminGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const http = inject(HttpClient);
   const token = localStorage.getItem('auth_token');
@@ -15,20 +15,20 @@ export const authGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  // Verify token with backend
+  // Verify token and admin status with backend
   const headers = new HttpHeaders({
     'Authorization': `Bearer ${token}`
   });
 
   return http.get(`${environment.apiUrl}/auth/me`, { headers }).pipe(
     map((response: any) => {
-      if (response.user) {
+      if (response.user && response.user.is_admin) {
         // Update localStorage with current user data
         localStorage.setItem('currentUser', JSON.stringify(response.user));
         return true;
       } else {
-        // Token is invalid, redirect to login
-        router.navigate(['/login']);
+        // User is not admin, redirect to dashboard
+        router.navigate(['/dashboard']);
         return false;
       }
     }),

@@ -70,4 +70,26 @@ export class AuthService {
     const user = this.currentUserValue;
     return user ? user.is_admin : false;
   }
+
+  // Refresh user data from backend and update local state
+  refreshUserData(): Observable<User> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('No token available');
+    }
+
+    return this.http.get<{user: User}>(`${this.apiUrl}/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).pipe(map(response => {
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      this.currentUserSubject.next(response.user);
+      return response.user;
+    }));
+  }
+
+  // Update user data without making HTTP request (used by guards)
+  updateUserData(user: User): void {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
 }
