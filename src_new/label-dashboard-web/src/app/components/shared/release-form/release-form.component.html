@@ -1,0 +1,281 @@
+<form [formGroup]="releaseForm" (ngSubmit)="onSubmit()">
+  <!-- Basic Release Information -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="title">Title <span class="text-danger">*</span></label>
+        <input type="text" 
+               class="form-control" 
+               id="title" 
+               formControlName="title"
+               [class.is-invalid]="isFieldInvalid('title')"
+               placeholder="Enter release title">
+        <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">
+          {{ getFieldError('title') }}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="catalogNo">Catalog Number <span class="text-danger">*</span></label>
+        <input type="text" 
+               class="form-control" 
+               id="catalogNo" 
+               formControlName="catalog_no"
+               [class.is-invalid]="isFieldInvalid('catalog_no')"
+               placeholder="e.g. MELT001">
+        <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text text-muted">
+          Default is auto-generated
+        </small>
+        <div *ngIf="isFieldInvalid('catalog_no')" class="invalid-feedback">
+          {{ getFieldError('catalog_no') }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="upc">UPC Code</label>
+        <input type="text" 
+               class="form-control" 
+               id="upc" 
+               formControlName="UPC"
+               placeholder="Universal Product Code">
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="releaseDate">Release Date <span class="text-danger">*</span></label>
+        <input type="date" 
+               class="form-control" 
+               id="releaseDate" 
+               formControlName="release_date"
+               [class.is-invalid]="isFieldInvalid('release_date')">
+        <div *ngIf="isFieldInvalid('release_date')" class="invalid-feedback">
+          {{ getFieldError('release_date') }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="isAdmin && showStatus">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select class="form-control" id="status" formControlName="status">
+          <option value="Pending">Pending</option>
+          <option value="Live">Live</option>
+          <option value="Taken Down">Taken Down</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cover Art -->
+  <div class="form-group">
+    <label for="coverArt">Cover Art</label>
+    <div class="row">
+      <div class="col-md-6">
+        <input type="file" 
+               class="form-control-file" 
+               id="coverArt" 
+               accept="image/*"
+               (change)="onCoverArtSelected($event)">
+        <small class="form-text text-muted">
+          JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
+        </small>
+      </div>
+      <div class="col-md-6" *ngIf="coverArtPreview">
+        <div class="cover-art-preview">
+          <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Description and Liner Notes -->
+  <div class="form-group">
+    <label for="description">Tell us about this release</label>
+    <small class="form-text text-muted mb-2">
+      Give us a quick statement about the release, indicating what the song is about, the musical approach, 
+      production stories, and any future plans related to the song. We will use this to craft our pitch to 
+      playlists as well as for our press releases. Feel free to give us a bullet list or just a rough statement.
+    </small>
+    <textarea class="form-control" 
+              id="description" 
+              formControlName="description"
+              rows="4" 
+              placeholder="Description of the release, musical approach, stories..."></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="linerNotes">Liner Notes</label>
+    <small class="form-text text-muted mb-2">
+      Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp. 
+      It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
+      <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
+    </small>
+    <textarea class="form-control" 
+              id="linerNotes" 
+              formControlName="liner_notes"
+              rows="6" 
+              placeholder="Liner notes, acknowledgments, credits..."></textarea>
+  </div>
+
+  <!-- Royalty Artists (Admin Only) -->
+  <div *ngIf="isAdmin" class="artist-royalty-section" formArrayName="royaltyArtists">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">Artist Royalty Splits</h5>
+      <button type="button" 
+              class="btn btn-sm btn-outline-primary" 
+              (click)="addRoyaltyArtist()"
+              [disabled]="loadingArtists">
+        <i class="fa fa-plus"></i> Add Artist
+      </button>
+    </div>
+
+    <div *ngIf="loadingArtists" class="text-center py-3">
+      <i class="fa fa-spinner fa-spin"></i>
+      Loading artists...
+    </div>
+
+    <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">
+      <div *ngFor="let artistControl of royaltyArtists.controls; let i = index" 
+           class="card mb-3" 
+           [formGroupName]="i">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-3">
+              <div class="form-group mb-0">
+                <label class="small font-weight-bold">Artist</label>
+                <select class="form-control form-control-sm" 
+                        formControlName="artist_id"
+                        [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched">
+                  <option value="">Select Artist</option>
+                  <option *ngFor="let artist of getAvailableArtists(i)" 
+                          [value]="artist.id">
+                    {{ artist.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group mb-0">
+                <label class="small font-weight-bold">Streaming %</label>
+                <input type="number" 
+                       class="form-control form-control-sm" 
+                       formControlName="streaming_royalty_percentage" 
+                       min="0" max="100" step="1">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group mb-0">
+                <label class="small font-weight-bold">Sync %</label>
+                <input type="number" 
+                       class="form-control form-control-sm" 
+                       formControlName="sync_royalty_percentage" 
+                       min="0" max="100" step="1">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group mb-0">
+                <label class="small font-weight-bold">Download %</label>
+                <input type="number" 
+                       class="form-control form-control-sm" 
+                       formControlName="download_royalty_percentage" 
+                       min="0" max="100" step="1">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group mb-0">
+                <label class="small font-weight-bold">Physical %</label>
+                <input type="number" 
+                       class="form-control form-control-sm" 
+                       formControlName="physical_royalty_percentage" 
+                       min="0" max="100" step="1">
+              </div>
+            </div>
+            <div class="col-md-1">
+              <button type="button" 
+                      class="btn btn-sm btn-outline-danger" 
+                      (click)="removeRoyaltyArtist(i)"
+                      [disabled]="royaltyArtists.length <= 1"
+                      title="Remove Artist">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Royalty Totals -->
+      <div class="card bg-light">
+        <div class="card-body py-2">
+          <div class="row text-center">
+            <div class="col-md-3">
+              <strong>Label Royalty:</strong>
+            </div>
+            <div class="col-md-2">
+              <span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
+                {{ getLabelRoyalty('streaming') }}%
+              </span>
+            </div>
+            <div class="col-md-2">
+              <span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
+                {{ getLabelRoyalty('sync') }}%
+              </span>
+            </div>
+            <div class="col-md-2">
+              <span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
+                {{ getLabelRoyalty('download') }}%
+              </span>
+            </div>
+            <div class="col-md-2">
+              <span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
+                {{ getLabelRoyalty('physical') }}%
+              </span>
+            </div>
+            <div class="col-md-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Royalty Split Notes -->
+      <div class="mt-3">
+        <small class="text-muted">
+          <i class="fa fa-info-circle"></i>
+          <strong>Note:</strong> Artist percentages for each royalty type should not exceed 100%. 
+          The label row shows the remaining percentage (100% - total artist percentages).
+        </small>
+      </div>
+    </div>
+
+    <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="text-center text-muted py-3">
+      <i class="fa fa-info-circle"></i>
+      No artists added yet. Click "Add Artist" to get started.
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div *ngIf="showActionButtons" class="row mt-4">
+    <div class="col-md-6">
+      <button type="submit" 
+              class="btn btn-primary btn-block"
+              [disabled]="loading || !isFormValid">
+        <i class="fa fa-save" *ngIf="!loading"></i>
+        <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+        {{ loading ? 'Saving...' : submitButtonText }}
+      </button>
+    </div>
+    <div class="col-md-6">
+      <button type="button" 
+              class="btn btn-secondary btn-block"
+              [disabled]="loading"
+              (click)="onCancel()">
+        {{ cancelButtonText }}
+      </button>
+    </div>
+  </div>
+</form>

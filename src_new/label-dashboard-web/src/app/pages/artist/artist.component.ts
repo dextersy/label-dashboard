@@ -33,7 +33,6 @@ export class ArtistComponent implements OnInit {
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
-  editingRelease: ArtistRelease | null = null;
 
   constructor(
     private notificationService: NotificationService,
@@ -84,28 +83,17 @@ export class ArtistComponent implements OnInit {
     }
   }
 
-  onEditRelease(release: ArtistRelease): void {
-    this.editingRelease = release;
-    this.activeTab = 'new-release';
-  }
-
   onReleaseCreated(release: any): void {
     // Switch back to releases tab to show the updated list
     this.activeTab = 'releases';
-    this.editingRelease = null;
   }
 
   onReleaseFormCancelled(): void {
-    // Switch back to releases tab and clear editing state
+    // Switch back to releases tab
     this.activeTab = 'releases';
-    this.editingRelease = null;
   }
 
   setActiveTab(tab: TabType): void {
-    // Clear editing state when switching tabs
-    if (tab !== 'new-release') {
-      this.editingRelease = null;
-    }
     this.activeTab = tab;
   }
 

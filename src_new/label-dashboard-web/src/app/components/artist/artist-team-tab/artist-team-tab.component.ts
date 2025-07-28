@@ -204,6 +204,6 @@ export class ArtistTeamTabComponent {
   }
 
   getStatusIcon(status: string): string {
-    return status === 'Accepted' ? 'fa-check-circle' : 'fa-clock-o';
+    return status === 'Accepted' ? 'fa-check-circle' : 'fa-clock';
   }
 }

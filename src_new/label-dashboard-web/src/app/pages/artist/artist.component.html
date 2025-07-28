@@ -45,8 +45,7 @@
             <div class="tab-pane" [class.active]="activeTab === 'releases'" *ngIf="activeTab === 'releases'">
               <app-artist-releases-tab 
                 [artist]="selectedArtist"
-                (alertMessage)="onAlertMessage($event)"
-                (editRelease)="onEditRelease($event)">
+                (alertMessage)="onAlertMessage($event)">
               </app-artist-releases-tab>
             </div>
             
@@ -61,8 +60,7 @@
             <!-- New Release Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'new-release'" *ngIf="activeTab === 'new-release' && isAdmin">
               <app-artist-new-release-tab 
-                [artist]="selectedArtist" 
-                [editingRelease]="editingRelease"
+                [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)"
                 (releaseCreated)="onReleaseCreated($event)"
                 (cancelled)="onReleaseFormCancelled()">

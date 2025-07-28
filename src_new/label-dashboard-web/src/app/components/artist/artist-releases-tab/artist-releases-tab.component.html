@@ -37,7 +37,7 @@
                        class="cover-thumbnail">
                 </td>
                 <td class="catalog-cell">
-                  <span class="catalog-number">{{ release.catalog_number }}</span>
+                  <span class="catalog-number">{{ release.catalog_no }}</span>
                 </td>
                 <td class="title-cell">
                   <div class="release-title">{{ release.title }}</div>
@@ -50,16 +50,18 @@
                 </td>
                 <td class="status-cell">
                   <span class="badge" [class]="getStatusClass(release.status)">
-                    <i class="fa" [class]="getStatusIcon(release.status)"></i>
+                    <i class="fa" [ngClass]="getStatusIcon(release.status)"></i>
                     {{ release.status }}
                   </span>
                 </td>
                 <td *ngIf="isAdmin" class="actions-cell">
                   <button class="btn btn-sm btn-primary" 
                           (click)="onEditRelease(release)"
+                          [disabled]="loadingReleaseDetails"
                           title="Edit Release">
-                    <i class="fa fa-edit"></i>
-                    Edit
+                    <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
+                    <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
+                    {{ loadingReleaseDetails ? 'Loading...' : 'Edit' }}
                   </button>
                 </td>
               </tr>
@@ -70,4 +72,14 @@
       
     </div>
   </div>
+
+  <!-- Edit Release Dialog -->
+  <app-edit-release-dialog
+    [isVisible]="showEditDialog"
+    [artist]="artist"
+    [editingRelease]="selectedRelease"
+    (close)="onEditDialogClose()"
+    (releaseUpdated)="onReleaseUpdated($event)"
+    (alertMessage)="alertMessage.emit($event)">
+  </app-edit-release-dialog>
 </div>
