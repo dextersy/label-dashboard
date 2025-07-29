@@ -13,8 +13,13 @@
 /* ================================= */
 
 /* BASIC */
+html {
+  font-size: 13px; /* Reduced from default 16px */
+}
+
 body {
   font-family: "Roboto", sans-serif;
+  font-size: 13px; /* Reduced from default 14px */
   height: 100vh;
   margin: 0;
   padding: 0;
@@ -350,6 +355,43 @@ app-root {
   display: block;
   height: 100vh;
 }
+
+/* ================================= */
+/* GLOBAL FONT SIZE OVERRIDES       */
+/* ================================= */
+
+/* Reduce default font sizes for dashboard components */
+.table {
+  font-size: 13px;
+}
+
+.btn {
+  font-size: 13px;
+}
+
+.form-control {
+  font-size: 13px;
+}
+
+.card {
+  font-size: 13px;
+}
+
+.nav-link {
+  font-size: 13px;
+}
+
+/* Specific overrides for components that might have larger fonts */
+.navbar-brand {
+  font-size: 16px; /* Keep navbar brand slightly larger */
+}
+
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.6rem; }
+h3 { font-size: 1.4rem; }
+h4 { font-size: 1.2rem; }
+h5 { font-size: 1.1rem; }
+h6 { font-size: 1rem; }
 
 /* ================================= */
 /* MOBILE SIDEBAR RESPONSIVE STYLES */
