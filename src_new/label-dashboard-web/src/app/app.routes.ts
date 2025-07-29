@@ -4,6 +4,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ArtistComponent } from './pages/artist/artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
+import { AdminComponent } from './pages/admin/admin.component';
 import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-found.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
@@ -23,6 +24,7 @@ export const routes: Routes = [
   { path: 'artist', component: ArtistComponent, canActivate: [authGuard] },
   { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },
   { path: 'events', component: EventsComponent, canActivate: [adminGuard] }, // Admin only
+  { path: 'admin', component: AdminComponent, canActivate: [adminGuard] }, // Admin only
   { path: 'domain-not-found', component: DomainNotFoundComponent },
   { path: '**', redirectTo: '/login' }
 ];
