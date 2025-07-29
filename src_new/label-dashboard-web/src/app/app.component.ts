@@ -4,9 +4,6 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { GlobalNotificationComponent } from './components/global-notification/global-notification.component';
-import { ArtistSelectionComponent } from './components/artist/artist-selection/artist-selection.component';
-import { Artist } from './components/artist/artist-selection/artist-selection.component';
-import { ArtistStateService } from './services/artist-state.service';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { filter } from 'rxjs/operators';
@@ -14,18 +11,16 @@ import { filter } from 'rxjs/operators';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ArtistSelectionComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
   title = 'label-dashboard-web';
-  selectedArtist: Artist | null = null;
   currentRoute = '';
 
   constructor(
     private router: Router,
-    private artistStateService: ArtistStateService,
     private brandService: BrandService,
     private authService: AuthService
   ) {}
@@ -48,11 +43,6 @@ export class AppComponent implements OnInit {
       .subscribe((event) => {
         this.currentRoute = (event as NavigationEnd).url;
       });
-
-    // Subscribe to artist state changes
-    this.artistStateService.selectedArtist$.subscribe(artist => {
-      this.selectedArtist = artist;
-    });
   }
 
   private applyBrandStyling(brandSettings: any): void {
@@ -101,14 +91,5 @@ export class AppComponent implements OnInit {
     
     // Check auth status
     return !this.authService.isLoggedIn();
-  }
-
-  shouldShowArtistSelection(): boolean {
-    const hiddenRoutes = ['/dashboard', '/events', '/admin'];
-    return !this.isStandalonePage() && !hiddenRoutes.some(route => this.currentRoute.startsWith(route));
-  }
-
-  onArtistSelected(artist: Artist): void {
-    this.artistStateService.setSelectedArtist(artist);
   }
 }

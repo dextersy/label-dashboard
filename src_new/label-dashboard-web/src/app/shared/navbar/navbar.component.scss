@@ -50,6 +50,46 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+}
+
+/* Artist selection in navbar */
+.navbar-artist-selection {
+  margin-left: 15px;
+  
+  // Override the artist selection styles to fit in navbar
+  ::ng-deep .artist-selection-container {
+    margin-bottom: 0;
+  }
+  
+  ::ng-deep .dropdown {
+    @media (min-width: 768px) {
+      width: 280px;
+      max-width: 280px;
+    }
+  }
+  
+  ::ng-deep .dropdown-menu {
+    @media (min-width: 768px) {
+      width: 280px;
+      min-width: 280px;
+    }
+  }
+}
+
+/* Spacer to push content to the right */
+.navbar-spacer {
+  flex: 1;
+}
+
+/* Welcome message styling */
+.navbar-welcome {
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 20px;
 }
 
 /* Show hamburger menu on mobile */
@@ -58,9 +98,13 @@
     display: flex;
   }
   
-  .navbar-brand {
-    margin-left: 0;
+  .navbar-artist-selection {
+    margin-left: 10px;
     flex: 1;
+  }
+  
+  .navbar-welcome {
+    display: none; // Hide welcome message on mobile to save space
   }
   
   .navbar-collapse {

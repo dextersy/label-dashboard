@@ -6,7 +6,19 @@
       <span class="icon-bar"></span>
     </button>
     
-    <span class="navbar-brand">
+    <!-- Artist Selection on the left -->
+    <div class="navbar-artist-selection" *ngIf="shouldShowArtistSelection()">
+      <app-artist-selection 
+        [currentArtist]="selectedArtist"
+        (artistSelected)="onArtistSelected($event)">
+      </app-artist-selection>
+    </div>
+    
+    <!-- Spacer to push content to the right -->
+    <div class="navbar-spacer"></div>
+    
+    <!-- Welcome message and admin chip on the right -->
+    <span class="navbar-welcome">
       <i class="fa-solid fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!
       <span *ngIf="isAdmin" class="admin-chip">
         <i class="fa-solid fa-shield"></i> Admin

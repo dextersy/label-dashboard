@@ -3,24 +3,29 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
+import { ArtistStateService } from '../../services/artist-state.service';
+import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
+import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ArtistSelectionComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   userFirstName: string = 'User';
   isAdmin: boolean = false;
+  selectedArtist: Artist | null = null;
   private authSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private artistStateService: ArtistStateService
   ) {}
 
   ngOnInit(): void {
@@ -36,6 +41,24 @@ export class NavbarComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // Subscribe to selected artist changes
+    this.authSubscription.add(
+      this.artistStateService.selectedArtist$.subscribe(artist => {
+        this.selectedArtist = artist;
+      })
+    );
+  }
+
+  onArtistSelected(artist: Artist): void {
+    this.artistStateService.setSelectedArtist(artist);
+  }
+
+  shouldShowArtistSelection(): boolean {
+    const currentRoute = this.router.url;
+    return currentRoute.includes('/artist') || 
+           currentRoute.includes('/releases') || 
+           currentRoute.includes('/financial');
   }
 
   ngOnDestroy(): void {

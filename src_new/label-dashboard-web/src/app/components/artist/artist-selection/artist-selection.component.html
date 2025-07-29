@@ -7,9 +7,6 @@
              [alt]="selectedArtist.name">
         <div class="artist-details">
           <div class="artist-name">{{ selectedArtist.name }}</div>
-          <div class="artist-members" *ngIf="selectedArtist.band_members">
-            {{ selectedArtist.band_members }}
-          </div>
         </div>
       </div>
       <div *ngIf="!selectedArtist && !loading" class="no-artist">
@@ -30,9 +27,6 @@
                [alt]="artist.name">
           <div class="dropdown-artist-info">
             <div class="dropdown-artist-name">{{ artist.name }}</div>
-            <div class="dropdown-artist-members" *ngIf="artist.band_members">
-              {{ artist.band_members }}
-            </div>
           </div>
         </a>
       </li>
