@@ -198,6 +198,11 @@
         object-fit: cover;
         display: block;
         transition: transform 0.3s ease;
+        cursor: pointer;
+        
+        &:hover {
+          transform: scale(1.05);
+        }
       }
       
       .photo-overlay {
@@ -223,6 +228,15 @@
             border: none;
             cursor: pointer;
             font-size: 14px;
+            
+            &.btn-info {
+              background-color: #17a2b8;
+              color: #fff;
+              
+              &:hover {
+                background-color: #138496;
+              }
+            }
             
             &.btn-light {
               background-color: #f8f9fa;

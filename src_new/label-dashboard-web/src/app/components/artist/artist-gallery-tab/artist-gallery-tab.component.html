@@ -71,17 +71,25 @@
           <div class="photo-container">
             <img [src]="getPhotoUrl(photo)" 
                  [alt]="photo.caption || 'Artist photo'"
-                 class="photo-image">
+                 class="photo-image"
+                 (dblclick)="onPhotoDoubleClick(photo)">
             
             <div class="photo-overlay">
               <div class="photo-actions">
+                <button class="btn btn-sm btn-info" 
+                        (click)="openLightbox(photo)"
+                        title="View photo">
+                  <i class="fa fa-eye"></i>
+                </button>
                 <button class="btn btn-sm btn-light" 
                         (click)="startEditingCaption(photo)"
-                        *ngIf="!editingCaptions[photo.id]">
+                        *ngIf="!editingCaptions[photo.id]"
+                        title="Edit caption">
                   <i class="fa fa-edit"></i>
                 </button>
                 <button class="btn btn-sm btn-danger" 
-                        (click)="deletePhoto(photo)">
+                        (click)="deletePhoto(photo)"
+                        title="Delete photo">
                   <i class="fa fa-trash"></i>
                 </button>
               </div>
@@ -117,5 +125,14 @@
       
     </div>
   </div>
+  
+  <!-- Lightbox -->
+  <app-lightbox 
+    [imageUrl]="lightboxImageUrl"
+    [imageAlt]="lightboxImageAlt"
+    [caption]="lightboxCaption"
+    [isVisible]="showLightbox"
+    (close)="closeLightbox()">
+  </app-lightbox>
   
 </div>

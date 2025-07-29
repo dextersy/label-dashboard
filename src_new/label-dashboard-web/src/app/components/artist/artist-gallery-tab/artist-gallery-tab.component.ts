@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
+import { LightboxComponent } from '../../shared/lightbox/lightbox.component';
 
 export interface ArtistPhoto {
   id: number;
@@ -16,7 +17,7 @@ export interface ArtistPhoto {
 @Component({
   selector: 'app-artist-gallery-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LightboxComponent],
   templateUrl: './artist-gallery-tab.component.html',
   styleUrl: './artist-gallery-tab.component.scss'
 })
@@ -31,6 +32,12 @@ export class ArtistGalleryTabComponent {
   uploadProgress = 0;
   editingCaptions: { [key: number]: boolean } = {};
   editingCaptionTexts: { [key: number]: string } = {};
+  
+  // Lightbox properties
+  showLightbox = false;
+  lightboxImageUrl = '';
+  lightboxImageAlt = '';
+  lightboxCaption = '';
 
   constructor(private http: HttpClient) {}
 
@@ -270,5 +277,24 @@ export class ArtistGalleryTabComponent {
   getSelectedFilesArray(): File[] {
     if (!this.selectedFiles) return [];
     return Array.from(this.selectedFiles);
+  }
+
+  // Lightbox methods
+  openLightbox(photo: ArtistPhoto): void {
+    this.lightboxImageUrl = this.getPhotoUrl(photo);
+    this.lightboxImageAlt = photo.caption || 'Artist photo';
+    this.lightboxCaption = photo.caption || '';
+    this.showLightbox = true;
+  }
+
+  closeLightbox(): void {
+    this.showLightbox = false;
+    this.lightboxImageUrl = '';
+    this.lightboxImageAlt = '';
+    this.lightboxCaption = '';
+  }
+
+  onPhotoDoubleClick(photo: ArtistPhoto): void {
+    this.openLightbox(photo);
   }
 }
