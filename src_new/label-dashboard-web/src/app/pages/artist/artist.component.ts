@@ -75,11 +75,8 @@ export class ArtistComponent implements OnInit {
 
   onArtistUpdated(artist: ArtistProfile): void {
     if (this.selectedArtist) {
-      // Update the global artist state with new profile data
-      this.artistStateService.updateSelectedArtist({
-        name: artist.name,
-        profile_photo: artist.profile_photo
-      });
+      // Update the global artist state with complete profile data
+      this.artistStateService.updateSelectedArtist(artist);
     }
   }
 
