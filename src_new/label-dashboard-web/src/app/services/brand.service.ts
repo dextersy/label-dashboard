@@ -89,4 +89,15 @@ export class BrandService {
     localStorage.removeItem('brand_settings');
     this.brandSettingsSubject.next(null);
   }
+
+  refreshBrandSettings(): Observable<BrandSettings> {
+    // Refresh brand settings from the server and update all subscribers
+    return this.loadBrandByDomain();
+  }
+
+  updateBrandSettings(updatedSettings: BrandSettings): void {
+    // Update local state and localStorage with new settings
+    localStorage.setItem('brand_settings', JSON.stringify(updatedSettings));
+    this.brandSettingsSubject.next(updatedSettings);
+  }
 }

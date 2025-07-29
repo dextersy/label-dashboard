@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AdminService, BrandSettings, User, LoginAttempt, EarningsSummary, ArtistBalance, BulkEarning } from '../../services/admin.service';
 import { ReleaseService, Release } from '../../services/release.service';
+import { NotificationService } from '../../services/notification.service';
+import { BrandService } from '../../services/brand.service';
 
 @Component({
   selector: 'app-admin',
@@ -14,8 +16,6 @@ import { ReleaseService, Release } from '../../services/release.service';
 export class AdminComponent implements OnInit {
   activeTab: string = 'brand';
   loading: boolean = false;
-  message: string = '';
-  messageType: 'success' | 'error' | '' = '';
 
   // Brand Settings
   brandSettings: BrandSettings | null = null;
@@ -51,10 +51,12 @@ export class AdminComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private releaseService: ReleaseService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private notificationService: NotificationService,
+    private brandService: BrandService
   ) {
     this.brandForm = this.fb.group({
-      brand_name: ['', Validators.required],
+      name: ['', Validators.required],
       brand_website: [''],
       brand_color: ['purple', Validators.required],
       catalog_prefix: [''],
@@ -81,7 +83,6 @@ export class AdminComponent implements OnInit {
 
   setActiveTab(tab: string): void {
     this.activeTab = tab;
-    this.clearMessage();
     
     // Load tab-specific data
     switch (tab) {
@@ -116,7 +117,7 @@ export class AdminComponent implements OnInit {
         this.loadDomains();
       },
       error: (error) => {
-        this.showMessage('Error loading brand settings', 'error');
+        this.notificationService.showError('Error loading brand settings');
         this.loading = false;
       }
     });
@@ -129,7 +130,7 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.showMessage('Error loading domains', 'error');
+        this.notificationService.showError('Error loading domains');
         this.loading = false;
       }
     });
@@ -144,7 +145,7 @@ export class AdminComponent implements OnInit {
         this.loadPaymentsRoyaltiesSummary();
       },
       error: (error) => {
-        this.showMessage('Error loading earnings summary', 'error');
+        this.notificationService.showError('Error loading earnings summary');
         this.loading = false;
       }
     });
@@ -157,7 +158,7 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.showMessage('Error loading payments and royalties summary', 'error');
+        this.notificationService.showError('Error loading payments and royalties summary');
         this.loading = false;
       }
     });
@@ -173,7 +174,7 @@ export class AdminComponent implements OnInit {
         this.loadRecuperableExpenses();
       },
       error: (error) => {
-        this.showMessage('Error loading artist balances', 'error');
+        this.notificationService.showError('Error loading artist balances');
         this.loading = false;
       }
     });
@@ -186,7 +187,7 @@ export class AdminComponent implements OnInit {
         this.loadWalletBalance();
       },
       error: (error) => {
-        this.showMessage('Error loading recuperable expenses', 'error');
+        this.notificationService.showError('Error loading recuperable expenses');
         this.loading = false;
       }
     });
@@ -199,7 +200,7 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.showMessage('Error loading wallet balance', 'error');
+        this.notificationService.showError('Error loading wallet balance');
         this.loading = false;
       }
     });
@@ -214,7 +215,7 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.showMessage('Error loading releases', 'error');
+        this.notificationService.showError('Error loading releases');
         this.loading = false;
       }
     });
@@ -229,7 +230,7 @@ export class AdminComponent implements OnInit {
         this.loadLoginAttempts();
       },
       error: (error) => {
-        this.showMessage('Error loading users', 'error');
+        this.notificationService.showError('Error loading users');
         this.loading = false;
       }
     });
@@ -242,7 +243,7 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.showMessage('Error loading login attempts', 'error');
+        this.notificationService.showError('Error loading login attempts');
         this.loading = false;
       }
     });
@@ -282,12 +283,31 @@ export class AdminComponent implements OnInit {
       const formData = { ...this.brandSettings, ...this.brandForm.value };
       
       this.adminService.updateBrandSettings(formData).subscribe({
-        next: () => {
-          this.showMessage('Brand settings saved successfully', 'success');
+        next: (response) => {
+          // Update local brand settings with the response
+          if (response.brand) {
+            this.brandSettings = response.brand;
+            this.brandForm.patchValue(response.brand);
+            // Convert admin BrandSettings to brand service format and update
+            const brandServiceSettings = {
+              id: response.brand.id,
+              name: response.brand.name,
+              logo_url: response.brand.logo_url,
+              brand_color: response.brand.brand_color,
+              brand_website: response.brand.brand_website,
+              favicon_url: response.brand.favicon_url,
+              domain: this.brandService.getCurrentBrandSettings()?.domain,
+              release_submission_url: response.brand.release_submission_url,
+              catalog_prefix: response.brand.catalog_prefix
+            };
+            this.brandService.updateBrandSettings(brandServiceSettings);
+          }
+          this.notificationService.showSuccess('Brand settings saved successfully');
           this.loading = false;
         },
         error: (error) => {
-          this.showMessage('Error saving brand settings', 'error');
+          console.error('Error saving brand settings:', error);
+          this.notificationService.showError('Error saving brand settings');
           this.loading = false;
         }
       });
@@ -302,12 +322,25 @@ export class AdminComponent implements OnInit {
         next: (response) => {
           if (this.brandSettings) {
             this.brandSettings.logo_url = response.logo_url;
+            // Convert admin BrandSettings to brand service format and update
+            const brandServiceSettings = {
+              id: this.brandSettings.id,
+              name: this.brandSettings.name,
+              logo_url: response.logo_url,
+              brand_color: this.brandSettings.brand_color,
+              brand_website: this.brandSettings.brand_website,
+              favicon_url: this.brandSettings.favicon_url,
+              domain: this.brandService.getCurrentBrandSettings()?.domain,
+              release_submission_url: this.brandSettings.release_submission_url,
+              catalog_prefix: this.brandSettings.catalog_prefix
+            };
+            this.brandService.updateBrandSettings(brandServiceSettings);
           }
-          this.showMessage('Logo uploaded successfully', 'success');
+          this.notificationService.showSuccess('Logo uploaded successfully');
           this.loading = false;
         },
         error: (error) => {
-          this.showMessage('Error uploading logo', 'error');
+          this.notificationService.showError('Error uploading logo');
           this.loading = false;
         }
       });
@@ -322,12 +355,25 @@ export class AdminComponent implements OnInit {
         next: (response) => {
           if (this.brandSettings) {
             this.brandSettings.favicon_url = response.favicon_url;
+            // Convert admin BrandSettings to brand service format and update
+            const brandServiceSettings = {
+              id: this.brandSettings.id,
+              name: this.brandSettings.name,
+              logo_url: this.brandSettings.logo_url,
+              brand_color: this.brandSettings.brand_color,
+              brand_website: this.brandSettings.brand_website,
+              favicon_url: response.favicon_url,
+              domain: this.brandService.getCurrentBrandSettings()?.domain,
+              release_submission_url: this.brandSettings.release_submission_url,
+              catalog_prefix: this.brandSettings.catalog_prefix
+            };
+            this.brandService.updateBrandSettings(brandServiceSettings);
           }
-          this.showMessage('Favicon uploaded successfully', 'success');
+          this.notificationService.showSuccess('Favicon uploaded successfully');
           this.loading = false;
         },
         error: (error) => {
-          this.showMessage('Error uploading favicon', 'error');
+          this.notificationService.showError('Error uploading favicon');
           this.loading = false;
         }
       });
@@ -341,10 +387,10 @@ export class AdminComponent implements OnInit {
         next: () => {
           this.newDomainName = '';
           this.loadDomains();
-          this.showMessage('Domain added successfully', 'success');
+          this.notificationService.showSuccess('Domain added successfully');
         },
         error: (error) => {
-          this.showMessage('Error adding domain', 'error');
+          this.notificationService.showError('Error adding domain');
           this.loading = false;
         }
       });
@@ -356,10 +402,10 @@ export class AdminComponent implements OnInit {
       this.adminService.deleteDomain(domainName).subscribe({
         next: () => {
           this.loadDomains();
-          this.showMessage('Domain deleted successfully', 'success');
+          this.notificationService.showSuccess('Domain deleted successfully');
         },
         error: (error) => {
-          this.showMessage('Error deleting domain', 'error');
+          this.notificationService.showError('Error deleting domain');
         }
       });
     }
@@ -369,10 +415,10 @@ export class AdminComponent implements OnInit {
     this.adminService.verifyDomain(domainName).subscribe({
       next: () => {
         this.loadDomains();
-        this.showMessage('Domain verification initiated', 'success');
+        this.notificationService.showSuccess('Domain verification initiated');
       },
       error: (error) => {
-        this.showMessage('Error verifying domain', 'error');
+        this.notificationService.showError('Error verifying domain');
       }
     });
   }
@@ -392,10 +438,10 @@ export class AdminComponent implements OnInit {
     this.adminService.toggleAdminStatus(userId).subscribe({
       next: () => {
         this.loadUsersData();
-        this.showMessage('Admin status updated successfully', 'success');
+        this.notificationService.showSuccess('Admin status updated successfully');
       },
       error: (error) => {
-        this.showMessage('Error updating admin status', 'error');
+        this.notificationService.showError('Error updating admin status');
       }
     });
   }
@@ -405,10 +451,10 @@ export class AdminComponent implements OnInit {
       this.adminService.payAllBalances().subscribe({
         next: () => {
           this.loadBalanceData();
-          this.showMessage('All balances paid successfully', 'success');
+          this.notificationService.showSuccess('All balances paid successfully');
         },
         error: (error) => {
-          this.showMessage('Error paying balances', 'error');
+          this.notificationService.showError('Error paying balances');
         }
       });
     }
@@ -440,7 +486,7 @@ export class AdminComponent implements OnInit {
     );
 
     if (validEarnings.length === 0) {
-      this.showMessage('Please add at least one valid earning entry', 'error');
+      this.notificationService.showError('Please add at least one valid earning entry');
       return;
     }
 
@@ -449,11 +495,11 @@ export class AdminComponent implements OnInit {
       next: () => {
         this.initializeBulkEarnings();
         this.onBulkAmountChange();
-        this.showMessage(`${validEarnings.length} earnings added successfully`, 'success');
+        this.notificationService.showSuccess(`${validEarnings.length} earnings added successfully`);
         this.loading = false;
       },
       error: (error) => {
-        this.showMessage('Error saving bulk earnings', 'error');
+        this.notificationService.showError('Error saving bulk earnings');
         this.loading = false;
       }
     });
@@ -470,16 +516,6 @@ export class AdminComponent implements OnInit {
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
 
-  private showMessage(message: string, type: 'success' | 'error'): void {
-    this.message = message;
-    this.messageType = type;
-    setTimeout(() => this.clearMessage(), 5000);
-  }
-
-  clearMessage(): void {
-    this.message = '';
-    this.messageType = '';
-  }
 
   // Helper Methods for Template
   formatCurrency(amount: number): string {

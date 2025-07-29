@@ -38,6 +38,13 @@ export class AppComponent implements OnInit {
       }
     });
 
+    // Subscribe to brand settings changes for dynamic updates
+    this.brandService.brandSettings$.subscribe(brandSettings => {
+      if (brandSettings) {
+        this.applyBrandStyling(brandSettings);
+      }
+    });
+
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event) => {

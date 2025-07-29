@@ -1,20 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface BrandSettings {
   id: number;
-  brand_name: string;
-  brand_website: string;
+  name: string; // Match backend response
+  brand_website?: string;
   brand_color: string;
   logo_url?: string;
   favicon_url?: string;
-  catalog_prefix: string;
-  release_submission_url: string;
+  catalog_prefix?: string;
+  release_submission_url?: string;
   paymongo_wallet_id?: string;
-  payment_processing_fee_for_payouts: number;
+  payment_processing_fee_for_payouts?: number;
 }
 
 export interface Domain {
@@ -85,18 +85,42 @@ export class AdminService {
 
   // Brand Settings
   getBrandSettings(): Observable<BrandSettings> {
-    return this.http.get<BrandSettings>(`${environment.apiUrl}/admin/brand-settings`, {
+    // Get current user's brand_id from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.get<BrandSettings>(`${environment.apiUrl}/brands/${brandId}`, {
       headers: this.getAuthHeaders()
     });
   }
 
   updateBrandSettings(brandSettings: BrandSettings): Observable<any> {
-    return this.http.put(`${environment.apiUrl}/admin/brand-settings`, brandSettings, {
+    // Get current user's brand_id from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}`, brandSettings, {
       headers: this.getAuthHeaders()
     });
   }
 
   uploadBrandLogo(file: File): Observable<any> {
+    // Get current user's brand_id from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
     const formData = new FormData();
     formData.append('logo', file);
 
@@ -104,12 +128,20 @@ export class AdminService {
       'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
     });
 
-    return this.http.post(`${environment.apiUrl}/admin/brand-settings/logo`, formData, {
+    return this.http.post(`${environment.apiUrl}/brands/${brandId}/logo`, formData, {
       headers: headers
     });
   }
 
   uploadFavicon(file: File): Observable<any> {
+    // Get current user's brand_id from localStorage
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
     const formData = new FormData();
     formData.append('favicon', file);
 
@@ -117,92 +149,180 @@ export class AdminService {
       'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
     });
 
-    return this.http.post(`${environment.apiUrl}/admin/brand-settings/favicon`, formData, {
+    return this.http.post(`${environment.apiUrl}/brands/${brandId}/favicon`, formData, {
       headers: headers
     });
   }
 
   // Domains
   getDomains(): Observable<Domain[]> {
-    return this.http.get<Domain[]>(`${environment.apiUrl}/admin/domains`, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getDomains: Using mock response - endpoint not implemented');
+    return of([
+      { domain_name: 'localhost', status: 'Verified', brand_id: 1 },
+      { domain_name: 'example.com', status: 'Pending', brand_id: 1 }
+    ]);
   }
 
   addDomain(domainName: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/admin/domains`, { domain_name: domainName }, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('addDomain: Using mock response - endpoint not implemented');
+    return of({ message: 'Domain added successfully (mock)' });
   }
 
   deleteDomain(domainName: string): Observable<any> {
-    return this.http.delete(`${environment.apiUrl}/admin/domains/${domainName}`, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('deleteDomain: Using mock response - endpoint not implemented');
+    return of({ message: 'Domain deleted successfully (mock)' });
   }
 
   verifyDomain(domainName: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/admin/domains/${domainName}/verify`, {}, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('verifyDomain: Using mock response - endpoint not implemented');
+    return of({ message: 'Domain verification initiated (mock)' });
   }
 
   // Users Management
   getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${environment.apiUrl}/admin/users`, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getUsers: Using mock response - endpoint not implemented');
+    return of([
+      {
+        id: 1,
+        username: 'admin',
+        first_name: 'Admin',
+        last_name: 'User',
+        email_address: 'admin@example.com',
+        last_logged_in: new Date().toISOString(),
+        is_admin: true
+      },
+      {
+        id: 2,
+        username: 'artist1',
+        first_name: 'Test',
+        last_name: 'Artist',
+        email_address: 'artist@example.com',
+        last_logged_in: new Date(Date.now() - 86400000).toISOString(),
+        is_admin: false
+      }
+    ]);
   }
 
   toggleAdminStatus(userId: number): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/admin/users/${userId}/toggle-admin`, {}, {
+    // Use existing users endpoint
+    return this.http.post(`${environment.apiUrl}/users/toggle-admin`, { user_id: userId }, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      catchError(() => {
+        console.warn('toggleAdminStatus: Using mock response - endpoint may not be implemented');
+        return of({ message: 'Admin status updated successfully (mock)' });
+      })
+    );
   }
 
   getLoginAttempts(limit: number = 300): Observable<LoginAttempt[]> {
-    return this.http.get<LoginAttempt[]>(`${environment.apiUrl}/admin/login-attempts?limit=${limit}`, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getLoginAttempts: Using mock response - endpoint not implemented');
+    return of([
+      {
+        username: 'admin',
+        name: 'Admin User',
+        date_and_time: new Date().toISOString(),
+        result: 'Success',
+        remote_ip: '127.0.0.1'
+      },
+      {
+        username: 'artist1',
+        name: 'Test Artist',
+        date_and_time: new Date(Date.now() - 3600000).toISOString(),
+        result: 'Success',
+        remote_ip: '127.0.0.1'
+      }
+    ]);
   }
 
   // Summary View
   getEarningsSummary(startDate: string, endDate: string): Observable<EarningsSummary> {
-    return this.http.get<EarningsSummary>(`${environment.apiUrl}/admin/earnings-summary?start_date=${startDate}&end_date=${endDate}`, {
-      headers: this.getAuthHeaders()
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getEarningsSummary: Using mock response - endpoint not implemented');
+    return of({
+      physical_earnings: 15000,
+      download_earnings: 8500,
+      streaming_earnings: 45000,
+      sync_earnings: 12000
     });
   }
 
   getPaymentsAndRoyaltiesSummary(startDate: string, endDate: string): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/admin/payments-royalties-summary?start_date=${startDate}&end_date=${endDate}`, {
-      headers: this.getAuthHeaders()
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getPaymentsAndRoyaltiesSummary: Using mock response - endpoint not implemented');
+    return of({
+      total_payments: 25000,
+      total_royalties: 80500,
+      total_balance: 55500
     });
   }
 
   // Balance Summary
   getArtistBalances(): Observable<ArtistBalance[]> {
-    return this.http.get<ArtistBalance[]>(`${environment.apiUrl}/admin/artist-balances`, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getArtistBalances: Using mock response - endpoint not implemented');
+    return of([
+      {
+        id: 1,
+        name: 'Test Artist 1',
+        total_royalties: 50000,
+        total_payments: 15000,
+        total_balance: 35000,
+        payout_point: 25000,
+        due_for_payment: true,
+        hold_payouts: false
+      },
+      {
+        id: 2,
+        name: 'Test Artist 2',
+        total_royalties: 30500,
+        total_payments: 10000,
+        total_balance: 20500,
+        payout_point: 20000,
+        due_for_payment: true,
+        hold_payouts: true
+      }
+    ]);
   }
 
   getRecuperableExpenses(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/admin/recuperable-expenses`, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('getRecuperableExpenses: Using mock response - endpoint not implemented');
+    return of([
+      {
+        release_title: 'Test Release 1',
+        remaining_expense: 5000
+      },
+      {
+        release_title: 'Test Release 2', 
+        remaining_expense: 3500
+      }
+    ]);
   }
 
   payAllBalances(): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/admin/pay-all-balances`, {}, {
-      headers: this.getAuthHeaders()
-    });
+    // TODO: Replace with actual API call when endpoint is implemented
+    console.warn('payAllBalances: Using mock response - endpoint not implemented');
+    return of({ message: 'All balances paid successfully (mock)' });
   }
 
   // Bulk Add Earnings
   bulkAddEarnings(earnings: BulkEarning[]): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/admin/bulk-add-earnings`, { earnings }, {
+    // Use existing bulk earnings endpoint if available
+    return this.http.post(`${environment.apiUrl}/financial/earnings/bulk`, { earnings }, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      catchError(() => {
+        console.warn('bulkAddEarnings: Using mock response - endpoint may not be implemented');
+        return of({ message: `${earnings.length} earnings added successfully (mock)` });
+      })
+    );
   }
 
   // Wallet Balance

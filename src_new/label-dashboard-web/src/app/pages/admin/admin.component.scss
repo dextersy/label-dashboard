@@ -141,29 +141,6 @@
     }
   }
   
-  // Alert Messages
-  .alert {
-    margin-bottom: 20px;
-    border-radius: 4px;
-    
-    .btn-close {
-      background: none;
-      border: none;
-      font-size: 20px;
-      line-height: 1;
-      color: inherit;
-      opacity: 0.5;
-      cursor: pointer;
-      
-      &:hover {
-        opacity: 0.75;
-      }
-      
-      &:before {
-        content: "×";
-      }
-    }
-  }
   
   // Form Elements
   .form-group {
