@@ -45,11 +45,49 @@ export class GlobalNotificationComponent implements OnInit, OnDestroy {
 
   getNotificationClass(): string {
     if (!this.currentNotification) return '';
-    return this.currentNotification.type === 'success' ? 'alert-success' : 'alert-danger';
+    
+    switch (this.currentNotification.type) {
+      case 'success':
+        return 'alert-success';
+      case 'info':
+        return 'alert-info';
+      case 'warning':
+        return 'alert-warning';
+      case 'error':
+      default:
+        return 'alert-danger';
+    }
   }
 
   getNotificationIcon(): string {
     if (!this.currentNotification) return '';
-    return this.currentNotification.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    switch (this.currentNotification.type) {
+      case 'success':
+        return 'fa-check-circle';
+      case 'info':
+        return 'fa-info-circle';
+      case 'warning':
+        return 'fa-exclamation-triangle';
+      case 'error':
+      default:
+        return 'fa-exclamation-circle';
+    }
+  }
+
+  getNotificationCaption(): string {
+    if (!this.currentNotification) return '';
+    
+    switch (this.currentNotification.type) {
+      case 'success':
+        return 'Success!';
+      case 'warning':
+        return 'Warning!';
+      case 'error':
+        return 'Error!';
+      case 'info':
+      default:
+        return ''; // No caption for info messages
+    }
   }
 }

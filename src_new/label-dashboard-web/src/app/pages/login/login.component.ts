@@ -29,6 +29,7 @@ export class LoginComponent implements OnInit {
   brandLogo: string = 'assets/img/Melt Records-logo-WHITE.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
+  brandId: number | null = null;
 
   constructor(
     private router: Router,
@@ -74,6 +75,7 @@ export class LoginComponent implements OnInit {
         this.brandLogo = brandSettings.logo_url || 'assets/img/Melt Records-logo-WHITE.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
+        this.brandId = brandSettings.id;
         
         // Apply brand styling to the page
         document.documentElement.style.setProperty('--brand-color', this.brandColor);
@@ -113,6 +115,11 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    if (this.brandId === null) {
+      this.errorMessage = 'Brand information not loaded. Please refresh the page.';
+      return;
+    }
+
     this.loading = true;
     this.errorMessage = '';
     this.errorType = '';
@@ -120,7 +127,7 @@ export class LoginComponent implements OnInit {
     // Show loading overlay (matching original behavior)
     this.showLoadingOverlay();
 
-    this.authService.login(this.loginField, this.password).subscribe({
+    this.authService.login(this.loginField, this.password, this.brandId).subscribe({
       next: (response) => {
         if (response.token) {
           const redirectTo = this.redirectUrl || '/dashboard';

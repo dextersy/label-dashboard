@@ -5,6 +5,9 @@ import multer from 'multer';
 import path from 'path';
 import AWS from 'aws-sdk';
 import pngToIco from 'png-to-ico';
+import dns from 'dns';
+import { promisify } from 'util';
+import https from 'https';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -318,3 +321,262 @@ export const uploadFavicon = [
     }
   }
 ];
+
+// Domain Management Functions
+
+export const getDomains = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+
+    const domains = await Domain.findAll({
+      where: { brand_id: brandId },
+      attributes: ['domain_name', 'status', 'brand_id']
+    });
+
+    res.json(domains);
+
+  } catch (error) {
+    console.error('Error fetching domains:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const addDomain = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+    const { domain_name } = req.body;
+
+    if (!domain_name) {
+      return res.status(400).json({ error: 'Domain name is required' });
+    }
+
+    // Validate domain name format
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!domainRegex.test(domain_name)) {
+      return res.status(400).json({ error: 'Invalid domain name format' });
+    }
+
+    // Check if brand exists
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Check if domain already exists
+    const existingDomain = await Domain.findOne({
+      where: { domain_name }
+    });
+
+    if (existingDomain) {
+      return res.status(409).json({ error: 'Domain already exists' });
+    }
+
+    // Create new domain
+    const newDomain = await Domain.create({
+      brand_id: parseInt(brandId),
+      domain_name: domain_name.toLowerCase().trim(),
+      status: 'Unverified'
+    });
+
+    res.status(201).json({
+      message: 'Domain added successfully',
+      domain: {
+        domain_name: newDomain.domain_name,
+        status: newDomain.status,
+        brand_id: newDomain.brand_id
+      }
+    });
+
+  } catch (error) {
+    console.error('Error adding domain:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteDomain = async (req: Request, res: Response) => {
+  try {
+    const { brandId, domainName } = req.params;
+
+    // Check if brand exists
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Find the domain
+    const domain = await Domain.findOne({
+      where: {
+        brand_id: brandId,
+        domain_name: domainName
+      }
+    });
+
+    if (!domain) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    // Delete the domain
+    await domain.destroy();
+
+    res.json({
+      message: 'Domain deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting domain:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const dnsResolve4 = promisify(dns.resolve4);
+
+// Cache for server IP (valid for 1 hour)
+let serverIPCache: { ip: string; timestamp: number } | null = null;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+
+// Function to get server's public IP address dynamically
+const getServerPublicIP = async (): Promise<string> => {
+  // Check cache first
+  if (serverIPCache && (Date.now() - serverIPCache.timestamp) < CACHE_DURATION) {
+    console.log(`Using cached server IP: ${serverIPCache.ip}`);
+    return serverIPCache.ip;
+  }
+
+  return new Promise((resolve, reject) => {
+    // Try multiple IP detection services for reliability
+    const ipServices = [
+      'https://api.ipify.org',
+      'https://ipinfo.io/ip',
+      'https://icanhazip.com'
+    ];
+
+    let attempts = 0;
+    const tryService = (serviceIndex: number) => {
+      if (serviceIndex >= ipServices.length) {
+        reject(new Error('Unable to determine server public IP from any service'));
+        return;
+      }
+
+      const url = ipServices[serviceIndex];
+      console.log(`Attempting to get server IP from: ${url}`);
+
+      const request = https.get(url, (response) => {
+        let data = '';
+        
+        response.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        response.on('end', () => {
+          const ip = data.trim();
+          // Validate IP format
+          const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+          if (ipRegex.test(ip)) {
+            console.log(`Server public IP detected: ${ip}`);
+            // Cache the IP
+            serverIPCache = { ip, timestamp: Date.now() };
+            resolve(ip);
+          } else {
+            console.warn(`Invalid IP format from ${url}: ${ip}`);
+            tryService(serviceIndex + 1);
+          }
+        });
+      });
+
+      request.on('error', (error) => {
+        console.warn(`Error getting IP from ${url}:`, error.message);
+        tryService(serviceIndex + 1);
+      });
+
+      // Set timeout for each request
+      request.setTimeout(5000, () => {
+        request.destroy();
+        console.warn(`Timeout getting IP from ${url}`);
+        tryService(serviceIndex + 1);
+      });
+    };
+
+    tryService(0);
+  });
+};
+
+export const verifyDomain = async (req: Request, res: Response) => {
+  try {
+    const { brandId, domainName } = req.params;
+
+    // Check if brand exists
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Find the domain
+    const domain = await Domain.findOne({
+      where: {
+        brand_id: brandId,
+        domain_name: domainName
+      }
+    });
+
+    if (!domain) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    try {
+      // Get server's public IP dynamically
+      console.log('Getting server public IP...');
+      const serverIP = await getServerPublicIP();
+      console.log(`Verifying domain ${domainName} against server IP ${serverIP}`);
+      
+      // Resolve domain's A record
+      const addresses = await dnsResolve4(domainName);
+      console.log(`Domain ${domainName} resolves to:`, addresses);
+      
+      // Check if any of the resolved addresses match our server IP
+      const isVerified = addresses.some(addr => addr === serverIP);
+      console.log(`Domain verification result: ${isVerified ? 'VERIFIED' : 'FAILED'}`);
+      
+      // Update domain status - either Verified or Unverified
+      const newStatus = isVerified ? 'Verified' : 'Unverified';
+      await domain.update({ status: newStatus });
+
+      if (isVerified) {
+        res.json({
+          message: 'Domain verified successfully',
+          status: 'Verified'
+        });
+      } else {
+        res.status(400).json({
+          error: 'Domain verification failed. Domain does not point to our server.',
+          status: 'Unverified',
+          serverIP,
+          resolvedIPs: addresses,
+          hint: `Please update your domain's A record to point to ${serverIP}`
+        });
+      }
+
+    } catch (error: any) {
+      console.error(`Error during domain verification for ${domainName}:`, error.message);
+      
+      // All errors result in Unverified status
+      await domain.update({ status: 'Unverified' });
+      
+      if (error.message.includes('Unable to determine server public IP')) {
+        res.status(500).json({
+          error: 'Unable to determine server IP address for verification',
+          status: 'Unverified'
+        });
+      } else {
+        res.status(400).json({
+          error: 'Domain verification failed. Please check your DNS configuration.',
+          status: 'Unverified',
+          dnsError: error.message
+        });
+      }
+    }
+
+  } catch (error) {
+    console.error('Error verifying domain:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

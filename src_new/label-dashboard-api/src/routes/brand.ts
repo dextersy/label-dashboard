@@ -1,5 +1,5 @@
 import express from 'express';
-import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon } from '../controllers/brandController';
+import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain } from '../controllers/brandController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = express.Router();
@@ -12,5 +12,11 @@ router.get('/:brandId', authenticateToken, getBrandSettings);
 router.put('/:brandId', authenticateToken, requireAdmin, updateBrandSettings);
 router.post('/:brandId/logo', authenticateToken, requireAdmin, ...uploadLogo);
 router.post('/:brandId/favicon', authenticateToken, requireAdmin, ...uploadFavicon);
+
+// Domain management routes
+router.get('/:brandId/domains', authenticateToken, requireAdmin, getDomains);
+router.post('/:brandId/domains', authenticateToken, requireAdmin, addDomain);
+router.delete('/:brandId/domains/:domainName', authenticateToken, requireAdmin, deleteDomain);
+router.put('/:brandId/domains/:domainName/verify', authenticateToken, requireAdmin, verifyDomain);
 
 export default router;

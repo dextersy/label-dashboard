@@ -413,14 +413,50 @@ export class AdminComponent implements OnInit {
 
   verifyDomain(domainName: string): void {
     this.adminService.verifyDomain(domainName).subscribe({
-      next: () => {
-        this.loadDomains();
-        this.notificationService.showSuccess('Domain verification initiated');
+      next: (response) => {
+        // Update local domain status
+        const domainIndex = this.domains.findIndex(d => d.domain_name === domainName);
+        if (domainIndex !== -1) {
+          this.domains[domainIndex].status = response.status;
+        }
+        this.notificationService.showSuccess('Domain verified successfully!');
       },
       error: (error) => {
-        this.notificationService.showError('Error verifying domain');
+        // Update local domain status to unverified
+        const domainIndex = this.domains.findIndex(d => d.domain_name === domainName);
+        if (domainIndex !== -1) {
+          this.domains[domainIndex].status = 'Unverified';
+        }
+        
+        const errorMessage = error.error?.error || 'Domain verification failed';
+        this.notificationService.showError(errorMessage);
+        
+        // Show helpful hint if available
+        if (error.error?.hint) {
+          console.log('DNS Configuration Hint:', error.error.hint);
+        }
       }
     });
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'Verified':
+        return 'fas fa-check-circle text-success';
+      case 'Unverified':
+      default:
+        return 'fas fa-times-circle text-danger';
+    }
+  }
+
+  getStatusTooltip(status: string): string {
+    switch (status) {
+      case 'Verified':
+        return 'Domain verified successfully - DNS points to our server';
+      case 'Unverified':
+      default:
+        return 'Domain not verified - Click to verify';
+    }
   }
 
   filterSummaryData(): void {

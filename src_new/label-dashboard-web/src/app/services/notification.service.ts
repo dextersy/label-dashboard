@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 export interface NotificationMessage {
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'info' | 'warning';
   message: string;
 }
 
@@ -19,6 +19,14 @@ export class NotificationService {
 
   showError(message: string): void {
     this.notificationSubject.next({ type: 'error', message });
+  }
+
+  showInfo(message: string): void {
+    this.notificationSubject.next({ type: 'info', message });
+  }
+
+  showWarning(message: string): void {
+    this.notificationSubject.next({ type: 'warning', message });
   }
 
   clear(): void {

@@ -173,12 +173,25 @@
                       <table class="table">
                         <tbody>
                           <tr *ngFor="let domain of domains">
-                            <td>{{ domain.domain_name }}</td>
                             <td>
-                              <i class="fas fa-check" *ngIf="domain.status === 'Verified'" title="Verified"></i>
+                              <i [class]="getStatusIcon(domain.status)" 
+                                 [title]="getStatusTooltip(domain.status)"></i>
+                              {{ domain.domain_name }}
+                            </td>
+                            <td>
                               <a *ngIf="domain.status !== 'Verified'" 
-                                 (click)="verifyDomain(domain.domain_name)" class="btn btn-link btn-sm">[ Verify ]</a>
-                              <a (click)="deleteDomain(domain.domain_name)" class="btn btn-link btn-sm text-danger">
+                                 (click)="verifyDomain(domain.domain_name)" 
+                                 class="btn btn-link btn-sm"
+                                 title="Click to verify domain">
+                                [ Verify ]
+                              </a>
+                              <span *ngIf="domain.status === 'Verified'" 
+                                    class="text-success small">
+                                <i class="fas fa-check"></i> Verified
+                              </span>
+                              <a (click)="deleteDomain(domain.domain_name)" 
+                                 class="btn btn-link btn-sm text-danger ms-2"
+                                 title="Delete domain">
                                 <i class="fas fa-trash"></i>
                               </a>
                             </td>

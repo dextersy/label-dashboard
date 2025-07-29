@@ -3,6 +3,6 @@
     <span aria-hidden="true">&times;</span>
   </button>
   <i class="fa" [class]="getNotificationIcon()"></i>
-  <strong>{{ currentNotification.type === 'success' ? 'Success!' : 'Error!' }}</strong>
+  <strong *ngIf="getNotificationCaption()">{{ getNotificationCaption() }}</strong>
   {{ currentNotification.message }}
 </div>

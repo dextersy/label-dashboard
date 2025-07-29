@@ -156,30 +156,57 @@ export class AdminService {
 
   // Domains
   getDomains(): Observable<Domain[]> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getDomains: Using mock response - endpoint not implemented');
-    return of([
-      { domain_name: 'localhost', status: 'Verified', brand_id: 1 },
-      { domain_name: 'example.com', status: 'Pending', brand_id: 1 }
-    ]);
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.get<Domain[]>(`${environment.apiUrl}/brands/${brandId}/domains`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   addDomain(domainName: string): Observable<any> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('addDomain: Using mock response - endpoint not implemented');
-    return of({ message: 'Domain added successfully (mock)' });
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.post(`${environment.apiUrl}/brands/${brandId}/domains`, 
+      { domain_name: domainName }, 
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   deleteDomain(domainName: string): Observable<any> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('deleteDomain: Using mock response - endpoint not implemented');
-    return of({ message: 'Domain deleted successfully (mock)' });
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.delete(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   verifyDomain(domainName: string): Observable<any> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('verifyDomain: Using mock response - endpoint not implemented');
-    return of({ message: 'Domain verification initiated (mock)' });
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}/verify`, 
+      {}, 
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   // Users Management
