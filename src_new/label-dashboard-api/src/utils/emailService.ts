@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import EmailAttempt from '../models/EmailAttempt';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -13,12 +14,37 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Log email attempt to database (matching PHP implementation)
+const logEmailAttempt = async (
+  recipients: string[],
+  subject: string,
+  body: string,
+  result: boolean,
+  brandId: number
+): Promise<void> => {
+  try {
+    await EmailAttempt.create({
+      recipients: recipients.join(','),
+      subject,
+      body,
+      result: result ? 'Success' : 'Failed',
+      brand_id: brandId,
+    });
+  } catch (error) {
+    console.error('Error logging email attempt:', error);
+    // Don't throw - logging failure shouldn't prevent email sending
+  }
+};
+
 export const sendEmail = async (
   recipients: string[],
   subject: string,
   htmlBody: string,
+  brandId: number,
   textBody?: string
 ): Promise<boolean> => {
+  let success = false;
+  
   try {
     const mailOptions = {
       from: process.env.FROM_EMAIL,
@@ -30,16 +56,22 @@ export const sendEmail = async (
 
     const result = await transporter.sendMail(mailOptions);
     console.log('Email sent successfully:', result.messageId);
-    return true;
+    success = true;
   } catch (error) {
     console.error('Email sending failed:', error);
-    return false;
+    success = false;
   }
+
+  // Log the email attempt (matching PHP implementation)
+  await logEmailAttempt(recipients, subject, htmlBody, success, brandId);
+  
+  return success;
 };
 
 export const sendNotificationEmail = async (
   type: 'login_success' | 'login_failure' | 'admin_alert',
-  data: any
+  data: any,
+  brandId: number
 ): Promise<boolean> => {
   let subject: string;
   let body: string;
@@ -92,7 +124,7 @@ export const sendNotificationEmail = async (
       return false;
   }
 
-  return await sendEmail(recipients, subject, body);
+  return await sendEmail(recipients, subject, body, brandId);
 };
 
 // Load email template from file
@@ -122,35 +154,37 @@ const processTemplate = (template: string, data: Record<string, any>): string =>
 export const sendBrandedEmail = async (
   email: string,
   templateName: string,
-  templateData: Record<string, any>
+  templateData: Record<string, any>,
+  brandId: number
 ): Promise<boolean> => {
-  try {
-    // Load the email template
-    const template = loadEmailTemplate(templateName);
-    if (!template) {
-      console.error(`Template ${templateName} not found`);
-      return false;
-    }
+  
+  // Load the email template
+  const template = loadEmailTemplate(templateName);
+  if (!template) {
+    console.error(`Template ${templateName} not found`);
+    return false;
+  }
 
-    // Process template with data
-    const htmlBody = processTemplate(template, templateData);
+  // Process template with data
+  const htmlBody = processTemplate(template, templateData);
     
-    // Determine subject based on template
-    let subject = '';
-    switch (templateName) {
-      case 'invite_email':
-        subject = `You've been invited to join ${templateData.artist || 'the team'}!`;
-        break;
-      case 'artist_update_email':
-        subject = `${templateData.artist_name || 'Artist'} profile has been updated`;
-        break;
-      case 'reset_password_email':
-        subject = 'Reset your password';
-        break;
-      default:
-        subject = 'Notification';
-    }
+  // Determine subject based on template
+  let subject = '';
+  switch (templateName) {
+    case 'invite_email':
+      subject = `You've been invited to join ${templateData.artist || 'the team'}!`;
+      break;
+    case 'artist_update_email':
+      subject = `${templateData.artist_name || 'Artist'} profile has been updated`;
+      break;
+    case 'reset_password_email':
+      subject = 'Reset your password';
+      break;
+    default:
+      subject = 'Notification';
+  }
 
+  try {
     const mailOptions = {
       from: process.env.FROM_EMAIL,
       to: email,
@@ -160,9 +194,15 @@ export const sendBrandedEmail = async (
 
     const result = await transporter.sendMail(mailOptions);
     console.log('Branded email sent successfully:', result.messageId);
+    
+    // Log successful email attempt
+    await logEmailAttempt([email], subject, htmlBody, true, brandId);
     return true;
   } catch (error) {
     console.error('Branded email sending failed:', error);
+    
+    // Log failed email attempt
+    await logEmailAttempt([email], subject, htmlBody, false, brandId);
     return false;
   }
 };
@@ -183,7 +223,7 @@ export const sendTeamInviteEmail = async (
     logo: brandInfo?.logo_url || ''
   };
 
-  return await sendBrandedEmail(email, 'invite_email', templateData);
+  return await sendBrandedEmail(email, 'invite_email', templateData, brandInfo?.id || 1);
 };
 
 // Send artist update notification email
@@ -231,7 +271,7 @@ export const sendArtistUpdateEmail = async (
     logo: brandInfo?.logo_url || ''
   };
 
-  return await sendBrandedEmail(email, 'artist_update_email', templateData);
+  return await sendBrandedEmail(email, 'artist_update_email', templateData, brandInfo?.id || 1);
 };
 
 // Send payment method update notification
@@ -262,7 +302,7 @@ export const sendPaymentMethodNotification = async (
     template = template.replace(/%LINK%/g, `${process.env.FRONTEND_URL}/financial#payments`);
 
     const subject = `A new payment method has been added to ${artistName}`;
-    return await sendEmail(recipients, subject, template);
+    return await sendEmail(recipients, subject, template, brand?.id || 1);
   } catch (error) {
     console.error('Error sending payment method notification:', error);
     return false;
@@ -291,7 +331,7 @@ export const sendPayoutPointNotification = async (
     template = template.replace(/%URL%/g, `${process.env.FRONTEND_URL}/financial#payments`);
 
     const subject = `Payout point for ${artistName} updated.`;
-    return await sendEmail(recipients, subject, template);
+    return await sendEmail(recipients, subject, template, brand?.id || 1);
   } catch (error) {
     console.error('Error sending payout point notification:', error);
     return false;
@@ -311,7 +351,8 @@ export const sendEarningsNotification = async (
   brandName: string,
   brandColor: string,
   brandLogo: string,
-  dashboardUrl: string
+  dashboardUrl: string,
+  brandId: number
 ): Promise<boolean> => {
   try {
     const templatePath = path.join(__dirname, '../assets/templates/earning_notification.html');
@@ -331,7 +372,7 @@ export const sendEarningsNotification = async (
     template = template.replace(/%URL%/g, dashboardUrl);
 
     const subject = `New earnings posted for ${artistName} - ${releaseTitle}`;
-    return await sendEmail(recipients, subject, template);
+    return await sendEmail(recipients, subject, template, brandId);
   } catch (error) {
     console.error('Error sending earnings notification:', error);
     return false;
@@ -343,7 +384,8 @@ export const sendLoginNotification = async (
   userEmail: string,
   firstName: string,
   remoteIp: string,
-  proxyIp: string
+  proxyIp: string,
+  brandId: number
 ): Promise<boolean> => {
   const subject = 'Successful login to your account.';
   
@@ -364,14 +406,15 @@ export const sendLoginNotification = async (
     </div>
   `;
 
-  return await sendEmail([userEmail], subject, body);
+  return await sendEmail([userEmail], subject, body, brandId);
 };
 
 // Send admin failed login alert (matching PHP logic)
 export const sendAdminFailedLoginAlert = async (
   username: string,
   remoteIp: string,
-  proxyIp: string
+  proxyIp: string,
+  brandId: number
 ): Promise<boolean> => {
   const subject = 'WARNING: Too many failed logins detected.';
   
@@ -379,5 +422,5 @@ export const sendAdminFailedLoginAlert = async (
   const body = `We've detected multiple login failures for user <b>${username}</b>.<br>Remote login IP: ${remoteIp}<br>Proxy login IP: ${proxyIp}<br><br>`;
 
   const adminEmail = process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com'; // Matching PHP default
-  return await sendEmail([adminEmail], subject, body);
+  return await sendEmail([adminEmail], subject, body, brandId);
 };

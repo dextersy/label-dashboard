@@ -299,7 +299,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         processingFee: processingFee,
         totalAmount: totalAmount + processingFee,
         paymentUrl: paymentLink.attributes.checkout_url
-      }
+      },
+      req.user.brand_id
     );
 
     res.status(201).json({
@@ -397,7 +398,8 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
         name: ticket.name,
         eventTitle: ticket.event.title,
         ticketCode: ticket.ticket_code
-      }
+      },
+      req.user.brand_id
     );
 
     res.json({ 

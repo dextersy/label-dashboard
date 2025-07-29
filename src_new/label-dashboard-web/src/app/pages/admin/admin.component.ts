@@ -5,11 +5,12 @@ import { AdminService, BrandSettings, User, LoginAttempt, EarningsSummary, Artis
 import { ReleaseService, Release } from '../../services/release.service';
 import { NotificationService } from '../../services/notification.service';
 import { BrandService } from '../../services/brand.service';
+import { PaginatedTableComponent, PaginationInfo } from '../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginatedTableComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
@@ -46,7 +47,11 @@ export class AdminComponent implements OnInit {
 
   // Users
   users: User[] = [];
+  usersPagination: PaginationInfo | null = null;
+  usersLoading: boolean = false;
   loginAttempts: LoginAttempt[] = [];
+  loginAttemptsPagination: PaginationInfo | null = null;
+  loginAttemptsLoading: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -222,29 +227,38 @@ export class AdminComponent implements OnInit {
   }
 
   private loadUsersData(): void {
-    this.loading = true;
+    this.loadUsers(1);
+    this.loadLoginAttempts(1);
+  }
+
+  loadUsers(page: number): void {
+    this.usersLoading = true;
     
-    this.adminService.getUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-        this.loadLoginAttempts();
+    this.adminService.getUsers(page, 15).subscribe({
+      next: (response) => {
+        this.users = response.data;
+        this.usersPagination = response.pagination;
+        this.usersLoading = false;
       },
       error: (error) => {
         this.notificationService.showError('Error loading users');
-        this.loading = false;
+        this.usersLoading = false;
       }
     });
   }
 
-  private loadLoginAttempts(): void {
-    this.adminService.getLoginAttempts().subscribe({
-      next: (attempts) => {
-        this.loginAttempts = attempts;
-        this.loading = false;
+  loadLoginAttempts(page: number): void {
+    this.loginAttemptsLoading = true;
+    
+    this.adminService.getLoginAttempts(page, 20).subscribe({
+      next: (response) => {
+        this.loginAttempts = response.data;
+        this.loginAttemptsPagination = response.pagination;
+        this.loginAttemptsLoading = false;
       },
       error: (error) => {
         this.notificationService.showError('Error loading login attempts');
-        this.loading = false;
+        this.loginAttemptsLoading = false;
       }
     });
   }
@@ -473,7 +487,7 @@ export class AdminComponent implements OnInit {
   toggleAdminStatus(userId: number): void {
     this.adminService.toggleAdminStatus(userId).subscribe({
       next: () => {
-        this.loadUsersData();
+        this.loadUsers(this.usersPagination?.current_page || 1);
         this.notificationService.showSuccess('Admin status updated successfully');
       },
       error: (error) => {

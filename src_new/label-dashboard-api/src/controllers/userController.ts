@@ -64,7 +64,8 @@ export const sendResetLink = async (req: Request, res: Response) => {
         <p><a href="${resetLink}">Reset Password</a></p>
         <p>This link will expire in 24 hours.</p>
         <p>If you didn't request this reset, please ignore this email.</p>
-      `
+      `,
+      user.brand_id
     );
 
     if (emailSent) {
@@ -201,7 +202,8 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
         <p>You've been invited to join our label dashboard as a team member.</p>
         <p><a href="${inviteLink}">Accept Invitation</a></p>
         <p>If you don't recognize this invitation, please ignore this email.</p>
-      `
+      `,
+      req.user.brand_id
     );
 
     if (emailSent) {
@@ -281,6 +283,122 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Team member removed successfully' });
   } catch (error) {
     console.error('Remove team member error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAllUsers = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Parse pagination parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+
+    // Exclude users with blank usernames (following PHP pattern)
+    const whereCondition = {
+      brand_id: req.user.brand_id,
+      username: {
+        [require('sequelize').Op.ne]: '',
+        [require('sequelize').Op.not]: null
+      }
+    };
+
+    const { count, rows: users } = await User.findAndCountAll({
+      where: whereCondition,
+      attributes: [
+        'id', 
+        'username', 
+        'email_address', 
+        'first_name', 
+        'last_name', 
+        'is_admin', 
+        'last_logged_in'
+      ],
+      order: [['username', 'ASC']],
+      limit,
+      offset
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    res.json({
+      data: users,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: limit,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLoginAttempts = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Parse pagination parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: loginAttempts } = await LoginAttempt.findAndCountAll({
+      where: { brand_id: req.user.brand_id },
+      include: [{ 
+        model: User, 
+        as: 'user',
+        attributes: ['username', 'first_name', 'last_name'],
+        where: {
+          username: {
+            [require('sequelize').Op.ne]: '',
+            [require('sequelize').Op.not]: null
+          }
+        },
+        required: false // Left join to include attempts even if user is deleted
+      }],
+      order: [['date_and_time', 'DESC']],
+      limit,
+      offset
+    });
+
+    // Format the response to match the frontend interface
+    const formattedAttempts = loginAttempts.map(attempt => {
+      const user = (attempt as any).user;
+      return {
+        username: user?.username || 'Unknown',
+        name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Unknown User',
+        date_and_time: attempt.date_and_time,
+        result: attempt.status,
+        remote_ip: attempt.remote_ip || attempt.proxy_ip || 'Unknown'
+      };
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    res.json({
+      data: formattedAttempts,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: limit,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get login attempts error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

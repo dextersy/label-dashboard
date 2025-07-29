@@ -256,7 +256,8 @@ export const ticketPaymentWebhook = async (req: Request, res: Response) => {
             eventDate: ticket.event.date_and_time,
             eventVenue: ticket.event.venue,
             numberOfEntries: ticket.number_of_entries
-          }
+          },
+          ticket.event.brand_id
         );
 
         // Update ticket status to sent

@@ -556,7 +556,8 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
               datePaid: new Date(date_paid).toLocaleDateString(),
               method: paid_thru_type || 'Not specified',
               description: description || 'Payment'
-            }
+            },
+            req.user.brand_id
           );
         }
       }
@@ -930,7 +931,8 @@ async function sendEarningNotifications(earning: any, brandId: number) {
         brandName,
         brandColor,
         brandLogo,
-        dashboardUrl
+        dashboardUrl,
+        release.brand_id
       );
     }
 

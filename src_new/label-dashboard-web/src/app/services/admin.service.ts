@@ -210,62 +210,22 @@ export class AdminService {
   }
 
   // Users Management
-  getUsers(): Observable<User[]> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getUsers: Using mock response - endpoint not implemented');
-    return of([
-      {
-        id: 1,
-        username: 'admin',
-        first_name: 'Admin',
-        last_name: 'User',
-        email_address: 'admin@example.com',
-        last_logged_in: new Date().toISOString(),
-        is_admin: true
-      },
-      {
-        id: 2,
-        username: 'artist1',
-        first_name: 'Test',
-        last_name: 'Artist',
-        email_address: 'artist@example.com',
-        last_logged_in: new Date(Date.now() - 86400000).toISOString(),
-        is_admin: false
-      }
-    ]);
+  getUsers(page: number = 1, limit: number = 20): Observable<{data: User[], pagination: any}> {
+    return this.http.get<{data: User[], pagination: any}>(`${environment.apiUrl}/users?page=${page}&limit=${limit}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   toggleAdminStatus(userId: number): Observable<any> {
-    // Use existing users endpoint
     return this.http.post(`${environment.apiUrl}/users/toggle-admin`, { user_id: userId }, {
       headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        console.warn('toggleAdminStatus: Using mock response - endpoint may not be implemented');
-        return of({ message: 'Admin status updated successfully (mock)' });
-      })
-    );
+    });
   }
 
-  getLoginAttempts(limit: number = 300): Observable<LoginAttempt[]> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getLoginAttempts: Using mock response - endpoint not implemented');
-    return of([
-      {
-        username: 'admin',
-        name: 'Admin User',
-        date_and_time: new Date().toISOString(),
-        result: 'Success',
-        remote_ip: '127.0.0.1'
-      },
-      {
-        username: 'artist1',
-        name: 'Test Artist',
-        date_and_time: new Date(Date.now() - 3600000).toISOString(),
-        result: 'Success',
-        remote_ip: '127.0.0.1'
-      }
-    ]);
+  getLoginAttempts(page: number = 1, limit: number = 50): Observable<{data: LoginAttempt[], pagination: any}> {
+    return this.http.get<{data: LoginAttempt[], pagination: any}>(`${environment.apiUrl}/users/login-attempts?page=${page}&limit=${limit}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   // Summary View

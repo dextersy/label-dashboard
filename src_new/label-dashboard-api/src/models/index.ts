@@ -19,6 +19,7 @@ import ArtistDocument from './ArtistDocument';
 import ArtistAccess from './ArtistAccess';
 import Domain from './Domain';
 import LoginAttempt from './LoginAttempt';
+import EmailAttempt from './EmailAttempt';
 
 // Define relationships
 // Brand relationships
@@ -28,6 +29,7 @@ Brand.hasMany(Event, { foreignKey: 'brand_id', as: 'events' });
 Brand.hasMany(Release, { foreignKey: 'brand_id', as: 'releases' });
 Brand.hasMany(RecuperableExpense, { foreignKey: 'brand_id', as: 'expenses' });
 Brand.hasMany(LoginAttempt, { foreignKey: 'brand_id', as: 'loginAttempts' });
+Brand.hasMany(EmailAttempt, { foreignKey: 'brand_id', as: 'emailAttempts' });
 Brand.hasMany(Domain, { foreignKey: 'brand_id', as: 'domains' });
 
 // User relationships
@@ -126,6 +128,9 @@ Domain.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 LoginAttempt.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 LoginAttempt.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 
+// EmailAttempt relationships
+EmailAttempt.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+
 // Export all models
 export {
   sequelize,
@@ -147,6 +152,7 @@ export {
   ArtistAccess,
   Domain,
   LoginAttempt,
+  EmailAttempt,
 };
 
 // Initialize database connection

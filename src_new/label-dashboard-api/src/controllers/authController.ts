@@ -39,7 +39,7 @@ export const login = async (req: Request, res: Response) => {
     // Check login lock (matching PHP logic)
     const isLocked = await checkLoginLock(user.id);
     if (isLocked) {
-      await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp);
+      await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id);
       const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
       return res.status(423).json({ 
         error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.` 
@@ -92,7 +92,8 @@ export const login = async (req: Request, res: Response) => {
       user.email_address,
       user.first_name || '',
       remoteIp,
-      proxyIp
+      proxyIp,
+      user.brand_id
     ).catch(error => {
       console.error('Failed to send login notification:', error);
       // Don't fail login if email fails
@@ -177,7 +178,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       resetHash, 
       user.brand?.brand_name || 'Label Dashboard',
       user.brand?.brand_color || '#5fbae9',
-      user.brand?.logo_url || ''
+      user.brand?.logo_url || '',
+      user.brand_id
     );
 
     // Send admin notification (matching original PHP)
@@ -234,10 +236,10 @@ export const resetPassword = async (req: Request, res: Response) => {
 };
 
 // Helper functions matching original PHP implementation
-async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string): Promise<boolean> {
+async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number): Promise<boolean> {
   const subject = "Here's the link to reset your password!";
   const emailContent = generateEmailFromTemplate(resetHash, brandName, brandColor, brandLogo);
-  return await sendEmail([emailAddress], subject, emailContent);
+  return await sendEmail([emailAddress], subject, emailContent, brandId);
 }
 
 function generateEmailFromTemplate(resetHash: string, brandName: string, brandColor: string, brandLogo: string): string {
@@ -283,7 +285,7 @@ async function sendAdminNotification(user: any, remoteIp: string, proxyIp: strin
     Proxy login IP: ${proxyIp}<br><br>
   `;
   
-  return await sendEmail([adminEmail], subject, body);
+  return await sendEmail([adminEmail], subject, body, user.brand_id);
 }
 
 // Validate reset hash (matching original PHP fromResetHash validation)
