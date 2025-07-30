@@ -633,7 +633,7 @@ export const getPaymentById = async (req: AuthRequest, res: Response) => {
 export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.params;
-    const { page = '1', limit = '10' } = req.query;
+    const { page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -651,9 +651,53 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    // Get payments for this artist with pagination
+    // Build where conditions based on filters
+    const where: any = { artist_id: artist_id };
+    
+    // Add search filters
+    if (filters.description && filters.description !== '') {
+      where.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
+    }
+    
+    if (filters.paid_thru_type && filters.paid_thru_type !== '') {
+      where.paid_thru_type = { [require('sequelize').Op.like]: `%${filters.paid_thru_type}%` };
+    }
+    
+    if (filters.amount && filters.amount !== '') {
+      where.amount = parseFloat(filters.amount as string);
+    }
+    
+    if (filters.payment_processing_fee && filters.payment_processing_fee !== '') {
+      where.payment_processing_fee = parseFloat(filters.payment_processing_fee as string);
+    }
+    
+    if (filters.date_paid && filters.date_paid !== '') {
+      // Search by date (exact match for the day)
+      const searchDate = new Date(filters.date_paid as string);
+      const nextDay = new Date(searchDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      where.date_paid = {
+        [require('sequelize').Op.gte]: searchDate,
+        [require('sequelize').Op.lt]: nextDay
+      };
+    }
+
+    // Build order clause
+    let orderClause: any[] = [['date_paid', 'DESC']]; // Default order
+    
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['date_paid', 'description', 'paid_thru_type', 'amount', 'payment_processing_fee'];
+      const validDirections = ['asc', 'desc'];
+      
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        orderClause = [[sortBy as string, (sortDirection as string).toUpperCase()]];
+      }
+    }
+
+    // Get payments for this artist with pagination and filters
     const { count, rows: payments } = await Payment.findAndCountAll({
-      where: { artist_id: artist_id },
+      where,
       include: [
         { 
           model: Artist, 
@@ -661,7 +705,7 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
           where: { brand_id: req.user.brand_id }
         }
       ],
-      order: [['date_paid', 'DESC']],
+      order: orderClause,
       limit: pageSize,
       offset: offset
     });

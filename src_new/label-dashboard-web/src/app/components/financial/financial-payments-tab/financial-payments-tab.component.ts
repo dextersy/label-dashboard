@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Payment, PaymentMethod, PayoutSettings } from '../../../pages/financial/financial.component';
 import { PaymentsTableComponent } from '../payments-table/payments-table.component';
-import { PaginatedTableComponent, PaginationInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-financial-payments-tab',
@@ -16,8 +16,11 @@ export class FinancialPaymentsTabComponent {
   @Input() payments: Payment[] = [];
   @Input() paymentsPagination: PaginationInfo | null = null;
   @Input() paymentsLoading: boolean = false;
+  @Input() paymentsSort: { column: string; direction: 'asc' | 'desc' } | null = null;
   @Input() paymentMethods: PaymentMethod[] = [];
   @Output() paymentsPageChange = new EventEmitter<number>();
+  @Output() paymentsFiltersChange = new EventEmitter<SearchFilters>();
+  @Output() paymentsSortChange = new EventEmitter<{ column: string; direction: 'asc' | 'desc' } | null>();
   @Input() payoutSettings: PayoutSettings | null = null;
   @Input() supportedBanks: { bank_code: string; bank_name: string }[] = [];
   @Input() addPaymentMethodForm: any = {};
@@ -26,6 +29,15 @@ export class FinancialPaymentsTabComponent {
   @Input() onUpdatePayoutSettings: () => Promise<void> = async () => {};
   @Input() onDeletePaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
   @Input() onSetDefaultPaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
+
+  // Define table columns for search and sort functionality
+  paymentsColumns: TableColumn[] = [
+    { key: 'date_paid', label: 'Date Paid', type: 'date', searchable: true, sortable: true },
+    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: true },
+    { key: 'paid_thru_type', label: 'Paid Through', type: 'text', searchable: true, sortable: true },
+    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true },
+    { key: 'payment_processing_fee', label: 'Processing Fee', type: 'number', searchable: true, sortable: true }
+  ];
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
@@ -48,7 +60,4 @@ export class FinancialPaymentsTabComponent {
     await this.onSetDefaultPaymentMethod(paymentMethodId);
   }
 
-  onPaymentsPageChange(page: number): void {
-    this.paymentsPageChange.emit(page);
-  }
 }

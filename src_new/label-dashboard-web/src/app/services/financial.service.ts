@@ -68,8 +68,22 @@ export class FinancialService {
     };
   }
 
-  async getPayments(artistId: number, page: number = 1, limit: number = 10): Promise<{payments: Payment[], pagination: any}> {
-    const response = await this.http.get<{payments: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/payments?page=${page}&limit=${limit}`, {
+  async getPayments(artistId: number, page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Promise<{payments: Payment[], pagination: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    
+    const response = await this.http.get<{payments: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/payments?${queryParams}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 

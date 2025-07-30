@@ -3,11 +3,77 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5>{{ title }}</h5>
-        <span class="text-muted" *ngIf="pagination">
-          Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
-          {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }} 
-          of {{ pagination.total_count }} entries
-        </span>
+        <div class="d-flex align-items-center gap-2">
+          <button 
+            *ngIf="showSearch && columns.length > 0"
+            class="btn btn-sm btn-outline-primary"
+            (click)="toggleSearchFilters()"
+            [title]="showSearchFilters ? 'Hide search filters' : 'Show search filters'">
+            <i class="fa fa-search"></i> 
+            {{ showSearchFilters ? 'Hide' : 'Search' }}
+          </button>
+          <button 
+            *ngIf="showSearch && columns.length > 0 && hasActiveFilters()"
+            class="btn btn-sm btn-outline-secondary"
+            (click)="clearFilters()"
+            title="Clear all filters">
+            <i class="fa fa-times"></i> Clear
+          </button>
+          <span class="text-muted" *ngIf="pagination">
+            Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
+            {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }} 
+            of {{ pagination.total_count }} entries
+          </span>
+        </div>
+      </div>
+      
+      <!-- Search filters row (collapsible) -->
+      <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="card-body border-bottom bg-light py-3">
+        <div class="row g-2 align-items-end">
+          <div class="col" *ngFor="let column of columns; let isLast = last">
+            <div *ngIf="column.searchable !== false" class="form-group mb-0">
+              <label class="form-label small text-muted mb-1">{{ column.label }}</label>
+              
+              <!-- Text input -->
+              <input 
+                *ngIf="!column.type || column.type === 'text'"
+                type="text"
+                class="form-control form-control-sm"
+                [placeholder]="'Search...'"
+                [value]="searchFilters[column.key] || ''"
+                (input)="onFilterChange(column.key, $any($event.target).value)">
+              
+              <!-- Number input -->
+              <input 
+                *ngIf="column.type === 'number'"
+                type="number"
+                class="form-control form-control-sm"
+                [placeholder]="'Amount...'"
+                [value]="searchFilters[column.key] || ''"
+                (input)="onFilterChange(column.key, $any($event.target).value)">
+              
+              <!-- Date input -->
+              <input 
+                *ngIf="column.type === 'date'"
+                type="date"
+                class="form-control form-control-sm"
+                [value]="searchFilters[column.key] || ''"
+                (input)="onFilterChange(column.key, $any($event.target).value)">
+              
+              <!-- Select input -->
+              <select 
+                *ngIf="column.type === 'select'"
+                class="form-control form-control-sm"
+                [value]="searchFilters[column.key] || ''"
+                (change)="onFilterChange(column.key, $any($event.target).value)">
+                <option value="">All {{ column.label }}</option>
+                <option *ngFor="let option of column.options" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="card-body">
         <div *ngIf="loading" class="text-center p-4">
@@ -16,8 +82,39 @@
           </div>
         </div>
         <div *ngIf="!loading">
-          <!-- Table content will be projected here -->
-          <ng-container *ngTemplateOutlet="tableContent; context: { $implicit: data }"></ng-container>
+          <!-- Sortable headers (optional) -->
+          <div *ngIf="showSortableHeaders && columns.length > 0" class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th *ngFor="let column of columns" 
+                      [class.sortable]="column.sortable"
+                      (click)="onSort(column)"
+                      [style.cursor]="column.sortable ? 'pointer' : 'default'">
+                    {{ column.label }}
+                    <i *ngIf="column.sortable" 
+                       class="fa ms-1" 
+                       [class]="getSortIcon(column)"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of data">
+                  <td *ngFor="let column of columns">
+                    {{ getColumnValue(item, column) }}
+                  </td>
+                </tr>
+                <tr *ngIf="data.length === 0">
+                  <td [attr.colspan]="columns.length" class="text-center">No data available.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table content will be projected here (when not using sortable headers) -->
+          <ng-container *ngIf="!showSortableHeaders">
+            <ng-container *ngTemplateOutlet="tableContent; context: { $implicit: data }"></ng-container>
+          </ng-container>
           
           <!-- Pagination Controls -->
           <nav *ngIf="pagination && pagination.total_pages > 1" class="mt-3">

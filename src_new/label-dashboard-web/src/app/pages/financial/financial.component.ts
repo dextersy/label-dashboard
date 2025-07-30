@@ -136,6 +136,8 @@ export class FinancialComponent implements OnInit {
   // Pagination data
   paymentsPagination: any = null;
   paymentsLoading = false;
+  paymentsFilters: any = {};
+  paymentsSort: { column: string; direction: 'asc' | 'desc' } | null = null;
 
   // Latest data for summary view
   latestEarnings: Earning[] = [];
@@ -290,7 +292,7 @@ export class FinancialComponent implements OnInit {
       this.summary = await this.financialService.getFinancialSummary(this.selectedArtist.id);
       
       // Load first page of payments
-      await this.loadPaymentsPage(1);
+      await this.loadPaymentsPage(1, this.paymentsFilters, this.paymentsSort);
       
       // Load first page of earnings and royalties for summary view
       const earningsResult = await this.financialService.getEarnings(this.selectedArtist.id, 1, 5);
@@ -351,11 +353,18 @@ export class FinancialComponent implements OnInit {
     }
   }
 
-  async loadPaymentsPage(page: number): Promise<void> {
+  async loadPaymentsPage(page: number, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
     if (!this.selectedArtist) return;
     this.paymentsLoading = true;
     try {
-      const result = await this.financialService.getPayments(this.selectedArtist.id, page, 10);
+      const result = await this.financialService.getPayments(
+        this.selectedArtist.id, 
+        page, 
+        10, 
+        filters,
+        sort?.column,
+        sort?.direction
+      );
       this.payments = result.payments;
       this.paymentsPagination = result.pagination;
     } catch (error) {
@@ -740,5 +749,22 @@ export class FinancialComponent implements OnInit {
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-PH');
+  }
+
+  // Handle payments filter changes
+  async onPaymentsFiltersChange(filters: any): Promise<void> {
+    this.paymentsFilters = filters;
+    await this.loadPaymentsPage(1, this.paymentsFilters, this.paymentsSort);
+  }
+
+  // Handle payments page changes (preserve current filters and sort)
+  async onPaymentsPageChange(page: number): Promise<void> {
+    await this.loadPaymentsPage(page, this.paymentsFilters, this.paymentsSort);
+  }
+
+  // Handle payments sort changes
+  async onPaymentsSortChange(sortInfo: { column: string; direction: 'asc' | 'desc' } | null): Promise<void> {
+    this.paymentsSort = sortInfo;
+    await this.loadPaymentsPage(1, this.paymentsFilters, this.paymentsSort);
   }
 }

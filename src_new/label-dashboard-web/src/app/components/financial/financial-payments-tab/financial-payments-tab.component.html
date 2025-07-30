@@ -5,7 +5,12 @@
       [data]="payments"
       [pagination]="paymentsPagination"
       [loading]="paymentsLoading"
-      (pageChange)="onPaymentsPageChange($event)">
+      [columns]="paymentsColumns"
+      [showSortableHeaders]="true"
+      [sortInfo]="paymentsSort"
+      (pageChange)="paymentsPageChange.emit($event)"
+      (filtersChange)="paymentsFiltersChange.emit($event)"
+      (sortChange)="paymentsSortChange.emit($event)">
       
       <ng-template #tableContent let-data>
         <app-payments-table [payments]="data" [showHeader]="true"></app-payments-table>

@@ -73,6 +73,7 @@
                 [payments]="payments"
                 [paymentsPagination]="paymentsPagination"
                 [paymentsLoading]="paymentsLoading"
+                [paymentsSort]="paymentsSort"
                 [paymentMethods]="paymentMethods"
                 [payoutSettings]="payoutSettings"
                 [supportedBanks]="supportedBanks"
@@ -82,7 +83,9 @@
                 [onUpdatePayoutSettings]="onUpdatePayoutSettings.bind(this)"
                 [onDeletePaymentMethod]="onDeletePaymentMethod.bind(this)"
                 [onSetDefaultPaymentMethod]="onSetDefaultPaymentMethod.bind(this)"
-                (paymentsPageChange)="loadPaymentsPage($event)">
+                (paymentsPageChange)="onPaymentsPageChange($event)"
+                (paymentsFiltersChange)="onPaymentsFiltersChange($event)"
+                (paymentsSortChange)="onPaymentsSortChange($event)">
               </app-financial-payments-tab>
             </div>
             
