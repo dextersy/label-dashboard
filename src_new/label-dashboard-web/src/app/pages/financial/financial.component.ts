@@ -15,6 +15,7 @@ import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
+import { DateRangeSelection } from '../../components/shared/date-range-filter/date-range-filter.component';
 
 export type FinancialTabType = 'summary' | 'documents' | 'earnings' | 'royalties' | 'payments' | 'release' | 'new-royalty' | 'new-payment' | 'new-earning';
 
@@ -152,6 +153,10 @@ export class FinancialComponent implements OnInit {
   royaltiesFilters: any = {};
   earningsSort: { column: string; direction: 'asc' | 'desc' } | null = null;
   royaltiesSort: { column: string; direction: 'asc' | 'desc' } | null = null;
+  
+  // Date range filtering
+  earningsDateRange: DateRangeSelection | null = null;
+  royaltiesDateRange: DateRangeSelection | null = null;
 
   // Form data for new entries
   newRoyaltyForm = {
@@ -337,7 +342,9 @@ export class FinancialComponent implements OnInit {
         20, 
         filters,
         sort?.column,
-        sort?.direction
+        sort?.direction,
+        this.earningsDateRange?.startDate,
+        this.earningsDateRange?.endDate
       );
       this.earnings = result.earnings;
       this.earningsPagination = result.pagination;
@@ -359,7 +366,9 @@ export class FinancialComponent implements OnInit {
         20, 
         filters,
         sort?.column,
-        sort?.direction
+        sort?.direction,
+        this.royaltiesDateRange?.startDate,
+        this.royaltiesDateRange?.endDate
       );
       this.royalties = result.royalties;
       this.royaltiesPagination = result.pagination;
@@ -817,6 +826,18 @@ export class FinancialComponent implements OnInit {
   // Handle royalties sort changes
   async onRoyaltiesSortChange(sortInfo: { column: string; direction: 'asc' | 'desc' } | null): Promise<void> {
     this.royaltiesSort = sortInfo;
+    await this.loadRoyaltiesPage(1, this.royaltiesFilters, this.royaltiesSort);
+  }
+
+  // Handle earnings date range changes
+  async onEarningsDateRangeChange(dateRange: DateRangeSelection): Promise<void> {
+    this.earningsDateRange = dateRange;
+    await this.loadEarningsPage(1, this.earningsFilters, this.earningsSort);
+  }
+
+  // Handle royalties date range changes
+  async onRoyaltiesDateRangeChange(dateRange: DateRangeSelection): Promise<void> {
+    this.royaltiesDateRange = dateRange;
     await this.loadRoyaltiesPage(1, this.royaltiesFilters, this.royaltiesSort);
   }
 }

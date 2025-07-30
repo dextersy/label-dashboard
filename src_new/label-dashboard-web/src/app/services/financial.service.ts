@@ -32,8 +32,13 @@ export class FinancialService {
     };
   }
 
-  async getEarnings(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Promise<{earnings: Earning[], pagination: any}> {
+  async getEarnings(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string, startDate?: string, endDate?: string): Promise<{earnings: Earning[], pagination: any}> {
     let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add date range parameters
+    if (startDate && endDate) {
+      queryParams += `&start_date=${startDate}&end_date=${endDate}`;
+    }
     
     // Add filter parameters
     Object.keys(filters).forEach(key => {
@@ -64,8 +69,13 @@ export class FinancialService {
     };
   }
 
-  async getRoyalties(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Promise<{royalties: Royalty[], pagination: any}> {
+  async getRoyalties(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string, startDate?: string, endDate?: string): Promise<{royalties: Royalty[], pagination: any}> {
     let queryParams = `artist_id=${artistId}&page=${page}&limit=${limit}`;
+    
+    // Add date range parameters
+    if (startDate && endDate) {
+      queryParams += `&start_date=${startDate}&end_date=${endDate}`;
+    }
     
     // Add filter parameters
     Object.keys(filters).forEach(key => {

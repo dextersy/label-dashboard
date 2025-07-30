@@ -58,7 +58,8 @@
                 [earningsSort]="earningsSort"
                 (pageChange)="onEarningsPageChange($event)"
                 (filtersChange)="onEarningsFiltersChange($event)"
-                (sortChange)="onEarningsSortChange($event)"></app-financial-earnings-tab>
+                (sortChange)="onEarningsSortChange($event)"
+                (dateRangeChange)="onEarningsDateRangeChange($event)"></app-financial-earnings-tab>
             </div>
             
             <!-- Royalties Tab -->
@@ -70,7 +71,8 @@
                 [royaltiesSort]="royaltiesSort"
                 (pageChange)="onRoyaltiesPageChange($event)"
                 (filtersChange)="onRoyaltiesFiltersChange($event)"
-                (sortChange)="onRoyaltiesSortChange($event)"></app-financial-royalties-tab>
+                (sortChange)="onRoyaltiesSortChange($event)"
+                (dateRangeChange)="onRoyaltiesDateRangeChange($event)"></app-financial-royalties-tab>
             </div>
             
             <!-- Payments Tab -->

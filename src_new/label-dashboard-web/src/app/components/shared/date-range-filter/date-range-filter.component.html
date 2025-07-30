@@ -1,0 +1,175 @@
+<!-- Date Range Filter Component -->
+<div class="card date-range-filter" [class.compact]="compact">
+  <div class="card-body" [class.py-2]="compact">
+    <div class="row align-items-center">
+      <!-- Date Range Presets -->
+      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0" [class.col-12]="compact">
+        <div class="d-flex flex-wrap align-items-center">
+          <span class="text-muted me-3 mb-2" [class.small]="compact">Date Range:</span>
+          <div class="btn-group me-3 mb-2" role="group">
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'today'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'today'"
+                    (click)="applyDatePreset('today')">
+              Today
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'yesterday'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'yesterday'"
+                    (click)="applyDatePreset('yesterday')">
+              Yesterday
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'last7days'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'last7days'"
+                    (click)="applyDatePreset('last7days')">
+              Last 7 days
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'last30days'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'last30days'"
+                    (click)="applyDatePreset('last30days')">
+              Last 30 days
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'thismonth'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'thismonth'"
+                    (click)="applyDatePreset('thismonth')">
+              This month
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'lastmonth'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'lastmonth'"
+                    (click)="applyDatePreset('lastmonth')">
+              Last month
+            </button>
+          </div>
+        </div>
+        
+        <!-- Custom Date Range -->
+        <div class="d-flex flex-wrap align-items-center mt-2" *ngIf="!compact">
+          <span class="text-muted me-3 mb-2 small">Custom Range:</span>
+          <div class="input-group me-3 mb-2 custom-date-inputs">
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="startDate"
+                   (change)="onCustomDateChange()"
+                   [max]="maxDate">
+            <span class="input-group-text">to</span>
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="endDate"
+                   (change)="onCustomDateChange()"
+                   [min]="startDate"
+                   [max]="maxDate">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="col-lg-4 col-md-12" [class.col-12]="compact" *ngIf="!compact">
+        <div class="d-flex justify-content-lg-end justify-content-start flex-wrap">
+          <div class="form-check form-switch me-3 mb-2" *ngIf="showComparison">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="compareSwitch"
+                   [(ngModel)]="showComparisonToggle"
+                   (change)="onComparisonToggle()">
+            <label class="form-check-label" for="compareSwitch">
+              <small>Compare to previous period</small>
+            </label>
+          </div>
+          <button class="btn btn-outline-primary btn-sm me-2 mb-2" 
+                  (click)="onRefresh()" 
+                  [disabled]="loading">
+            <i class="fa fa-refresh" [class.fa-spin]="loading"></i>
+            <span class="ms-1">Refresh</span>
+          </button>
+          <div class="dropdown" *ngIf="showExport">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle mb-2" 
+                    type="button" 
+                    data-bs-toggle="dropdown">
+              <i class="fa fa-download"></i>
+              <span class="ms-1">Export</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" (click)="onExport('csv')">Export as CSV</a></li>
+              <li><a class="dropdown-item" href="#" (click)="onExport('pdf')">Export as PDF</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Compact Actions Row -->
+    <div class="row mt-2" *ngIf="compact">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <div class="input-group custom-date-inputs-compact me-2 mb-2">
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="startDate"
+                   (change)="onCustomDateChange()"
+                   [max]="maxDate"
+                   placeholder="Start date">
+            <span class="input-group-text">to</span>
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="endDate"
+                   (change)="onCustomDateChange()"
+                   [min]="startDate"
+                   [max]="maxDate"
+                   placeholder="End date">
+          </div>
+          <button class="btn btn-outline-primary btn-sm mb-2" 
+                  (click)="onRefresh()" 
+                  [disabled]="loading"
+                  title="Refresh data">
+            <i class="fa fa-refresh" [class.fa-spin]="loading"></i>
+            <span class="d-none d-sm-inline ms-1">Refresh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Active Filter Display -->
+    <div class="row mt-3" *ngIf="!loading && !compact">
+      <div class="col-12">
+        <div class="d-flex align-items-center">
+          <small class="text-muted me-3">
+            <i class="fa fa-calendar"></i>
+            Showing data from <strong>{{ formatDateForDisplay(startDate) }}</strong> 
+            to <strong>{{ formatDateForDisplay(endDate) }}</strong>
+            <span class="text-success ms-2">({{ getDaysDifference() }} days)</span>
+          </small>
+          <small class="text-muted ms-auto">
+            Last updated: {{ lastUpdated | date:'medium' }}
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Compact Filter Display -->
+    <div class="row mt-2" *ngIf="compact">
+      <div class="col-12">
+        <small class="text-muted">
+          <i class="fa fa-calendar"></i>
+          {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
+          <span class="text-success ms-1">({{ getDaysDifference() }} days)</span>
+        </small>
+      </div>
+    </div>
+  </div>
+</div>

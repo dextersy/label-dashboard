@@ -229,7 +229,7 @@ export const addRoyalty = async (req: AuthRequest, res: Response) => {
 
 export const getRoyalties = async (req: AuthRequest, res: Response) => {
   try {
-    const { artist_id, release_id, page = '1', limit = '20', sortBy, sortDirection, ...filters } = req.query;
+    const { artist_id, release_id, page = '1', limit = '20', sortBy, sortDirection, start_date, end_date, ...filters } = req.query;
     const artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
     const releaseIdNum = release_id ? parseInt(release_id as string, 10) : undefined;
 
@@ -255,17 +255,13 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
       where.release_id = releaseIdNum;
     }
 
-    // Add search filters
-    if (filters.description && filters.description !== '') {
-      where.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
-    }
-    
-    if (filters.amount && filters.amount !== '') {
-      where.amount = parseFloat(filters.amount as string);
-    }
-    
-    if (filters.date_recorded && filters.date_recorded !== '') {
-      // Search by date (exact match for the day)
+    // Add date range filtering
+    if (start_date && end_date) {
+      where.date_recorded = {
+        [require('sequelize').Op.between]: [start_date, end_date]
+      };
+    } else if (filters.date_recorded && filters.date_recorded !== '') {
+      // Fallback for single date search (exact match for the day)
       const searchDate = new Date(filters.date_recorded as string);
       const nextDay = new Date(searchDate);
       nextDay.setDate(nextDay.getDate() + 1);
@@ -274,6 +270,15 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
         [require('sequelize').Op.gte]: searchDate,
         [require('sequelize').Op.lt]: nextDay
       };
+    }
+
+    // Add search filters
+    if (filters.description && filters.description !== '') {
+      where.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
+    }
+    
+    if (filters.amount && filters.amount !== '') {
+      where.amount = parseFloat(filters.amount as string);
     }
 
     // Build order clause
@@ -407,7 +412,7 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    const { type, page = '1', limit = '20', sortBy, sortDirection, ...filters } = req.query;
+    const { type, page = '1', limit = '20', sortBy, sortDirection, start_date, end_date, ...filters } = req.query;
     
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -427,17 +432,13 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
       earningsWhere.type = type;
     }
 
-    // Add search filters
-    if (filters.description && filters.description !== '') {
-      earningsWhere.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
-    }
-    
-    if (filters.amount && filters.amount !== '') {
-      earningsWhere.amount = parseFloat(filters.amount as string);
-    }
-    
-    if (filters.date_recorded && filters.date_recorded !== '') {
-      // Search by date (exact match for the day)
+    // Add date range filtering
+    if (start_date && end_date) {
+      earningsWhere.date_recorded = {
+        [require('sequelize').Op.between]: [start_date, end_date]
+      };
+    } else if (filters.date_recorded && filters.date_recorded !== '') {
+      // Fallback for single date search (exact match for the day)
       const searchDate = new Date(filters.date_recorded as string);
       const nextDay = new Date(searchDate);
       nextDay.setDate(nextDay.getDate() + 1);
@@ -446,6 +447,15 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
         [require('sequelize').Op.gte]: searchDate,
         [require('sequelize').Op.lt]: nextDay
       };
+    }
+
+    // Add search filters
+    if (filters.description && filters.description !== '') {
+      earningsWhere.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
+    }
+    
+    if (filters.amount && filters.amount !== '') {
+      earningsWhere.amount = parseFloat(filters.amount as string);
     }
 
     // Build order clause

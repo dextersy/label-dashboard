@@ -1,3 +1,11 @@
+<!-- Date Range Filter -->
+<app-date-range-filter 
+  [compact]="true"
+  [loading]="loading"
+  (dateRangeChange)="onDateRangeChange($event)"
+  (refresh)="onRefresh()">
+</app-date-range-filter>
+
 <app-paginated-table 
   title="Earnings History"
   [data]="earnings"

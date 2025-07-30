@@ -29,9 +29,9 @@
       
       <!-- Search filters row (collapsible) -->
       <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="card-body border-bottom bg-light py-3">
-        <div class="row g-2 align-items-end">
-          <div class="col" *ngFor="let column of columns; let isLast = last">
-            <div *ngIf="column.searchable !== false" class="form-group mb-0">
+        <div class="d-flex flex-wrap gap-3 align-items-end search-filters-container">
+          <div class="search-field" *ngFor="let column of columns" [hidden]="column.searchable === false">
+            <div class="form-group mb-0">
               <label class="form-label small text-muted mb-1">{{ column.label }}</label>
               
               <!-- Text input -->
