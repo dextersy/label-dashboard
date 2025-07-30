@@ -1,24 +1,145 @@
-<div class="row mb-3">
-  <div class="col-md-3">
-    <div class="form-group">
-      <label for="dateRange">Select date range</label>
-      <div class="input-group">
-        <input type="text" class="form-control" id="dateRange" 
-               [(ngModel)]="dateRange" placeholder="MM/DD/YYYY - MM/DD/YYYY" />
-        <button class="btn btn-outline-secondary" type="button" (click)="filterSummaryData()">
-          <i class="fas fa-filter"></i>
-        </button>
+<!-- Enhanced Filtering Controls -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row align-items-center">
+      <!-- Date Range Presets -->
+      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
+        <div class="d-flex flex-wrap align-items-center">
+          <span class="text-muted me-3 mb-2">Date Range:</span>
+          <div class="btn-group me-3 mb-2" role="group">
+            <button type="button" 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="selectedPreset === 'today'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'today'"
+                    (click)="applyDatePreset('today')">
+              Today
+            </button>
+            <button type="button" 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="selectedPreset === 'yesterday'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'yesterday'"
+                    (click)="applyDatePreset('yesterday')">
+              Yesterday
+            </button>
+            <button type="button" 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="selectedPreset === 'last7days'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'last7days'"
+                    (click)="applyDatePreset('last7days')">
+              Last 7 days
+            </button>
+            <button type="button" 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="selectedPreset === 'last30days'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'last30days'"
+                    (click)="applyDatePreset('last30days')">
+              Last 30 days
+            </button>
+            <button type="button" 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="selectedPreset === 'thismonth'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'thismonth'"
+                    (click)="applyDatePreset('thismonth')">
+              This month
+            </button>
+            <button type="button" 
+                    class="btn btn-sm" 
+                    [class.btn-primary]="selectedPreset === 'lastmonth'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'lastmonth'"
+                    (click)="applyDatePreset('lastmonth')">
+              Last month
+            </button>
+          </div>
+        </div>
+        
+        <!-- Custom Date Range -->
+        <div class="d-flex flex-wrap align-items-center mt-2">
+          <span class="text-muted me-3 mb-2">Custom Range:</span>
+          <div class="input-group me-3 mb-2" style="width: auto; min-width: 200px;">
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="startDate"
+                   (change)="onCustomDateChange()"
+                   [max]="maxDate">
+            <span class="input-group-text">to</span>
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="endDate"
+                   (change)="onCustomDateChange()"
+                   [min]="startDate"
+                   [max]="maxDate">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="col-lg-4 col-md-12">
+        <div class="d-flex justify-content-lg-end justify-content-start flex-wrap">
+          <div class="form-check form-switch me-3 mb-2">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="compareSwitch"
+                   [(ngModel)]="showComparison"
+                   (change)="onComparisonToggle()">
+            <label class="form-check-label" for="compareSwitch">
+              <small>Compare to previous period</small>
+            </label>
+          </div>
+          <button class="btn btn-outline-primary btn-sm me-2 mb-2" 
+                  (click)="refreshData()" 
+                  [disabled]="loading">
+            <i class="fa fa-refresh" [class.fa-spin]="loading"></i>
+            <span class="ms-1">Refresh</span>
+          </button>
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle mb-2" 
+                    type="button" 
+                    data-bs-toggle="dropdown">
+              <i class="fa fa-download"></i>
+              <span class="ms-1">Export</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" (click)="exportData('csv')">Export as CSV</a></li>
+              <li><a class="dropdown-item" href="#" (click)="exportData('pdf')">Export as PDF</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Active Filter Display -->
+    <div class="row mt-3" *ngIf="!loading">
+      <div class="col-12">
+        <div class="d-flex align-items-center">
+          <small class="text-muted me-3">
+            <i class="fa fa-calendar"></i>
+            Showing data from <strong>{{ formatDateForDisplay(startDate) }}</strong> 
+            to <strong>{{ formatDateForDisplay(endDate) }}</strong>
+            <span class="text-success ms-2">({{ getDaysDifference() }} days)</span>
+          </small>
+          <small class="text-muted ms-auto">
+            Last updated: {{ lastUpdated | date:'medium' }}
+          </small>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<h3>Earnings Summary</h3>
-<div class="row" *ngIf="earningsSummary">
-  <div class="col-md-3">
+<div *ngIf="loading" class="text-center">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+  <p>Loading summary data...</p>
+</div>
+
+<div *ngIf="!loading">
+  <h3>Earnings Summary</h3>
+  <div class="row" *ngIf="earningsSummary">
+    <div class="col-md-3">
     <div class="card">
       <div class="card-header">
-        <h4 class="title"><i class="fas fa-shopping-bag"></i> Physical Earnings</h4>
+        <h4 class="title"><i class="fa fa-shopping-bag"></i> Physical Earnings</h4>
       </div>
       <div class="card-body text-center">
         <h5>{{ formatCurrency(earningsSummary.physical_earnings) }}</h5>
@@ -29,7 +150,7 @@
   <div class="col-md-3">
     <div class="card">
       <div class="card-header">
-        <h4 class="title"><i class="fas fa-download"></i> Download Earnings</h4>
+        <h4 class="title"><i class="fa fa-download"></i> Download Earnings</h4>
       </div>
       <div class="card-body text-center">
         <h5>{{ formatCurrency(earningsSummary.download_earnings) }}</h5>
@@ -40,7 +161,7 @@
   <div class="col-md-3">
     <div class="card">
       <div class="card-header">
-        <h4 class="title"><i class="fas fa-headphones"></i> Streaming Earnings</h4>
+        <h4 class="title"><i class="fa fa-headphones"></i> Streaming Earnings</h4>
       </div>
       <div class="card-body text-center">
         <h5>{{ formatCurrency(earningsSummary.streaming_earnings) }}</h5>
@@ -51,18 +172,118 @@
   <div class="col-md-3">
     <div class="card">
       <div class="card-header">
-        <h4 class="title"><i class="fas fa-tv"></i> Sync Earnings</h4>
+        <h4 class="title"><i class="fa fa-television"></i> Sync Earnings</h4>
       </div>
       <div class="card-body text-center">
         <h5>{{ formatCurrency(earningsSummary.sync_earnings) }}</h5>
       </div>
     </div>
   </div>
-</div>
-
-<h3>Payments and Royalties Summary</h3>
-<div class="row" *ngIf="paymentsRoyaltiesSummary">
-  <div class="col-md-12">
-    <p class="text-muted">Payments and royalties summary will be displayed here.</p>
+  
+  <div *ngIf="!earningsSummary">
+    <p class="text-muted">No releases yet.</p>
   </div>
+
+  <h3 class="mt-4 mb-3">
+    <i class="fa fa-users text-primary me-2"></i>
+    Payments and Royalties Summary
+  </h3>
+  
+  <div class="row" *ngIf="paymentsRoyaltiesSummary">
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fa fa-table text-secondary me-2"></i>
+            Artist Breakdown
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="border-0">Artist</th>
+                  <th class="border-0 text-end">Payments</th>
+                  <th class="border-0 text-end">Royalties</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let artist of paymentsRoyaltiesSummary.artist_summaries">
+                  <td class="fw-medium">{{ artist.artist_name }}</td>
+                  <td class="text-end text-success">{{ formatCurrency(artist.total_payments) }}</td>
+                  <td class="text-end text-primary">{{ formatCurrency(artist.total_royalties) }}</td>
+                </tr>
+                <tr *ngIf="paymentsRoyaltiesSummary.artist_summaries.length === 0">
+                  <td colspan="3" class="text-muted text-center py-4">
+                    <i class="fa fa-info-circle me-2"></i>
+                    No artists with payments or royalties in this period.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+    <div class="row g-3">
+      <!-- First Row of Cards -->
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-money text-success"></i>
+              Total Payments
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_payments) }}</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-chart-line text-primary"></i>
+              Total Royalties
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_royalties) }}</h5>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Second Row of Cards -->
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-plus-circle text-warning"></i>
+              New Expenses
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.total_new_recuperable_expense) }}</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-minus-circle text-info"></i>
+              Recuperated Expenses
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.total_recuperated_expense) }}</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </div>

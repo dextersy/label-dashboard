@@ -962,6 +962,179 @@ export const getWalletBalance = async (req: AuthRequest, res: Response) => {
 
 // Note: Release information management moved to artistController.ts
 
+// ADMIN SUMMARY ENDPOINTS (based on PHP admin-summary-view.php)
+export const getAdminEarningsSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date } = req.query;
+    
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    // Get all releases for the brand
+    const releases = await Release.findAll({
+      where: { brand_id: req.user.brand_id }
+    });
+
+    const releaseIds = releases.map(r => r.id);
+
+    if (releaseIds.length === 0) {
+      return res.json({
+        physical_earnings: 0,
+        download_earnings: 0,
+        streaming_earnings: 0,
+        sync_earnings: 0
+      });
+    }
+
+    // Get earnings by type for the date range
+    const earningsByType = await Earning.findAll({
+      where: {
+        release_id: releaseIds,
+        date_recorded: {
+          [require('sequelize').Op.between]: [start_date, end_date]
+        }
+      },
+      attributes: [
+        'type',
+        [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
+      ],
+      group: ['type'],
+      raw: true
+    });
+
+    // Initialize summary with zeros
+    const summary = {
+      physical_earnings: 0,
+      download_earnings: 0,
+      streaming_earnings: 0,
+      sync_earnings: 0
+    };
+
+    // Populate summary with actual earnings
+    earningsByType.forEach((earning: any) => {
+      const total = parseFloat(earning.total) || 0;
+      switch (earning.type) {
+        case 'Physical':
+          summary.physical_earnings = total;
+          break;
+        case 'Downloads':
+          summary.download_earnings = total;
+          break;
+        case 'Streaming':
+          summary.streaming_earnings = total;
+          break;
+        case 'Sync':
+          summary.sync_earnings = total;
+          break;
+      }
+    });
+
+    res.json(summary);
+  } catch (error) {
+    console.error('Get admin earnings summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAdminPaymentsRoyaltiesSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date } = req.query;
+    
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    // Get all artists for the brand
+    const artists = await Artist.findAll({
+      where: { brand_id: req.user.brand_id }
+    });
+
+    const artistSummaries = [];
+    let overallTotalPayments = 0;
+    let overallTotalRoyalties = 0;
+
+    for (const artist of artists) {
+      // Get total payments for this artist in the date range
+      const totalPayments = await Payment.sum('amount', {
+        where: {
+          artist_id: artist.id,
+          date_paid: {
+            [require('sequelize').Op.between]: [start_date, end_date]
+          }
+        }
+      }) || 0;
+
+      // Get total royalties for this artist in the date range
+      const totalRoyalties = await Royalty.sum('amount', {
+        where: {
+          artist_id: artist.id,
+          date_recorded: {
+            [require('sequelize').Op.between]: [start_date, end_date]
+          }
+        }
+      }) || 0;
+
+      // Only include artists with payments or royalties
+      if (totalPayments > 0 || totalRoyalties > 0) {
+        artistSummaries.push({
+          artist_id: artist.id,
+          artist_name: artist.name,
+          total_payments: totalPayments,
+          total_royalties: totalRoyalties
+        });
+
+        overallTotalPayments += totalPayments;
+        overallTotalRoyalties += totalRoyalties;
+      }
+    }
+
+    // Get recuperable expenses
+    const totalNewRecuperableExpense = await RecuperableExpense.sum('expense_amount', {
+      where: {
+        brand_id: req.user.brand_id,
+        expense_amount: {
+          [require('sequelize').Op.gt]: 0
+        },
+        date_recorded: {
+          [require('sequelize').Op.between]: [start_date, end_date]
+        }
+      }
+    }) || 0;
+
+    const totalRecuperatedExpense = await RecuperableExpense.sum('expense_amount', {
+      where: {
+        brand_id: req.user.brand_id,
+        expense_amount: {
+          [require('sequelize').Op.lt]: 0  
+        },
+        date_recorded: {
+          [require('sequelize').Op.between]: [start_date, end_date]
+        }
+      }
+    }) || 0;
+
+    res.json({
+      artist_summaries: artistSummaries,
+      overall_total_payments: overallTotalPayments,
+      overall_total_royalties: overallTotalRoyalties,
+      total_new_recuperable_expense: totalNewRecuperableExpense,
+      total_recuperated_expense: Math.abs(totalRecuperatedExpense)
+    });
+  } catch (error) {
+    console.error('Get admin payments royalties summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Helper function to send earning notifications (matching PHP logic)
 async function sendEarningNotifications(earning: any, brandId: number) {
   try {

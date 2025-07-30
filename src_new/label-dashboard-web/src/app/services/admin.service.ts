@@ -275,23 +275,16 @@ export class AdminService {
 
   // Summary View
   getEarningsSummary(startDate: string, endDate: string): Observable<EarningsSummary> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getEarningsSummary: Using mock response - endpoint not implemented');
-    return of({
-      physical_earnings: 15000,
-      download_earnings: 8500,
-      streaming_earnings: 45000,
-      sync_earnings: 12000
+    const params = `start_date=${startDate}&end_date=${endDate}`;
+    return this.http.get<EarningsSummary>(`${environment.apiUrl}/financial/admin/earnings-summary?${params}`, {
+      headers: this.getAuthHeaders()
     });
   }
 
   getPaymentsAndRoyaltiesSummary(startDate: string, endDate: string): Observable<any> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getPaymentsAndRoyaltiesSummary: Using mock response - endpoint not implemented');
-    return of({
-      total_payments: 25000,
-      total_royalties: 80500,
-      total_balance: 55500
+    const params = `start_date=${startDate}&end_date=${endDate}`;
+    return this.http.get<any>(`${environment.apiUrl}/financial/admin/payments-royalties-summary?${params}`, {
+      headers: this.getAuthHeaders()
     });
   }
 

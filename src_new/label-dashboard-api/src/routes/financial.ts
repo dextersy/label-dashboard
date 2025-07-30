@@ -12,7 +12,9 @@ import {
   getPaymentById,
   getPaymentsByArtist,
   getFinancialSummary,
-  getWalletBalance
+  getWalletBalance,
+  getAdminEarningsSummary,
+  getAdminPaymentsRoyaltiesSummary
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -44,5 +46,9 @@ router.get('/summary', getFinancialSummary);
 
 // Wallet balance
 router.get('/wallet/balance', requireAdmin, getWalletBalance);
+
+// Admin summary endpoints
+router.get('/admin/earnings-summary', requireAdmin, getAdminEarningsSummary);
+router.get('/admin/payments-royalties-summary', requireAdmin, getAdminPaymentsRoyaltiesSummary);
 
 export default router;
