@@ -55,7 +55,10 @@
                 [earnings]="earnings"
                 [pagination]="earningsPagination"
                 [loading]="earningsLoading"
-                (pageChange)="loadEarningsPage($event)"></app-financial-earnings-tab>
+                [earningsSort]="earningsSort"
+                (pageChange)="onEarningsPageChange($event)"
+                (filtersChange)="onEarningsFiltersChange($event)"
+                (sortChange)="onEarningsSortChange($event)"></app-financial-earnings-tab>
             </div>
             
             <!-- Royalties Tab -->
@@ -64,7 +67,10 @@
                 [royalties]="royalties"
                 [pagination]="royaltiesPagination"
                 [loading]="royaltiesLoading"
-                (pageChange)="loadRoyaltiesPage($event)"></app-financial-royalties-tab>
+                [royaltiesSort]="royaltiesSort"
+                (pageChange)="onRoyaltiesPageChange($event)"
+                (filtersChange)="onRoyaltiesFiltersChange($event)"
+                (sortChange)="onRoyaltiesSortChange($event)"></app-financial-royalties-tab>
             </div>
             
             <!-- Payments Tab -->

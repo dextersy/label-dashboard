@@ -32,8 +32,22 @@ export class FinancialService {
     };
   }
 
-  async getEarnings(artistId: number, page: number = 1, limit: number = 20): Promise<{earnings: Earning[], pagination: any}> {
-    const response = await this.http.get<{earnings: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings?page=${page}&limit=${limit}`, {
+  async getEarnings(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Promise<{earnings: Earning[], pagination: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+
+    const response = await this.http.get<{earnings: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings?${queryParams}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 
@@ -50,8 +64,22 @@ export class FinancialService {
     };
   }
 
-  async getRoyalties(artistId: number, page: number = 1, limit: number = 20): Promise<{royalties: Royalty[], pagination: any}> {
-    const response = await this.http.get<{royalties: any[], pagination: any}>(`${environment.apiUrl}/financial/royalties?artist_id=${artistId}&page=${page}&limit=${limit}`, {
+  async getRoyalties(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Promise<{royalties: Royalty[], pagination: any}> {
+    let queryParams = `artist_id=${artistId}&page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+
+    const response = await this.http.get<{royalties: any[], pagination: any}>(`${environment.apiUrl}/financial/royalties?${queryParams}`, {
       headers: this.getAuthHeaders()
     }).toPromise();
 

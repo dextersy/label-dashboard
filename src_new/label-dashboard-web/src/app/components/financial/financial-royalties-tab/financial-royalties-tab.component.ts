@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RoyaltiesTableComponent } from '../royalties-table/royalties-table.component';
-import { PaginatedTableComponent, PaginationInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { Royalty } from '../../../pages/financial/financial.component';
 
 @Component({
@@ -15,7 +15,18 @@ export class FinancialRoyaltiesTabComponent {
   @Input() royalties: Royalty[] = [];
   @Input() pagination: PaginationInfo | null = null;
   @Input() loading: boolean = false;
+  @Input() royaltiesSort: SortInfo | null = null;
   @Output() pageChange = new EventEmitter<number>();
+  @Output() filtersChange = new EventEmitter<SearchFilters>();
+  @Output() sortChange = new EventEmitter<SortInfo | null>();
+
+  // Define table columns for search and sort functionality
+  royaltiesColumns: TableColumn[] = [
+    { key: 'date_recorded', label: 'Date Recorded', type: 'date', searchable: true, sortable: true },
+    { key: 'release_title', label: 'For Release', type: 'text', searchable: true, sortable: true },
+    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: true },
+    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true }
+  ];
 
   onPageChange(page: number): void {
     this.pageChange.emit(page);

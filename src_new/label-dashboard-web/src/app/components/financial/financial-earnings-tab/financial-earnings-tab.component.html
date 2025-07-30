@@ -3,7 +3,12 @@
   [data]="earnings"
   [pagination]="pagination"
   [loading]="loading"
-  (pageChange)="onPageChange($event)">
+  [columns]="earningsColumns"
+  [showSortableHeaders]="true"
+  [sortInfo]="earningsSort"
+  (pageChange)="onPageChange($event)"
+  (filtersChange)="filtersChange.emit($event)"
+  (sortChange)="sortChange.emit($event)">
   
   <ng-template #tableContent let-data>
     <app-earnings-table [earnings]="data" [showHeader]="true"></app-earnings-table>

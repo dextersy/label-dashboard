@@ -229,14 +229,22 @@ export const addRoyalty = async (req: AuthRequest, res: Response) => {
 
 export const getRoyalties = async (req: AuthRequest, res: Response) => {
   try {
-    const { artist_id, release_id, page = '1', limit = '20' } = req.query;
+    const { artist_id, release_id, page = '1', limit = '20', sortBy, sortDirection, ...filters } = req.query;
     const artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
     const releaseIdNum = release_id ? parseInt(release_id as string, 10) : undefined;
 
     const where: any = {};
+    
+    // Build release where clause for title filtering
+    const releaseWhere: any = {};
+    
+    if (filters.release_title && filters.release_title !== '') {
+      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.release_title}%` };
+    }
+    
     const includeConditions: any[] = [
       { model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } },
-      { model: Release, as: 'release' } // Always include release information
+      { model: Release, as: 'release', where: releaseWhere } // Include release with filtering
     ];
 
     if (artist_id) {
@@ -247,6 +255,39 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
       where.release_id = releaseIdNum;
     }
 
+    // Add search filters
+    if (filters.description && filters.description !== '') {
+      where.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
+    }
+    
+    if (filters.amount && filters.amount !== '') {
+      where.amount = parseFloat(filters.amount as string);
+    }
+    
+    if (filters.date_recorded && filters.date_recorded !== '') {
+      // Search by date (exact match for the day)
+      const searchDate = new Date(filters.date_recorded as string);
+      const nextDay = new Date(searchDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      where.date_recorded = {
+        [require('sequelize').Op.gte]: searchDate,
+        [require('sequelize').Op.lt]: nextDay
+      };
+    }
+
+    // Build order clause
+    let orderClause: any[] = [['date_recorded', 'DESC']]; // Default order
+    
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['date_recorded', 'description', 'amount'];
+      const validDirections = ['asc', 'desc'];
+      
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        orderClause = [[sortBy as string, (sortDirection as string).toUpperCase()]];
+      }
+    }
+
     const pageNum = parseInt(page as string);
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
@@ -254,7 +295,7 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
     const { count, rows: royalties } = await Royalty.findAndCountAll({
       where,
       include: includeConditions,
-      order: [['date_recorded', 'DESC']],
+      order: orderClause,
       limit: pageSize,
       offset: offset
     });
@@ -366,7 +407,7 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    const { type, page = '1', limit = '20' } = req.query;
+    const { type, page = '1', limit = '20', sortBy, sortDirection, ...filters } = req.query;
     
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -386,9 +427,49 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
       earningsWhere.type = type;
     }
 
+    // Add search filters
+    if (filters.description && filters.description !== '') {
+      earningsWhere.description = { [require('sequelize').Op.like]: `%${filters.description}%` };
+    }
+    
+    if (filters.amount && filters.amount !== '') {
+      earningsWhere.amount = parseFloat(filters.amount as string);
+    }
+    
+    if (filters.date_recorded && filters.date_recorded !== '') {
+      // Search by date (exact match for the day)
+      const searchDate = new Date(filters.date_recorded as string);
+      const nextDay = new Date(searchDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      earningsWhere.date_recorded = {
+        [require('sequelize').Op.gte]: searchDate,
+        [require('sequelize').Op.lt]: nextDay
+      };
+    }
+
+    // Build order clause
+    let orderClause: any[] = [['date_recorded', 'DESC']]; // Default order
+    
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['date_recorded', 'description', 'amount', 'type'];
+      const validDirections = ['asc', 'desc'];
+      
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        orderClause = [[sortBy as string, (sortDirection as string).toUpperCase()]];
+      }
+    }
+
     const pageNum = parseInt(page as string);
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
+
+    // Build release where clause for title filtering
+    const releaseWhere: any = { brand_id: req.user.brand_id };
+    
+    if (filters.release_title && filters.release_title !== '') {
+      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.release_title}%` };
+    }
 
     // Get earnings for releases associated with this artist
     const { count, rows: earnings } = await Earning.findAndCountAll({
@@ -397,7 +478,7 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
         {
           model: Release,
           as: 'release',
-          where: { brand_id: req.user.brand_id },
+          where: releaseWhere,
           include: [
             {
               model: ReleaseArtist,
@@ -413,7 +494,7 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
           ]
         }
       ],
-      order: [['date_recorded', 'DESC']],
+      order: orderClause,
       limit: pageSize,
       offset: offset
     });

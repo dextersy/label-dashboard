@@ -148,6 +148,10 @@ export class FinancialComponent implements OnInit {
   royaltiesPagination: any = null;
   earningsLoading = false;
   royaltiesLoading = false;
+  earningsFilters: any = {};
+  royaltiesFilters: any = {};
+  earningsSort: { column: string; direction: 'asc' | 'desc' } | null = null;
+  royaltiesSort: { column: string; direction: 'asc' | 'desc' } | null = null;
 
   // Form data for new entries
   newRoyaltyForm = {
@@ -302,8 +306,8 @@ export class FinancialComponent implements OnInit {
       this.latestRoyalties = royaltiesResult.royalties;
       
       // Initialize earnings and royalties data for tabs
-      await this.loadEarningsPage(1);
-      await this.loadRoyaltiesPage(1);
+      await this.loadEarningsPage(1, this.earningsFilters, this.earningsSort);
+      await this.loadRoyaltiesPage(1, this.royaltiesFilters, this.royaltiesSort);
       
       // Load documents
       await this.loadDocuments();
@@ -323,11 +327,18 @@ export class FinancialComponent implements OnInit {
     }
   }
 
-  async loadEarningsPage(page: number): Promise<void> {
+  async loadEarningsPage(page: number, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
     if (!this.selectedArtist) return;
     this.earningsLoading = true;
     try {
-      const result = await this.financialService.getEarnings(this.selectedArtist.id, page, 20);
+      const result = await this.financialService.getEarnings(
+        this.selectedArtist.id, 
+        page, 
+        20, 
+        filters,
+        sort?.column,
+        sort?.direction
+      );
       this.earnings = result.earnings;
       this.earningsPagination = result.pagination;
     } catch (error) {
@@ -338,11 +349,18 @@ export class FinancialComponent implements OnInit {
     }
   }
 
-  async loadRoyaltiesPage(page: number): Promise<void> {
+  async loadRoyaltiesPage(page: number, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
     if (!this.selectedArtist) return;
     this.royaltiesLoading = true;
     try {
-      const result = await this.financialService.getRoyalties(this.selectedArtist.id, page, 20);
+      const result = await this.financialService.getRoyalties(
+        this.selectedArtist.id, 
+        page, 
+        20, 
+        filters,
+        sort?.column,
+        sort?.direction
+      );
       this.royalties = result.royalties;
       this.royaltiesPagination = result.pagination;
     } catch (error) {
@@ -766,5 +784,39 @@ export class FinancialComponent implements OnInit {
   async onPaymentsSortChange(sortInfo: { column: string; direction: 'asc' | 'desc' } | null): Promise<void> {
     this.paymentsSort = sortInfo;
     await this.loadPaymentsPage(1, this.paymentsFilters, this.paymentsSort);
+  }
+
+  // Handle earnings filter changes
+  async onEarningsFiltersChange(filters: any): Promise<void> {
+    this.earningsFilters = filters;
+    await this.loadEarningsPage(1, this.earningsFilters, this.earningsSort);
+  }
+
+  // Handle earnings page changes
+  async onEarningsPageChange(page: number): Promise<void> {
+    await this.loadEarningsPage(page, this.earningsFilters, this.earningsSort);
+  }
+
+  // Handle earnings sort changes
+  async onEarningsSortChange(sortInfo: { column: string; direction: 'asc' | 'desc' } | null): Promise<void> {
+    this.earningsSort = sortInfo;
+    await this.loadEarningsPage(1, this.earningsFilters, this.earningsSort);
+  }
+
+  // Handle royalties filter changes
+  async onRoyaltiesFiltersChange(filters: any): Promise<void> {
+    this.royaltiesFilters = filters;
+    await this.loadRoyaltiesPage(1, this.royaltiesFilters, this.royaltiesSort);
+  }
+
+  // Handle royalties page changes
+  async onRoyaltiesPageChange(page: number): Promise<void> {
+    await this.loadRoyaltiesPage(page, this.royaltiesFilters, this.royaltiesSort);
+  }
+
+  // Handle royalties sort changes
+  async onRoyaltiesSortChange(sortInfo: { column: string; direction: 'asc' | 'desc' } | null): Promise<void> {
+    this.royaltiesSort = sortInfo;
+    await this.loadRoyaltiesPage(1, this.royaltiesFilters, this.royaltiesSort);
   }
 }
