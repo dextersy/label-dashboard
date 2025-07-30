@@ -127,7 +127,7 @@ fi
 print_status "Running Web build command: $WEB_BUILD_COMMAND"
 eval "$WEB_BUILD_COMMAND"
 
-if [ ! -d "dist" ]; then
+if [ ! -d "dist-prod" ]; then
     print_error "Web build failed - dist directory not found"
     exit 1
 fi
