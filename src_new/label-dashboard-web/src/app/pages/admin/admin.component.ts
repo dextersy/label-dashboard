@@ -5,7 +5,7 @@ import { AdminService, BrandSettings, User, LoginAttempt, EarningsSummary, Artis
 import { ReleaseService, Release } from '../../services/release.service';
 import { NotificationService } from '../../services/notification.service';
 import { BrandService } from '../../services/brand.service';
-import { PaginatedTableComponent, PaginationInfo } from '../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-admin',
@@ -49,16 +49,47 @@ export class AdminComponent implements OnInit {
   users: User[] = [];
   usersPagination: PaginationInfo | null = null;
   usersLoading: boolean = false;
+  usersFilters: any = {};
+  usersSort: SortInfo | null = null;
   loginAttempts: LoginAttempt[] = [];
   loginAttemptsPagination: PaginationInfo | null = null;
   loginAttemptsLoading: boolean = false;
+  loginAttemptsFilters: any = {};
+  loginAttemptsSort: SortInfo | null = null;
 
   // Tools
   emailLogs: EmailLog[] = [];
   emailLogsPagination: PaginationInfo | null = null;
   emailLogsLoading: boolean = false;
+  emailLogsFilters: any = {};
+  emailLogsSort: SortInfo | null = null;
   selectedEmail: EmailDetail | null = null;
   showEmailModal: boolean = false;
+
+  // Table column definitions
+  usersColumns: TableColumn[] = [
+    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true },
+    { key: 'first_name', label: 'First Name', type: 'text', searchable: true, sortable: true },
+    { key: 'last_name', label: 'Last Name', type: 'text', searchable: true, sortable: true },
+    { key: 'email_address', label: 'Email address', type: 'text', searchable: true, sortable: true },
+    { key: 'last_logged_in', label: 'Last logged in', type: 'date', searchable: false, sortable: true },
+    { key: 'is_admin', label: 'Is administrator', type: 'text', searchable: false, sortable: true }
+  ];
+
+  loginAttemptsColumns: TableColumn[] = [
+    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true },
+    { key: 'name', label: 'Name', type: 'text', searchable: true, sortable: true },
+    { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true },
+    { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true },
+    { key: 'remote_ip', label: 'Remote IP', type: 'text', searchable: true, sortable: true }
+  ];
+
+  emailLogsColumns: TableColumn[] = [
+    { key: 'timestamp', label: 'Timestamp', type: 'date', searchable: true, sortable: true },
+    { key: 'recipients', label: 'Recipients', type: 'text', searchable: true, sortable: true },
+    { key: 'subject', label: 'Subject', type: 'text', searchable: true, sortable: true },
+    { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true }
+  ];
 
   constructor(
     private adminService: AdminService,
@@ -237,14 +268,14 @@ export class AdminComponent implements OnInit {
   }
 
   private loadUsersData(): void {
-    this.loadUsers(1);
-    this.loadLoginAttempts(1);
+    this.loadUsers(1, this.usersFilters, this.usersSort);
+    this.loadLoginAttempts(1, this.loginAttemptsFilters, this.loginAttemptsSort);
   }
 
-  loadUsers(page: number): void {
+  loadUsers(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.usersLoading = true;
     
-    this.adminService.getUsers(page, 15).subscribe({
+    this.adminService.getUsers(page, 15, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
         this.users = response.data;
         this.usersPagination = response.pagination;
@@ -257,10 +288,10 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  loadLoginAttempts(page: number): void {
+  loadLoginAttempts(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.loginAttemptsLoading = true;
     
-    this.adminService.getLoginAttempts(page, 20).subscribe({
+    this.adminService.getLoginAttempts(page, 20, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
         this.loginAttempts = response.data;
         this.loginAttemptsPagination = response.pagination;
@@ -274,13 +305,13 @@ export class AdminComponent implements OnInit {
   }
 
   private loadToolsData(): void {
-    this.loadEmailLogs(1);
+    this.loadEmailLogs(1, this.emailLogsFilters, this.emailLogsSort);
   }
 
-  loadEmailLogs(page: number): void {
+  loadEmailLogs(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.emailLogsLoading = true;
     
-    this.adminService.getEmailLogs(page, 50).subscribe({
+    this.adminService.getEmailLogs(page, 50, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
         this.emailLogs = response.data;
         this.emailLogsPagination = response.pagination;
@@ -693,5 +724,50 @@ export class AdminComponent implements OnInit {
   getReleaseTitle(releaseId: number): string {
     const release = this.releases.find(r => r.id === releaseId);
     return release ? `${release.catalog_no}: ${release.title}` : '';
+  }
+
+  // Users table pagination handlers
+  onUsersPageChange(page: number): void {
+    this.loadUsers(page, this.usersFilters, this.usersSort);
+  }
+
+  onUsersFiltersChange(filters: SearchFilters): void {
+    this.usersFilters = filters;
+    this.loadUsers(1, this.usersFilters, this.usersSort); // Reset to first page when filtering
+  }
+
+  onUsersSortChange(sort: SortInfo | null): void {
+    this.usersSort = sort;
+    this.loadUsers(this.usersPagination?.current_page || 1, this.usersFilters, this.usersSort);
+  }
+
+  // Login attempts table pagination handlers
+  onLoginAttemptsPageChange(page: number): void {
+    this.loadLoginAttempts(page, this.loginAttemptsFilters, this.loginAttemptsSort);
+  }
+
+  onLoginAttemptsFiltersChange(filters: SearchFilters): void {
+    this.loginAttemptsFilters = filters;
+    this.loadLoginAttempts(1, this.loginAttemptsFilters, this.loginAttemptsSort); // Reset to first page when filtering
+  }
+
+  onLoginAttemptsSortChange(sort: SortInfo | null): void {
+    this.loginAttemptsSort = sort;
+    this.loadLoginAttempts(this.loginAttemptsPagination?.current_page || 1, this.loginAttemptsFilters, this.loginAttemptsSort);
+  }
+
+  // Email logs table pagination handlers
+  onEmailLogsPageChange(page: number): void {
+    this.loadEmailLogs(page, this.emailLogsFilters, this.emailLogsSort);
+  }
+
+  onEmailLogsFiltersChange(filters: SearchFilters): void {
+    this.emailLogsFilters = filters;
+    this.loadEmailLogs(1, this.emailLogsFilters, this.emailLogsSort); // Reset to first page when filtering
+  }
+
+  onEmailLogsSortChange(sort: SortInfo | null): void {
+    this.emailLogsSort = sort;
+    this.loadEmailLogs(this.emailLogsPagination?.current_page || 1, this.emailLogsFilters, this.emailLogsSort);
   }
 }

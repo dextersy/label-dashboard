@@ -227,8 +227,22 @@ export class AdminService {
   }
 
   // Users Management
-  getUsers(page: number = 1, limit: number = 20): Observable<{data: User[], pagination: any}> {
-    return this.http.get<{data: User[], pagination: any}>(`${environment.apiUrl}/users?page=${page}&limit=${limit}`, {
+  getUsers(page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: User[], pagination: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    
+    return this.http.get<{data: User[], pagination: any}>(`${environment.apiUrl}/users?${queryParams}`, {
       headers: this.getAuthHeaders()
     });
   }
@@ -239,8 +253,22 @@ export class AdminService {
     });
   }
 
-  getLoginAttempts(page: number = 1, limit: number = 50): Observable<{data: LoginAttempt[], pagination: any}> {
-    return this.http.get<{data: LoginAttempt[], pagination: any}>(`${environment.apiUrl}/users/login-attempts?page=${page}&limit=${limit}`, {
+  getLoginAttempts(page: number = 1, limit: number = 50, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: LoginAttempt[], pagination: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    
+    return this.http.get<{data: LoginAttempt[], pagination: any}>(`${environment.apiUrl}/users/login-attempts?${queryParams}`, {
       headers: this.getAuthHeaders()
     });
   }
@@ -339,8 +367,22 @@ export class AdminService {
   }
 
   // Email Management
-  getEmailLogs(page: number = 1, limit: number = 50): Observable<{data: EmailLog[], pagination: any}> {
-    return this.http.get<{data: EmailLog[], pagination: any}>(`${environment.apiUrl}/email?page=${page}&limit=${limit}`, {
+  getEmailLogs(page: number = 1, limit: number = 50, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: EmailLog[], pagination: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    
+    return this.http.get<{data: EmailLog[], pagination: any}>(`${environment.apiUrl}/email?${queryParams}`, {
       headers: this.getAuthHeaders()
     });
   }

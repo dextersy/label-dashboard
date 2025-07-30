@@ -16,8 +16,41 @@ export const getEmailLogs = async (req: AuthRequest, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = (page - 1) * limit;
 
+    // Parse filter and sort parameters
+    const sortBy = req.query.sortBy as string;
+    const sortDirection = (req.query.sortDirection as string) || 'DESC';
+
+    // Build where condition
+    const whereCondition: any = { brand_id: req.user.brand_id };
+
+    // Add filters
+    const filterableFields = ['recipients', 'subject', 'timestamp', 'result'];
+    filterableFields.forEach(field => {
+      const filterValue = req.query[field] as string;
+      if (filterValue && filterValue.trim() !== '') {
+        if (field === 'timestamp') {
+          // Handle date filter - search for dates containing the filter value
+          whereCondition[field] = {
+            [require('sequelize').Op.like]: `%${filterValue}%`
+          };
+        } else {
+          // Handle text filters with partial matching
+          whereCondition[field] = {
+            [require('sequelize').Op.like]: `%${filterValue}%`
+          };
+        }
+      }
+    });
+
+    // Build order clause
+    let orderClause: any[] = [['timestamp', 'DESC']]; // Default ordering
+    if (sortBy && filterableFields.includes(sortBy)) {
+      const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+      orderClause = [[sortBy, direction]];
+    }
+
     const { count, rows: emailLogs } = await EmailAttempt.findAndCountAll({
-      where: { brand_id: req.user.brand_id },
+      where: whereCondition,
       attributes: [
         'id',
         'recipients',
@@ -25,7 +58,7 @@ export const getEmailLogs = async (req: AuthRequest, res: Response) => {
         'timestamp',
         'result'
       ],
-      order: [['timestamp', 'DESC']],
+      order: orderClause,
       limit,
       offset
     });

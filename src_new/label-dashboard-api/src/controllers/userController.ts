@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
+import { sequelize } from '../config/database';
+import { QueryTypes, Op } from 'sequelize';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -298,44 +300,190 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = (page - 1) * limit;
 
-    // Exclude users with blank usernames (following PHP pattern)
-    const whereCondition = {
+    // Parse filter and sort parameters
+    const sortBy = req.query.sortBy as string;
+    const sortDirection = (req.query.sortDirection as string) || 'ASC';
+
+    // Build base where condition (exclude users with blank usernames)
+    const whereCondition: any = {
       brand_id: req.user.brand_id,
       username: {
-        [require('sequelize').Op.ne]: '',
-        [require('sequelize').Op.not]: null
+        [Op.ne]: '',
+        [Op.not]: null
       }
     };
 
-    const { count, rows: users } = await User.findAndCountAll({
-      where: whereCondition,
-      attributes: [
-        'id', 
-        'username', 
-        'email_address', 
-        'first_name', 
-        'last_name', 
-        'is_admin', 
-        'last_logged_in'
-      ],
-      order: [['username', 'ASC']],
-      limit,
-      offset
-    });
-
-    const totalPages = Math.ceil(count / limit);
-
-    res.json({
-      data: users,
-      pagination: {
-        current_page: page,
-        total_pages: totalPages,
-        total_count: count,
-        per_page: limit,
-        has_next: page < totalPages,
-        has_prev: page > 1
+    // Add filters (removed last_logged_in as it's not filterable)
+    const filterableFields = ['username', 'first_name', 'last_name', 'email_address', 'is_admin'];
+    filterableFields.forEach(field => {
+      const filterValue = req.query[field] as string;
+      if (filterValue && filterValue.trim() !== '') {
+        if (field === 'is_admin') {
+          // Handle boolean filter
+          whereCondition[field] = filterValue.toLowerCase() === 'true';
+        } else {
+          // Handle text filters with partial matching
+          whereCondition[field] = {
+            [Op.like]: `%${filterValue}%`
+          };
+        }
       }
     });
+
+    // Special handling for last_logged_in sorting - we need to use raw SQL for this
+    if (sortBy === 'last_logged_in') {
+      const direction = sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      
+      // MySQL doesn't support NULLS FIRST/LAST, so we use a workaround
+      // For DESC: non-null values first (DESC), then NULL values
+      // For ASC: NULL values first, then non-null values (ASC)
+      const orderClause = direction === 'DESC' 
+        ? 'last_logged_in IS NULL, last_logged_in DESC'
+        : 'last_logged_in IS NULL DESC, last_logged_in ASC';
+      
+      // Use raw query with subquery to properly sort by last login
+      const usersQuery = `
+        SELECT u.*, 
+               (SELECT MAX(la.date_and_time) 
+                FROM login_attempt la 
+                WHERE la.user_id = u.id 
+                  AND la.status = 'Successful' 
+                  AND la.brand_id = ?) as last_logged_in
+        FROM user u
+        WHERE u.brand_id = ? 
+          AND u.username != '' 
+          AND u.username IS NOT NULL
+          ${Object.keys(whereCondition).filter(key => key !== 'brand_id' && key !== 'username').map(key => {
+            const value = whereCondition[key];
+            if (key === 'is_admin') {
+              return `AND u.${key} = ${value ? 1 : 0}`;
+            } else if (typeof value === 'object' && value[Op.like]) {
+              const likeValue = value[Op.like].replace(/%/g, '');
+              return `AND u.${key} LIKE '%${likeValue}%'`;
+            }
+            return '';
+          }).join(' ')}
+        ORDER BY ${orderClause}
+        LIMIT ? OFFSET ?
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM user u
+        WHERE u.brand_id = ? 
+          AND u.username != '' 
+          AND u.username IS NOT NULL
+          ${Object.keys(whereCondition).filter(key => key !== 'brand_id' && key !== 'username').map(key => {
+            const value = whereCondition[key];
+            if (key === 'is_admin') {
+              return `AND u.${key} = ${value ? 1 : 0}`;
+            } else if (typeof value === 'object' && value[Op.like]) {
+              const likeValue = value[Op.like].replace(/%/g, '');
+              return `AND u.${key} LIKE '%${likeValue}%'`;
+            }
+            return '';
+          }).join(' ')}
+      `;
+
+      const [users, countResult] = await Promise.all([
+        sequelize.query(usersQuery, {
+          replacements: [req.user.brand_id, req.user.brand_id, limit, offset],
+          type: QueryTypes.SELECT
+        }),
+        sequelize.query(countQuery, {
+          replacements: [req.user.brand_id],
+          type: QueryTypes.SELECT
+        })
+      ]);
+
+      const count = (countResult[0] as any).total;
+      const totalPages = Math.ceil(count / limit);
+
+      res.json({
+        data: users,
+        pagination: {
+          current_page: page,
+          total_pages: totalPages,
+          total_count: count,
+          per_page: limit,
+          has_next: page < totalPages,
+          has_prev: page > 1
+        }
+      });
+    } else {
+      // Standard sorting for other fields
+      let orderClause: any[] = [['username', 'ASC']]; // Default ordering
+      const sortableFields = [...filterableFields];
+      if (sortBy && sortableFields.includes(sortBy)) {
+        const direction = sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        orderClause = [[sortBy, direction]];
+      }
+
+      const { count, rows: users } = await User.findAndCountAll({
+        where: whereCondition,
+        attributes: [
+          'id', 
+          'username', 
+          'email_address', 
+          'first_name', 
+          'last_name', 
+          'is_admin'
+        ],
+        order: orderClause,
+        limit,
+        offset
+      });
+
+      // Get latest successful login for each user
+      const userIds = users.map(user => user.id);
+      let loginMap = new Map();
+      
+      if (userIds.length > 0) {
+        const latestLogins = await LoginAttempt.findAll({
+          attributes: [
+            'user_id',
+            [require('sequelize').fn('MAX', require('sequelize').col('date_and_time')), 'last_logged_in']
+          ],
+          where: {
+            user_id: userIds,
+            status: 'Successful',
+            brand_id: req.user.brand_id
+          },
+          group: ['user_id'],
+          raw: true
+        });
+
+        // Create a map of user_id to last_logged_in
+        latestLogins.forEach((login: any) => {
+          loginMap.set(login.user_id, login.last_logged_in);
+        });
+      }
+
+      // Add last_logged_in to users and format the response
+      const formattedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        is_admin: user.is_admin,
+        last_logged_in: loginMap.get(user.id) || null
+      }));
+
+      const totalPages = Math.ceil(count / limit);
+
+      res.json({
+        data: formattedUsers,
+        pagination: {
+          current_page: page,
+          total_pages: totalPages,
+          total_count: count,
+          per_page: limit,
+          has_next: page < totalPages,
+          has_prev: page > 1
+        }
+      });
+    }
   } catch (error) {
     console.error('Get all users error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -353,21 +501,100 @@ export const getLoginAttempts = async (req: AuthRequest, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = (page - 1) * limit;
 
+    // Parse filter and sort parameters
+    const sortBy = req.query.sortBy as string;
+    const sortDirection = (req.query.sortDirection as string) || 'DESC';
+
+    // Build where condition for main table
+    const whereCondition: any = { brand_id: req.user.brand_id };
+
+    // Build where condition for user include
+    const userWhereCondition: any = {
+      username: {
+        [Op.ne]: '',
+        [Op.not]: null
+      }
+    };
+
+    // Add filters - these need to be handled carefully with the JOIN
+    const username = req.query.username as string;
+    const name = req.query.name as string;
+    const date_and_time = req.query.date_and_time as string;
+    const result = req.query.result as string;
+    const remote_ip = req.query.remote_ip as string;
+
+    // Username filter
+    if (username && username.trim() !== '') {
+      userWhereCondition.username = {
+        ...userWhereCondition.username,
+        [require('sequelize').Op.like]: `%${username}%`
+      };
+    }
+
+    // Name filter (first_name or last_name)
+    if (name && name.trim() !== '') {
+      const nameCondition = {
+        [require('sequelize').Op.or]: [
+          { first_name: { [require('sequelize').Op.like]: `%${name}%` } },
+          { last_name: { [require('sequelize').Op.like]: `%${name}%` } }
+        ]
+      };
+      userWhereCondition[require('sequelize').Op.and] = [
+        userWhereCondition[require('sequelize').Op.and] || {},
+        nameCondition
+      ].filter(Boolean);
+    }
+
+    // Date filter
+    if (date_and_time && date_and_time.trim() !== '') {
+      whereCondition.date_and_time = {
+        [require('sequelize').Op.like]: `%${date_and_time}%`
+      };
+    }
+
+    // Result filter (status)
+    if (result && result.trim() !== '') {
+      whereCondition.status = {
+        [require('sequelize').Op.like]: `%${result}%`
+      };
+    }
+
+    // Remote IP filter
+    if (remote_ip && remote_ip.trim() !== '') {
+      whereCondition[require('sequelize').Op.or] = [
+        { remote_ip: { [require('sequelize').Op.like]: `%${remote_ip}%` } },
+        { proxy_ip: { [require('sequelize').Op.like]: `%${remote_ip}%` } }
+      ];
+    }
+
+    // Build order clause
+    let orderClause: any[] = [['date_and_time', 'DESC']]; // Default ordering
+    const sortableFields = ['username', 'name', 'date_and_time', 'result', 'remote_ip'];
+    if (sortBy && sortableFields.includes(sortBy)) {
+      const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+      if (sortBy === 'username') {
+        orderClause = [[{ model: User, as: 'user' }, 'username', direction]];
+      } else if (sortBy === 'name') {
+        orderClause = [[{ model: User, as: 'user' }, 'first_name', direction]];
+      } else if (sortBy === 'result') {
+        orderClause = [['status', direction]];
+      } else if (sortBy === 'remote_ip') {
+        orderClause = [['remote_ip', direction]];
+      } else {
+        orderClause = [[sortBy, direction]];
+      }
+    }
+
     const { count, rows: loginAttempts } = await LoginAttempt.findAndCountAll({
-      where: { brand_id: req.user.brand_id },
+      where: whereCondition,
       include: [{ 
         model: User, 
         as: 'user',
         attributes: ['username', 'first_name', 'last_name'],
-        where: {
-          username: {
-            [require('sequelize').Op.ne]: '',
-            [require('sequelize').Op.not]: null
-          }
-        },
+        where: userWhereCondition,
         required: false // Left join to include attempts even if user is deleted
       }],
-      order: [['date_and_time', 'DESC']],
+      order: orderClause,
       limit,
       offset
     });

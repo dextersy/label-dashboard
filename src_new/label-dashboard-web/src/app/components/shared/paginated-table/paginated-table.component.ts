@@ -45,11 +45,13 @@ export class PaginatedTableComponent implements OnInit {
   @Input() showSearch: boolean = true;
   @Input() showSortableHeaders: boolean = false;
   @Input() sortInfo: SortInfo | null = null;
+  @Input() showActionsColumn: boolean = false;
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
 
   @ContentChild('tableContent', { static: false }) tableContent!: TemplateRef<any>;
+  @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;
 
   searchFilters: SearchFilters = {};
   private searchTimeout: any;
@@ -134,7 +136,7 @@ export class PaginatedTableComponent implements OnInit {
     return this.sortInfo.direction === 'asc' ? 'fa-sort-up text-primary' : 'fa-sort-down text-primary';
   }
 
-  getColumnValue(item: any, column: TableColumn): string {
+  getColumnValue(item: any, column: TableColumn): any {
     const value = item[column.key];
     
     if (value === null || value === undefined) {
@@ -144,7 +146,9 @@ export class PaginatedTableComponent implements OnInit {
     // Format based on column type and key
     switch (column.type) {
       case 'date':
-        return new Date(value).toLocaleDateString();
+        if (!value) return 'Never';
+        const date = new Date(value);
+        return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US');
       case 'number':
         // Special formatting for currency columns
         if (column.key === 'amount' || column.key === 'payment_processing_fee') {
@@ -155,6 +159,10 @@ export class PaginatedTableComponent implements OnInit {
         }
         return typeof value === 'number' ? value.toLocaleString() : value.toString();
       default:
+        // Special handling for boolean columns
+        if (column.key === 'is_admin') {
+          return value ? '✔️' : '';
+        }
         return value.toString();
     }
   }

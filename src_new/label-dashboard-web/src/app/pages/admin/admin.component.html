@@ -475,38 +475,17 @@
                   [data]="users"
                   [pagination]="usersPagination"
                   [loading]="usersLoading"
-                  (pageChange)="loadUsers($event)">
-                  <ng-template #tableContent let-data>
-                    <div class="table-responsive">
-                      <table class="table">
-                        <thead>
-                          <tr>
-                            <th>Username</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email address</th>
-                            <th>Last logged in</th>
-                            <th>Is administrator</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr *ngFor="let user of data">
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.first_name }}</td>
-                            <td>{{ user.last_name }}</td>
-                            <td>{{ user.email_address }}</td>
-                            <td>{{ formatDate(user.last_logged_in || '') }}</td>
-                            <td>{{ user.is_admin ? '✔️' : '' }}</td>
-                            <td>
-                              <a (click)="toggleAdminStatus(user.id)" class="btn btn-link btn-sm">
-                                {{ user.is_admin ? 'Remove admin' : 'Make admin' }}
-                              </a>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  [columns]="usersColumns"
+                  [showSortableHeaders]="true"
+                  [showActionsColumn]="true"
+                  [sortInfo]="usersSort"
+                  (pageChange)="onUsersPageChange($event)"
+                  (filtersChange)="onUsersFiltersChange($event)"
+                  (sortChange)="onUsersSortChange($event)">
+                  <ng-template #actionsContent let-user>
+                    <a (click)="toggleAdminStatus(user.id)" class="btn btn-link btn-sm">
+                      {{ user.is_admin ? 'Remove admin' : 'Make admin' }}
+                    </a>
                   </ng-template>
                 </app-paginated-table>
               </div>
@@ -517,31 +496,12 @@
                   [data]="loginAttempts"
                   [pagination]="loginAttemptsPagination"
                   [loading]="loginAttemptsLoading"
-                  (pageChange)="loadLoginAttempts($event)">
-                  <ng-template #tableContent let-data>
-                    <div class="table-responsive">
-                      <table class="table">
-                        <thead>
-                          <tr>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Time</th>
-                            <th>Result</th>
-                            <th>Remote IP</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr *ngFor="let attempt of data">
-                            <td>{{ attempt.username }}</td>
-                            <td>{{ attempt.name }}</td>
-                            <td>{{ formatDate(attempt.date_and_time) }}</td>
-                            <td>{{ attempt.result }}</td>
-                            <td>{{ attempt.remote_ip }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </ng-template>
+                  [columns]="loginAttemptsColumns"
+                  [showSortableHeaders]="true"
+                  [sortInfo]="loginAttemptsSort"
+                  (pageChange)="onLoginAttemptsPageChange($event)"
+                  (filtersChange)="onLoginAttemptsFiltersChange($event)"
+                  (sortChange)="onLoginAttemptsSortChange($event)">
                 </app-paginated-table>
               </div>
             </div>
@@ -570,47 +530,24 @@
                   [data]="emailLogs"
                   [pagination]="emailLogsPagination"
                   [loading]="emailLogsLoading"
-                  (pageChange)="loadEmailLogs($event)">
-                  <ng-template #tableContent let-data>
-                    <div class="table-responsive">
-                      <table class="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Timestamp</th>
-                            <th>Recipients</th>
-                            <th>Subject</th>
-                            <th>Result</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr *ngFor="let email of data">
-                            <td>{{ formatDate(email.timestamp) }}</td>
-                            <td>{{ email.recipients }}</td>
-                            <td>{{ email.subject }}</td>
-                            <td>
-                              <span class="badge" 
-                                    [class.bg-success]="email.result === 'Success'"
-                                    [class.bg-danger]="email.result === 'Failed'">
-                                {{ email.result }}
-                              </span>
-                            </td>
-                            <td>
-                              <button class="btn btn-sm btn-outline-primary me-2" 
-                                      (click)="viewEmailContent(email.id)"
-                                      title="View Details">
-                                <i class="fas fa-eye"></i>
-                              </button>
-                              <button class="btn btn-sm btn-outline-secondary" 
-                                      (click)="previewEmail(email.id)"
-                                      title="Preview in New Window">
-                                <i class="fas fa-external-link-alt"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  [columns]="emailLogsColumns"
+                  [showSortableHeaders]="true"
+                  [showActionsColumn]="true"
+                  [sortInfo]="emailLogsSort"
+                  (pageChange)="onEmailLogsPageChange($event)"
+                  (filtersChange)="onEmailLogsFiltersChange($event)"
+                  (sortChange)="onEmailLogsSortChange($event)">
+                  <ng-template #actionsContent let-email>
+                    <button class="btn btn-sm btn-outline-primary me-2" 
+                            (click)="viewEmailContent(email.id)"
+                            title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            (click)="previewEmail(email.id)"
+                            title="Preview in New Window">
+                      <i class="fas fa-external-link-alt"></i>
+                    </button>
                   </ng-template>
                 </app-paginated-table>
               </div>

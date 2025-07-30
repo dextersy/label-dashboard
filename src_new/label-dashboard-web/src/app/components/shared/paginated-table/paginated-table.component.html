@@ -96,16 +96,28 @@
                        class="fa ms-1" 
                        [class]="getSortIcon(column)"></i>
                   </th>
+                  <th *ngIf="showActionsColumn">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let item of data">
                   <td *ngFor="let column of columns">
-                    {{ getColumnValue(item, column) }}
+                    <span *ngIf="column.key === 'result' && (item[column.key] === 'Success' || item[column.key] === 'Failed' || item[column.key] === 'Successful')" 
+                          class="badge" 
+                          [class.bg-success]="item[column.key] === 'Success' || item[column.key] === 'Successful'"
+                          [class.bg-danger]="item[column.key] === 'Failed'">
+                      {{ item[column.key] }}
+                    </span>
+                    <span *ngIf="column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')">
+                      {{ getColumnValue(item, column) }}
+                    </span>
+                  </td>
+                  <td *ngIf="showActionsColumn">
+                    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item }"></ng-container>
                   </td>
                 </tr>
                 <tr *ngIf="data.length === 0">
-                  <td [attr.colspan]="columns.length" class="text-center">No data available.</td>
+                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0)" class="text-center">No data available.</td>
                 </tr>
               </tbody>
             </table>
