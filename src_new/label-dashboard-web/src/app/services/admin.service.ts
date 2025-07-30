@@ -41,6 +41,23 @@ export interface LoginAttempt {
   remote_ip: string;
 }
 
+export interface EmailLog {
+  id: number;
+  recipients: string;
+  subject: string;
+  timestamp: string;
+  result: 'Success' | 'Failed';
+}
+
+export interface EmailDetail {
+  id: number;
+  recipients: string;
+  subject: string;
+  body: string;
+  timestamp: string;
+  result: 'Success' | 'Failed';
+}
+
 export interface EarningsSummary {
   physical_earnings: number;
   download_earnings: number;
@@ -319,5 +336,18 @@ export class AdminService {
     }).pipe(
       map(response => response.balance)
     );
+  }
+
+  // Email Management
+  getEmailLogs(page: number = 1, limit: number = 50): Observable<{data: EmailLog[], pagination: any}> {
+    return this.http.get<{data: EmailLog[], pagination: any}>(`${environment.apiUrl}/email?page=${page}&limit=${limit}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getEmailDetail(emailId: number): Observable<EmailDetail> {
+    return this.http.get<EmailDetail>(`${environment.apiUrl}/email/${emailId}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 }

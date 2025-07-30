@@ -38,6 +38,7 @@ import brandRoutes from './routes/brand';
 import dashboardRoutes from './routes/dashboard';
 import profileRoutes from './routes/profile';
 import inviteRoutes from './routes/invite';
+import emailRoutes from './routes/email';
 
 // API Routes (protected)
 app.use('/api/auth', authRoutes);
@@ -50,6 +51,7 @@ app.use('/api/brands', brandRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/invite', inviteRoutes);
+app.use('/api/email', emailRoutes);
 
 // Public API Routes (no authentication required)
 app.use('/api/public', publicRoutes);

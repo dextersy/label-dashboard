@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AdminService, BrandSettings, User, LoginAttempt, EarningsSummary, ArtistBalance, BulkEarning } from '../../services/admin.service';
+import { AdminService, BrandSettings, User, LoginAttempt, EarningsSummary, ArtistBalance, BulkEarning, EmailLog, EmailDetail } from '../../services/admin.service';
 import { ReleaseService, Release } from '../../services/release.service';
 import { NotificationService } from '../../services/notification.service';
 import { BrandService } from '../../services/brand.service';
@@ -52,6 +52,13 @@ export class AdminComponent implements OnInit {
   loginAttempts: LoginAttempt[] = [];
   loginAttemptsPagination: PaginationInfo | null = null;
   loginAttemptsLoading: boolean = false;
+
+  // Tools
+  emailLogs: EmailLog[] = [];
+  emailLogsPagination: PaginationInfo | null = null;
+  emailLogsLoading: boolean = false;
+  selectedEmail: EmailDetail | null = null;
+  showEmailModal: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -105,6 +112,9 @@ export class AdminComponent implements OnInit {
         break;
       case 'users':
         this.loadUsersData();
+        break;
+      case 'tools':
+        this.loadToolsData();
         break;
     }
   }
@@ -261,6 +271,108 @@ export class AdminComponent implements OnInit {
         this.loginAttemptsLoading = false;
       }
     });
+  }
+
+  private loadToolsData(): void {
+    this.loadEmailLogs(1);
+  }
+
+  loadEmailLogs(page: number): void {
+    this.emailLogsLoading = true;
+    
+    this.adminService.getEmailLogs(page, 50).subscribe({
+      next: (response) => {
+        this.emailLogs = response.data;
+        this.emailLogsPagination = response.pagination;
+        this.emailLogsLoading = false;
+      },
+      error: (error) => {
+        this.notificationService.showError('Error loading email logs');
+        this.emailLogsLoading = false;
+      }
+    });
+  }
+
+  viewEmailContent(emailId: number): void {
+    this.adminService.getEmailDetail(emailId).subscribe({
+      next: (email) => {
+        this.selectedEmail = email;
+        this.showEmailModal = true;
+      },
+      error: (error) => {
+        this.notificationService.showError('Error loading email content');
+      }
+    });
+  }
+
+  previewEmail(emailId: number): void {
+    this.adminService.getEmailDetail(emailId).subscribe({
+      next: (email) => {
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="utf-8">
+              <title>Email Preview - ${email.subject}</title>
+              <style>
+                  body { 
+                      margin: 10px; 
+                      font-family: Arial, sans-serif; 
+                      background-color: #f8f9fa;
+                  }
+                  .email-content {
+                      background-color: white;
+                      padding: 20px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  }
+                  .email-header {
+                      background-color: #e9ecef;
+                      padding: 15px;
+                      border-radius: 8px 8px 0 0;
+                      margin: -20px -20px 20px -20px;
+                      border-bottom: 1px solid #dee2e6;
+                  }
+                  .email-header h3 {
+                      margin: 0 0 10px 0;
+                      color: #495057;
+                  }
+                  .email-meta {
+                      font-size: 14px;
+                      color: #6c757d;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="email-content">
+                  <div class="email-header">
+                      <h3>${email.subject}</h3>
+                      <div class="email-meta">
+                          <strong>To:</strong> ${email.recipients}<br>
+                          <strong>Date:</strong> ${this.formatDate(email.timestamp)}
+                      </div>
+                  </div>
+                  ${email.body}
+              </div>
+          </body>
+          </html>
+        `;
+        
+        const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        if (newWindow) {
+          newWindow.document.write(htmlContent);
+          newWindow.document.close();
+        }
+      },
+      error: (error) => {
+        this.notificationService.showError('Error loading email preview');
+      }
+    });
+  }
+
+  closeEmailModal(): void {
+    this.showEmailModal = false;
+    this.selectedEmail = null;
   }
 
   private calculateBalanceTotals(): void {
