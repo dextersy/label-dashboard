@@ -1,0 +1,77 @@
+<h3>Balance Summary</h3>
+<div class="table-responsive">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Artist</th>
+        <th class="text-end">Total royalties (₱)</th>
+        <th class="text-end">Total payments (₱)</th>
+        <th class="text-end">Total balance (₱)</th>
+        <th class="text-end">Payout point (₱)</th>
+        <th class="text-center">Due for payment</th>
+        <th class="text-center">Payouts paused</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let artist of artistBalances">
+        <td>{{ artist.name }}</td>
+        <td class="text-end">{{ formatCurrency(artist.total_royalties) }}</td>
+        <td class="text-end">{{ formatCurrency(artist.total_payments) }}</td>
+        <td class="text-end fw-bold">{{ formatCurrency(artist.total_balance) }}</td>
+        <td class="text-end">{{ formatCurrency(artist.payout_point) }}</td>
+        <td class="text-center">
+          <i class="fas fa-check" *ngIf="artist.due_for_payment"></i>
+        </td>
+        <td class="text-center">
+          <i class="fas fa-pause-circle" *ngIf="artist.hold_payouts"></i>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title">Total Balance</h4>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(totalBalance) }}</strong></h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title">Total Due For Payment</h4>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(totalDueForPayment) }}</strong></h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title">Ready to Pay <i class="fas fa-info-circle" title="Due for payment and has bank account"></i></h4>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(readyForPayment) }}</strong></h3>
+        <button class="btn btn-primary btn-block" 
+                [disabled]="readyForPayment <= 0 || walletBalance < readyForPayment"
+                (click)="payAllBalances()">
+          <i class="fas fa-credit-card"></i> Pay Now
+        </button>
+        <small><strong>On hold:</strong> {{ formatCurrency(pausedPayouts) }}</small>
+      </div>
+      <div class="card-footer text-center">
+        <div class="badge bg-info">
+          Available balance: {{ formatCurrency(walletBalance) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

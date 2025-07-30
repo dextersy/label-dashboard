@@ -1,0 +1,68 @@
+<div class="row mb-3">
+  <div class="col-md-3">
+    <div class="form-group">
+      <label for="dateRange">Select date range</label>
+      <div class="input-group">
+        <input type="text" class="form-control" id="dateRange" 
+               [(ngModel)]="dateRange" placeholder="MM/DD/YYYY - MM/DD/YYYY" />
+        <button class="btn btn-outline-secondary" type="button" (click)="filterSummaryData()">
+          <i class="fas fa-filter"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Earnings Summary</h3>
+<div class="row" *ngIf="earningsSummary">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fas fa-shopping-bag"></i> Physical Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.physical_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fas fa-download"></i> Download Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.download_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fas fa-headphones"></i> Streaming Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.streaming_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fas fa-tv"></i> Sync Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.sync_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Payments and Royalties Summary</h3>
+<div class="row" *ngIf="paymentsRoyaltiesSummary">
+  <div class="col-md-12">
+    <p class="text-muted">Payments and royalties summary will be displayed here.</p>
+  </div>
+</div>

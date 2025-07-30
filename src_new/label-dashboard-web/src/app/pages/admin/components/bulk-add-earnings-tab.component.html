@@ -1,0 +1,93 @@
+<h3>Bulk Add Earnings</h3>
+<div class="row mb-3">
+  <div class="col-md-3">
+    <strong>Current total earnings:</strong> 
+    <span>{{ formatCurrency(totalEarnings) }}</span>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Release</th>
+        <th>Earning Date</th>
+        <th>Earning Type</th>
+        <th>Earning Description</th>
+        <th>Earning Amount</th>
+        <th>Calculate royalties</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Apply to all row -->
+      <tr style="background-color:#f1f1f1;">
+        <td><em>Apply to all</em></td>
+        <td>
+          <input type="date" class="form-control" #applyAllDateInput 
+                 (change)="applyAllDate(applyAllDateInput.value)">
+        </td>
+        <td>
+          <select class="form-control" #applyAllTypeInput 
+                  (change)="applyAllType(applyAllTypeInput.value)">
+            <option value="Sync">Sync</option>
+            <option value="Streaming">Streaming</option>
+            <option value="Downloads">Downloads</option>
+            <option value="Physical">Physical</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" class="form-control" #applyAllDescInput placeholder="Description" 
+                 (change)="applyAllDescription(applyAllDescInput.value); applyAllDescInput.value = ''">
+        </td>
+        <td></td>
+        <td>
+          <input type="checkbox" class="form-check-input" #applyAllCalcInput 
+                 checked (change)="applyAllCalculateRoyalties(applyAllCalcInput.checked)">
+        </td>
+      </tr>
+
+      <!-- Data rows -->
+      <tr *ngFor="let earning of bulkEarnings; let i = index">
+        <td>
+          <select class="form-control" [(ngModel)]="earning.release_id">
+            <option value="0"></option>
+            <option *ngFor="let release of releases" [value]="release.id">
+              {{ release.catalog_no }}: {{ release.title }}
+            </option>
+          </select>
+        </td>
+        <td>
+          <input type="date" class="form-control" [(ngModel)]="earning.date_recorded">
+        </td>
+        <td>
+          <select class="form-control" [(ngModel)]="earning.type">
+            <option value="Sync">Sync</option>
+            <option value="Streaming">Streaming</option>
+            <option value="Downloads">Downloads</option>
+            <option value="Physical">Physical</option>
+          </select>
+        </td>
+        <td>
+          <input type="text" class="form-control" [(ngModel)]="earning.description" 
+                 placeholder="Description">
+        </td>
+        <td>
+          <div class="input-group">
+            <div class="input-group-text">₱</div>
+            <input type="number" class="form-control" step="0.01" min="0" 
+                   [(ngModel)]="earning.amount" placeholder="Amount" 
+                   (ngModelChange)="onBulkAmountChange()">
+          </div>
+        </td>
+        <td>
+          <input type="checkbox" class="form-check-input" 
+                 [(ngModel)]="earning.calculate_royalties">
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<button type="button" class="btn btn-primary" (click)="saveBulkEarnings()" [disabled]="loading">
+  Save All Earnings
+</button>

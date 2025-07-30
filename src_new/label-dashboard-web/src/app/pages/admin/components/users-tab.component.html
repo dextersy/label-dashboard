@@ -1,0 +1,37 @@
+<div class="row">
+  <div class="col-md-6">
+    <app-paginated-table 
+      title="Users"
+      [data]="users"
+      [pagination]="usersPagination"
+      [loading]="usersLoading"
+      [columns]="usersColumns"
+      [showSortableHeaders]="true"
+      [showActionsColumn]="true"
+      [sortInfo]="usersSort"
+      (pageChange)="onUsersPageChange($event)"
+      (filtersChange)="onUsersFiltersChange($event)"
+      (sortChange)="onUsersSortChange($event)">
+      <ng-template #actionsContent let-user>
+        <a (click)="toggleAdminStatus(user.id)" class="btn btn-link btn-sm">
+          {{ user.is_admin ? 'Remove admin' : 'Make admin' }}
+        </a>
+      </ng-template>
+    </app-paginated-table>
+  </div>
+
+  <div class="col-md-6">
+    <app-paginated-table 
+      title="Recent Login Attempts"
+      [data]="loginAttempts"
+      [pagination]="loginAttemptsPagination"
+      [loading]="loginAttemptsLoading"
+      [columns]="loginAttemptsColumns"
+      [showSortableHeaders]="true"
+      [sortInfo]="loginAttemptsSort"
+      (pageChange)="onLoginAttemptsPageChange($event)"
+      (filtersChange)="onLoginAttemptsFiltersChange($event)"
+      (sortChange)="onLoginAttemptsSortChange($event)">
+    </app-paginated-table>
+  </div>
+</div>
