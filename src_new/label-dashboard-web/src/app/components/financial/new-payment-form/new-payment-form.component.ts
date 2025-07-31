@@ -13,6 +13,7 @@ export class NewPaymentFormComponent implements OnInit, OnChanges {
   @Input() newPaymentForm: any = {};
   @Input() paymentMethods: any[] = [];
   @Input() walletBalance: number = 0;
+  @Input() isSubmittingPayment: boolean = false;
   @Input() onSubmitPayment: () => Promise<void> = async () => {};
 
   isManualPayment = false;

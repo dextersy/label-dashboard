@@ -202,6 +202,7 @@ export class FinancialComponent implements OnInit {
   };
   
   addingPaymentMethod = false;
+  submittingPayment = false;
   
   // Document upload form
   uploadingDocument = false;
@@ -470,8 +471,9 @@ export class FinancialComponent implements OnInit {
   }
 
   async onSubmitPayment(): Promise<void> {
-    if (!this.selectedArtist) return;
+    if (!this.selectedArtist || this.submittingPayment) return;
 
+    this.submittingPayment = true;
     try {
       await this.financialService.createPayment(this.selectedArtist.id, this.newPaymentForm);
       this.notificationService.showSuccess('Payment added successfully');
@@ -481,6 +483,8 @@ export class FinancialComponent implements OnInit {
     } catch (error) {
       console.error('Error creating payment:', error);
       this.notificationService.showError('Failed to add payment');
+    } finally {
+      this.submittingPayment = false;
     }
   }
 
