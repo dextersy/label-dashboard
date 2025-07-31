@@ -68,6 +68,7 @@ export class DateRangeFilterComponent implements OnInit {
         break;
       case 'thismonth':
         startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today);
         break;
       case 'lastmonth':
         startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
@@ -78,8 +79,8 @@ export class DateRangeFilterComponent implements OnInit {
         break;
     }
 
-    this.startDate = startDate.toISOString().split('T')[0];
-    this.endDate = endDate.toISOString().split('T')[0];
+    this.startDate = this.formatDateToString(startDate);
+    this.endDate = this.formatDateToString(endDate);
     this.emitDateRangeChange();
   }
 
@@ -121,5 +122,13 @@ export class DateRangeFilterComponent implements OnInit {
     const end = new Date(this.endDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }
+
+  private formatDateToString(date: Date): string {
+    // Format date as YYYY-MM-DD using local timezone to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
