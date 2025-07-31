@@ -18,6 +18,7 @@ export interface TableColumn {
   sortable?: boolean;
   type?: 'text' | 'number' | 'date' | 'select';
   options?: { value: string; label: string }[]; // For select type
+  formatter?: (item: any) => string; // Custom formatter function
 }
 
 export interface SearchFilters {
@@ -137,6 +138,11 @@ export class PaginatedTableComponent implements OnInit {
   }
 
   getColumnValue(item: any, column: TableColumn): any {
+    // Use custom formatter if provided
+    if (column.formatter) {
+      return column.formatter(item);
+    }
+    
     const value = item[column.key];
     
     if (value === null || value === undefined) {
