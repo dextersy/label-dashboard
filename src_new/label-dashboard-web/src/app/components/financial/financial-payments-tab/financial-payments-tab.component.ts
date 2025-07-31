@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Payment, PaymentMethod, PayoutSettings } from '../../../pages/financial/financial.component';
 import { PaymentsTableComponent } from '../payments-table/payments-table.component';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
+import { PaginationInfo, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-financial-payments-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaymentsTableComponent, PaginatedTableComponent],
+  imports: [CommonModule, FormsModule, PaymentsTableComponent],
   templateUrl: './financial-payments-tab.component.html',
   styleUrl: './financial-payments-tab.component.scss'
 })
@@ -30,14 +30,6 @@ export class FinancialPaymentsTabComponent {
   @Input() onDeletePaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
   @Input() onSetDefaultPaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
 
-  // Define table columns for search and sort functionality
-  paymentsColumns: TableColumn[] = [
-    { key: 'date_paid', label: 'Date Paid', type: 'date', searchable: true, sortable: true },
-    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: true },
-    { key: 'paid_thru_type', label: 'Paid Through', type: 'text', searchable: true, sortable: true },
-    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true },
-    { key: 'payment_processing_fee', label: 'Processing Fee', type: 'number', searchable: true, sortable: true }
-  ];
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {

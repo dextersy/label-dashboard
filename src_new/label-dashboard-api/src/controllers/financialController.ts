@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
-import { sendBrandedEmail, sendEarningsNotification } from '../utils/emailService';
+import { sendEarningsNotification, sendPaymentNotification } from '../utils/emailService';
 import { PaymentService } from '../utils/paymentService';
 
 interface AuthRequest extends Request {
@@ -612,23 +612,33 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const payment = await Payment.create({
+    // Create payment object - prioritize payment_method_id over legacy paid_thru_* fields
+    const paymentData: any = {
       artist_id: artistIdNum,
       amount: finalAmount,
       description,
       date_paid: new Date(date_paid),
-      paid_thru_type,
-      paid_thru_account_name,
-      paid_thru_account_number,
-      payment_method_id: payment_method_id && payment_method_id !== '-1' ? payment_method_id : null,
       reference_number: finalReferenceNumber,
       payment_processing_fee: finalProcessingFee
-    });
+    };
+
+    // Set payment_method_id if provided, otherwise fall back to legacy fields
+    if (payment_method_id && payment_method_id !== '-1') {
+      paymentData.payment_method_id = payment_method_id;
+      // Do not set paid_thru_* fields for new payments with payment_method_id
+    } else {
+      // Only set legacy fields if no payment_method_id is provided (for backward compatibility)
+      paymentData.paid_thru_type = paid_thru_type;
+      paymentData.paid_thru_account_name = paid_thru_account_name;
+      paymentData.paid_thru_account_number = paid_thru_account_number;
+    }
+
+    const payment = await Payment.create(paymentData);
 
     // Send payment notification if requested
     if (send_notification) {
       // Get artist team members
-      const { ArtistAccess, User } = require('../models');
+      const { ArtistAccess, User, Brand } = require('../models');
       const artistAccess = await ArtistAccess.findAll({
         where: { artist_id: artistIdNum },
         include: [{ model: User, as: 'user' }]
@@ -637,20 +647,41 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       const recipients = artistAccess.map(access => access.user.email_address);
 
       if (recipients.length > 0) {
-        for (const recipient of recipients) {
-          await sendBrandedEmail(
-            recipient,
-            'payment_notification_email',
-            {
-              artistName: artist.name,
-              amount: amount,
-              datePaid: new Date(date_paid).toLocaleDateString(),
-              method: paid_thru_type || 'Not specified',
-              description: description || 'Payment'
-            },
-            req.user.brand_id
-          );
+        // Get brand info for proper email formatting
+        const brand = await Brand.findByPk(req.user.brand_id);
+        
+        // Load payment method data if payment_method_id is set
+        let paymentMethodData = null;
+        if (payment.payment_method_id) {
+          const paymentMethod = await PaymentMethod.findByPk(payment.payment_method_id);
+          if (paymentMethod) {
+            paymentMethodData = {
+              type: paymentMethod.type,
+              account_name: paymentMethod.account_name,
+              account_number_or_email: paymentMethod.account_number_or_email
+            };
+          }
         }
+        
+        await sendPaymentNotification(
+          recipients,
+          artist.name,
+          {
+            amount: parseFloat(amount),
+            description: description || '',
+            payment_processing_fee: finalProcessingFee,
+            paid_thru_type: paid_thru_type || 'Not specified',
+            paid_thru_account_name: paid_thru_account_name || '',
+            paid_thru_account_number: paid_thru_account_number || '',
+            paymentMethod: paymentMethodData
+          },
+          {
+            name: brand?.brand_name || brand?.name,
+            brand_color: brand?.brand_color,
+            logo_url: brand?.logo_url,
+            id: brand?.id || req.user.brand_id
+          }
+        );
       }
     }
 
@@ -794,6 +825,11 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
           model: Artist, 
           as: 'artist',
           where: { brand_id: req.user.brand_id }
+        },
+        {
+          model: PaymentMethod,
+          as: 'paymentMethod',
+          required: false // Left join - include payments without payment methods
         }
       ],
       order: orderClause,
@@ -1685,7 +1721,7 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
   // Send payment notification email
   try {
     // Get artist team members
-    const { ArtistAccess, User } = require('../models');
+    const { ArtistAccess, User, Brand } = require('../models');
     const artistAccess = await ArtistAccess.findAll({
       where: { artist_id: artist.id },
       include: [{ model: User, as: 'user' }]
@@ -1694,20 +1730,30 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
     const recipients = artistAccess.map(access => access.user.email_address);
 
     if (recipients.length > 0) {
-      for (const recipient of recipients) {
-        await sendBrandedEmail(
-          recipient,
-          'payment_notification_email',
-          {
-            artistName: artist.name,
-            amount: balance,
-            datePaid: new Date().toLocaleDateString(),
-            method: 'Online Payment',
-            description: 'Batch payment - All balances'
-          },
-          brandId
-        );
-      }
+      // Get brand info for proper email formatting
+      const brand = await Brand.findByPk(brandId);
+      
+      await sendPaymentNotification(
+        recipients,
+        artist.name,
+        {
+          amount: balance,
+          description: 'Batch payment - All balances',
+          payment_processing_fee: finalProcessingFee,
+          // Don't set legacy paid_thru_* fields for batch payments
+          paymentMethod: {
+            type: paymentMethod.type,
+            account_name: paymentMethod.account_name,
+            account_number_or_email: paymentMethod.account_number_or_email
+          }
+        },
+        {
+          name: brand?.brand_name || brand?.name,
+          brand_color: brand?.brand_color,
+          logo_url: brand?.logo_url,
+          id: brand?.id || brandId
+        }
+      );
     }
   } catch (emailError) {
     console.error('Email notification error for artist', artist.name, ':', emailError);

@@ -180,6 +180,9 @@ export const sendBrandedEmail = async (
     case 'reset_password_email':
       subject = 'Reset your password';
       break;
+    case 'payment_notification_email':
+      subject = `Payment made to ${templateData.artist || templateData.artistName}!`;
+      break;
     default:
       subject = 'Notification';
   }
@@ -423,4 +426,89 @@ export const sendAdminFailedLoginAlert = async (
 
   const adminEmail = process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com'; // Matching PHP default
   return await sendEmail([adminEmail], subject, body, brandId);
+};
+
+// Send payment notification email (matching PHP logic)
+export const sendPaymentNotification = async (
+  recipients: string[],
+  artistName: string,
+  payment: {
+    amount: number;
+    description?: string;
+    payment_processing_fee?: number;
+    paid_thru_type?: string;
+    paid_thru_account_name?: string;
+    paid_thru_account_number?: string;
+    paymentMethod?: {
+      type: string;
+      account_name: string;
+      account_number_or_email: string;
+    } | null;
+  },
+  brand: {
+    name?: string;
+    brand_color?: string;
+    logo_url?: string;
+    id: number;
+  },
+  dashboardUrl?: string
+): Promise<boolean> => {
+  try {
+    const templatePath = path.join(__dirname, '../assets/templates/payment_notification_email.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Calculate net amount (matching PHP logic)
+    const processingFee = payment.payment_processing_fee || 0;
+    const netAmount = payment.amount - processingFee;
+
+    // Format payment method as "Bank name - Account name - Account number" (matching PHP logic)
+    // Prioritize PaymentMethod data over legacy paid_thru_* fields
+    let formattedMethod = 'Not specified';
+    
+    if (payment.paymentMethod) {
+      // Use PaymentMethod data (preferred for new payments)
+      const { type, account_name, account_number_or_email } = payment.paymentMethod;
+      if (type && account_name && account_number_or_email) {
+        formattedMethod = `${type} - ${account_name} - ${account_number_or_email}`;
+      } else if (type && account_name) {
+        formattedMethod = `${type} - ${account_name}`;
+      } else if (type) {
+        formattedMethod = type;
+      }
+    } else {
+      // Fall back to legacy paid_thru_* fields (for backward compatibility)
+      if (payment.paid_thru_type && payment.paid_thru_account_name && payment.paid_thru_account_number) {
+        formattedMethod = `${payment.paid_thru_type} - ${payment.paid_thru_account_name} - ${payment.paid_thru_account_number}`;
+      } else if (payment.paid_thru_type && payment.paid_thru_account_name) {
+        formattedMethod = `${payment.paid_thru_type} - ${payment.paid_thru_account_name}`;
+      } else if (payment.paid_thru_type) {
+        formattedMethod = payment.paid_thru_type;
+      }
+    }
+
+    // Replace template variables (matching PHP __generatePaymentEmailFromTemplate logic)
+    template = template.replace(/%LOGO%/g, brand.logo_url || '');
+    template = template.replace(/%BRAND_NAME%/g, brand.name || '');
+    template = template.replace(/%BRAND_COLOR%/g, brand.brand_color || '#1595e7');
+    template = template.replace(/%ARTIST%/g, artistName);
+    template = template.replace(/%AMOUNT%/g, `₱ ${payment.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%PROCESSING_FEE%/g, `₱ ${processingFee.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%NET_AMOUNT%/g, `₱ ${netAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%DESCRIPTION%/g, payment.description || '');
+    template = template.replace(/%METHOD%/g, formattedMethod);
+    
+    // Set dashboard URL (matching PHP logic)
+    if (!dashboardUrl) {
+      dashboardUrl = `${process.env.FRONTEND_URL || 'https://dashboard.meltrecords.com'}/financial#payments`;
+    }
+    template = template.replace(/%URL%/g, dashboardUrl);
+
+    // Subject matches PHP logic exactly
+    const subject = `Payment made to ${artistName}!`;
+    
+    return await sendEmail(recipients, subject, template, brand.id);
+  } catch (error) {
+    console.error('Error sending payment notification:', error);
+    return false;
+  }
 };

@@ -95,9 +95,11 @@ Ticket.belongsTo(EventReferrer, { foreignKey: 'referrer_id', as: 'referrer' });
 
 // Payment relationships
 Payment.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+Payment.belongsTo(PaymentMethod, { foreignKey: 'payment_method_id', as: 'paymentMethod' });
 
 // PaymentMethod relationships
 PaymentMethod.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+PaymentMethod.hasMany(Payment, { foreignKey: 'payment_method_id', as: 'payments' });
 
 // Earning relationships
 Earning.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });

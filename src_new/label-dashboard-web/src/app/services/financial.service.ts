@@ -135,7 +135,14 @@ export class FinancialService {
         paid_thru_account_name: payment.paid_thru_account_name || '',
         paid_thru_account_number: payment.paid_thru_account_number || '',
         amount: payment.amount,
-        payment_processing_fee: payment.payment_processing_fee || 0
+        payment_processing_fee: payment.payment_processing_fee || 0,
+        payment_method_id: payment.payment_method_id,
+        paymentMethod: payment.paymentMethod ? {
+          id: payment.paymentMethod.id,
+          type: payment.paymentMethod.type,
+          account_name: payment.paymentMethod.account_name,
+          account_number_or_email: payment.paymentMethod.account_number_or_email
+        } : undefined
       })),
       pagination: response?.pagination || {}
     };

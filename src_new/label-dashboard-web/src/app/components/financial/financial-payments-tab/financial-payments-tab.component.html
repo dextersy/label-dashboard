@@ -1,22 +1,14 @@
 <div class="row">
   <div class="col-md-8">
-    <app-paginated-table 
-      title="Payment History"
-      [data]="payments"
+    <app-payments-table 
+      [payments]="payments"
       [pagination]="paymentsPagination"
       [loading]="paymentsLoading"
-      [columns]="paymentsColumns"
-      [showSortableHeaders]="true"
       [sortInfo]="paymentsSort"
       (pageChange)="paymentsPageChange.emit($event)"
       (filtersChange)="paymentsFiltersChange.emit($event)"
       (sortChange)="paymentsSortChange.emit($event)">
-      
-      <ng-template #tableContent let-data>
-        <app-payments-table [payments]="data" [showHeader]="true"></app-payments-table>
-      </ng-template>
-      
-    </app-paginated-table>
+    </app-payments-table>
   </div>
   
   <div class="col-md-4">

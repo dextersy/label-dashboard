@@ -51,6 +51,13 @@ export interface Payment {
   paid_thru_account_number: string;
   amount: number;
   payment_processing_fee: number;
+  payment_method_id?: number;
+  paymentMethod?: {
+    id: number;
+    type: string;
+    account_name: string;
+    account_number_or_email: string;
+  };
 }
 
 export interface PaymentMethod {
