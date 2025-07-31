@@ -1311,12 +1311,9 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
       artistWhere.payout_point = parseFloat(filters.payout_point as string);
     }
 
-    // Get all artists for the brand with filters
-    const { count: totalArtists, rows: artists } = await Artist.findAndCountAll({
-      where: artistWhere,
-      offset: offset,
-      limit: pageSize,
-      order: []  // We'll apply custom ordering later
+    // Get ALL artists for the brand with filters (no pagination yet)
+    const artists = await Artist.findAll({
+      where: artistWhere
     });
 
     // Calculate balance data for each artist

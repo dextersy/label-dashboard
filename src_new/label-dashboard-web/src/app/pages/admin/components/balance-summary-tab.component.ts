@@ -155,10 +155,6 @@ export class BalanceSummaryTabComponent implements OnInit {
     this.loadBalanceData();
   }
 
-  onBalanceSortChange(sort: SortInfo | null): void {
-    this.balanceSort = sort;
-    this.loadBalanceData();
-  }
 
   onBalanceSortToggle(column: string): void {
     if (this.balanceSort?.column === column) {

@@ -10,8 +10,7 @@
       [showSortableHeaders]="false"
       [sortInfo]="balanceSort"
       (pageChange)="onBalancePageChange($event)"
-      (filtersChange)="onBalanceFiltersChange($event)"
-      (sortChange)="onBalanceSortChange($event)">
+      (filtersChange)="onBalanceFiltersChange($event)">
       
       <ng-template #tableContent let-data>
         <div class="table-responsive" *ngIf="!balanceLoading">
