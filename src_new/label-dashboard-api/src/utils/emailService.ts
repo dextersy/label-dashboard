@@ -463,7 +463,7 @@ export const sendPaymentNotification = async (
 
     // Format payment method as "Bank name - Account name - Account number" (matching PHP logic)
     // Prioritize PaymentMethod data over legacy paid_thru_* fields
-    let formattedMethod = 'Not specified';
+    let formattedMethod = 'Non-cash / adjustment';
     
     if (payment.paymentMethod) {
       // Use PaymentMethod data (preferred for new payments)
