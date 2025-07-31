@@ -38,6 +38,7 @@ class Artist extends Model<ArtistAttributes, ArtistCreationAttributes> implement
 
   // Association properties
   public brand?: any;
+  public releaseArtists?: any[];
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;

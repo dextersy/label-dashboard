@@ -14,7 +14,11 @@ import {
   getFinancialSummary,
   getWalletBalance,
   getAdminEarningsSummary,
-  getAdminPaymentsRoyaltiesSummary
+  getAdminPaymentsRoyaltiesSummary,
+  getAdminBalanceSummary,
+  getAdminRecuperableExpenses,
+  getArtistsReadyForPayment,
+  payAllBalances
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -50,5 +54,9 @@ router.get('/wallet/balance', requireAdmin, getWalletBalance);
 // Admin summary endpoints
 router.get('/admin/earnings-summary', requireAdmin, getAdminEarningsSummary);
 router.get('/admin/payments-royalties-summary', requireAdmin, getAdminPaymentsRoyaltiesSummary);
+router.get('/admin/balance-summary', requireAdmin, getAdminBalanceSummary);
+router.get('/admin/recuperable-expenses', requireAdmin, getAdminRecuperableExpenses);
+router.get('/admin/artists-ready-for-payment', requireAdmin, getArtistsReadyForPayment);
+router.post('/admin/pay-all-balances', requireAdmin, payAllBalances);
 
 export default router;

@@ -33,6 +33,9 @@ class ReleaseArtist extends Model<ReleaseArtistAttributes, ReleaseArtistCreation
   public physical_royalty_percentage!: number;
   public physical_royalty_type!: RoyaltyType;
 
+  // Association properties
+  public release?: any;
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }

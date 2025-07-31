@@ -74,6 +74,8 @@ export interface ArtistBalance {
   payout_point: number;
   due_for_payment: boolean;
   hold_payouts: boolean;
+  has_payment_method?: boolean;
+  ready_for_payment?: boolean;
 }
 
 export interface BulkEarning {
@@ -289,52 +291,56 @@ export class AdminService {
   }
 
   // Balance Summary
-  getArtistBalances(): Observable<ArtistBalance[]> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getArtistBalances: Using mock response - endpoint not implemented');
-    return of([
-      {
-        id: 1,
-        name: 'Test Artist 1',
-        total_royalties: 50000,
-        total_payments: 15000,
-        total_balance: 35000,
-        payout_point: 25000,
-        due_for_payment: true,
-        hold_payouts: false
-      },
-      {
-        id: 2,
-        name: 'Test Artist 2',
-        total_royalties: 30500,
-        total_payments: 10000,
-        total_balance: 20500,
-        payout_point: 20000,
-        due_for_payment: true,
-        hold_payouts: true
+  getArtistBalances(page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: ArtistBalance[], pagination: any, summary: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
       }
-    ]);
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    
+    return this.http.get<{data: ArtistBalance[], pagination: any, summary: any}>(`${environment.apiUrl}/financial/admin/balance-summary?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
-  getRecuperableExpenses(): Observable<any[]> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('getRecuperableExpenses: Using mock response - endpoint not implemented');
-    return of([
-      {
-        release_title: 'Test Release 1',
-        remaining_expense: 5000
-      },
-      {
-        release_title: 'Test Release 2', 
-        remaining_expense: 3500
+  getRecuperableExpenses(page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: any[], pagination: any, summary: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
       }
-    ]);
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    
+    return this.http.get<{data: any[], pagination: any, summary: any}>(`${environment.apiUrl}/financial/admin/recuperable-expenses?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getArtistsReadyForPayment(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/financial/admin/artists-ready-for-payment`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   payAllBalances(): Observable<any> {
-    // TODO: Replace with actual API call when endpoint is implemented
-    console.warn('payAllBalances: Using mock response - endpoint not implemented');
-    return of({ message: 'All balances paid successfully (mock)' });
+    return this.http.post(`${environment.apiUrl}/financial/admin/pay-all-balances`, {}, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   // Bulk Add Earnings

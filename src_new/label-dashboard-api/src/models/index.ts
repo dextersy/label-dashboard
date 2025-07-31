@@ -55,6 +55,7 @@ Artist.belongsToMany(User, {
   otherKey: 'user_id',
   as: 'userAccess' 
 });
+Artist.hasMany(ReleaseArtist, { foreignKey: 'artist_id', as: 'releaseArtists' });
 Artist.belongsToMany(Release, { 
   through: ReleaseArtist, 
   foreignKey: 'artist_id', 

@@ -640,7 +640,7 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
         for (const recipient of recipients) {
           await sendBrandedEmail(
             recipient,
-            'payment_notification',
+            'payment_notification_email',
             {
               artistName: artist.name,
               amount: amount,
@@ -1249,3 +1249,538 @@ async function sendEarningNotifications(earning: any, brandId: number) {
     // Don't throw error - email failures shouldn't block earning creation
   }
 }
+
+// ADMIN BALANCE SUMMARY - with pagination, search, and sorting
+export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    // Build where clause for artist filtering
+    const artistWhere: any = { brand_id: req.user.brand_id };
+    
+    // Add column-specific filters
+    if (filters.name && filters.name !== '') {
+      artistWhere.name = { [require('sequelize').Op.like]: `%${filters.name}%` };
+    }
+    
+    if (filters.payout_point && filters.payout_point !== '') {
+      artistWhere.payout_point = parseFloat(filters.payout_point as string);
+    }
+
+    // Get all artists for the brand with filters
+    const { count: totalArtists, rows: artists } = await Artist.findAndCountAll({
+      where: artistWhere,
+      offset: offset,
+      limit: pageSize,
+      order: []  // We'll apply custom ordering later
+    });
+
+    // Calculate balance data for each artist
+    const artistBalances = await Promise.all(
+      artists.map(async (artist) => {
+        // Get total royalties for artist
+        const totalRoyalties = parseFloat((await Royalty.sum('amount', {
+          where: { artist_id: artist.id }
+        }) || 0).toFixed(2));
+
+        // Get total payments for artist
+        const totalPayments = parseFloat((await Payment.sum('amount', {
+          where: { artist_id: artist.id }
+        }) || 0).toFixed(2));
+
+        const totalBalance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
+        const dueForPayment = totalBalance > artist.payout_point;
+
+        // Check if artist has payment methods
+        const paymentMethods = await PaymentMethod.findAll({
+          where: { artist_id: artist.id }
+        });
+        const hasPaymentMethod = paymentMethods.length > 0;
+
+        return {
+          id: artist.id,
+          name: artist.name,
+          total_royalties: totalRoyalties,
+          total_payments: totalPayments,
+          total_balance: totalBalance,
+          payout_point: parseFloat((artist.payout_point || 0).toString()),
+          due_for_payment: dueForPayment,
+          hold_payouts: artist.hold_payouts || false,
+          has_payment_method: hasPaymentMethod,
+          ready_for_payment: dueForPayment && hasPaymentMethod && !artist.hold_payouts
+        };
+      })
+    );
+
+    // Apply post-calculation filters on computed values
+    let filteredBalances = artistBalances.filter(artist => {
+      // Filter by total_royalties
+      if (filters.total_royalties && filters.total_royalties !== '') {
+        const filterValue = parseFloat(filters.total_royalties as string);
+        if (isNaN(filterValue) || artist.total_royalties !== filterValue) {
+          return false;
+        }
+      }
+      
+      // Filter by total_payments
+      if (filters.total_payments && filters.total_payments !== '') {
+        const filterValue = parseFloat(filters.total_payments as string);
+        if (isNaN(filterValue) || artist.total_payments !== filterValue) {
+          return false;
+        }
+      }
+      
+      // Filter by total_balance
+      if (filters.total_balance && filters.total_balance !== '') {
+        const filterValue = parseFloat(filters.total_balance as string);
+        if (isNaN(filterValue) || artist.total_balance !== filterValue) {
+          return false;
+        }
+      }
+      
+      // Filter by due_for_payment
+      if (filters.due_for_payment && filters.due_for_payment !== '') {
+        const filterValue = filters.due_for_payment === 'true';
+        if (artist.due_for_payment !== filterValue) {
+          return false;
+        }
+      }
+      
+      // Filter by hold_payouts
+      if (filters.hold_payouts && filters.hold_payouts !== '') {
+        const filterValue = filters.hold_payouts === 'true';
+        if (artist.hold_payouts !== filterValue) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+
+    // Apply sorting to the results
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['name', 'total_royalties', 'total_payments', 'total_balance', 'payout_point'];
+      const validDirections = ['asc', 'desc'];
+      
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        filteredBalances.sort((a, b) => {
+          let aValue = a[sortBy as keyof typeof a];
+          let bValue = b[sortBy as keyof typeof b];
+          
+          // Handle string vs number comparison
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = (bValue as string).toLowerCase();
+          }
+          
+          if (sortDirection === 'desc') {
+            return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+          } else {
+            return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+          }
+        });
+      }
+    }
+
+    // Calculate summary statistics from filtered results
+    const totalBalance = parseFloat(filteredBalances.reduce((sum, artist) => sum + artist.total_balance, 0).toFixed(2));
+    const totalDueForPayment = parseFloat(filteredBalances
+      .filter(artist => artist.due_for_payment)
+      .reduce((sum, artist) => sum + artist.total_balance, 0).toFixed(2));
+    const readyForPayment = parseFloat(filteredBalances
+      .filter(artist => artist.ready_for_payment)
+      .reduce((sum, artist) => sum + artist.total_balance, 0).toFixed(2));
+    const pausedPayouts = parseFloat(filteredBalances
+      .filter(artist => artist.due_for_payment && artist.hold_payouts)
+      .reduce((sum, artist) => sum + artist.total_balance, 0).toFixed(2));
+
+    // Apply pagination to filtered results
+    const totalFilteredCount = filteredBalances.length;
+    const paginatedBalances = filteredBalances.slice(offset, offset + pageSize);
+    const totalPages = Math.ceil(totalFilteredCount / pageSize);
+
+    res.json({
+      data: paginatedBalances,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: totalFilteredCount,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      },
+      summary: {
+        total_balance: totalBalance,
+        total_due_for_payment: totalDueForPayment,
+        ready_for_payment: readyForPayment,
+        paused_payouts: pausedPayouts
+      }
+    });
+  } catch (error) {
+    console.error('Get admin balance summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ADMIN RECUPERABLE EXPENSES SUMMARY
+export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    // Build where clause for release filtering
+    const releaseWhere: any = { brand_id: req.user.brand_id };
+    
+    // Add column-specific filters
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
+    }
+    
+    if (filters.title && filters.title !== '') {
+      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.title}%` };
+    }
+
+    // Get all releases for the brand
+    const releases = await Release.findAll({
+      where: releaseWhere
+    });
+
+    const releaseExpenses = [];
+    let totalRecuperableExpense = 0;
+
+    for (const release of releases) {
+      // Calculate recuperable expense balance for this release
+      const expenses = await RecuperableExpense.findAll({
+        where: { release_id: release.id }
+      });
+
+      const recuperableBalance = expenses.reduce((sum, expense) => sum + parseFloat((expense.expense_amount || 0).toString()), 0);
+
+      if (recuperableBalance > 0) {
+        const expenseItem = {
+          release_id: release.id,
+          catalog_no: release.catalog_no,
+          title: release.title,
+          remaining_expense: parseFloat(recuperableBalance.toFixed(2))
+        };
+        
+        // Apply remaining_expense filter
+        if (filters.remaining_expense && filters.remaining_expense !== '') {
+          const filterValue = parseFloat(filters.remaining_expense as string);
+          if (!isNaN(filterValue) && recuperableBalance === filterValue) {
+            releaseExpenses.push(expenseItem);
+            totalRecuperableExpense += parseFloat(recuperableBalance.toFixed(2));
+          }
+        } else {
+          releaseExpenses.push(expenseItem);
+          totalRecuperableExpense += parseFloat(recuperableBalance.toFixed(2));
+        }
+      }
+    }
+
+    // Apply sorting
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['catalog_no', 'title', 'remaining_expense'];
+      const validDirections = ['asc', 'desc'];
+      
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        releaseExpenses.sort((a, b) => {
+          let aValue = a[sortBy as keyof typeof a];
+          let bValue = b[sortBy as keyof typeof b];
+          
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = (bValue as string).toLowerCase();
+          }
+          
+          if (sortDirection === 'desc') {
+            return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+          } else {
+            return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+          }
+        });
+      }
+    }
+
+    // Apply pagination
+    const totalRecords = releaseExpenses.length;
+    const paginatedExpenses = releaseExpenses.slice(offset, offset + pageSize);
+    const totalPages = Math.ceil(totalRecords / pageSize);
+
+    res.json({
+      data: paginatedExpenses,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: totalRecords,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      },
+      summary: {
+        total_recuperable_expense: parseFloat(totalRecuperableExpense.toFixed(2))
+      }
+    });
+  } catch (error) {
+    console.error('Get admin recuperable expenses error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// HELPER: Check if artist is ready for payment and return payment details
+interface ArtistPaymentDetails {
+  artist: any;
+  balance: number;
+  isReadyForPayment: boolean;
+}
+
+const getArtistPaymentDetails = async (artist: any): Promise<ArtistPaymentDetails> => {
+  // Calculate balance
+  const totalRoyalties = parseFloat((await Royalty.sum('amount', {
+    where: { artist_id: artist.id }
+  }) || 0).toFixed(2));
+
+  const totalPayments = parseFloat((await Payment.sum('amount', {
+    where: { artist_id: artist.id }
+  }) || 0).toFixed(2));
+
+  const balance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
+
+  // Check if ready for payment
+  let isReadyForPayment = false;
+  if (balance > artist.payout_point) {
+    // Check if has payment methods
+    const paymentMethods = await PaymentMethod.findAll({
+      where: { artist_id: artist.id }
+    });
+    isReadyForPayment = paymentMethods.length > 0;
+  }
+
+  return {
+    artist,
+    balance,
+    isReadyForPayment
+  };
+};
+
+// GET ARTISTS READY FOR PAYMENT WITH DETAILS
+export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Get all artists for this brand that don't have payouts on hold
+    const artists = await Artist.findAll({
+      where: { 
+        brand_id: req.user.brand_id,
+        hold_payouts: false
+      }
+    });
+
+    const readyForPayment = [];
+    let totalAmount = 0;
+
+    for (const artist of artists) {
+      const paymentDetails = await getArtistPaymentDetails(artist);
+      
+      if (paymentDetails.isReadyForPayment) {
+        readyForPayment.push({
+          id: artist.id,
+          name: artist.name,
+          total_balance: paymentDetails.balance
+        });
+
+        totalAmount += paymentDetails.balance;
+      }
+    }
+
+    res.json({
+      artists: readyForPayment,
+      total_amount: parseFloat(totalAmount.toFixed(2))
+    });
+  } catch (error) {
+    console.error('Get artists ready for payment error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// HELPER: Process individual payment with Paymongo and email notification
+const processArtistPayment = async (artist: any, balance: number, brandId: number) => {
+  // Get payment methods for the artist
+  const paymentMethods = await PaymentMethod.findAll({
+    where: { artist_id: artist.id }
+  });
+
+  if (paymentMethods.length === 0) {
+    throw new Error(`No payment methods found for artist ${artist.name}`);
+  }
+
+  // Use the first available payment method
+  const paymentMethod = paymentMethods[0];
+  
+  let finalAmount = balance;
+  let finalProcessingFee = 0;
+  let finalReferenceNumber = null;
+
+  // Handle Paymongo payment processing
+  try {
+    const paymentService = new PaymentService();
+    
+    // Get brand info for wallet configuration
+    const brand = await Brand.findByPk(brandId);
+    if (!brand || !brand.paymongo_wallet_id) {
+      throw new Error('Brand wallet not configured for payments');
+    }
+
+    // Calculate processing fee
+    const processingFee = brand.payment_processing_fee_for_payouts || 0;
+    const transferAmount = balance - processingFee;
+
+    // Send money through Paymongo
+    const referenceNumber = await paymentService.sendMoneyTransfer(
+      brand.id,
+      paymentMethod.id,
+      transferAmount,
+      'Batch payment - All balances'
+    );
+
+    if (!referenceNumber) {
+      throw new Error('Payment processing failed');
+    }
+
+    finalProcessingFee = processingFee;
+    finalReferenceNumber = referenceNumber;
+  } catch (error) {
+    console.error('Paymongo payment error for artist', artist.name, ':', error);
+    throw error;
+  }
+
+  // Create payment record
+  const payment = await Payment.create({
+    artist_id: artist.id,
+    amount: finalAmount,
+    description: 'Batch payment - All balances',
+    date_paid: new Date(),
+    payment_method_id: paymentMethod.id,
+    reference_number: finalReferenceNumber,
+    payment_processing_fee: finalProcessingFee
+  });
+
+  // Send payment notification email
+  try {
+    // Get artist team members
+    const { ArtistAccess, User } = require('../models');
+    const artistAccess = await ArtistAccess.findAll({
+      where: { artist_id: artist.id },
+      include: [{ model: User, as: 'user' }]
+    });
+
+    const recipients = artistAccess.map(access => access.user.email_address);
+
+    if (recipients.length > 0) {
+      for (const recipient of recipients) {
+        await sendBrandedEmail(
+          recipient,
+          'payment_notification_email',
+          {
+            artistName: artist.name,
+            amount: balance,
+            datePaid: new Date().toLocaleDateString(),
+            method: 'Online Payment',
+            description: 'Batch payment - All balances'
+          },
+          brandId
+        );
+      }
+    }
+  } catch (emailError) {
+    console.error('Email notification error for artist', artist.name, ':', emailError);
+    // Don't fail the payment if email fails
+  }
+
+  return {
+    artist_id: artist.id,
+    artist_name: artist.name,
+    amount: balance,
+    payment_id: payment.id,
+    reference_number: finalReferenceNumber
+  };
+};
+
+// PAY ALL BALANCES
+export const payAllBalances = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Get all artists for this brand that don't have payouts on hold
+    const artists = await Artist.findAll({
+      where: { 
+        brand_id: req.user.brand_id,
+        hold_payouts: false
+      }
+    });
+
+    const payments = [];
+    const failedPayments = [];
+    let totalPaid = 0;
+
+    for (const artist of artists) {
+      const paymentDetails = await getArtistPaymentDetails(artist);
+      
+      if (paymentDetails.isReadyForPayment) {
+        try {
+          const paymentResult = await processArtistPayment(
+            artist, 
+            paymentDetails.balance, 
+            req.user.brand_id
+          );
+          
+          payments.push(paymentResult);
+          totalPaid += paymentDetails.balance;
+        } catch (error) {
+          console.error(`Failed to process payment for artist ${artist.name}:`, error);
+          failedPayments.push({
+            artist_id: artist.id,
+            artist_name: artist.name,
+            amount: paymentDetails.balance,
+            error: error.message
+          });
+        }
+      }
+    }
+
+    const response: any = {
+      message: `Successfully paid ${payments.length} artists`,
+      total_amount: parseFloat(totalPaid.toFixed(2)),
+      payments: payments
+    };
+
+    if (failedPayments.length > 0) {
+      response.failed_payments = failedPayments;
+      response.message += `, ${failedPayments.length} payments failed`;
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.error('Pay all balances error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
