@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import EmailAttempt from '../models/EmailAttempt';
 import User from '../models/User';
+import Brand from '../models/Brand';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -47,8 +48,16 @@ export const sendEmail = async (
   let success = false;
   
   try {
+    // Fetch brand information to use brand name as "From" name
+    const brand = await Brand.findByPk(brandId);
+    const fromName = brand?.brand_name || 'Dashboard';
+    const fromEmail = process.env.FROM_EMAIL;
+    
+    // Quote the display name if it contains special characters like parentheses
+    const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
+    
     const mailOptions = {
-      from: process.env.FROM_EMAIL,
+      from: `${quotedFromName} <${fromEmail}>`,
       to: recipients.join(', '),
       subject,
       html: htmlBody,
@@ -209,8 +218,16 @@ export const sendBrandedEmail = async (
   }
 
   try {
+    // Fetch brand information to use brand name as "From" name
+    const brand = await Brand.findByPk(brandId);
+    const fromName = brand?.brand_name || 'Dashboard';
+    const fromEmail = process.env.FROM_EMAIL;
+    
+    // Quote the display name if it contains special characters like parentheses
+    const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
+    
     const mailOptions = {
-      from: process.env.FROM_EMAIL,
+      from: `${quotedFromName} <${fromEmail}>`,
       to: email,
       subject,
       html: htmlBody,
