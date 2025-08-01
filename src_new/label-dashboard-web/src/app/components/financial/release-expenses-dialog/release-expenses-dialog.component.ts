@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FinancialService } from '../../../services/financial.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -19,7 +19,7 @@ export interface ReleaseExpense {
   templateUrl: './release-expenses-dialog.component.html',
   styleUrl: './release-expenses-dialog.component.scss'
 })
-export class ReleaseExpensesDialogComponent implements OnInit {
+export class ReleaseExpensesDialogComponent implements OnInit, OnChanges {
   @Input() releaseId: number = 0;
   @Input() releaseTitle: string = '';
   @Input() isVisible: boolean = false;
@@ -40,8 +40,19 @@ export class ReleaseExpensesDialogComponent implements OnInit {
     }
   }
 
-  ngOnChanges(): void {
-    if (this.isVisible && this.releaseId) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isVisible']) {
+      if (this.isVisible) {
+        // Modal opened - prevent scrolling
+        document.body.classList.add('modal-open');
+        if (this.releaseId) {
+          this.loadExpenses(1);
+        }
+      } else {
+        // Modal closed - restore scrolling
+        document.body.classList.remove('modal-open');
+      }
+    } else if (this.isVisible && this.releaseId && changes['releaseId']) {
       this.loadExpenses(1);
     }
   }

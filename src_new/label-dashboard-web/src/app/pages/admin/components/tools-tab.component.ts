@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService, EmailLog, EmailDetail } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -10,7 +10,7 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
   imports: [CommonModule, PaginatedTableComponent],
   templateUrl: './tools-tab.component.html'
 })
-export class ToolsTabComponent implements OnInit {
+export class ToolsTabComponent implements OnInit, OnDestroy {
   emailLogs: EmailLog[] = [];
   emailLogsPagination: PaginationInfo | null = null;
   emailLogsLoading: boolean = false;
@@ -35,6 +35,13 @@ export class ToolsTabComponent implements OnInit {
     this.loadEmailLogs(1, this.emailLogsFilters, this.emailLogsSort);
   }
 
+  ngOnDestroy(): void {
+    // Ensure modal-open class is removed if component is destroyed while modal is open
+    if (this.showEmailModal) {
+      document.body.classList.remove('modal-open');
+    }
+  }
+
   loadEmailLogs(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.emailLogsLoading = true;
     
@@ -56,6 +63,8 @@ export class ToolsTabComponent implements OnInit {
       next: (email) => {
         this.selectedEmail = email;
         this.showEmailModal = true;
+        // Prevent scrolling when modal opens
+        document.body.classList.add('modal-open');
       },
       error: (error) => {
         this.notificationService.showError('Error loading email content');
@@ -131,6 +140,8 @@ export class ToolsTabComponent implements OnInit {
   closeEmailModal(): void {
     this.showEmailModal = false;
     this.selectedEmail = null;
+    // Restore scrolling when modal closes
+    document.body.classList.remove('modal-open');
   }
 
   formatDate(dateString: string): string {

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface PaymentArtist {
@@ -12,7 +12,7 @@ export interface PaymentArtist {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="payment-modal-overlay modal fade show d-block" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -72,7 +72,7 @@ export interface PaymentArtist {
     </div>
   `
 })
-export class PaymentConfirmationDialogComponent implements OnChanges {
+export class PaymentConfirmationDialogComponent implements OnChanges, OnInit, OnDestroy {
   @Input() artists: PaymentArtist[] = [];
   @Input() availableBalance: number = 0;
   @Input() processing: boolean = false;
@@ -81,6 +81,16 @@ export class PaymentConfirmationDialogComponent implements OnChanges {
   @Output() cancel = new EventEmitter<void>();
 
   totalAmount: number = 0;
+
+  ngOnInit(): void {
+    // Add modal-open class to body to prevent scrolling
+    document.body.classList.add('modal-open');
+  }
+
+  ngOnDestroy(): void {
+    // Remove modal-open class from body to restore scrolling
+    document.body.classList.remove('modal-open');
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['artists'] && this.artists) {

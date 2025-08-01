@@ -3,6 +3,23 @@
 /* Import Font Awesome */
 @import '@fortawesome/fontawesome-free/css/all.css';
 
+/* ================================= */
+/* MODAL FIXES - PREVENT SCROLLING  */
+/* ================================= */
+
+/* Prevent scrolling when modals are open */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+.modal-open .main-panel {
+  overflow: hidden !important;
+}
+
+.modal-open .content {
+  overflow: hidden !important;
+}
+
 /* Bootstrap 4.0.0 is already loaded in index.html - no need to import again */
 
 /* Import Light Bootstrap Dashboard Theme */

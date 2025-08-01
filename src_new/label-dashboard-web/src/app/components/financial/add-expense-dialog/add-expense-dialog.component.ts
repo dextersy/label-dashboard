@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './add-expense-dialog.component.html',
   styleUrl: './add-expense-dialog.component.scss'
 })
-export class AddExpenseDialogComponent {
+export class AddExpenseDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;
   @Input() releaseId: number = 0;
   @Input() releaseTitle: string = '';
@@ -23,9 +23,16 @@ export class AddExpenseDialogComponent {
     date_recorded: new Date().toISOString().split('T')[0]
   };
 
-  ngOnChanges(): void {
-    if (this.isVisible) {
-      this.resetForm();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isVisible']) {
+      if (this.isVisible) {
+        // Modal opened - prevent scrolling
+        document.body.classList.add('modal-open');
+        this.resetForm();
+      } else {
+        // Modal closed - restore scrolling
+        document.body.classList.remove('modal-open');
+      }
     }
   }
 

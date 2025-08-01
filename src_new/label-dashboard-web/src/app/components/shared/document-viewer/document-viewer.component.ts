@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Document } from '../../../pages/financial/financial.component';
@@ -28,8 +28,18 @@ export class DocumentViewerComponent implements OnInit, OnChanges {
     }
   }
 
-  ngOnChanges() {
-    if (this.document) {
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['isVisible']) {
+      if (this.isVisible) {
+        // Modal opened - prevent scrolling
+        document.body.classList.add('modal-open');
+      } else {
+        // Modal closed - restore scrolling
+        document.body.classList.remove('modal-open');
+      }
+    }
+    
+    if (changes['document'] && this.document) {
       this.loading = true;
       this.determineDocumentType();
       this.sanitizeUrl();

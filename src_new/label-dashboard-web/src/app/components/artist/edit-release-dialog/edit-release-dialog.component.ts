@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
@@ -12,7 +12,7 @@ import { ReleaseService } from '../../../services/release.service';
   templateUrl: './edit-release-dialog.component.html',
   styleUrl: './edit-release-dialog.component.scss'
 })
-export class EditReleaseDialogComponent {
+export class EditReleaseDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;
   @Input() artist: Artist | null = null;
   @Input() editingRelease: ArtistRelease | null = null;
@@ -25,6 +25,18 @@ export class EditReleaseDialogComponent {
   @ViewChild(ReleaseFormComponent) releaseFormComponent!: ReleaseFormComponent;
 
   constructor(private releaseService: ReleaseService) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isVisible']) {
+      if (this.isVisible) {
+        // Modal opened - prevent scrolling
+        document.body.classList.add('modal-open');
+      } else {
+        // Modal closed - restore scrolling
+        document.body.classList.remove('modal-open');
+      }
+    }
+  }
 
   onFormSubmit(submitData: ReleaseFormSubmitData): void {
     if (!this.editingRelease) {
