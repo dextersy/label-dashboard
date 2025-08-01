@@ -1,7 +1,7 @@
-<div class="sidebar" [class.open]="isOpen" [style.background]="brandColor" data-image="assets/img/sidebar-5.jpg">
+<div class="sidebar" [class.open]="isOpen" [style.background]="brandColor">
   <div class="sidebar-wrapper">
     <div class="logo">
-      <a [href]="brandWebsite" class="simple-text">
+      <a [href]="brandWebsite" class="simple-text" [style.color]="textColor">
         <img [src]="brandLogo" width="100" alt="Brand Logo">
       </a>
     </div>
@@ -9,24 +9,26 @@
     <ul class="nav">
       <li *ngFor="let item of menuItems" 
           [class.active]="isActiveRoute(item.route)">
-        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route" (click)="onMenuItemClick()">
-          <i [class]="item.icon"></i>
-          <p>{{ item.title }}</p>
+        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route" (click)="onMenuItemClick()" 
+           [style.color]="textColor">
+          <i [class]="item.icon" 
+             [style.color]="isActiveRoute(item.route) ? textColor : iconColor"></i>
+          <p [style.color]="textColor">{{ item.title }}</p>
         </a>
       </li>
       
       <!-- Mobile-only profile/logout links -->
       <li class="separator mobile-only"></li>
       <li class="mobile-only">
-        <a routerLink="/profile" (click)="onMenuItemClick()">
-          <i class="fa fa-edit"></i>
-          <p>Edit Profile</p>
+        <a routerLink="/profile" (click)="onMenuItemClick()" [style.color]="textColor">
+          <i class="fa fa-edit" [style.color]="iconColor"></i>
+          <p [style.color]="textColor">Edit Profile</p>
         </a>
       </li>
       <li class="mobile-only">
-        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;">
-          <i class="fa fa-sign-out"></i>
-          <p>Log Out</p>
+        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;" [style.color]="textColor">
+          <i class="fa fa-sign-out" [style.color]="iconColor"></i>
+          <p [style.color]="textColor">Log Out</p>
         </a>
       </li>
     </ul>

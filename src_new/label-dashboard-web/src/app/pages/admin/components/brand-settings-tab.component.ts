@@ -27,7 +27,7 @@ export class BrandSettingsTabComponent implements OnInit {
     this.brandForm = this.fb.group({
       name: ['', Validators.required],
       brand_website: [''],
-      brand_color: ['purple', Validators.required],
+      brand_color: ['#800080', Validators.required],
       catalog_prefix: [''],
       release_submission_url: [''],
       payment_processing_fee_for_payouts: [0, [Validators.min(0)]]
@@ -130,6 +130,15 @@ export class BrandSettingsTabComponent implements OnInit {
           this.loading = false;
         }
       });
+    }
+  }
+
+  onHexColorChange(event: any): void {
+    const hexValue = event.target.value;
+    const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+    
+    if (hexPattern.test(hexValue)) {
+      this.brandForm.patchValue({ brand_color: hexValue.toLowerCase() });
     }
   }
 

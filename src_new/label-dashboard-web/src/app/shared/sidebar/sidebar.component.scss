@@ -8,6 +8,12 @@
   background: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  
+  // Remove overlays completely
+  &:before,
+  &:after {
+    display: none !important;
+  }
 }
 
 // Removed hardcoded data-color styles - now using dynamic brand color
@@ -30,7 +36,7 @@
 
 .logo .simple-text {
   text-decoration: none;
-  color: #fff;
+  // Color is now set dynamically via [style.color] binding
 }
 
 .nav {
@@ -52,7 +58,7 @@
 .nav li a {
   margin: 10px 15px 0;
   border-radius: 3px;
-  color: #fff;
+  // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
@@ -78,7 +84,7 @@
   line-height: 30px;
   width: 30px;
   text-align: center;
-  color: #a9afbb;
+  // Color is now set dynamically via [style.color] binding
 }
 
 .nav li a p {
@@ -86,7 +92,7 @@
   line-height: 30px;
   font-size: 12px;
   height: 30px;
-  color: #fff;
+  // Color is now set dynamically via [style.color] binding
 }
 
 .nav li.active a,
@@ -97,7 +103,8 @@
 
 .nav li.active a i,
 .nav li a:hover i {
-  color: #fff;
+  // Icons will use the main text color when active/hovered
+  // This is handled by the dynamic color binding
 }
 
 /* Mobile responsive styles */

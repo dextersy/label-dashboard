@@ -17,6 +17,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   brandLogo: string = 'assets/img/new_logo.png';
   brandWebsite: string = '#';
   brandColor: string = '#667eea'; // Use actual hex color instead of mapped color
+  textColor: string = '#ffffff'; // Dynamic text color based on brand color brightness
+  iconColor: string = '#a9afbb'; // Dynamic icon color for inactive items
   isAdmin: boolean = false;
   currentRoute: string = '';
   isOpen: boolean = false;
@@ -102,6 +104,38 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.brandLogo = settings.logo_url || 'assets/img/placeholder.jpg';
     this.brandWebsite = settings.brand_website || '#';
     this.brandColor = settings.brand_color; // Use the actual hex color from the API
+    this.updateTextColorsBasedOnBrightness();
+  }
+
+  private updateTextColorsBasedOnBrightness(): void {
+    const isLight = this.isColorLight(this.brandColor);
+    
+    if (isLight) {
+      // Use dark colors for light backgrounds
+      this.textColor = '#333333';
+      this.iconColor = '#666666';
+    } else {
+      // Use light colors for dark backgrounds (default)
+      this.textColor = '#ffffff';
+      this.iconColor = '#a9afbb';
+    }
+  }
+
+  private isColorLight(hexColor: string): boolean {
+    // Remove # if present
+    const hex = hexColor.replace('#', '');
+    
+    // Parse RGB values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Calculate relative luminance using the formula from WCAG
+    // https://www.w3.org/TR/WCAG20/#relativeluminancedef
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return true if the color is light (luminance > 0.5)
+    return luminance > 0.5;
   }
 
   // Removed mapColorToDataColor method - no longer needed

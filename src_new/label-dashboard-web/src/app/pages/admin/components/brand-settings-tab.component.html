@@ -27,20 +27,32 @@
           </div>
           
           <div class="form-group mb-3">
-            <label for="brand_color">Brand color 
-              <span [style.color]="brandForm.get('brand_color')?.value">
-                <i class="fas fa-square"></i>
-              </span>
-            </label>
-            <select class="form-control" formControlName="brand_color">
-              <option value="purple">Purple</option>
-              <option value="red">Red</option>
-              <option value="blue">Blue</option>
-              <option value="azure">Azure</option>
-              <option value="green">Green</option>
-              <option value="black">Black</option>
-              <option value="white">White</option>
-            </select>
+            <label for="brand_color">Brand color</label>
+            <div class="d-flex align-items-center gap-3">
+              <!-- Color Preview -->
+              <div class="color-preview d-flex align-items-center justify-content-center rounded border" 
+                   [style.background-color]="brandForm.get('brand_color')?.value"
+                   style="width: 60px; height: 45px; min-width: 60px; border: 2px solid #dee2e6;">
+                <i class="fas fa-palette text-white" 
+                   style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-size: 18px;"></i>
+              </div>
+              
+              <!-- Color Picker -->
+              <input type="color" class="form-control color-picker" id="brand_color" 
+                     formControlName="brand_color" 
+                     style="width: 80px; height: 45px; padding: 4px; border-radius: 6px;">
+              
+              <!-- Hex Value Input -->
+              <div class="flex-grow-1">
+                <input type="text" class="form-control" 
+                       [value]="brandForm.get('brand_color')?.value?.toUpperCase()" 
+                       (input)="onHexColorChange($event)"
+                       placeholder="#800080" 
+                       pattern="^#[0-9A-Fa-f]{6}$"
+                       style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                <small class="text-muted">Enter hex color code (e.g., #800080)</small>
+              </div>
+            </div>
           </div>
           
           <div class="form-group mb-3">
