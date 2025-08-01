@@ -44,7 +44,7 @@ export class ApiService {
 
   // Profile Management
   checkUsernameExists(username: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/profile/check-username`, { username }, { headers: this.getAuthHeaders() });
+    return this.http.post(`${this.baseUrl}/users/check-username`, { username }, { headers: this.getAuthHeaders() });
   }
 
   // Invite handling

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as crypto from 'crypto';
+import { Op } from 'sequelize';
 import { User } from '../models';
 
 interface AuthenticatedRequest extends Request {
@@ -46,50 +47,10 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { username, email, first_name, last_name } = req.body;
+    const { first_name, last_name } = req.body;
 
     // Validation
     const errors: any = {};
-
-    if (!username?.trim()) {
-      errors.username = 'Username is required';
-    }
-
-    if (!email?.trim()) {
-      errors.email = 'Email is required';
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        errors.email = 'Please enter a valid email address';
-      }
-    }
-
-    // Check if username or email already exists (excluding current user)
-    if (username) {
-      const existingUser = await User.findOne({
-        where: {
-          username,
-          id: { $ne: req.user.id }
-        }
-      });
-
-      if (existingUser) {
-        errors.username = 'Username already exists';
-      }
-    }
-
-    if (email) {
-      const existingUser = await User.findOne({
-        where: {
-          email_address: email,
-          id: { $ne: req.user.id }
-        }
-      });
-
-      if (existingUser) {
-        errors.email = 'Email already exists';
-      }
-    }
 
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({ errors });
@@ -102,8 +63,6 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
     }
 
     await user.update({
-      username: username?.trim(),
-      email_address: email?.trim(),
       first_name: first_name?.trim() || null,
       last_name: last_name?.trim() || null
     });
