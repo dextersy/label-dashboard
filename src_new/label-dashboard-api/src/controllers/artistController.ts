@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense } from '../models';
-import { sendTeamInviteEmail, sendArtistUpdateEmail, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
+import { sendTeamInviteEmail, sendArtistUpdateEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -355,25 +355,27 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
           ? `${req.user.first_name} ${req.user.last_name}`.trim() 
           : req.user.email_address;
 
-        // Send email to each team member
-        for (const access of artistAccess) {
-          if (access.user && access.user.email_address) {
-            try {
-              await sendArtistUpdateEmail(
-                access.user.email_address,
-                artist.name,
-                updaterName,
-                changes,
-                dashboardUrl,
-                {
-                  brand_color: brand?.brand_color || '#1595e7',
-                  logo_url: brand?.logo_url || ''
-                }
-              );
-            } catch (emailError) {
-              console.error('Failed to send artist update email:', emailError);
+        // Get team member emails
+        const teamEmails = artistAccess
+          .filter(access => access.user?.email_address)
+          .map(access => access.user!.email_address);
+
+        // Send notifications to team members AND brand administrators
+        try {
+          await sendArtistUpdateNotifications(
+            teamEmails,
+            artist.name,
+            updaterName,
+            changes,
+            dashboardUrl,
+            {
+              id: brand?.id || 1,
+              brand_color: brand?.brand_color || '#1595e7',
+              logo_url: brand?.logo_url || ''
             }
-          }
+          );
+        } catch (emailError) {
+          console.error('Failed to send artist update notifications:', emailError);
         }
       }
     }

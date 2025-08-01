@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 import EmailAttempt from '../models/EmailAttempt';
+import User from '../models/User';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -66,6 +67,26 @@ export const sendEmail = async (
   await logEmailAttempt(recipients, subject, htmlBody, success, brandId);
   
   return success;
+};
+
+// Helper function to get all admin users for a brand
+const getBrandAdministrators = async (brandId: number): Promise<string[]> => {
+  try {
+    const adminUsers = await User.findAll({
+      where: {
+        brand_id: brandId,
+        is_admin: true
+      },
+      attributes: ['email_address']
+    });
+
+    return adminUsers
+      .filter(user => user.email_address)
+      .map(user => user.email_address);
+  } catch (error) {
+    console.error('Error fetching brand administrators:', error);
+    return [];
+  }
 };
 
 export const sendNotificationEmail = async (
@@ -229,7 +250,7 @@ export const sendTeamInviteEmail = async (
   return await sendBrandedEmail(email, 'invite_email', templateData, brandInfo?.id || 1);
 };
 
-// Send artist update notification email
+// Send artist update notification email to specific recipient
 export const sendArtistUpdateEmail = async (
   email: string,
   artistName: string,
@@ -277,9 +298,59 @@ export const sendArtistUpdateEmail = async (
   return await sendBrandedEmail(email, 'artist_update_email', templateData, brandInfo?.id || 1);
 };
 
-// Send payment method update notification
+// Send artist update notifications to team members AND brand administrators
+export const sendArtistUpdateNotifications = async (
+  teamEmails: string[],
+  artistName: string,
+  updaterName: string,
+  changes: Array<{field: string, oldValue: string, newValue: string}>,
+  dashboardUrl: string,
+  brandInfo: any
+): Promise<boolean> => {
+  try {
+    // Get brand administrators
+    const adminEmails = await getBrandAdministrators(brandInfo?.id || 1);
+    
+    // Combine team member emails and admin emails, removing duplicates
+    const allRecipients = [...new Set([...teamEmails, ...adminEmails])];
+    
+    if (allRecipients.length === 0) {
+      console.log('No recipients found for artist update notification');
+      return false;
+    }
+
+    let allSuccessful = true;
+    
+    // Send notification to each recipient
+    for (const email of allRecipients) {
+      try {
+        const success = await sendArtistUpdateEmail(
+          email,
+          artistName,
+          updaterName,
+          changes,
+          dashboardUrl,
+          brandInfo
+        );
+        if (!success) {
+          allSuccessful = false;
+        }
+      } catch (emailError) {
+        console.error(`Failed to send artist update email to ${email}:`, emailError);
+        allSuccessful = false;
+      }
+    }
+
+    return allSuccessful;
+  } catch (error) {
+    console.error('Error sending artist update notifications:', error);
+    return false;
+  }
+};
+
+// Send payment method update notification to team members AND brand administrators
 export const sendPaymentMethodNotification = async (
-  recipients: string[],
+  teamRecipients: string[],
   artistName: string,
   paymentMethodData: {
     type: string;
@@ -290,6 +361,17 @@ export const sendPaymentMethodNotification = async (
   brand: any
 ): Promise<boolean> => {
   try {
+    // Get brand administrators
+    const adminEmails = await getBrandAdministrators(brand?.id || 1);
+    
+    // Combine team member emails and admin emails, removing duplicates
+    const allRecipients = [...new Set([...teamRecipients, ...adminEmails])];
+    
+    if (allRecipients.length === 0) {
+      console.log('No recipients found for payment method notification');
+      return false;
+    }
+
     const templatePath = path.join(__dirname, '../../src/assets/templates/add_payment_method_email.html');
     let template = fs.readFileSync(templatePath, 'utf8');
 
@@ -305,7 +387,7 @@ export const sendPaymentMethodNotification = async (
     template = template.replace(/%LINK%/g, `${process.env.FRONTEND_URL}/financial#payments`);
 
     const subject = `A new payment method has been added to ${artistName}`;
-    return await sendEmail(recipients, subject, template, brand?.id || 1);
+    return await sendEmail(allRecipients, subject, template, brand?.id || 1);
   } catch (error) {
     console.error('Error sending payment method notification:', error);
     return false;
