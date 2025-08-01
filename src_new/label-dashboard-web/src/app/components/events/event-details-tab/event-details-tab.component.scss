@@ -1,0 +1,53 @@
+.event-details-tab {
+  .poster-preview {
+    max-width: 100%;
+    max-height: 300px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+  }
+
+  .form-label.required::after {
+    content: ' *';
+    color: #dc3545;
+  }
+
+  .save-panel {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 15px 0;
+    border-top: 1px solid #dee2e6;
+    margin-top: 20px;
+  }
+
+  .card {
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+  }
+
+  .badge-success {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .badge-danger {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .input-group-text {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+  }
+
+  .form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+}

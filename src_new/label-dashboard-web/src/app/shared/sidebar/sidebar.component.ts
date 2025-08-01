@@ -153,7 +153,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  onMenuItemClick(): void {
+  onMenuItemClick(item?: any): void {
     // Close sidebar on mobile when menu item is clicked
     this.sidebarService.closeOnMobileNavigation();
   }

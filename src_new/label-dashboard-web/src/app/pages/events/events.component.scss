@@ -1,0 +1,56 @@
+.events-page {
+  .tab-navigation {
+    .events-tabs {
+      border-bottom: none;
+      
+      .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        color: #666;
+        padding: 15px 20px;
+        
+        &:hover {
+          border-color: transparent;
+          color: #333;
+        }
+        
+        &.active {
+          border-bottom-color: #007bff;
+          color: #007bff;
+          background-color: transparent;
+        }
+        
+        i {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+  
+  .tab-pane {
+    min-height: 400px;
+    
+    &.active {
+      display: block;
+    }
+  }
+  
+  .card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+  }
+  
+  .btn {
+    border-radius: 6px;
+  }
+  
+  .form-label.required::after {
+    content: ' *';
+    color: #dc3545;
+  }
+}

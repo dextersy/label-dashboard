@@ -1,0 +1,335 @@
+<div class="event-details-tab">
+  <div class="p-4">
+    <h4><i class="fa fa-info-circle me-2"></i>Event Details</h4>
+    
+    <form (ngSubmit)="onSaveEvent()" #eventForm="ngForm" *ngIf="event">
+      <div class="row">
+        <!-- General Information Column -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">General Information</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label required">Title</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="event.title" 
+                  name="title"
+                  placeholder="Event Title"
+                  (change)="generateSlug()"
+                  required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">Date & Time</label>
+                <div class="input-group">
+                  <input 
+                    type="datetime-local" 
+                    class="form-control" 
+                    [(ngModel)]="event.date_and_time" 
+                    name="date_and_time"
+                    required>
+                  <span class="input-group-text">GMT+8 (PH)</span>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">Venue</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="event.venue" 
+                  name="venue"
+                  placeholder="Event Venue"
+                  required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">RSVP or Social Media Link</label>
+                <input 
+                  type="url" 
+                  class="form-control" 
+                  [(ngModel)]="event.rsvp_link" 
+                  name="rsvp_link"
+                  placeholder="https://facebook.com/events/..."
+                  required>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Add your Facebook event page link or preferred social media page. This will be included in tickets.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Event Poster Card -->
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">Event Poster</h6>
+            </div>
+            <div class="card-body">
+              <div class="text-center mb-3">
+                <img 
+                  [src]="event.poster_url || 'assets/img/placeholder.jpg'" 
+                  class="img-fluid poster-preview"
+                  alt="Event Poster">
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Select a file</label>
+                <input 
+                  type="file" 
+                  class="form-control" 
+                  accept=".jpg,.png,.jpeg"
+                  (change)="onFileSelected($event)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticketing Column -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">Ticketing</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <strong>Ticket sales: </strong>
+                <span class="badge" [class]="event.status === 'Open' ? 'badge-success' : 'badge-danger'">
+                  {{ event.status || 'Open' }}
+                </span>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Ticket Naming</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="event.ticket_naming" 
+                  name="ticket_naming"
+                  placeholder="e.g. Early Bird, General Admission">
+                <small class="form-text text-muted">E.g. "Early bird", "Promo", etc.</small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">Ticket Price</label>
+                <div class="input-group">
+                  <span class="input-group-text">₱</span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="event.ticket_price" 
+                    name="ticket_price"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Maximum Number of Tickets</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="event.max_tickets" 
+                  name="max_tickets"
+                  placeholder="0"
+                  min="0">
+                <small class="form-text text-muted">Set "0" for unlimited tickets.</small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Close Ticket Sales On</label>
+                <div class="input-group">
+                  <input 
+                    type="datetime-local" 
+                    class="form-control" 
+                    [(ngModel)]="event.close_time" 
+                    name="close_time">
+                  <span class="input-group-text">GMT+8 (PH)</span>
+                </div>
+              </div>
+
+              <div class="mb-3" *ngIf="event.buy_shortlink">
+                <label class="form-label">Ticket Purchase Link</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [value]="event.buy_shortlink || 'Save to see buy link'" 
+                    readonly>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="copyToClipboard(event.buy_shortlink!, 'Buy link')"
+                    *ngIf="event.buy_shortlink">
+                    <i class="fa fa-copy"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">Share this link to ticket buyers.</small>
+              </div>
+
+              <!-- Payment Methods -->
+              <h6 class="mt-4">Payment Methods</h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_gcash"
+                      name="supports_gcash"
+                      id="switchGCash">
+                    <label class="form-check-label" for="switchGCash">GCash</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_qrph"
+                      name="supports_qrph"
+                      id="switchQRPH">
+                    <label class="form-check-label" for="switchQRPH">QRPh</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_card"
+                      name="supports_card"
+                      id="switchCard">
+                    <label class="form-check-label" for="switchCard">Credit Card</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_ubp"
+                      name="supports_ubp"
+                      id="switchUBP">
+                    <label class="form-check-label" for="switchUBP">Unionbank Transfer</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_dob"
+                      name="supports_dob"
+                      id="switchDOB">
+                    <label class="form-check-label" for="switchDOB">BPI</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_maya"
+                      name="supports_maya"
+                      id="switchMaya">
+                    <label class="form-check-label" for="switchMaya">Maya</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      [(ngModel)]="event.supports_grabpay"
+                      name="supports_grabpay"
+                      id="switchGrabPay">
+                    <label class="form-check-label" for="switchGrabPay">Grab Pay</label>
+                  </div>
+                </div>
+              </div>
+              <small class="form-text text-muted">
+                <i class="fa fa-info-circle"></i> Click 
+                <a href="https://www.paymongo.com/pricing" target="_blank">here</a> 
+                for information on processing fees for each payment method.
+              </small>
+
+              <!-- Verification Section -->
+              <div class="mt-4">
+                <div class="mb-3" *ngIf="event.verification_link">
+                  <label class="form-label">Ticket Verification Link</label>
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      [value]="event.verification_link || 'Save to get link'" 
+                      readonly>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      (click)="copyToClipboard(event.verification_link!, 'Verification link')"
+                      *ngIf="event.verification_link">
+                      <i class="fa fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Verification PIN</label>
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      [value]="event.verification_pin" 
+                      readonly>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      (click)="copyToClipboard(event.verification_pin, 'Verification PIN')">
+                      <i class="fa fa-copy"></i>
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      (click)="resetPIN()">
+                      <i class="fa fa-refresh"></i>
+                    </button>
+                  </div>
+                  <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Event Description -->
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">Event Description</h6>
+            </div>
+            <div class="card-body">
+              <textarea 
+                class="form-control" 
+                [(ngModel)]="event.description" 
+                name="description"
+                rows="8"
+                placeholder="Describe your event..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="save-panel mt-4" *ngIf="isAdmin">
+        <button 
+          type="submit" 
+          class="btn btn-primary btn-lg"
+          [disabled]="!eventForm.form.valid || loading">
+          <i class="fa fa-save me-2"></i>
+          <span *ngIf="loading">Saving...</span>
+          <span *ngIf="!loading">Save All Changes</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Read-only view for non-admin users -->
+    <div class="alert alert-info" *ngIf="!isAdmin">
+      <i class="fa fa-info-circle me-2"></i>
+      You have read-only access to event details. Contact an administrator to make changes.
+    </div>
+  </div>
+</div>

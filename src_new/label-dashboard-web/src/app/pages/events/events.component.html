@@ -1,1 +1,139 @@
-<p>events works!</p>
+<div class="events-page">
+  <div class="container-fluid">
+    
+    <!-- Main Content -->
+    <div class="row" *ngIf="selectedArtist && selectedEvent">
+      <div class="col-12">
+        
+        <!-- Event Selection -->
+        <div class="card mb-3" *ngIf="availableEvents.length > 1">
+          <div class="card-body p-3">
+            <div class="row align-items-center">
+              <div class="col-md-3">
+                <label class="form-label mb-0">Select Event:</label>
+              </div>
+              <div class="col-md-9">
+                <select 
+                  class="form-select" 
+                  [value]="selectedEvent ? selectedEvent.id : ''" 
+                  (change)="onEventSelectionChange($event)">
+                  <option *ngFor="let event of availableEvents" [value]="event.id">
+                    {{ event.title }} - {{ event.date_and_time | date:'mediumDate' }} at {{ event.venue }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="card tab-navigation">
+          <div class="card-header p-0">
+            <ul class="nav nav-tabs events-tabs" role="tablist">
+              <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
+                <a class="nav-link" 
+                   [class]="getTabClass(tab.id)"
+                   (click)="setActiveTab(tab.id)"
+                   role="tab">
+                  <i class="fa" [class]="tab.icon"></i>
+                  {{ tab.label }}
+                </a>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Tab Content -->
+          <div class="card-body tab-content p-0">
+            
+            <!-- Event Details Tab -->
+            <div class="tab-pane" [class.active]="activeTab === 'details'" *ngIf="activeTab === 'details'">
+              <app-event-details-tab
+                [event]="eventDetails"
+                [isAdmin]="isAdmin"
+                [loading]="loading"
+                (eventUpdate)="onEventUpdate($event)"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-details-tab>
+            </div>
+            
+            <!-- Event Tickets Tab -->
+            <div class="tab-pane" [class.active]="activeTab === 'tickets'" *ngIf="activeTab === 'tickets'">
+              <app-event-tickets-tab
+                [tickets]="eventTickets"
+                [summary]="ticketSummary"
+                [isAdmin]="isAdmin"
+                [loading]="loading"
+                (resendTicket)="onResendTicket($event)"
+                (cancelTicket)="onCancelTicket($event)"
+                (downloadCSV)="onDownloadTicketsCSV()"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-tickets-tab>
+            </div>
+            
+            <!-- Abandoned Orders Tab -->
+            <div class="tab-pane" [class.active]="activeTab === 'abandoned'" *ngIf="activeTab === 'abandoned'">
+              <app-event-abandoned-orders-tab
+                [orders]="abandonedOrders"
+                [defaultTicketPrice]="eventDetails?.ticket_price || 0"
+                [isAdmin]="isAdmin"
+                [loading]="loading"
+                (markAsPaid)="onMarkAsPaid($event)"
+                (cancelOrder)="onCancelOrder($event)"
+                (verifyPayments)="onVerifyPayments()"
+                (sendPaymentReminders)="onSendPaymentReminders()"
+                (cancelAllUnpaid)="onCancelAllUnpaid()"
+                (createCustomTicket)="onCreateCustomTicket($event)"
+                (downloadCSV)="onDownloadAbandonedCSV()"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-abandoned-orders-tab>
+            </div>
+            
+            <!-- Referrals Tab -->
+            <div class="tab-pane" [class.active]="activeTab === 'referrals'" *ngIf="activeTab === 'referrals'">
+              <app-event-referrals-tab
+                [referrers]="eventReferrers"
+                [eventTitle]="eventDetails?.title || ''"
+                [isAdmin]="isAdmin"
+                [loading]="loading"
+                (addReferrer)="onAddReferrer($event)"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-referrals-tab>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- No Artist Selected -->
+    <div class="row" *ngIf="!selectedArtist">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <i class="fa fa-calendar fa-4x text-muted mb-3"></i>
+            <h4>No Artist Selected</h4>
+            <p class="text-muted">Please select an artist from the dropdown above to manage their events.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Events Available -->
+    <div class="row" *ngIf="selectedArtist && availableEvents.length === 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <i class="fa fa-calendar-plus fa-4x text-muted mb-3"></i>
+            <h4>No Events Available</h4>
+            <p class="text-muted">No events found for this artist. Create a new event to get started.</p>
+            <button class="btn btn-primary" *ngIf="isAdmin">
+              <i class="fa fa-plus me-1"></i>Create New Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>

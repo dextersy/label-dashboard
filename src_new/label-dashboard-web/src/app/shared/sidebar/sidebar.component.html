@@ -9,7 +9,7 @@
     <ul class="nav">
       <li *ngFor="let item of menuItems" 
           [class.active]="isActiveRoute(item.route)">
-        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route" (click)="onMenuItemClick()" 
+        <a *ngIf="shouldShowMenuItem(item)" [routerLink]="item.route" (click)="onMenuItemClick(item)" 
            [style.color]="textColor">
           <i [class]="item.icon" 
              [style.color]="isActiveRoute(item.route) ? textColor : iconColor"></i>

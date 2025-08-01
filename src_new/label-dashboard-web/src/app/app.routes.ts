@@ -25,7 +25,7 @@ export const routes: Routes = [
   { path: 'artist', component: ArtistComponent, canActivate: [authGuard] },
   { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { path: 'events', component: EventsComponent, canActivate: [adminGuard] }, // Admin only
+  { path: 'events', component: EventsComponent, canActivate: [adminGuard] },
   { path: 'admin', component: AdminComponent, canActivate: [adminGuard] }, // Admin only
   { path: 'domain-not-found', component: DomainNotFoundComponent },
   { path: '**', redirectTo: '/login' }

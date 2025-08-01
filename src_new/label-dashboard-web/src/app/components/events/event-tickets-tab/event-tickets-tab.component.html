@@ -1,0 +1,124 @@
+<div class="event-tickets-tab">
+  <div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4><i class="fa fa-ticket me-2"></i>Confirmed Orders</h4>
+      <button 
+        class="btn btn-outline-primary" 
+        (click)="onDownloadCSV()"
+        *ngIf="isAdmin"
+        [disabled]="loading">
+        <i class="fa fa-download me-1"></i>Download CSV
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive" *ngIf="tickets.length > 0; else noTickets">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email Address</th>
+                <th>Contact Number</th>
+                <th>No. of Tickets</th>
+                <th>Ticket Code</th>
+                <th class="text-end">Total Paid</th>
+                <th class="text-end">Processing Fee</th>
+                <th>Referred By</th>
+                <th>Time Ordered</th>
+                <th>Claimed</th>
+                <th *ngIf="isAdmin">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ticket of tickets" [class]="getRowClass(ticket)">
+                <td>{{ ticket.name }}</td>
+                <td>{{ ticket.email_address }}</td>
+                <td>{{ ticket.contact_number }}</td>
+                <td>{{ ticket.number_of_entries }}</td>
+                <td><strong>{{ ticket.ticket_code }}</strong></td>
+                <td class="text-end">
+                  <span *ngIf="getTotalPaid(ticket) > 0">{{ getTotalPaid(ticket) | currency:'PHP':'symbol':'1.2-2' }}</span>
+                  <span *ngIf="getTotalPaid(ticket) === 0">-</span>
+                </td>
+                <td class="text-end">
+                  <span *ngIf="getProcessingFee(ticket) > 0">{{ getProcessingFee(ticket) | currency:'PHP':'symbol':'1.2-2' }}</span>
+                  <span *ngIf="getProcessingFee(ticket) === 0">-</span>
+                </td>
+                <td>{{ ticket.referrer_name || '' }}</td>
+                <td>{{ ticket.order_timestamp | date:'medium' }}</td>
+                <td>{{ ticket.number_of_claimed_entries }} / {{ ticket.number_of_entries }}</td>
+                <td *ngIf="isAdmin">
+                  <div class="btn-group" role="group">
+                    <button 
+                      class="btn btn-sm btn-outline-primary"
+                      (click)="onResendTicket(ticket.id)"
+                      *ngIf="isTicketResendable(ticket)"
+                      title="Resend ticket">
+                      Resend
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="onCancelTicket(ticket.id)"
+                      *ngIf="isTicketCancellable(ticket)"
+                      title="Cancel ticket">
+                      Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noTickets>
+          <div class="text-center py-5">
+            <i class="fa fa-ticket fa-3x text-muted mb-3"></i>
+            <h5>No Tickets Yet</h5>
+            <p class="text-muted">No confirmed orders found for this event.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Summary Footer -->
+      <div class="card-footer bg-light" *ngIf="summary">
+        <div class="row">
+          <div class="col-12">
+            <strong class="me-3">Totals:</strong>
+            
+            <span class="me-3" title="Number of paid tickets">
+              <i class="fa fa-dot-circle-o text-success"></i>
+              {{ summary.total_tickets_sold }} tickets
+            </span>
+            
+            <span class="me-3" title="Total revenue">
+              <i class="fa fa-money text-primary"></i>
+              {{ summary.total_revenue | currency:'PHP':'symbol':'1.2-2' }}
+            </span>
+            
+            <span class="me-3 text-muted" title="Total processing fee">
+              <i class="fa fa-credit-card"></i>
+              -{{ summary.total_processing_fee | currency:'PHP':'symbol':'1.2-2' }}
+            </span>
+            
+            <span class="me-3 text-muted" title="Platform fee (5%)">
+              <i class="fa fa-percentage"></i>
+              -{{ summary.platform_fee | currency:'PHP':'symbol':'1.2-2' }}
+            </span>
+            
+            <span class="fw-bold" title="Grand total">
+              <i class="fa fa-plus-square text-success"></i>
+              {{ summary.grand_total | currency:'PHP':'symbol':'1.2-2' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert alert-info mt-3">
+      <h6><i class="fa fa-user-plus me-2"></i>Want to invite someone?</h6>
+      <p class="mb-0">Switch to the "Abandoned Orders" tab to create a custom ticket.</p>
+    </div>
+  </div>
+</div>

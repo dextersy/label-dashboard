@@ -1,0 +1,40 @@
+.event-tickets-tab {
+  .table {
+    th {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      font-weight: 600;
+    }
+
+    .text-muted {
+      opacity: 0.6;
+    }
+  }
+
+  .card-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: #f6f6f6 !important;
+    border-top: 1px solid #dee2e6;
+    
+    .fa {
+      margin-right: 5px;
+    }
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .alert-info {
+    border-color: #b8daff;
+    
+    h6 {
+      color: #0c5460;
+      margin-bottom: 8px;
+    }
+  }
+}

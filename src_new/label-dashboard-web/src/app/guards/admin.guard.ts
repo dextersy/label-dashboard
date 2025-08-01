@@ -19,7 +19,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
   const headers = new HttpHeaders({
     'Authorization': `Bearer ${token}`
   });
-
+  
   return http.get(`${environment.apiUrl}/auth/me`, { headers }).pipe(
     map((response: any) => {
       if (response.user && response.user.is_admin) {
@@ -32,7 +32,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
         return false;
       }
     }),
-    catchError(() => {
+    catchError((error) => {
       // Token is invalid, clear storage and redirect to login
       localStorage.removeItem('auth_token');
       localStorage.removeItem('currentUser');

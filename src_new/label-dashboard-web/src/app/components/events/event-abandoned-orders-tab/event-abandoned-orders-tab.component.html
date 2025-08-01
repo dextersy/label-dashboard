@@ -1,0 +1,276 @@
+<div class="abandoned-orders-tab">
+  <div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4><i class="fa fa-clock-o me-2"></i>Abandoned Orders</h4>
+    </div>
+
+    <div class="card">
+      <div class="card-header" *ngIf="isAdmin">
+        <div class="btn-toolbar" role="toolbar">
+          <div class="btn-group me-2" role="group">
+            <button 
+              type="button" 
+              class="btn btn-outline-primary btn-sm"
+              (click)="onDownloadCSV()"
+              [disabled]="loading">
+              <i class="fa fa-download me-1"></i>Download CSV
+            </button>
+          </div>
+          <div class="btn-group me-2" role="group">
+            <button 
+              type="button" 
+              class="btn btn-outline-success btn-sm"
+              (click)="onVerifyPayments()"
+              [disabled]="loading">
+              <i class="fa fa-check me-1"></i>Verify Payments
+            </button>
+          </div>
+          <div class="btn-group me-2" role="group">
+            <button 
+              type="button" 
+              class="btn btn-outline-info btn-sm"
+              (click)="onSendPaymentReminders()"
+              [disabled]="loading">
+              <i class="fa fa-bell me-1"></i>Send Payment Reminders
+            </button>
+          </div>
+          <div class="btn-group" role="group">
+            <button 
+              type="button" 
+              class="btn btn-outline-danger btn-sm"
+              (click)="onCancelAllUnpaid()"
+              [disabled]="loading">
+              <i class="fa fa-times me-1"></i>Cancel All Unpaid
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive" *ngIf="orders.length > 0; else noOrders">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email Address</th>
+                <th>Contact Number</th>
+                <th>No. of Tickets</th>
+                <th>Payment Link</th>
+                <th>Referred By</th>
+                <th>Time Ordered</th>
+                <th>Status</th>
+                <th *ngIf="isAdmin">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of orders">
+                <td>{{ order.name }}</td>
+                <td>{{ order.email_address }}</td>
+                <td>{{ order.contact_number }}</td>
+                <td>{{ order.number_of_entries }}</td>
+                <td>
+                  <a 
+                    [href]="order.payment_link" 
+                    target="_blank" 
+                    *ngIf="order.payment_link"
+                    class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-external-link"></i>
+                  </a>
+                  <span *ngIf="!order.payment_link" class="text-muted">-</span>
+                </td>
+                <td>{{ order.referrer_name || '' }}</td>
+                <td>{{ order.order_timestamp | date:'medium' }}</td>
+                <td>
+                  <span [class]="getStatusClass(order.status)">
+                    <i class="fa fa-circle me-1"></i>{{ getStatusText(order.status) }}
+                  </span>
+                </td>
+                <td *ngIf="isAdmin">
+                  <div class="btn-group" role="group">
+                    <button 
+                      class="btn btn-sm btn-outline-success"
+                      (click)="onMarkAsPaid(order.id)"
+                      *ngIf="order.status === 'New'"
+                      title="Mark as paid">
+                      Mark Paid
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="onCancelOrder(order.id)"
+                      *ngIf="order.status === 'New'"
+                      title="Cancel order">
+                      Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noOrders>
+          <div class="text-center py-5">
+            <i class="fa fa-clock-o fa-3x text-muted mb-3"></i>
+            <h5>No Abandoned Orders</h5>
+            <p class="text-muted">No pending orders found for this event.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="card-footer bg-light" *ngIf="orders.length > 0">
+        <strong class="me-3">Totals:</strong>
+        <span title="Number of pending tickets">
+          <i class="fa fa-dot-circle-o text-muted"></i>
+          {{ getTotalPendingOrders() }} pending tickets
+        </span>
+      </div>
+    </div>
+
+    <!-- Create Custom Ticket Form -->
+    <div class="row mt-4" *ngIf="isAdmin">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fa fa-plus me-2"></i>Create Custom Ticket</h5>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">
+              <small>Use this for special invites. Create a custom ticket and optionally send a payment link. You can override the ticket price for this payment.</small>
+            </div>
+
+            <form (ngSubmit)="onSubmitCustomTicket()" #customTicketFormRef="ngForm">
+              <div class="mb-3">
+                <label class="form-label required">Name</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.name"
+                  name="name"
+                  placeholder="Full Name"
+                  required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">Email Address</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.email_address"
+                  name="email_address"
+                  placeholder="email@example.com"
+                  required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">Contact Number</label>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.contact_number"
+                  name="contact_number"
+                  placeholder="+639xxxxxxxxx"
+                  required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label required">Number of Entries</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.number_of_entries"
+                  name="number_of_entries"
+                  placeholder="1"
+                  min="1"
+                  required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Price per Ticket</label>
+                <div class="input-group">
+                  <span class="input-group-text">₱</span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="customTicketForm.price_per_ticket"
+                    name="price_per_ticket"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    [disabled]="!priceOverrideEnabled">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="enablePriceOverride()"
+                    *ngIf="!priceOverrideEnabled">
+                    <i class="fa fa-pencil"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Referral Code (Optional)</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.referral_code"
+                  name="referral_code"
+                  placeholder="Enter referral code">
+              </div>
+
+              <div class="mb-3">
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [(ngModel)]="customTicketForm.ticket_paid"
+                    name="ticket_paid"
+                    id="ticket_paid"
+                    (change)="onToggleMarkAsPaid()">
+                  <label class="form-check-label" for="ticket_paid">
+                    Mark as paid
+                  </label>
+                </div>
+
+                <div class="mt-2" *ngIf="customTicketForm.ticket_paid">
+                  <label class="form-label">Payment Processing Fee</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.payment_processing_fee"
+                      name="payment_processing_fee"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0">
+                  </div>
+                </div>
+
+                <div class="form-check mt-2" *ngIf="!customTicketForm.ticket_paid">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [(ngModel)]="customTicketForm.send_email"
+                    name="send_email"
+                    id="send_email">
+                  <label class="form-check-label" for="send_email">
+                    Send payment email
+                  </label>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                class="btn btn-primary btn-block"
+                [disabled]="!customTicketFormRef.form.valid || loading">
+                <i class="fa fa-plus me-1"></i>
+                <span *ngIf="loading">Creating...</span>
+                <span *ngIf="!loading">Add Ticket</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
