@@ -334,36 +334,46 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     if (sortBy === 'last_logged_in') {
       const direction = sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       
-      // MySQL doesn't support NULLS FIRST/LAST, so we use a workaround
+      // MySQL doesn't support NULLS FIRST/LAST, so we use a CASE statement workaround
       // For DESC: non-null values first (DESC), then NULL values
       // For ASC: NULL values first, then non-null values (ASC)
-      const orderClause = direction === 'DESC' 
-        ? 'last_logged_in IS NULL, last_logged_in DESC'
-        : 'last_logged_in IS NULL DESC, last_logged_in ASC';
       
-      // Use raw query with subquery to properly sort by last login
+      // Build additional filter conditions for the raw query
+      const additionalFilters = Object.keys(whereCondition)
+        .filter(key => key !== 'brand_id' && key !== 'username')
+        .map(key => {
+          const value = whereCondition[key];
+          if (key === 'is_admin') {
+            return `AND u.${key} = ${value ? 1 : 0}`;
+          } else if (typeof value === 'object' && value[Op.like]) {
+            const likeValue = value[Op.like].replace(/%/g, '');
+            return `AND u.${key} LIKE '%${likeValue}%'`;
+          }
+          return '';
+        })
+        .filter(condition => condition !== '')
+        .join(' ');
+
+      // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
-        SELECT u.*, 
-               (SELECT MAX(la.date_and_time) 
-                FROM login_attempt la 
-                WHERE la.user_id = u.id 
-                  AND la.status = 'Successful' 
-                  AND la.brand_id = ?) as last_logged_in
+        SELECT u.*, la_max.last_logged_in
         FROM user u
+        LEFT JOIN (
+          SELECT user_id, MAX(date_and_time) as last_logged_in
+          FROM login_attempt 
+          WHERE status = 'Successful' AND brand_id = ?
+          GROUP BY user_id
+        ) la_max ON u.id = la_max.user_id
         WHERE u.brand_id = ? 
           AND u.username != '' 
           AND u.username IS NOT NULL
-          ${Object.keys(whereCondition).filter(key => key !== 'brand_id' && key !== 'username').map(key => {
-            const value = whereCondition[key];
-            if (key === 'is_admin') {
-              return `AND u.${key} = ${value ? 1 : 0}`;
-            } else if (typeof value === 'object' && value[Op.like]) {
-              const likeValue = value[Op.like].replace(/%/g, '');
-              return `AND u.${key} LIKE '%${likeValue}%'`;
-            }
-            return '';
-          }).join(' ')}
-        ORDER BY ${orderClause}
+          ${additionalFilters}
+        ORDER BY CASE 
+          WHEN la_max.last_logged_in IS NULL 
+          THEN ${direction === 'DESC' ? '1' : '0'} 
+          ELSE ${direction === 'DESC' ? '0' : '1'} 
+        END,
+        la_max.last_logged_in ${direction}
         LIMIT ? OFFSET ?
       `;
 
@@ -373,16 +383,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         WHERE u.brand_id = ? 
           AND u.username != '' 
           AND u.username IS NOT NULL
-          ${Object.keys(whereCondition).filter(key => key !== 'brand_id' && key !== 'username').map(key => {
-            const value = whereCondition[key];
-            if (key === 'is_admin') {
-              return `AND u.${key} = ${value ? 1 : 0}`;
-            } else if (typeof value === 'object' && value[Op.like]) {
-              const likeValue = value[Op.like].replace(/%/g, '');
-              return `AND u.${key} LIKE '%${likeValue}%'`;
-            }
-            return '';
-          }).join(' ')}
+          ${additionalFilters}
       `;
 
       const [users, countResult] = await Promise.all([
