@@ -263,19 +263,21 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
         next: (tickets) => {
           // Convert API tickets to component format
-          this.eventTickets = tickets.map(ticket => ({
-            id: ticket.id,
-            name: ticket.name,
-            email_address: ticket.email_address,
-            contact_number: ticket.contact_number || '',
-            number_of_entries: ticket.number_of_entries,
-            ticket_code: ticket.ticket_code,
-            price_per_ticket: ticket.price_per_ticket,
-            payment_processing_fee: ticket.payment_processing_fee,
-            order_timestamp: ticket.order_timestamp,
-            number_of_claimed_entries: ticket.number_of_claimed_entries,
-            status: this.normalizeTicketStatus(ticket.status)
-          }));
+          this.eventTickets = tickets
+            .filter(ticket => (ticket.status != 'New' && ticket.status != 'Canceled'))
+            .map(ticket => ({
+              id: ticket.id,
+              name: ticket.name,
+              email_address: ticket.email_address,
+              contact_number: ticket.contact_number || '',
+              number_of_entries: ticket.number_of_entries,
+              ticket_code: ticket.ticket_code,
+              price_per_ticket: ticket.price_per_ticket,
+              payment_processing_fee: ticket.payment_processing_fee,
+              order_timestamp: ticket.order_timestamp,
+              number_of_claimed_entries: ticket.number_of_claimed_entries,
+              status: this.normalizeTicketStatus(ticket.status)
+            }));
           
           // Filter for abandoned orders (non-confirmed tickets)
           this.abandonedOrders = tickets
