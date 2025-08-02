@@ -2,12 +2,7 @@
   margin-bottom: 25px;
 }
 
-.event-header {
-  h5 {
-    color: #333;
-    font-weight: 600;
-  }
-}
+// Page header styling moved to global styles.scss as .page-header
 
 .event-actions {
   .btn {

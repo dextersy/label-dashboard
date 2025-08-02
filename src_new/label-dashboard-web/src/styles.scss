@@ -411,6 +411,18 @@ h5 { font-size: 1.1rem; }
 h6 { font-size: 1rem; }
 
 /* ================================= */
+/* GLOBAL PAGE HEADER STYLES         */
+/* ================================= */
+
+/* Global page header styling - matches event-header styling */
+.page-header {
+  h5 {
+    color: #333;
+    font-weight: 600;
+  }
+}
+
+/* ================================= */
 /* MOBILE SIDEBAR RESPONSIVE STYLES */
 /* ================================= */
 
