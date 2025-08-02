@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -44,6 +44,9 @@ export type EventSelection = Event;
   styleUrl: './events.component.scss'
 })
 export class EventsComponent implements OnInit, OnDestroy {
+  @ViewChild(EventDetailsTabComponent) eventDetailsTab!: EventDetailsTabComponent;
+  @ViewChild(CreateEventModalComponent) createEventModal!: CreateEventModalComponent;
+  
   selectedEvent: EventSelection | null = null;
   activeTab: EventsTabType = 'details';
   isAdmin = false;
@@ -440,6 +443,12 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.createEvent(eventData).subscribe({
         next: (newEvent) => {
           this.onAlertMessage({ type: 'success', text: 'Event created successfully!' });
+          
+          // Reset the form in the modal before closing
+          if (this.createEventModal) {
+            this.createEventModal.reset();
+          }
+          
           this.closeCreateEventModal();
           
           // Add new event to the list and select it
@@ -610,10 +619,55 @@ export class EventsComponent implements OnInit, OnDestroy {
           
           // Refresh event data from API to get any backend-generated fields
           this.refreshEventDetails();
+          
+          // Clear any poster selection from the details tab
+          if (this.eventDetailsTab) {
+            this.eventDetailsTab.onEventSaved();
+          }
         },
         error: (error) => {
           console.error('Failed to update event:', error);
           this.onAlertMessage({ type: 'error', text: 'Failed to update event' });
+        }
+      })
+    );
+  }
+
+  onEventUpdateWithFile({ eventId, formData }: { eventId: number, formData: FormData }): void {
+    if (!this.selectedEvent) return;
+    
+    this.subscriptions.add(
+      this.eventService.updateEventWithFile(eventId, formData).subscribe({
+        next: (updatedEvent) => {
+          this.onAlertMessage({ type: 'success', text: 'Event updated successfully!' });
+          
+          // Update the selected event in the list
+          const index = this.availableEvents.findIndex(e => e.id === updatedEvent.id);
+          if (index !== -1) {
+            this.availableEvents[index] = updatedEvent;
+          }
+          
+          // Update the selected event reference to keep it in sync
+          if (this.selectedEvent && this.selectedEvent.id === updatedEvent.id) {
+            this.selectedEvent = updatedEvent;
+          }
+          
+          // Refresh event data from API to get any backend-generated fields
+          this.refreshEventDetails();
+          
+          // Clear any poster selection from the details tab
+          if (this.eventDetailsTab) {
+            this.eventDetailsTab.onEventSaved();
+          }
+        },
+        error: (error) => {
+          console.error('Failed to update event with file:', error);
+          this.onAlertMessage({ type: 'error', text: 'Failed to update event' });
+          
+          // Reset uploading state on error
+          if (this.eventDetailsTab) {
+            this.eventDetailsTab.uploading = false;
+          }
         }
       })
     );

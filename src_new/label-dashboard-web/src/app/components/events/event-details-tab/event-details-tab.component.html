@@ -101,12 +101,45 @@
               </div>
               
               <div class="mb-3">
-                <label class="form-label">Select a file</label>
+                <label class="form-label">Upload New Poster</label>
                 <input 
                   type="file" 
                   class="form-control" 
-                  accept=".jpg,.png,.jpeg"
-                  (change)="onFileSelected($event)">
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  [disabled]="uploading">
+                <small class="form-text text-muted">
+                  Upload an image file (max 10MB). JPG, PNG, GIF supported.
+                </small>
+                
+                <!-- Poster Preview -->
+                <div *ngIf="posterPreview" class="mt-3">
+                  <div class="d-flex align-items-center">
+                    <img [src]="posterPreview" alt="New poster preview" class="img-thumbnail me-3" style="max-width: 150px; max-height: 150px;">
+                    <div>
+                      <p class="mb-2 text-success">
+                        <i class="fa fa-check-circle me-1"></i>
+                        New poster selected
+                      </p>
+                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="removePoster()">
+                        <i class="fa fa-times me-1"></i> Remove
+                      </button>
+                    </div>
+                  </div>
+                  <div class="alert alert-info mt-2 mb-0">
+                    <small>
+                      <i class="fa fa-info-circle me-1"></i>
+                      Click "Save Changes" to upload this poster.
+                    </small>
+                  </div>
+                </div>
+                
+                <div *ngIf="uploading" class="mt-2">
+                  <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <span class="text-muted">Uploading poster...</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

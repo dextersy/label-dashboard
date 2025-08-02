@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { map, catchError } from 'rxjs/operators';
+import { CreateEventForm } from '../components/events/create-event-modal/create-event-modal.component';
 
 export interface Event {
   id: number;
@@ -107,11 +108,26 @@ export class EventService {
     }
   }
 
-  private getAuthHeaders(): HttpHeaders {
+  private getAuthHeaders(contentType?: string): HttpHeaders {
+    const token = localStorage.getItem('auth_token');
+    const headers: any = {
+      'Authorization': `Bearer ${token}`
+    };
+    
+    if (contentType) {
+      headers['Content-Type'] = contentType;
+    } else {
+      headers['Content-Type'] = 'application/json';
+    }
+    
+    return new HttpHeaders(headers);
+  }
+
+  private getAuthHeadersForFormData(): HttpHeaders {
     const token = localStorage.getItem('auth_token');
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      'Authorization': `Bearer ${token}`
+      // Don't set Content-Type for FormData - let browser set it with boundary
     });
   }
 
@@ -222,13 +238,42 @@ export class EventService {
   /**
    * Create a new event
    */
-  createEvent(eventData: Partial<Event>): Observable<Event> {
-    return this.http.post<{event: Event}>(`${environment.apiUrl}/events`, eventData, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      map(response => response.event),
-      catchError(this.handleError)
-    );
+  createEvent(eventData: CreateEventForm | Partial<Event>): Observable<Event> {
+    // Check if eventData has a poster_file property
+    const formEventData = eventData as CreateEventForm;
+    
+    if (formEventData.poster_file) {
+      // Use FormData for file upload
+      const formData = new FormData();
+      
+      // Add all form fields
+      formData.append('title', formEventData.title);
+      formData.append('date_and_time', formEventData.date_and_time);
+      formData.append('venue', formEventData.venue);
+      formData.append('description', formEventData.description || '');
+      formData.append('ticket_price', formEventData.ticket_price.toString());
+      formData.append('close_time', formEventData.close_time || '');
+      formData.append('rsvp_link', formEventData.rsvp_link || '');
+      formData.append('slug', formEventData.slug);
+      
+      // Add the poster file
+      formData.append('poster', formEventData.poster_file);
+      
+      return this.http.post<{event: Event}>(`${environment.apiUrl}/events`, formData, {
+        headers: this.getAuthHeadersForFormData()
+      }).pipe(
+        map(response => response.event),
+        catchError(this.handleError)
+      );
+    } else {
+      // Use regular JSON for non-file uploads
+      return this.http.post<{event: Event}>(`${environment.apiUrl}/events`, eventData, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        map(response => response.event),
+        catchError(this.handleError)
+      );
+    }
   }
 
   /**
@@ -237,6 +282,18 @@ export class EventService {
   updateEvent(eventId: number, eventData: Partial<Event>): Observable<Event> {
     return this.http.put<{event: Event}>(`${environment.apiUrl}/events/${eventId}`, eventData, {
       headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.event),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Update an existing event with file upload
+   */
+  updateEventWithFile(eventId: number, formData: FormData): Observable<Event> {
+    return this.http.put<{event: Event}>(`${environment.apiUrl}/events/${eventId}`, formData, {
+      headers: this.getAuthHeadersForFormData()
     }).pipe(
       map(response => response.event),
       catchError(this.handleError)

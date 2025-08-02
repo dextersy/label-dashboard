@@ -8,7 +8,8 @@ import {
   addTicket,
   getTickets,
   markTicketPaid,
-  refreshVerificationPIN
+  refreshVerificationPIN,
+  upload
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -20,8 +21,8 @@ router.use(authenticateToken);
 // Event CRUD operations
 router.get('/', getEvents);
 router.get('/:id', getEvent);
-router.post('/', requireAdmin, createEvent);
-router.put('/:id', requireAdmin, updateEvent);
+router.post('/', requireAdmin, upload.single('poster'), createEvent);
+router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
 
 // Event management operations
 router.post('/set-selected', setSelectedEvent);

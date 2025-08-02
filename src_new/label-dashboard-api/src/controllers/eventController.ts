@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
-import { Event, Ticket, EventReferrer, Brand } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import crypto from 'crypto';
+import multer from 'multer';
+import path from 'path';
+import AWS from 'aws-sdk';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -20,26 +23,90 @@ const generateEventSlug = (title: string): string => {
   return title.replace(/[^A-Z0-9]/gi, '');
 };
 
-// Helper function to generate verification link (would integrate with Short.io in production)
-const generateVerificationLink = (eventId: number, slug: string): string => {
-  const domain = process.env.SHORT_IO_DOMAIN;
-  if (!domain) {
-    throw new Error('SHORT_IO_DOMAIN environment variable is required but not configured');
+// Helper function to create Short.io link
+const createShortLink = async (originalUrl: string, path: string): Promise<string> => {
+  const shortIoDomain = process.env.SHORT_IO_DOMAIN;
+  const shortIoKey = process.env.SHORT_IO_KEY;
+  
+  if (!shortIoDomain || !shortIoKey) {
+    throw new Error('SHORT_IO_DOMAIN and SHORT_IO_KEY environment variables are required but not configured');
   }
-  // In production, this would call Short.io API to create shortened URL
-  // For now, return a URL structure using the configured domain
-  return `https://${domain}/Verify${slug}`;
+
+  try {
+    const response = await fetch('https://api.short.io/links', {
+      method: 'POST',
+      headers: {
+        'Authorization': shortIoKey,
+        'accept': 'application/json',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        domain: shortIoDomain,
+        originalURL: originalUrl,
+        path: path
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Short.io API error:', response.status, errorText);
+      throw new Error(`Short.io API error: ${response.status}`);
+    }
+
+    const data = await response.json() as { secureShortURL: string };
+    return data.secureShortURL;
+  } catch (error) {
+    console.error('Failed to create short link:', error);
+    throw error;
+  }
 };
 
-// Helper function to generate buy link (would integrate with Short.io in production)
-const generateBuyLink = (eventId: number, slug: string): string => {
-  const domain = process.env.SHORT_IO_DOMAIN;
-  if (!domain) {
-    throw new Error('SHORT_IO_DOMAIN environment variable is required but not configured');
+// Helper function to get brand's frontend URL
+const getBrandFrontendUrl = async (brandId: number): Promise<string> => {
+  // First try to get a verified domain for the brand
+  const verifiedDomain = await Domain.findOne({
+    where: { 
+      brand_id: brandId,
+      status: 'Verified'
+    }
+  });
+  
+  if (verifiedDomain) {
+    return `https://${verifiedDomain.domain_name}`;
   }
-  // In production, this would call Short.io API to create shortened URL
-  // For now, return a URL structure using the configured domain
-  return `https://${domain}/Buy${slug}`;
+  
+  // Fallback to any domain if no verified domain exists
+  const anyDomain = await Domain.findOne({
+    where: { brand_id: brandId }
+  });
+  
+  if (anyDomain) {
+    return `https://${anyDomain.domain_name}`;
+  }
+  
+  // Final fallback to environment variable or default
+  const fallbackUrl = process.env.FRONTEND_URL;
+  if (!fallbackUrl) {
+    throw new Error('No domains found for brand and FRONTEND_URL environment variable is not configured');
+  }
+  
+  return fallbackUrl;
+};
+
+// Helper function to generate verification link
+const generateVerificationLink = async (eventId: number, slug: string, brandId: number): Promise<string> => {
+  const frontendUrl = await getBrandFrontendUrl(brandId);
+  const originalUrl = `${frontendUrl}/public/tickets/verify/${eventId}`;
+  const path = `Verify${slug}`;
+  return await createShortLink(originalUrl, path);
+};
+
+// Helper function to generate buy link
+const generateBuyLink = async (eventId: number, slug: string, brandId: number): Promise<string> => {
+  const frontendUrl = await getBrandFrontendUrl(brandId);
+  const originalUrl = `${frontendUrl}/public/tickets/buy/${eventId}`;
+  const path = `Buy${slug}`;
+  return await createShortLink(originalUrl, path);
 };
 
 export const getEvents = async (req: AuthRequest, res: Response) => {
@@ -129,23 +196,36 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // Handle poster upload if provided
+    let finalPosterUrl = poster_url;
+    if (req.file) {
+      // Generate unique filename for S3
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(req.file.originalname);
+      const fileName = `event-poster-${uniqueSuffix}${extension}`;
+
+      try {
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+
+        const result = await s3.upload(uploadParams).promise();
+        finalPosterUrl = result.Location;
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload poster image' });
+      }
+    }
+
     // Generate verification PIN and slug
     const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title);
     const generatedPIN = verification_pin || generateVerificationPIN();
     
-    let actualVerificationLink: string;
-    let actualBuyLink: string;
-    
-    try {
-      actualVerificationLink = verification_link || generateVerificationLink(0, eventSlug);
-      actualBuyLink = buy_shortlink || generateBuyLink(0, eventSlug);
-    } catch (error) {
-      console.error('URL generation error:', error);
-      return res.status(500).json({ 
-        error: 'Server configuration error: SHORT_IO_DOMAIN is not configured' 
-      });
-    }
-    
+    // Create event without shortlinks first to get the ID
     const event = await Event.create({
       title,
       date_and_time: new Date(date_and_time),
@@ -153,10 +233,10 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       description,
       ticket_price,
       close_time: close_time ? new Date(close_time) : null,
-      poster_url,
+      poster_url: finalPosterUrl,
       rsvp_link,
       verification_pin: generatedPIN,
-      verification_link: actualVerificationLink,
+      verification_link: verification_link || '', // Placeholder, will be updated below
       supports_gcash: supports_gcash !== undefined ? supports_gcash : true,
       supports_qrph: supports_qrph !== undefined ? supports_qrph : true,
       supports_card: supports_card !== undefined ? supports_card : true,
@@ -166,23 +246,36 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       supports_grabpay: supports_grabpay !== undefined ? supports_grabpay : true,
       max_tickets: max_tickets || 0,
       ticket_naming: ticket_naming || 'Regular',
-      buy_shortlink: actualBuyLink,
+      buy_shortlink: buy_shortlink || '', // Placeholder, will be updated below
       brand_id: req.user.brand_id
     });
 
-    // Update verification and buy links with actual event ID
+    // Generate shortlinks with actual event ID
     try {
-      const finalVerificationLink = verification_link || generateVerificationLink(event.id, eventSlug);
-      const finalBuyLink = buy_shortlink || generateBuyLink(event.id, eventSlug);
+      let finalVerificationLink = verification_link;
+      let finalBuyLink = buy_shortlink;
       
+      // Only generate shortlinks if not provided
+      if (!verification_link) {
+        finalVerificationLink = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
+      }
+      
+      if (!buy_shortlink) {
+        finalBuyLink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
+      }
+      
+      // Update event with generated shortlinks
       await event.update({
         verification_link: finalVerificationLink,
         buy_shortlink: finalBuyLink
       });
+      
+      // Refresh event to get updated values
+      await event.reload();
     } catch (error) {
-      console.error('URL generation error during update:', error);
+      console.error('URL generation error:', error);
       // Event was created but URL generation failed - still return success but log error
-      console.warn('Event created but URL generation failed due to missing SHORT_IO_DOMAIN');
+      console.warn('Event created but shortlink generation failed:', error.message);
     }
 
     res.status(201).json({
@@ -243,6 +336,46 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Handle poster upload if provided
+    let finalPosterUrl = poster_url || event.poster_url;
+    if (req.file) {
+      // Generate unique filename for S3
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(req.file.originalname);
+      const fileName = `event-poster-${eventId}-${uniqueSuffix}${extension}`;
+
+      try {
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+
+        const result = await s3.upload(uploadParams).promise();
+        finalPosterUrl = result.Location;
+
+        // Delete old poster from S3 if it exists
+        if (event.poster_url && event.poster_url.startsWith('https://')) {
+          try {
+            const oldUrl = new URL(event.poster_url);
+            const oldKey = oldUrl.pathname.substring(1);
+            
+            await s3.deleteObject({
+              Bucket: process.env.S3_BUCKET!,
+              Key: oldKey
+            }).promise();
+          } catch (deleteError) {
+            console.error('Error deleting old poster:', deleteError);
+          }
+        }
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload poster image' });
+      }
+    }
+
     // Handle URL generation if new URLs are being set
     let updatedVerificationLink = verification_link || event.verification_link;
     let updatedBuyLink = buy_shortlink || event.buy_shortlink;
@@ -252,17 +385,17 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     if (needsUrlRegeneration) {
       try {
         const newSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title || event.title);
+        
         if (!verification_link) {
-          updatedVerificationLink = generateVerificationLink(event.id, newSlug);
+          updatedVerificationLink = await generateVerificationLink(event.id, newSlug, req.user.brand_id);
         }
         if (!buy_shortlink) {
-          updatedBuyLink = generateBuyLink(event.id, newSlug);
+          updatedBuyLink = await generateBuyLink(event.id, newSlug, req.user.brand_id);
         }
       } catch (error) {
         console.error('URL generation error during update:', error);
-        return res.status(500).json({ 
-          error: 'Server configuration error: SHORT_IO_DOMAIN is not configured' 
-        });
+        console.warn('URL generation failed but continuing with event update:', error.message);
+        // Don't fail the entire update if shortlink generation fails
       }
     }
 
@@ -273,7 +406,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       description,
       ticket_price: ticket_price !== undefined ? ticket_price : event.ticket_price,
       close_time: close_time ? new Date(close_time) : event.close_time,
-      poster_url,
+      poster_url: finalPosterUrl,
       rsvp_link,
       verification_pin: verification_pin || event.verification_pin,
       verification_link: updatedVerificationLink,
@@ -589,3 +722,32 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Configure AWS S3
+AWS.config.update({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  region: process.env.S3_REGION
+});
+
+const s3 = new AWS.S3();
+
+// Multer configuration for memory storage (for S3 upload)
+const storage = multer.memoryStorage();
+
+const fileFilter = (req: any, file: any, cb: any) => {
+  // Accept only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'), false);
+  }
+};
+
+export const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});

@@ -42,9 +42,13 @@ export class EventDetailsTabComponent implements OnInit, OnChanges {
   @Input() isAdmin: boolean = false;
   @Input() loading: boolean = false;
   @Output() eventUpdate = new EventEmitter<EventDetails>();
+  @Output() eventUpdateWithFile = new EventEmitter<{eventId: number, formData: FormData}>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
   refreshingPIN = false;
+  selectedPosterFile: File | null = null;
+  posterPreview: string | null = null;
+  uploading = false;
 
   constructor(private eventService: EventService) {}
 
@@ -228,25 +232,101 @@ export class EventDetailsTabComponent implements OnInit, OnChanges {
       return;
     }
 
-    // Create a copy with properly formatted dates for the API
-    const eventForAPI = {
-      ...this.event,
-      date_and_time: this.formatDateForAPI(this.event.date_and_time),
-      close_time: this.event.close_time ? this.formatDateForAPI(this.event.close_time) : ''
-    };
+    // If there's a selected poster file, use FormData for file upload
+    if (this.selectedPosterFile) {
+      this.uploading = true;
+      
+      const formData = new FormData();
+      formData.append('poster', this.selectedPosterFile);
+      
+      // Add all other event data
+      formData.append('title', this.event.title);
+      formData.append('date_and_time', this.formatDateForAPI(this.event.date_and_time));
+      formData.append('venue', this.event.venue);
+      formData.append('description', this.event.description || '');
+      formData.append('ticket_price', this.event.ticket_price.toString());
+      formData.append('close_time', this.event.close_time ? this.formatDateForAPI(this.event.close_time) : '');
+      formData.append('rsvp_link', this.event.rsvp_link || '');
+      formData.append('ticket_naming', this.event.ticket_naming || 'Regular');
+      formData.append('max_tickets', (this.event.max_tickets || 0).toString());
+      
+      // Add payment method support flags
+      formData.append('supports_gcash', this.event.supports_gcash.toString());
+      formData.append('supports_qrph', this.event.supports_qrph.toString());
+      formData.append('supports_card', this.event.supports_card.toString());
+      formData.append('supports_ubp', this.event.supports_ubp.toString());
+      formData.append('supports_dob', this.event.supports_dob.toString());
+      formData.append('supports_maya', this.event.supports_maya.toString());
+      formData.append('supports_grabpay', this.event.supports_grabpay.toString());
 
-    this.eventUpdate.emit(eventForAPI);
+      // Call the parent component's update method with FormData
+      if (this.event.id) {
+        this.eventUpdateWithFile.emit({ eventId: this.event.id, formData });
+      }
+    } else {
+      // Create a copy with properly formatted dates for the API
+      const eventForAPI = {
+        ...this.event,
+        date_and_time: this.formatDateForAPI(this.event.date_and_time),
+        close_time: this.event.close_time ? this.formatDateForAPI(this.event.close_time) : ''
+      };
+
+      this.eventUpdate.emit(eventForAPI);
+    }
   }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Handle file upload - this would typically involve uploading to a service
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        this.alertMessage.emit({
+          type: 'error',
+          text: 'Please select a valid image file (JPG, PNG, GIF).'
+        });
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        this.alertMessage.emit({
+          type: 'error',
+          text: 'File is too large. Please select an image smaller than 10MB.'
+        });
+        return;
+      }
+
+      this.selectedPosterFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.posterPreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+
       this.alertMessage.emit({
         type: 'info',
-        text: 'File upload functionality to be implemented.'
+        text: 'Poster selected. Click "Save Changes" to upload.'
       });
     }
+  }
+
+  removePoster(): void {
+    this.selectedPosterFile = null;
+    this.posterPreview = null;
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  onEventSaved(): void {
+    // Clear poster selection after successful save
+    this.removePoster();
+    this.uploading = false;
   }
 
   onImageError(event: any): void {

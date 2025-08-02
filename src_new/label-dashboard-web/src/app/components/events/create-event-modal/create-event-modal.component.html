@@ -1,0 +1,171 @@
+<div class="modal fade show" style="display: block;" tabindex="-1" *ngIf="isOpen">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa fa-calendar-plus me-2"></i>
+          Create New Event
+        </h5>
+        <button type="button" class="btn-close" (click)="close()"></button>
+      </div>
+      
+      <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <div class="row">
+            
+            <!-- Event Title -->
+            <div class="col-12 mb-3">
+              <label class="form-label required">Event Title</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="title"
+                placeholder="Enter event title"
+                [class.is-invalid]="eventForm.get('title')?.invalid && eventForm.get('title')?.touched">
+              <div class="invalid-feedback" *ngIf="eventForm.get('title')?.invalid && eventForm.get('title')?.touched">
+                Event title is required
+              </div>
+            </div>
+            
+            <!-- Date and Time -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">Event Date & Time</label>
+              <input 
+                type="datetime-local" 
+                class="form-control" 
+                formControlName="date_and_time"
+                [class.is-invalid]="eventForm.get('date_and_time')?.invalid && eventForm.get('date_and_time')?.touched">
+              <div class="invalid-feedback" *ngIf="eventForm.get('date_and_time')?.invalid && eventForm.get('date_and_time')?.touched">
+                Event date and time is required
+              </div>
+            </div>
+            
+            <!-- Venue -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">Venue</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="venue"
+                placeholder="Enter venue name"
+                [class.is-invalid]="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
+              <div class="invalid-feedback" *ngIf="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
+                Venue is required
+              </div>
+            </div>
+            
+            <!-- URL Slug -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">URL Slug</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="slug"
+                placeholder="EventNameInPascalCase"
+                [class.is-invalid]="eventForm.get('slug')?.invalid && eventForm.get('slug')?.touched">
+              <div class="invalid-feedback" *ngIf="eventForm.get('slug')?.invalid && eventForm.get('slug')?.touched">
+                URL slug is required and can only contain letters and numbers
+              </div>
+              <small class="form-text text-muted">
+                <i class="fa fa-info-circle me-1"></i>
+                This will be used to generate your event's verification and buy links. 
+                Auto-generated from the event title, but you can customize it.
+              </small>
+            </div>
+            
+            <!-- Description -->
+            <div class="col-12 mb-3">
+              <label class="form-label">Description</label>
+              <textarea 
+                class="form-control" 
+                formControlName="description" 
+                rows="3"
+                placeholder="Enter event description (optional)">
+              </textarea>
+            </div>
+            
+            <!-- Ticket Price -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">Ticket Price (PHP)</label>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  formControlName="ticket_price"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  [class.is-invalid]="eventForm.get('ticket_price')?.invalid && eventForm.get('ticket_price')?.touched">
+              </div>
+              <div class="invalid-feedback" *ngIf="eventForm.get('ticket_price')?.invalid && eventForm.get('ticket_price')?.touched">
+                Ticket price is required and must be a positive number
+              </div>
+            </div>
+            
+            <!-- Close Time -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Ticket Sales Close Time</label>
+              <input 
+                type="datetime-local" 
+                class="form-control" 
+                formControlName="close_time"
+                placeholder="Leave empty to close at event time">
+              <small class="form-text text-muted">
+                Leave empty to close ticket sales at event time
+              </small>
+            </div>
+            
+            <!-- Poster Upload -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Event Poster</label>
+              <input 
+                type="file" 
+                class="form-control" 
+                accept="image/*"
+                (change)="onPosterSelected($event)">
+              <small class="form-text text-muted">
+                Upload an image file (max 10MB). JPG, PNG, GIF supported.
+              </small>
+              <div *ngIf="posterPreview" class="mt-2">
+                <img [src]="posterPreview" alt="Poster preview" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="removePoster()">
+                  <i class="fa fa-times"></i> Remove
+                </button>
+              </div>
+            </div>
+            
+            <!-- RSVP Link -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">RSVP/Social Media Link</label>
+              <input 
+                type="url" 
+                class="form-control" 
+                formControlName="rsvp_link"
+                placeholder="https://facebook.com/events/123456">
+            </div>
+            
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="close()">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="eventForm.invalid || loading">
+            <i class="fa fa-spinner fa-spin me-1" *ngIf="loading"></i>
+            <i class="fa fa-plus me-1" *ngIf="!loading"></i>
+            {{ loading ? 'Creating...' : 'Create Event' }}
+          </button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+</div>
+
+<!-- Modal backdrop -->
+<div class="modal-backdrop fade show" *ngIf="isOpen" (click)="close()"></div>

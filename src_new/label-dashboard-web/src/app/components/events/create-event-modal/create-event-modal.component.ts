@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Event } from '../../../services/event.service';
@@ -10,159 +10,17 @@ export interface CreateEventForm {
   description: string;
   ticket_price: number;
   close_time: string;
-  poster_url: string;
+  poster_url?: string;
+  poster_file?: File;
   rsvp_link: string;
+  slug: string;
 }
 
 @Component({
   selector: 'app-create-event-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  template: `
-    <div class="modal fade show" style="display: block;" tabindex="-1" *ngIf="isOpen">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fa fa-calendar-plus me-2"></i>
-              Create New Event
-            </h5>
-            <button type="button" class="btn-close" (click)="close()"></button>
-          </div>
-          
-          <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
-            <div class="modal-body">
-              <div class="row">
-                
-                <!-- Event Title -->
-                <div class="col-12 mb-3">
-                  <label class="form-label required">Event Title</label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    formControlName="title"
-                    placeholder="Enter event title"
-                    [class.is-invalid]="eventForm.get('title')?.invalid && eventForm.get('title')?.touched">
-                  <div class="invalid-feedback" *ngIf="eventForm.get('title')?.invalid && eventForm.get('title')?.touched">
-                    Event title is required
-                  </div>
-                </div>
-                
-                <!-- Date and Time -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label required">Event Date & Time</label>
-                  <input 
-                    type="datetime-local" 
-                    class="form-control" 
-                    formControlName="date_and_time"
-                    [class.is-invalid]="eventForm.get('date_and_time')?.invalid && eventForm.get('date_and_time')?.touched">
-                  <div class="invalid-feedback" *ngIf="eventForm.get('date_and_time')?.invalid && eventForm.get('date_and_time')?.touched">
-                    Event date and time is required
-                  </div>
-                </div>
-                
-                <!-- Venue -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label required">Venue</label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    formControlName="venue"
-                    placeholder="Enter venue name"
-                    [class.is-invalid]="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
-                  <div class="invalid-feedback" *ngIf="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
-                    Venue is required
-                  </div>
-                </div>
-                
-                <!-- Description -->
-                <div class="col-12 mb-3">
-                  <label class="form-label">Description</label>
-                  <textarea 
-                    class="form-control" 
-                    formControlName="description" 
-                    rows="3"
-                    placeholder="Enter event description (optional)">
-                  </textarea>
-                </div>
-                
-                <!-- Ticket Price -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label required">Ticket Price (PHP)</label>
-                  <div class="input-group">
-                    <span class="input-group-text">₱</span>
-                    <input 
-                      type="number" 
-                      class="form-control" 
-                      formControlName="ticket_price"
-                      min="0"
-                      step="1"
-                      placeholder="0"
-                      [class.is-invalid]="eventForm.get('ticket_price')?.invalid && eventForm.get('ticket_price')?.touched">
-                  </div>
-                  <div class="invalid-feedback" *ngIf="eventForm.get('ticket_price')?.invalid && eventForm.get('ticket_price')?.touched">
-                    Ticket price is required and must be a positive number
-                  </div>
-                </div>
-                
-                <!-- Close Time -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Ticket Sales Close Time</label>
-                  <input 
-                    type="datetime-local" 
-                    class="form-control" 
-                    formControlName="close_time"
-                    placeholder="Leave empty to close at event time">
-                  <small class="form-text text-muted">
-                    Leave empty to close ticket sales at event time
-                  </small>
-                </div>
-                
-                <!-- Poster URL -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Poster Image URL</label>
-                  <input 
-                    type="url" 
-                    class="form-control" 
-                    formControlName="poster_url"
-                    placeholder="https://example.com/poster.jpg">
-                </div>
-                
-                <!-- RSVP Link -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">RSVP/Social Media Link</label>
-                  <input 
-                    type="url" 
-                    class="form-control" 
-                    formControlName="rsvp_link"
-                    placeholder="https://facebook.com/events/123456">
-                </div>
-                
-              </div>
-            </div>
-            
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" (click)="close()">
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                class="btn btn-primary" 
-                [disabled]="eventForm.invalid || loading">
-                <i class="fa fa-spinner fa-spin me-1" *ngIf="loading"></i>
-                <i class="fa fa-plus me-1" *ngIf="!loading"></i>
-                {{ loading ? 'Creating...' : 'Create Event' }}
-              </button>
-            </div>
-          </form>
-          
-        </div>
-      </div>
-    </div>
-    
-    <!-- Modal backdrop -->
-    <div class="modal-backdrop fade show" *ngIf="isOpen" (click)="close()"></div>
-  `,
+  templateUrl: './create-event-modal.component.html',
   styles: [`
     .modal {
       z-index: 1050;
@@ -176,13 +34,15 @@ export interface CreateEventForm {
     }
   `]
 })
-export class CreateEventModalComponent {
+export class CreateEventModalComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() loading = false;
   @Output() eventCreate = new EventEmitter<CreateEventForm>();
   @Output() modalClose = new EventEmitter<void>();
 
   eventForm: FormGroup;
+  selectedPosterFile: File | null = null;
+  posterPreview: string | null = null;
 
   constructor(private fb: FormBuilder) {
     this.eventForm = this.fb.group({
@@ -192,14 +52,25 @@ export class CreateEventModalComponent {
       description: [''],
       ticket_price: [0, [Validators.required, Validators.min(0)]],
       close_time: [''],
-      poster_url: [''],
-      rsvp_link: ['']
+      rsvp_link: [''],
+      slug: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]+$/)]]
+    });
+    
+    // Auto-generate slug when title changes
+    this.eventForm.get('title')?.valueChanges.subscribe((title: string) => {
+      if (title) {
+        const generatedSlug = this.generateSlug(title);
+        this.eventForm.get('slug')?.setValue(generatedSlug, { emitEvent: false });
+      }
     });
   }
 
   onSubmit(): void {
     if (this.eventForm.valid) {
       const formData = this.eventForm.value as CreateEventForm;
+      if (this.selectedPosterFile) {
+        formData.poster_file = this.selectedPosterFile;
+      }
       this.eventCreate.emit(formData);
     } else {
       // Mark all fields as touched to show validation errors
@@ -209,21 +80,90 @@ export class CreateEventModalComponent {
 
   close(): void {
     this.modalClose.emit();
-    this.eventForm.reset();
+    this.resetForm();
   }
 
-  // Set default date to tomorrow at 7 PM when modal opens
-  ngOnInit(): void {
-    if (this.isOpen) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(19, 0, 0, 0); // 7 PM
-      
-      const formattedDate = tomorrow.toISOString().slice(0, 16); // Format for datetime-local input
-      this.eventForm.patchValue({
-        date_and_time: formattedDate,
-        ticket_price: 500 // Default ticket price
-      });
+  onPosterSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPG, PNG, GIF).');
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File is too large. Please select an image smaller than 10MB.');
+        return;
+      }
+
+      this.selectedPosterFile = file;
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.posterPreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
     }
+  }
+
+  removePoster(): void {
+    this.selectedPosterFile = null;
+    this.posterPreview = null;
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Reset and set default values when modal is opened
+    if (changes['isOpen'] && this.isOpen) {
+      this.resetForm();
+    }
+  }
+
+  private resetForm(): void {
+    // Reset the form to clear all previous values
+    this.eventForm.reset();
+    
+    // Clear poster selection
+    this.removePoster();
+    
+    // Set default values
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(19, 0, 0, 0); // 7 PM
+    
+    const formattedDate = tomorrow.toISOString().slice(0, 16); // Format for datetime-local input
+    this.eventForm.patchValue({
+      title: '',
+      date_and_time: formattedDate,
+      venue: '',
+      description: '',
+      ticket_price: 500, // Default ticket price
+      close_time: '',
+      rsvp_link: '',
+      slug: ''
+    });
+  }
+
+  // Public method for parent component to trigger form reset
+  public reset(): void {
+    this.resetForm();
+  }
+
+  private generateSlug(title: string): string {
+    return title
+      .trim()
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+      .split(/\s+/) // Split by whitespace
+      .filter(word => word.length > 0) // Remove empty strings
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // PascalCase
+      .join('');
   }
 }
