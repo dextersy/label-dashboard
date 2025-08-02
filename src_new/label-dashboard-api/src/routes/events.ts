@@ -20,17 +20,19 @@ router.use(authenticateToken);
 
 // Event CRUD operations
 router.get('/', getEvents);
-router.get('/:id', getEvent);
 router.post('/', requireAdmin, upload.single('poster'), createEvent);
-router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
 
-// Event management operations
+// Event management operations (specific routes first)
 router.post('/set-selected', setSelectedEvent);
-router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
 
-// Ticket operations
+// Ticket operations (specific routes before /:id)
 router.get('/tickets', getTickets);
 router.post('/tickets', requireAdmin, addTicket);
 router.post('/tickets/mark-paid', requireAdmin, markTicketPaid);
+
+// Event CRUD operations with :id (these must come last)
+router.get('/:id', getEvent);
+router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
+router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
 
 export default router;

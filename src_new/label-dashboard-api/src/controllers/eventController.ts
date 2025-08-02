@@ -593,6 +593,11 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
     const { event_id } = req.query;
     const eventIdNum = event_id ? parseInt(event_id as string, 10) : undefined;
 
+    // Validate event_id if provided
+    if (event_id && (isNaN(eventIdNum!) || eventIdNum! <= 0)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
     const where: any = {};
     if (event_id) {
       // Verify user has access to this event

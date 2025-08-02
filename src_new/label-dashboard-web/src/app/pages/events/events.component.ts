@@ -213,7 +213,10 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   loadEventData(): void {
-    if (!this.selectedEvent) return;
+    if (!this.selectedEvent || !this.selectedEvent.id || isNaN(this.selectedEvent.id)) {
+      console.error('Invalid selectedEvent or selectedEvent.id:', this.selectedEvent);
+      return;
+    }
 
     this.loading = true;
     
@@ -276,14 +279,14 @@ export class EventsComponent implements OnInit, OnDestroy {
           
           // Filter for abandoned orders (non-confirmed tickets)
           this.abandonedOrders = tickets
-            .filter(ticket => ticket.status === 'New' || ticket.status === 'Payment pending')
+            .filter(ticket => ticket.status === 'New')
             .map(ticket => ({
               id: ticket.id,
               name: ticket.name,
               email_address: ticket.email_address,
               contact_number: ticket.contact_number || '',
               number_of_entries: ticket.number_of_entries,
-              payment_link: '', // Would need to be added to API response
+              payment_link: ticket.payment_link || '',
               order_timestamp: ticket.order_timestamp,
               status: this.normalizeAbandonedOrderStatus(ticket.status)
             }));

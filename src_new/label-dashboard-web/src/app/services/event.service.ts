@@ -44,6 +44,7 @@ export interface EventTicket {
   status: string;
   price_per_ticket: number;
   payment_processing_fee: number;
+  payment_link?: string;
   referrer_id?: number;
   order_timestamp: string;
 }
@@ -147,6 +148,10 @@ export class EventService {
    * Get a specific event by ID
    */
   getEvent(eventId: number): Observable<Event> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
     return this.http.get<{event: Event}>(`${environment.apiUrl}/events/${eventId}`, {
       headers: this.getAuthHeaders()
     }).pipe(
@@ -194,6 +199,10 @@ export class EventService {
    * Get tickets for a specific event
    */
   getEventTickets(eventId: number): Observable<EventTicket[]> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
     return this.http.get<{tickets: EventTicket[]}>(`${environment.apiUrl}/events/tickets`, {
       headers: this.getAuthHeaders(),
       params: { event_id: eventId.toString() }
@@ -207,6 +216,10 @@ export class EventService {
    * Get event summary/statistics
    */
   getEventSummary(eventId: number): Observable<EventSummary> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
     return this.getEventTickets(eventId).pipe(
       map(tickets => {
         const confirmedTickets = tickets.filter(t => 
