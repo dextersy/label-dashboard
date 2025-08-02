@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { EventService } from '../../../services/event.service';
 
 export interface EventDetails {
   id?: number;
@@ -17,6 +18,7 @@ export interface EventDetails {
   verification_link?: string;
   buy_shortlink?: string;
   ticket_naming: string;
+  slug?: string;
   supports_gcash: boolean;
   supports_qrph: boolean;
   supports_card: boolean;
@@ -35,16 +37,79 @@ export interface EventDetails {
   templateUrl: './event-details-tab.component.html',
   styleUrl: './event-details-tab.component.scss'
 })
-export class EventDetailsTabComponent implements OnInit {
+export class EventDetailsTabComponent implements OnInit, OnChanges {
   @Input() event: EventDetails | null = null;
   @Input() isAdmin: boolean = false;
   @Input() loading: boolean = false;
   @Output() eventUpdate = new EventEmitter<EventDetails>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
+  refreshingPIN = false;
+
+  constructor(private eventService: EventService) {}
+
   ngOnInit(): void {
     if (!this.event) {
       this.initializeNewEvent();
+    } else {
+      this.formatDatesForDisplay();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['event'] && this.event && changes['event'].currentValue) {
+      this.formatDatesForDisplay();
+    }
+  }
+
+  private formatDatesForDisplay(): void {
+    if (this.event) {
+      // Format dates for datetime-local inputs
+      this.event.date_and_time = this.formatDateForInput(this.event.date_and_time);
+      if (this.event.close_time) {
+        this.event.close_time = this.formatDateForInput(this.event.close_time);
+      }
+    }
+  }
+
+  private formatDateForInput(dateString: string): string {
+    if (!dateString) return '';
+    
+    try {
+      // Handle various date formats from API
+      let date: Date;
+      
+      // If it's already in the correct format for datetime-local, return as-is
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+        return dateString;
+      }
+      
+      // Parse the date - handle both ISO strings and MySQL datetime format
+      if (dateString.includes('T')) {
+        // ISO format: 2024-12-31T19:00:00.000Z
+        date = new Date(dateString);
+      } else {
+        // MySQL datetime format: 2024-12-31 19:00:00
+        date = new Date(dateString.replace(' ', 'T'));
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date format:', dateString);
+        return '';
+      }
+      
+      // Convert to local timezone and format for datetime-local input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return '';
     }
   }
 
@@ -62,14 +127,17 @@ export class EventDetailsTabComponent implements OnInit {
       max_tickets: 0,
       close_time: closeTime.toISOString().slice(0, 16),
       verification_pin: this.generateVerificationPIN(),
-      ticket_naming: 'General Admission',
+      verification_link: '',
+      buy_shortlink: '',
+      ticket_naming: 'Regular',
+      slug: '',
       supports_gcash: true,
       supports_qrph: true,
       supports_card: true,
-      supports_ubp: false,
-      supports_dob: false,
-      supports_maya: false,
-      supports_grabpay: false
+      supports_ubp: true,
+      supports_dob: true,
+      supports_maya: true,
+      supports_grabpay: true
     };
   }
 
@@ -80,18 +148,42 @@ export class EventDetailsTabComponent implements OnInit {
   generateSlug(): void {
     if (this.event?.title) {
       const slug = 'Buy' + this.event.title.replace(/[^A-Z0-9]/gi, '');
-      // This would be used for URL slug generation in the backend
+      this.event.slug = slug;
+    }
+  }
+
+  onTitleChange(): void {
+    // Auto-generate slug only for new events (no ID) and if slug is empty
+    if (this.event && !this.event.id && !this.event.slug) {
+      this.generateSlug();
     }
   }
 
   resetPIN(): void {
-    if (this.event) {
-      this.event.verification_pin = this.generateVerificationPIN();
-      this.alertMessage.emit({
-        type: 'info',
-        text: 'PIN reset. Please save the event to apply changes.'
-      });
-    }
+    if (!this.event || !this.event.id || this.refreshingPIN) return;
+
+    this.refreshingPIN = true;
+    
+    this.eventService.refreshVerificationPIN(this.event.id).subscribe({
+      next: (response) => {
+        if (this.event) {
+          this.event.verification_pin = response.verification_pin;
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Verification PIN refreshed successfully!'
+          });
+        }
+        this.refreshingPIN = false;
+      },
+      error: (error) => {
+        console.error('Failed to refresh verification PIN:', error);
+        this.alertMessage.emit({
+          type: 'error',
+          text: 'Failed to refresh verification PIN. Please try again.'
+        });
+        this.refreshingPIN = false;
+      }
+    });
   }
 
   copyToClipboard(text: string, type: string): void {
@@ -108,6 +200,22 @@ export class EventDetailsTabComponent implements OnInit {
     });
   }
 
+  private formatDateForAPI(dateString: string): string {
+    if (!dateString) return '';
+    
+    try {
+      // Convert datetime-local format back to ISO string for API
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.error('Error formatting date for API:', dateString, error);
+      return '';
+    }
+  }
+
   onSaveEvent(): void {
     if (!this.event) return;
     
@@ -120,7 +228,14 @@ export class EventDetailsTabComponent implements OnInit {
       return;
     }
 
-    this.eventUpdate.emit(this.event);
+    // Create a copy with properly formatted dates for the API
+    const eventForAPI = {
+      ...this.event,
+      date_and_time: this.formatDateForAPI(this.event.date_and_time),
+      close_time: this.event.close_time ? this.formatDateForAPI(this.event.close_time) : ''
+    };
+
+    this.eventUpdate.emit(eventForAPI);
   }
 
   onFileSelected(event: any): void {
@@ -132,5 +247,10 @@ export class EventDetailsTabComponent implements OnInit {
         text: 'File upload functionality to be implemented.'
       });
     }
+  }
+
+  onImageError(event: any): void {
+    // Set fallback image if the poster URL fails to load
+    event.target.src = 'assets/img/placeholder.jpg';
   }
 }

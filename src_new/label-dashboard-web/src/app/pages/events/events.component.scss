@@ -2,6 +2,16 @@
   .tab-navigation {
     .events-tabs {
       border-bottom: none;
+      display: flex;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      
+      &::-webkit-scrollbar {
+        display: none;
+      }
       
       .nav-link {
         border: none;
@@ -9,6 +19,8 @@
         border-radius: 0;
         color: #666;
         padding: 15px 20px;
+        white-space: nowrap;
+        flex-shrink: 0;
         
         &:hover {
           border-color: transparent;

@@ -30,7 +30,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
     { route: '/artist', icon: 'fas fa-headphones', title: 'Artist', adminOnly: false },
     { route: '/financial', icon: 'fas fa-dollar-sign', title: 'Financial', adminOnly: false },
-    { route: '/events', icon: 'fas fa-calendar', title: 'Events', adminOnly: true },
+    { route: '/events', icon: 'fas fa-ticket', title: 'Events', adminOnly: true },
     { route: '/admin', icon: 'fas fa-cogs', title: 'Admin', adminOnly: true }
   ];
 

@@ -1,0 +1,163 @@
+<div class="event-selection-container">
+  <div class="event-header d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+      <i class="fa fa-ticket me-2 text-primary"></i>
+      Event Management
+    </h5>
+    <div class="event-actions">
+      <button 
+        class="btn btn-outline-primary btn-sm me-2" 
+        (click)="refreshEvents()"
+        [disabled]="loading"
+        title="Refresh events">
+        <i class="fa" [class.fa-refresh]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
+        <span class="d-none d-md-inline ms-1">Refresh</span>
+      </button>
+      <button 
+        class="btn btn-primary btn-sm" 
+        *ngIf="isAdmin"
+        (click)="createEvent()"
+        title="Create new event">
+        <i class="fa fa-plus me-1"></i>
+        <span class="d-none d-md-inline">New Event</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="dropdown" [class.open]="isDropdownOpen">
+    <button class="btn btn-default event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+      <div class="event-info" *ngIf="selectedEvent">
+        <div class="event-poster">
+          <img *ngIf="selectedEvent.poster_url; else defaultPoster" 
+               [src]="selectedEvent.poster_url" 
+               class="event-image" 
+               [alt]="selectedEvent.title"
+               (error)="onImageError($event)">
+          <ng-template #defaultPoster>
+            <div class="default-event-image">
+              <i class="fa fa-calendar-alt"></i>
+            </div>
+          </ng-template>
+        </div>
+        <div class="event-details">
+          <div class="event-title">{{ selectedEvent.title }}</div>
+          <div class="event-meta">
+            <span class="event-date">
+              <i class="fa fa-clock me-1"></i>
+              {{ selectedEvent.date_and_time | date:'MMM d, y • h:mm a' }}
+            </span>
+            <span class="event-venue ms-2">
+              <i class="fa fa-map-marker-alt me-1"></i>
+              {{ selectedEvent.venue }}
+            </span>
+          </div>
+          <div class="event-status">
+            <span class="badge" [class]="getEventStatusClass(selectedEvent)">
+              {{ getEventStatusText(selectedEvent) }}
+            </span>
+            <span class="event-price ms-2 text-muted">
+              ₱{{ selectedEvent.ticket_price | number:'1.0-0' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!selectedEvent && !loading" class="no-event">
+        <i class="fa fa-calendar-plus me-2"></i>
+        Select an Event
+      </div>
+      <div *ngIf="loading" class="loading">
+        <i class="fa fa-spinner fa-spin me-2"></i> 
+        Loading events...
+      </div>
+      <span class="caret"></span>
+    </button>
+    
+    <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+      <!-- Search input for many events -->
+      <li class="search-container" *ngIf="events.length > 5">
+        <div class="search-input-wrapper">
+          <i class="fa fa-search search-icon"></i>
+          <input 
+            type="text" 
+            class="form-control search-input" 
+            placeholder="Search events..."
+            [(ngModel)]="searchTerm"
+            (click)="$event.stopPropagation()"
+            #searchInput>
+          <button 
+            class="btn btn-link search-clear" 
+            *ngIf="searchTerm"
+            (click)="clearSearch(); $event.stopPropagation()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </li>
+      
+      <li class="divider" *ngIf="events.length > 5"></li>
+      
+      <li *ngFor="let event of filteredEvents" 
+          [class.active]="selectedEvent?.id === event.id"
+          class="event-item">
+        <a (click)="selectEvent(event)">
+          <div class="dropdown-event-poster">
+            <img *ngIf="event.poster_url; else dropdownDefaultPoster" 
+                 [src]="event.poster_url" 
+                 class="dropdown-event-image" 
+                 [alt]="event.title"
+                 (error)="onDropdownImageError($event)">
+            <ng-template #dropdownDefaultPoster>
+              <div class="dropdown-default-event-image">
+                <i class="fa fa-calendar-alt"></i>
+              </div>
+            </ng-template>
+          </div>
+          <div class="dropdown-event-info">
+            <div class="dropdown-event-title">{{ event.title }}</div>
+            <div class="dropdown-event-meta">
+              <div class="dropdown-event-date">
+                <i class="fa fa-clock me-1"></i>
+                {{ event.date_and_time | date:'MMM d, y • h:mm a' }}
+              </div>
+              <div class="dropdown-event-venue">
+                <i class="fa fa-map-marker-alt me-1"></i>
+                {{ event.venue }}
+              </div>
+            </div>
+            <div class="dropdown-event-status">
+              <span class="badge badge-sm" [class]="getEventStatusClass(event)">
+                {{ getEventStatusText(event) }}
+              </span>
+              <span class="dropdown-event-price">
+                ₱{{ event.ticket_price | number:'1.0-0' }}
+              </span>
+            </div>
+          </div>
+        </a>
+      </li>
+      
+      <li class="no-results" *ngIf="filteredEvents.length === 0 && searchTerm">
+        <div class="no-results-content">
+          <i class="fa fa-search text-muted"></i>
+          <span>No events found matching "{{ searchTerm }}"</span>
+        </div>
+      </li>
+      
+      <li class="divider" *ngIf="isAdmin && events.length > 0"></li>
+      
+      <li *ngIf="isAdmin" class="create-event-item">
+        <a (click)="createEvent()" class="create-new-event">
+          <i class="fa fa-plus me-2"></i>
+          Create New Event
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <!-- Event search results summary -->
+  <div class="search-summary mt-2" *ngIf="searchTerm && filteredEvents.length > 0">
+    <small class="text-muted">
+      <i class="fa fa-filter me-1"></i>
+      Showing {{ filteredEvents.length }} of {{ events.length }} events
+    </small>
+  </div>
+</div>

@@ -10,6 +10,38 @@ interface AuthRequest extends Request {
 
 const paymentService = new PaymentService();
 
+// Helper function to generate verification PIN
+const generateVerificationPIN = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Helper function to generate event slug (matches PHP logic)
+const generateEventSlug = (title: string): string => {
+  return title.replace(/[^A-Z0-9]/gi, '');
+};
+
+// Helper function to generate verification link (would integrate with Short.io in production)
+const generateVerificationLink = (eventId: number, slug: string): string => {
+  const domain = process.env.SHORT_IO_DOMAIN;
+  if (!domain) {
+    throw new Error('SHORT_IO_DOMAIN environment variable is required but not configured');
+  }
+  // In production, this would call Short.io API to create shortened URL
+  // For now, return a URL structure using the configured domain
+  return `https://${domain}/Verify${slug}`;
+};
+
+// Helper function to generate buy link (would integrate with Short.io in production)
+const generateBuyLink = (eventId: number, slug: string): string => {
+  const domain = process.env.SHORT_IO_DOMAIN;
+  if (!domain) {
+    throw new Error('SHORT_IO_DOMAIN environment variable is required but not configured');
+  }
+  // In production, this would call Short.io API to create shortened URL
+  // For now, return a URL structure using the configured domain
+  return `https://${domain}/Buy${slug}`;
+};
+
 export const getEvents = async (req: AuthRequest, res: Response) => {
   try {
     const events = await Event.findAll({
@@ -75,7 +107,20 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       ticket_price,
       close_time,
       poster_url,
-      rsvp_link
+      rsvp_link,
+      verification_pin,
+      verification_link,
+      supports_gcash,
+      supports_qrph,
+      supports_card,
+      supports_ubp,
+      supports_dob,
+      supports_maya,
+      supports_grabpay,
+      max_tickets,
+      ticket_naming,
+      buy_shortlink,
+      slug
     } = req.body;
 
     if (!title || !date_and_time || !venue || !ticket_price) {
@@ -84,6 +129,23 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // Generate verification PIN and slug
+    const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title);
+    const generatedPIN = verification_pin || generateVerificationPIN();
+    
+    let actualVerificationLink: string;
+    let actualBuyLink: string;
+    
+    try {
+      actualVerificationLink = verification_link || generateVerificationLink(0, eventSlug);
+      actualBuyLink = buy_shortlink || generateBuyLink(0, eventSlug);
+    } catch (error) {
+      console.error('URL generation error:', error);
+      return res.status(500).json({ 
+        error: 'Server configuration error: SHORT_IO_DOMAIN is not configured' 
+      });
+    }
+    
     const event = await Event.create({
       title,
       date_and_time: new Date(date_and_time),
@@ -93,8 +155,35 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       close_time: close_time ? new Date(close_time) : null,
       poster_url,
       rsvp_link,
+      verification_pin: generatedPIN,
+      verification_link: actualVerificationLink,
+      supports_gcash: supports_gcash !== undefined ? supports_gcash : true,
+      supports_qrph: supports_qrph !== undefined ? supports_qrph : true,
+      supports_card: supports_card !== undefined ? supports_card : true,
+      supports_ubp: supports_ubp !== undefined ? supports_ubp : true,
+      supports_dob: supports_dob !== undefined ? supports_dob : true,
+      supports_maya: supports_maya !== undefined ? supports_maya : true,
+      supports_grabpay: supports_grabpay !== undefined ? supports_grabpay : true,
+      max_tickets: max_tickets || 0,
+      ticket_naming: ticket_naming || 'Regular',
+      buy_shortlink: actualBuyLink,
       brand_id: req.user.brand_id
     });
+
+    // Update verification and buy links with actual event ID
+    try {
+      const finalVerificationLink = verification_link || generateVerificationLink(event.id, eventSlug);
+      const finalBuyLink = buy_shortlink || generateBuyLink(event.id, eventSlug);
+      
+      await event.update({
+        verification_link: finalVerificationLink,
+        buy_shortlink: finalBuyLink
+      });
+    } catch (error) {
+      console.error('URL generation error during update:', error);
+      // Event was created but URL generation failed - still return success but log error
+      console.warn('Event created but URL generation failed due to missing SHORT_IO_DOMAIN');
+    }
 
     res.status(201).json({
       message: 'Event created successfully',
@@ -127,7 +216,20 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ticket_price,
       close_time,
       poster_url,
-      rsvp_link
+      rsvp_link,
+      verification_pin,
+      verification_link,
+      supports_gcash,
+      supports_qrph,
+      supports_card,
+      supports_ubp,
+      supports_dob,
+      supports_maya,
+      supports_grabpay,
+      max_tickets,
+      ticket_naming,
+      buy_shortlink,
+      slug
     } = req.body;
 
     const event = await Event.findOne({
@@ -141,6 +243,29 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Handle URL generation if new URLs are being set
+    let updatedVerificationLink = verification_link || event.verification_link;
+    let updatedBuyLink = buy_shortlink || event.buy_shortlink;
+    
+    // If slug is provided or title is being updated and no explicit links provided, regenerate them
+    const needsUrlRegeneration = (slug || (title && title !== event.title)) && (!verification_link || !buy_shortlink);
+    if (needsUrlRegeneration) {
+      try {
+        const newSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title || event.title);
+        if (!verification_link) {
+          updatedVerificationLink = generateVerificationLink(event.id, newSlug);
+        }
+        if (!buy_shortlink) {
+          updatedBuyLink = generateBuyLink(event.id, newSlug);
+        }
+      } catch (error) {
+        console.error('URL generation error during update:', error);
+        return res.status(500).json({ 
+          error: 'Server configuration error: SHORT_IO_DOMAIN is not configured' 
+        });
+      }
+    }
+
     await event.update({
       title: title || event.title,
       date_and_time: date_and_time ? new Date(date_and_time) : event.date_and_time,
@@ -149,7 +274,19 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ticket_price: ticket_price !== undefined ? ticket_price : event.ticket_price,
       close_time: close_time ? new Date(close_time) : event.close_time,
       poster_url,
-      rsvp_link
+      rsvp_link,
+      verification_pin: verification_pin || event.verification_pin,
+      verification_link: updatedVerificationLink,
+      supports_gcash: supports_gcash !== undefined ? supports_gcash : event.supports_gcash,
+      supports_qrph: supports_qrph !== undefined ? supports_qrph : event.supports_qrph,
+      supports_card: supports_card !== undefined ? supports_card : event.supports_card,
+      supports_ubp: supports_ubp !== undefined ? supports_ubp : event.supports_ubp,
+      supports_dob: supports_dob !== undefined ? supports_dob : event.supports_dob,
+      supports_maya: supports_maya !== undefined ? supports_maya : event.supports_maya,
+      supports_grabpay: supports_grabpay !== undefined ? supports_grabpay : event.supports_grabpay,
+      max_tickets: max_tickets !== undefined ? max_tickets : event.max_tickets,
+      ticket_naming: ticket_naming || event.ticket_naming,
+      buy_shortlink: updatedBuyLink
     });
 
     res.json({
@@ -356,6 +493,47 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
     res.json({ tickets });
   } catch (error) {
     console.error('Get tickets error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const refreshVerificationPIN = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const eventId = parseInt(id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const event = await Event.findOne({
+      where: { 
+        id: eventId,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Generate new verification PIN
+    const newPIN = generateVerificationPIN();
+    
+    await event.update({
+      verification_pin: newPIN
+    });
+
+    res.json({
+      message: 'Verification PIN refreshed successfully',
+      verification_pin: newPIN
+    });
+  } catch (error) {
+    console.error('Refresh verification PIN error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

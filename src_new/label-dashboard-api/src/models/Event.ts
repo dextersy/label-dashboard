@@ -13,6 +13,17 @@ interface EventAttributes {
   ticket_price: number;
   buy_shortlink?: string;
   close_time?: Date;
+  verification_pin: string;
+  verification_link: string;
+  supports_gcash: boolean;
+  supports_qrph: boolean;
+  supports_card: boolean;
+  supports_ubp: boolean;
+  supports_dob: boolean;
+  supports_maya: boolean;
+  supports_grabpay: boolean;
+  max_tickets?: number;
+  ticket_naming: string;
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -29,6 +40,17 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public ticket_price!: number;
   public buy_shortlink?: string;
   public close_time?: Date;
+  public verification_pin!: string;
+  public verification_link!: string;
+  public supports_gcash!: boolean;
+  public supports_qrph!: boolean;
+  public supports_card!: boolean;
+  public supports_ubp!: boolean;
+  public supports_dob!: boolean;
+  public supports_maya!: boolean;
+  public supports_grabpay!: boolean;
+  public max_tickets?: number;
+  public ticket_naming!: string;
 
   // Association properties
   public brand?: any;
@@ -83,6 +105,59 @@ Event.init(
     close_time: {
       type: DataTypes.DATE,
       allowNull: true,
+    },
+    verification_pin: {
+      type: DataTypes.STRING(6),
+      allowNull: false,
+    },
+    verification_link: {
+      type: DataTypes.STRING(1024),
+      allowNull: false,
+    },
+    supports_gcash: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    supports_qrph: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    supports_card: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    supports_ubp: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    supports_dob: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    supports_maya: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    supports_grabpay: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
+    max_tickets: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    ticket_naming: {
+      type: DataTypes.STRING(45),
+      allowNull: false,
+      defaultValue: 'Regular',
     },
   },
   {

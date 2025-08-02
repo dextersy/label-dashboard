@@ -7,7 +7,8 @@ import {
   setSelectedEvent,
   addTicket,
   getTickets,
-  markTicketPaid
+  markTicketPaid,
+  refreshVerificationPIN
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -24,6 +25,7 @@ router.put('/:id', requireAdmin, updateEvent);
 
 // Event management operations
 router.post('/set-selected', setSelectedEvent);
+router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
 
 // Ticket operations
 router.get('/tickets', getTickets);

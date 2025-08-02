@@ -19,7 +19,7 @@
                   [(ngModel)]="event.title" 
                   name="title"
                   placeholder="Event Title"
-                  (change)="generateSlug()"
+                  (input)="onTitleChange()"
                   required>
               </div>
 
@@ -60,6 +60,28 @@
                   <i class="fa fa-info-circle"></i> Add your Facebook event page link or preferred social media page. This will be included in tickets.
                 </small>
               </div>
+
+              <div class="mb-3" *ngIf="!event.id">
+                <label class="form-label">URL Slug</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="event.slug" 
+                    name="slug"
+                    placeholder="BuyEventTitle">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="generateSlug()"
+                    title="Auto-generate from title">
+                    <i class="fa fa-refresh"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Custom URL path for shortened links. Leave empty to auto-generate from title when saving.
+                </small>
+              </div>
             </div>
           </div>
 
@@ -73,7 +95,9 @@
                 <img 
                   [src]="event.poster_url || 'assets/img/placeholder.jpg'" 
                   class="img-fluid poster-preview"
-                  alt="Event Poster">
+                  alt="Event Poster"
+                  (error)="onImageError($event)"
+                  style="max-height: 300px; border-radius: 8px;">
               </div>
               
               <div class="mb-3">
@@ -153,19 +177,19 @@
                 </div>
               </div>
 
-              <div class="mb-3" *ngIf="event.buy_shortlink">
-                <label class="form-label">Ticket Purchase Link</label>
+              <div class="mb-3">
+                <label class="form-label">Ticket Purchase URL</label>
                 <div class="input-group">
                   <input 
                     type="text" 
                     class="form-control" 
-                    [value]="event.buy_shortlink || 'Save to see buy link'" 
+                    [value]="event.buy_shortlink || 'Save to generate buy link'" 
                     readonly>
                   <button 
                     type="button" 
                     class="btn btn-outline-secondary"
                     (click)="copyToClipboard(event.buy_shortlink!, 'Buy link')"
-                    *ngIf="event.buy_shortlink">
+                    [disabled]="!event.buy_shortlink">
                     <i class="fa fa-copy"></i>
                   </button>
                 </div>
@@ -251,19 +275,19 @@
 
               <!-- Verification Section -->
               <div class="mt-4">
-                <div class="mb-3" *ngIf="event.verification_link">
-                  <label class="form-label">Ticket Verification Link</label>
+                <div class="mb-3">
+                  <label class="form-label">Verification URL</label>
                   <div class="input-group">
                     <input 
                       type="text" 
                       class="form-control" 
-                      [value]="event.verification_link || 'Save to get link'" 
+                      [value]="event.verification_link || 'Save to generate verification link'" 
                       readonly>
                     <button 
                       type="button" 
                       class="btn btn-outline-secondary"
                       (click)="copyToClipboard(event.verification_link!, 'Verification link')"
-                      *ngIf="event.verification_link">
+                      [disabled]="!event.verification_link">
                       <i class="fa fa-copy"></i>
                     </button>
                   </div>
@@ -286,8 +310,10 @@
                     <button 
                       type="button" 
                       class="btn btn-outline-secondary"
-                      (click)="resetPIN()">
-                      <i class="fa fa-refresh"></i>
+                      (click)="resetPIN()"
+                      [disabled]="!event.id || refreshingPIN"
+                      [title]="!event.id ? 'Save event first to refresh PIN' : 'Refresh verification PIN'">
+                      <i class="fa" [class]="refreshingPIN ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
                     </button>
                   </div>
                   <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>
