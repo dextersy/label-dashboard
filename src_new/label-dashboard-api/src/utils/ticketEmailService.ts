@@ -1,11 +1,6 @@
 import { sendBrandedEmail } from './emailService';
 import { Ticket } from '../models';
-
-// Helper function to generate QR code URL (mimicking PHP logic)
-const generateQRCodeUrl = (ticketCode: string): string => {
-  const domain = process.env.DOMAIN || 'localhost';
-  return `https://${domain}/tmp/qrcode/${ticketCode}.png`;
-};
+import { QRCodeService } from './qrCodeService';
 
 // Helper function to generate 5 random alphabet letters
 const generateRandomLetters = (): string => {
@@ -60,6 +55,7 @@ export const sendTicketEmail = async (
     number_of_entries: number;
   },
   event: {
+    id: number;
     title: string;
     date_and_time: Date;
     venue: string;
@@ -71,7 +67,8 @@ export const sendTicketEmail = async (
   brandId: number
 ): Promise<boolean> => {
   try {
-    const qrCodeUrl = generateQRCodeUrl(ticket.ticket_code);
+    // Get or create QR code from S3
+    const qrCodeUrl = await QRCodeService.getOrCreateQRCodeUrl(event.id, ticket.ticket_code);
 
     await sendBrandedEmail(
       ticket.email_address,
@@ -211,6 +208,19 @@ export const sendPaymentConfirmationEmail = async (
     return true;
   } catch (error) {
     console.error('Failed to send payment confirmation email:', error);
+    return false;
+  }
+};
+
+// Delete QR code from S3 when ticket is canceled
+export const deleteTicketQRCode = async (
+  eventId: number,
+  ticketCode: string
+): Promise<boolean> => {
+  try {
+    return await QRCodeService.deleteQRCode(eventId, ticketCode);
+  } catch (error) {
+    console.error('Failed to delete QR code:', error);
     return false;
   }
 };

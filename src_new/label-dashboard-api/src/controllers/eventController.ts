@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
-import { sendBrandedEmail } from '../utils/emailService';
-import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode } from '../utils/ticketEmailService';
+import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
@@ -1107,6 +1106,12 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
       if (!emailSent) {
         console.warn('Failed to send cancellation email, but continuing with cancellation');
       }
+      
+      // Delete QR code from S3 when canceling paid/sent tickets
+      const qrDeleted = await deleteTicketQRCode(ticket.event.id, ticket.ticket_code);
+      if (!qrDeleted) {
+        console.warn('Failed to delete QR code from S3, but continuing with cancellation');
+      }
     }
 
     res.json({ 
@@ -1165,6 +1170,7 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
         number_of_entries: ticket.number_of_entries
       },
       {
+        id: ticket.event.id,
         title: ticket.event.title,
         date_and_time: ticket.event.date_and_time,
         venue: ticket.event.venue,
