@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
+import { CsvService } from '../../../services/csv.service';
 
 export interface AbandonedOrder {
   id: number;
@@ -58,7 +59,10 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   priceOverrideEnabled = false;
   private subscriptions = new Subscription();
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private csvService: CsvService
+  ) {}
 
   ngOnInit(): void {
     this.loadAbandonedOrders();
@@ -200,10 +204,37 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   }
 
   onDownloadCSV(): void {
-    // TODO: Implement CSV download
+    if (!this.selectedEvent || !this.orders.length) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'No abandoned orders to export.'
+      });
+      return;
+    }
+
+    // Format data according to PHP format (pending tickets include status)
+    const csvData = this.orders.map(order => [
+      order.name,
+      order.email_address,
+      order.contact_number,
+      order.number_of_entries.toString(),
+      '', // Ticket code (empty for pending orders)
+      '', // Notes column (empty in PHP version)
+      order.status
+    ]);
+
+    const filename = `${this.selectedEvent.title.replace(/\s+/g, '_')}_tickets_pending.csv`;
+    
+    this.csvService.downloadCsv({
+      title: `Abandoned orders for ${this.selectedEvent.title}`,
+      headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Notes', 'Status'],
+      data: csvData,
+      filename: filename
+    });
+
     this.alertMessage.emit({
-      type: 'info',
-      text: 'CSV download functionality to be implemented.'
+      type: 'success',
+      text: 'Abandoned orders CSV downloaded successfully!'
     });
   }
 

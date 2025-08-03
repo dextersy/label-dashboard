@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
+import { CsvService } from '../../../services/csv.service';
 
 export interface EventTicket {
   id: number;
@@ -46,7 +47,10 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   private subscriptions = new Subscription();
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private csvService: CsvService
+  ) {}
 
   ngOnInit(): void {
     this.loadEventTickets();
@@ -182,10 +186,36 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onDownloadCSV(): void {
-    // TODO: Implement CSV download
+    if (!this.selectedEvent || !this.tickets.length) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'No tickets to export.'
+      });
+      return;
+    }
+
+    // Format data according to PHP format
+    const csvData = this.tickets.map(ticket => [
+      ticket.name,
+      ticket.email_address,
+      ticket.contact_number,
+      ticket.number_of_entries.toString(),
+      ticket.ticket_code,
+      '' // Notes column (empty in PHP version)
+    ]);
+
+    const filename = `${this.selectedEvent.title.replace(/\s+/g, '_')}_tickets.csv`;
+    
+    this.csvService.downloadCsv({
+      title: `Ticket list for ${this.selectedEvent.title}`,
+      headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Notes'],
+      data: csvData,
+      filename: filename
+    });
+
     this.alertMessage.emit({
-      type: 'info',
-      text: 'CSV download functionality to be implemented.'
+      type: 'success',
+      text: 'Tickets CSV downloaded successfully!'
     });
   }
 
