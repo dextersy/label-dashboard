@@ -157,14 +157,9 @@ export const sendPaymentLinkEmail = async (
       {
         name: ticket.name,
         event_name: event.title,
-        event_date: event.date_and_time,
-        event_venue: event.venue,
-        number_of_entries: ticket.number_of_entries,
-        ticket_code: ticket.ticket_code,
-        ticket_price: ticket.price_per_ticket,
-        processing_fee: ticket.payment_processing_fee,
-        total_amount: totalAmount + ticket.payment_processing_fee,
-        payment_url: paymentUrl,
+        no_of_entries: ticket.number_of_entries,
+        payment_amount: (totalAmount + ticket.payment_processing_fee).toFixed(2),
+        payment_link: paymentUrl,
         brand_name: brand.brand_name || 'Melt Records'
       },
       brandId
