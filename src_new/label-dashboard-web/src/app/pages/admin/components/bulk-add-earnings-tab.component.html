@@ -1,26 +1,58 @@
 <h3>Bulk Add Earnings</h3>
-<div class="row mb-3">
-  <div class="col-md-3">
-    <strong>Current total earnings:</strong> 
-    <span>{{ formatCurrency(totalEarnings) }}</span>
-  </div>
-  <div class="col-md-9">
-    <div class="btn-group" role="group">
-      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(1)">
-        Add 1 Row
-      </button>
-      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(5)">
-        Add 5 Rows
-      </button>
-      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(10)">
-        Add 10 Rows
-      </button>
+
+<!-- View Toggle -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex justify-content-center align-items-center flex-column">
+      <div class="btn-group view-toggle" role="group" aria-label="View toggle">
+        <button type="button" 
+                class="btn"
+                [class.active]="currentView === 'manual'"
+                (click)="switchToManualView()"
+                [attr.aria-pressed]="currentView === 'manual'">
+          <i class="fa fa-edit me-2"></i>Manual Entry
+        </button>
+        <button type="button" 
+                class="btn"
+                [class.active]="currentView === 'csv'"
+                (click)="switchToCsvView()"
+                [attr.aria-pressed]="currentView === 'csv'">
+          <i class="fa fa-file-csv me-2"></i>CSV Import
+        </button>
+      </div>
+      <small class="text-muted mt-2">
+        <i class="fa fa-info-circle me-1"></i>
+        <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
+        <span *ngIf="currentView === 'csv'">Bulk import earnings from CSV file</span>
+      </small>
     </div>
-    <span class="ms-3 text-muted">Total rows: {{ bulkEarnings.length }}</span>
   </div>
 </div>
 
-<div class="table-responsive">
+<!-- Manual Entry View -->
+<div *ngIf="currentView === 'manual'">
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <strong>Current total earnings:</strong> 
+      <span>{{ formatCurrency(totalEarnings) }}</span>
+    </div>
+    <div class="col-md-9">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(1)">
+          Add 1 Row
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(5)">
+          Add 5 Rows
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(10)">
+          Add 10 Rows
+        </button>
+      </div>
+      <span class="ms-3 text-muted">Total rows: {{ bulkEarnings.length }}</span>
+    </div>
+  </div>
+
+  <div class="table-responsive">
   <table class="table">
     <thead>
       <tr>
@@ -140,6 +172,121 @@
   </table>
 </div>
 
-<button type="button" class="btn btn-primary" (click)="saveBulkEarnings()" [disabled]="loading">
-  Save All Earnings
-</button>
+  <button type="button" class="btn btn-primary" (click)="saveBulkEarnings()" [disabled]="loading">
+    Save All Earnings
+  </button>
+</div>
+
+<!-- CSV Import View -->
+<div *ngIf="currentView === 'csv'">
+  <!-- CSV Upload Section -->
+  <div *ngIf="!csvFile" class="csv-upload-area" 
+       (dragover)="onDragOver($event)" 
+       (dragleave)="onDragLeave($event)" 
+       (drop)="onDrop($event)">
+    <div class="mb-3">
+      <i class="fa fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+      <h5>Upload CSV File</h5>
+      <p class="text-muted">
+        Drag and drop a CSV file here, or click to select a file.<br>
+        Expected columns: Catalog No, Release Title, Artist Name, Earning Amount
+      </p>
+      <input type="file" 
+             class="form-control d-none" 
+             id="csvFileInput" 
+             accept=".csv" 
+             (change)="onFileSelected($event)">
+      <button type="button" class="btn btn-primary" (click)="openFileDialog()">
+        <i class="fa fa-folder-open me-2"></i>Select CSV File
+      </button>
+    </div>
+  </div>
+
+  <!-- CSV Preview Section -->
+  <div *ngIf="csvFile && csvData.length > 0">
+    <!-- Summary Information -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">{{ csvTotalCount }}</h5>
+            <p class="card-text text-muted">Total Entries</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body text-center">
+            <h5 class="card-title text-success">{{ formatCurrency(csvTotalAmount) }}</h5>
+            <p class="card-text text-muted">Total Amount</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body text-center">
+            <h6 class="card-title">{{ csvFile.name }}</h6>
+            <p class="card-text text-muted">
+              <small>{{ (csvFile.size / 1024).toFixed(1) }} KB</small>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="form-check form-switch">
+              <input class="form-check-input" 
+                     type="checkbox" 
+                     id="csvCalculateRoyalties" 
+                     [(ngModel)]="csvCalculateRoyalties">
+              <label class="form-check-label" for="csvCalculateRoyalties">
+                Calculate Royalties
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV Data Table -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">CSV Preview</h6>
+        <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeCsvFile()">
+          <i class="fa fa-times me-2"></i>Remove File
+        </button>
+      </div>
+      <div class="card-body">
+        <app-paginated-table
+          [data]="csvData"
+          [columns]="csvTableColumns"
+          [pagination]="csvPagination"
+          [loading]="loading"
+          [showSearch]="true"
+          [showSortableHeaders]="true"
+          [title]="'CSV Data Preview'"
+          (pageChange)="onCsvPageChange($event)">
+        </app-paginated-table>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-4">
+      <button type="button" class="btn btn-success" (click)="saveCsvEarnings()" [disabled]="loading">
+        <i class="fa fa-save me-2"></i>Import {{ csvTotalCount }} Earnings
+      </button>
+      <button type="button" class="btn btn-outline-secondary ms-2" (click)="removeCsvFile()">
+        <i class="fa fa-times me-2"></i>Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Processing...</span>
+    </div>
+    <p class="mt-2 text-muted">Processing CSV file...</p>
+  </div>
+</div>
