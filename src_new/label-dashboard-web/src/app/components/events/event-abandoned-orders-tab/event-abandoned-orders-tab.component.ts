@@ -166,12 +166,25 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   onCancelOrder(orderId: number): void {
     const confirmed = confirm('Are you sure you want to cancel this order?');
     if (confirmed) {
-      // TODO: Implement API call to cancel order
-      this.alertMessage.emit({
-        type: 'success',
-        text: 'Order cancelled successfully!'
-      });
-      this.orders = this.orders.filter(o => o.id !== orderId);
+      this.subscriptions.add(
+        this.eventService.cancelTicket(orderId).subscribe({
+          next: () => {
+            this.alertMessage.emit({
+              type: 'success',
+              text: 'Order cancelled successfully!'
+            });
+            // Remove order from list
+            this.orders = this.orders.filter(o => o.id !== orderId);
+          },
+          error: (error) => {
+            console.error('Failed to cancel order:', error);
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'Failed to cancel order'
+            });
+          }
+        })
+      );
     }
   }
 
@@ -275,7 +288,8 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       name: this.customTicketForm.name,
       email_address: this.customTicketForm.email_address,
       contact_number: this.customTicketForm.contact_number,
-      number_of_entries: this.customTicketForm.number_of_entries
+      number_of_entries: this.customTicketForm.number_of_entries,
+      send_email: this.customTicketForm.send_email
     };
     
     this.subscriptions.add(
@@ -359,5 +373,20 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
   getTotalPendingOrders(): number {
     return this.orders.reduce((total, order) => total + order.number_of_entries, 0);
+  }
+
+  isEventClosed(): boolean {
+    if (!this.selectedEvent || !this.selectedEvent.close_time) {
+      return false;
+    }
+    
+    const closeTime = new Date(this.selectedEvent.close_time);
+    const now = new Date();
+    
+    return now > closeTime;
+  }
+
+  canCreateCustomTickets(): boolean {
+    return this.isAdmin && !this.isEventClosed();
   }
 }

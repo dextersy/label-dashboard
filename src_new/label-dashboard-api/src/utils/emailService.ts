@@ -213,6 +213,18 @@ export const sendBrandedEmail = async (
     case 'payment_notification_email':
       subject = `Payment made to ${templateData.artist || templateData.artistName}!`;
       break;
+    case 'event_ticket_email':
+      subject = `Here's your ticket to ${templateData.event_name}!`;
+      break;
+    case 'event_ticket_payment_link':
+      subject = `Payment link for ${templateData.event_name}`;
+      break;
+    case 'event_ticket_canceled_email':
+      subject = `Ticket to ${templateData.event_name} has been canceled.`;
+      break;
+    case 'payment_confirmed':
+      subject = `Payment confirmed for ${templateData.event_name}!`;
+      break;
     default:
       subject = 'Notification';
   }

@@ -126,8 +126,14 @@
       </div>
     </div>
 
+    <!-- Event Closed Message -->
+    <div class="alert alert-warning mt-4" *ngIf="isAdmin && isEventClosed()">
+      <i class="fa fa-clock-o me-2"></i>
+      <strong>Event Closed:</strong> This event is closed for ticket sales. Custom ticket creation is disabled.
+    </div>
+
     <!-- Create Custom Ticket Form -->
-    <div class="row mt-4" *ngIf="isAdmin">
+    <div class="row mt-4" *ngIf="canCreateCustomTickets()">
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">

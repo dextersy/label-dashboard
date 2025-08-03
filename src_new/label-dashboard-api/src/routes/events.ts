@@ -8,6 +8,8 @@ import {
   addTicket,
   getTickets,
   markTicketPaid,
+  cancelTicket,
+  resendTicket,
   refreshVerificationPIN,
   getEventReferrers,
   createEventReferrer,
@@ -33,6 +35,8 @@ router.post('/set-selected', setSelectedEvent);
 router.get('/tickets', getTickets);
 router.post('/tickets', requireAdmin, addTicket);
 router.post('/tickets/mark-paid', requireAdmin, markTicketPaid);
+router.post('/tickets/cancel', requireAdmin, cancelTicket);
+router.post('/tickets/resend', requireAdmin, resendTicket);
 
 // Referrer operations (specific routes before /:id)
 router.get('/referrers', getEventReferrers);

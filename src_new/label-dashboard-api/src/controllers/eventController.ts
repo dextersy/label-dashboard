@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
+import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, generateUniqueTicketCode } from '../utils/ticketEmailService';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
@@ -480,7 +481,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       email_address,
       contact_number,
       number_of_entries = 1,
-      referrer_code
+      referrer_code,
+      send_email = true
     } = req.body;
 
     if (!event_id || !name || !email_address) {
@@ -520,8 +522,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Generate unique ticket code
-    const ticketCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+    // Generate unique ticket code for this event
+    const ticketCode = await generateUniqueTicketCode(eventIdNum);
 
     // Calculate total amount and processing fee
     const totalAmount = event.ticket_price * number_of_entries;
@@ -554,24 +556,33 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       referrer_id: referrer?.id || null
     });
 
-    // Send ticket email with payment link
-    await sendBrandedEmail(
-      email_address,
-      'ticket_created',
-      {
-        name,
-        eventTitle: event.title,
-        eventDate: event.date_and_time,
-        eventVenue: event.venue,
-        numberOfEntries: number_of_entries,
-        ticketCode: ticketCode,
-        ticketPrice: event.ticket_price,
-        processingFee: processingFee,
-        totalAmount: totalAmount + processingFee,
-        paymentUrl: paymentLink.attributes.checkout_url
-      },
-      req.user.brand_id
-    );
+    // Send payment link email if requested
+    if (send_email) {
+      const emailSent = await sendPaymentLinkEmail(
+        {
+          email_address,
+          name,
+          ticket_code: ticketCode,
+          number_of_entries,
+          price_per_ticket: event.ticket_price,
+          payment_processing_fee: processingFee
+        },
+        {
+          title: event.title,
+          date_and_time: event.date_and_time,
+          venue: event.venue
+        },
+        paymentLink.attributes.checkout_url,
+        {
+          brand_name: event.brand?.brand_name
+        },
+        req.user.brand_id
+      );
+
+      if (!emailSent) {
+        console.warn('Failed to send payment link email, but ticket was created successfully');
+      }
+    }
 
     res.status(201).json({
       message: 'Ticket created successfully',
@@ -706,17 +717,25 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
 
     await ticket.update({ status: 'Payment Confirmed' });
 
-    // Send confirmation email
-    await sendBrandedEmail(
-      ticket.email_address,
-      'payment_confirmed',
+    // Send payment confirmation email using helper function
+    const emailSent = await sendPaymentConfirmationEmail(
       {
+        email_address: ticket.email_address,
         name: ticket.name,
-        eventTitle: ticket.event.title,
-        ticketCode: ticket.ticket_code
+        ticket_code: ticket.ticket_code
+      },
+      {
+        title: ticket.event.title
+      },
+      {
+        brand_name: ticket.event.brand?.brand_name
       },
       req.user.brand_id
     );
+
+    if (!emailSent) {
+      console.warn('Failed to send payment confirmation email, but ticket was marked as paid');
+    }
 
     res.json({ 
       message: 'Ticket marked as paid successfully',
@@ -1027,6 +1046,154 @@ export const deleteEventReferrer = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Delete event referrer error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const cancelTicket = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { ticket_id } = req.body;
+
+    if (!ticket_id) {
+      return res.status(400).json({ error: 'Ticket ID is required' });
+    }
+
+    const ticket = await Ticket.findOne({
+      where: { id: ticket_id },
+      include: [
+        { 
+          model: Event, 
+          as: 'event',
+          where: { brand_id: req.user.brand_id },
+          include: [{ model: Brand, as: 'brand' }]
+        }
+      ]
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    if (ticket.status === 'Canceled') {
+      return res.status(400).json({ error: 'Ticket is already canceled' });
+    }
+
+    const originalStatus = ticket.status;
+
+    // Update ticket status to canceled
+    await ticket.update({ status: 'Canceled' });
+
+    // Send cancellation email if ticket was already paid/sent
+    if (originalStatus === 'Payment Confirmed' || originalStatus === 'Ticket sent.') {
+      const emailSent = await sendTicketCancellationEmail(
+        {
+          email_address: ticket.email_address,
+          name: ticket.name,
+          ticket_code: ticket.ticket_code
+        },
+        {
+          title: ticket.event.title
+        },
+        {
+          brand_name: ticket.event.brand?.brand_name
+        },
+        req.user.brand_id
+      );
+      
+      if (!emailSent) {
+        console.warn('Failed to send cancellation email, but continuing with cancellation');
+      }
+    }
+
+    res.json({ 
+      message: 'Ticket canceled successfully',
+      ticket: {
+        id: ticket.id,
+        status: 'Canceled'
+      }
+    });
+  } catch (error) {
+    console.error('Cancel ticket error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const resendTicket = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { ticket_id } = req.body;
+
+    if (!ticket_id) {
+      return res.status(400).json({ error: 'Ticket ID is required' });
+    }
+
+    const ticket = await Ticket.findOne({
+      where: { id: ticket_id },
+      include: [
+        { 
+          model: Event, 
+          as: 'event',
+          where: { brand_id: req.user.brand_id },
+          include: [{ model: Brand, as: 'brand' }]
+        }
+      ]
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    if (ticket.status === 'New' || ticket.status === 'Canceled') {
+      return res.status(400).json({ 
+        error: 'Cannot resend ticket - ticket must be paid or already sent' 
+      });
+    }
+
+    // Send ticket email using helper function
+    const emailSent = await sendTicketEmail(
+      {
+        email_address: ticket.email_address,
+        name: ticket.name,
+        ticket_code: ticket.ticket_code,
+        number_of_entries: ticket.number_of_entries
+      },
+      {
+        title: ticket.event.title,
+        date_and_time: ticket.event.date_and_time,
+        venue: ticket.event.venue,
+        rsvp_link: ticket.event.rsvp_link
+      },
+      {
+        brand_name: ticket.event.brand?.brand_name
+      },
+      req.user.brand_id
+    );
+
+    if (!emailSent) {
+      return res.status(500).json({ error: 'Failed to send ticket email' });
+    }
+
+    // Update status to "Ticket sent." if it wasn't already
+    if (ticket.status !== 'Ticket sent.') {
+      await ticket.update({ status: 'Ticket sent.' });
+    }
+
+    res.json({ 
+      message: 'Ticket resent successfully',
+      ticket: {
+        id: ticket.id,
+        status: 'Ticket sent.'
+      }
+    });
+  } catch (error) {
+    console.error('Resend ticket error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

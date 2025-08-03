@@ -164,24 +164,49 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onResendTicket(ticketId: number): void {
-    // TODO: Implement API call to resend ticket
-    this.alertMessage.emit({
-      type: 'success',
-      text: 'Ticket resent successfully!'
-    });
+    this.subscriptions.add(
+      this.eventService.resendTicket(ticketId).subscribe({
+        next: () => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Ticket resent successfully!'
+          });
+        },
+        error: (error) => {
+          console.error('Failed to resend ticket:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to resend ticket'
+          });
+        }
+      })
+    );
   }
 
   onCancelTicket(ticketId: number): void {
     this.selectedTicketId = ticketId;
     const confirmed = confirm('WARNING: This ticket is already paid and sent to the customer. Are you sure you want to cancel this ticket?');
     if (confirmed) {
-      // TODO: Implement API call to cancel ticket
-      this.alertMessage.emit({
-        type: 'success',
-        text: 'Ticket cancelled successfully!'
-      });
-      this.tickets = this.tickets.filter(t => t.id !== ticketId);
-      this.calculateTicketSummary();
+      this.subscriptions.add(
+        this.eventService.cancelTicket(ticketId).subscribe({
+          next: () => {
+            this.alertMessage.emit({
+              type: 'success',
+              text: 'Ticket cancelled successfully!'
+            });
+            // Remove ticket from list and recalculate summary
+            this.tickets = this.tickets.filter(t => t.id !== ticketId);
+            this.calculateTicketSummary();
+          },
+          error: (error) => {
+            console.error('Failed to cancel ticket:', error);
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'Failed to cancel ticket'
+            });
+          }
+        })
+      );
     }
   }
 

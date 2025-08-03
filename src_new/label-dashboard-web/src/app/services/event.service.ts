@@ -338,6 +338,30 @@ export class EventService {
   }
 
   /**
+   * Cancel a ticket
+   */
+  cancelTicket(ticketId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/events/tickets/cancel`, 
+      { ticket_id: ticketId },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Resend ticket email
+   */
+  resendTicket(ticketId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/events/tickets/resend`, 
+      { ticket_id: ticketId },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Refresh verification PIN for an event
    */
   refreshVerificationPIN(eventId: number): Observable<{verification_pin: string}> {
