@@ -77,9 +77,13 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.add(
       this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
         next: (tickets) => {
-          // Convert API tickets to component format and filter confirmed tickets
+          // Convert API tickets to component format and filter confirmed tickets or tickets with claimed entries
           this.tickets = tickets
-            .filter(ticket => (ticket.status != 'New' && ticket.status != 'Canceled'))
+            .filter(ticket => {
+              // Show tickets that are confirmed/paid OR have claimed entries (regardless of payment status)
+              return (ticket.status != 'New' && ticket.status != 'Canceled') || 
+                     (ticket.number_of_claimed_entries > 0);
+            })
             .map(ticket => this.convertServiceTicketToComponentTicket(ticket));
           
           this.calculateTicketSummary();
@@ -185,7 +189,26 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   onCancelTicket(ticketId: number): void {
     this.selectedTicketId = ticketId;
-    const confirmed = confirm('WARNING: This ticket is already paid and sent to the customer. Are you sure you want to cancel this ticket?');
+    
+    // Find the ticket to get its status
+    const ticket = this.tickets.find(t => t.id === ticketId);
+    if (!ticket) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'Ticket not found'
+      });
+      return;
+    }
+
+    // Show different confirmation messages based on ticket status
+    let confirmMessage = '';
+    if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
+      confirmMessage = 'WARNING: This ticket is already paid and sent to the customer. The customer will receive a cancellation email. Are you sure you want to cancel this ticket?';
+    } else {
+      confirmMessage = 'Are you sure you want to cancel this ticket?';
+    }
+
+    const confirmed = confirm(confirmMessage);
     if (confirmed) {
       this.subscriptions.add(
         this.eventService.cancelTicket(ticketId).subscribe({
@@ -245,7 +268,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getRowClass(ticket: EventTicket): string {
-    return ticket.number_of_claimed_entries === ticket.number_of_entries ? 'text-muted' : '';
+    return Number(ticket.number_of_claimed_entries) === Number(ticket.number_of_entries) ? 'text-muted' : '';
   }
 
   getTotalPaid(ticket: EventTicket): number {
@@ -261,10 +284,10 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isTicketCancellable(ticket: EventTicket): boolean {
-    return ticket.number_of_claimed_entries === 0 && this.isAdmin;
+    return Number(ticket.number_of_claimed_entries) === 0 && !!this.isAdmin;
   }
 
   isTicketResendable(ticket: EventTicket): boolean {
-    return ticket.number_of_claimed_entries < ticket.number_of_entries && this.isAdmin;
+    return Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries) && !!this.isAdmin;
   }
 }
