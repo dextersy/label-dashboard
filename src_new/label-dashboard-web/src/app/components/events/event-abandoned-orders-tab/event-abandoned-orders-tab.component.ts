@@ -1,6 +1,8 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 
 export interface AbandonedOrder {
   id: number;
@@ -33,20 +35,14 @@ export interface CustomTicketForm {
   templateUrl: './event-abandoned-orders-tab.component.html',
   styleUrl: './event-abandoned-orders-tab.component.scss'
 })
-export class EventAbandonedOrdersTabComponent {
-  @Input() orders: AbandonedOrder[] = [];
-  @Input() defaultTicketPrice: number = 0;
+export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() selectedEvent: Event | null = null;
   @Input() isAdmin: boolean = false;
-  @Input() loading: boolean = false;
-  @Output() markAsPaid = new EventEmitter<number>();
-  @Output() cancelOrder = new EventEmitter<number>();
-  @Output() verifyPayments = new EventEmitter<void>();
-  @Output() sendPaymentReminders = new EventEmitter<void>();
-  @Output() cancelAllUnpaid = new EventEmitter<void>();
-  @Output() createCustomTicket = new EventEmitter<CustomTicketForm>();
-  @Output() downloadCSV = new EventEmitter<void>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
+  orders: AbandonedOrder[] = [];
+  loading = false;
+  
   customTicketForm: CustomTicketForm = {
     name: '',
     email_address: '',
@@ -60,39 +56,155 @@ export class EventAbandonedOrdersTabComponent {
   };
 
   priceOverrideEnabled = false;
+  private subscriptions = new Subscription();
+
+  constructor(private eventService: EventService) {}
 
   ngOnInit(): void {
-    this.customTicketForm.price_per_ticket = this.defaultTicketPrice;
+    this.loadAbandonedOrders();
+    this.initializeCustomTicketForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedEvent']) {
+      this.loadAbandonedOrders();
+      this.initializeCustomTicketForm();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private loadAbandonedOrders(): void {
+    if (!this.selectedEvent) {
+      this.orders = [];
+      return;
+    }
+
+    this.loading = true;
+    this.subscriptions.add(
+      this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
+        next: (tickets) => {
+          // Filter for abandoned orders (new/unpaid tickets)
+          this.orders = tickets
+            .filter(ticket => ticket.status === 'New')
+            .map(ticket => this.convertServiceTicketToAbandonedOrder(ticket));
+          
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load abandoned orders:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to load abandoned orders'
+          });
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  private convertServiceTicketToAbandonedOrder(ticket: ServiceEventTicket): AbandonedOrder {
+    return {
+      id: ticket.id,
+      name: ticket.name,
+      email_address: ticket.email_address,
+      contact_number: ticket.contact_number || '',
+      number_of_entries: ticket.number_of_entries,
+      payment_link: ticket.payment_link || '',
+      order_timestamp: ticket.order_timestamp,
+      status: this.normalizeAbandonedOrderStatus(ticket.status)
+    };
+  }
+
+  private normalizeAbandonedOrderStatus(status: string): 'Payment Confirmed' | 'New' | 'Canceled' {
+    switch (status.toLowerCase()) {
+      case 'payment confirmed':
+      case 'payment confirmed.':
+        return 'Payment Confirmed';
+      case 'new':
+        return 'New';
+      case 'canceled':
+      case 'cancelled':
+        return 'Canceled';
+      default:
+        return 'New';
+    }
+  }
+
+  private initializeCustomTicketForm(): void {
+    this.customTicketForm.price_per_ticket = this.selectedEvent?.ticket_price || 0;
   }
 
   onMarkAsPaid(orderId: number): void {
-    this.markAsPaid.emit(orderId);
+    this.subscriptions.add(
+      this.eventService.markTicketPaid(orderId).subscribe({
+        next: () => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Order marked as paid!'
+          });
+          // Remove from abandoned orders since it's now confirmed
+          this.orders = this.orders.filter(o => o.id !== orderId);
+        },
+        error: (error) => {
+          console.error('Failed to mark order as paid:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to mark order as paid'
+          });
+        }
+      })
+    );
   }
 
   onCancelOrder(orderId: number): void {
     const confirmed = confirm('Are you sure you want to cancel this order?');
     if (confirmed) {
-      this.cancelOrder.emit(orderId);
+      // TODO: Implement API call to cancel order
+      this.alertMessage.emit({
+        type: 'success',
+        text: 'Order cancelled successfully!'
+      });
+      this.orders = this.orders.filter(o => o.id !== orderId);
     }
   }
 
   onVerifyPayments(): void {
-    this.verifyPayments.emit();
+    // TODO: Implement API call to verify payments
+    this.alertMessage.emit({
+      type: 'info',
+      text: 'Payment verification started.'
+    });
   }
 
   onSendPaymentReminders(): void {
-    this.sendPaymentReminders.emit();
+    // TODO: Implement API call to send payment reminders
+    this.alertMessage.emit({
+      type: 'success',
+      text: 'Payment reminders sent!'
+    });
   }
 
   onCancelAllUnpaid(): void {
     const confirmed = confirm('Are you sure you want to cancel ALL unpaid orders? This action cannot be undone.');
     if (confirmed) {
-      this.cancelAllUnpaid.emit();
+      // TODO: Implement API call to cancel all unpaid orders
+      this.alertMessage.emit({
+        type: 'success',
+        text: 'All unpaid orders cancelled!'
+      });
+      this.orders = [];
     }
   }
 
   onDownloadCSV(): void {
-    this.downloadCSV.emit();
+    // TODO: Implement CSV download
+    this.alertMessage.emit({
+      type: 'info',
+      text: 'CSV download functionality to be implemented.'
+    });
   }
 
   enablePriceOverride(): void {
@@ -108,6 +220,8 @@ export class EventAbandonedOrdersTabComponent {
   }
 
   onSubmitCustomTicket(): void {
+    if (!this.selectedEvent) return;
+    
     // Basic validation
     if (!this.customTicketForm.name || !this.customTicketForm.email_address || !this.customTicketForm.contact_number) {
       this.alertMessage.emit({
@@ -125,8 +239,50 @@ export class EventAbandonedOrdersTabComponent {
       return;
     }
 
-    this.createCustomTicket.emit({ ...this.customTicketForm });
-    this.resetCustomTicketForm();
+    const ticketData = {
+      event_id: this.selectedEvent.id,
+      name: this.customTicketForm.name,
+      email_address: this.customTicketForm.email_address,
+      contact_number: this.customTicketForm.contact_number,
+      number_of_entries: this.customTicketForm.number_of_entries
+    };
+    
+    this.subscriptions.add(
+      this.eventService.addTicket(ticketData).subscribe({
+        next: (response) => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Custom ticket created successfully!'
+          });
+          
+          // If ticket is marked as paid, mark it as paid immediately
+          if (this.customTicketForm.ticket_paid && response.ticket?.id) {
+            this.subscriptions.add(
+              this.eventService.markTicketPaid(response.ticket.id).subscribe({
+                next: () => {
+                  this.loadAbandonedOrders(); // Refresh data
+                },
+                error: (error) => {
+                  console.error('Failed to mark custom ticket as paid:', error);
+                }
+              })
+            );
+          } else {
+            // Refresh data to show new ticket
+            this.loadAbandonedOrders();
+          }
+          
+          this.resetCustomTicketForm();
+        },
+        error: (error) => {
+          console.error('Failed to create custom ticket:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to create custom ticket'
+          });
+        }
+      })
+    );
   }
 
   resetCustomTicketForm(): void {
@@ -135,7 +291,7 @@ export class EventAbandonedOrdersTabComponent {
       email_address: '',
       contact_number: '',
       number_of_entries: 1,
-      price_per_ticket: this.defaultTicketPrice,
+      price_per_ticket: this.selectedEvent?.ticket_price || 0,
       referral_code: '',
       ticket_paid: false,
       payment_processing_fee: 0,

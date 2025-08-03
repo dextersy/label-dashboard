@@ -8,10 +8,10 @@ import { EventService, Event } from '../../services/event.service';
 import { environment } from '../../../environments/environment';
 
 // Import tab components
-import { EventDetailsTabComponent, EventDetails } from '../../components/events/event-details-tab/event-details-tab.component';
-import { EventTicketsTabComponent, EventTicket, TicketSummary } from '../../components/events/event-tickets-tab/event-tickets-tab.component';
-import { EventAbandonedOrdersTabComponent, AbandonedOrder, CustomTicketForm } from '../../components/events/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
-import { EventReferralsTabComponent, EventReferrer, ReferrerForm } from '../../components/events/event-referrals-tab/event-referrals-tab.component';
+import { EventDetailsTabComponent } from '../../components/events/event-details-tab/event-details-tab.component';
+import { EventTicketsTabComponent } from '../../components/events/event-tickets-tab/event-tickets-tab.component';
+import { EventAbandonedOrdersTabComponent } from '../../components/events/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
+import { EventReferralsTabComponent } from '../../components/events/event-referrals-tab/event-referrals-tab.component';
 import { CreateEventModalComponent, CreateEventForm } from '../../components/events/create-event-modal/create-event-modal.component';
 import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 
@@ -44,7 +44,6 @@ export type EventSelection = Event;
   styleUrl: './events.component.scss'
 })
 export class EventsComponent implements OnInit, OnDestroy {
-  @ViewChild(EventDetailsTabComponent) eventDetailsTab!: EventDetailsTabComponent;
   @ViewChild(CreateEventModalComponent) createEventModal!: CreateEventModalComponent;
   
   selectedEvent: EventSelection | null = null;
@@ -59,12 +58,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   // Subscriptions for cleanup
   private subscriptions = new Subscription();
 
-  // Event data for tabs
-  eventDetails: EventDetails | null = null;
-  eventTickets: EventTicket[] = [];
-  abandonedOrders: AbandonedOrder[] = [];
-  eventReferrers: EventReferrer[] = [];
-  ticketSummary: TicketSummary | null = null;
+  // Remove tab-specific data since tabs now handle their own data
 
   // Available events for selection
   availableEvents: EventSelection[] = [];
@@ -95,7 +89,6 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.selectedEvent$.subscribe(event => {
         if (event && event !== this.selectedEvent) {
           this.selectedEvent = event;
-          this.loadEventData();
         }
       })
     );
@@ -127,11 +120,6 @@ export class EventsComponent implements OnInit, OnDestroy {
           if (events.length > 0 && !this.selectedEvent) {
             this.selectedEvent = events[0];
             this.eventService.setSelectedEvent(events[0]);
-          }
-          
-          // Load event data if we have a selection
-          if (this.selectedEvent) {
-            this.loadEventData();
           }
           
           this.loading = false;
@@ -208,216 +196,14 @@ export class EventsComponent implements OnInit, OnDestroy {
     // Auto-select first event if available
     if (this.availableEvents.length > 0) {
       this.selectedEvent = this.availableEvents[0];
-      this.loadEventData();
     }
   }
 
-  loadEventData(): void {
-    if (!this.selectedEvent || !this.selectedEvent.id || isNaN(this.selectedEvent.id)) {
-      console.error('Invalid selectedEvent or selectedEvent.id:', this.selectedEvent);
-      return;
-    }
-
-    this.loading = true;
-    
-    // Load event details
-    this.subscriptions.add(
-      this.eventService.getEvent(this.selectedEvent.id).subscribe({
-        next: (event) => {
-          // Convert Event to EventDetails format
-          this.eventDetails = {
-            id: event.id,
-            title: event.title,
-            date_and_time: event.date_and_time,
-            venue: event.venue,
-            description: event.description || '',
-            poster_url: event.poster_url,
-            rsvp_link: event.rsvp_link || '',
-            ticket_price: event.ticket_price,
-            max_tickets: event.max_tickets || 0,
-            close_time: event.close_time || '',
-            verification_pin: event.verification_pin,
-            verification_link: event.verification_link,
-            buy_shortlink: event.buy_shortlink,
-            ticket_naming: event.ticket_naming,
-            slug: '', // Slug is input-only, not stored in API
-            supports_gcash: event.supports_gcash,
-            supports_qrph: event.supports_qrph,
-            supports_card: event.supports_card,
-            supports_ubp: event.supports_ubp,
-            supports_dob: event.supports_dob,
-            supports_maya: event.supports_maya,
-            supports_grabpay: event.supports_grabpay,
-            status: this.getEventStatus(event) as 'Open' | 'Closed'
-          };
-        },
-        error: (error) => {
-          console.error('Failed to load event details:', error);
-          this.notificationService.showError('Failed to load event details');
-        }
-      })
-    );
-    
-    // Load event tickets
-    this.subscriptions.add(
-      this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
-        next: (tickets) => {
-          // Convert API tickets to component format
-          this.eventTickets = tickets
-            .filter(ticket => (ticket.status != 'New' && ticket.status != 'Canceled'))
-            .map(ticket => ({
-              id: ticket.id,
-              name: ticket.name,
-              email_address: ticket.email_address,
-              contact_number: ticket.contact_number || '',
-              number_of_entries: ticket.number_of_entries,
-              ticket_code: ticket.ticket_code,
-              price_per_ticket: ticket.price_per_ticket,
-              payment_processing_fee: ticket.payment_processing_fee,
-              order_timestamp: ticket.order_timestamp,
-              number_of_claimed_entries: ticket.number_of_claimed_entries,
-              status: this.normalizeTicketStatus(ticket.status)
-            }));
-          
-          // Filter for abandoned orders (non-confirmed tickets)
-          this.abandonedOrders = tickets
-            .filter(ticket => ticket.status === 'New')
-            .map(ticket => ({
-              id: ticket.id,
-              name: ticket.name,
-              email_address: ticket.email_address,
-              contact_number: ticket.contact_number || '',
-              number_of_entries: ticket.number_of_entries,
-              payment_link: ticket.payment_link || '',
-              order_timestamp: ticket.order_timestamp,
-              status: this.normalizeAbandonedOrderStatus(ticket.status)
-            }));
-          
-          // Calculate ticket summary
-          this.calculateTicketSummary();
-        },
-        error: (error) => {
-          console.error('Failed to load event tickets:', error);
-          this.notificationService.showError('Failed to load event tickets');
-        }
-      })
-    );
-    
-    // Load event referrers
-    this.subscriptions.add(
-      this.eventService.getEventReferrers(this.selectedEvent.id).subscribe({
-        next: (referrers) => {
-          this.eventReferrers = referrers;
-        },
-        error: (error) => {
-          console.error('Failed to load event referrers:', error);
-          this.notificationService.showError('Failed to load event referrers');
-        }
-      })
-    );
-
-    // Load event summary for additional stats
-    this.subscriptions.add(
-      this.eventService.getEventSummary(this.selectedEvent.id).subscribe({
-        next: (summary) => {
-          // Update ticket summary with API data
-          if (this.ticketSummary) {
-            this.ticketSummary.total_tickets_sold = summary.total_tickets_sold;
-            this.ticketSummary.total_revenue = summary.total_revenue;
-          }
-        },
-        error: (error) => {
-          console.error('Failed to load event summary:', error);
-        }
-      })
-    );
-    
-    this.loading = false;
-  }
-
-  private loadPlaceholderEventData(): void {
-    // Placeholder event details
-    this.eventDetails = {
-      id: this.selectedEvent!.id,
-      title: this.selectedEvent!.title,
-      date_and_time: this.selectedEvent!.date_and_time,
-      venue: this.selectedEvent!.venue,
-      description: 'Join us for an amazing musical experience!',
-      rsvp_link: 'https://facebook.com/events/123456',
-      ticket_price: 500,
-      max_tickets: 200,
-      close_time: '2024-07-15T17:00',
-      verification_pin: '123456',
-      ticket_naming: 'General Admission',
-      supports_gcash: true,
-      supports_qrph: true,
-      supports_card: true,
-      supports_ubp: false,
-      supports_dob: false,
-      supports_maya: false,
-      supports_grabpay: false,
-      status: 'Open'
-    };
-
-    // Placeholder ticket data
-    this.eventTickets = [
-      {
-        id: 1,
-        name: 'John Doe',
-        email_address: 'john@example.com',
-        contact_number: '+639123456789',
-        number_of_entries: 2,
-        ticket_code: 'ABC123',
-        price_per_ticket: 500,
-        payment_processing_fee: 25,
-        order_timestamp: '2024-01-15T10:30:00',
-        number_of_claimed_entries: 0,
-        status: 'Ticket sent.'
-      }
-    ];
-
-    // Placeholder abandoned orders
-    this.abandonedOrders = [
-      {
-        id: 2,
-        name: 'Jane Smith',
-        email_address: 'jane@example.com',
-        contact_number: '+639987654321',
-        number_of_entries: 1,
-        payment_link: 'https://payment.link/abc123',
-        order_timestamp: '2024-01-14T15:20:00',
-        status: 'New'
-      }
-    ];
-
-    // Placeholder referrers
-    this.eventReferrers = [
-      {
-        id: 1,
-        name: 'Music Promoter',
-        referral_code: 'SUMMER2024-MUSICPROMOTER',
-        tickets_sold: 5,
-        gross_amount_sold: 2500,
-        net_amount_sold: 2375,
-        referral_shortlink: 'https://tickets.example.com/buy/summer2024-musicpromoter'
-      }
-    ];
-
-    // Placeholder ticket summary
-    this.ticketSummary = {
-      total_tickets_sold: 2,
-      total_revenue: 1000,
-      total_processing_fee: 25,
-      net_revenue: 975,
-      platform_fee: 50,
-      grand_total: 925
-    };
-  }
+  // Removed loadEventData and loadPlaceholderEventData - tabs now handle their own data loading
 
   onEventSelection(event: EventSelection): void {
     this.selectedEvent = event;
     this.eventService.setSelectedEvent(event);
-    this.loadEventData();
   }
 
   onEventSelectionChange(event: any): void {
@@ -473,7 +259,6 @@ export class EventsComponent implements OnInit, OnDestroy {
           this.availableEvents.unshift(newEvent);
           this.selectedEvent = newEvent;
           this.eventService.setSelectedEvent(newEvent);
-          this.loadEventData();
         },
         error: (error) => {
           console.error('Failed to create event:', error);
@@ -500,84 +285,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     // Clear any temporary data but preserve selected event
   }
   
-  private getEventStatus(event: Event): 'Open' | 'Closed' {
-    const now = new Date();
-    const eventDate = new Date(event.date_and_time);
-    const closeTime = event.close_time ? new Date(event.close_time) : eventDate;
-    
-    if (now > closeTime) {
-      return 'Closed';
-    } else {
-      return 'Open';
-    }
-  }
-  
-  private normalizeTicketStatus(status: string): 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled' {
-    // Map various possible API status values to component expected values
-    switch (status.toLowerCase()) {
-      case 'ticket sent.':
-      case 'ticket sent':
-        return 'Ticket sent.';
-      case 'payment confirmed':
-      case 'payment confirmed.':
-        return 'Payment Confirmed';
-      case 'new':
-        return 'New';
-      case 'canceled':
-      case 'cancelled':
-        return 'Canceled';
-      default:
-        return 'New'; // Default fallback
-    }
-  }
-  
-  private normalizeAbandonedOrderStatus(status: string): 'Payment Confirmed' | 'New' | 'Canceled' {
-    // Map various possible API status values to abandoned order expected values
-    switch (status.toLowerCase()) {
-      case 'payment confirmed':
-      case 'payment confirmed.':
-        return 'Payment Confirmed';
-      case 'new':
-        return 'New';
-      case 'canceled':
-      case 'cancelled':
-        return 'Canceled';
-      default:
-        return 'New'; // Default fallback
-    }
-  }
-  
-  private calculateTicketSummary(): void {
-    const confirmedTickets = this.eventTickets.filter(t => 
-      t.status === 'Ticket sent.' || t.status === 'Payment Confirmed'
-    );
-    
-    const totalTicketsSold = confirmedTickets.reduce((sum, ticket) => 
-      sum + ticket.number_of_entries, 0
-    );
-    
-    const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
-      const ticketRevenue = ticket.price_per_ticket * ticket.number_of_entries;
-      return sum + ticketRevenue;
-    }, 0);
-    
-    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => 
-      sum + ticket.payment_processing_fee, 0
-    );
-    
-    const netRevenue = totalRevenue - totalProcessingFee;
-    const platformFee = netRevenue * 0.05; // 5% platform fee (adjust as needed)
-    const grandTotal = netRevenue - platformFee;
-    
-    this.ticketSummary = {
-      total_tickets_sold: totalTicketsSold,
-      total_revenue: totalRevenue,
-      total_processing_fee: totalProcessingFee,
-      net_revenue: netRevenue,
-      platform_fee: platformFee,
-      grand_total: grandTotal
-    };
-  }
+  // Utility methods moved to individual tab components
 
   setActiveTab(tabId: EventsTabType): void {
     this.activeTab = tabId;
@@ -591,285 +299,18 @@ export class EventsComponent implements OnInit, OnDestroy {
     return !tab.adminOnly || this.isAdmin;
   }
 
-  // Event Details Tab handlers
-  onEventUpdate(eventDetails: EventDetails): void {
-    if (!this.selectedEvent) return;
+  // Simplified event handlers - tabs now handle their own logic
+  onEventUpdated(updatedEvent: Event): void {
+    // Update the selected event in the list
+    const index = this.availableEvents.findIndex(e => e.id === updatedEvent.id);
+    if (index !== -1) {
+      this.availableEvents[index] = updatedEvent;
+    }
     
-    const updateData = {
-      title: eventDetails.title,
-      date_and_time: eventDetails.date_and_time,
-      venue: eventDetails.venue,
-      description: eventDetails.description,
-      poster_url: eventDetails.poster_url,
-      rsvp_link: eventDetails.rsvp_link,
-      ticket_price: eventDetails.ticket_price,
-      close_time: eventDetails.close_time,
-      verification_pin: eventDetails.verification_pin,
-      verification_link: eventDetails.verification_link,
-      buy_shortlink: eventDetails.buy_shortlink,
-      ticket_naming: eventDetails.ticket_naming,
-      slug: eventDetails.slug, // Send slug to backend for URL generation
-      supports_gcash: eventDetails.supports_gcash,
-      supports_qrph: eventDetails.supports_qrph,
-      supports_card: eventDetails.supports_card,
-      supports_ubp: eventDetails.supports_ubp,
-      supports_dob: eventDetails.supports_dob,
-      supports_maya: eventDetails.supports_maya,
-      supports_grabpay: eventDetails.supports_grabpay,
-      max_tickets: eventDetails.max_tickets
-    };
-    
-    this.subscriptions.add(
-      this.eventService.updateEvent(this.selectedEvent.id, updateData).subscribe({
-        next: (updatedEvent) => {
-          this.onAlertMessage({ type: 'success', text: 'Event updated successfully!' });
-          
-          // Update the selected event in the list
-          const index = this.availableEvents.findIndex(e => e.id === updatedEvent.id);
-          if (index !== -1) {
-            this.availableEvents[index] = updatedEvent;
-          }
-          
-          // Update the selected event reference to keep it in sync
-          if (this.selectedEvent && this.selectedEvent.id === updatedEvent.id) {
-            this.selectedEvent = updatedEvent;
-          }
-          
-          // Refresh event data from API to get any backend-generated fields
-          this.refreshEventDetails();
-          
-          // Clear any poster selection from the details tab
-          if (this.eventDetailsTab) {
-            this.eventDetailsTab.onEventSaved();
-          }
-        },
-        error: (error) => {
-          console.error('Failed to update event:', error);
-          this.onAlertMessage({ type: 'error', text: 'Failed to update event' });
-        }
-      })
-    );
-  }
-
-  onEventUpdateWithFile({ eventId, formData }: { eventId: number, formData: FormData }): void {
-    if (!this.selectedEvent) return;
-    
-    this.subscriptions.add(
-      this.eventService.updateEventWithFile(eventId, formData).subscribe({
-        next: (updatedEvent) => {
-          this.onAlertMessage({ type: 'success', text: 'Event updated successfully!' });
-          
-          // Update the selected event in the list
-          const index = this.availableEvents.findIndex(e => e.id === updatedEvent.id);
-          if (index !== -1) {
-            this.availableEvents[index] = updatedEvent;
-          }
-          
-          // Update the selected event reference to keep it in sync
-          if (this.selectedEvent && this.selectedEvent.id === updatedEvent.id) {
-            this.selectedEvent = updatedEvent;
-          }
-          
-          // Refresh event data from API to get any backend-generated fields
-          this.refreshEventDetails();
-          
-          // Clear any poster selection from the details tab
-          if (this.eventDetailsTab) {
-            this.eventDetailsTab.onEventSaved();
-          }
-        },
-        error: (error) => {
-          console.error('Failed to update event with file:', error);
-          this.onAlertMessage({ type: 'error', text: 'Failed to update event' });
-          
-          // Reset uploading state on error
-          if (this.eventDetailsTab) {
-            this.eventDetailsTab.uploading = false;
-          }
-        }
-      })
-    );
-  }
-
-  /**
-   * Refresh event details from API after save
-   */
-  private refreshEventDetails(): void {
-    if (!this.selectedEvent) return;
-
-    this.subscriptions.add(
-      this.eventService.getEvent(this.selectedEvent.id).subscribe({
-        next: (event) => {
-          // Update the selected event in available events list with fresh data
-          const index = this.availableEvents.findIndex(e => e.id === event.id);
-          if (index !== -1) {
-            this.availableEvents[index] = event;
-          }
-          
-          // Update the selected event reference
-          if (this.selectedEvent && this.selectedEvent.id === event.id) {
-            this.selectedEvent = event;
-          }
-          
-          // Convert Event to EventDetails format with fresh API data
-          this.eventDetails = {
-            id: event.id,
-            title: event.title,
-            date_and_time: event.date_and_time,
-            venue: event.venue,
-            description: event.description || '',
-            poster_url: event.poster_url,
-            rsvp_link: event.rsvp_link || '',
-            ticket_price: event.ticket_price,
-            max_tickets: event.max_tickets || 0,
-            close_time: event.close_time || '',
-            verification_pin: event.verification_pin,
-            verification_link: event.verification_link,
-            buy_shortlink: event.buy_shortlink,
-            ticket_naming: event.ticket_naming,
-            slug: '', // Slug is input-only, not stored in API
-            supports_gcash: event.supports_gcash,
-            supports_qrph: event.supports_qrph,
-            supports_card: event.supports_card,
-            supports_ubp: event.supports_ubp,
-            supports_dob: event.supports_dob,
-            supports_maya: event.supports_maya,
-            supports_grabpay: event.supports_grabpay,
-            status: this.getEventStatus(event) as 'Open' | 'Closed'
-          };
-        },
-        error: (error) => {
-          console.error('Failed to refresh event details:', error);
-          // Don't show error to user since the save was successful
-        }
-      })
-    );
-  }
-
-  // Event Tickets Tab handlers
-  onResendTicket(ticketId: number): void {
-    // TODO: Implement API call to resend ticket
-    this.onAlertMessage({ type: 'success', text: 'Ticket resent successfully!' });
-  }
-
-  onCancelTicket(ticketId: number): void {
-    // TODO: Implement API call to cancel ticket
-    this.onAlertMessage({ type: 'success', text: 'Ticket cancelled successfully!' });
-    // Remove ticket from list
-    this.eventTickets = this.eventTickets.filter(t => t.id !== ticketId);
-  }
-
-  onDownloadTicketsCSV(): void {
-    // TODO: Implement CSV download
-    this.onAlertMessage({ type: 'info', text: 'CSV download functionality to be implemented.' });
-  }
-
-  // Abandoned Orders Tab handlers
-  onMarkAsPaid(orderId: number): void {
-    this.subscriptions.add(
-      this.eventService.markTicketPaid(orderId).subscribe({
-        next: () => {
-          this.onAlertMessage({ type: 'success', text: 'Order marked as paid!' });
-          // Remove from abandoned orders and add to confirmed tickets
-          const order = this.abandonedOrders.find(o => o.id === orderId);
-          if (order) {
-            this.abandonedOrders = this.abandonedOrders.filter(o => o.id !== orderId);
-            // Refresh event data to get updated ticket status
-            this.loadEventData();
-          }
-        },
-        error: (error) => {
-          console.error('Failed to mark order as paid:', error);
-          this.onAlertMessage({ type: 'error', text: 'Failed to mark order as paid' });
-        }
-      })
-    );
-  }
-
-  onCancelOrder(orderId: number): void {
-    // TODO: Implement API call to cancel order
-    this.onAlertMessage({ type: 'success', text: 'Order cancelled successfully!' });
-    this.abandonedOrders = this.abandonedOrders.filter(o => o.id !== orderId);
-  }
-
-  onVerifyPayments(): void {
-    // TODO: Implement API call to verify payments
-    this.onAlertMessage({ type: 'info', text: 'Payment verification started.' });
-  }
-
-  onSendPaymentReminders(): void {
-    // TODO: Implement API call to send payment reminders
-    this.onAlertMessage({ type: 'success', text: 'Payment reminders sent!' });
-  }
-
-  onCancelAllUnpaid(): void {
-    // TODO: Implement API call to cancel all unpaid orders
-    this.onAlertMessage({ type: 'success', text: 'All unpaid orders cancelled!' });
-    this.abandonedOrders = [];
-  }
-
-  onCreateCustomTicket(ticketForm: CustomTicketForm): void {
-    if (!this.selectedEvent) return;
-    
-    const ticketData = {
-      event_id: this.selectedEvent.id,
-      name: ticketForm.name,
-      email_address: ticketForm.email_address,
-      contact_number: ticketForm.contact_number,
-      number_of_entries: ticketForm.number_of_entries
-    };
-    
-    this.subscriptions.add(
-      this.eventService.addTicket(ticketData).subscribe({
-        next: (response) => {
-          this.onAlertMessage({ type: 'success', text: 'Custom ticket created successfully!' });
-          
-          // If ticket is marked as paid, mark it as paid immediately
-          if (ticketForm.ticket_paid && response.ticket?.id) {
-            this.subscriptions.add(
-              this.eventService.markTicketPaid(response.ticket.id).subscribe({
-                next: () => {
-                  this.loadEventData(); // Refresh data
-                },
-                error: (error) => {
-                  console.error('Failed to mark custom ticket as paid:', error);
-                }
-              })
-            );
-          } else {
-            // Refresh event data to show new ticket
-            this.loadEventData();
-          }
-        },
-        error: (error) => {
-          console.error('Failed to create custom ticket:', error);
-          this.onAlertMessage({ type: 'error', text: 'Failed to create custom ticket' });
-        }
-      })
-    );
-  }
-
-  onDownloadAbandonedCSV(): void {
-    // TODO: Implement CSV download
-    this.onAlertMessage({ type: 'info', text: 'CSV download functionality to be implemented.' });
-  }
-
-  // Referrals Tab handlers
-  onAddReferrer(referrerForm: ReferrerForm): void {
-    if (!this.selectedEvent) return;
-    
-    this.subscriptions.add(
-      this.eventService.createEventReferrer(this.selectedEvent.id, referrerForm).subscribe({
-        next: (newReferrer) => {
-          this.onAlertMessage({ type: 'success', text: 'Referrer added successfully!' });
-          this.eventReferrers.push(newReferrer);
-        },
-        error: (error) => {
-          console.error('Failed to create referrer:', error);
-          this.onAlertMessage({ type: 'error', text: error.message || 'Failed to create referrer' });
-        }
-      })
-    );
+    // Update the selected event reference to keep it in sync
+    if (this.selectedEvent && this.selectedEvent.id === updatedEvent.id) {
+      this.selectedEvent = updatedEvent;
+    }
   }
 
   onAlertMessage(message: { type: string; text: string }): void {

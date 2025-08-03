@@ -1,6 +1,8 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { EventService, Event, EventReferrer as ServiceEventReferrer } from '../../../services/event.service';
 
 export interface EventReferrer {
   id: number;
@@ -25,23 +27,78 @@ export interface ReferrerForm {
   templateUrl: './event-referrals-tab.component.html',
   styleUrl: './event-referrals-tab.component.scss'
 })
-export class EventReferralsTabComponent {
-  @Input() referrers: EventReferrer[] = [];
-  @Input() eventTitle: string = '';
+export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() selectedEvent: Event | null = null;
   @Input() isAdmin: boolean = false;
-  @Input() loading: boolean = false;
-  @Output() addReferrer = new EventEmitter<ReferrerForm>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
+  referrers: EventReferrer[] = [];
+  loading = false;
+  
   referrerForm: ReferrerForm = {
     name: '',
     referral_code: '',
     slug: ''
   };
 
+  private subscriptions = new Subscription();
+
+  constructor(private eventService: EventService) {}
+
+  ngOnInit(): void {
+    this.loadEventReferrers();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedEvent']) {
+      this.loadEventReferrers();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private loadEventReferrers(): void {
+    if (!this.selectedEvent) {
+      this.referrers = [];
+      return;
+    }
+
+    this.loading = true;
+    this.subscriptions.add(
+      this.eventService.getEventReferrers(this.selectedEvent.id).subscribe({
+        next: (referrers) => {
+          this.referrers = referrers.map(referrer => this.convertServiceReferrerToComponentReferrer(referrer));
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load event referrers:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to load event referrers'
+          });
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  private convertServiceReferrerToComponentReferrer(referrer: ServiceEventReferrer): EventReferrer {
+    return {
+      id: referrer.id,
+      name: referrer.name,
+      referral_code: referrer.referral_code,
+      tickets_sold: referrer.tickets_sold,
+      gross_amount_sold: referrer.gross_amount_sold,
+      net_amount_sold: referrer.net_amount_sold,
+      referral_shortlink: referrer.referral_shortlink
+    };
+  }
+
   generateReferralCode(): void {
-    if (this.referrerForm.name && this.eventTitle) {
-      const cleanEventTitle = this.eventTitle.replace(/[^A-Z0-9]/gi, '');
+    if (this.referrerForm.name && this.selectedEvent?.title) {
+      const cleanEventTitle = this.selectedEvent.title.replace(/[^A-Z0-9]/gi, '');
       const cleanReferrerName = this.referrerForm.name.replace(/[^A-Z0-9]/gi, '');
       this.referrerForm.referral_code = `${cleanEventTitle}-${cleanReferrerName}`;
       this.generateSlug();
@@ -70,6 +127,8 @@ export class EventReferralsTabComponent {
   }
 
   onSubmitReferrer(): void {
+    if (!this.selectedEvent) return;
+    
     // Basic validation
     if (!this.referrerForm.name || !this.referrerForm.referral_code || !this.referrerForm.slug) {
       this.alertMessage.emit({
@@ -89,8 +148,25 @@ export class EventReferralsTabComponent {
       return;
     }
 
-    this.addReferrer.emit({ ...this.referrerForm });
-    this.resetForm();
+    this.subscriptions.add(
+      this.eventService.createEventReferrer(this.selectedEvent.id, this.referrerForm).subscribe({
+        next: (newReferrer) => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Referrer added successfully!'
+          });
+          this.referrers.push(this.convertServiceReferrerToComponentReferrer(newReferrer));
+          this.resetForm();
+        },
+        error: (error) => {
+          console.error('Failed to create referrer:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error.message || 'Failed to create referrer'
+          });
+        }
+      })
+    );
   }
 
   resetForm(): void {

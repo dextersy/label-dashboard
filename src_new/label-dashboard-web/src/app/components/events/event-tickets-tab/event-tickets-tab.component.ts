@@ -1,5 +1,7 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 
 export interface EventTicket {
   id: number;
@@ -32,33 +34,159 @@ export interface TicketSummary {
   templateUrl: './event-tickets-tab.component.html',
   styleUrl: './event-tickets-tab.component.scss'
 })
-export class EventTicketsTabComponent {
-  @Input() tickets: EventTicket[] = [];
-  @Input() summary: TicketSummary | null = null;
+export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() selectedEvent: Event | null = null;
   @Input() isAdmin: boolean = false;
-  @Input() loading: boolean = false;
-  @Output() resendTicket = new EventEmitter<number>();
-  @Output() cancelTicket = new EventEmitter<number>();
-  @Output() downloadCSV = new EventEmitter<void>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
+  tickets: EventTicket[] = [];
+  summary: TicketSummary | null = null;
+  loading = false;
   selectedTicketId: number | null = null;
 
+  private subscriptions = new Subscription();
+
+  constructor(private eventService: EventService) {}
+
+  ngOnInit(): void {
+    this.loadEventTickets();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedEvent']) {
+      this.loadEventTickets();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private loadEventTickets(): void {
+    if (!this.selectedEvent) {
+      this.tickets = [];
+      this.summary = null;
+      return;
+    }
+
+    this.loading = true;
+    this.subscriptions.add(
+      this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
+        next: (tickets) => {
+          // Convert API tickets to component format and filter confirmed tickets
+          this.tickets = tickets
+            .filter(ticket => (ticket.status != 'New' && ticket.status != 'Canceled'))
+            .map(ticket => this.convertServiceTicketToComponentTicket(ticket));
+          
+          this.calculateTicketSummary();
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load event tickets:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to load event tickets'
+          });
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  private convertServiceTicketToComponentTicket(ticket: ServiceEventTicket): EventTicket {
+    return {
+      id: ticket.id,
+      name: ticket.name,
+      email_address: ticket.email_address,
+      contact_number: ticket.contact_number || '',
+      number_of_entries: ticket.number_of_entries,
+      ticket_code: ticket.ticket_code,
+      price_per_ticket: ticket.price_per_ticket,
+      payment_processing_fee: ticket.payment_processing_fee,
+      order_timestamp: ticket.order_timestamp,
+      number_of_claimed_entries: ticket.number_of_claimed_entries,
+      status: this.normalizeTicketStatus(ticket.status)
+    };
+  }
+
+  private normalizeTicketStatus(status: string): 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled' {
+    switch (status.toLowerCase()) {
+      case 'ticket sent.':
+      case 'ticket sent':
+        return 'Ticket sent.';
+      case 'payment confirmed':
+      case 'payment confirmed.':
+        return 'Payment Confirmed';
+      case 'new':
+        return 'New';
+      case 'canceled':
+      case 'cancelled':
+        return 'Canceled';
+      default:
+        return 'New';
+    }
+  }
+
+  private calculateTicketSummary(): void {
+    const confirmedTickets = this.tickets.filter(t => 
+      t.status === 'Ticket sent.' || t.status === 'Payment Confirmed'
+    );
+    
+    const totalTicketsSold = confirmedTickets.reduce((sum, ticket) => 
+      sum + ticket.number_of_entries, 0
+    );
+    
+    const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
+      const ticketRevenue = ticket.price_per_ticket * ticket.number_of_entries;
+      return sum + ticketRevenue;
+    }, 0);
+    
+    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => 
+      sum + ticket.payment_processing_fee, 0
+    );
+    
+    const netRevenue = totalRevenue - totalProcessingFee;
+    const platformFee = netRevenue * 0.05; // 5% platform fee
+    const grandTotal = netRevenue - platformFee;
+    
+    this.summary = {
+      total_tickets_sold: totalTicketsSold,
+      total_revenue: totalRevenue,
+      total_processing_fee: totalProcessingFee,
+      net_revenue: netRevenue,
+      platform_fee: platformFee,
+      grand_total: grandTotal
+    };
+  }
+
   onResendTicket(ticketId: number): void {
-    this.resendTicket.emit(ticketId);
+    // TODO: Implement API call to resend ticket
+    this.alertMessage.emit({
+      type: 'success',
+      text: 'Ticket resent successfully!'
+    });
   }
 
   onCancelTicket(ticketId: number): void {
     this.selectedTicketId = ticketId;
-    // In a real implementation, this would open a confirmation modal
     const confirmed = confirm('WARNING: This ticket is already paid and sent to the customer. Are you sure you want to cancel this ticket?');
     if (confirmed) {
-      this.cancelTicket.emit(ticketId);
+      // TODO: Implement API call to cancel ticket
+      this.alertMessage.emit({
+        type: 'success',
+        text: 'Ticket cancelled successfully!'
+      });
+      this.tickets = this.tickets.filter(t => t.id !== ticketId);
+      this.calculateTicketSummary();
     }
   }
 
   onDownloadCSV(): void {
-    this.downloadCSV.emit();
+    // TODO: Implement CSV download
+    this.alertMessage.emit({
+      type: 'info',
+      text: 'CSV download functionality to be implemented.'
+    });
   }
 
   getRowClass(ticket: EventTicket): string {

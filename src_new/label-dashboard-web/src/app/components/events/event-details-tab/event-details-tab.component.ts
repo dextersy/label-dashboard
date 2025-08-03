@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { EventService } from '../../../services/event.service';
+import { Subscription } from 'rxjs';
+import { EventService, Event } from '../../../services/event.service';
 
 export interface EventDetails {
   id?: number;
@@ -37,32 +38,100 @@ export interface EventDetails {
   templateUrl: './event-details-tab.component.html',
   styleUrl: './event-details-tab.component.scss'
 })
-export class EventDetailsTabComponent implements OnInit, OnChanges {
-  @Input() event: EventDetails | null = null;
+export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() selectedEvent: Event | null = null;
   @Input() isAdmin: boolean = false;
-  @Input() loading: boolean = false;
-  @Output() eventUpdate = new EventEmitter<EventDetails>();
-  @Output() eventUpdateWithFile = new EventEmitter<{eventId: number, formData: FormData}>();
+  @Output() eventUpdated = new EventEmitter<Event>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
+  event: EventDetails | null = null;
+  loading = false;
   refreshingPIN = false;
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   uploading = false;
 
+  private subscriptions = new Subscription();
+
   constructor(private eventService: EventService) {}
 
   ngOnInit(): void {
-    if (!this.event) {
-      this.initializeNewEvent();
-    } else {
-      this.formatDatesForDisplay();
-    }
+    this.loadEventDetails();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['event'] && this.event && changes['event'].currentValue) {
-      this.formatDatesForDisplay();
+    if (changes['selectedEvent']) {
+      this.loadEventDetails();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  private loadEventDetails(): void {
+    if (!this.selectedEvent) {
+      this.initializeNewEvent();
+      return;
+    }
+
+    this.loading = true;
+    this.subscriptions.add(
+      this.eventService.getEvent(this.selectedEvent.id).subscribe({
+        next: (event) => {
+          this.event = this.convertEventToDetails(event);
+          this.formatDatesForDisplay();
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load event details:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to load event details'
+          });
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  private convertEventToDetails(event: Event): EventDetails {
+    return {
+      id: event.id,
+      title: event.title,
+      date_and_time: event.date_and_time,
+      venue: event.venue,
+      description: event.description || '',
+      poster_url: event.poster_url,
+      rsvp_link: event.rsvp_link || '',
+      ticket_price: event.ticket_price,
+      max_tickets: event.max_tickets || 0,
+      close_time: event.close_time || '',
+      verification_pin: event.verification_pin,
+      verification_link: event.verification_link,
+      buy_shortlink: event.buy_shortlink,
+      ticket_naming: event.ticket_naming,
+      slug: '', // Slug is input-only, not stored in API
+      supports_gcash: event.supports_gcash,
+      supports_qrph: event.supports_qrph,
+      supports_card: event.supports_card,
+      supports_ubp: event.supports_ubp,
+      supports_dob: event.supports_dob,
+      supports_maya: event.supports_maya,
+      supports_grabpay: event.supports_grabpay,
+      status: this.getEventStatus(event) as 'Open' | 'Closed'
+    };
+  }
+
+  private getEventStatus(event: Event): 'Open' | 'Closed' {
+    const now = new Date();
+    const eventDate = new Date(event.date_and_time);
+    const closeTime = event.close_time ? new Date(event.close_time) : eventDate;
+    
+    if (now > closeTime) {
+      return 'Closed';
+    } else {
+      return 'Open';
     }
   }
 
@@ -232,10 +301,18 @@ export class EventDetailsTabComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (!this.event.id) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'Cannot update event without ID.'
+      });
+      return;
+    }
+
+    this.uploading = true;
+
     // If there's a selected poster file, use FormData for file upload
     if (this.selectedPosterFile) {
-      this.uploading = true;
-      
       const formData = new FormData();
       formData.append('poster', this.selectedPosterFile);
       
@@ -259,19 +336,77 @@ export class EventDetailsTabComponent implements OnInit, OnChanges {
       formData.append('supports_maya', this.event.supports_maya.toString());
       formData.append('supports_grabpay', this.event.supports_grabpay.toString());
 
-      // Call the parent component's update method with FormData
-      if (this.event.id) {
-        this.eventUpdateWithFile.emit({ eventId: this.event.id, formData });
-      }
+      this.subscriptions.add(
+        this.eventService.updateEventWithFile(this.event.id, formData).subscribe({
+          next: (updatedEvent) => {
+            this.alertMessage.emit({
+              type: 'success',
+              text: 'Event updated successfully!'
+            });
+            this.event = this.convertEventToDetails(updatedEvent);
+            this.formatDatesForDisplay();
+            this.onEventSaved();
+            this.eventUpdated.emit(updatedEvent);
+            this.uploading = false;
+          },
+          error: (error) => {
+            console.error('Failed to update event with file:', error);
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'Failed to update event'
+            });
+            this.uploading = false;
+          }
+        })
+      );
     } else {
       // Create a copy with properly formatted dates for the API
-      const eventForAPI = {
-        ...this.event,
+      const updateData = {
+        title: this.event.title,
         date_and_time: this.formatDateForAPI(this.event.date_and_time),
-        close_time: this.event.close_time ? this.formatDateForAPI(this.event.close_time) : ''
+        venue: this.event.venue,
+        description: this.event.description,
+        poster_url: this.event.poster_url,
+        rsvp_link: this.event.rsvp_link,
+        ticket_price: this.event.ticket_price,
+        close_time: this.event.close_time ? this.formatDateForAPI(this.event.close_time) : '',
+        verification_pin: this.event.verification_pin,
+        verification_link: this.event.verification_link,
+        buy_shortlink: this.event.buy_shortlink,
+        ticket_naming: this.event.ticket_naming,
+        slug: this.event.slug,
+        supports_gcash: this.event.supports_gcash,
+        supports_qrph: this.event.supports_qrph,
+        supports_card: this.event.supports_card,
+        supports_ubp: this.event.supports_ubp,
+        supports_dob: this.event.supports_dob,
+        supports_maya: this.event.supports_maya,
+        supports_grabpay: this.event.supports_grabpay,
+        max_tickets: this.event.max_tickets
       };
 
-      this.eventUpdate.emit(eventForAPI);
+      this.subscriptions.add(
+        this.eventService.updateEvent(this.event.id, updateData).subscribe({
+          next: (updatedEvent) => {
+            this.alertMessage.emit({
+              type: 'success',
+              text: 'Event updated successfully!'
+            });
+            this.event = this.convertEventToDetails(updatedEvent);
+            this.formatDatesForDisplay();
+            this.eventUpdated.emit(updatedEvent);
+            this.uploading = false;
+          },
+          error: (error) => {
+            console.error('Failed to update event:', error);
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'Failed to update event'
+            });
+            this.uploading = false;
+          }
+        })
+      );
     }
   }
 
