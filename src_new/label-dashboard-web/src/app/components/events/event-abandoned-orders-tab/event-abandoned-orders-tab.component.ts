@@ -396,18 +396,18 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     return this.orders.reduce((total, order) => total + order.number_of_entries, 0);
   }
 
-  isEventClosed(): boolean {
-    if (!this.selectedEvent || !this.selectedEvent.close_time) {
+  isEventPast(): boolean {
+    if (!this.selectedEvent || !this.selectedEvent.date_and_time) {
       return false;
     }
     
-    const closeTime = new Date(this.selectedEvent.close_time);
+    const eventDate = new Date(this.selectedEvent.date_and_time);
     const now = new Date();
     
-    return now > closeTime;
+    return now > eventDate;
   }
 
   canCreateCustomTickets(): boolean {
-    return this.isAdmin && !this.isEventClosed();
+    return this.isAdmin && !this.isEventPast();
   }
 }

@@ -126,10 +126,10 @@
       </div>
     </div>
 
-    <!-- Event Closed Message -->
-    <div class="alert alert-warning mt-4" *ngIf="isAdmin && isEventClosed()">
+    <!-- Event Past Message -->
+    <div class="alert alert-warning mt-4" *ngIf="isAdmin && isEventPast()">
       <i class="fa fa-clock-o me-2"></i>
-      <strong>Event Closed:</strong> This event is closed for ticket sales. Custom ticket creation is disabled.
+      <strong>Event Past:</strong> This event has already occurred. Custom ticket creation is disabled.
     </div>
 
     <!-- Create Custom Ticket Form -->
