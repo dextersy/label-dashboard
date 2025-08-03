@@ -524,13 +524,13 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
     // Generate unique ticket code for this event
     const ticketCode = await generateUniqueTicketCode(eventIdNum);
 
-    // Calculate total amount and processing fee
+    // Calculate total amount and processing fee (no processing fee for custom tickets)
     const totalAmount = event.ticket_price * number_of_entries;
-    const processingFee = paymentService.calculateProcessingFee(totalAmount);
+    const processingFee = 0; // No processing fee for custom tickets created by admin
 
     // Create PayMongo payment link
     const paymentLink = await paymentService.createPaymentLink({
-      amount: (totalAmount + processingFee) * 100, // Convert to cents
+      amount: totalAmount * 100, // Convert to cents (no processing fee added)
       description: `${event.title} - ${number_of_entries} ticket(s)`,
       remarks: `Ticket code: ${ticketCode}`
     });
@@ -589,7 +589,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         id: ticket.id,
         ticket_code: ticketCode,
         payment_link: paymentLink.attributes.checkout_url,
-        total_amount: totalAmount + processingFee
+        total_amount: totalAmount // No processing fee for custom tickets
       }
     });
   } catch (error) {
