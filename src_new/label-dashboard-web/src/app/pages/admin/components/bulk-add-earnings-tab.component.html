@@ -88,8 +88,10 @@
         </td>
         <td></td>
         <td>
-          <input type="checkbox" class="form-check-input" #applyAllCalcInput 
-                 checked (change)="applyAllCalculateRoyalties(applyAllCalcInput.checked)">
+          <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" #applyAllCalcInput 
+                   checked (change)="applyAllCalculateRoyalties(applyAllCalcInput.checked)">
+          </div>
         </td>
         <td></td>
       </tr>
@@ -156,8 +158,10 @@
           </div>
         </td>
         <td>
-          <input type="checkbox" class="form-check-input" 
-                 [(ngModel)]="earning.calculate_royalties">
+          <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" 
+                   [(ngModel)]="earning.calculate_royalties">
+          </div>
         </td>
         <td>
           <button type="button" 
