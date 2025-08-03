@@ -1197,3 +1197,71 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const cancelAllUnpaidTickets = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { event_id } = req.body;
+
+    if (!event_id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const eventIdNum = parseInt(event_id, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Find all unpaid tickets for this event
+    const unpaidTickets = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum,
+        status: 'New'
+      }
+    });
+
+    if (unpaidTickets.length === 0) {
+      return res.json({
+        message: 'No unpaid tickets found to cancel',
+        canceled_count: 0
+      });
+    }
+
+    // Update all unpaid tickets to canceled status
+    const [updatedCount] = await Ticket.update(
+      { status: 'Canceled' },
+      {
+        where: {
+          event_id: eventIdNum,
+          status: 'New'
+        }
+      }
+    );
+
+    res.json({
+      message: `Successfully canceled ${updatedCount} unpaid ticket(s)`,
+      canceled_count: updatedCount,
+      event_id: eventIdNum
+    });
+  } catch (error) {
+    console.error('Cancel all unpaid tickets error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -205,14 +205,35 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   }
 
   onCancelAllUnpaid(): void {
+    if (!this.selectedEvent) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'No event selected'
+      });
+      return;
+    }
+
     const confirmed = confirm('Are you sure you want to cancel ALL unpaid orders? This action cannot be undone.');
     if (confirmed) {
-      // TODO: Implement API call to cancel all unpaid orders
-      this.alertMessage.emit({
-        type: 'success',
-        text: 'All unpaid orders cancelled!'
-      });
-      this.orders = [];
+      this.subscriptions.add(
+        this.eventService.cancelAllUnpaidTickets(this.selectedEvent.id).subscribe({
+          next: (response) => {
+            this.alertMessage.emit({
+              type: 'success',
+              text: response.message || 'All unpaid orders cancelled successfully!'
+            });
+            // Refresh the abandoned orders list
+            this.loadAbandonedOrders();
+          },
+          error: (error) => {
+            console.error('Failed to cancel all unpaid orders:', error);
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'Failed to cancel all unpaid orders'
+            });
+          }
+        })
+      );
     }
   }
 

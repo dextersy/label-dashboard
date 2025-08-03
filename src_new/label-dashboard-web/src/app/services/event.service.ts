@@ -362,6 +362,18 @@ export class EventService {
   }
 
   /**
+   * Cancel all unpaid tickets for an event
+   */
+  cancelAllUnpaidTickets(eventId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/events/tickets/cancel-all-unpaid`, 
+      { event_id: eventId },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Refresh verification PIN for an event
    */
   refreshVerificationPIN(eventId: number): Observable<{verification_pin: string}> {
