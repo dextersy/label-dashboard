@@ -4,6 +4,20 @@
     <strong>Current total earnings:</strong> 
     <span>{{ formatCurrency(totalEarnings) }}</span>
   </div>
+  <div class="col-md-9">
+    <div class="btn-group" role="group">
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(1)">
+        Add 1 Row
+      </button>
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(5)">
+        Add 5 Rows
+      </button>
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(10)">
+        Add 10 Rows
+      </button>
+    </div>
+    <span class="ms-3 text-muted">Total rows: {{ bulkEarnings.length }}</span>
+  </div>
 </div>
 
 <div class="table-responsive">
@@ -16,6 +30,7 @@
         <th>Earning Description</th>
         <th>Earning Amount</th>
         <th>Calculate royalties</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -44,17 +59,46 @@
           <input type="checkbox" class="form-check-input" #applyAllCalcInput 
                  checked (change)="applyAllCalculateRoyalties(applyAllCalcInput.checked)">
         </td>
+        <td></td>
       </tr>
 
       <!-- Data rows -->
       <tr *ngFor="let earning of bulkEarnings; let i = index">
         <td>
-          <select class="form-control" [(ngModel)]="earning.release_id">
-            <option value="0"></option>
-            <option *ngFor="let release of releases" [value]="release.id">
-              {{ release.catalog_no }}: {{ release.title }}
-            </option>
-          </select>
+          <div class="position-relative">
+            <input type="text" 
+                   class="form-control" 
+                   [(ngModel)]="searchTerms[i]"
+                   (input)="onReleaseSearch(i, searchTerms[i])"
+                   (focus)="onInputFocus(i)"
+                   (blur)="onInputBlur(i)"
+                   placeholder="Search releases..."
+                   autocomplete="off">
+            
+            <!-- Dropdown for autocomplete results -->
+            <div *ngIf="showDropdown[i]" 
+                 class="position-absolute w-100 bg-white border border-top-0 shadow-sm" 
+                 style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+              <div *ngIf="filteredReleases.length > 0; else noResults">
+                <div *ngFor="let release of filteredReleases" 
+                     class="p-2 release-option"
+                     style="cursor: pointer; border-bottom: 1px solid #eee;"
+                     (click)="selectRelease(i, release)">
+                  <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
+                </div>
+              </div>
+              <ng-template #noResults>
+                <div class="p-2 text-muted">
+                  No releases found
+                </div>
+              </ng-template>
+            </div>
+            
+            <!-- Show selected release if one is selected -->
+            <div *ngIf="earning.release_id > 0 && !searchTerms[i]" class="text-muted small">
+              Selected: {{ getSelectedRelease(earning.release_id)?.catalog_no }}: {{ getSelectedRelease(earning.release_id)?.title }}
+            </div>
+          </div>
         </td>
         <td>
           <input type="date" class="form-control" [(ngModel)]="earning.date_recorded">
@@ -82,6 +126,14 @@
         <td>
           <input type="checkbox" class="form-check-input" 
                  [(ngModel)]="earning.calculate_royalties">
+        </td>
+        <td>
+          <button type="button" 
+                  class="btn btn-outline-danger btn-sm" 
+                  (click)="removeRow(i)"
+                  title="Remove row">
+            ×
+          </button>
         </td>
       </tr>
     </tbody>

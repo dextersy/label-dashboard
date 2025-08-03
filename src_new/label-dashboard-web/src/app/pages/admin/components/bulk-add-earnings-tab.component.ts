@@ -9,13 +9,21 @@ import { NotificationService } from '../../../services/notification.service';
   selector: 'app-bulk-add-earnings-tab',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './bulk-add-earnings-tab.component.html'
+  templateUrl: './bulk-add-earnings-tab.component.html',
+  styles: [`
+    .release-option:hover {
+      background-color: #f8f9fa !important;
+    }
+  `]
 })
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;
   releases: Release[] = [];
+  filteredReleases: Release[] = [];
   bulkEarnings: BulkEarning[] = [];
   totalEarnings: number = 0;
+  searchTerms: string[] = [];
+  showDropdown: boolean[] = [];
 
   constructor(
     private adminService: AdminService,
@@ -35,6 +43,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.releaseService.getReleases().subscribe({
       next: (response) => {
         this.releases = response.releases;
+        this.filteredReleases = [...this.releases];
         this.loading = false;
       },
       error: (error) => {
@@ -46,16 +55,24 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   private initializeBulkEarnings(): void {
     this.bulkEarnings = [];
-    for (let i = 0; i < 20; i++) {
-      this.bulkEarnings.push({
-        release_id: 0,
-        date_recorded: new Date().toISOString().split('T')[0],
-        type: 'Streaming',
-        description: '',
-        amount: 0,
-        calculate_royalties: true
-      });
+    this.searchTerms = [];
+    this.showDropdown = [];
+    for (let i = 0; i < 10; i++) {
+      this.addEarningRow();
     }
+  }
+
+  private addEarningRow(): void {
+    this.bulkEarnings.push({
+      release_id: 0,
+      date_recorded: new Date().toISOString().split('T')[0],
+      type: 'Streaming',
+      description: '',
+      amount: 0,
+      calculate_royalties: true
+    });
+    this.searchTerms.push('');
+    this.showDropdown.push(false);
   }
 
   onBulkAmountChange(): void {
@@ -101,6 +118,59 @@ export class BulkAddEarningsTabComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  addRows(count: number): void {
+    for (let i = 0; i < count; i++) {
+      this.addEarningRow();
+    }
+  }
+
+  removeRow(index: number): void {
+    this.bulkEarnings.splice(index, 1);
+    this.searchTerms.splice(index, 1);
+    this.showDropdown.splice(index, 1);
+    this.onBulkAmountChange();
+  }
+
+  onReleaseSearch(index: number, searchTerm: string): void {
+    this.searchTerms[index] = searchTerm;
+    
+    if (searchTerm.length === 0) {
+      this.filteredReleases = [...this.releases];
+    } else {
+      this.filteredReleases = this.releases.filter(release => 
+        release.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        release.catalog_no.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+  }
+
+  onInputFocus(index: number): void {
+    this.showDropdown[index] = true;
+    if (this.searchTerms[index].length === 0) {
+      this.filteredReleases = [...this.releases];
+    } else {
+      this.onReleaseSearch(index, this.searchTerms[index]);
+    }
+  }
+
+  onInputBlur(index: number): void {
+    // Delay hiding to allow for click events on dropdown items
+    setTimeout(() => {
+      this.showDropdown[index] = false;
+    }, 200);
+  }
+
+  selectRelease(index: number, release: Release): void {
+    this.bulkEarnings[index].release_id = release.id;
+    this.searchTerms[index] = `${release.catalog_no}: ${release.title}`;
+    this.showDropdown[index] = false;
+    this.filteredReleases = [];
+  }
+
+  getSelectedRelease(releaseId: number): Release | undefined {
+    return this.releases.find(r => r.id === releaseId);
   }
 
   formatCurrency(amount: number): string {
