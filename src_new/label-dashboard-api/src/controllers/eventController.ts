@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
-import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, generateUniqueTicketCode } from '../utils/ticketEmailService';
+import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode } from '../utils/ticketEmailService';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
