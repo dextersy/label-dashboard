@@ -756,3 +756,277 @@ export const upload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB limit
   }
 });
+
+export const getEventReferrers = async (req: AuthRequest, res: Response) => {
+  try {
+    const { event_id } = req.query;
+    const eventIdNum = event_id ? parseInt(event_id as string, 10) : undefined;
+
+    if (!event_id || isNaN(eventIdNum!) || eventIdNum! <= 0) {
+      return res.status(400).json({ error: 'Valid event ID is required' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get referrers for this event with sales data
+    const referrers = await EventReferrer.findAll({
+      where: { event_id: eventIdNum },
+      order: [['id', 'ASC']]
+    });
+
+    // Calculate sales data for each referrer
+    const referrersWithSales = await Promise.all(
+      referrers.map(async (referrer) => {
+        // Get tickets sold through this referrer
+        const tickets = await Ticket.findAll({
+          where: { 
+            event_id: eventIdNum,
+            referrer_id: referrer.id,
+            status: ['Payment Confirmed', 'Ticket sent.']
+          }
+        });
+
+        const ticketsSold = tickets.reduce((sum, ticket) => sum + ticket.number_of_entries, 0);
+        const grossAmount = tickets.reduce((sum, ticket) => sum + (ticket.price_per_ticket * ticket.number_of_entries), 0);
+        const processingFees = tickets.reduce((sum, ticket) => sum + ticket.payment_processing_fee, 0);
+        const netAmount = grossAmount - processingFees;
+
+        return {
+          id: referrer.id,
+          name: referrer.name,
+          referral_code: referrer.referral_code,
+          tickets_sold: ticketsSold,
+          gross_amount_sold: grossAmount,
+          net_amount_sold: netAmount,
+          referral_shortlink: referrer.referral_shortlink || ''
+        };
+      })
+    );
+
+    res.json({ referrers: referrersWithSales });
+  } catch (error) {
+    console.error('Get event referrers error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const createEventReferrer = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { event_id, name, referral_code, slug } = req.body;
+
+    if (!event_id || !name || !referral_code || !slug) {
+      return res.status(400).json({ 
+        error: 'Event ID, name, referral code, and slug are required' 
+      });
+    }
+
+    const eventIdNum = parseInt(event_id, 10);
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Check for duplicate referral codes
+    const existingReferrer = await EventReferrer.findOne({
+      where: { referral_code }
+    });
+
+    if (existingReferrer) {
+      return res.status(400).json({ error: 'A referrer with this referral code already exists' });
+    }
+
+    try {
+      // Generate referral shortlink
+      const frontendUrl = await getBrandFrontendUrl(req.user.brand_id);
+      const originalUrl = `${frontendUrl}/public/tickets/buy/${eventIdNum}?ref=${referral_code}`;
+      const referralShortlink = await createShortLink(originalUrl, slug);
+
+      // Create the referrer
+      const referrer = await EventReferrer.create({
+        event_id: eventIdNum,
+        name,
+        referral_code,
+        referral_shortlink: referralShortlink
+      });
+
+      res.status(201).json({
+        message: 'Event referrer created successfully',
+        referrer: {
+          id: referrer.id,
+          name: referrer.name,
+          referral_code: referrer.referral_code,
+          tickets_sold: 0,
+          gross_amount_sold: 0,
+          net_amount_sold: 0,
+          referral_shortlink: referrer.referral_shortlink
+        }
+      });
+    } catch (shortlinkError) {
+      console.error('Failed to create referral shortlink:', shortlinkError);
+      
+      // Create referrer without shortlink
+      const referrer = await EventReferrer.create({
+        event_id: eventIdNum,
+        name,
+        referral_code,
+        referral_shortlink: ''
+      });
+
+      res.status(201).json({
+        message: 'Event referrer created successfully (shortlink generation failed)',
+        referrer: {
+          id: referrer.id,
+          name: referrer.name,
+          referral_code: referrer.referral_code,
+          tickets_sold: 0,
+          gross_amount_sold: 0,
+          net_amount_sold: 0,
+          referral_shortlink: referrer.referral_shortlink
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Create event referrer error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateEventReferrer = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const referrerId = parseInt(id, 10);
+
+    if (isNaN(referrerId)) {
+      return res.status(400).json({ error: 'Invalid referrer ID' });
+    }
+
+    const { name, referral_code } = req.body;
+
+    if (!name || !referral_code) {
+      return res.status(400).json({ 
+        error: 'Name and referral code are required' 
+      });
+    }
+
+    // Find the referrer and verify access
+    const referrer = await EventReferrer.findOne({
+      where: { id: referrerId },
+      include: [{
+        model: Event,
+        as: 'event',
+        where: { brand_id: req.user.brand_id }
+      }]
+    });
+
+    if (!referrer) {
+      return res.status(404).json({ error: 'Referrer not found' });
+    }
+
+    // Check for duplicate referral codes (excluding current referrer)
+    const existingReferrer = await EventReferrer.findOne({
+      where: { 
+        referral_code,
+        id: { [require('sequelize').Op.ne]: referrerId }
+      }
+    });
+
+    if (existingReferrer) {
+      return res.status(400).json({ error: 'A referrer with this referral code already exists' });
+    }
+
+    // Update the referrer
+    await referrer.update({
+      name,
+      referral_code
+    });
+
+    res.json({
+      message: 'Event referrer updated successfully',
+      referrer: {
+        id: referrer.id,
+        name: referrer.name,
+        referral_code: referrer.referral_code,
+        referral_shortlink: referrer.referral_shortlink
+      }
+    });
+  } catch (error) {
+    console.error('Update event referrer error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteEventReferrer = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const referrerId = parseInt(id, 10);
+
+    if (isNaN(referrerId)) {
+      return res.status(400).json({ error: 'Invalid referrer ID' });
+    }
+
+    // Find the referrer and verify access
+    const referrer = await EventReferrer.findOne({
+      where: { id: referrerId },
+      include: [{
+        model: Event,
+        as: 'event',
+        where: { brand_id: req.user.brand_id }
+      }]
+    });
+
+    if (!referrer) {
+      return res.status(404).json({ error: 'Referrer not found' });
+    }
+
+    // Check if there are any tickets associated with this referrer
+    const ticketCount = await Ticket.count({
+      where: { referrer_id: referrerId }
+    });
+
+    if (ticketCount > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete referrer as there are tickets associated with it' 
+      });
+    }
+
+    // Delete the referrer
+    await referrer.destroy();
+
+    res.json({
+      message: 'Event referrer deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete event referrer error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

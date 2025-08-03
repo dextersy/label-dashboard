@@ -9,6 +9,10 @@ import {
   getTickets,
   markTicketPaid,
   refreshVerificationPIN,
+  getEventReferrers,
+  createEventReferrer,
+  updateEventReferrer,
+  deleteEventReferrer,
   upload
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -29,6 +33,12 @@ router.post('/set-selected', setSelectedEvent);
 router.get('/tickets', getTickets);
 router.post('/tickets', requireAdmin, addTicket);
 router.post('/tickets/mark-paid', requireAdmin, markTicketPaid);
+
+// Referrer operations (specific routes before /:id)
+router.get('/referrers', getEventReferrers);
+router.post('/referrers', requireAdmin, createEventReferrer);
+router.put('/referrers/:id', requireAdmin, updateEventReferrer);
+router.delete('/referrers/:id', requireAdmin, deleteEventReferrer);
 
 // Event CRUD operations with :id (these must come last)
 router.get('/:id', getEvent);

@@ -51,11 +51,12 @@ export interface EventTicket {
 
 export interface EventReferrer {
   id: number;
-  event_id: number;
   name: string;
   referral_code: string;
-  sales_made: number;
-  total_earnings: number;
+  tickets_sold: number;
+  gross_amount_sold: number;
+  net_amount_sold: number;
+  referral_shortlink: string;
 }
 
 export interface EventSummary {
@@ -344,6 +345,73 @@ export class EventService {
       {},
       { headers: this.getAuthHeaders() }
     ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get event referrers for a specific event
+   */
+  getEventReferrers(eventId: number): Observable<EventReferrer[]> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.get<{referrers: EventReferrer[]}>(`${environment.apiUrl}/events/referrers`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(
+      map(response => response.referrers),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Create a new event referrer
+   */
+  createEventReferrer(eventId: number, referrerData: { name: string; referral_code: string; slug: string }): Observable<EventReferrer> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.post<{referrer: EventReferrer}>(`${environment.apiUrl}/events/referrers`, {
+      event_id: eventId,
+      ...referrerData
+    }, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.referrer),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Update an existing event referrer
+   */
+  updateEventReferrer(referrerId: number, referrerData: { name: string; referral_code: string }): Observable<EventReferrer> {
+    if (!referrerId || isNaN(referrerId) || referrerId <= 0) {
+      return throwError(() => new Error('Invalid referrer ID provided'));
+    }
+    
+    return this.http.put<{referrer: EventReferrer}>(`${environment.apiUrl}/events/referrers/${referrerId}`, referrerData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.referrer),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Delete an event referrer
+   */
+  deleteEventReferrer(referrerId: number): Observable<any> {
+    if (!referrerId || isNaN(referrerId) || referrerId <= 0) {
+      return throwError(() => new Error('Invalid referrer ID provided'));
+    }
+    
+    return this.http.delete(`${environment.apiUrl}/events/referrers/${referrerId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       catchError(this.handleError)
     );
   }

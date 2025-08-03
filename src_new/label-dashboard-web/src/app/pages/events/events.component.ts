@@ -303,6 +303,19 @@ export class EventsComponent implements OnInit, OnDestroy {
       })
     );
     
+    // Load event referrers
+    this.subscriptions.add(
+      this.eventService.getEventReferrers(this.selectedEvent.id).subscribe({
+        next: (referrers) => {
+          this.eventReferrers = referrers;
+        },
+        error: (error) => {
+          console.error('Failed to load event referrers:', error);
+          this.notificationService.showError('Failed to load event referrers');
+        }
+      })
+    );
+
     // Load event summary for additional stats
     this.subscriptions.add(
       this.eventService.getEventSummary(this.selectedEvent.id).subscribe({
@@ -843,19 +856,20 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   // Referrals Tab handlers
   onAddReferrer(referrerForm: ReferrerForm): void {
-    // TODO: Implement API call to add referrer
-    this.onAlertMessage({ type: 'success', text: 'Referrer added successfully!' });
+    if (!this.selectedEvent) return;
     
-    const newReferrer: EventReferrer = {
-      id: Date.now(), // Temporary ID
-      name: referrerForm.name,
-      referral_code: referrerForm.referral_code,
-      tickets_sold: 0,
-      gross_amount_sold: 0,
-      net_amount_sold: 0,
-      referral_shortlink: `https://tickets.example.com/buy/${referrerForm.slug.toLowerCase()}`
-    };
-    this.eventReferrers.push(newReferrer);
+    this.subscriptions.add(
+      this.eventService.createEventReferrer(this.selectedEvent.id, referrerForm).subscribe({
+        next: (newReferrer) => {
+          this.onAlertMessage({ type: 'success', text: 'Referrer added successfully!' });
+          this.eventReferrers.push(newReferrer);
+        },
+        error: (error) => {
+          console.error('Failed to create referrer:', error);
+          this.onAlertMessage({ type: 'error', text: error.message || 'Failed to create referrer' });
+        }
+      })
+    );
   }
 
   onAlertMessage(message: { type: string; text: string }): void {
