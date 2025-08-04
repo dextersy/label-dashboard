@@ -22,6 +22,7 @@ export interface PublicEvent {
   supports_dob: boolean;
   supports_maya: boolean;
   supports_grabpay: boolean;
+  buy_shortlink?: string;
   brand?: {
     id: number;
     name: string;

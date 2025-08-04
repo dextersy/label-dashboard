@@ -78,6 +78,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         supports_dob: event.supports_dob,
         supports_maya: event.supports_maya,
         supports_grabpay: event.supports_grabpay,
+        buy_shortlink: event.buy_shortlink,
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,

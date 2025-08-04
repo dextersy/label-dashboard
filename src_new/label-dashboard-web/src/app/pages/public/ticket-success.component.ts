@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { PublicService, TicketDetails, TicketVerificationRequest } from '../../services/public.service';
+import { PublicService, TicketDetails, TicketVerificationRequest, PublicEvent } from '../../services/public.service';
 
 
 @Component({
@@ -17,8 +17,10 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   
   isLoading = true;
   isSuccess = false;
+  isError = false;
   ticketDetails: TicketDetails | null = null;
   eventId: string | null = null;
+  event: PublicEvent | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -28,6 +30,9 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.eventId = params['id'];
+      if (this.eventId) {
+        this.loadEventDetails();
+      }
     });
 
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
@@ -88,11 +93,40 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
     }, 2000);
   }
 
+  loadEventDetails() {
+    if (!this.eventId) {
+      this.showError();
+      return;
+    }
+    
+    this.publicService.getEvent(parseInt(this.eventId, 10))
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.event) {
+            this.event = response.event;
+          } else {
+            this.showError();
+          }
+        },
+        error: (error) => {
+          console.error('Error loading event details:', error);
+          this.showError();
+        }
+      });
+  }
+
   showGenericSuccess() {
     setTimeout(() => {
       this.isLoading = false;
       this.isSuccess = true;
     }, 1000);
+  }
+
+  showError() {
+    this.isLoading = false;
+    this.isSuccess = false;
+    this.isError = true;
   }
 
   refreshStatus() {
@@ -130,10 +164,24 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   }
 
   contactSupport() {
-    const subject = this.ticketDetails 
-      ? `Issue with ticket ${this.ticketDetails.ticket_code} for ${this.ticketDetails.event.title}`
-      : 'Issue with ticket purchase';
+    const eventTitle = this.event?.title || (this.ticketDetails?.event?.title) || 'Unknown Event';
+    const subject = `Problem with my ticket to ${eventTitle}`;
     
     window.location.href = `mailto:support@melt-records.com?subject=${encodeURIComponent(subject)}`;
+  }
+
+  shareOnFacebook() {
+    if (!this.event?.buy_shortlink) return;
+    
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(this.event.buy_shortlink)}`;
+    window.open(url, '_blank', 'width=600,height=400');
+  }
+
+  shareOnTwitter() {
+    if (!this.event) return;
+    
+    const text = `Join me at ${this.event.title}! You can get your ticket here: ${this.event.buy_shortlink || ''}`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'width=600,height=400');
   }
 }
