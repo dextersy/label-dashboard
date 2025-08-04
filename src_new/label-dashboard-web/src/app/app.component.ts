@@ -29,7 +29,6 @@ export class AppComponent implements OnInit {
     // Initialize brand information before anything else
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        console.log('Brand settings loaded:', brandSettings);
         this.applyBrandStyling(brandSettings);
       },
       error: (error) => {
@@ -84,14 +83,14 @@ export class AppComponent implements OnInit {
 
   isStandalonePage(): boolean {
     const standaloneRoutes = ['/login', '/domain-not-found', '/forgot-password', '/reset-password', '/set-profile'];
-    const standaloneRoutePrefixes = ['/invite'];
+    const standaloneRoutePrefixes = ['/invite', '/public'];
     
     // Check exact matches
     if (standaloneRoutes.includes(this.router.url) || this.router.url === '/') {
       return true;
     }
     
-    // Check route prefixes (for routes like /invite/accept)
+    // Check route prefixes (for routes like /invite/accept and /public)
     if (standaloneRoutePrefixes.some(prefix => this.router.url.startsWith(prefix))) {
       return true;
     }

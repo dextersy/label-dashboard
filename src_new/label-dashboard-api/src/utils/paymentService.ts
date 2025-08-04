@@ -90,17 +90,45 @@ export class PaymentService {
     }>;
     payment_method_types: string[];
     success_url: string;
-    cancel_url: string;
+    cancel_url?: string;
     description?: string;
+    billing?: {
+      name: string;
+      email: string;
+      phone: string;
+    };
   }): Promise<any> {
     try {
+      const requestBody: any = {
+        data: {
+          attributes: {
+            line_items: data.line_items,
+            payment_method_types: data.payment_method_types,
+            success_url: data.success_url,
+            send_email_receipt: false,
+            show_description: true,
+            show_line_items: true
+          }
+        }
+      };
+
+      // Add billing information if provided (to match PHP implementation)
+      if (data.billing) {
+        requestBody.data.attributes.billing = {
+          name: data.billing.name,
+          email: data.billing.email,
+          phone: data.billing.phone
+        };
+      }
+
+      // Add optional fields
+      if (data.description) {
+        requestBody.data.attributes.description = data.description;
+      }
+
       const response = await axios.post(
         `${this.baseUrl}/checkout_sessions`,
-        {
-          data: {
-            attributes: data
-          }
-        },
+        requestBody,
         {
           headers: {
             'Accept': 'application/json',
@@ -137,7 +165,7 @@ export class PaymentService {
       
       const event = payload.data;
       
-      if (event.attributes.type === 'payment.paid') {
+      if (event.attributes.type === 'checkout_session.payment.paid' || event.attributes.type === 'link.payment.paid') {
         // Handle successful payment
         return true;
       }

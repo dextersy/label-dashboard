@@ -11,6 +11,8 @@ import { ResetPasswordComponent } from './pages/reset-password/reset-password.co
 import { SetProfileComponent } from './pages/set-profile/set-profile.component';
 import { InviteComponent } from './pages/invite/invite.component';
 import { ProfileComponent } from './pages/profile/profile.component';
+import { TicketBuyComponent } from './pages/public/ticket-buy.component';
+import { TicketSuccessComponent } from './pages/public/ticket-success.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
@@ -21,6 +23,12 @@ export const routes: Routes = [
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'set-profile', component: SetProfileComponent }, // No auth guard - standalone
   { path: 'invite/accept', component: InviteComponent }, // No auth guard - standalone
+  
+  // Public Routes (no authentication required)
+  { path: 'public/tickets/buy/:id', component: TicketBuyComponent },
+  { path: 'public/tickets/success/:id', component: TicketSuccessComponent },
+  
+  // Protected Routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'artist', component: ArtistComponent, canActivate: [authGuard] },
   { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },

@@ -2,9 +2,95 @@ import { Request, Response } from 'express';
 import { Ticket, Event, EventReferrer, Brand, User, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
+import { generateUniqueTicketCode } from '../utils/ticketEmailService';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { Op } from 'sequelize';
 import crypto from 'crypto';
 
 const paymentService = new PaymentService();
+
+
+// Helper function to get total tickets sold for an event
+const getTotalTicketsSold = async (eventId: number): Promise<number> => {
+  const result = await Ticket.sum('number_of_entries', {
+    where: {
+      event_id: eventId,
+      status: {
+        [Op.in]: ['Payment Confirmed', 'Ticket sent.']
+      }
+    }
+  });
+  return result || 0;
+};
+
+// Get event details for public ticket purchasing
+export const getEventForPublic = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const eventId = parseInt(id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const event = await Event.findOne({
+      where: { id: eventId },
+      include: [
+        { 
+          model: Brand, 
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        }
+      ]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Check if event is closed
+    const isEventClosed = event.close_time && new Date() > event.close_time;
+    
+    // Calculate remaining tickets if max_tickets is set
+    let remainingTickets = null;
+    if (event.max_tickets && event.max_tickets > 0) {
+      const totalSold = await getTotalTicketsSold(eventId);
+      remainingTickets = event.max_tickets - totalSold;
+    }
+
+    res.json({
+      event: {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        date_and_time: event.date_and_time,
+        venue: event.venue,
+        poster_url: event.poster_url,
+        ticket_price: event.ticket_price,
+        ticket_naming: event.ticket_naming || 'Regular',
+        max_tickets: event.max_tickets,
+        remaining_tickets: remainingTickets,
+        is_closed: isEventClosed,
+        supports_card: event.supports_card,
+        supports_gcash: event.supports_gcash,
+        supports_qrph: event.supports_qrph,
+        supports_ubp: event.supports_ubp,
+        supports_dob: event.supports_dob,
+        supports_maya: event.supports_maya,
+        supports_grabpay: event.supports_grabpay,
+        brand: event.brand ? {
+          id: event.brand.id,
+          name: event.brand.brand_name,
+          color: event.brand.brand_color,
+          logo_url: event.brand.logo_url
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error('Get event for public error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 export const getTicketFromCode = async (req: Request, res: Response) => {
   try {
@@ -69,19 +155,20 @@ export const buyTicket = async (req: Request, res: Response) => {
       email_address,
       contact_number,
       number_of_entries = 1,
-      referrer_code,
-      payment_method = 'card'
+      referral_code
     } = req.body;
 
-    if (!event_id || !name || !email_address) {
+    if (!event_id || !name || !email_address || !contact_number) {
       return res.status(400).json({ 
-        error: 'Event ID, name, and email are required' 
+        error: 'Event ID, name, email, and contact number are required' 
       });
     }
 
+    const eventIdNum = parseInt(event_id, 10);
+
     // Get event details
     const event = await Event.findOne({
-      where: { id: event_id },
+      where: { id: eventIdNum },
       include: [{ model: Brand, as: 'brand' }]
     });
 
@@ -94,36 +181,62 @@ export const buyTicket = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Ticket sales are closed for this event' });
     }
 
+    // Check remaining tickets if max_tickets is set
+    if (event.max_tickets && event.max_tickets > 0) {
+      const totalSold = await getTotalTicketsSold(eventIdNum);
+      const remainingTickets = event.max_tickets - totalSold;
+      if (number_of_entries > remainingTickets) {
+        return res.status(400).json({ error: 'Not enough tickets available' });
+      }
+    }
+
     // Find referrer if code provided
     let referrer = null;
-    if (referrer_code) {
+    if (referral_code && referral_code.trim() !== '') {
       referrer = await EventReferrer.findOne({
         where: { 
-          referral_code: referrer_code,
-          event_id 
+          referral_code: referral_code.trim(),
+          event_id: eventIdNum 
         }
       });
     }
 
     // Generate unique ticket code
-    const ticketCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+    const ticketCode = await generateUniqueTicketCode(eventIdNum);
 
-    // Calculate total amount and processing fee
+    // Calculate total amount
     const totalAmount = event.ticket_price * number_of_entries;
-    const processingFee = paymentService.calculateProcessingFee(totalAmount, payment_method);
+    const description = `${event.title} - Ticket #${ticketCode}`;
 
-    // Create checkout session for public purchase
+    // Prepare payment methods based on event settings
+    const paymentMethods: string[] = [];
+    if (event.supports_card) paymentMethods.push('card');
+    if (event.supports_gcash) paymentMethods.push('gcash');
+    if (event.supports_ubp) paymentMethods.push('dob_ubp');
+    if (event.supports_dob) paymentMethods.push('dob');
+    if (event.supports_qrph) paymentMethods.push('qrph');
+    if (event.supports_maya) paymentMethods.push('paymaya');
+    if (event.supports_grabpay) paymentMethods.push('grab_pay');
+
+    // Get brand's domain for success URL (matching PHP implementation)
+    const brandDomain = await getBrandFrontendUrl(event.brand_id);
+
+    // Create checkout session with billing information (matching PHP implementation)
     const checkoutSession = await paymentService.createCheckoutSession({
       line_items: [{
-        name: `${event.title} - Ticket`,
-        amount: (event.ticket_price + processingFee / number_of_entries) * 100, // Convert to cents
+        name: 'Tickets',
+        amount: event.ticket_price * 100, // Convert to cents
         currency: 'PHP',
         quantity: number_of_entries
       }],
-      payment_method_types: [payment_method, 'gcash', 'grab_pay'],
-      success_url: `${process.env.FRONTEND_URL}/tickets/success?ticket_code=${ticketCode}`,
-      cancel_url: `${process.env.FRONTEND_URL}/tickets/buy?event_id=${event_id}`,
-      description: `${event.title} - ${number_of_entries} ticket(s)`
+      payment_method_types: paymentMethods,
+      success_url: `${brandDomain}/public/tickets/success/${eventIdNum}`,
+      description,
+      billing: {
+        name: name,
+        email: email_address,
+        phone: contact_number
+      }
     });
 
     if (!checkoutSession) {
@@ -132,25 +245,30 @@ export const buyTicket = async (req: Request, res: Response) => {
 
     // Create ticket record
     const ticket = await Ticket.create({
-      event_id,
+      event_id: eventIdNum,
       name,
       email_address,
       contact_number,
       number_of_entries,
       ticket_code: ticketCode,
       status: 'New',
-      payment_link: checkoutSession.attributes.checkout_url,
-      payment_link_id: checkoutSession.id,
       price_per_ticket: event.ticket_price,
-      payment_processing_fee: processingFee,
       referrer_id: referrer?.id || null
     });
 
+    // Store checkout session info in ticket
+    await ticket.update({
+      payment_link: checkoutSession.attributes.checkout_url,
+      payment_link_id: checkoutSession.id
+    });
+
     res.json({
+      success: true,
+      ticket_id: ticket.id,
       ticket_code: ticketCode,
       checkout_url: checkoutSession.attributes.checkout_url,
-      total_amount: totalAmount + processingFee,
-      message: 'Ticket created successfully. Complete payment to confirm.'
+      total_amount: totalAmount,
+      message: 'Ticket created successfully. Redirecting to payment...'
     });
   } catch (error) {
     console.error('Buy ticket error:', error);

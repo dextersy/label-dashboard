@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
@@ -61,37 +62,6 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
   }
 };
 
-// Helper function to get brand's frontend URL
-const getBrandFrontendUrl = async (brandId: number): Promise<string> => {
-  // First try to get a verified domain for the brand
-  const verifiedDomain = await Domain.findOne({
-    where: { 
-      brand_id: brandId,
-      status: 'Verified'
-    }
-  });
-  
-  if (verifiedDomain) {
-    return `https://${verifiedDomain.domain_name}`;
-  }
-  
-  // Fallback to any domain if no verified domain exists
-  const anyDomain = await Domain.findOne({
-    where: { brand_id: brandId }
-  });
-  
-  if (anyDomain) {
-    return `https://${anyDomain.domain_name}`;
-  }
-  
-  // Final fallback to environment variable or default
-  const fallbackUrl = process.env.FRONTEND_URL;
-  if (!fallbackUrl) {
-    throw new Error('No domains found for brand and FRONTEND_URL environment variable is not configured');
-  }
-  
-  return fallbackUrl;
-};
 
 // Helper function to generate verification link
 const generateVerificationLink = async (eventId: number, slug: string, brandId: number): Promise<string> => {

@@ -1,0 +1,97 @@
+<div class="public-page">
+  <div class="wrapper fadeInDown h-100">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+          
+          <!-- Success Message -->
+          <div *ngIf="!isLoading && isSuccess" class="success-section">
+            <div class="success-icon">
+              <i class="fa fa-check-circle"></i>
+            </div>
+            <h1 class="success-title">Payment Successful!</h1>
+            <h4 class="success-subtitle">Your ticket has been confirmed</h4>
+            
+            <div class="ticket-details" *ngIf="ticketDetails">
+              <div class="ticket-card">
+                <h5><strong>{{ ticketDetails.event.title }}</strong></h5>
+                <p><strong>{{ formatEventDate(ticketDetails.event.date_and_time) }}</strong></p>
+                <p><strong>{{ ticketDetails.event.venue }}</strong></p>
+                <hr>
+                <p><strong>Ticket Holder:</strong> {{ ticketDetails.name }}</p>
+                <p><strong>Ticket Code:</strong> <span class="ticket-code">{{ ticketDetails.ticket_code }}</span></p>
+                <p><strong>Number of Entries:</strong> {{ ticketDetails.number_of_entries }}</p>
+                <p><strong>Status:</strong> <span class="status-badge">{{ ticketDetails.status }}</span></p>
+              </div>
+            </div>
+
+            <div class="next-steps">
+              <h6><i class="fa fa-info-circle"></i> What's next?</h6>
+              <div class="alert alert-info">
+                <ul class="text-left">
+                  <li>You will receive your ticket via email shortly</li>
+                  <li>Your ticket will include a QR code for entry</li>
+                  <li>Please bring a valid ID that matches the name on your ticket</li>
+                  <li>Arrive early to avoid long queues at the entrance</li>
+                </ul>
+              </div>
+              
+              <div class="action-buttons">
+                <button class="btn btn-outline-primary" (click)="checkEmail()">
+                  <i class="fa fa-envelope"></i> Check Email
+                </button>
+                <button class="btn btn-primary" (click)="goToEventPage()">
+                  <i class="fa fa-calendar"></i> Event Details
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoading" class="loading-section">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+            <h4>Processing your payment...</h4>
+            <p>Please wait while we confirm your ticket purchase.</p>
+          </div>
+
+          <!-- Error State -->
+          <div *ngIf="!isLoading && !isSuccess" class="error-section">
+            <div class="error-icon">
+              <i class="fa fa-exclamation-triangle"></i>
+            </div>
+            <h1 class="error-title">Payment Processing</h1>
+            <h4 class="error-subtitle">We're still processing your payment</h4>
+            <div class="alert alert-warning">
+              <p>Your payment is being processed. This may take a few minutes.</p>
+              <p>You will receive an email confirmation once your ticket is ready.</p>
+              <p>If you don't receive confirmation within 30 minutes, please contact support.</p>
+            </div>
+            
+            <div class="action-buttons">
+              <button class="btn btn-outline-primary" (click)="refreshStatus()">
+                <i class="fa fa-refresh"></i> Check Status
+              </button>
+              <button class="btn btn-secondary" (click)="contactSupport()">
+                <i class="fa fa-envelope"></i> Contact Support
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center footer-section">
+      <p>
+        <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+        <span style="font-size:12px; font-style:italic;">
+          Having trouble? Contact us via email 
+          <a href="mailto:support&#64;melt-records.com">support&#64;melt-records.com</a>
+        </span>
+      </p>
+    </div>
+  </div>
+</div>

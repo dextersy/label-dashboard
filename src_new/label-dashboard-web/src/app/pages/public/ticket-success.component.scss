@@ -1,0 +1,204 @@
+/* BASIC - Override global dashboard styles for public pages */
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+a {
+  color: #92badd;
+  display: inline-block;
+  text-decoration: none;
+  font-weight: 400;
+}
+
+/* STRUCTURE */
+
+.public-page {
+  background-color: #fafafa !important;
+  font-family: Arial, sans-serif !important; // Use Arial as default font
+  min-height: 100vh;
+  
+  // Override any existing background gradients
+  background-image: none !important;
+  
+  // Reset any dashboard margins/padding  
+  margin: 0 !important;
+  padding: 0 !important;
+  
+  // Use system default fonts for everything, including headers
+  h1, h2, h3, h4, h5, h6 {
+    font-family: inherit !important;
+  }
+}
+
+.wrapper {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column; 
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+}
+
+.success-section, .error-section, .loading-section {
+  background: #fff;
+  border-radius: 10px;
+  padding: 40px;
+  max-width: 600px;
+  box-shadow: 0 30px 60px 0 rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 72px;
+  color: #28a745;
+  margin-bottom: 20px;
+}
+
+.error-icon {
+  font-size: 72px;
+  color: #ffc107;
+  margin-bottom: 20px;
+}
+
+.success-title, .error-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.success-subtitle, .error-subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.ticket-details {
+  margin: 30px 0;
+}
+
+.ticket-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.ticket-code {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.status-badge {
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.next-steps {
+  margin-top: 30px;
+}
+
+.action-buttons {
+  margin-top: 20px;
+}
+
+.action-buttons .btn {
+  margin: 5px;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: bold;
+}
+
+.footer-section {
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* LOADING SPINNER */
+.loading-spinner {
+  margin: 20px 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ANIMATIONS */
+
+.fadeInDown {
+  -webkit-animation-name: fadeInDown;
+  animation-name: fadeInDown;
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+@-webkit-keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(0, -100%, 0);
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: none;
+    transform: none;
+  }
+}
+
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(0, -100%, 0);
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: none;
+    transform: none;
+  }
+}
+
+/* Responsive */
+@media only screen and (max-device-width: 400px) {
+  .wrapper {
+    padding: 10px;
+  }
+  
+  .success-section, .error-section, .loading-section {
+    padding: 20px;
+  }
+  
+  .success-title, .error-title {
+    font-size: 1.5rem;
+  }
+  
+  .success-subtitle, .error-subtitle {
+    font-size: 1rem;
+  }
+}

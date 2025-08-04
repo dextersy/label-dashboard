@@ -5,13 +5,15 @@ import {
   verifyTicket,
   ticketPaymentWebhook,
   checkPin,
-  getBrandByDomain
+  getBrandByDomain,
+  getEventForPublic
 } from '../controllers/publicController';
 
 const router = Router();
 
 // Public API routes (no authentication required)
 router.get('/brand/domain/:domain', getBrandByDomain);
+router.get('/events/:id', getEventForPublic);
 router.post('/tickets/get-from-code', getTicketFromCode);
 router.post('/tickets/buy', buyTicket);
 router.post('/tickets/verify', verifyTicket);
