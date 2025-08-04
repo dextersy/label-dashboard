@@ -35,6 +35,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   ticketForm: FormGroup;
   isLoading = false;
   isSubmitting = false;
+  isError = false;
   totalAmount = 0;
   brandColor = '#6f42c1';
   referralCode: string | null = null;
@@ -82,19 +83,30 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.event = response.event;
-          if (this.event?.brand?.color) {
-            this.brandColor = this.event.brand.color;
+          if (response.event) {
+            this.event = response.event;
+            if (this.event.brand?.color) {
+              this.brandColor = this.event.brand.color;
+            }
+            this.isLoading = false;
+          } else {
+            this.showError();
           }
-          this.isLoading = false;
         },
         error: (error) => {
           console.error('Error loading event:', error);
-          this.isLoading = false;
-          // Handle 404 - redirect to not found or show error
-          this.router.navigate(['/domain-not-found']);
+          this.showError();
         }
       });
+  }
+
+  showError() {
+    this.isLoading = false;
+    this.isError = true;
+  }
+
+  goBack() {
+    window.history.back();
   }
 
   calculateTotal() {
