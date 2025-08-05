@@ -99,11 +99,11 @@
                   </div>
                 </div>
                 <div class="invalid-feedback d-block" 
-                     *ngIf="ticketForm.get('email_address')?.errors?.['required']">
+                     *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">
                   Email address is required.
                 </div>
                 <div class="invalid-feedback d-block" 
-                     *ngIf="ticketForm.get('email_address')?.errors?.['email']">
+                     *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">
                   Email address is not valid.
                 </div>
                 <div class="valid-feedback d-block" 
