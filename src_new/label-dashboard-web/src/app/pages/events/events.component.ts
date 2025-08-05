@@ -65,7 +65,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   tabs = [
     { id: 'details' as EventsTabType, label: 'Details', icon: 'fa-solid fa-info-circle' },
-    { id: 'tickets' as EventsTabType, label: 'Tickets', icon: 'fa-solid fa-ticket' },
+    { id: 'tickets' as EventsTabType, label: 'Tickets', icon: 'fas fa-ticket-alt' },
     { id: 'abandoned' as EventsTabType, label: 'Abandoned Orders', icon: 'fa-solid fa-shopping-cart' },
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'fa-solid fa-user-plus' }
   ];

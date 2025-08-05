@@ -54,7 +54,7 @@
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text fadeIn third" style="background-color:#f6f6f6;border:0px;margin-top:10px;">
-            <i class="fa fa-unlock-alt"></i>
+            <i class="fas fa-unlock"></i>
           </span>
         </div>
         <input 
@@ -75,7 +75,7 @@
         type="submit" 
         class="fadeIn fourth btn btn-primary btn-block btn-md"
         [disabled]="loading || loginForm.invalid">
-        <span *ngIf="!loading">Log In <i class="fa fa-sign-in"></i></span>
+        <span *ngIf="!loading">Log In <i class="fas fa-sign-in-alt"></i></span>
         <span *ngIf="loading">Logging in... <i class="fa fa-spinner fa-spin"></i></span>
       </button>
     </form>

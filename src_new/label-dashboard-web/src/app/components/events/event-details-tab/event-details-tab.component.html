@@ -75,7 +75,7 @@
                     class="btn btn-outline-secondary"
                     (click)="generateSlug()"
                     title="Auto-generate from title">
-                    <i class="fa fa-refresh"></i>
+                    <i class="fas fa-sync"></i>
                   </button>
                 </div>
                 <small class="form-text text-muted">
@@ -346,7 +346,7 @@
                       (click)="resetPIN()"
                       [disabled]="!event.id || refreshingPIN"
                       [title]="!event.id ? 'Save event first to refresh PIN' : 'Refresh verification PIN'">
-                      <i class="fa" [class]="refreshingPIN ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
+                      <i class="fa" [class]="refreshingPIN ? 'fa-spinner fa-spin' : 'fa-sync'"></i>
                     </button>
                   </div>
                   <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>

@@ -94,7 +94,7 @@
           <button class="btn btn-outline-primary btn-sm me-2 mb-2" 
                   (click)="onRefresh()" 
                   [disabled]="loading">
-            <i class="fa fa-refresh" [class.fa-spin]="loading"></i>
+            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
             <span class="ms-1">Refresh</span>
           </button>
           <div class="dropdown" *ngIf="showExport">
@@ -137,7 +137,7 @@
                   (click)="onRefresh()" 
                   [disabled]="loading"
                   title="Refresh data">
-            <i class="fa fa-refresh" [class.fa-spin]="loading"></i>
+            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
             <span class="d-none d-sm-inline ms-1">Refresh</span>
           </button>
         </div>

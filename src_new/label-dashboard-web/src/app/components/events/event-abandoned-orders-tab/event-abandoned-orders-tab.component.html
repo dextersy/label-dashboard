@@ -1,7 +1,7 @@
 <div class="abandoned-orders-tab">
   <div class="p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4><i class="fa fa-clock-o me-2"></i>Abandoned Orders</h4>
+      <h4><i class="far fa-clock me-2"></i>Abandoned Orders</h4>
     </div>
 
     <div class="card">
@@ -74,7 +74,7 @@
                     target="_blank" 
                     *ngIf="order.payment_link"
                     class="btn btn-sm btn-outline-primary">
-                    <i class="fa fa-external-link"></i>
+                    <i class="fas fa-external-link-alt"></i>
                   </a>
                   <span *ngIf="!order.payment_link" class="text-muted">-</span>
                 </td>
@@ -110,7 +110,7 @@
 
         <ng-template #noOrders>
           <div class="text-center py-5">
-            <i class="fa fa-clock-o fa-3x text-muted mb-3"></i>
+            <i class="far fa-clock fa-3x text-muted mb-3"></i>
             <h5>No Abandoned Orders</h5>
             <p class="text-muted">No pending orders found for this event.</p>
           </div>
@@ -120,7 +120,7 @@
       <div class="card-footer bg-light" *ngIf="orders.length > 0">
         <strong class="me-3">Totals:</strong>
         <span title="Number of pending tickets">
-          <i class="fa fa-dot-circle-o text-muted"></i>
+          <i class="far fa-dot-circle text-muted"></i>
           {{ getTotalPendingOrders() }} pending tickets
         </span>
       </div>
@@ -128,7 +128,7 @@
 
     <!-- Event Past Message -->
     <div class="alert alert-warning mt-4" *ngIf="isAdmin && isEventPast()">
-      <i class="fa fa-clock-o me-2"></i>
+      <i class="far fa-clock me-2"></i>
       <strong>Event Past:</strong> This event has already occurred. Custom ticket creation is disabled.
     </div>
 
@@ -208,7 +208,7 @@
                     class="btn btn-outline-secondary"
                     (click)="enablePriceOverride()"
                     *ngIf="!priceOverrideEnabled">
-                    <i class="fa fa-pencil"></i>
+                    <i class="fas fa-pen"></i>
                   </button>
                 </div>
               </div>

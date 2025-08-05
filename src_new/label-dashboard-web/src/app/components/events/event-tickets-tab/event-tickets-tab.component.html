@@ -1,7 +1,7 @@
 <div class="event-tickets-tab">
   <div class="p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4><i class="fa fa-ticket me-2"></i>Confirmed Orders</h4>
+      <h4><i class="fas fa-ticket-alt me-2"></i>Confirmed Orders</h4>
       <button 
         class="btn btn-outline-primary" 
         (click)="onDownloadCSV()"
@@ -73,7 +73,7 @@
 
         <ng-template #noTickets>
           <div class="text-center py-5">
-            <i class="fa fa-ticket fa-3x text-muted mb-3"></i>
+            <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
             <h5>No Tickets Yet</h5>
             <p class="text-muted">No confirmed orders found for this event.</p>
           </div>
@@ -87,12 +87,12 @@
             <strong class="me-3">Totals:</strong>
             
             <span class="me-3" title="Number of paid tickets">
-              <i class="fa fa-dot-circle-o text-success"></i>
+              <i class="far fa-dot-circle text-success"></i>
               {{ summary.total_tickets_sold }} tickets
             </span>
             
             <span class="me-3" title="Total revenue">
-              <i class="fa fa-money text-primary"></i>
+              <i class="fas fa-money-bill text-primary"></i>
               {{ summary.total_revenue | currency:'PHP':'symbol':'1.2-2' }}
             </span>
             
