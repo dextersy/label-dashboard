@@ -1,6 +1,12 @@
 import axios from 'axios';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
+import { Ticket, Event, User, Domain } from '../models';
+import { sendTicketEmail } from './ticketEmailService';
+import { sendBrandedEmail } from './emailService';
 
 interface PayMongoLinkData {
   amount: number; // in cents
@@ -158,21 +164,358 @@ export class PaymentService {
     return Math.ceil(amount * feeRate + fixedFee);
   }
 
-  async processWebhook(payload: any, signature: string): Promise<boolean> {
+  async processWebhook(payload: any, signature?: string): Promise<boolean> {
     try {
-      // Verify webhook signature (implement based on PayMongo documentation)
-      // For now, we'll assume it's valid
+      this.webhookLog('Received a webhook event: ' + JSON.stringify(payload));
       
-      const event = payload.data;
-      
-      if (event.attributes.type === 'checkout_session.payment.paid' || event.attributes.type === 'link.payment.paid') {
-        // Handle successful payment
-        return true;
+      // Early return for signature verification failure
+      if (signature && !this.verifyWebhookSignature(payload, signature)) {
+        this.webhookLog('ERROR: Invalid webhook signature');
+        await this.sendAdminFailureNotification('Invalid webhook signature');
+        return false;
       }
       
-      return false;
+      // Early return for invalid payload structure
+      if (!payload.data?.attributes?.data) {
+        this.webhookLog('ERROR: Invalid webhook payload structure');
+        await this.sendAdminFailureNotification('Invalid JSON data: ' + JSON.stringify(payload));
+        return false;
+      }
+      
+      const eventData = payload.data.attributes.data;
+      const eventType = eventData.type;
+      
+      // Early return for unsupported event types
+      if (eventType !== 'link' && eventType !== 'checkout_session') {
+        this.webhookLog('ERROR: Unsupported event type: ' + eventType);
+        await this.sendAdminFailureNotification('Unsupported event type: ' + eventType);
+        return false;
+      }
+      
+      this.webhookLog('Valid JSON - type ' + eventType);
+      
+      // Find ticket based on payment type
+      const ticket = await this.findTicketByPaymentType(eventType, eventData);
+      
+      // Early return if ticket not found
+      if (!ticket) {
+        this.webhookLog('ERROR: Reference is not valid or ticket not found');
+        await this.sendAdminFailureNotification('Invalid reference value in JSON response');
+        return false;
+      }
+      
+      this.webhookLog('Valid reference found for ticket ID: ' + ticket.id);
+      
+      // Calculate processing fee
+      const processingFee = this.calculateProcessingFeeFromPayments(eventType, eventData);
+      
+      // Process payment confirmation
+      return await this.processPaymentConfirmation(ticket, processingFee);
+      
     } catch (error) {
+      this.webhookLog('ERROR: Exception in processWebhook: ' + (error as Error).message);
+      await this.sendAdminFailureNotification('Webhook processing exception: ' + (error as Error).message);
       console.error('PayMongo webhook processing error:', error);
+      return false;
+    }
+  }
+  
+  private async findTicketByPaymentType(eventType: string, eventData: any): Promise<any> {
+    const includeOptions = [
+      { 
+        model: Event, 
+        as: 'event',
+        include: [{ model: Brand, as: 'brand' }]
+      }
+    ];
+    
+    if (eventType === 'link') {
+      return await Ticket.findOne({
+        where: { payment_link_id: eventData.id },
+        include: includeOptions
+      });
+    }
+    
+    if (eventType === 'checkout_session') {
+      // Use the checkout session ID directly, not the client_key
+      const checkoutSessionId = eventData.id;
+      if (!checkoutSessionId) {
+        return null;
+      }
+      
+      return await Ticket.findOne({
+        where: { payment_link_id: checkoutSessionId },
+        include: includeOptions
+      });
+    }
+    
+    return null;
+  }
+  
+  private calculateProcessingFeeFromPayments(eventType: string, eventData: any): number {
+    const payments = eventData.attributes?.payments;
+    
+    if (!payments) {
+      return 0;
+    }
+    
+    this.webhookLog('Payments data is available...');
+    
+    return payments.reduce((total: number, payment: any) => {
+      if (eventType === 'checkout_session') {
+        return total + ((payment.attributes?.fee || 0) / 100);
+      }
+      
+      if (eventType === 'link') {
+        return total + ((payment.data?.attributes?.fee || 0) / 100);
+      }
+      
+      return total;
+    }, 0);
+  }
+  
+  private async processPaymentConfirmation(ticket: any, processingFee: number): Promise<boolean> {
+    // Update ticket payment status
+    const paymentUpdated = await this.updateTicketPaymentStatus(ticket.id, processingFee);
+    
+    if (!paymentUpdated) {
+      this.webhookLog('ERROR: Failed to update ticket payment verification. id = ' + ticket.id + ', processing_fee = ' + processingFee);
+      await this.sendAdminFailureNotification('Ticket payment verification failed. Ticket id = ' + ticket.id, ticket.event?.brand_id);
+      return false;
+    }
+    
+    this.webhookLog('Successfully updated ticket payment status');
+    
+    // Send ticket email
+    const ticketSent = await this.sendTicket(ticket.id);
+    
+    if (!ticketSent) {
+      this.webhookLog('ERROR: Failed to send ticket email');
+      await this.sendAdminFailureNotification('Failed to send ticket to customer', ticket.event?.brand_id);
+      return false;
+    }
+    
+    this.webhookLog('Successfully sent ticket email');
+    
+    // Reload ticket to get updated processing fee
+    const updatedTicket = await Ticket.findOne({
+      where: { id: ticket.id },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          include: [{ model: Brand, as: 'brand' }]
+        }
+      ]
+    });
+    
+    if (!updatedTicket) {
+      this.webhookLog('ERROR: Failed to reload ticket for admin notification');
+      await this.sendAdminFailureNotification('Failed to reload ticket for admin notification', ticket.event?.brand_id);
+      return false;
+    }
+    
+    // Send admin notification with updated ticket data
+    const adminNotificationSent = await this.sendAdminNotification(updatedTicket.event, updatedTicket);
+    
+    if (!adminNotificationSent) {
+      this.webhookLog('ERROR: Failed to send admin notification');
+      await this.sendAdminFailureNotification('Failed to send admin notification email', ticket.event?.brand_id);
+      return false;
+    }
+    
+    this.webhookLog('Successfully sent admin notification');
+    return true;
+  }
+  
+  private verifyWebhookSignature(payload: any, signature: string): boolean {
+    try {
+      // PayMongo webhook signature verification
+      // This is a placeholder - implement actual signature verification based on PayMongo docs
+      return true;
+    } catch (error) {
+      console.error('Webhook signature verification error:', error);
+      return false;
+    }
+  }
+  
+  private webhookLog(message: string): void {
+    try {
+      const timestamp = '[' + new Date().toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: true 
+      }) + '] ';
+      
+      const logMessage = timestamp + message + '\n';
+      
+      // Write to webhook.log file
+      const logPath = path.join(process.cwd(), 'webhook.log');
+      fs.appendFileSync(logPath, logMessage);
+      
+      // Also log to console for development
+      console.log('WEBHOOK: ' + message);
+    } catch (error) {
+      console.error('Failed to write webhook log:', error);
+    }
+  }
+  
+  private async updateTicketPaymentStatus(ticketId: number, processingFee: number): Promise<boolean> {
+    try {
+      const ticket = await Ticket.findByPk(ticketId);
+      if (!ticket) {
+        return false;
+      }
+      
+      await ticket.update({
+        status: 'Payment Confirmed',
+        payment_processing_fee: processingFee
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to update ticket payment status:', error);
+      return false;
+    }
+  }
+  
+  private async sendTicket(ticketId: number): Promise<boolean> {
+    try {
+      const ticket = await Ticket.findOne({
+        where: { id: ticketId },
+        include: [
+          { 
+            model: Event, 
+            as: 'event',
+            include: [{ model: Brand, as: 'brand' }]
+          }
+        ]
+      });
+      
+      if (!ticket || !ticket.event || !ticket.event.brand) {
+        return false;
+      }
+      
+      // Send ticket email
+      const success = await sendTicketEmail(
+        {
+          email_address: ticket.email_address,
+          name: ticket.name,
+          ticket_code: ticket.ticket_code,
+          number_of_entries: ticket.number_of_entries
+        },
+        {
+          id: ticket.event.id,
+          title: ticket.event.title,
+          date_and_time: ticket.event.date_and_time,
+          venue: ticket.event.venue,
+          rsvp_link: ticket.event.rsvp_link
+        },
+        {
+          brand_name: ticket.event.brand.brand_name
+        },
+        ticket.event.brand_id
+      );
+      
+      if (success) {
+        // Update ticket status to sent
+        await ticket.update({ status: 'Ticket sent.' });
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Failed to send ticket:', error);
+      return false;
+    }
+  }
+  
+  private async getAdminEmails(brandId: number): Promise<string[]> {
+    try {
+      const admins = await User.findAll({
+        where: {
+          brand_id: brandId,
+          is_admin: true
+        },
+        attributes: ['email_address']
+      });
+      
+      return admins.map(admin => admin.email_address);
+    } catch (error) {
+      console.error('Failed to get admin emails:', error);
+      return [];
+    }
+  }
+  
+  private async sendAdminNotification(event: any, ticket: any): Promise<boolean> {
+    try {
+      const adminEmails = await this.getAdminEmails(event.brand_id);
+      
+      if (adminEmails.length === 0) {
+        return false;
+      }
+      
+      // Get domain for the brand
+      const domains = await Domain.findAll({
+        where: { brand_id: event.brand_id }
+      });
+      
+      const domainName = domains.length > 0 ? domains[0].domain_name : 'dashboard.meltrecords.com';
+      
+      const subject = `New ticket order for ${event.title} completed.`;
+      const totalPayment = ticket.price_per_ticket * ticket.number_of_entries;
+      
+      // Ensure processing fee is a number
+      const processingFee = parseFloat(ticket.payment_processing_fee) || 0;
+      
+      // Create HTML body matching the PHP implementation exactly
+      const body = `
+        Confirmed payment for the following ticket.<br><br>
+        Ticket ID : ${ticket.id}<br>
+        Name : ${ticket.name}<br>
+        Email : ${ticket.email_address}<br>
+        Code : ${ticket.ticket_code}<br>
+        Number of entries : ${ticket.number_of_entries}<br>
+        Payment : ${totalPayment.toFixed(2)}<br>
+        Processing fee : -${processingFee.toFixed(2)}<br>
+        <br>
+        Go to <a href="https://${domainName}/events#tickets" target="_blank">dashboard</a>
+      `;
+      
+      // Use the simple sendEmail function that accepts HTML directly (matches PHP pattern)
+      const { sendEmail } = await import('./emailService');
+      
+      return await sendEmail(adminEmails, subject, body, event.brand_id);
+    } catch (error) {
+      console.error('Failed to send admin notification:', error);
+      return false;
+    }
+  }
+  
+  private async sendAdminFailureNotification(reason: string, brandId?: number): Promise<boolean> {
+    try {
+      const subject = 'Link payment webhook error detected.';
+      const body = `We detected a failed webhook event.<br>Reason: ${reason}`;
+      
+      // Use the direct sendEmail function for consistency with sendAdminNotification
+      const { sendEmail } = await import('./emailService');
+      
+      // Use provided brandId, or default to brand ID 1 only if no brand context is available
+      const targetBrandId = brandId || 1;
+      
+      // Only send if admin email is configured
+      const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+      if (!adminEmail) {
+        console.log('No admin email configured for failure notifications, skipping email');
+        return false;
+      }
+      
+      return await sendEmail([adminEmail], subject, body, targetBrandId);
+    } catch (error) {
+      console.error('Failed to send admin failure notification:', error);
       return false;
     }
   }

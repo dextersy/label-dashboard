@@ -2,8 +2,9 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { PublicService, PublicEvent, TicketPurchaseRequest } from '../../services/public.service';
+import { BrandService, BrandSettings } from '../../services/brand.service';
 
 // Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -37,12 +38,14 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   totalAmount = 0;
   brandColor = '#6f42c1';
   referralCode: string | null = null;
+  currentBrand: BrandSettings | null = null;
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private publicService: PublicService
+    private publicService: PublicService,
+    private brandService: BrandService
   ) {
     this.ticketForm = this.fb.group({
       name: ['', Validators.required],
@@ -77,22 +80,41 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   loadEvent(eventId: string) {
     this.isLoading = true;
-    this.publicService.getEvent(parseInt(eventId, 10))
-      .pipe(takeUntil(this.destroy$))
+    
+    // Load both brand and event information simultaneously
+    forkJoin({
+      brand: this.brandService.loadBrandByDomain(),
+      event: this.publicService.getEvent(parseInt(eventId, 10))
+    }).pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          if (response.event) {
-            this.event = response.event;
-            if (this.event.brand?.color) {
+        next: ({ brand, event }) => {
+          this.currentBrand = brand;
+          
+          if (event.event) {
+            this.event = event.event;
+            
+            // Additional frontend validation: check if event belongs to current brand
+            if (this.event.brand?.id && this.currentBrand?.id && 
+                this.event.brand.id !== this.currentBrand.id) {
+              console.warn('Event belongs to different brand than current domain');
+              this.showError();
+              return;
+            }
+            
+            // Set brand color from current brand or event brand
+            if (this.currentBrand?.brand_color) {
+              this.brandColor = this.currentBrand.brand_color;
+            } else if (this.event.brand?.color) {
               this.brandColor = this.event.brand.color;
             }
+            
             this.isLoading = false;
           } else {
             this.showError();
           }
         },
         error: (error) => {
-          console.error('Error loading event:', error);
+          console.error('Error loading event or brand:', error);
           this.showError();
         }
       });

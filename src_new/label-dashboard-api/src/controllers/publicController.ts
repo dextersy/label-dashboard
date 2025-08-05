@@ -28,6 +28,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id, 10);
+    // Extract domain from request, removing port if present
+    let requestDomain = req.get('host') || req.hostname || '';
+    requestDomain = requestDomain.split(':')[0]; // Remove port number if present
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -39,12 +42,30 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         { 
           model: Brand, 
           as: 'brand',
-          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          include: [{
+            model: Domain,
+            as: 'domains',
+            attributes: ['domain_name']
+          }]
         }
       ]
     });
 
     if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Validate that the event belongs to the brand associated with the current domain
+    if (event.brand && event.brand.domains && requestDomain) {
+      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = eventBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
       return res.status(404).json({ error: 'Event not found' });
     }
 
@@ -166,14 +187,38 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     const eventIdNum = parseInt(event_id, 10);
+    // Extract domain from request, removing port if present
+    let requestDomain = req.get('host') || req.hostname || '';
+    requestDomain = requestDomain.split(':')[0]; // Remove port number if present
 
     // Get event details
     const event = await Event.findOne({
       where: { id: eventIdNum },
-      include: [{ model: Brand, as: 'brand' }]
+      include: [{ 
+        model: Brand, 
+        as: 'brand',
+        include: [{
+          model: Domain,
+          as: 'domains',
+          attributes: ['domain_name']
+        }]
+      }]
     });
 
     if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Validate that the event belongs to the brand associated with the current domain
+    if (event.brand && event.brand.domains && requestDomain) {
+      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = eventBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
       return res.status(404).json({ error: 'Event not found' });
     }
 
@@ -336,58 +381,16 @@ export const ticketPaymentWebhook = async (req: Request, res: Response) => {
     const signature = req.headers['paymongo-signature'] as string;
     const payload = req.body;
 
-    // Verify webhook signature
+    // Process webhook using the comprehensive implementation
     const isValid = await paymentService.processWebhook(payload, signature);
     
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid webhook signature' });
-    }
-
-    const event = payload.data;
-    
-    if (event.attributes.type === 'payment.paid') {
-      const paymentIntentId = event.attributes.data.id;
-      
-      // Find ticket by payment link ID
-      const ticket = await Ticket.findOne({
-        where: { payment_link_id: paymentIntentId },
-        include: [
-          { 
-            model: Event, 
-            as: 'event',
-            include: [{ model: Brand, as: 'brand' }]
-          }
-        ]
-      });
-
-      if (ticket) {
-        // Update ticket status
-        await ticket.update({ status: 'Payment Confirmed' });
-
-        // Send confirmation email
-        await sendBrandedEmail(
-          ticket.email_address,
-          'payment_confirmed',
-          {
-            name: ticket.name,
-            eventTitle: ticket.event.title,
-            ticketCode: ticket.ticket_code,
-            eventDate: ticket.event.date_and_time,
-            eventVenue: ticket.event.venue,
-            numberOfEntries: ticket.number_of_entries
-          },
-          ticket.event.brand_id
-        );
-
-        // Update ticket status to sent
-        await ticket.update({ status: 'Ticket sent.' });
-      }
-    }
-
-    res.json({ received: true });
+    // Always respond with 200 OK as per PHP implementation
+    // PayMongo expects a 200 response to consider the webhook delivered
+    res.status(200).json({ received: true, processed: isValid });
   } catch (error) {
     console.error('Payment webhook error:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
+    // Still respond with 200 to prevent PayMongo from retrying
+    res.status(200).json({ received: true, processed: false, error: 'Processing failed' });
   }
 };
 

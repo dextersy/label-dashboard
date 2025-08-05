@@ -128,7 +128,12 @@ export const sendNotificationEmail = async (
 
     case 'login_failure':
       subject = 'WARNING: Too many failed logins detected';
-      recipients = [process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com'];
+      const adminEmailForLogin = process.env.ADMIN_EMAIL;
+      if (!adminEmailForLogin) {
+        console.log('No admin email configured for login failure notifications, skipping email');
+        return false;
+      }
+      recipients = [adminEmailForLogin];
       body = `
         <h2>Security Alert: Multiple Login Failures</h2>
         <p>We've detected multiple login failures for user <strong>${data.username}</strong>.</p>
@@ -146,7 +151,12 @@ export const sendNotificationEmail = async (
 
     case 'admin_alert':
       subject = data.subject;
-      recipients = [process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com'];
+      const adminEmailForAlert = process.env.ADMIN_EMAIL;
+      if (!adminEmailForAlert) {
+        console.log('No admin email configured for admin alerts, skipping email');
+        return false;
+      }
+      recipients = [adminEmailForAlert];
       body = data.body;
       break;
 
@@ -535,7 +545,11 @@ export const sendAdminFailedLoginAlert = async (
   // Match exact PHP email format
   const body = `We've detected multiple login failures for user <b>${username}</b>.<br>Remote login IP: ${remoteIp}<br>Proxy login IP: ${proxyIp}<br><br>`;
 
-  const adminEmail = process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com'; // Matching PHP default
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    console.log('No admin email configured for failed login alerts, skipping email');
+    return false;
+  }
   return await sendEmail([adminEmail], subject, body, brandId);
 };
 
