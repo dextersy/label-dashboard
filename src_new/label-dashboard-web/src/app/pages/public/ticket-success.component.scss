@@ -5,6 +5,11 @@ body {
   height: 100vh;
 }
 
+// Ensure FontAwesome icons keep their proper font-family (v7)
+.fa, .fas, .far, .fab, .fal {
+  font-family: "Font Awesome 7 Free", "Font Awesome 7 Brands" !important;
+}
+
 // Override all dashboard styles for public pages
 :host {
   display: block;
@@ -175,3 +180,4 @@ p, div, span, a, li, ul {
 .text-center {
   text-align: center !important;
 }
+

@@ -2,17 +2,17 @@
   <div class="card mb-3">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="card-body text-center py-5">
-      <i class="fa fa-spinner fa-spin fa-3x text-muted mb-3"></i>
+      <i class="fas fa-spinner fa-spin fa-3x text-muted mb-3"></i>
       <h5>Loading...</h5>
     </div>
 
     <!-- Error State (404) -->
     <div *ngIf="isError" class="card-body text-center py-5">
-      <i class="fa fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+      <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
       <h1 class="text-danger">404 - Event Not Found</h1>
       <p class="text-muted">The event you're looking for could not be found.</p>
       <button class="btn btn-primary" (click)="goToEventPage()">
-        <i class="fa fa-arrow-left me-1"></i>Go Back
+        <i class="fas fa-arrow-left me-1"></i>Go Back
       </button>
     </div>
 
@@ -32,12 +32,13 @@
 
       <!-- Success Message -->
       <div class="card-body text-center">
-        <p><i class="fa fa-check-circle" style="font-size:150px;color:green;"></i></p>
+        
+        <p><i class="fas fa-check-circle" style="font-size:150px;color:green;"></i></p>
         <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
 
         <!-- Instructions -->
       <div class="alert alert-info field-description text-dark text-left">
-        <i class="fa fa-info-circle"></i> <b>How to use your ticket</b><br>
+        <i class="fas fa-info-circle"></i> <b>How to use your ticket</b><br>
         <ul>
           <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
           <li>You may be required to provide identification to verify your ticket at the gate.</li>
@@ -61,14 +62,14 @@
             <a (click)="shareOnFacebook()" 
                class="btn btn-primary" 
                style="background-color: #1877f2; border-color: #1877f2;">
-              <i class="fa fa-facebook"></i> Share
+              <i class="fab fa-facebook"></i> Share
             </a>
           </div>
           <div class="col-6 text-left">
             <a (click)="shareOnTwitter()" 
                class="btn btn-info" 
                style="background-color: #1da1f2; border-color: #1da1f2;">
-              <i class="fa fa-twitter"></i> Tweet
+              <i class="fab fa-twitter"></i> Tweet
             </a>
           </div>
         </div>

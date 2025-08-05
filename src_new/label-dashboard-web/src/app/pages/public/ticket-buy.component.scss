@@ -5,6 +5,7 @@
   min-height: 100vh;
 }
 
+
 // Force override of global dashboard styles
 .public-page {
   background-color: #fafafa !important;
@@ -12,6 +13,7 @@
   font-size: 14px !important; // Standard readable size instead of global 13px
   line-height: 1.5 !important;
   min-height: 100vh;
+  
   
   // Override any existing background gradients
   background-image: none !important;
@@ -26,13 +28,14 @@
   }
   
   // Override all possible font-family sources with higher specificity
-  *, 
-  *:before, 
-  *:after,
+  // BUT exclude FontAwesome classes and their pseudo-elements
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]), 
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]):before, 
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]):after,
   body,
-  div,
-  span,
-  p,
+  div:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
+  span:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
+  p:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
   label,
   input,
   button,
@@ -40,6 +43,14 @@
   .input-group-text,
   .btn {
     font-family: Arial, sans-serif !important;
+  }
+  
+  // BUT ensure FontAwesome icons keep their proper font-family (v7) - higher specificity
+  .fa, .fas, .far, .fab, .fal,
+  i.fa, i.fas, i.far, i.fab, i.fal,
+  .fa::before, .fas::before, .far::before, .fab::before, .fal::before,
+  i.fa::before, i.fas::before, i.far::before, i.fab::before, i.fal::before {
+    font-family: "Font Awesome 7 Free", "Font Awesome 7 Brands" !important;
   }
   
   // Override global heading sizes to match PHP styling
@@ -659,3 +670,5 @@ input.material:not(:focus)::placeholder {
 .w-100 {
   width: 100% !important;
 }
+
+

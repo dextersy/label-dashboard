@@ -5,12 +5,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { PublicService, PublicEvent, TicketPurchaseRequest } from '../../services/public.service';
 
-// Angular Material imports
+// Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
 
 
 @Component({
@@ -22,8 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatCheckboxModule,
-    MatIconModule
+    MatCheckboxModule
   ],
   templateUrl: './ticket-buy.component.html',
   styleUrls: ['./ticket-buy.component.scss']
