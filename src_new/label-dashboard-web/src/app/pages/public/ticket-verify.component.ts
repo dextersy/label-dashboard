@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 
 // QR Code scanner
-import { Html5QrcodeScanner, Html5QrcodeResult } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeResult } from 'html5-qrcode';
 
 @Component({
   selector: 'app-ticket-verify',
@@ -35,7 +35,7 @@ import { Html5QrcodeScanner, Html5QrcodeResult } from 'html5-qrcode';
 })
 export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
-  private html5QrcodeScanner?: Html5QrcodeScanner;
+  private html5QrCode?: Html5Qrcode;
   
   // Form states
   pinForm: FormGroup;
@@ -183,30 +183,23 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const config = {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0,
-      disableFlip: false,
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
-      }
-    };
-
-    this.html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader", 
-      config,
-      false
-    );
-
-    this.html5QrcodeScanner.render(
+    this.html5QrCode = new Html5Qrcode("qr-reader");
+    
+    this.html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      },
       (decodedText: string, decodedResult: Html5QrcodeResult) => {
         this.onScanSuccess(decodedText);
       },
       (errorMessage: string) => {
-        // Handle scan failure - usually just ignore
+        // Don't do anything
       }
-    );
+    ).catch((err) => {
+      console.error('QR Scanner start failed:', err);
+    });
   }
 
   private onScanSuccess(decodedText: string): void {
@@ -249,11 +242,11 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   stopScanner(): void {
-    if (this.html5QrcodeScanner) {
-      this.html5QrcodeScanner.clear().catch(err => {
-        console.error('Failed to clear scanner', err);
+    if (this.html5QrCode) {
+      this.html5QrCode.stop().catch(err => {
+        console.error('Failed to stop scanner', err);
       });
-      this.html5QrcodeScanner = undefined;
+      this.html5QrCode = undefined;
     }
     this.isScanning = false;
   }
