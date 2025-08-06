@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
+import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 
 export interface EventTicket {
   id: number;
@@ -31,7 +32,7 @@ export interface TicketSummary {
 @Component({
   selector: 'app-event-tickets-tab',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PaginatedTableComponent],
   templateUrl: './event-tickets-tab.component.html',
   styleUrl: './event-tickets-tab.component.scss'
 })
@@ -44,6 +45,25 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   summary: TicketSummary | null = null;
   loading = false;
   selectedTicketId: number | null = null;
+
+  // Pagination properties
+  pagination: PaginationInfo | null = null;
+  currentSort: SortInfo | null = null;
+  currentFilters: SearchFilters = {};
+
+  // Table configuration
+  tableColumns: TableColumn[] = [
+    { key: 'name', label: 'Name', searchable: true, sortable: true },
+    { key: 'email_address', label: 'Email Address', searchable: true, sortable: true },
+    { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
+    { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number' },
+    { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true },
+    { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', formatter: (item) => this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-' },
+    { key: 'processing_fee', label: 'Processing Fee', sortable: false, type: 'number', formatter: (item) => this.getProcessingFee(item) > 0 ? this.formatCurrency(this.getProcessingFee(item)) : '-' },
+    { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
+    { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
+    { key: 'claimed_status', label: 'Claimed', sortable: false, formatter: (item) => `${item.number_of_claimed_entries} / ${item.number_of_entries}` },
+  ];
 
   private subscriptions = new Subscription();
 
@@ -66,19 +86,29 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  private loadEventTickets(): void {
+  private loadEventTickets(page: number = 1): void {
     if (!this.selectedEvent) {
       this.tickets = [];
       this.summary = null;
+      this.pagination = null;
       return;
     }
 
     this.loading = true;
+    
+    const params = {
+      page,
+      per_page: 20,
+      sort_column: this.currentSort?.column,
+      sort_direction: this.currentSort?.direction,
+      filters: this.currentFilters
+    };
+
     this.subscriptions.add(
-      this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
-        next: (tickets) => {
+      this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
+        next: (response) => {
           // Convert API tickets to component format and filter confirmed tickets or tickets with claimed entries
-          this.tickets = tickets
+          this.tickets = response.tickets
             .filter(ticket => {
               // Show tickets that are confirmed/paid OR have claimed entries (regardless of payment status)
               return (ticket.status != 'New' && ticket.status != 'Canceled') || 
@@ -86,6 +116,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
             })
             .map(ticket => this.convertServiceTicketToComponentTicket(ticket));
           
+          this.pagination = response.pagination;
           this.calculateTicketSummary();
           this.loading = false;
         },
@@ -289,5 +320,28 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   isTicketResendable(ticket: EventTicket): boolean {
     return Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries) && !!this.isAdmin;
+  }
+
+  // Pagination event handlers
+  onPageChange(page: number): void {
+    this.loadEventTickets(page);
+  }
+
+  onFiltersChange(filters: SearchFilters): void {
+    this.currentFilters = filters;
+    this.loadEventTickets(1); // Reset to page 1 when filtering
+  }
+
+  onSortChange(sortInfo: SortInfo | null): void {
+    this.currentSort = sortInfo;
+    this.loadEventTickets(1); // Reset to page 1 when sorting
+  }
+
+  // Helper methods
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP'
+    }).format(amount);
   }
 }

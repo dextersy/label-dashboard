@@ -102,13 +102,28 @@
               <tbody>
                 <tr *ngFor="let item of data">
                   <td *ngFor="let column of columns">
+                    <!-- Payment link special handling -->
+                    <span *ngIf="column.key === 'payment_link'">
+                      <a 
+                        [href]="item[column.key]" 
+                        target="_blank" 
+                        *ngIf="item[column.key]"
+                        class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                      </a>
+                      <span *ngIf="!item[column.key]" class="text-muted">-</span>
+                    </span>
+                    
+                    <!-- Result badge special handling -->
                     <span *ngIf="column.key === 'result' && (item[column.key] === 'Success' || item[column.key] === 'Failed' || item[column.key] === 'Successful')" 
                           class="badge" 
                           [class.bg-success]="item[column.key] === 'Success' || item[column.key] === 'Successful'"
                           [class.bg-danger]="item[column.key] === 'Failed'">
                       {{ item[column.key] }}
                     </span>
-                    <span *ngIf="column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')">
+                    
+                    <!-- Default handling -->
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful'))">
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>

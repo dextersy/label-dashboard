@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
@@ -570,12 +571,32 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
 
 export const getTickets = async (req: AuthRequest, res: Response) => {
   try {
-    const { event_id } = req.query;
+    const { 
+      event_id, 
+      page = '1', 
+      per_page = '20', 
+      sort_column, 
+      sort_direction = 'desc',
+      ...filters 
+    } = req.query;
+    
     const eventIdNum = event_id ? parseInt(event_id as string, 10) : undefined;
+    const pageNum = parseInt(page as string, 10);
+    const perPageNum = Math.min(parseInt(per_page as string, 10), 100); // Max 100 per page
+    const offset = (pageNum - 1) * perPageNum;
 
     // Validate event_id if provided
     if (event_id && (isNaN(eventIdNum!) || eventIdNum! <= 0)) {
       return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Validate pagination parameters
+    if (isNaN(pageNum) || pageNum < 1) {
+      return res.status(400).json({ error: 'Invalid page number' });
+    }
+
+    if (isNaN(perPageNum) || perPageNum < 1) {
+      return res.status(400).json({ error: 'Invalid per_page number' });
     }
 
     const where: any = {};
@@ -595,7 +616,34 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
       where.event_id = eventIdNum;
     }
 
-    const tickets = await Ticket.findAll({
+    // Apply search filters
+    if (filters.name) {
+      where.name = { [Op.like]: `%${filters.name}%` };
+    }
+    if (filters.email_address) {
+      where.email_address = { [Op.like]: `%${filters.email_address}%` };
+    }
+    if (filters.contact_number) {
+      where.contact_number = { [Op.like]: `%${filters.contact_number}%` };
+    }
+    if (filters.ticket_code) {
+      where.ticket_code = { [Op.like]: `%${filters.ticket_code}%` };
+    }
+    if (filters.status) {
+      where.status = filters.status;
+    }
+    if (filters.number_of_entries) {
+      where.number_of_entries = parseInt(filters.number_of_entries as string, 10);
+    }
+
+    // Build sorting
+    const allowedSortColumns = ['id', 'name', 'email_address', 'contact_number', 'number_of_entries', 'ticket_code', 'status', 'order_timestamp', 'number_of_claimed_entries'];
+    const sortColumn = allowedSortColumns.includes(sort_column as string) ? sort_column as string : 'id';
+    const sortDir = ['asc', 'desc'].includes(sort_direction as string) ? sort_direction as string : 'desc';
+    
+    const order: any = [[sortColumn, sortDir]];
+
+    const { count, rows: tickets } = await Ticket.findAndCountAll({
       where,
       include: [
         { 
@@ -605,10 +653,27 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
         },
         { model: EventReferrer, as: 'referrer' }
       ],
-      order: [['id', 'DESC']]
+      order,
+      limit: perPageNum,
+      offset: offset,
+      distinct: true
     });
 
-    res.json({ tickets });
+    // Build pagination info
+    const totalPages = Math.ceil(count / perPageNum);
+    const pagination = {
+      current_page: pageNum,
+      total_pages: totalPages,
+      total_count: count,
+      per_page: perPageNum,
+      has_next: pageNum < totalPages,
+      has_prev: pageNum > 1
+    };
+
+    res.json({ 
+      tickets,
+      pagination 
+    });
   } catch (error) {
     console.error('Get tickets error:', error);
     res.status(500).json({ error: 'Internal server error' });

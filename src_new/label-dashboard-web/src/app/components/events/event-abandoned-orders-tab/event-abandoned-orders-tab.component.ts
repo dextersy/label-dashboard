@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
+import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 
 export interface AbandonedOrder {
   id: number;
@@ -32,7 +33,7 @@ export interface CustomTicketForm {
 @Component({
   selector: 'app-event-abandoned-orders-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent],
   templateUrl: './event-abandoned-orders-tab.component.html',
   styleUrl: './event-abandoned-orders-tab.component.scss'
 })
@@ -43,6 +44,27 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
   orders: AbandonedOrder[] = [];
   loading = false;
+  
+  // Pagination properties
+  pagination: PaginationInfo | null = null;
+  currentSort: SortInfo | null = null;
+  currentFilters: SearchFilters = {};
+
+  // Table configuration
+  tableColumns: TableColumn[] = [
+    { key: 'name', label: 'Name', searchable: true, sortable: true },
+    { key: 'email_address', label: 'Email Address', searchable: true, sortable: true },
+    { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
+    { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number' },
+    { key: 'payment_link', label: 'Payment Link', sortable: false },
+    { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
+    { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
+    { key: 'status', label: 'Status', searchable: true, sortable: true, type: 'select', options: [
+      { value: 'New', label: 'Awaiting Payment' },
+      { value: 'Payment Confirmed', label: 'Payment Confirmed' },
+      { value: 'Canceled', label: 'Canceled' }
+    ]},
+  ];
   
   customTicketForm: CustomTicketForm = {
     name: '',
@@ -80,21 +102,32 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     this.subscriptions.unsubscribe();
   }
 
-  private loadAbandonedOrders(): void {
+  private loadAbandonedOrders(page: number = 1): void {
     if (!this.selectedEvent) {
       this.orders = [];
+      this.pagination = null;
       return;
     }
 
     this.loading = true;
+    
+    const params = {
+      page,
+      per_page: 20,
+      sort_column: this.currentSort?.column,
+      sort_direction: this.currentSort?.direction,
+      filters: { ...this.currentFilters, status: 'New' } // Always filter for abandoned orders
+    };
+
     this.subscriptions.add(
-      this.eventService.getEventTickets(this.selectedEvent.id).subscribe({
-        next: (tickets) => {
+      this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
+        next: (response) => {
           // Filter for abandoned orders (new/unpaid tickets)
-          this.orders = tickets
+          this.orders = response.tickets
             .filter(ticket => ticket.status === 'New')
             .map(ticket => this.convertServiceTicketToAbandonedOrder(ticket));
           
+          this.pagination = response.pagination;
           this.loading = false;
         },
         error: (error) => {
@@ -409,5 +442,20 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
   canCreateCustomTickets(): boolean {
     return this.isAdmin && !this.isEventPast();
+  }
+
+  // Pagination event handlers
+  onPageChange(page: number): void {
+    this.loadAbandonedOrders(page);
+  }
+
+  onFiltersChange(filters: SearchFilters): void {
+    this.currentFilters = filters;
+    this.loadAbandonedOrders(1); // Reset to page 1 when filtering
+  }
+
+  onSortChange(sortInfo: SortInfo | null): void {
+    this.currentSort = sortInfo;
+    this.loadAbandonedOrders(1); // Reset to page 1 when sorting
   }
 }

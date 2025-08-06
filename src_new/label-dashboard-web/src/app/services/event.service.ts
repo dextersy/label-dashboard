@@ -197,54 +197,44 @@ export class EventService {
   }
 
   /**
-   * Get tickets for a specific event
+   * Get tickets for a specific event with pagination and filtering
    */
-  getEventTickets(eventId: number): Observable<EventTicket[]> {
+  getEventTickets(
+    eventId: number, 
+    params?: {
+      page?: number;
+      per_page?: number;
+      sort_column?: string;
+      sort_direction?: 'asc' | 'desc';
+      filters?: { [key: string]: string };
+    }
+  ): Observable<{ tickets: EventTicket[], pagination?: any }> {
     if (!eventId || isNaN(eventId) || eventId <= 0) {
       return throwError(() => new Error('Invalid event ID provided'));
     }
     
-    return this.http.get<{tickets: EventTicket[]}>(`${environment.apiUrl}/events/tickets`, {
+    const queryParams: any = { event_id: eventId.toString() };
+    
+    if (params) {
+      if (params.page) queryParams.page = params.page.toString();
+      if (params.per_page) queryParams.per_page = params.per_page.toString();
+      if (params.sort_column) queryParams.sort_column = params.sort_column;
+      if (params.sort_direction) queryParams.sort_direction = params.sort_direction;
+      
+      // Add filter parameters
+      if (params.filters) {
+        Object.keys(params.filters).forEach(key => {
+          if (params.filters![key]) {
+            queryParams[key] = params.filters![key];
+          }
+        });
+      }
+    }
+    
+    return this.http.get<{tickets: EventTicket[], pagination?: any}>(`${environment.apiUrl}/events/tickets`, {
       headers: this.getAuthHeaders(),
-      params: { event_id: eventId.toString() }
+      params: queryParams
     }).pipe(
-      map(response => response.tickets),
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Get event summary/statistics
-   */
-  getEventSummary(eventId: number): Observable<EventSummary> {
-    if (!eventId || isNaN(eventId) || eventId <= 0) {
-      return throwError(() => new Error('Invalid event ID provided'));
-    }
-    
-    return this.getEventTickets(eventId).pipe(
-      map(tickets => {
-        const confirmedTickets = tickets.filter(t => 
-          t.status === 'Ticket sent.' || t.status === 'Payment confirmed'
-        );
-        const pendingTickets = tickets.filter(t => 
-          t.status === 'New' || t.status === 'Payment pending'
-        );
-
-        const totalTicketsSold = confirmedTickets.reduce((sum, ticket) => 
-          sum + ticket.number_of_entries, 0
-        );
-
-        const totalRevenue = confirmedTickets.reduce((sum, ticket) => 
-          sum + (ticket.price_per_ticket * ticket.number_of_entries - ticket.payment_processing_fee), 0
-        );
-
-        return {
-          total_tickets_sold: totalTicketsSold,
-          total_revenue: totalRevenue,
-          pending_orders: pendingTickets.length,
-          active_referrers: 0 // Will be calculated separately if needed
-        };
-      }),
       catchError(this.handleError)
     );
   }
