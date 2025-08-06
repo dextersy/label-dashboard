@@ -75,6 +75,15 @@ Ticket.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
+      get() {
+        // Force conversion to number when reading from database
+        const value = this.getDataValue('number_of_entries');
+        return typeof value === 'string' ? parseInt(value, 10) : value;
+      },
+      set(value: any) {
+        // Force conversion to number when writing to database
+        this.setDataValue('number_of_entries', typeof value === 'string' ? parseInt(value, 10) : value);
+      }
     },
     ticket_code: {
       type: DataTypes.STRING(5),
@@ -109,6 +118,15 @@ Ticket.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
+      get() {
+        // Force conversion to number when reading from database
+        const value = this.getDataValue('number_of_claimed_entries');
+        return typeof value === 'string' ? parseInt(value, 10) : value;
+      },
+      set(value: any) {
+        // Force conversion to number when writing to database
+        this.setDataValue('number_of_claimed_entries', typeof value === 'string' ? parseInt(value, 10) : value);
+      }
     },
     order_timestamp: {
       type: DataTypes.DATE,

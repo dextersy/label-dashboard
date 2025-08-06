@@ -3,7 +3,7 @@ import { Ticket, Event, EventReferrer, Brand, User, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode } from '../utils/ticketEmailService';
-import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
 import { Op } from 'sequelize';
 import crypto from 'crypto';
 
@@ -151,8 +151,21 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
   try {
     const { event_id, verification_pin, ticket_code } = req.body;
 
-    if (!event_id || !ticket_code) {
-      return res.status(400).json({ error: 'Event ID and ticket code are required' });
+    if (!event_id || !ticket_code || !verification_pin) {
+      return res.status(400).json({ error: 'Event ID, ticket code, and verification PIN are required' });
+    }
+
+    // Extract domain from referer URL for multibrand validation
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
     }
 
     const ticket = await Ticket.findOne({
@@ -164,7 +177,15 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
         { 
           model: Event, 
           as: 'event',
-          include: [{ model: Brand, as: 'brand' }]
+          include: [{
+            model: Brand,
+            as: 'brand',
+            include: [{
+              model: Domain,
+              as: 'domains',
+              attributes: ['domain_name']
+            }]
+          }]
         },
         { model: EventReferrer, as: 'referrer' }
       ]
@@ -174,8 +195,31 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    // Verify PIN if event requires it (you can add pin field to Event model)
-    // For now, we'll assume all tickets are accessible
+    // Validate that the event belongs to the brand associated with the current domain
+    if (ticket.event.brand && ticket.event.brand.domains && requestDomain) {
+      const eventBrandDomains = ticket.event.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = eventBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Verify PIN matches the event's verification PIN
+    if (verification_pin !== ticket.event.verification_pin) {
+      return res.status(403).json({ error: 'Invalid verification PIN' });
+    }
+
+    // Only show tickets that are confirmed (matching PHP logic)
+    if (ticket.status !== 'Ticket sent.') {
+      return res.status(404).json({ error: 'Ticket not found or not confirmed' });
+    }
+
+    // Calculate remaining entries - model handles type conversion automatically
+    const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
 
     res.json({
       ticket: {
@@ -184,8 +228,11 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
         name: ticket.name,
         email_address: ticket.email_address,
         number_of_entries: ticket.number_of_entries,
+        number_of_claimed_entries: ticket.number_of_claimed_entries,
+        remaining_entries: remainingEntries,
         status: ticket.status,
         event: {
+          id: ticket.event.id,
           title: ticket.event.title,
           date_and_time: ticket.event.date_and_time,
           venue: ticket.event.venue
@@ -444,17 +491,51 @@ export const checkPin = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID and PIN are required' });
     }
 
-    const event = await Event.findByPk(event_id);
+    // Extract domain from referer URL for multibrand validation
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+
+    const event = await Event.findOne({
+      where: { id: event_id },
+      include: [{
+        model: Brand,
+        as: 'brand',
+        include: [{
+          model: Domain,
+          as: 'domains',
+          attributes: ['domain_name']
+        }]
+      }]
+    });
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // For now, we'll assume all events use a default PIN or no PIN
-    // You can add a pin field to the Event model if needed
-    const validPin = process.env.DEFAULT_EVENT_PIN || '1234';
+    // Validate that the event belongs to the brand associated with the current domain
+    if (event.brand && event.brand.domains && requestDomain) {
+      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = eventBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(404).json({ error: 'Event not found' });
+    }
 
-    if (pin !== validPin) {
+    // Use the actual verification PIN from the event
+    if (pin !== event.verification_pin) {
       return res.status(403).json({ error: 'Invalid PIN' });
     }
 
@@ -465,11 +546,210 @@ export const checkPin = async (req: Request, res: Response) => {
         id: event.id,
         title: event.title,
         date_and_time: event.date_and_time,
-        venue: event.venue
+        venue: event.venue,
+        poster_url: event.poster_url,
+        brand: event.brand ? {
+          id: event.brand.id,
+          name: event.brand.brand_name,
+          color: event.brand.brand_color,
+          logo_url: event.brand.logo_url
+        } : null
       }
     });
   } catch (error) {
     console.error('Check PIN error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Check in ticket entries (equivalent to PHP action.verify.php)
+export const checkInTicket = async (req: Request, res: Response) => {
+  try {
+    const { event_id, verification_pin, ticket_code, entries_to_claim } = req.body;
+
+    if (!event_id || !ticket_code || !verification_pin || !entries_to_claim) {
+      return res.status(400).json({ error: 'Event ID, ticket code, verification PIN, and entries to claim are required' });
+    }
+
+    // Parse entries_to_claim as integer to prevent string concatenation
+    const entriesToClaimNum = parseInt(entries_to_claim, 10);
+    
+    if (isNaN(entriesToClaimNum) || entriesToClaimNum < 1) {
+      return res.status(400).json({ error: 'Entries to claim must be a valid number greater than 0' });
+    }
+
+    // Extract domain from referer URL for multibrand validation
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+
+    const ticket = await Ticket.findOne({
+      where: { 
+        event_id,
+        ticket_code: ticket_code.toUpperCase()
+      },
+      include: [
+        { 
+          model: Event, 
+          as: 'event',
+          include: [{
+            model: Brand,
+            as: 'brand',
+            include: [{
+              model: Domain,
+              as: 'domains',
+              attributes: ['domain_name']
+            }]
+          }]
+        }
+      ]
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Validate that the event belongs to the brand associated with the current domain
+    if (ticket.event.brand && ticket.event.brand.domains && requestDomain) {
+      const eventBrandDomains = ticket.event.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = eventBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Verify PIN matches the event's verification PIN
+    if (verification_pin !== ticket.event.verification_pin) {
+      return res.status(403).json({ error: 'Invalid verification PIN' });
+    }
+
+    // Only allow check-in for confirmed tickets (matching PHP logic)
+    if (ticket.status !== 'Ticket sent.') {
+      return res.status(400).json({ error: 'Ticket is not confirmed and cannot be checked in' });
+    }
+
+    // Calculate remaining entries - model now handles type conversion automatically
+    const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
+
+    if (entriesToClaimNum > remainingEntries) {
+      return res.status(400).json({ 
+        error: `Cannot claim ${entriesToClaimNum} entries. Only ${remainingEntries} entries remaining.` 
+      });
+    }
+
+    // Update claimed entries (matching PHP logic) - model ensures numeric addition
+    const newClaimedEntries = ticket.number_of_claimed_entries + entriesToClaimNum;
+    await ticket.update({
+      number_of_claimed_entries: newClaimedEntries
+    });
+
+    const updatedRemainingEntries = ticket.number_of_entries - newClaimedEntries;
+
+    res.json({
+      success: true,
+      message: `Successfully checked in ${entriesToClaimNum} ${entriesToClaimNum === 1 ? 'entry' : 'entries'}`,
+      ticket: {
+        id: ticket.id,
+        ticket_code: ticket.ticket_code,
+        name: ticket.name,
+        number_of_entries: ticket.number_of_entries,
+        number_of_claimed_entries: newClaimedEntries,
+        remaining_entries: updatedRemainingEntries,
+        event: {
+          id: ticket.event.id,
+          title: ticket.event.title,
+          date_and_time: ticket.event.date_and_time,
+          venue: ticket.event.venue
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Check in ticket error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get public event information by ID (without PIN requirement)
+export const getPublicEventInfo = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    // Extract domain from referer URL for multibrand validation
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+
+    const event = await Event.findOne({
+      where: { id },
+      include: [{
+        model: Brand,
+        as: 'brand',
+        include: [{
+          model: Domain,
+          as: 'domains',
+          attributes: ['domain_name']
+        }]
+      }]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Validate that the event belongs to the brand associated with the current domain
+    if (event.brand && event.brand.domains && requestDomain) {
+      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = eventBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    res.json({
+      event: {
+        id: event.id,
+        title: event.title,
+        date_and_time: event.date_and_time,
+        venue: event.venue,
+        poster_url: event.poster_url,
+        brand: event.brand ? {
+          id: event.brand.id,
+          name: event.brand.brand_name,
+          color: event.brand.brand_color,
+          logo_url: event.brand.logo_url
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error('Get public event info error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

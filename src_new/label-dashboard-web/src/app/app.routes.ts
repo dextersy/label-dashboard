@@ -13,6 +13,7 @@ import { InviteComponent } from './pages/invite/invite.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { TicketBuyComponent } from './pages/public/ticket-buy.component';
 import { TicketSuccessComponent } from './pages/public/ticket-success.component';
+import { TicketVerifyComponent } from './pages/public/ticket-verify.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
@@ -27,6 +28,7 @@ export const routes: Routes = [
   // Public Routes (no authentication required)
   { path: 'public/tickets/buy/:id', component: TicketBuyComponent },
   { path: 'public/tickets/success/:id', component: TicketSuccessComponent },
+  { path: 'public/tickets/verify/:id', component: TicketVerifyComponent },
   
   // Protected Routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },

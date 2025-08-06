@@ -58,8 +58,11 @@ export interface TicketDetails {
   ticket_code: string;
   name: string;
   number_of_entries: number;
+  number_of_claimed_entries?: number;
+  remaining_entries?: number;
   status: string;
   event: {
+    id?: number;
     title: string;
     date_and_time: string;
     venue: string;
@@ -70,6 +73,32 @@ export interface TicketVerificationResponse {
   valid: boolean;
   ticket?: TicketDetails;
   message: string;
+}
+
+export interface CheckInRequest {
+  event_id: number;
+  verification_pin: string;
+  ticket_code: string;
+  entries_to_claim: number;
+}
+
+export interface CheckInResponse {
+  success: boolean;
+  message: string;
+  ticket: {
+    id: number;
+    ticket_code: string;
+    name: string;
+    number_of_entries: number;
+    number_of_claimed_entries: number;
+    remaining_entries: number;
+    event: {
+      id: number;
+      title: string;
+      date_and_time: string;
+      venue: string;
+    };
+  };
 }
 
 export interface BrandInfo {
@@ -133,6 +162,13 @@ export class PublicService {
       title: string;
       date_and_time: string;
       venue: string;
+      poster_url?: string;
+      brand?: {
+        id: number;
+        name: string;
+        color: string;
+        logo_url: string;
+      };
     };
   }> {
     return this.http.post<{
@@ -143,6 +179,13 @@ export class PublicService {
         title: string;
         date_and_time: string;
         venue: string;
+        poster_url?: string;
+        brand?: {
+          id: number;
+          name: string;
+          color: string;
+          logo_url: string;
+        };
       };
     }>(`${this.apiUrl}/public/tickets/check-pin`, {
       event_id: eventId,
@@ -160,8 +203,11 @@ export class PublicService {
       name: string;
       email_address: string;
       number_of_entries: number;
+      number_of_claimed_entries: number;
+      remaining_entries: number;
       status: string;
       event: {
+        id: number;
         title: string;
         date_and_time: string;
         venue: string;
@@ -179,8 +225,11 @@ export class PublicService {
         name: string;
         email_address: string;
         number_of_entries: number;
+        number_of_claimed_entries: number;
+        remaining_entries: number;
         status: string;
         event: {
+          id: number;
           title: string;
           date_and_time: string;
           venue: string;
@@ -195,5 +244,47 @@ export class PublicService {
       verification_pin: verificationPin,
       ticket_code: ticketCode
     });
+  }
+
+  /**
+   * Check in ticket entries
+   */
+  checkInTicket(request: CheckInRequest): Observable<CheckInResponse> {
+    return this.http.post<CheckInResponse>(`${this.apiUrl}/public/tickets/check-in`, request);
+  }
+
+  /**
+   * Get public event information by ID (without PIN requirement)
+   */
+  getPublicEventInfo(eventId: number): Observable<{
+    event: {
+      id: number;
+      title: string;
+      date_and_time: string;
+      venue: string;
+      poster_url?: string;
+      brand?: {
+        id: number;
+        name: string;
+        color: string;
+        logo_url: string;
+      };
+    };
+  }> {
+    return this.http.get<{
+      event: {
+        id: number;
+        title: string;
+        date_and_time: string;
+        venue: string;
+        poster_url?: string;
+        brand?: {
+          id: number;
+          name: string;
+          color: string;
+          logo_url: string;
+        };
+      };
+    }>(`${this.apiUrl}/public/events/${eventId}/info`);
   }
 }
