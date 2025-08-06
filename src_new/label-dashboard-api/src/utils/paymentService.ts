@@ -171,14 +171,14 @@ export class PaymentService {
       // Early return for signature verification failure
       if (signature && !this.verifyWebhookSignature(payload, signature)) {
         this.webhookLog('ERROR: Invalid webhook signature');
-        await this.sendAdminFailureNotification('Invalid webhook signature');
+        await this.sendAdminFailureNotification('Invalid webhook signature', undefined, payload);
         return false;
       }
       
       // Early return for invalid payload structure
       if (!payload.data?.attributes?.data) {
         this.webhookLog('ERROR: Invalid webhook payload structure');
-        await this.sendAdminFailureNotification('Invalid JSON data: ' + JSON.stringify(payload));
+        await this.sendAdminFailureNotification('Invalid JSON data', undefined, payload);
         return false;
       }
       
@@ -188,7 +188,7 @@ export class PaymentService {
       // Early return for unsupported event types
       if (eventType !== 'link' && eventType !== 'checkout_session') {
         this.webhookLog('ERROR: Unsupported event type: ' + eventType);
-        await this.sendAdminFailureNotification('Unsupported event type: ' + eventType);
+        await this.sendAdminFailureNotification('Unsupported event type: ' + eventType, undefined, payload);
         return false;
       }
       
@@ -200,7 +200,7 @@ export class PaymentService {
       // Early return if ticket not found
       if (!ticket) {
         this.webhookLog('ERROR: Reference is not valid or ticket not found');
-        await this.sendAdminFailureNotification('Invalid reference value in JSON response');
+        await this.sendAdminFailureNotification('Invalid reference value in JSON response', undefined, payload);
         return false;
       }
       
@@ -210,11 +210,11 @@ export class PaymentService {
       const processingFee = this.calculateProcessingFeeFromPayments(eventType, eventData);
       
       // Process payment confirmation
-      return await this.processPaymentConfirmation(ticket, processingFee);
+      return await this.processPaymentConfirmation(ticket, processingFee, payload);
       
     } catch (error) {
       this.webhookLog('ERROR: Exception in processWebhook: ' + (error as Error).message);
-      await this.sendAdminFailureNotification('Webhook processing exception: ' + (error as Error).message);
+      await this.sendAdminFailureNotification('Webhook processing exception: ' + (error as Error).message, undefined, payload);
       console.error('PayMongo webhook processing error:', error);
       return false;
     }
@@ -274,13 +274,13 @@ export class PaymentService {
     }, 0);
   }
   
-  private async processPaymentConfirmation(ticket: any, processingFee: number): Promise<boolean> {
+  private async processPaymentConfirmation(ticket: any, processingFee: number, payload?: any): Promise<boolean> {
     // Update ticket payment status
     const paymentUpdated = await this.updateTicketPaymentStatus(ticket.id, processingFee);
     
     if (!paymentUpdated) {
       this.webhookLog('ERROR: Failed to update ticket payment verification. id = ' + ticket.id + ', processing_fee = ' + processingFee);
-      await this.sendAdminFailureNotification('Ticket payment verification failed. Ticket id = ' + ticket.id, ticket.event?.brand_id);
+      await this.sendAdminFailureNotification('Ticket payment verification failed. Ticket id = ' + ticket.id, ticket.event?.brand_id, payload);
       return false;
     }
     
@@ -291,7 +291,7 @@ export class PaymentService {
     
     if (!ticketSent) {
       this.webhookLog('ERROR: Failed to send ticket email');
-      await this.sendAdminFailureNotification('Failed to send ticket to customer', ticket.event?.brand_id);
+      await this.sendAdminFailureNotification('Failed to send ticket to customer', ticket.event?.brand_id, payload);
       return false;
     }
     
@@ -311,7 +311,7 @@ export class PaymentService {
     
     if (!updatedTicket) {
       this.webhookLog('ERROR: Failed to reload ticket for admin notification');
-      await this.sendAdminFailureNotification('Failed to reload ticket for admin notification', ticket.event?.brand_id);
+      await this.sendAdminFailureNotification('Failed to reload ticket for admin notification', ticket.event?.brand_id, payload);
       return false;
     }
     
@@ -320,7 +320,7 @@ export class PaymentService {
     
     if (!adminNotificationSent) {
       this.webhookLog('ERROR: Failed to send admin notification');
-      await this.sendAdminFailureNotification('Failed to send admin notification email', ticket.event?.brand_id);
+      await this.sendAdminFailureNotification('Failed to send admin notification email', ticket.event?.brand_id, payload);
       return false;
     }
     
@@ -495,10 +495,15 @@ export class PaymentService {
     }
   }
   
-  private async sendAdminFailureNotification(reason: string, brandId?: number): Promise<boolean> {
+  private async sendAdminFailureNotification(reason: string, brandId?: number, payload?: any): Promise<boolean> {
     try {
       const subject = 'Link payment webhook error detected.';
-      const body = `We detected a failed webhook event.<br>Reason: ${reason}`;
+      let body = `We detected a failed webhook event.<br>Reason: ${reason}`;
+      
+      // Add preformatted JSON payload if provided
+      if (payload) {
+        body += `<br><br><strong>Webhook Payload:</strong><br><pre>${JSON.stringify(payload, null, 2)}</pre>`;
+      }
       
       // Use the direct sendEmail function for consistency with sendAdminNotification
       const { sendEmail } = await import('./emailService');
