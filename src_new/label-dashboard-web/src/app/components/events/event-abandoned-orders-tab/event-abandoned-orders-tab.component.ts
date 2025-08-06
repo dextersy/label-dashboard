@@ -116,15 +116,15 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       per_page: 20,
       sort_column: this.currentSort?.column,
       sort_direction: this.currentSort?.direction,
-      filters: { ...this.currentFilters, status: 'New' } // Always filter for abandoned orders
+      filters: this.currentFilters // Remove status filter to get both New and Payment Confirmed
     };
 
     this.subscriptions.add(
       this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
         next: (response) => {
-          // Filter for abandoned orders (new/unpaid tickets)
+          // Filter for pending tickets (New and Payment Confirmed statuses)
           this.orders = response.tickets
-            .filter(ticket => ticket.status === 'New')
+            .filter(ticket => ticket.status === 'New' || ticket.status === 'Payment Confirmed')
             .map(ticket => this.convertServiceTicketToAbandonedOrder(ticket));
           
           this.pagination = response.pagination;
@@ -174,6 +174,28 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     this.customTicketForm.price_per_ticket = this.selectedEvent?.ticket_price || 0;
   }
 
+  onSendTicket(orderId: number): void {
+    this.subscriptions.add(
+      this.eventService.resendTicket(orderId).subscribe({
+        next: () => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Ticket sent successfully!'
+          });
+          // Remove from pending tickets since it's now sent
+          this.orders = this.orders.filter(o => o.id !== orderId);
+        },
+        error: (error) => {
+          console.error('Failed to send ticket:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to send ticket'
+          });
+        }
+      })
+    );
+  }
+
   onMarkAsPaid(orderId: number): void {
     this.subscriptions.add(
       this.eventService.markTicketPaid(orderId).subscribe({
@@ -182,8 +204,8 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
             type: 'success',
             text: 'Order marked as paid!'
           });
-          // Remove from abandoned orders since it's now confirmed
-          this.orders = this.orders.filter(o => o.id !== orderId);
+          // Refresh the list to show the updated status
+          this.loadAbandonedOrders();
         },
         error: (error) => {
           console.error('Failed to mark order as paid:', error);
@@ -274,7 +296,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     if (!this.selectedEvent || !this.orders.length) {
       this.alertMessage.emit({
         type: 'error',
-        text: 'No abandoned orders to export.'
+        text: 'No pending tickets to export.'
       });
       return;
     }
@@ -293,7 +315,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     const filename = `${this.selectedEvent.title.replace(/\s+/g, '_')}_tickets_pending.csv`;
     
     this.csvService.downloadCsv({
-      title: `Abandoned orders for ${this.selectedEvent.title}`,
+      title: `Pending tickets for ${this.selectedEvent.title}`,
       headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Notes', 'Status'],
       data: csvData,
       filename: filename
@@ -301,7 +323,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
     this.alertMessage.emit({
       type: 'success',
-      text: 'Abandoned orders CSV downloaded successfully!'
+      text: 'Pending tickets CSV downloaded successfully!'
     });
   }
 

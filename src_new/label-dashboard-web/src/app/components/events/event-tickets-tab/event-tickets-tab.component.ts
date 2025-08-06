@@ -107,12 +107,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.add(
       this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
         next: (response) => {
-          // Convert API tickets to component format and filter confirmed tickets or tickets with claimed entries
+          // Convert API tickets to component format and filter for sent tickets only
           this.tickets = response.tickets
             .filter(ticket => {
-              // Show tickets that are confirmed/paid OR have claimed entries (regardless of payment status)
-              return (ticket.status != 'New' && ticket.status != 'Canceled') || 
-                     (ticket.number_of_claimed_entries > 0);
+              // Show only tickets with "Ticket sent." status
+              return ticket.status === 'Ticket sent.';
             })
             .map(ticket => this.convertServiceTicketToComponentTicket(ticket));
           
