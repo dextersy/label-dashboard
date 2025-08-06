@@ -1,6 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
 
@@ -43,6 +43,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isAdmin: boolean = false;
   @Output() eventUpdated = new EventEmitter<Event>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
+  @ViewChild('eventForm') eventForm!: NgForm;
 
   event: EventDetails | null = null;
   loading = false;
@@ -293,10 +294,10 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.event) return;
     
     // Basic validation
-    if (!this.event.title || !this.event.venue || !this.event.date_and_time) {
+    if (!this.event.title || !this.event.venue || !this.event.date_and_time || !this.event.rsvp_link) {
       this.alertMessage.emit({
         type: 'error',
-        text: 'Please fill in all required fields.'
+        text: 'Please fill in all required fields (Title, Date & Time, Venue, RSVP Link).'
       });
       return;
     }
@@ -346,6 +347,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
             this.event = this.convertEventToDetails(updatedEvent);
             this.formatDatesForDisplay();
             this.onEventSaved();
+            this.resetFormState();
             this.eventUpdated.emit(updatedEvent);
             this.uploading = false;
           },
@@ -394,6 +396,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
             });
             this.event = this.convertEventToDetails(updatedEvent);
             this.formatDatesForDisplay();
+            this.resetFormState();
             this.eventUpdated.emit(updatedEvent);
             this.uploading = false;
           },
@@ -462,6 +465,22 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     // Clear poster selection after successful save
     this.removePoster();
     this.uploading = false;
+  }
+
+  resetFormState(): void {
+    // Reset the form's dirty state after successful save
+    setTimeout(() => {
+      if (this.eventForm) {
+        // Mark all form controls as pristine
+        Object.keys(this.eventForm.controls).forEach(key => {
+          const control = this.eventForm.controls[key];
+          control.markAsPristine();
+          control.markAsUntouched();
+        });
+        this.eventForm.form.markAsPristine();
+        this.eventForm.form.markAsUntouched();
+      }
+    }, 100);
   }
 
   onImageError(event: any): void {

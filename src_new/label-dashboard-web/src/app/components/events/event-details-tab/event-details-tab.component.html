@@ -377,7 +377,7 @@
         <button 
           type="submit" 
           class="btn btn-primary btn-lg"
-          [disabled]="!eventForm.form.valid || loading">
+          [disabled]="!eventForm.form.dirty || loading">
           <i class="fa fa-save me-2"></i>
           <span *ngIf="loading">Saving...</span>
           <span *ngIf="!loading">Save All Changes</span>
