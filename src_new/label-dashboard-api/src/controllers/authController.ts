@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
+import { getBrandIdFromDomain } from '../utils/brandUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
@@ -151,11 +152,25 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
+    // Get brand ID from referer URL (frontend domain)
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    console.log('Referer URL:', refererUrl);
+    
+    if (!refererUrl) {
+      return res.status(400).json({ error: 'Unable to determine frontend domain from request' });
+    }
+    
+    const brandId = await getBrandIdFromDomain(refererUrl);
+    
+    if (!brandId) {
+      return res.status(400).json({ error: 'Invalid domain or brand not found' });
+    }
+
     // Find user by email (brand-scoped like original PHP)
     const user = await User.findOne({
       where: { 
         email_address: email,
-        brand_id: 1 // Default to brand 1 for now - would need session management for multi-brand
+        brand_id: brandId
       },
       include: [{ model: Brand, as: 'brand' }]
     });
@@ -179,7 +194,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       user.brand?.brand_name || 'Label Dashboard',
       user.brand?.brand_color || '#5fbae9',
       user.brand?.logo_url || '',
-      user.brand_id
+      user.brand_id,
+      refererUrl // Pass the frontend domain
     );
 
     // Send admin notification (matching original PHP)
@@ -236,21 +252,32 @@ export const resetPassword = async (req: Request, res: Response) => {
 };
 
 // Helper functions matching original PHP implementation
-async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number): Promise<boolean> {
+async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number, refererUrl: string): Promise<boolean> {
   const subject = "Here's the link to reset your password!";
-  const emailContent = generateEmailFromTemplate(resetHash, brandName, brandColor, brandLogo);
+  const emailContent = generateEmailFromTemplate(resetHash, brandName, brandColor, brandLogo, refererUrl);
   return await sendEmail([emailAddress], subject, emailContent, brandId);
 }
 
-function generateEmailFromTemplate(resetHash: string, brandName: string, brandColor: string, brandLogo: string): string {
+function generateEmailFromTemplate(resetHash: string, brandName: string, brandColor: string, brandLogo: string, refererUrl: string): string {
+  // refererUrl is now required - no fallback logic
+  if (!refererUrl) {
+    throw new Error('Frontend URL is required to generate reset password email');
+  }
+
+  let frontendBaseUrl: string;
+  try {
+    const url = new URL(refererUrl);
+    frontendBaseUrl = `${url.protocol}//${url.hostname}${url.port ? ':' + url.port : ''}`;
+  } catch (error) {
+    throw new Error(`Invalid referer URL: ${refererUrl}`);
+  }
+  
+  const resetUrl = `${frontendBaseUrl}/reset-password?code=${resetHash}`;
+  console.log('Generated reset URL:', resetUrl);
+
   try {
     const templatePath = path.join(__dirname, '../assets/templates/reset_password_email.html');
     let template = fs.readFileSync(templatePath, 'utf8');
-
-    // Get protocol and host from environment or use defaults
-    const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
-    const host = process.env.FRONTEND_HOST || 'localhost:4200';
-    const resetUrl = `${protocol}://${host}/reset-password?code=${resetHash}`;
 
     // Replace template variables (matching original PHP)
     template = template.replace(/%LOGO%/g, brandLogo);
@@ -261,13 +288,14 @@ function generateEmailFromTemplate(resetHash: string, brandName: string, brandCo
     return template;
   } catch (error) {
     console.error('Error loading email template:', error);
-    // Fallback simple HTML email
+    
+    // Simple HTML email without fallback URL logic
     return `
       <html>
         <body>
           <h2>Password Reset Request</h2>
           <p>Click the link below to reset your password:</p>
-          <a href="${process.env.FRONTEND_URL}/reset-password?code=${resetHash}">Reset Password</a>
+          <a href="${resetUrl}">Reset Password</a>
           <p>If you didn't request this, please ignore this email.</p>
         </body>
       </html>
@@ -277,7 +305,13 @@ function generateEmailFromTemplate(resetHash: string, brandName: string, brandCo
 
 async function sendAdminNotification(user: any, remoteIp: string, proxyIp: string): Promise<boolean> {
   const subject = `Password reset requested for user ${user.username}`;
-  const adminEmail = process.env.ADMIN_EMAIL || 'sy.dexter@gmail.com';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  
+  // Only send if admin email is configured
+  if (!adminEmail) {
+    console.log('No admin email configured for password reset notifications, skipping email');
+    return false;
+  }
   
   const body = `
     We've detected a password reset request for user <b>${user.username}</b>.<br>
@@ -297,11 +331,25 @@ export const validateResetHash = async (req: Request, res: Response) => {
       return res.status(400).json({ valid: false, error: 'Reset hash is required' });
     }
 
+    // Get brand ID from referer URL (frontend domain)
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    console.log('Referer URL:', refererUrl);
+    
+    if (!refererUrl) {
+      return res.status(400).json({ valid: false, error: 'Unable to determine frontend domain from request' });
+    }
+    
+    const brandId = await getBrandIdFromDomain(refererUrl);
+    
+    if (!brandId) {
+      return res.status(400).json({ valid: false, error: 'Invalid domain or brand not found' });
+    }
+
     // Find user with valid reset hash (matching original PHP logic)
     const user = await User.findOne({
       where: {
         reset_hash: hash,
-        brand_id: 1 // Default to brand 1 for now - would need session management for multi-brand
+        brand_id: brandId
       }
     });
 

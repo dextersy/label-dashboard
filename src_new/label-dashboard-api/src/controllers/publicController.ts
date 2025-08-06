@@ -28,9 +28,22 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id, 10);
-    // Extract domain from request, removing port if present
-    let requestDomain = req.get('host') || req.hostname || '';
-    requestDomain = requestDomain.split(':')[0]; // Remove port number if present
+    // Extract domain from referer URL (frontend domain)
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+    
+    console.log('=== BRAND VALIDATION DEBUG ===');
+    console.log('Request domain:', requestDomain);
+    console.log('Event ID:', eventId);
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -51,6 +64,13 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         }
       ]
     });
+    
+    console.log('Event found:', !!event);
+    if (event) {
+      console.log('Event brand ID:', event.brand?.id);
+      console.log('Event brand name:', event.brand?.brand_name);
+      console.log('Event brand domains:', event.brand?.domains?.map((d: any) => d.domain_name));
+    }
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
@@ -61,11 +81,24 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = eventBrandDomains.includes(requestDomain);
       
+      console.log('Domain validation check:');
+      console.log('- Event brand domains:', eventBrandDomains);
+      console.log('- Request domain:', requestDomain);
+      console.log('- Domain valid:', isDomainValid);
+      
       if (!isDomainValid) {
+        console.log('VALIDATION FAILED: Domain not in event brand domains');
         return res.status(404).json({ error: 'Event not found' });
       }
+      console.log('VALIDATION PASSED: Domain matches event brand');
     } else {
       // Fail securely: if we cannot validate brand/domain, deny access
+      console.log('VALIDATION FAILED: Missing validation data', {
+        hasBrand: !!event.brand,
+        hasDomains: !!(event.brand && event.brand.domains),
+        hasRequestDomain: !!requestDomain,
+        domainsCount: event.brand?.domains?.length || 0
+      });
       return res.status(404).json({ error: 'Event not found' });
     }
 
@@ -187,9 +220,18 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     const eventIdNum = parseInt(event_id, 10);
-    // Extract domain from request, removing port if present
-    let requestDomain = req.get('host') || req.hostname || '';
-    requestDomain = requestDomain.split(':')[0]; // Remove port number if present
+    // Extract domain from referer URL (frontend domain)
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
 
     // Get event details
     const event = await Event.findOne({
