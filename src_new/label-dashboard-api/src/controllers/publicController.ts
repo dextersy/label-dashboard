@@ -41,10 +41,6 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       }
     }
     
-    console.log('=== BRAND VALIDATION DEBUG ===');
-    console.log('Request domain:', requestDomain);
-    console.log('Event ID:', eventId);
-    
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
     }
@@ -65,12 +61,6 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       ]
     });
     
-    console.log('Event found:', !!event);
-    if (event) {
-      console.log('Event brand ID:', event.brand?.id);
-      console.log('Event brand name:', event.brand?.brand_name);
-      console.log('Event brand domains:', event.brand?.domains?.map((d: any) => d.domain_name));
-    }
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
@@ -81,24 +71,11 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = eventBrandDomains.includes(requestDomain);
       
-      console.log('Domain validation check:');
-      console.log('- Event brand domains:', eventBrandDomains);
-      console.log('- Request domain:', requestDomain);
-      console.log('- Domain valid:', isDomainValid);
-      
       if (!isDomainValid) {
-        console.log('VALIDATION FAILED: Domain not in event brand domains');
         return res.status(404).json({ error: 'Event not found' });
       }
-      console.log('VALIDATION PASSED: Domain matches event brand');
     } else {
       // Fail securely: if we cannot validate brand/domain, deny access
-      console.log('VALIDATION FAILED: Missing validation data', {
-        hasBrand: !!event.brand,
-        hasDomains: !!(event.brand && event.brand.domains),
-        hasRequestDomain: !!requestDomain,
-        domainsCount: event.brand?.domains?.length || 0
-      });
       return res.status(404).json({ error: 'Event not found' });
     }
 
