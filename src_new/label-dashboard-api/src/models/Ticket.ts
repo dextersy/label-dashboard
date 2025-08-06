@@ -15,6 +15,7 @@ interface TicketAttributes {
   status: TicketStatus;
   payment_link?: string;
   payment_link_id?: string;
+  checkout_key?: string;
   price_per_ticket?: number;
   payment_processing_fee?: number;
   referrer_id?: number;
@@ -35,6 +36,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public status!: TicketStatus;
   public payment_link?: string;
   public payment_link_id?: string;
+  public checkout_key?: string;
   public price_per_ticket?: number;
   public payment_processing_fee?: number;
   public referrer_id?: number;
@@ -100,6 +102,10 @@ Ticket.init(
     },
     payment_link_id: {
       type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    checkout_key: {
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
     price_per_ticket: {

@@ -371,7 +371,8 @@ export const buyTicket = async (req: Request, res: Response) => {
     // Store checkout session info in ticket
     await ticket.update({
       payment_link: checkoutSession.attributes.checkout_url,
-      payment_link_id: checkoutSession.id
+      checkout_key: checkoutSession.attributes.client_key,
+      payment_link_id: null
     });
 
     res.json({

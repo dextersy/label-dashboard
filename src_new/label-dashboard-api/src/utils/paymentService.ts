@@ -237,14 +237,14 @@ export class PaymentService {
     }
     
     if (eventType === 'checkout_session') {
-      // Use the checkout session ID directly, not the client_key
-      const checkoutSessionId = eventData.id;
-      if (!checkoutSessionId) {
+      // Use the client_key from checkout session to match against checkout_key field
+      const clientKey = eventData.attributes?.client_key;
+      if (!clientKey) {
         return null;
       }
       
       return await Ticket.findOne({
-        where: { payment_link_id: checkoutSessionId },
+        where: { checkout_key: clientKey },
         include: includeOptions
       });
     }
