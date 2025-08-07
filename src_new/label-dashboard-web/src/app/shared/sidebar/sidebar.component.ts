@@ -44,7 +44,23 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/artist/submit-release', title: 'Submit Release', adminOnly: false }
       ]
     },
-    { route: '/financial', icon: 'fas fa-dollar-sign', title: 'Financial', adminOnly: false },
+    { 
+      route: '/financial', 
+      icon: 'fas fa-dollar-sign', 
+      title: 'Financial', 
+      adminOnly: false,
+      children: [
+        { route: '/financial/summary', title: 'Summary', adminOnly: false },
+        { route: '/financial/documents', title: 'Documents', adminOnly: false },
+        { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
+        { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
+        { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
+        { route: '/financial/release', title: 'Release Information', adminOnly: false },
+        { route: '/financial/new-royalty', title: 'New Royalty', adminOnly: true },
+        { route: '/financial/new-payment', title: 'New Payment', adminOnly: true },
+        { route: '/financial/new-earning', title: 'New Earning', adminOnly: true }
+      ]
+    },
     { route: '/events', icon: 'fas fa-ticket-alt', title: 'Events', adminOnly: true },
     { route: '/admin', icon: 'fas fa-cogs', title: 'Admin', adminOnly: true }
   ];

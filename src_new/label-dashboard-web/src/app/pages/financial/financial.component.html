@@ -9,27 +9,12 @@
     <div class="row" *ngIf="selectedArtist">
       <div class="col-12">
         
-        <!-- Tab Navigation -->
-        <div class="card tab-navigation">
-          <div class="card-header p-0">
-            <ul class="nav nav-tabs financial-tabs" role="tablist">
-              <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
-                <a class="nav-link" 
-                   [class]="getTabClass(tab.id)"
-                   (click)="setActiveTab(tab.id)"
-                   role="tab">
-                  <i class="fa" [class]="tab.icon"></i>
-                  {{ tab.label }}
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-          <!-- Tab Content -->
-          <div class="card-body tab-content p-0">
+        <!-- Tab Content (no navigation needed, handled by sidebar) -->
+        <div class="card">
+          <div class="card-body p-0">
             
             <!-- Summary Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'summary'" *ngIf="activeTab === 'summary'">
+            <div *ngIf="activeTab === 'summary'">
               <app-financial-summary-tab
                 [summary]="summary"
                 [latestEarnings]="latestEarnings"
@@ -42,7 +27,7 @@
             </div>
             
             <!-- Documents Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'documents'" *ngIf="activeTab === 'documents'">
+            <div *ngIf="activeTab === 'documents'">
               <app-financial-documents-tab
                 [documents]="documents"
                 [documentUploadForm]="documentUploadForm"
@@ -54,7 +39,7 @@
             </div>
             
             <!-- Earnings Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'earnings'" *ngIf="activeTab === 'earnings'">
+            <div *ngIf="activeTab === 'earnings'">
               <app-financial-earnings-tab 
                 [earnings]="earnings"
                 [pagination]="earningsPagination"
@@ -67,7 +52,7 @@
             </div>
             
             <!-- Royalties Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'royalties'" *ngIf="activeTab === 'royalties'">
+            <div *ngIf="activeTab === 'royalties'">
               <app-financial-royalties-tab 
                 [royalties]="royalties"
                 [pagination]="royaltiesPagination"
@@ -80,7 +65,7 @@
             </div>
             
             <!-- Payments Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'payments'" *ngIf="activeTab === 'payments'">
+            <div *ngIf="activeTab === 'payments'">
               <app-financial-payments-tab
                 [payments]="payments"
                 [paymentsPagination]="paymentsPagination"
@@ -102,7 +87,7 @@
             </div>
             
             <!-- Release Information Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'release'" *ngIf="activeTab === 'release'">
+            <div *ngIf="activeTab === 'release'">
               <app-financial-release-tab
                 [releases]="releases"
                 [isAdmin]="isAdmin"
@@ -114,8 +99,8 @@
               </app-financial-release-tab>
             </div>
 
-            <!-- Admin-only tabs -->
-            <div class="tab-pane" [class.active]="activeTab === 'new-royalty'" *ngIf="activeTab === 'new-royalty' && isAdmin">
+            <!-- New Royalty Tab -->
+            <div *ngIf="activeTab === 'new-royalty' && isAdmin">
               <app-new-royalty-form
                 [newRoyaltyForm]="newRoyaltyForm"
                 [releases]="releases"
@@ -123,7 +108,8 @@
               </app-new-royalty-form>
             </div>
 
-            <div class="tab-pane" [class.active]="activeTab === 'new-payment'" *ngIf="activeTab === 'new-payment' && isAdmin">
+            <!-- New Payment Tab -->
+            <div *ngIf="activeTab === 'new-payment' && isAdmin">
               <app-new-payment-form
                 #newPaymentFormComponent
                 [newPaymentForm]="newPaymentForm"
@@ -134,7 +120,8 @@
               </app-new-payment-form>
             </div>
 
-            <div class="tab-pane" [class.active]="activeTab === 'new-earning'" *ngIf="activeTab === 'new-earning' && isAdmin">
+            <!-- New Earning Tab -->
+            <div *ngIf="activeTab === 'new-earning' && isAdmin">
               <app-new-earning-form
                 [newEarningForm]="newEarningForm"
                 [releases]="releases"

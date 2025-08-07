@@ -45,7 +45,22 @@ export const routes: Routes = [
       { path: 'submit-release', component: ArtistComponent, data: { tab: 'submit-release' } }
     ]
   },
-  { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },
+  { 
+    path: 'financial', 
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'summary', pathMatch: 'full' },
+      { path: 'summary', component: FinancialComponent, data: { tab: 'summary' } },
+      { path: 'documents', component: FinancialComponent, data: { tab: 'documents' } },
+      { path: 'earnings', component: FinancialComponent, data: { tab: 'earnings' } },
+      { path: 'royalties', component: FinancialComponent, data: { tab: 'royalties' } },
+      { path: 'payments', component: FinancialComponent, data: { tab: 'payments' } },
+      { path: 'release', component: FinancialComponent, data: { tab: 'release' } },
+      { path: 'new-royalty', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-royalty' } },
+      { path: 'new-payment', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-payment' } },
+      { path: 'new-earning', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-earning' } }
+    ]
+  },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'events', component: EventsComponent, canActivate: [adminGuard] },
   { path: 'admin', component: AdminComponent, canActivate: [adminGuard] }, // Admin only

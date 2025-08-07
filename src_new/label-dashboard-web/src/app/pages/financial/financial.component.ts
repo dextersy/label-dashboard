@@ -1,6 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { FinancialSummaryTabComponent } from '../../components/financial/financial-summary-tab/financial-summary-tab.component';
 import { FinancialDocumentsTabComponent } from '../../components/financial/financial-documents-tab/financial-documents-tab.component';
@@ -120,7 +122,7 @@ export interface ReleaseInfo {
   templateUrl: './financial.component.html',
   styleUrl: './financial.component.scss'
 })
-export class FinancialComponent implements OnInit {
+export class FinancialComponent implements OnInit, OnDestroy {
   @ViewChild('newPaymentFormComponent') newPaymentFormComponent?: NewPaymentFormComponent;
   
   private static getTodaysDate(): string {
@@ -131,6 +133,7 @@ export class FinancialComponent implements OnInit {
   activeTab: FinancialTabType = 'summary';
   isAdmin = false;
   loading = false;
+  private routeSubscription: Subscription = new Subscription();
 
   // Financial data
   summary: FinancialSummary | null = null;
@@ -227,23 +230,14 @@ export class FinancialComponent implements OnInit {
     { bank_code: 'PAYMAYA', bank_name: 'PayMaya' }
   ];
 
-  tabs = [
-    { id: 'summary' as FinancialTabType, label: 'Summary', icon: 'fa-solid fa-info' },
-    { id: 'documents' as FinancialTabType, label: 'Documents', icon: 'fa-solid fa-file' },
-    { id: 'earnings' as FinancialTabType, label: 'Earnings', icon: 'fa-solid fa-dollar-sign' },
-    { id: 'royalties' as FinancialTabType, label: 'Royalties', icon: 'fa-solid fa-star' },
-    { id: 'payments' as FinancialTabType, label: 'Payments and Advances', icon: 'fa-solid fa-credit-card' },
-    { id: 'release' as FinancialTabType, label: 'Release Information', icon: 'fa-solid fa-play' },
-    { id: 'new-royalty' as FinancialTabType, label: 'New Royalty', icon: 'fa-solid fa-lock', adminOnly: true },
-    { id: 'new-payment' as FinancialTabType, label: 'New Payment', icon: 'fa-solid fa-lock', adminOnly: true },
-    { id: 'new-earning' as FinancialTabType, label: 'New Earning', icon: 'fa-solid fa-lock', adminOnly: true }
-  ];
 
   constructor(
     private financialService: FinancialService,
     private notificationService: NotificationService,
     private artistStateService: ArtistStateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -262,6 +256,24 @@ export class FinancialComponent implements OnInit {
         this.loadFinancialData();
       }
     });
+
+    // Subscribe to route data changes to determine active tab
+    this.routeSubscription.add(
+      this.route.data.subscribe(data => {
+        if (data['tab']) {
+          this.activeTab = data['tab'] as FinancialTabType;
+          
+          // Load specific data when switching to certain tabs
+          if (this.selectedArtist) {
+            this.loadTabSpecificData(this.activeTab);
+          }
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription.unsubscribe();
   }
 
 
@@ -274,33 +286,25 @@ export class FinancialComponent implements OnInit {
   }
 
   setActiveTab(tab: FinancialTabType): void {
-    this.activeTab = tab;
-    
-    // Load specific data when switching to certain tabs
-    if (tab === 'payments' && this.selectedArtist) {
+    // Navigate to the corresponding route instead of just changing state
+    this.router.navigate(['/financial', tab]);
+  }
+
+  private loadTabSpecificData(tab: FinancialTabType): void {
+    if (!this.selectedArtist) return;
+
+    if (tab === 'payments') {
       this.loadPaymentMethods();
       this.loadPayoutSettings();
-    } else if (tab === 'documents' && this.selectedArtist) {
+    } else if (tab === 'documents') {
       this.loadDocuments();
-    } else if (tab === 'release' && this.selectedArtist) {
+    } else if (tab === 'release') {
       this.loadReleases();
     } else if (tab === 'new-payment' && this.isAdmin) {
       this.loadWalletBalance();
-      // Don't initialize form here - it would clear user input
-      // Form should only be initialized on first load and after successful submission
     }
   }
 
-  shouldShowTab(tab: any): boolean {
-    if (tab.adminOnly && !this.isAdmin) {
-      return false;
-    }
-    return true;
-  }
-
-  getTabClass(tabId: FinancialTabType): string {
-    return this.activeTab === tabId ? 'active' : '';
-  }
 
   private async loadFinancialData(): Promise<void> {
     if (!this.selectedArtist) return;
