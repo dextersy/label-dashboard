@@ -19,7 +19,32 @@
     </button>
     
     <ul class="dropdown-menu" *ngIf="isDropdownOpen">
-      <li *ngFor="let artist of artists" 
+      <!-- Search input -->
+      <li class="search-container">
+        <div class="search-input-wrapper">
+          <i class="fa fa-search search-icon"></i>
+          <input type="text" 
+                 class="form-control artist-search-input" 
+                 [(ngModel)]="searchTerm"
+                 (input)="onSearchChange()"
+                 (keydown)="onSearchKeydown($event)"
+                 placeholder="Search artists..."
+                 (click)="$event.stopPropagation()">
+        </div>
+      </li>
+      
+      <!-- Add new artist option at the top -->
+      <li *ngIf="isAdmin">
+        <a (click)="addNewArtist()" class="add-new-artist">
+          <i class="fa fa-plus"></i>
+          Add New Artist
+        </a>
+      </li>
+      
+      <li class="divider" *ngIf="isAdmin && filteredArtists.length > 0"></li>
+      
+      <!-- Artist list -->
+      <li *ngFor="let artist of filteredArtists" 
           [class.active]="selectedArtist?.id === artist.id">
         <a (click)="selectArtist(artist)">
           <img [src]="getProfilePhotoUrl(artist.profile_photo)" 
@@ -31,13 +56,9 @@
         </a>
       </li>
       
-      <li class="divider" *ngIf="isAdmin && artists.length > 0"></li>
-      
-      <li *ngIf="isAdmin">
-        <a (click)="addNewArtist()" class="add-new-artist">
-          <i class="fa fa-plus"></i>
-          Add New Artist
-        </a>
+      <!-- No results message -->
+      <li class="no-results" *ngIf="searchTerm.trim() && filteredArtists.length === 0">
+        <span>No artists found matching "{{ searchTerm }}"</span>
       </li>
     </ul>
   </div>

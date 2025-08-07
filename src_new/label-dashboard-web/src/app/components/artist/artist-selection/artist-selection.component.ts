@@ -1,5 +1,6 @@
 import { Component, OnInit, OnChanges, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from 'environments/environment';
 
@@ -13,7 +14,7 @@ export interface Artist {
 @Component({
   selector: 'app-artist-selection',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './artist-selection.component.html',
   styleUrl: './artist-selection.component.scss'
 })
@@ -22,10 +23,12 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
   @Output() artistSelected = new EventEmitter<Artist>();
   
   artists: Artist[] = [];
+  filteredArtists: Artist[] = [];
   selectedArtist: Artist | null = null;
   loading = false;
   isDropdownOpen = false;
   isAdmin = false;
+  searchTerm: string = '';
 
   constructor(private http: HttpClient) {}
 
@@ -64,6 +67,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
       next: (data) => {
         this.artists = data.artists;
         this.isAdmin = data.isAdmin;
+        this.filterArtists(); // Initialize filtered list
         
         // Try to restore from localStorage first
         const savedArtistId = this.getSavedArtistId();
@@ -105,11 +109,55 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
 
   toggleDropdown(): void {
     this.isDropdownOpen = !this.isDropdownOpen;
+    if (this.isDropdownOpen) {
+      // Clear search when opening dropdown
+      this.searchTerm = '';
+      this.filterArtists();
+      // Focus on search input after dropdown opens
+      setTimeout(() => {
+        const searchInput = document.querySelector('.artist-search-input') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 100);
+    }
+  }
+
+  onSearchChange(): void {
+    this.filterArtists();
+  }
+
+  filterArtists(): void {
+    if (!this.searchTerm.trim()) {
+      this.filteredArtists = [...this.artists];
+    } else {
+      const searchLower = this.searchTerm.toLowerCase();
+      this.filteredArtists = this.artists.filter(artist => 
+        artist.name.toLowerCase().includes(searchLower) ||
+        (artist.band_members && artist.band_members.toLowerCase().includes(searchLower))
+      );
+    }
   }
 
   addNewArtist(): void {
     // TODO: Implement add new artist functionality
     console.log('Add new artist clicked');
+    this.isDropdownOpen = false;
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    // Allow users to navigate with arrow keys
+    if (event.key === 'ArrowDown' && this.filteredArtists.length > 0) {
+      event.preventDefault();
+      // Focus first artist in the list
+      const firstArtistElement = document.querySelector('.dropdown-menu li:not(.search-container):not(.divider):not(.no-results) a') as HTMLElement;
+      if (firstArtistElement) {
+        firstArtistElement.focus();
+      }
+    }
+    if (event.key === 'Escape') {
+      this.isDropdownOpen = false;
+    }
   }
 
   refreshArtists(): void {

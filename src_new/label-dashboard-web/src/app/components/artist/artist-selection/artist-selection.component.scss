@@ -178,14 +178,7 @@
   background-color: #e5e5e5;
 }
 
-.add-new-artist {
-  font-weight: 500;
-  color: #337ab7;
-  
-  i {
-    margin-right: 8px;
-  }
-}
+// Old .add-new-artist styles moved to the bottom with improvements
 
 .dropdown.open .dropdown-menu {
   display: block;
@@ -193,4 +186,83 @@
 
 .dropdown:not(.open) .dropdown-menu {
   display: none;
+}
+
+// Search functionality styles
+.search-container {
+  padding: 8px 12px !important;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e5e5e5;
+  
+  &:hover {
+    background-color: #f9f9f9 !important;
+  }
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: #999;
+  z-index: 1;
+  font-size: 12px;
+}
+
+.artist-search-input {
+  width: 100%;
+  padding: 6px 12px 6px 28px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  background-color: #fff;
+  
+  &:focus {
+    border-color: #337ab7;
+    box-shadow: 0 0 3px rgba(51, 122, 183, 0.3);
+  }
+  
+  &::placeholder {
+    color: #999;
+    font-style: italic;
+  }
+}
+
+// No results message
+.no-results {
+  padding: 12px 15px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  font-size: 12px;
+  
+  &:hover {
+    background-color: transparent !important;
+  }
+  
+  span {
+    display: block;
+  }
+}
+
+// Improved Add New Artist styling
+.add-new-artist {
+  font-weight: 600;
+  color: #28a745;
+  background-color: rgba(40, 167, 69, 0.05);
+  
+  &:hover {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    color: #218838;
+  }
+  
+  i {
+    margin-right: 8px;
+    font-weight: bold;
+  }
 }
