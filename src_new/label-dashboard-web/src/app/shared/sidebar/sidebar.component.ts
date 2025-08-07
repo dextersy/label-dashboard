@@ -186,6 +186,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.expandedMenus.delete(route);
       this.collapsedMenus.add(route); // Mark as explicitly collapsed
     } else {
+      // Close all other expanded menus first
+      this.expandedMenus.clear();
+      this.collapsedMenus.clear();
+      
+      // Then expand the clicked menu
       this.expandedMenus.add(route);
       this.collapsedMenus.delete(route); // Remove from collapsed list
     }
