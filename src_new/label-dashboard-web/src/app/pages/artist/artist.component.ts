@@ -62,6 +62,22 @@ export class ArtistComponent implements OnInit, OnDestroy {
       this.route.data.subscribe(data => {
         if (data['tab']) {
           this.activeTab = data['tab'] as TabType;
+        } else {
+          // Fallback: determine tab from current URL if no route data
+          const currentUrl = this.router.url;
+          if (currentUrl.includes('/artist/profile') || currentUrl === '/artist' || currentUrl === '/artist/') {
+            this.activeTab = 'profile';
+          } else if (currentUrl.includes('/artist/gallery')) {
+            this.activeTab = 'gallery';
+          } else if (currentUrl.includes('/artist/releases')) {
+            this.activeTab = 'releases';
+          } else if (currentUrl.includes('/artist/team')) {
+            this.activeTab = 'team';
+          } else if (currentUrl.includes('/artist/new-release')) {
+            this.activeTab = 'new-release';
+          } else if (currentUrl.includes('/artist/submit-release')) {
+            this.activeTab = 'submit-release';
+          }
         }
       })
     );
@@ -106,5 +122,6 @@ export class ArtistComponent implements OnInit, OnDestroy {
     // Navigate to the corresponding route instead of just changing state
     this.router.navigate(['/artist', tab]);
   }
+
 
 }

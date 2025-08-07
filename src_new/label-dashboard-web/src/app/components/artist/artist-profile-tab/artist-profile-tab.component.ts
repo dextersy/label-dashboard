@@ -1,13 +1,10 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
-
-// Angular Material imports
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 
 export interface ArtistProfile extends Artist {
   bio?: string;
@@ -22,21 +19,32 @@ export interface ArtistProfile extends Artist {
 @Component({
   selector: 'app-artist-profile-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './artist-profile-tab.component.html',
   styleUrl: './artist-profile-tab.component.scss'
 })
-export class ArtistProfileTabComponent {
+export class ArtistProfileTabComponent implements OnInit, OnChanges {
   @Input() artist: ArtistProfile | null = null;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() artistUpdated = new EventEmitter<ArtistProfile>();
 
-  editingProfile: ArtistProfile = {} as ArtistProfile;
+  editingProfile: ArtistProfile = {
+    id: 0,
+    name: '',
+    bio: '',
+    website_page_url: '',
+    facebook_handle: '',
+    instagram_handle: '',
+    twitter_handle: '',
+    tiktok_handle: '',
+    youtube_channel: '',
+    band_members: ''
+  } as ArtistProfile;
   saving = false;
   selectedFile: File | null = null;
   uploadProgress = 0;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
     if (this.artist) {

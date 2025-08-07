@@ -1,7 +1,19 @@
+// Override parent card styling
+:host {
+  display: block;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 .artist-profile-tab {
-  text-align: left;
-  max-width: 1200px;
-  margin: 0 auto;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
   
   .card {
     margin-bottom: 32px;
@@ -40,138 +52,92 @@
     }
   }
   
-  // Override Material Design uppercase labels globally
-  ::ng-deep .mat-mdc-form-field-label,
-  ::ng-deep .mat-mdc-floating-label,
-  ::ng-deep .mdc-floating-label,
-  ::ng-deep .mdc-floating-label--float-above,
-  ::ng-deep .mat-mdc-form-field-label.mdc-floating-label,
-  ::ng-deep .mat-mdc-form-field .mdc-floating-label {
-    text-transform: none !important;
-  }
-
-  // Angular Material form field styling
-  ::ng-deep .mat-mdc-form-field {
-    width: 100%;
-    margin-bottom: 16px;
-    
-    &.full-width {
-      width: 100%;
-    }
-    
-    .mat-mdc-text-field-wrapper {
-      border-radius: 8px !important;
-      
-      .mat-mdc-form-field-outline {
-        border-radius: 8px !important;
-        
-        .mat-mdc-form-field-outline-start,
-        .mat-mdc-form-field-outline-end {
-          border-radius: 8px !important;
-        }
-      }
-      
-      .mat-mdc-form-field-outline-thick {
-        .mat-mdc-form-field-outline-start,
-        .mat-mdc-form-field-outline-end {
-          border-width: 1.5px !important;
-        }
-      }
-    }
-    
-    .mat-mdc-form-field-input-control input,
-    .mat-mdc-form-field-input-control textarea {
-      font-size: 15px !important;
-      font-weight: 400 !important;
-      line-height: 1.5 !important;
-      color: #1f2937 !important;
-      
-      &::placeholder {
-        color: #9ca3af !important;
-        opacity: 1 !important;
-      }
-    }
-    
-    .mat-mdc-form-field-label {
-      font-size: 14px !important;
-      font-weight: 500 !important;
-      color: #374151 !important;
-      letter-spacing: -0.01em !important;
-      text-transform: none !important;
-      
-      .text-danger {
-        color: #ef4444 !important;
-        font-weight: 600 !important;
-      }
-    }
-    
-    &.mat-focused {
-      .mat-mdc-form-field-outline-thick {
-        color: #3b82f6 !important;
-      }
-      
-      .mat-mdc-form-field-label {
-        color: #3b82f6 !important;
-      }
-    }
-    
-    &:hover:not(.mat-focused) {
-      .mat-mdc-form-field-outline {
-        color: #9ca3af !important;
-      }
-    }
-  }
-
-  // Legacy form elements (for file upload)
   .form-group {
-    margin-bottom: 24px;
+    margin: 0 0 20px 0;
+    padding: 0;
     text-align: left;
     
-    .file-upload-label {
+    label {
       display: block;
-      margin-bottom: 8px;
+      margin: 0 0 8px 0;
+      padding: 0;
       font-weight: 500;
       font-size: 14px;
       color: #374151;
       text-align: left;
       letter-spacing: -0.01em;
       line-height: 1.5;
+      
+      .text-danger {
+        color: #ef4444;
+        font-weight: 600;
+      }
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #1f2937;
+      background-color: #f9fafb;
+      background-image: none;
+      border: none;
+      border-radius: 8px;
+      box-shadow: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: left;
+      margin: 0;
+      
+      &:focus {
+        background-color: #ffffff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+      
+      &:hover:not(:focus) {
+        background-color: #f3f4f6;
+      }
+      
+      &::placeholder {
+        color: #9ca3af;
+        font-weight: 400;
+      }
+    }
+    
+    textarea.form-control {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.6;
+      margin: 0;
+      padding: 12px 16px;
+    }
+    
+    input[type="text"].form-control,
+    input[type="url"].form-control {
+      margin: 0;
+      padding: 12px 16px;
     }
     
     .form-control-file {
       display: block;
       width: 100%;
-      padding: 12px 16px;
+      padding: 6px 0;
       font-size: 14px;
-      font-weight: 500;
-      line-height: 1.5;
-      color: #374151;
-      background-color: #f9fafb;
-      border: 1.5px dashed #d1d5db;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      
-      &:hover {
-        background-color: #f3f4f6;
-        border-color: #9ca3af;
-      }
-      
-      &:focus {
-        outline: none;
-        border-color: #3b82f6;
-        background-color: #ffffff;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
+      line-height: 1.42857143;
+      color: #555;
+      background-color: #fff;
+      background-image: none;
+      border: none;
+      border-radius: 4px;
     }
     
     .form-text {
       display: block;
-      margin-top: 6px;
-      color: #6b7280;
-      font-size: 13px;
-      font-weight: 400;
-      line-height: 1.4;
+      margin-top: 5px;
+      color: #737373;
+      font-size: 12px;
     }
   }
   
@@ -294,10 +260,20 @@
   .row {
     margin-left: -12px;
     margin-right: -12px;
+    display: flex;
+    align-items: flex-start;
     
     [class*="col-"] {
       padding-left: 12px;
       padding-right: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
   }
 }

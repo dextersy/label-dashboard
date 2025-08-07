@@ -10,17 +10,18 @@
       <div class="col-12">
         
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
-        <div class="card">
+        <!-- Profile Tab (no card wrapper for minimalist design) -->
+        <div *ngIf="activeTab === 'profile'">
+          <app-artist-profile-tab 
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)"
+            (artistUpdated)="onArtistUpdated($event)">
+          </app-artist-profile-tab>
+        </div>
+        
+        <!-- Other tabs with card wrapper -->
+        <div class="card" *ngIf="activeTab !== 'profile'">
           <div class="card-body p-0">
-            
-            <!-- Profile Tab -->
-            <div *ngIf="activeTab === 'profile'">
-              <app-artist-profile-tab 
-                [artist]="selectedArtist"
-                (alertMessage)="onAlertMessage($event)"
-                (artistUpdated)="onArtistUpdated($event)">
-              </app-artist-profile-tab>
-            </div>
             
             <!-- Gallery Tab -->
             <div *ngIf="activeTab === 'gallery'">
