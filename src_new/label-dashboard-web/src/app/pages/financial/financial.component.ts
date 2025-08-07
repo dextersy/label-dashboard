@@ -270,6 +270,20 @@ export class FinancialComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // Subscribe to route params for payment amount
+    this.routeSubscription.add(
+      this.route.params.subscribe(params => {
+        if (params['amount'] && this.activeTab === 'new-payment') {
+          const amount = parseFloat(params['amount']);
+          if (!isNaN(amount) && amount > 0) {
+            this.newPaymentForm.amount = amount;
+            this.newPaymentForm.description = 'Royalty payout';
+            this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate();
+          }
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -454,11 +468,8 @@ export class FinancialComponent implements OnInit, OnDestroy {
   async onPayNow(): Promise<void> {
     if (!this.selectedArtist || !this.summary || this.summary.currentBalance <= 0) return;
     
-    this.setActiveTab('new-payment');
-    // Pre-fill form with royalty payout details
-    this.newPaymentForm.description = 'Royalty payout';
-    this.newPaymentForm.amount = this.summary.currentBalance;
-    this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate(); // Ensure today's date
+    // Navigate to payment form with amount parameter
+    this.router.navigate(['/financial/payments/new', this.summary.currentBalance]);
   }
 
   async onSubmitRoyalty(): Promise<void> {
