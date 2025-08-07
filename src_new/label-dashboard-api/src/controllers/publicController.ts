@@ -732,6 +732,235 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
   }
 };
 
+// Generate SEO page on-demand for social media crawlers
+export const generateSEOPage = async (req: Request, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(404).send('Event not found');
+    }
+
+    // Get event details with brand information (no domain validation for SEO pages)
+    const event = await Event.findOne({
+      where: { id: eventId },
+      include: [
+        { 
+          model: Brand, 
+          as: 'brand',
+          include: [{
+            model: Domain,
+            as: 'domains',
+            attributes: ['domain_name']
+          }]
+        }
+      ]
+    });
+
+    if (!event) {
+      return res.status(404).send('Event not found');
+    }
+
+    // Generate meta tags for social sharing
+    const title = `Buy tickets to ${event.title}`;
+    const description = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
+    const image = event.poster_url || '';
+    const siteName = event.brand?.brand_name || 'Melt Records';
+    
+    // Use the brand's primary domain for the frontend URL
+    const brandDomain = event.brand?.domains?.[0]?.domain_name || 'testbrand.melt-records.com';
+    const frontendUrl = `https://${brandDomain}/public/tickets/buy/${event.id}`;
+
+    // Generate structured data
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": event.title,
+      "description": description,
+      "startDate": event.date_and_time,
+      "location": {
+        "@type": "Place",
+        "name": event.venue
+      },
+      "image": event.poster_url,
+      "offers": {
+        "@type": "Offer",
+        "price": event.ticket_price,
+        "priceCurrency": "PHP",
+        "availability": "https://schema.org/InStock",
+        "url": frontendUrl
+      },
+      "organizer": {
+        "@type": "Organization",
+        "name": siteName
+      }
+    };
+
+    // Generate SEO-optimized HTML
+    const seoHTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${title.replace(/"/g, '&quot;')}</title>
+  <base href="/">
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+  
+  <!-- SEO Meta Tags for ${event.title.replace(/"/g, '&quot;')} -->
+  <meta name="description" content="${description.replace(/"/g, '&quot;')}">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="${siteName}">
+  <meta property="og:url" content="${frontendUrl}">
+  ${image ? `<meta property="og:image" content="${image}">` : ''}
+  ${image ? `<meta property="og:image:width" content="1200">` : ''}
+  ${image ? `<meta property="og:image:height" content="630">` : ''}
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}">
+  ${image ? `<meta name="twitter:image" content="${image}">` : ''}
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${frontendUrl}">
+  
+  <!-- Meta refresh backup for non-crawler users -->
+  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+${JSON.stringify(structuredData, null, 4)}
+  </script>
+  
+  <!-- Auto-redirect for regular users (non-crawlers) -->
+  <script>
+    (function() {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot/i.test(userAgent);
+      
+      if (!isCrawler) {
+        window.location.replace('${frontendUrl}');
+      }
+    })();
+  </script>
+  
+  <!-- Styles for crawler display -->
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container { 
+      max-width: 500px; 
+      background: white; 
+      border-radius: 12px; 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+      overflow: hidden;
+    }
+    .poster { 
+      width: 100%; 
+      height: 300px; 
+      object-fit: cover; 
+    }
+    .content { 
+      padding: 30px; 
+    }
+    .title { 
+      color: #1a1a1a; 
+      margin: 0 0 15px 0; 
+      font-size: 24px; 
+      font-weight: 700; 
+      line-height: 1.3;
+    }
+    .details { 
+      color: #666; 
+      line-height: 1.6; 
+      font-size: 16px; 
+      margin-bottom: 20px;
+    }
+    .detail-item {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+    .detail-icon {
+      margin-right: 8px;
+      font-size: 18px;
+    }
+    .price { 
+      font-size: 20px; 
+      font-weight: 700; 
+      color: #10b981; 
+      margin: 15px 0; 
+    }
+    .cta-button { 
+      display: inline-block; 
+      background: linear-gradient(45deg, #667eea, #764ba2); 
+      color: white; 
+      padding: 14px 28px; 
+      text-decoration: none; 
+      border-radius: 8px; 
+      font-weight: 600; 
+      font-size: 16px;
+      transition: transform 0.2s;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    ${image ? `<img src="${image}" alt="${event.title.replace(/"/g, '&quot;')}" class="poster">` : ''}
+    <div class="content">
+      <h1 class="title">${event.title}</h1>
+      <div class="details">
+        <div class="detail-item">
+          <span class="detail-icon">📅</span>
+          <span><strong>Date:</strong> ${new Date(event.date_and_time).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          })}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-icon">📍</span>
+          <span><strong>Venue:</strong> ${event.venue}</span>
+        </div>
+        ${event.description ? `
+        <div class="detail-item" style="align-items: flex-start; margin-top: 15px;">
+          <span class="detail-icon">📝</span>
+          <div><strong>About:</strong><br>${event.description}</div>
+        </div>` : ''}
+      </div>
+      <div class="price">🎫 ₱${event.ticket_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+      <a href="${frontendUrl}" class="cta-button">🎟️ Get Your Tickets Now</a>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(seoHTML);
+
+  } catch (error) {
+    console.error('Generate SEO page error:', error);
+    res.status(500).send('Internal server error');
+  }
+};
+
+
 // Get brand information by domain
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {

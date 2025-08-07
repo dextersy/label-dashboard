@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { PublicService, PublicEvent, TicketPurchaseRequest } from '../../services/public.service';
 import { BrandService, BrandSettings } from '../../services/brand.service';
+import { MetaService } from '../../services/meta.service';
 
 // Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -45,7 +46,8 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private publicService: PublicService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private metaService: MetaService
   ) {
     this.ticketForm = this.fb.group({
       name: ['', Validators.required],
@@ -76,6 +78,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Clean up metadata when leaving the page
+    this.metaService.clearMetadata();
   }
 
   loadEvent(eventId: string) {
@@ -107,6 +112,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
             } else if (this.event.brand?.color) {
               this.brandColor = this.event.brand.color;
             }
+            
+            // Update SEO metadata for social sharing
+            this.updatePageMetadata();
             
             this.isLoading = false;
           } else {
@@ -188,5 +196,14 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  private updatePageMetadata(): void {
+    if (!this.event) {
+      return;
+    }
+
+    const brandName = this.currentBrand?.name || this.event.brand?.name;
+    this.metaService.updateEventTicketMetadata(this.event, brandName);
   }
 }

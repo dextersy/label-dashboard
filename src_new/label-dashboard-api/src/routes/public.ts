@@ -8,7 +8,8 @@ import {
   checkInTicket,
   getBrandByDomain,
   getEventForPublic,
-  getPublicEventInfo
+  getPublicEventInfo,
+  generateSEOPage
 } from '../controllers/publicController';
 
 const router = Router();
@@ -17,6 +18,10 @@ const router = Router();
 router.get('/brand/domain/:domain', getBrandByDomain);
 router.get('/events/:id', getEventForPublic);
 router.get('/events/:id/info', getPublicEventInfo);
+
+// On-demand SEO page generation for social media crawlers
+router.get('/seo/event-:id.html', generateSEOPage);
+
 router.post('/tickets/get-from-code', getTicketFromCode);
 router.post('/tickets/buy', buyTicket);
 router.post('/tickets/verify', verifyTicket);
