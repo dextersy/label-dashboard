@@ -178,7 +178,7 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
         : `${environment.apiUrl}/uploads/artists/${this.editingProfile.profile_photo}`;
     }
     
-    return 'assets/img/default-artist.jpg';
+    return 'assets/img/placeholder.jpg';
   }
 
   isFormValid(): boolean {

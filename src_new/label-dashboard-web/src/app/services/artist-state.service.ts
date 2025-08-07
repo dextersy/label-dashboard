@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Artist } from '../components/artist/artist-selection/artist-selection.component';
 
 @Injectable({
@@ -8,6 +8,9 @@ import { Artist } from '../components/artist/artist-selection/artist-selection.c
 export class ArtistStateService {
   private selectedArtistSubject = new BehaviorSubject<Artist | null>(null);
   public selectedArtist$ = this.selectedArtistSubject.asObservable();
+
+  private refreshArtistsSubject = new Subject<number | null>();
+  public refreshArtists$ = this.refreshArtistsSubject.asObservable();
 
   constructor() {}
 
@@ -25,5 +28,9 @@ export class ArtistStateService {
 
   getSelectedArtist(): Artist | null {
     return this.selectedArtistSubject.value;
+  }
+
+  triggerArtistsRefresh(selectArtistId?: number): void {
+    this.refreshArtistsSubject.next(selectArtistId || null);
   }
 }

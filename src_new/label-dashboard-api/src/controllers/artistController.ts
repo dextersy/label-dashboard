@@ -170,6 +170,31 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Artist name is required' });
     }
 
+    // Handle profile photo upload if provided
+    let profilePhotoUrl = null;
+    if (req.file) {
+      // Generate unique filename for S3
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(req.file.originalname);
+      const fileName = `artist-profile-new-${uniqueSuffix}${extension}`;
+
+      try {
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+
+        const result = await s3.upload(uploadParams).promise();
+        profilePhotoUrl = result.Location;
+      } catch (uploadError) {
+        console.error('Error uploading profile photo:', uploadError);
+        // Continue creating artist without photo
+      }
+    }
+
     const artist = await Artist.create({
       name,
       facebook_handle,
@@ -181,6 +206,7 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
       band_members,
       youtube_channel,
       payout_point: payout_point || 1000,
+      profile_photo: profilePhotoUrl,
       brand_id: req.user.brand_id
     });
 

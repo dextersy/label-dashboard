@@ -39,7 +39,7 @@ router.use(authenticateToken);
 // Artist CRUD operations
 router.get('/', getArtists);
 router.get('/:id', getArtist);
-router.post('/', requireAdmin, createArtist);
+router.post('/', requireAdmin, upload.single('profile_photo'), createArtist);
 router.put('/:id', upload.single('profile_photo'), updateArtist);
 router.delete('/:id', requireAdmin, deleteArtist);
 

@@ -1,0 +1,196 @@
+<div class="add-new-artist-page">
+  <div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-3">
+      <app-breadcrumb></app-breadcrumb>
+    </div>
+    
+    <!-- Alert Messages -->
+    <div *ngIf="alertMessage" class="alert" [class.alert-success]="alertMessage.type === 'success'" [class.alert-danger]="alertMessage.type === 'error'" role="alert">
+      {{ alertMessage.message }}
+      <button type="button" class="btn-close" aria-label="Close" (click)="alertMessage = null"></button>
+    </div>
+
+    <div class="add-new-artist">
+  <form id="newArtistForm" (ngSubmit)="createArtist()" #newArtistForm="ngForm">
+    
+    <!-- Basic Information Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5>Basic Information</h5>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="artistName">Artist Name <span class="text-danger">*</span></label>
+          <input type="text" 
+                 class="form-control" 
+                 id="artistName"
+                 name="artistName"
+                 [(ngModel)]="newArtist.name"
+                 required
+                 placeholder="Enter artist name">
+        </div>
+        
+        <div class="form-group">
+          <label for="bandMembers">Band Members</label>
+          <textarea class="form-control" 
+                    id="bandMembers"
+                    name="bandMembers"
+                    rows="3"
+                    [(ngModel)]="newArtist.band_members"
+                    placeholder="Enter band members, one per line or separated by commas"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="bio">Biography</label>
+          <textarea class="form-control" 
+                    id="bio"
+                    name="bio"
+                    rows="4"
+                    [(ngModel)]="newArtist.bio"
+                    placeholder="Tell us about the artist..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Photo Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5>Profile Photo</h5>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label for="profilePhoto" class="file-upload-label">Upload Photo</label>
+          <input type="file" 
+                 class="form-control-file" 
+                 id="profilePhoto"
+                 name="profilePhoto"
+                 (change)="onFileSelected($event)"
+                 accept="image/jpeg,image/jpg,image/png,image/gif">
+          <small class="form-text">
+            Accepted formats: JPEG, PNG, GIF. Maximum size: 5MB.
+          </small>
+        </div>
+        
+        <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2">
+          <div class="progress-bar" 
+               role="progressbar" 
+               [style.width.%]="uploadProgress">
+            {{ uploadProgress }}%
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Links Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5>Social Media & Links</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="website">Website</label>
+              <input type="url" 
+                     class="form-control" 
+                     id="website"
+                     name="website"
+                     [(ngModel)]="newArtist.website_page_url"
+                     placeholder="https://www.example.com">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="facebook">Facebook</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="facebook"
+                     name="facebook"
+                     [(ngModel)]="newArtist.facebook_handle"
+                     placeholder="Facebook username">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="instagram">Instagram</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="instagram"
+                     name="instagram"
+                     [(ngModel)]="newArtist.instagram_handle"
+                     placeholder="Instagram username">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="twitter">Twitter</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="twitter"
+                     name="twitter"
+                     [(ngModel)]="newArtist.twitter_handle"
+                     placeholder="Twitter username">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="tiktok">TikTok</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="tiktok"
+                     name="tiktok"
+                     [(ngModel)]="newArtist.tiktok_handle"
+                     placeholder="TikTok username">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="youtube">YouTube Channel</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="youtube"
+                     name="youtube"
+                     [(ngModel)]="newArtist.youtube_channel"
+                     placeholder="YouTube channel URL or name">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<!-- Sticky Bottom Panel -->
+<div class="sticky-bottom-panel">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="panel-content">
+          <button type="button" 
+                  class="btn btn-secondary me-2" 
+                  (click)="cancel()"
+                  [disabled]="creating">
+            Cancel
+          </button>
+          <button type="button" 
+                  class="btn btn-primary btn-lg" 
+                  [disabled]="creating || !isFormValid()"
+                  (click)="createArtist()">
+            <i class="fa fa-spinner fa-spin" *ngIf="creating"></i>
+            <i class="fa fa-plus" *ngIf="!creating"></i>
+            {{ creating ? 'Creating...' : 'Create Artist' }}
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
