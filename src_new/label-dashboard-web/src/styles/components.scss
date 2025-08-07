@@ -326,3 +326,77 @@ textarea.form-control {
     }
   }
 }
+
+/* ================================= */
+/* STICKY BOTTOM PANEL               */
+/* ================================= */
+
+// Sticky bottom panel for forms
+.sticky-bottom-panel {
+  position: sticky !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 1050 !important; // Higher than Bootstrap modals
+  transform: none !important;
+  contain: none !important;
+  
+  .panel-content {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 20px 0;
+    
+    .btn {
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: none;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      min-width: 160px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4), 0 6px 16px rgba(0, 0, 0, 0.2);
+      }
+      
+      &:active:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      
+      &:disabled {
+        transform: none;
+        box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3), 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      
+      i {
+        margin-right: 10px;
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// Responsive adjustments for sticky panel
+@media (max-width: 768px) {
+  .sticky-bottom-panel {
+    .panel-content {
+      justify-content: center;
+      padding: 16px 0;
+      
+      .btn {
+        width: calc(100% - 32px);
+        max-width: 300px;
+        padding: 14px 24px;
+        font-size: 15px;
+        min-width: auto;
+      }
+    }
+  }
+}

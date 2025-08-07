@@ -1,14 +1,15 @@
 <div class="artist-profile-tab">
-  <form (ngSubmit)="saveProfile()" #profileForm="ngForm" *ngIf="artist">
+  <form id="profileForm" (ngSubmit)="saveProfile()" #profileForm="ngForm" *ngIf="artist">
     
-    <!-- Basic Information Section -->
-    <div class="card">
-      <div class="card-header">
-        <h5>Basic Information</h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
+    <!-- Top Row: Basic Information and Profile Photo side by side -->
+    <div class="row">
+      <!-- Basic Information Section -->
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5>Basic Information</h5>
+          </div>
+          <div class="card-body">
             <div class="form-group">
               <label for="artistName">Artist Name <span class="text-danger">*</span></label>
               <input type="text" 
@@ -19,8 +20,7 @@
                      required
                      placeholder="Enter artist name">
             </div>
-          </div>
-          <div class="col-md-6">
+            
             <div class="form-group">
               <label for="bandMembers">Band Members</label>
               <textarea class="form-control" 
@@ -30,36 +30,33 @@
                         [(ngModel)]="editingProfile.band_members"
                         placeholder="Enter band members, one per line or separated by commas"></textarea>
             </div>
+            
+            <div class="form-group">
+              <label for="bio">Biography</label>
+              <textarea class="form-control" 
+                        id="bio"
+                        name="bio"
+                        rows="4"
+                        [(ngModel)]="editingProfile.bio"
+                        placeholder="Tell us about the artist..."></textarea>
+            </div>
           </div>
         </div>
-        
-        <div class="form-group">
-          <label for="bio">Biography</label>
-          <textarea class="form-control" 
-                    id="bio"
-                    name="bio"
-                    rows="4"
-                    [(ngModel)]="editingProfile.bio"
-                    placeholder="Tell us about the artist..."></textarea>
-        </div>
       </div>
-    </div>
 
-    <!-- Profile Photo Section -->
-    <div class="card">
-      <div class="card-header">
-        <h5>Profile Photo</h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-4">
+      <!-- Profile Photo Section -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5>Profile Photo</h5>
+          </div>
+          <div class="card-body">
             <div class="current-photo">
               <img [src]="getProfilePhotoUrl()" 
                    class="img-thumbnail current-photo-img" 
                    [alt]="editingProfile.name">
             </div>
-          </div>
-          <div class="col-md-8">
+            
             <div class="form-group">
               <label for="profilePhoto" class="file-upload-label">Upload New Photo</label>
               <input type="file" 
@@ -168,16 +165,25 @@
       </div>
     </div>
 
-    <!-- Save Button -->
-    <div class="form-actions">
-      <button type="submit" 
-              class="btn btn-primary" 
-              [disabled]="saving || !profileForm.form.valid">
-        <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-        <i class="fa fa-save" *ngIf="!saving"></i>
-        {{ saving ? 'Saving...' : 'Save Profile' }}
-      </button>
-    </div>
-    
   </form>
+</div>
+
+<!-- Sticky Bottom Panel - Outside all containers -->
+<div class="sticky-bottom-panel" *ngIf="artist">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="panel-content">
+          <button type="button" 
+                  class="btn btn-primary btn-lg" 
+                  [disabled]="saving || !isFormValid()"
+                  (click)="saveProfile()">
+            <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+            <i class="fa fa-save" *ngIf="!saving"></i>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

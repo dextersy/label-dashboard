@@ -180,4 +180,9 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     
     return 'assets/img/default-artist.jpg';
   }
+
+  isFormValid(): boolean {
+    // Basic validation - artist name is required
+    return !!(this.editingProfile.name && this.editingProfile.name.trim().length > 0);
+  }
 }

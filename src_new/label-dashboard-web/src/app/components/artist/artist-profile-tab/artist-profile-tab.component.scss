@@ -18,4 +18,14 @@
   box-shadow: none !important;
   padding: 0 !important;
   margin: 0 !important;
+  
+  // Add bottom padding to ensure content isn't hidden behind floating button
+  padding-bottom: 100px !important;
+}
+
+// Responsive adjustments for mobile spacing
+@media (max-width: 768px) {
+  .artist-profile-tab {
+    padding-bottom: 100px !important;
+  }
 }
