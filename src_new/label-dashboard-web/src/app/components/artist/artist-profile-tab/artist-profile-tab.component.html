@@ -45,6 +45,46 @@
       </div>
     </div>
 
+    <!-- Profile Photo Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5>Profile Photo</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="current-photo">
+              <img [src]="getProfilePhotoUrl()" 
+                   class="img-thumbnail current-photo-img" 
+                   [alt]="editingProfile.name">
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="form-group">
+              <label for="profilePhoto" class="file-upload-label">Upload New Photo</label>
+              <input type="file" 
+                     class="form-control-file" 
+                     id="profilePhoto"
+                     name="profilePhoto"
+                     (change)="onFileSelected($event)"
+                     accept="image/jpeg,image/jpg,image/png,image/gif">
+              <small class="form-text">
+                Accepted formats: JPEG, PNG, GIF. Maximum size: 5MB.
+              </small>
+            </div>
+            
+            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2">
+              <div class="progress-bar" 
+                   role="progressbar" 
+                   [style.width.%]="uploadProgress">
+                {{ uploadProgress }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Social Links Section -->
     <div class="card">
       <div class="card-header">
@@ -122,46 +162,6 @@
                      name="youtube"
                      [(ngModel)]="editingProfile.youtube_channel"
                      placeholder="YouTube channel URL or name">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Profile Photo Section -->
-    <div class="card">
-      <div class="card-header">
-        <h5>Profile Photo</h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-4">
-            <div class="current-photo">
-              <img [src]="getProfilePhotoUrl()" 
-                   class="img-thumbnail current-photo-img" 
-                   [alt]="editingProfile.name">
-            </div>
-          </div>
-          <div class="col-md-8">
-            <div class="form-group">
-              <label for="profilePhoto" class="file-upload-label">Upload New Photo</label>
-              <input type="file" 
-                     class="form-control-file" 
-                     id="profilePhoto"
-                     name="profilePhoto"
-                     (change)="onFileSelected($event)"
-                     accept="image/jpeg,image/jpg,image/png,image/gif">
-              <small class="form-text text-muted">
-                Accepted formats: JPEG, PNG, GIF. Maximum size: 5MB.
-              </small>
-            </div>
-            
-            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2">
-              <div class="progress-bar" 
-                   role="progressbar" 
-                   [style.width.%]="uploadProgress">
-                {{ uploadProgress }}%
-              </div>
             </div>
           </div>
         </div>
