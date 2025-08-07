@@ -44,6 +44,13 @@ export class BreadcrumbService {
     '/financial/new-earning': { label: 'New Earning', parent: '/financial' },
     '/events': { label: 'Events', icon: 'fas fa-ticket-alt' },
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
+    '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
+    '/admin/summary': { label: 'Summary View', parent: '/admin' },
+    '/admin/balance': { label: 'Balance Summary', parent: '/admin' },
+    '/admin/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin' },
+    '/admin/users': { label: 'Users', parent: '/admin' },
+    '/admin/child-brands': { label: 'Sublabels', parent: '/admin' },
+    '/admin/tools': { label: 'Tools', parent: '/admin' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

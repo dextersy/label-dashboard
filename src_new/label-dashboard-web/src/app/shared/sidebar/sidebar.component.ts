@@ -63,7 +63,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     { route: '/events', icon: 'fas fa-ticket-alt', title: 'Events', adminOnly: true },
-    { route: '/admin', icon: 'fas fa-cogs', title: 'Admin', adminOnly: true }
+    { 
+      route: '/admin', 
+      icon: 'fas fa-cogs', 
+      title: 'Admin', 
+      adminOnly: true,
+      children: [
+        { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
+        { route: '/admin/summary', title: 'Summary View', adminOnly: true },
+        { route: '/admin/balance', title: 'Balance Summary', adminOnly: true },
+        { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
+        { route: '/admin/users', title: 'Users', adminOnly: true },
+        { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
+        { route: '/admin/tools', title: 'Tools', adminOnly: true }
+      ]
+    }
   ];
 
   constructor(

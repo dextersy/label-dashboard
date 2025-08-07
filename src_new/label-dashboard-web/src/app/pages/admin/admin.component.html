@@ -1,100 +1,52 @@
 <div class="admin-page">
   <div class="container-fluid">
     <!-- Page Header -->
-    <div class="page-header d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">
-        <i class="fas fa-cogs me-2 text-primary"></i>
-        Administration
-      </h5>
+    <div class="page-header mb-3">
+      <app-breadcrumb></app-breadcrumb>
     </div>
-
-    <!-- Tab Navigation -->
-    <div class="card tab-navigation">
-      <div class="card-header">
-        <ul class="nav nav-pills admin-tabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'brand'" 
-               (click)="setActiveTab('brand')" role="tab">
-              <i class="fas fa-cog"></i> Brand Settings
-            </a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'summary'" 
-               (click)="setActiveTab('summary')" role="tab">
-              <i class="fas fa-chart-bar"></i> Summary View
-            </a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'balance'" 
-               (click)="setActiveTab('balance')" role="tab">
-              <i class="fas fa-balance-scale"></i> Balance Summary
-            </a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'bulk-add-earnings'" 
-               (click)="setActiveTab('bulk-add-earnings')" role="tab">
-              <i class="fas fa-plus-circle"></i> Bulk Add Earnings
-            </a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'users'" 
-               (click)="setActiveTab('users')" role="tab">
-              <i class="fas fa-users"></i> Users
-            </a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'child-brands'" 
-               (click)="setActiveTab('child-brands')" role="tab">
-              <i class="fas fa-sitemap"></i> Sublabels
-            </a>
-          </li>
-          <li class="nav-item" role="presentation">
-            <a class="nav-link" [class.active]="activeTab === 'tools'" 
-               (click)="setActiveTab('tools')" role="tab">
-              <i class="fas fa-tools"></i> Tools
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="card-body">
-        <div class="tab-content">
-          <!-- Brand Settings Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'brand'">
-            <app-brand-settings-tab></app-brand-settings-tab>
-          </div>
-
-          <!-- Summary View Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'summary'">
-            <app-summary-view-tab></app-summary-view-tab>
-          </div>
-
-          <!-- Balance Summary Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'balance'">
-            <app-balance-summary-tab></app-balance-summary-tab>
-          </div>
-
-          <!-- Bulk Add Earnings Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'bulk-add-earnings'">
-            <app-bulk-add-earnings-tab></app-bulk-add-earnings-tab>
-          </div>
-
-          <!-- Users Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'users'">
-            <app-users-tab></app-users-tab>
-          </div>
-
-          <!-- Sublabels Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'child-brands'">
-            <app-child-brands-tab></app-child-brands-tab>
-          </div>
-
-          <!-- Tools Tab -->
-          <div class="tab-pane" [class.active]="activeTab === 'tools'">
-            <app-tools-tab></app-tools-tab>
-          </div>
+    
+    <!-- Main Content -->
+    <div class="row">
+      <div class="col-12">
+        
+        <!-- Tab Content (no navigation needed, handled by sidebar) -->
+        <!-- Brand Settings Tab -->
+        <div *ngIf="activeTab === 'brand'">
+          <app-brand-settings-tab></app-brand-settings-tab>
         </div>
+
+        <!-- Summary View Tab -->
+        <div *ngIf="activeTab === 'summary'">
+          <app-summary-view-tab></app-summary-view-tab>
+        </div>
+
+        <!-- Balance Summary Tab -->
+        <div *ngIf="activeTab === 'balance'">
+          <app-balance-summary-tab></app-balance-summary-tab>
+        </div>
+
+        <!-- Bulk Add Earnings Tab -->
+        <div *ngIf="activeTab === 'bulk-add-earnings'">
+          <app-bulk-add-earnings-tab></app-bulk-add-earnings-tab>
+        </div>
+
+        <!-- Users Tab -->
+        <div *ngIf="activeTab === 'users'">
+          <app-users-tab></app-users-tab>
+        </div>
+
+        <!-- Sublabels Tab -->
+        <div *ngIf="activeTab === 'child-brands'">
+          <app-child-brands-tab></app-child-brands-tab>
+        </div>
+
+        <!-- Tools Tab -->
+        <div *ngIf="activeTab === 'tools'">
+          <app-tools-tab></app-tools-tab>
+        </div>
+        
       </div>
     </div>
+    
   </div>
 </div>

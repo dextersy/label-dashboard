@@ -63,7 +63,20 @@ export const routes: Routes = [
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'events', component: EventsComponent, canActivate: [adminGuard] },
-  { path: 'admin', component: AdminComponent, canActivate: [adminGuard] }, // Admin only
+  { 
+    path: 'admin', 
+    canActivate: [adminGuard],
+    children: [
+      { path: '', redirectTo: 'brand', pathMatch: 'full' },
+      { path: 'brand', component: AdminComponent, data: { tab: 'brand' } },
+      { path: 'summary', component: AdminComponent, data: { tab: 'summary' } },
+      { path: 'balance', component: AdminComponent, data: { tab: 'balance' } },
+      { path: 'bulk-add-earnings', component: AdminComponent, data: { tab: 'bulk-add-earnings' } },
+      { path: 'users', component: AdminComponent, data: { tab: 'users' } },
+      { path: 'child-brands', component: AdminComponent, data: { tab: 'child-brands' } },
+      { path: 'tools', component: AdminComponent, data: { tab: 'tools' } }
+    ]
+  },
   { path: 'domain-not-found', component: DomainNotFoundComponent },
   { path: '**', redirectTo: '/login' }
 ];
