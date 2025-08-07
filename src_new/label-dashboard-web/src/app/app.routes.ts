@@ -32,7 +32,19 @@ export const routes: Routes = [
   
   // Protected Routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-  { path: 'artist', component: ArtistComponent, canActivate: [authGuard] },
+  { 
+    path: 'artist', 
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'profile', pathMatch: 'full' },
+      { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
+      { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
+      { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
+      { path: 'team', component: ArtistComponent, data: { tab: 'team' } },
+      { path: 'new-release', component: ArtistComponent, canActivate: [adminGuard], data: { tab: 'new-release' } },
+      { path: 'submit-release', component: ArtistComponent, data: { tab: 'submit-release' } }
+    ]
+  },
   { path: 'financial', component: FinancialComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'events', component: EventsComponent, canActivate: [adminGuard] },

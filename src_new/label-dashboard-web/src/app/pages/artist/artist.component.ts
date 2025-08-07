@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artist/artist-profile-tab/artist-profile-tab.component';
 import { ArtistGalleryTabComponent } from '../../components/artist/artist-gallery-tab/artist-gallery-tab.component';
@@ -10,6 +12,7 @@ import { ArtistSubmitReleaseTabComponent } from '../../components/artist/artist-
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release';
 
@@ -23,31 +26,27 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
     ArtistReleasesTabComponent,
     ArtistTeamTabComponent,
     ArtistNewReleaseTabComponent,
-    ArtistSubmitReleaseTabComponent
+    ArtistSubmitReleaseTabComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './artist.component.html',
   styleUrl: './artist.component.scss'
 })
-export class ArtistComponent implements OnInit {
+export class ArtistComponent implements OnInit, OnDestroy {
   
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
+  private routeSubscription: Subscription = new Subscription();
 
   constructor(
     private notificationService: NotificationService,
     private artistStateService: ArtistStateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
-  tabs = [
-    { id: 'profile' as TabType, label: 'Profile', icon: 'fa-solid fa-user' },
-    { id: 'gallery' as TabType, label: 'Media', icon: 'fa-solid fa-camera' },
-    { id: 'releases' as TabType, label: 'Releases', icon: 'fa-solid fa-music' },
-    { id: 'team' as TabType, label: 'Team', icon: 'fa-solid fa-users' },
-    { id: 'new-release' as TabType, label: 'New Release', icon: 'fa-solid fa-plus', adminOnly: true },
-    { id: 'submit-release' as TabType, label: 'Submit A Release', icon: 'fa-solid fa-upload' }
-  ];
 
   ngOnInit(): void {
     // Check if user is admin
@@ -57,6 +56,19 @@ export class ArtistComponent implements OnInit {
     this.artistStateService.selectedArtist$.subscribe(artist => {
       this.selectedArtist = artist;
     });
+
+    // Subscribe to route data changes to determine active tab
+    this.routeSubscription.add(
+      this.route.data.subscribe(data => {
+        if (data['tab']) {
+          this.activeTab = data['tab'] as TabType;
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.routeSubscription.unsubscribe();
   }
 
   onArtistSelected(artist: Artist): void {
@@ -81,27 +93,18 @@ export class ArtistComponent implements OnInit {
   }
 
   onReleaseCreated(release: any): void {
-    // Switch back to releases tab to show the updated list
-    this.activeTab = 'releases';
+    // Navigate back to releases tab to show the updated list
+    this.router.navigate(['/artist/releases']);
   }
 
   onReleaseFormCancelled(): void {
-    // Switch back to releases tab
-    this.activeTab = 'releases';
+    // Navigate back to releases tab
+    this.router.navigate(['/artist/releases']);
   }
 
   setActiveTab(tab: TabType): void {
-    this.activeTab = tab;
+    // Navigate to the corresponding route instead of just changing state
+    this.router.navigate(['/artist', tab]);
   }
 
-  shouldShowTab(tab: any): boolean {
-    if (tab.adminOnly && !this.isAdmin) {
-      return false;
-    }
-    return true;
-  }
-
-  getTabClass(tabId: TabType): string {
-    return this.activeTab === tabId ? 'active' : '';
-  }
 }

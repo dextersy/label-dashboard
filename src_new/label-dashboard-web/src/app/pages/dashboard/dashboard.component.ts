@@ -5,6 +5,7 @@ import { LatestAlbumsComponent, LatestRelease } from '../../components/dashboard
 import { TopAlbumsComponent, TopEarningRelease } from '../../components/dashboard/top-albums/top-albums.component';
 import { BalanceTableComponent, ArtistBalance } from '../../components/dashboard/balance-table/balance-table.component';
 import { EventSalesChartComponent, EventSales } from '../../components/dashboard/event-sales-chart/event-sales-chart.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from 'environments/environment';
 
 interface DashboardData {
@@ -26,7 +27,8 @@ interface DashboardData {
     LatestAlbumsComponent,
     TopAlbumsComponent,
     BalanceTableComponent,
-    EventSalesChartComponent
+    EventSalesChartComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

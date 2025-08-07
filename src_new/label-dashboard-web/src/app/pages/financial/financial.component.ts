@@ -16,6 +16,7 @@ import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
 import { DateRangeSelection } from '../../components/shared/date-range-filter/date-range-filter.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 export type FinancialTabType = 'summary' | 'documents' | 'earnings' | 'royalties' | 'payments' | 'release' | 'new-royalty' | 'new-payment' | 'new-earning';
 
@@ -113,7 +114,8 @@ export interface ReleaseInfo {
     FinancialReleaseTabComponent,
     NewRoyaltyFormComponent,
     NewPaymentFormComponent,
-    NewEarningFormComponent
+    NewEarningFormComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './financial.component.html',
   styleUrl: './financial.component.scss'

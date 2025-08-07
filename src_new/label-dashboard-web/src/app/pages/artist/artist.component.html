@@ -1,38 +1,20 @@
 <div class="artist-page">
   <div class="container-fluid">
     <!-- Page Header -->
-    <div class="page-header d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">
-        <i class="fas fa-headphones me-2 text-primary"></i>
-        Artist Management
-      </h5>
+    <div class="page-header mb-3">
+      <app-breadcrumb></app-breadcrumb>
     </div>
     
     <!-- Main Content -->
     <div class="row" *ngIf="selectedArtist">
       <div class="col-12">
         
-        <!-- Tab Navigation -->
-        <div class="card tab-navigation">
-          <div class="card-header p-0">
-            <ul class="nav nav-tabs artist-tabs" role="tablist">
-              <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
-                <a class="nav-link" 
-                   [class]="getTabClass(tab.id)"
-                   (click)="setActiveTab(tab.id)"
-                   role="tab">
-                  <i class="fa" [class]="tab.icon"></i>
-                  {{ tab.label }}
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-          <!-- Tab Content -->
-          <div class="card-body tab-content p-0">
+        <!-- Tab Content (no navigation needed, handled by sidebar) -->
+        <div class="card">
+          <div class="card-body p-0">
             
             <!-- Profile Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'profile'" *ngIf="activeTab === 'profile'">
+            <div *ngIf="activeTab === 'profile'">
               <app-artist-profile-tab 
                 [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)"
@@ -41,7 +23,7 @@
             </div>
             
             <!-- Gallery Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'gallery'" *ngIf="activeTab === 'gallery'">
+            <div *ngIf="activeTab === 'gallery'">
               <app-artist-gallery-tab 
                 [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)">
@@ -49,7 +31,7 @@
             </div>
             
             <!-- Releases Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'releases'" *ngIf="activeTab === 'releases'">
+            <div *ngIf="activeTab === 'releases'">
               <app-artist-releases-tab 
                 [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)">
@@ -57,7 +39,7 @@
             </div>
             
             <!-- Team Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'team'" *ngIf="activeTab === 'team'">
+            <div *ngIf="activeTab === 'team'">
               <app-artist-team-tab 
                 [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)">
@@ -65,7 +47,7 @@
             </div>
             
             <!-- New Release Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'new-release'" *ngIf="activeTab === 'new-release' && isAdmin">
+            <div *ngIf="activeTab === 'new-release' && isAdmin">
               <app-artist-new-release-tab 
                 [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)"
@@ -75,7 +57,7 @@
             </div>
             
             <!-- Submit Release Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'submit-release'" *ngIf="activeTab === 'submit-release'">
+            <div *ngIf="activeTab === 'submit-release'">
               <app-artist-submit-release-tab 
                 [artist]="selectedArtist"
                 (alertMessage)="onAlertMessage($event)">

@@ -51,9 +51,7 @@
   width: 100%;
 }
 
-.nav li.active {
-  background: rgba(255, 255, 255, 0.13);
-}
+/* Remove background highlighting - will use font color instead */
 
 .nav li a {
   margin: 10px 15px 0;
@@ -95,9 +93,7 @@
   // Color is now set dynamically via [style.color] binding
 }
 
-.nav li.active a,
 .nav li a:hover {
-  background: rgba(255, 255, 255, 0.23);
   opacity: 1;
 }
 
@@ -145,6 +141,85 @@
   
   .mobile-only {
     display: none !important;
+  }
+}
+
+/* Submenu styles */
+.parent-menu-item {
+  position: relative;
+  
+  .submenu-arrow {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    transition: transform 0.2s ease;
+    
+    &.rotated {
+      transform: translateY(-50%) rotate(180deg);
+    }
+  }
+}
+
+.submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: rgba(0, 0, 0, 0.05);
+  
+  &.expanded {
+    max-height: 400px; // Adjust based on expected number of submenu items
+  }
+  
+  li {
+    width: 100%;
+    // Remove background highlighting for active submenu items
+  }
+  
+  .submenu-item {
+    margin: 0; // Reset margins completely
+    padding: 0px 10px 0px 60px !important; // Reduced left padding to 60px, minimal vertical spacing
+    border-radius: 2px;
+    display: block;
+    text-decoration: none;
+    font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
+    font-size: 10px; // Slightly smaller font
+    text-transform: none; // Don't uppercase submenu items
+    line-height: 14px; // Even smaller line height
+    opacity: 0.7; // More subtle when inactive
+    transition: all 0.2s ease;
+    
+    &:hover {
+      opacity: 1;
+      // Remove background hover effect
+    }
+    
+    span {
+      font-size: 10px;
+      line-height: 14px;
+      margin: 0;
+      height: auto;
+    }
+  }
+}
+
+/* Admin icon styling */
+.admin-icon {
+  font-size: 10px !important;
+  margin-left: 5px;
+  opacity: 0.6;
+  float: none !important;
+  width: auto !important;
+  
+  // For submenu items, make it even smaller
+  .submenu-item & {
+    font-size: 8px !important;
+    margin-left: 3px;
   }
 }
 

@@ -22,13 +22,28 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   currentRoute: string = '';
   isOpen: boolean = false;
+  expandedMenus: Set<string> = new Set();
+  collapsedMenus: Set<string> = new Set();
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
 
   menuItems = [
     { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
-    { route: '/artist', icon: 'fas fa-headphones', title: 'Artist', adminOnly: false },
+    { 
+      route: '/artist', 
+      icon: 'fas fa-headphones', 
+      title: 'Artist', 
+      adminOnly: false,
+      children: [
+        { route: '/artist/profile', title: 'Manage Profile', adminOnly: false },
+        { route: '/artist/gallery', title: 'Upload Media', adminOnly: false },
+        { route: '/artist/releases', title: 'View Releases', adminOnly: false },
+        { route: '/artist/team', title: 'Manage Team', adminOnly: false },
+        { route: '/artist/new-release', title: 'Create Release', adminOnly: true },
+        { route: '/artist/submit-release', title: 'Submit Release', adminOnly: false }
+      ]
+    },
     { route: '/financial', icon: 'fas fa-dollar-sign', title: 'Financial', adminOnly: false },
     { route: '/events', icon: 'fas fa-ticket-alt', title: 'Events', adminOnly: true },
     { route: '/admin', icon: 'fas fa-cogs', title: 'Admin', adminOnly: true }
@@ -47,6 +62,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     
     this.router.events.subscribe(() => {
       this.currentRoute = this.router.url;
+      // Only auto-expand parent menus for active routes, don't persist expansion
+      // The isSubmenuExpanded method will handle showing active child routes
     });
 
     // Subscribe to sidebar state changes
@@ -142,6 +159,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   isActiveRoute(route: string): boolean {
     return this.currentRoute === route;
+  }
+
+  isActiveParentRoute(parentRoute: string): boolean {
+    return this.currentRoute.startsWith(parentRoute + '/');
+  }
+
+  toggleSubmenu(route: string): void {
+    if (this.expandedMenus.has(route)) {
+      this.expandedMenus.delete(route);
+      this.collapsedMenus.add(route); // Mark as explicitly collapsed
+    } else {
+      this.expandedMenus.add(route);
+      this.collapsedMenus.delete(route); // Remove from collapsed list
+    }
+  }
+
+  isSubmenuExpanded(route: string): boolean {
+    // If explicitly collapsed by user, stay collapsed even with active child route
+    if (this.collapsedMenus.has(route)) {
+      return false;
+    }
+    // Expand if explicitly toggled OR if there's an active child route
+    return this.expandedMenus.has(route) || this.isActiveParentRoute(route);
+  }
+
+  hasChildren(item: any): boolean {
+    return item.children && item.children.length > 0;
   }
 
   shouldShowMenuItem(item: any): boolean {
