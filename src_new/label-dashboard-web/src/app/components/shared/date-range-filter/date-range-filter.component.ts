@@ -33,6 +33,8 @@ export class DateRangeFilterComponent implements OnInit {
   selectedPreset: string = 'last30days';
   lastUpdated: Date = new Date();
   showComparisonToggle: boolean = false;
+  isExpanded: boolean = false; // Track if the date fields are expanded
+  private initialized: boolean = false; // Track if component is initialized
 
   constructor() {
     // Set max date to today
@@ -43,6 +45,7 @@ export class DateRangeFilterComponent implements OnInit {
     this.selectedPreset = this.initialPreset;
     this.showComparisonToggle = this.showComparison;
     this.applyDatePreset(this.initialPreset);
+    this.initialized = true;
   }
 
   applyDatePreset(preset: string): void {
@@ -82,12 +85,25 @@ export class DateRangeFilterComponent implements OnInit {
     this.startDate = this.formatDateToString(startDate);
     this.endDate = this.formatDateToString(endDate);
     this.emitDateRangeChange();
+    
+    // Auto-collapse after preset selection (only if not during initialization)
+    if (this.initialized) {
+      this.isExpanded = false;
+    }
   }
 
   onCustomDateChange(): void {
     if (this.startDate && this.endDate) {
       this.selectedPreset = 'custom';
       this.emitDateRangeChange();
+      
+      // Auto-collapse after custom date selection (only if initialized and both dates selected)
+      if (this.initialized) {
+        // Add a small delay to allow the user to see the change
+        setTimeout(() => {
+          this.isExpanded = false;
+        }, 500);
+      }
     }
   }
 
@@ -130,5 +146,30 @@ export class DateRangeFilterComponent implements OnInit {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  toggleExpanded(): void {
+    this.isExpanded = !this.isExpanded;
+  }
+
+  getPresetDisplayName(): string {
+    switch (this.selectedPreset) {
+      case 'today':
+        return 'Today';
+      case 'yesterday':
+        return 'Yesterday';
+      case 'last7days':
+        return 'Last 7 days';
+      case 'last30days':
+        return 'Last 30 days';
+      case 'thismonth':
+        return 'This month';
+      case 'lastmonth':
+        return 'Last month';
+      case 'custom':
+        return 'Custom range';
+      default:
+        return 'Last 30 days';
+    }
   }
 }

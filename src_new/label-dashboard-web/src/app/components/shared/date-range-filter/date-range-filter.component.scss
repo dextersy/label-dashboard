@@ -11,6 +11,28 @@
   }
 }
 
+// Date range header styling
+.date-range-header {
+  .btn-link {
+    color: #495057;
+    text-decoration: none !important;
+    
+    &:hover {
+      color: #007bff;
+    }
+    
+    &:focus {
+      box-shadow: none;
+    }
+    
+    i.fa-chevron-down,
+    i.fa-chevron-up {
+      font-size: 0.75rem;
+      transition: transform 0.2s ease;
+    }
+  }
+}
+
 .btn-group .btn {
   border-radius: 0.25rem;
   margin-right: 0.25rem;
@@ -128,6 +150,24 @@
   }
 }
 
+// Collapsible content animation
+.expanded-content {
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // Form switch styling
 .form-check-input {
   &:checked {
@@ -139,6 +179,20 @@
 .form-check-label {
   font-size: 0.875rem;
   color: #495057;
+}
+
+// Header button improvements
+.btn-link {
+  transition: color 0.2s ease;
+  
+  strong {
+    font-weight: 600;
+  }
+  
+  &:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+  }
 }
 
 // Active filter display styling

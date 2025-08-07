@@ -1,11 +1,66 @@
 <!-- Date Range Filter Component -->
 <div class="card date-range-filter" [class.compact]="compact">
   <div class="card-body" [class.py-2]="compact">
-    <div class="row align-items-center">
+    <!-- Collapsed Header - Always visible -->
+    <div class="row align-items-center date-range-header">
+      <div class="col-lg-8 col-md-8" [class.col-8]="compact">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-link btn-sm text-decoration-none p-0 me-3" 
+                  (click)="toggleExpanded()"
+                  [title]="isExpanded ? 'Collapse date range options' : 'Expand date range options'">
+            <i class="fa fa-calendar me-1"></i>
+            <strong>{{ getPresetDisplayName() }}</strong>
+            <i class="fa ms-1" [class.fa-chevron-down]="!isExpanded" [class.fa-chevron-up]="isExpanded"></i>
+          </button>
+          <span class="text-muted small me-3" [class.d-none]="compact" [class.d-sm-inline]="compact">
+            {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
+            <span class="text-success ms-1">({{ getDaysDifference() }} days)</span>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Header Actions -->
+      <div class="col-lg-4 col-md-4" [class.col-4]="compact">
+        <div class="d-flex justify-content-end align-items-center">
+          <div class="form-check form-switch me-3" *ngIf="showComparison && !compact">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="compareSwitch"
+                   [(ngModel)]="showComparisonToggle"
+                   (change)="onComparisonToggle()">
+            <label class="form-check-label" for="compareSwitch">
+              <small>Compare</small>
+            </label>
+          </div>
+          <button class="btn btn-outline-primary btn-sm me-2" 
+                  (click)="onRefresh()" 
+                  [disabled]="loading"
+                  [title]="loading ? 'Refreshing data...' : 'Refresh data'">
+            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
+            <span class="ms-1 d-none d-md-inline">Refresh</span>
+          </button>
+          <div class="dropdown" *ngIf="showExport && !compact">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                    type="button" 
+                    data-bs-toggle="dropdown">
+              <i class="fa fa-download"></i>
+              <span class="ms-1 d-none d-lg-inline">Export</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" (click)="onExport('csv')">Export as CSV</a></li>
+              <li><a class="dropdown-item" href="#" (click)="onExport('pdf')">Export as PDF</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expanded Content - Show/hide based on isExpanded -->
+    <div class="row align-items-center mt-3 expanded-content" *ngIf="isExpanded">
       <!-- Date Range Presets -->
-      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0" [class.col-12]="compact">
-        <div class="d-flex flex-wrap align-items-center">
-          <span class="text-muted me-3 mb-2" [class.small]="compact">Date Range:</span>
+      <div class="col-12">
+        <div class="d-flex flex-wrap align-items-center mb-3">
+          <span class="text-muted me-3 mb-2" [class.small]="compact">Quick Select:</span>
           <div class="btn-group me-3 mb-2" role="group">
             <button type="button" 
                     class="btn" 
@@ -59,7 +114,7 @@
         </div>
         
         <!-- Custom Date Range -->
-        <div class="d-flex flex-wrap align-items-center mt-2" *ngIf="!compact">
+        <div class="d-flex flex-wrap align-items-center">
           <span class="text-muted me-3 mb-2 small">Custom Range:</span>
           <div class="input-group me-3 mb-2 custom-date-inputs">
             <input type="date" 
@@ -75,99 +130,27 @@
                    [min]="startDate"
                    [max]="maxDate">
           </div>
-        </div>
-      </div>
-      
-      <!-- Actions -->
-      <div class="col-lg-4 col-md-12" [class.col-12]="compact" *ngIf="!compact">
-        <div class="d-flex justify-content-lg-end justify-content-start flex-wrap">
-          <div class="form-check form-switch me-3 mb-2" *ngIf="showComparison">
+          
+          <!-- Additional options for expanded view -->
+          <div class="form-check form-switch me-3 mb-2" *ngIf="showComparison && compact">
             <input class="form-check-input" 
                    type="checkbox" 
-                   id="compareSwitch"
+                   id="compareSwitchExpanded"
                    [(ngModel)]="showComparisonToggle"
                    (change)="onComparisonToggle()">
-            <label class="form-check-label" for="compareSwitch">
+            <label class="form-check-label" for="compareSwitchExpanded">
               <small>Compare to previous period</small>
             </label>
           </div>
-          <button class="btn btn-outline-primary btn-sm me-2 mb-2" 
-                  (click)="onRefresh()" 
-                  [disabled]="loading">
-            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
-            <span class="ms-1">Refresh</span>
-          </button>
-          <div class="dropdown" *ngIf="showExport">
-            <button class="btn btn-outline-secondary btn-sm dropdown-toggle mb-2" 
-                    type="button" 
-                    data-bs-toggle="dropdown">
-              <i class="fa fa-download"></i>
-              <span class="ms-1">Export</span>
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" (click)="onExport('csv')">Export as CSV</a></li>
-              <li><a class="dropdown-item" href="#" (click)="onExport('pdf')">Export as PDF</a></li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
-    
-    <!-- Compact Actions Row -->
-    <div class="row mt-2" *ngIf="compact">
+
+    <!-- Last Updated Display - Only show when not loading and not expanded -->
+    <div class="row mt-2" *ngIf="!loading && !isExpanded && !compact">
       <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-          <div class="input-group custom-date-inputs-compact me-2 mb-2">
-            <input type="date" 
-                   class="form-control form-control-sm" 
-                   [(ngModel)]="startDate"
-                   (change)="onCustomDateChange()"
-                   [max]="maxDate"
-                   placeholder="Start date">
-            <span class="input-group-text">to</span>
-            <input type="date" 
-                   class="form-control form-control-sm" 
-                   [(ngModel)]="endDate"
-                   (change)="onCustomDateChange()"
-                   [min]="startDate"
-                   [max]="maxDate"
-                   placeholder="End date">
-          </div>
-          <button class="btn btn-outline-primary btn-sm mb-2" 
-                  (click)="onRefresh()" 
-                  [disabled]="loading"
-                  title="Refresh data">
-            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
-            <span class="d-none d-sm-inline ms-1">Refresh</span>
-          </button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Active Filter Display -->
-    <div class="row mt-3" *ngIf="!loading && !compact">
-      <div class="col-12">
-        <div class="d-flex align-items-center">
-          <small class="text-muted me-3">
-            <i class="fa fa-calendar"></i>
-            Showing data from <strong>{{ formatDateForDisplay(startDate) }}</strong> 
-            to <strong>{{ formatDateForDisplay(endDate) }}</strong>
-            <span class="text-success ms-2">({{ getDaysDifference() }} days)</span>
-          </small>
-          <small class="text-muted ms-auto">
-            Last updated: {{ lastUpdated | date:'medium' }}
-          </small>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Compact Filter Display -->
-    <div class="row mt-2" *ngIf="compact">
-      <div class="col-12">
-        <small class="text-muted">
-          <i class="fa fa-calendar"></i>
-          {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
-          <span class="text-success ms-1">({{ getDaysDifference() }} days)</span>
+        <small class="text-muted d-flex justify-content-end">
+          Last updated: {{ lastUpdated | date:'medium' }}
         </small>
       </div>
     </div>
