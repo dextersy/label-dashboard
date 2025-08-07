@@ -18,8 +18,7 @@
         
         <!-- Tab Navigation -->
         <div class="card tab-navigation">
-          <div class="card-header p-0">
-            <ul class="nav nav-tabs events-tabs" role="tablist">
+          <ul class="nav nav-tabs events-tabs" role="tablist">
               <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
                 <a class="nav-link" 
                    [class]="getTabClass(tab.id)"
@@ -32,9 +31,6 @@
             </ul>
           </div>
           
-          <!-- Tab Content -->
-          <div class="card-body tab-content p-0">
-            
             <!-- Event Details Tab -->
             <div class="tab-pane" [class.active]="activeTab === 'details'" *ngIf="activeTab === 'details'">
               <app-event-details-tab
@@ -72,10 +68,8 @@
               </app-event-referrals-tab>
             </div>
             
-          </div>
         </div>
         
-      </div>
     </div>
     
     <!-- Loading Events -->

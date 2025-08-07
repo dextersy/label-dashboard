@@ -1,89 +1,86 @@
 <div class="event-tickets-tab">
-  <div class="p-4">
-    <!-- Header with download button -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4><i class="fas fa-ticket-alt me-2"></i>Confirmed Orders</h4>
-      <button 
-        class="btn btn-outline-primary" 
-        (click)="onDownloadCSV()"
-        *ngIf="isAdmin"
-        [disabled]="loading">
-        <i class="fa fa-download me-1"></i>Download CSV
-      </button>
-    </div>
+  <!-- Header with download button -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <button 
+      class="btn btn-outline-primary" 
+      (click)="onDownloadCSV()"
+      *ngIf="isAdmin"
+      [disabled]="loading">
+      <i class="fa fa-download me-1"></i>Download CSV
+    </button>
+  </div>
 
-    <!-- Paginated Table -->
-    <app-paginated-table
-      title=""
-      [data]="tickets"
-      [pagination]="pagination"
-      [loading]="loading"
-      [columns]="tableColumns"
-      [showSearch]="true"
-      [showSortableHeaders]="true"
-      [sortInfo]="currentSort"
-      [showActionsColumn]="isAdmin"
-      (pageChange)="onPageChange($event)"
-      (filtersChange)="onFiltersChange($event)"
-      (sortChange)="onSortChange($event)">
-      
-      <!-- Actions template -->
-      <ng-template #actionsContent let-ticket>
-        <div class="btn-group" role="group">
-          <button 
-            class="btn btn-sm btn-outline-primary"
-            (click)="onResendTicket(ticket.id)"
-            *ngIf="isTicketResendable(ticket)"
-            title="Resend ticket">
-            Resend
-          </button>
-          <button 
-            class="btn btn-sm btn-outline-danger"
-            (click)="onCancelTicket(ticket.id)"
-            *ngIf="isTicketCancellable(ticket)"
-            title="Cancel ticket">
-            Cancel
-          </button>
-        </div>
-      </ng-template>
-    </app-paginated-table>
-
-    <!-- Summary Footer -->
-    <div class="card mt-3" *ngIf="summary">
-      <div class="card-body bg-light">
-        <strong class="me-3">Totals:</strong>
-        
-        <span class="me-3" title="Number of paid tickets">
-          <i class="far fa-dot-circle text-success"></i>
-          {{ summary.total_tickets_sold }} tickets
-        </span>
-        
-        <span class="me-3" title="Total revenue">
-          <i class="fas fa-money-bill text-primary"></i>
-          {{ summary.total_revenue | currency:'PHP':'symbol':'1.2-2' }}
-        </span>
-        
-        <span class="me-3 text-muted" title="Total processing fee">
-          <i class="fa fa-credit-card"></i>
-          -{{ summary.total_processing_fee | currency:'PHP':'symbol':'1.2-2' }}
-        </span>
-        
-        <span class="me-3 text-muted" title="Platform fee (5%)">
-          <i class="fa fa-percentage"></i>
-          -{{ summary.platform_fee | currency:'PHP':'symbol':'1.2-2' }}
-        </span>
-        
-        <span class="fw-bold" title="Grand total">
-          <i class="fa fa-plus-square text-success"></i>
-          {{ summary.grand_total | currency:'PHP':'symbol':'1.2-2' }}
-        </span>
+  <!-- Paginated Table -->
+  <app-paginated-table
+    title=""
+    [data]="tickets"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="tableColumns"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [sortInfo]="currentSort"
+    [showActionsColumn]="isAdmin"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)"
+    (sortChange)="onSortChange($event)">
+    
+    <!-- Actions template -->
+    <ng-template #actionsContent let-ticket>
+      <div class="btn-group" role="group">
+        <button 
+          class="btn btn-sm btn-outline-primary"
+          (click)="onResendTicket(ticket.id)"
+          *ngIf="isTicketResendable(ticket)"
+          title="Resend ticket">
+          Resend
+        </button>
+        <button 
+          class="btn btn-sm btn-outline-danger"
+          (click)="onCancelTicket(ticket.id)"
+          *ngIf="isTicketCancellable(ticket)"
+          title="Cancel ticket">
+          Cancel
+        </button>
       </div>
-    </div>
+    </ng-template>
+  </app-paginated-table>
 
-    <!-- Info Alert -->
-    <div class="alert alert-info mt-3">
-      <h6><i class="fa fa-user-plus me-2"></i>Want to invite someone?</h6>
-      <p class="mb-0">Switch to the "Pending Tickets" tab to create a custom ticket.</p>
+  <!-- Summary Footer -->
+  <div class="card mt-3" *ngIf="summary">
+    <div class="card-body bg-light">
+      <strong class="me-3">Totals:</strong>
+      
+      <span class="me-3" title="Number of paid tickets">
+        <i class="far fa-dot-circle text-success"></i>
+        {{ summary.total_tickets_sold }} tickets
+      </span>
+      
+      <span class="me-3" title="Total revenue">
+        <i class="fas fa-money-bill text-primary"></i>
+        {{ summary.total_revenue | currency:'PHP':'symbol':'1.2-2' }}
+      </span>
+      
+      <span class="me-3 text-muted" title="Total processing fee">
+        <i class="fa fa-credit-card"></i>
+        -{{ summary.total_processing_fee | currency:'PHP':'symbol':'1.2-2' }}
+      </span>
+      
+      <span class="me-3 text-muted" title="Platform fee (5%)">
+        <i class="fa fa-percentage"></i>
+        -{{ summary.platform_fee | currency:'PHP':'symbol':'1.2-2' }}
+      </span>
+      
+      <span class="fw-bold" title="Grand total">
+        <i class="fa fa-plus-square text-success"></i>
+        {{ summary.grand_total | currency:'PHP':'symbol':'1.2-2' }}
+      </span>
     </div>
+  </div>
+
+  <!-- Info Alert -->
+  <div class="alert alert-info mt-3">
+    <h6><i class="fa fa-user-plus me-2"></i>Want to invite someone?</h6>
+    <p class="mb-0">Switch to the "Pending Tickets" tab to create a custom ticket.</p>
   </div>
 </div>
