@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sidebar',
@@ -186,9 +187,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.expandedMenus.delete(route);
       this.collapsedMenus.add(route); // Mark as explicitly collapsed
     } else {
-      // Close all other expanded menus first
-      this.expandedMenus.clear();
-      this.collapsedMenus.clear();
+      // Close all other expanded menus first - mark them as explicitly collapsed
+      // to override any auto-expansion from active routes
+      this.menuItems.forEach(item => {
+        if (item.children && item.route !== route) {
+          this.expandedMenus.delete(item.route);
+          this.collapsedMenus.add(item.route);
+        }
+      });
       
       // Then expand the clicked menu
       this.expandedMenus.add(route);
