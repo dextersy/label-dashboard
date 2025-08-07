@@ -2,7 +2,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="card-title">Current Balance</h5>
+        <h3 class="card-title">Current Balance</h3>
         <h2 class="text-primary">{{ formatCurrency(summary.currentBalance) }}</h2>
         <button class="btn btn-success" 
                 (click)="onPayNow()"
@@ -15,7 +15,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="card-title">Total Earnings</h5>
+        <h3 class="card-title">Total Earnings</h3>
         <h2 class="text-success">{{ formatCurrency(summary.totalEarnings) }}</h2>
         <button class="btn btn-outline-success btn-sm" 
                 (click)="viewEarningsDetails.emit()">
@@ -27,7 +27,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="card-title">Total Royalties</h5>
+        <h3 class="card-title">Total Royalties</h3>
         <h2 class="text-info">{{ formatCurrency(summary.totalRoyalties) }}</h2>
         <button class="btn btn-outline-info btn-sm" 
                 (click)="viewRoyaltiesDetails.emit()">
@@ -39,7 +39,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="card-title">Total Payments</h5>
+        <h3 class="card-title">Total Payments</h3>
         <h2 class="text-warning">{{ formatCurrency(summary.totalPayments) }}</h2>
         <button class="btn btn-outline-warning btn-sm" 
                 (click)="viewPaymentsDetails.emit()">
@@ -54,7 +54,7 @@
   <div class="col-md-6">
     <div class="card">
       <div class="card-header">
-        <h5>Latest Earnings</h5>
+        <h4>Latest Earnings</h4>
       </div>
       <div class="card-body">
         <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
@@ -64,7 +64,7 @@
   <div class="col-md-6">
     <div class="card">
       <div class="card-header">
-        <h5>Latest Royalties</h5>
+        <h4>Latest Royalties</h4>
       </div>
       <div class="card-body">
         <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>
