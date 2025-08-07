@@ -30,8 +30,9 @@ export class BreadcrumbService {
     '/artist/gallery': { label: 'Upload Media', parent: '/artist' },
     '/artist/releases': { label: 'View Releases', parent: '/artist' },
     '/artist/team': { label: 'Manage Team', parent: '/artist' },
-    '/artist/new-release': { label: 'Create Release', parent: '/artist' },
-    '/artist/submit-release': { label: 'Submit Release', parent: '/artist' },
+    '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
+    '/artist/releases/submit': { label: 'Submit Release', parent: '/artist/releases' },
+    '/artist/new': { label: 'Add New Artist', parent: '/artist' },
     '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },
     '/financial/summary': { label: 'Summary', parent: '/financial' },
     '/financial/documents': { label: 'Documents', parent: '/financial' },
@@ -39,9 +40,9 @@ export class BreadcrumbService {
     '/financial/royalties': { label: 'Royalties', parent: '/financial' },
     '/financial/payments': { label: 'Payments and Advances', parent: '/financial' },
     '/financial/release': { label: 'Release Information', parent: '/financial' },
-    '/financial/new-royalty': { label: 'New Royalty', parent: '/financial' },
-    '/financial/new-payment': { label: 'New Payment', parent: '/financial' },
-    '/financial/new-earning': { label: 'New Earning', parent: '/financial' },
+    '/financial/royalties/new': { label: 'New Royalty', parent: '/financial/royalties' },
+    '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
+    '/financial/earnings/new': { label: 'New Earning', parent: '/financial/earnings' },
     '/events': { label: 'Events', icon: 'fas fa-ticket-alt' },
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
     '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
@@ -69,27 +70,29 @@ export class BreadcrumbService {
     const menuItem = this.menuStructure[currentUrl];
     
     if (menuItem) {
-      // If this item has a parent, add the parent first
+      // Recursively build the full hierarchy
+      this.buildBreadcrumbHierarchy(currentUrl, breadcrumbs);
+    }
+
+    return breadcrumbs;
+  }
+
+  private buildBreadcrumbHierarchy(url: string, breadcrumbs: BreadcrumbItem[]): void {
+    const menuItem = this.menuStructure[url];
+    
+    if (menuItem) {
+      // If this item has a parent, recursively add the parent hierarchy first
       if (menuItem.parent) {
-        const parentItem = this.menuStructure[menuItem.parent];
-        if (parentItem) {
-          breadcrumbs.push({
-            label: parentItem.label,
-            route: menuItem.parent,
-            icon: parentItem.icon
-          });
-        }
+        this.buildBreadcrumbHierarchy(menuItem.parent, breadcrumbs);
       }
 
       // Add the current item
       breadcrumbs.push({
         label: menuItem.label,
-        route: currentUrl,
+        route: url,
         icon: menuItem.icon
       });
     }
-
-    return breadcrumbs;
   }
 
   // Method to manually set breadcrumbs if needed

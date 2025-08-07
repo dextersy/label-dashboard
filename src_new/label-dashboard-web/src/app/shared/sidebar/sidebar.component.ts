@@ -40,9 +40,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/artist/profile', title: 'Manage Profile', adminOnly: false },
         { route: '/artist/gallery', title: 'Upload Media', adminOnly: false },
         { route: '/artist/releases', title: 'View Releases', adminOnly: false },
-        { route: '/artist/team', title: 'Manage Team', adminOnly: false },
-        { route: '/artist/new-release', title: 'Create Release', adminOnly: true },
-        { route: '/artist/submit-release', title: 'Submit Release', adminOnly: false }
+        { route: '/artist/team', title: 'Manage Team', adminOnly: false }
       ]
     },
     { 
@@ -56,10 +54,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
         { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
         { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
-        { route: '/financial/release', title: 'Release Information', adminOnly: false },
-        { route: '/financial/new-royalty', title: 'New Royalty', adminOnly: true },
-        { route: '/financial/new-payment', title: 'New Payment', adminOnly: true },
-        { route: '/financial/new-earning', title: 'New Earning', adminOnly: true }
+        { route: '/financial/release', title: 'Release Information', adminOnly: false }
       ]
     },
     { route: '/events', icon: 'fas fa-ticket-alt', title: 'Events', adminOnly: true },

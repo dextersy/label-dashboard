@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { EditReleaseDialogComponent } from '../edit-release-dialog/edit-release-dialog.component';
 import { environment } from 'environments/environment';
@@ -44,7 +45,7 @@ export class ArtistReleasesTabComponent {
   selectedRelease: ArtistRelease | null = null;
   loadingReleaseDetails = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
     if (this.artist) {
@@ -175,5 +176,13 @@ export class ArtistReleasesTabComponent {
       default:
         return 'fa-question-circle';
     }
+  }
+
+  navigateToCreateRelease(): void {
+    this.router.navigate(['/artist/releases/new']);
+  }
+
+  navigateToSubmitRelease(): void {
+    this.router.navigate(['/artist/releases/submit']);
   }
 }

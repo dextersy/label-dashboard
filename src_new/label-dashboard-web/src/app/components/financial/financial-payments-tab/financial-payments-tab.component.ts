@@ -1,9 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Payment, PaymentMethod, PayoutSettings } from '../../../pages/financial/financial.component';
 import { PaymentsTableComponent } from '../payments-table/payments-table.component';
 import { PaginationInfo, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-financial-payments-tab',
@@ -30,6 +32,15 @@ export class FinancialPaymentsTabComponent {
   @Input() onDeletePaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
   @Input() onSetDefaultPaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
 
+  isAdmin = false;
+
+  constructor(private router: Router, private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser.subscribe(user => {
+      this.isAdmin = user ? user.is_admin : false;
+    });
+  }
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
@@ -50,6 +61,10 @@ export class FinancialPaymentsTabComponent {
 
   async setDefaultPaymentMethod(paymentMethodId: number): Promise<void> {
     await this.onSetDefaultPaymentMethod(paymentMethodId);
+  }
+
+  navigateToNewPayment(): void {
+    this.router.navigate(['/financial/payments/new']);
   }
 
 }

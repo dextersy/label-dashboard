@@ -1,9 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { EarningsTableComponent } from '../earnings-table/earnings-table.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../shared/date-range-filter/date-range-filter.component';
 import { Earning } from '../../../pages/financial/financial.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-financial-earnings-tab',
@@ -23,6 +25,16 @@ export class FinancialEarningsTabComponent {
   @Output() dateRangeChange = new EventEmitter<DateRangeSelection>();
   @Output() refresh = new EventEmitter<void>();
 
+  isAdmin = false;
+
+  constructor(private router: Router, private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser.subscribe(user => {
+      this.isAdmin = user ? user.is_admin : false;
+    });
+  }
+
   // Define table columns for search and sort functionality
   earningsColumns: TableColumn[] = [
     { key: 'date_recorded', label: 'Date Recorded', type: 'date', searchable: false, sortable: true },
@@ -41,5 +53,9 @@ export class FinancialEarningsTabComponent {
 
   onRefresh(): void {
     this.refresh.emit();
+  }
+
+  navigateToNewEarning(): void {
+    this.router.navigate(['/financial/earnings/new']);
   }
 }

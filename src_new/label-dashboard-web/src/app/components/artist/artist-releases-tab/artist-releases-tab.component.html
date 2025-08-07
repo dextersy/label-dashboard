@@ -1,7 +1,20 @@
 <div class="artist-releases-tab">
   <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Artist Releases</h5>
+      <div class="btn-group" *ngIf="artist">
+        <button *ngIf="isAdmin" 
+                class="btn btn-primary btn-sm" 
+                (click)="navigateToCreateRelease()"
+                title="Create new release">
+          <i class="fas fa-plus"></i> Create Release
+        </button>
+        <button class="btn btn-outline-primary btn-sm" 
+                (click)="navigateToSubmitRelease()"
+                title="Submit release for review">
+          <i class="fas fa-upload"></i> Submit Release
+        </button>
+      </div>
     </div>
     <div class="card-body">
       

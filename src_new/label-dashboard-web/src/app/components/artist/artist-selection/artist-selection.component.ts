@@ -1,7 +1,10 @@
-import { Component, OnInit, OnChanges, Output, EventEmitter, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { ArtistStateService } from '../../../services/artist-state.service';
+import { Subscription } from 'rxjs';
 import { environment } from 'environments/environment';
 
 export interface Artist {
@@ -18,7 +21,7 @@ export interface Artist {
   templateUrl: './artist-selection.component.html',
   styleUrl: './artist-selection.component.scss'
 })
-export class ArtistSelectionComponent implements OnInit, OnChanges {
+export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentArtist: Artist | null = null;
   @Output() artistSelected = new EventEmitter<Artist>();
   
@@ -29,11 +32,23 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
   isDropdownOpen = false;
   isAdmin = false;
   searchTerm: string = '';
+  private refreshSubscription: Subscription = new Subscription();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient, 
+    private router: Router,
+    private artistStateService: ArtistStateService
+  ) {}
 
   ngOnInit(): void {
     this.loadArtists();
+    
+    // Subscribe to refresh triggers
+    this.refreshSubscription.add(
+      this.artistStateService.refreshArtists$.subscribe((selectArtistId) => {
+        this.refreshArtistsAndSelect(selectArtistId);
+      })
+    );
   }
 
   ngOnChanges(): void {
@@ -140,9 +155,8 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
   }
 
   addNewArtist(): void {
-    // TODO: Implement add new artist functionality
-    console.log('Add new artist clicked');
     this.isDropdownOpen = false;
+    this.router.navigate(['/artist/new']);
   }
 
   onSearchKeydown(event: KeyboardEvent): void {
@@ -162,6 +176,62 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
 
   refreshArtists(): void {
     this.loadArtists();
+  }
+
+  refreshArtistsAndSelect(selectArtistId: number | null): void {
+    this.loading = true;
+    
+    this.http.get<{artists: Artist[], isAdmin: boolean}>(`${environment.apiUrl}/artists`, {
+      headers: this.getAuthHeaders()
+    }).subscribe({
+      next: (data) => {
+        this.artists = data.artists;
+        this.isAdmin = data.isAdmin;
+        this.filterArtists(); // Initialize filtered list
+        
+        // If a specific artist ID was provided, select that artist
+        if (selectArtistId) {
+          const artistToSelect = this.artists.find(artist => artist.id === selectArtistId);
+          if (artistToSelect) {
+            this.selectArtist(artistToSelect);
+            this.loading = false;
+            return;
+          }
+        }
+        
+        // Otherwise follow the normal selection logic
+        this.restoreArtistSelection();
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading artists:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  private restoreArtistSelection(): void {
+    // Try to restore from localStorage first
+    const savedArtistId = this.getSavedArtistId();
+    let artistToSelect: Artist | null = null;
+    
+    if (savedArtistId && this.artists.length > 0) {
+      artistToSelect = this.artists.find(artist => artist.id === savedArtistId) || null;
+    }
+    
+    // Fallback to currentArtist prop if no saved selection or saved artist not found
+    if (!artistToSelect && this.currentArtist) {
+      artistToSelect = this.artists.find(artist => artist.id === this.currentArtist!.id) || null;
+    }
+    
+    // Final fallback to first artist
+    if (!artistToSelect && this.artists.length > 0) {
+      artistToSelect = this.artists[0];
+    }
+    
+    if (artistToSelect) {
+      this.selectArtist(artistToSelect);
+    }
   }
 
   private saveArtistId(artistId: number): void {
@@ -187,5 +257,9 @@ export class ArtistSelectionComponent implements OnInit, OnChanges {
       return 'assets/img/placeholder.jpg';
     }
     return photo.startsWith('http') ? photo : `${environment.apiUrl}/uploads/artists/${photo}`;
+  }
+
+  ngOnDestroy(): void {
+    this.refreshSubscription.unsubscribe();
   }
 }

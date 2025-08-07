@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ArtistComponent } from './pages/artist/artist.component';
+import { AddNewArtistComponent } from './components/artist/add-new-artist/add-new-artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
 import { AdminComponent } from './pages/admin/admin.component';
@@ -40,9 +41,10 @@ export const routes: Routes = [
       { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
       { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
       { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
+      { path: 'releases/new', component: ArtistComponent, canActivate: [adminGuard], data: { tab: 'new-release' } },
+      { path: 'releases/submit', component: ArtistComponent, data: { tab: 'submit-release' } },
       { path: 'team', component: ArtistComponent, data: { tab: 'team' } },
-      { path: 'new-release', component: ArtistComponent, canActivate: [adminGuard], data: { tab: 'new-release' } },
-      { path: 'submit-release', component: ArtistComponent, data: { tab: 'submit-release' } }
+      { path: 'new', component: AddNewArtistComponent, canActivate: [adminGuard] }
     ]
   },
   { 
@@ -53,12 +55,12 @@ export const routes: Routes = [
       { path: 'summary', component: FinancialComponent, data: { tab: 'summary' } },
       { path: 'documents', component: FinancialComponent, data: { tab: 'documents' } },
       { path: 'earnings', component: FinancialComponent, data: { tab: 'earnings' } },
+      { path: 'earnings/new', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-earning' } },
       { path: 'royalties', component: FinancialComponent, data: { tab: 'royalties' } },
+      { path: 'royalties/new', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-royalty' } },
       { path: 'payments', component: FinancialComponent, data: { tab: 'payments' } },
-      { path: 'release', component: FinancialComponent, data: { tab: 'release' } },
-      { path: 'new-royalty', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-royalty' } },
-      { path: 'new-payment', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-payment' } },
-      { path: 'new-earning', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-earning' } }
+      { path: 'payments/new', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-payment' } },
+      { path: 'release', component: FinancialComponent, data: { tab: 'release' } }
     ]
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
