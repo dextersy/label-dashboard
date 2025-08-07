@@ -1,5 +1,8 @@
 /* Global styles for Label Dashboard Web */
 
+/* Import Modern Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 /* Import Font Awesome */
 @import '@fortawesome/fontawesome-free/css/all.css';
 
@@ -41,11 +44,15 @@ html {
 }
 
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   font-size: 13px; /* Reduced from default 14px */
   height: 100vh;
   margin: 0;
   padding: 0;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: #4a5568; /* Soft gray for body text */
 }
 
 a {
@@ -409,12 +416,47 @@ app-root {
   font-size: 16px; /* Keep navbar brand slightly larger */
 }
 
-h1 { font-size: 1.8rem; }
-h2 { font-size: 1.6rem; }
-h3 { font-size: 1.4rem; }
-h4 { font-size: 1.2rem; }
-h5 { font-size: 1.1rem; }
-h6 { font-size: 1rem; }
+/* Modern Heading Styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: #2d3748; /* Softer dark gray for headings */
+}
+
+h1 { 
+  font-size: 1.8rem; 
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+h2 { 
+  font-size: 1.6rem; 
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+h3 { 
+  font-size: 1.4rem; 
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+h4 { 
+  font-size: 1.2rem; 
+  font-weight: 600;
+}
+
+h5 { 
+  font-size: 1.1rem; 
+  font-weight: 600;
+}
+
+h6 { 
+  font-size: 1rem; 
+  font-weight: 500;
+}
 
 /* ================================= */
 /* GLOBAL PAGE HEADER STYLES         */
