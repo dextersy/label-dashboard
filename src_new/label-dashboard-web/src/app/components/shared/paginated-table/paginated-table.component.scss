@@ -1,10 +1,37 @@
-// Search filters styles
+// Search filters styles - very light background for better input visibility
 .bg-light {
-  background-color: #f8f9fa !important;
+  background-color: #fafbfc !important;
 }
 
-// Flex-based search filters
+// Enhanced search bar styling for better form control visibility
 .search-filters-container {
+  background-color: #fafbfc;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  
+  .form-control {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    
+    &:focus {
+      background-color: #ffffff;
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+  
+  .form-label {
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  // Flex-based search filters layout
   .search-field {
     flex: 1 1 200px; // Grow and shrink, base width of 200px
     min-width: 150px; // Minimum width to prevent too narrow fields
