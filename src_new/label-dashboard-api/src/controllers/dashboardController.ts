@@ -260,10 +260,11 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
 // Get complete dashboard data
 export const getDashboardData = async (req: AuthRequest, res: Response) => {
   try {
-    const [latestReleases, topEarningReleases, balanceSummary] = await Promise.all([
+    const [latestReleases, topEarningReleases, balanceSummary, stats] = await Promise.all([
       getLatestReleasesData(req),
       getTopEarningReleasesData(req),
-      getBalanceSummaryData(req)
+      getBalanceSummaryData(req),
+      getDashboardStatsData(req)
     ]);
 
     const dashboardData: any = {
@@ -273,7 +274,8 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
       },
       latestReleases,
       topEarningReleases,
-      balanceSummary
+      balanceSummary,
+      stats
     };
 
     // Add event sales for admin users
@@ -508,4 +510,112 @@ async function getEventSalesData(req: AuthRequest) {
       };
     })
   );
+}
+
+async function getDashboardStatsData(req: AuthRequest) {
+  let statsQuery = {};
+  let accessibleArtistIds: number[] = [];
+
+  // For non-admin users, get accessible artist IDs first
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { 
+        user_id: req.user.id,
+        status: 'Accepted'
+      },
+      attributes: ['artist_id']
+    });
+    
+    accessibleArtistIds = artistAccess.map(access => access.artist_id);
+    
+    if (accessibleArtistIds.length === 0) {
+      return {
+        latestRelease: null,
+        totalArtists: 0,
+        totalReleases: 0
+      };
+    }
+  }
+
+  const brandFilter = { brand_id: req.user.brand_id };
+
+  // Get latest release with artist info
+  let latestReleaseQuery: any = {
+    where: brandFilter,
+    include: [
+      {
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        include: [
+          {
+            model: Artist,
+            as: 'artist'
+          }
+        ]
+      }
+    ],
+    order: [['release_date', 'DESC']],
+    limit: 1
+  };
+
+  // For non-admin users, filter by accessible artists
+  if (!req.user.is_admin && accessibleArtistIds.length > 0) {
+    latestReleaseQuery.include[0].where = {
+      artist_id: accessibleArtistIds
+    };
+    latestReleaseQuery.include[0].required = true;
+  }
+
+  const latestReleaseResult = await Release.findOne(latestReleaseQuery);
+
+  let latestRelease = null;
+  if (latestReleaseResult) {
+    latestRelease = {
+      catalog_no: latestReleaseResult.catalog_no,
+      title: latestReleaseResult.title,
+      artist_name: latestReleaseResult.releaseArtists && latestReleaseResult.releaseArtists.length > 0 
+        ? latestReleaseResult.releaseArtists[0].artist?.name 
+        : 'Unknown Artist'
+    };
+  }
+
+  // Get total counts
+  let totalArtists, totalReleases;
+
+  if (req.user.is_admin) {
+    // Admin can see all artists and releases in their brand
+    [totalArtists, totalReleases] = await Promise.all([
+      Artist.count({ where: brandFilter }),
+      Release.count({ where: brandFilter })
+    ]);
+  } else {
+    // Non-admin users see only accessible data
+    if (accessibleArtistIds.length === 0) {
+      totalArtists = 0;
+      totalReleases = 0;
+    } else {
+      totalArtists = accessibleArtistIds.length;
+      
+      // Count releases for accessible artists
+      totalReleases = await Release.count({
+        where: brandFilter,
+        include: [
+          {
+            model: ReleaseArtist,
+            as: 'releaseArtists',
+            where: {
+              artist_id: accessibleArtistIds
+            },
+            required: true
+          }
+        ]
+      });
+    }
+  }
+
+  return {
+    latestRelease,
+    totalArtists,
+    totalReleases
+  };
 }

@@ -22,11 +22,86 @@
 
   <!-- Dashboard content -->
   <div *ngIf="!loading && !error && dashboardData">
-    <!-- Welcome header -->
-    <h3 style="font-weight:normal;" class="text-secondary">
-      Welcome to your dashboard, <strong>{{ userFirstName }}</strong>! ✨
-    </h3>
-    <hr>
+    <!-- Welcome Card -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="welcome-card card" 
+             [style.background]="'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'"
+             [style.box-shadow]="boxShadow">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <div class="welcome-content">
+                  <h2 class="welcome-title mb-2" [style.color]="textColor">
+                    <i class="fas fa-chart-line me-2" [style.color]="iconColor"></i>
+                    Welcome, <strong>{{ userFirstName }}</strong>! 
+                    <span class="welcome-emoji">✨</span>
+                  </h2>
+                  <p class="welcome-description mb-3" [style.color]="textColor" [style.opacity]="'0.9'">
+                    This is your dashboard where you will find basic information about your artists, 
+                    track performance metrics, and manage your music catalog.
+                  </p>
+                  <div class="dashboard-features">
+                    <div class="feature-item" [style.color]="textColor">
+                      <i class="fas fa-music" [style.color]="iconColor"></i>
+                      <span>Monitor your latest releases and performance</span>
+                    </div>
+                    <div class="feature-item" [style.color]="textColor">
+                      <i class="fas fa-dollar-sign" [style.color]="iconColor"></i>
+                      <span>Track earnings and financial summaries</span>
+                    </div>
+                    <div class="feature-item" *ngIf="isAdmin" [style.color]="textColor">
+                      <i class="fas fa-users-cog" [style.color]="iconColor"></i>
+                      <span>Manage artists and administrative tasks</span>
+                    </div>
+                    <div class="feature-item" *ngIf="!isAdmin" [style.color]="textColor">
+                      <i class="fas fa-headphones" [style.color]="iconColor"></i>
+                      <span>Access your artist profile and team settings</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="welcome-graphic">
+                  <div class="dashboard-icon-wrapper">
+                    <i class="fas fa-chart-pie dashboard-icon" [style.color]="iconColor"></i>
+                  </div>
+                  <div class="stats-mini mt-3">
+                    <!-- Latest Release -->
+                    <div class="stat-item" *ngIf="dashboardData.stats?.latestRelease">
+                      <i class="fas fa-music" [style.color]="iconColor"></i>
+                      <div class="stat-content">
+                        <span class="stat-sublabel" [style.color]="textColor" [style.opacity]="'0.7'">{{ dashboardData.stats?.latestRelease?.catalog_no }}</span>
+                        <span class="stat-number" [style.color]="textColor">{{ dashboardData.stats?.latestRelease?.title }}</span>
+                        <span class="stat-label" [style.color]="textColor" [style.opacity]="'0.8'">Latest Release</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Total Artists -->
+                    <div class="stat-item">
+                      <i class="fas fa-users" [style.color]="iconColor"></i>
+                      <div class="stat-content">
+                        <span class="stat-number" [style.color]="textColor">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
+                        <span class="stat-label" [style.color]="textColor" [style.opacity]="'0.8'">Total Artists</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Total Releases -->
+                    <div class="stat-item">
+                      <i class="fas fa-compact-disc" [style.color]="iconColor"></i>
+                      <div class="stat-content">
+                        <span class="stat-number" [style.color]="textColor">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
+                        <span class="stat-label" [style.color]="textColor" [style.opacity]="'0.8'">Total Releases</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Dashboard widgets -->
     <div class="row">
