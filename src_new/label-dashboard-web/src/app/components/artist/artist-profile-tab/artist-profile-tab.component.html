@@ -9,39 +9,35 @@
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="artistName">Artist Name <span class="text-danger">*</span></label>
-              <input type="text" 
-                     class="form-control" 
-                     id="artistName"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Artist Name <span class="text-danger">*</span></mat-label>
+              <input matInput
                      name="artistName"
                      [(ngModel)]="editingProfile.name"
                      required
                      placeholder="Enter artist name">
-            </div>
+            </mat-form-field>
           </div>
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="bandMembers">Band Members</label>
-              <textarea class="form-control" 
-                        id="bandMembers"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Band Members</mat-label>
+              <textarea matInput
                         name="bandMembers"
                         rows="3"
                         [(ngModel)]="editingProfile.band_members"
                         placeholder="Enter band members, one per line or separated by commas"></textarea>
-            </div>
+            </mat-form-field>
           </div>
         </div>
         
-        <div class="form-group">
-          <label for="bio">Biography</label>
-          <textarea class="form-control" 
-                    id="bio"
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Biography</mat-label>
+          <textarea matInput
                     name="bio"
                     rows="4"
                     [(ngModel)]="editingProfile.bio"
                     placeholder="Tell us about the artist..."></textarea>
-        </div>
+        </mat-form-field>
       </div>
     </div>
 
@@ -53,76 +49,65 @@
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="website">Website</label>
-              <input type="url" 
-                     class="form-control" 
-                     id="website"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Website</mat-label>
+              <input matInput
+                     type="url"
                      name="website"
                      [(ngModel)]="editingProfile.website_page_url"
                      placeholder="https://www.example.com">
-            </div>
+            </mat-form-field>
           </div>
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="facebook">Facebook</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="facebook"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Facebook</mat-label>
+              <input matInput
                      name="facebook"
                      [(ngModel)]="editingProfile.facebook_handle"
                      placeholder="Facebook username">
-            </div>
+            </mat-form-field>
           </div>
         </div>
         
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="instagram">Instagram</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="instagram"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Instagram</mat-label>
+              <input matInput
                      name="instagram"
                      [(ngModel)]="editingProfile.instagram_handle"
                      placeholder="Instagram username">
-            </div>
+            </mat-form-field>
           </div>
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="twitter">Twitter</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="twitter"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Twitter</mat-label>
+              <input matInput
                      name="twitter"
                      [(ngModel)]="editingProfile.twitter_handle"
                      placeholder="Twitter username">
-            </div>
+            </mat-form-field>
           </div>
         </div>
         
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="tiktok">TikTok</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="tiktok"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>TikTok</mat-label>
+              <input matInput
                      name="tiktok"
                      [(ngModel)]="editingProfile.tiktok_handle"
                      placeholder="TikTok username">
-            </div>
+            </mat-form-field>
           </div>
           <div class="col-md-6">
-            <div class="form-group">
-              <label for="youtube">YouTube Channel</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="youtube"
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>YouTube Channel</mat-label>
+              <input matInput
                      name="youtube"
                      [(ngModel)]="editingProfile.youtube_channel"
                      placeholder="YouTube channel URL or name">
-            </div>
+            </mat-form-field>
           </div>
         </div>
       </div>
@@ -144,7 +129,7 @@
           </div>
           <div class="col-md-8">
             <div class="form-group">
-              <label for="profilePhoto">Upload New Photo</label>
+              <label for="profilePhoto" class="file-upload-label">Upload New Photo</label>
               <input type="file" 
                      class="form-control-file" 
                      id="profilePhoto"

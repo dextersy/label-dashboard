@@ -1,94 +1,177 @@
 .artist-profile-tab {
   text-align: left;
+  max-width: 1200px;
+  margin: 0 auto;
   
   .card {
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    margin-bottom: 32px;
+    border: none;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+      transform: translateY(-0.5px);
+    }
     
     .card-header {
-      background-color: #f5f5f5;
-      border-bottom: 1px solid #ddd;
-      padding: 15px;
+      background: transparent;
+      border: none;
+      padding: 28px 28px 16px 28px;
+      border-bottom: none;
       
       h5 {
         margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
+        font-size: 20px;
+        font-weight: 500;
+        color: #1a202c;
+        letter-spacing: -0.025em;
+        line-height: 1.3;
       }
     }
     
     .card-body {
-      padding: 20px;
+      padding: 0 28px 28px 28px;
       text-align: left;
+      background: #ffffff;
     }
   }
   
-  .form-group {
-    margin-bottom: 20px;
-    text-align: left;
+  // Override Material Design uppercase labels globally
+  ::ng-deep .mat-mdc-form-field-label,
+  ::ng-deep .mat-mdc-floating-label,
+  ::ng-deep .mdc-floating-label,
+  ::ng-deep .mdc-floating-label--float-above,
+  ::ng-deep .mat-mdc-form-field-label.mdc-floating-label,
+  ::ng-deep .mat-mdc-form-field .mdc-floating-label {
+    text-transform: none !important;
+  }
+
+  // Angular Material form field styling
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 16px;
     
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #333;
-      text-align: left;
+    &.full-width {
+      width: 100%;
+    }
+    
+    .mat-mdc-text-field-wrapper {
+      border-radius: 8px !important;
       
-      .text-danger {
-        color: #d9534f;
+      .mat-mdc-form-field-outline {
+        border-radius: 8px !important;
+        
+        .mat-mdc-form-field-outline-start,
+        .mat-mdc-form-field-outline-end {
+          border-radius: 8px !important;
+        }
+      }
+      
+      .mat-mdc-form-field-outline-thick {
+        .mat-mdc-form-field-outline-start,
+        .mat-mdc-form-field-outline-end {
+          border-width: 1.5px !important;
+        }
       }
     }
     
-    .form-control {
-      width: 100%;
-      padding: 10px 15px;
-      font-size: 14px;
-      line-height: 1.42857143;
-      color: #555;
-      background-color: #fff;
-      background-image: none;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-      transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
-      text-align: left;
-      
-      &:focus {
-        border-color: #66afe9;
-        outline: 0;
-        box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
-      }
+    .mat-mdc-form-field-input-control input,
+    .mat-mdc-form-field-input-control textarea {
+      font-size: 15px !important;
+      font-weight: 400 !important;
+      line-height: 1.5 !important;
+      color: #1f2937 !important;
       
       &::placeholder {
-        color: #999;
+        color: #9ca3af !important;
+        opacity: 1 !important;
       }
     }
     
-    textarea.form-control {
-      resize: vertical;
-      min-height: 100px;
+    .mat-mdc-form-field-label {
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      color: #374151 !important;
+      letter-spacing: -0.01em !important;
+      text-transform: none !important;
+      
+      .text-danger {
+        color: #ef4444 !important;
+        font-weight: 600 !important;
+      }
+    }
+    
+    &.mat-focused {
+      .mat-mdc-form-field-outline-thick {
+        color: #3b82f6 !important;
+      }
+      
+      .mat-mdc-form-field-label {
+        color: #3b82f6 !important;
+      }
+    }
+    
+    &:hover:not(.mat-focused) {
+      .mat-mdc-form-field-outline {
+        color: #9ca3af !important;
+      }
+    }
+  }
+
+  // Legacy form elements (for file upload)
+  .form-group {
+    margin-bottom: 24px;
+    text-align: left;
+    
+    .file-upload-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #374151;
+      text-align: left;
+      letter-spacing: -0.01em;
+      line-height: 1.5;
     }
     
     .form-control-file {
       display: block;
       width: 100%;
-      padding: 6px 0;
+      padding: 12px 16px;
       font-size: 14px;
-      line-height: 1.42857143;
-      color: #555;
-      background-color: #fff;
-      background-image: none;
-      border: none;
-      border-radius: 4px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: #374151;
+      background-color: #f9fafb;
+      border: 1.5px dashed #d1d5db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:hover {
+        background-color: #f3f4f6;
+        border-color: #9ca3af;
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
     }
     
     .form-text {
       display: block;
-      margin-top: 5px;
-      color: #737373;
-      font-size: 12px;
+      margin-top: 6px;
+      color: #6b7280;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.4;
     }
   }
   
@@ -96,10 +179,21 @@
     text-align: center;
     
     .current-photo-img {
-      max-width: 150px;
-      max-height: 150px;
+      max-width: 160px;
+      max-height: 160px;
+      width: 160px;
+      height: 160px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: 16px;
+      border: 3px solid #f1f5f9;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        border-color: #e2e8f0;
+      }
     }
   }
   
@@ -107,46 +201,48 @@
     display: inline-block;
     max-width: 100%;
     height: auto;
-    padding: 4px;
-    line-height: 1.42857143;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: all .2s ease-in-out;
+    padding: 0;
+    line-height: 1.5;
+    background-color: transparent;
+    border: none;
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .progress {
-    height: 20px;
-    margin-bottom: 20px;
+    height: 8px;
+    margin-bottom: 16px;
+    margin-top: 12px;
     overflow: hidden;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    box-shadow: none;
     
     .progress-bar {
-      float: left;
-      width: 0%;
       height: 100%;
-      font-size: 12px;
-      line-height: 20px;
-      color: #fff;
+      font-size: 0;
+      line-height: 8px;
+      color: transparent;
       text-align: center;
-      background-color: #337ab7;
-      box-shadow: inset 0 -1px 0 rgba(0,0,0,.15);
-      transition: width .6s ease;
+      background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 8px;
+      box-shadow: none;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
   
   .form-actions {
-    padding: 20px 0;
+    padding: 32px 0 8px 0;
     text-align: right;
-    border-top: 1px solid #ddd;
-    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 32px;
     
     .btn {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 0;
-      font-weight: normal;
+      font-weight: 500;
       text-align: center;
       white-space: nowrap;
       vertical-align: middle;
@@ -154,43 +250,54 @@
       cursor: pointer;
       background-image: none;
       border: 1px solid transparent;
-      padding: 10px 16px;
-      font-size: 14px;
-      line-height: 1.42857143;
-      border-radius: 4px;
+      padding: 12px 24px;
+      font-size: 15px;
+      line-height: 1.5;
+      border-radius: 8px;
       user-select: none;
       text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       
       &.btn-primary {
-        color: #fff;
-        background-color: #337ab7;
-        border-color: #2e6da4;
+        color: #ffffff;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-color: transparent;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
         
         &:hover:not(:disabled) {
-          color: #fff;
-          background-color: #286090;
-          border-color: #204d74;
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+          transform: translateY(-1px);
+        }
+        
+        &:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
         }
         
         &:disabled {
-          opacity: 0.65;
+          opacity: 0.5;
           cursor: not-allowed;
+          background: #9ca3af;
+          box-shadow: none;
+          transform: none;
         }
       }
       
       i {
-        margin-right: 5px;
+        margin-right: 8px;
+        font-size: 14px;
       }
     }
   }
   
   .row {
-    margin-left: -15px;
-    margin-right: -15px;
+    margin-left: -12px;
+    margin-right: -12px;
     
     [class*="col-"] {
-      padding-left: 15px;
-      padding-right: 15px;
+      padding-left: 12px;
+      padding-right: 12px;
     }
   }
 }
@@ -198,13 +305,57 @@
 // Responsive design
 @media (max-width: 768px) {
   .artist-profile-tab {
+    padding: 0 16px;
+    
+    .card {
+      margin-bottom: 24px;
+      border-radius: 8px;
+      
+      .card-header {
+        padding: 24px 20px 12px 20px;
+        
+        h5 {
+          font-size: 18px;
+        }
+      }
+      
+      .card-body {
+        padding: 0 20px 20px 20px;
+      }
+    }
+    
     .current-photo .current-photo-img {
-      max-width: 100px;
-      max-height: 100px;
+      max-width: 120px;
+      max-height: 120px;
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
     }
     
     .form-actions {
       text-align: center;
+      padding: 24px 0 8px 0;
+      margin-top: 24px;
+      
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+    
+    .row {
+      margin-left: -8px;
+      margin-right: -8px;
+      
+      [class*="col-"] {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    }
+    
+    // Material form fields mobile adjustments
+    ::ng-deep .mat-mdc-form-field {
+      margin-bottom: 12px;
     }
   }
 }

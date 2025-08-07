@@ -5,6 +5,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
 
+// Angular Material imports
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+
 export interface ArtistProfile extends Artist {
   bio?: string;
   website_page_url?: string;
@@ -18,7 +22,7 @@ export interface ArtistProfile extends Artist {
 @Component({
   selector: 'app-artist-profile-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule],
   templateUrl: './artist-profile-tab.component.html',
   styleUrl: './artist-profile-tab.component.scss'
 })
