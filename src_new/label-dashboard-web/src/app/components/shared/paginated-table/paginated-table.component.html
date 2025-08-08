@@ -125,8 +125,15 @@
                       {{ item[column.key] }}
                     </span>
                     
+                    <!-- Balance column with color coding -->
+                    <span *ngIf="column.key === 'balance'">
+                      <strong [class]="item.balance > 0 ? 'text-success' : (item.balance < 0 ? 'text-danger' : 'text-muted')">
+                        {{ getColumnValue(item, column) }}
+                      </strong>
+                    </span>
+                    
                     <!-- Default handling -->
-                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful'))">
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance'">
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>

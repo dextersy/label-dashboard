@@ -111,10 +111,28 @@ Ticket.init(
     price_per_ticket: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
+      get() {
+        // Force conversion to number when reading from database
+        const value = this.getDataValue('price_per_ticket');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        // Force conversion to number when writing to database
+        this.setDataValue('price_per_ticket', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
     },
     payment_processing_fee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
+      get() {
+        // Force conversion to number when reading from database
+        const value = this.getDataValue('payment_processing_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        // Force conversion to number when writing to database
+        this.setDataValue('payment_processing_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
     },
     referrer_id: {
       type: DataTypes.INTEGER,

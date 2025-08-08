@@ -97,6 +97,15 @@ Event.init(
     ticket_price: {
       type: DataTypes.DECIMAL(10, 0),
       allowNull: false,
+      get() {
+        // Force conversion to number when reading from database
+        const value = this.getDataValue('ticket_price');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        // Force conversion to number when writing to database
+        this.setDataValue('ticket_price', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
     },
     buy_shortlink: {
       type: DataTypes.STRING(1024),

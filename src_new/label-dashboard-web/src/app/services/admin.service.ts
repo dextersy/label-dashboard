@@ -49,6 +49,16 @@ export interface EmailLog {
   result: 'Success' | 'Failed';
 }
 
+export interface ChildBrand {
+  brand_id: number;
+  brand_name: string;
+  music_earnings: number;
+  event_earnings: number;
+  payments: number;
+  commission: number;
+  balance: number;
+}
+
 export interface EmailDetail {
   id: number;
   recipients: string;
@@ -226,6 +236,25 @@ export class AdminService {
       {}, 
       { headers: this.getAuthHeaders() }
     );
+  }
+
+  // Child Brands (Sublabels) Management
+  getChildBrands(startDate?: string, endDate?: string): Observable<ChildBrand[]> {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    let queryParams = '';
+    if (startDate && endDate) {
+      queryParams = `?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`;
+    }
+    
+    return this.http.get<ChildBrand[]>(`${environment.apiUrl}/brands/${brandId}/child-brands${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   // Users Management

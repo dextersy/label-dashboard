@@ -1,7 +1,61 @@
-<div class="placeholder-content">
-  <div class="text-center">
-    <i class="fas fa-sitemap fa-3x"></i>
-    <h4>Sublabels Management</h4>
-    <p class="text-muted">Sublabel management functionality will be implemented here.</p>
+<div class="child-brands-tab">
+  <!-- Date Range Filter -->
+  <app-date-range-filter
+    [loading]="loading"
+    [compact]="false"
+    (dateRangeChange)="onDateRangeChange($event)"
+    (refresh)="onRefreshData()">
+  </app-date-range-filter>
+
+  <!-- Sublabels Table -->
+  <app-paginated-table
+    title="Sublabels"
+    [data]="sortedChildBrands"
+    [columns]="tableColumns"
+    [loading]="loading"
+    [pagination]="pagination"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [sortInfo]="sortInfo"
+    (sortChange)="onSortChange($event)">
+  </app-paginated-table>
+
+  <!-- Summary Cards -->
+  <div class="row mt-4" *ngIf="!loading && childBrands.length > 0">
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-primary">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Balance</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-info">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Music Earnings</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-warning">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Event Earnings</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-secondary">₱{{ getTotalCommission() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Commission</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

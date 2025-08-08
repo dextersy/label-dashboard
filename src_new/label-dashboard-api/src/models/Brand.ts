@@ -12,6 +12,7 @@ interface BrandAttributes {
   payment_processing_fee_for_payouts?: number;
   release_submission_url?: string;
   catalog_prefix?: string;
+  parent_brand?: number;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -27,6 +28,7 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public payment_processing_fee_for_payouts?: number;
   public release_submission_url?: string;
   public catalog_prefix?: string;
+  public parent_brand?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -68,6 +70,15 @@ Brand.init(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       defaultValue: 0,
+      get() {
+        // Force conversion to number when reading from database
+        const value = this.getDataValue('payment_processing_fee_for_payouts');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        // Force conversion to number when writing to database
+        this.setDataValue('payment_processing_fee_for_payouts', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
     },
     release_submission_url: {
       type: DataTypes.STRING(500),
@@ -77,6 +88,14 @@ Brand.init(
       type: DataTypes.STRING(10),
       allowNull: true,
       defaultValue: 'REL',
+    },
+    parent_brand: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'brand',
+        key: 'id'
+      }
     },
   },
   {

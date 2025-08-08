@@ -32,6 +32,10 @@ Brand.hasMany(LoginAttempt, { foreignKey: 'brand_id', as: 'loginAttempts' });
 Brand.hasMany(EmailAttempt, { foreignKey: 'brand_id', as: 'emailAttempts' });
 Brand.hasMany(Domain, { foreignKey: 'brand_id', as: 'domains' });
 
+// Brand self-referencing relationships for parent-child hierarchy
+Brand.hasMany(Brand, { foreignKey: 'parent_brand', as: 'childBrands' });
+Brand.belongsTo(Brand, { foreignKey: 'parent_brand', as: 'parentBrand' });
+
 // User relationships
 User.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 User.hasMany(LoginAttempt, { foreignKey: 'user_id', as: 'loginAttempts' });

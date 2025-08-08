@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
+import { Earning, Royalty, Ticket, Event, Release } from '../models';
+import { Op, literal } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
 import AWS from 'aws-sdk';
@@ -581,6 +583,135 @@ export const verifyDomain = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error verifying domain:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Child Brands (Sublabel) Management
+
+interface ChildBrandData {
+  brand_id: number;
+  brand_name: string;
+  music_earnings: number;
+  event_earnings: number;
+  payments: number;
+  commission: number;
+  balance: number;
+}
+
+export const getChildBrands = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+    const { start_date, end_date } = req.query as { start_date?: string; end_date?: string };
+
+    // Commission rates - TODO: Make configurable
+    const MUSIC_COMMISSION = 0.2; // 20%
+    const EVENT_COMMISSION = 0.025; // 2.5%
+
+    // Find all child brands
+    const childBrands = await Brand.findAll({
+      where: { parent_brand: brandId },
+      attributes: ['id', 'brand_name']
+    });
+
+    if (childBrands.length === 0) {
+      return res.json([]);
+    }
+
+    const childBrandData: ChildBrandData[] = [];
+
+    for (const childBrand of childBrands) {
+      let musicEarnings = 0;
+      let eventEarnings = 0;
+      const payments = 0; // TODO: Implement actual payments calculation
+
+      // Get all release IDs for this brand
+      const releaseIds = await Release.findAll({
+        where: { brand_id: childBrand.id },
+        attributes: ['id'],
+        raw: true
+      });
+      
+      const releaseIdList = releaseIds.map(r => (r as any).id);
+      
+      if (releaseIdList.length === 0) {
+        musicEarnings = 0;
+      } else {
+        // Calculate music earnings (total earnings minus royalties for this brand's releases)
+        const totalEarnings = await Earning.sum('amount', {
+          where: {
+            release_id: { [Op.in]: releaseIdList },
+            ...(start_date && end_date ? {
+              date_recorded: {
+                [Op.between]: [new Date(start_date), new Date(end_date)]
+              }
+            } : {})
+          }
+        });
+
+        const totalRoyalties = await Royalty.sum('amount', {
+          where: {
+            release_id: { [Op.in]: releaseIdList },
+            ...(start_date && end_date ? {
+              date_recorded: {
+                [Op.between]: [new Date(start_date), new Date(end_date)]
+              }
+            } : {})
+          }
+        });
+
+        musicEarnings = (totalEarnings || 0) - (totalRoyalties || 0);
+      }
+
+      // Calculate event earnings (ticket sales minus processing fees for this brand's events)
+      const eventQuery = await Ticket.findAll({
+        attributes: [
+          [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales'],
+          [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+        ],
+        include: [{
+          model: Event,
+          as: 'event',
+          where: { brand_id: childBrand.id },
+          attributes: []
+        }],
+        where: {
+          status: ['Payment confirmed', 'Ticket sent.'],
+          ...(start_date && end_date ? {
+            order_timestamp: {
+              [Op.between]: [new Date(start_date), new Date(end_date)]
+            }
+          } : {})
+        },
+        raw: true
+      });
+
+      if (eventQuery.length > 0 && eventQuery[0]) {
+        const salesData = eventQuery[0] as any;
+        eventEarnings = (parseFloat(salesData.total_sales) || 0) - (parseFloat(salesData.total_processing_fee) || 0);
+      }
+
+      // Calculate commission
+      const commission = (musicEarnings * MUSIC_COMMISSION) + (eventEarnings * EVENT_COMMISSION);
+      
+      // Calculate balance
+      const balance = musicEarnings + eventEarnings - commission - payments;
+
+      childBrandData.push({
+        brand_id: childBrand.id,
+        brand_name: childBrand.brand_name,
+        music_earnings: musicEarnings,
+        event_earnings: eventEarnings,
+        payments: payments,
+        commission: commission,
+        balance: balance
+      });
+    }
+
+    res.json(childBrandData);
+
+  } catch (error) {
+    console.error('Error fetching child brands:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
