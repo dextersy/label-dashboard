@@ -1,4 +1,14 @@
-/* Login component specific styles to fix button alignment */
+/* Login component specific styles to fix button alignment and center the form */
+
+/* Center the login wrapper vertically on the screen */
+.login-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
 
 /* Ensure the login form button aligns with input fields */
 #formContent {
