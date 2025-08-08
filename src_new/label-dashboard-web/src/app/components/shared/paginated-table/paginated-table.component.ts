@@ -19,6 +19,7 @@ export interface TableColumn {
   type?: 'text' | 'number' | 'date' | 'select';
   options?: { value: string; label: string }[]; // For select type
   formatter?: (item: any) => string; // Custom formatter function
+  align?: 'left' | 'center' | 'right'; // Column alignment
 }
 
 export interface SearchFilters {

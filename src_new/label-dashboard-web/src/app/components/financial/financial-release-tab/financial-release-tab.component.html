@@ -10,25 +10,26 @@
         <thead>
           <tr>
             <th>For Release</th>
-            <th>Sync royalty %</th>
-            <th>Streaming royalty %</th>
-            <th>Downloads royalty %</th>
-            <th>Physical royalty %</th>
-            <th>Remaining Recuperable Expense</th>
-            <th>Total earnings 
+            <th class="text-right">Sync royalty %</th>
+            <th class="text-right">Streaming royalty %</th>
+            <th class="text-right">Downloads royalty %</th>
+            <th class="text-right">Physical royalty %</th>
+            <th class="text-right">Remaining Recuperable Expense</th>
+            <th class="text-right">Total earnings 
               <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Data starts on April 2021."></i>
             </th>
-            <th>Total royalties earned</th>
+            <th class="text-right">Total royalties earned</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let release of releases; let i = index">
             <td style="width: 25%"><strong>{{ release.title }}</strong></td>
-            <td>
+            <td class="text-right">
               <div class="input-group">
                 <input 
                   type="number" 
                   class="form-control" 
+                  style="text-align: right;"
                   min="0" 
                   step="1" 
                   max="100" 
@@ -38,11 +39,12 @@
                 <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
               </div>
             </td>
-            <td>
+            <td class="text-right">
               <div class="input-group">
                 <input 
                   type="number" 
                   class="form-control" 
+                  style="text-align: right;"
                   min="0" 
                   step="1" 
                   max="100" 
@@ -52,11 +54,12 @@
                 <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
               </div>
             </td>
-            <td>
+            <td class="text-right">
               <div class="input-group">
                 <input 
                   type="number" 
                   class="form-control" 
+                  style="text-align: right;"
                   min="0" 
                   step="1" 
                   max="100" 
@@ -66,11 +69,12 @@
                 <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
               </div>
             </td>
-            <td>
+            <td class="text-right">
               <div class="input-group">
                 <input 
                   type="number" 
                   class="form-control" 
+                  style="text-align: right;"
                   min="0" 
                   step="1" 
                   max="100" 
@@ -81,25 +85,27 @@
               </div>
             </td>
             <td class="text-right">
-              {{ formatCurrency(release.recuperable_expense_balance) }}
-              <button 
-                type="button"
-                class="btn btn-link btn-sm btn-icon-only ml-2"
-                (click)="openExpensesDialog(release.id, release.title)"
-                title="View expenses">
-                <i class="fa fa-eye"></i>
-              </button>
-              <button 
-                *ngIf="isAdmin" 
-                type="button"
-                class="btn btn-link btn-sm btn-icon-only ml-2"
-                (click)="openAddExpenseDialog(release.id, release.title)"
-                title="Add recuperable expense">
-                <i class="fa fa-plus"></i>
-              </button>
+              <div class="d-flex align-items-center justify-content-end">
+                <span>{{ formatCurrency(release.recuperable_expense_balance) }}</span>
+                <button 
+                  type="button"
+                  class="btn btn-link btn-sm btn-icon-only ml-2"
+                  (click)="openExpensesDialog(release.id, release.title)"
+                  title="View expenses">
+                  <i class="fa fa-eye"></i>
+                </button>
+                <button 
+                  *ngIf="isAdmin" 
+                  type="button"
+                  class="btn btn-link btn-sm btn-icon-only ml-1"
+                  (click)="openAddExpenseDialog(release.id, release.title)"
+                  title="Add recuperable expense">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </div>
             </td>
-            <td class="text-right">{{ formatCurrency(release.total_earnings) }}</td>
-            <td class="text-right">{{ formatCurrency(release.total_royalties) }}</td>
+            <td style="text-align: right;">{{ formatCurrency(release.total_earnings) }}</td>
+            <td style="text-align: right;">{{ formatCurrency(release.total_royalties) }}</td>
           </tr>
         </tbody>
       </table>

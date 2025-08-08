@@ -89,6 +89,7 @@
                 <tr>
                   <th *ngFor="let column of columns" 
                       [class.sortable]="column.sortable"
+                      [style.text-align]="column.align || 'left'"
                       (click)="onSort(column)"
                       [style.cursor]="column.sortable ? 'pointer' : 'default'">
                     {{ column.label }}
@@ -101,7 +102,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let item of data">
-                  <td *ngFor="let column of columns">
+                  <td *ngFor="let column of columns" [style.text-align]="column.align || 'left'">
                     <!-- Payment link special handling -->
                     <span *ngIf="column.key === 'payment_link'">
                       <a 
