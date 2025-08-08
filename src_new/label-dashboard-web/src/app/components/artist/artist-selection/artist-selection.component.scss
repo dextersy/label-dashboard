@@ -259,19 +259,22 @@
   }
 }
 
-// Improved Add New Artist styling
-.add-new-artist {
+// Create New Artist styling - matches Create New Event
+.create-new-artist {
   font-weight: 600;
-  color: #28a745;
-  background-color: rgba(40, 167, 69, 0.05);
+  color: #007bff !important;
   
   &:hover {
-    background-color: rgba(40, 167, 69, 0.1) !important;
-    color: #218838;
+    background-color: #f8f9fa !important;
   }
   
   i {
-    margin-right: 8px;
-    font-weight: bold;
+    color: #007bff;
   }
+}
+
+.create-artist-item {
+  border-top: 1px solid #eee;
+  margin-top: 4px;
+  padding-top: 4px;
 }

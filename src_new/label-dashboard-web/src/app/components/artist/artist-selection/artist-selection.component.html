@@ -49,10 +49,10 @@
       </li>
       
       <!-- Add new artist option at the top -->
-      <li *ngIf="isAdmin">
-        <a (click)="addNewArtist()" class="add-new-artist">
-          <i class="fa fa-plus"></i>
-          Add New Artist
+      <li *ngIf="isAdmin" class="create-artist-item">
+        <a (click)="addNewArtist()" class="create-new-artist">
+          <i class="fa fa-plus me-2"></i>
+          Create New Artist
         </a>
       </li>
       

@@ -70,6 +70,16 @@
       
       <li class="divider" *ngIf="events.length > 5"></li>
       
+      <!-- Create new event option at the top -->
+      <li *ngIf="isAdmin" class="create-event-item">
+        <a (click)="createEvent()" class="create-new-event">
+          <i class="fa fa-plus me-2"></i>
+          Create New Event
+        </a>
+      </li>
+      
+      <li class="divider" *ngIf="isAdmin && events.length > 0"></li>
+      
       <li *ngFor="let event of filteredEvents" 
           [class.active]="selectedEvent?.id === event.id"
           class="event-item">
@@ -115,15 +125,6 @@
           <i class="fa fa-search text-muted"></i>
           <span>No events found matching "{{ searchTerm }}"</span>
         </div>
-      </li>
-      
-      <li class="divider" *ngIf="isAdmin && events.length > 0"></li>
-      
-      <li *ngIf="isAdmin" class="create-event-item">
-        <a (click)="createEvent()" class="create-new-event">
-          <i class="fa fa-plus me-2"></i>
-          Create New Event
-        </a>
       </li>
     </ul>
     </div>
