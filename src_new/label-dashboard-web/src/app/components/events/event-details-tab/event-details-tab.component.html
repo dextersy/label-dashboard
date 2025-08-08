@@ -369,22 +369,31 @@
       </div>
     </div>
 
-    <!-- Save Button -->
-    <div class="save-panel mt-4" *ngIf="isAdmin">
-      <button 
-        type="submit" 
-        class="btn btn-primary btn-lg"
-        [disabled]="!eventForm.form.dirty || loading">
-        <i class="fa fa-save me-2"></i>
-        <span *ngIf="loading">Saving...</span>
-        <span *ngIf="!loading">Save All Changes</span>
-      </button>
-    </div>
   </form>
 
   <!-- Read-only view for non-admin users -->
   <div class="alert alert-info" *ngIf="!isAdmin">
     <i class="fa fa-info-circle me-2"></i>
     You have read-only access to event details. Contact an administrator to make changes.
+  </div>
+</div>
+
+<!-- Sticky Bottom Panel - Outside all containers -->
+<div class="sticky-bottom-panel" *ngIf="event && isAdmin">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="panel-content">
+          <button type="button" 
+                  class="btn btn-primary btn-lg" 
+                  [disabled]="loading || !isFormDirty()"
+                  (click)="onSaveEvent()">
+            <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+            <i class="fa fa-save" *ngIf="!loading"></i>
+            {{ loading ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

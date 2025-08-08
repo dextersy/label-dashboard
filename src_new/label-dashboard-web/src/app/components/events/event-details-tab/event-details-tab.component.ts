@@ -487,4 +487,14 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     // Set fallback image if the poster URL fails to load
     event.target.src = 'assets/img/placeholder.jpg';
   }
+
+  isFormDirty(): boolean {
+    // Check if the form has been modified
+    if (this.eventForm && this.eventForm.form.dirty) {
+      return true;
+    }
+    
+    // Also check if there's a poster file selected for upload
+    return this.selectedPosterFile !== null;
+  }
 }
