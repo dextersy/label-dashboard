@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artist/artist-profile-tab/artist-profile-tab.component';
@@ -13,6 +14,7 @@ import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { environment } from '../../../environments/environment';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release';
 
@@ -37,6 +39,8 @@ export class ArtistComponent implements OnInit, OnDestroy {
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
+  loading = false;
+  availableArtists: Artist[] = [];
   private routeSubscription: Subscription = new Subscription();
 
   constructor(
@@ -44,13 +48,17 @@ export class ArtistComponent implements OnInit, OnDestroy {
     private artistStateService: ArtistStateService,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
 
   ngOnInit(): void {
     // Check if user is admin
     this.isAdmin = this.authService.isAdmin();
+    
+    // Load available artists
+    this.loadAvailableArtists();
 
     // Subscribe to artist state changes
     this.artistStateService.selectedArtist$.subscribe(artist => {
@@ -123,5 +131,27 @@ export class ArtistComponent implements OnInit, OnDestroy {
     this.router.navigate(['/artist', tab]);
   }
 
+  loadAvailableArtists(): void {
+    this.loading = true;
+    const token = localStorage.getItem('token');
+    const headers = { 'Authorization': `Bearer ${token}` };
+    
+    this.http.get<{artists: Artist[], isAdmin: boolean}>(`${environment.apiUrl}/artists`, { headers }).subscribe({
+      next: (response) => {
+        this.availableArtists = response.artists || [];
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading artists:', error);
+        this.availableArtists = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  openCreateArtistModal(): void {
+    // Navigate to the new artist creation page (same as the artist selection component)
+    this.router.navigate(['/artist/new']);
+  }
 
 }
