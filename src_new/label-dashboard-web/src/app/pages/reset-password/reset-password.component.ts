@@ -21,7 +21,7 @@ export class ResetPasswordComponent implements OnInit {
   errorMessage: string = '';
   
   // Brand settings
-  brandLogo: string = 'assets/img/Melt Records-logo-WHITE.png';
+  brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
 
@@ -71,7 +71,7 @@ export class ResetPasswordComponent implements OnInit {
   loadBrandSettings(): void {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo_url || 'assets/img/Melt Records-logo-WHITE.png';
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
         

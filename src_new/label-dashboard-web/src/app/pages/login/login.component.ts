@@ -26,7 +26,7 @@ export class LoginComponent implements OnInit {
   lockTimeMinutes: number = 0;
   
   // Brand settings (matching original PHP defaults)
-  brandLogo: string = 'assets/img/Melt Records-logo-WHITE.png';
+  brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
   brandId: number | null = null;
@@ -72,7 +72,7 @@ export class LoginComponent implements OnInit {
   loadBrandSettings(): void {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo_url || 'assets/img/Melt Records-logo-WHITE.png';
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
         this.brandId = brandSettings.id;

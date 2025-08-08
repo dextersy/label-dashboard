@@ -15,7 +15,7 @@ import { filter } from 'rxjs/operators';
   styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  brandLogo: string = 'assets/img/new_logo.png';
+  brandLogo: string = 'assets/img/Your Logo Here.png';
   brandWebsite: string = '#';
   brandColor: string = '#667eea'; // Use actual hex color instead of mapped color
   textColor: string = '#ffffff'; // Dynamic text color based on brand color brightness
@@ -155,7 +155,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   private applyBrandSettings(settings: BrandSettings): void {
-    this.brandLogo = settings.logo_url || 'assets/img/placeholder.jpg';
+    this.brandLogo = settings.logo_url || 'assets/img/Your Logo Here.png';
     this.brandWebsite = settings.brand_website || '#';
     this.brandColor = settings.brand_color; // Use the actual hex color from the API
     this.updateTextColorsBasedOnBrightness();

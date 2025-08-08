@@ -57,7 +57,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   artistAccessId: number | null = null;
 
   // Brand settings (matching original PHP defaults)
-  brandLogo: string = 'assets/img/Melt Records-logo-WHITE.png';
+  brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
 
@@ -94,7 +94,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   loadBrandSettings(): void {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo_url || 'assets/img/Melt Records-logo-WHITE.png';
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Herepng';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
         
