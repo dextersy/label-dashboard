@@ -40,7 +40,7 @@ export class FinancialRoyaltiesTabComponent {
     { key: 'date_recorded', label: 'Date Recorded', type: 'date', searchable: false, sortable: true },
     { key: 'release_title', label: 'For Release', type: 'text', searchable: true, sortable: true },
     { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: true },
-    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true }
+    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true, align: 'right' }
   ];
 
   onPageChange(page: number): void {

@@ -31,8 +31,8 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
       sortable: true,
       formatter: (payment: any) => this.formatPaymentMethod(payment)
     },
-    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true },
-    { key: 'payment_processing_fee', label: 'Processing Fee', type: 'number', searchable: true, sortable: true }
+    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true, align: 'right' },
+    { key: 'payment_processing_fee', label: 'Processing Fee', type: 'number', searchable: true, sortable: true, align: 'right' }
   ];
 
   ngOnInit() {
