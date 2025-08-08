@@ -20,6 +20,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   brandColor: string = '#667eea'; // Use actual hex color instead of mapped color
   textColor: string = '#ffffff'; // Dynamic text color based on brand color brightness
   iconColor: string = '#a9afbb'; // Dynamic icon color for inactive items
+  activeColor: string = '#ffffff'; // Dynamic active item color that contrasts with brand background
   isAdmin: boolean = false;
   currentRoute: string = '';
   isOpen: boolean = false;
@@ -168,10 +169,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
       // Use dark colors for light backgrounds
       this.textColor = '#333333';
       this.iconColor = '#666666';
+      this.activeColor = this.darkenColor(this.brandColor, 0.3); // Darker contrast for active items
     } else {
       // Use light colors for dark backgrounds (default)
       this.textColor = '#ffffff';
       this.iconColor = '#a9afbb';
+      this.activeColor = this.lightenColor(this.brandColor, 0.3); // Lighter contrast for active items
     }
   }
 
@@ -190,6 +193,48 @@ export class SidebarComponent implements OnInit, OnDestroy {
     
     // Return true if the color is light (luminance > 0.5)
     return luminance > 0.5;
+  }
+
+  private darkenColor(hexColor: string, amount: number): string {
+    // Remove # if present
+    const hex = hexColor.replace('#', '');
+    
+    // Parse RGB values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Darken each component
+    const newR = Math.round(r * (1 - amount));
+    const newG = Math.round(g * (1 - amount));
+    const newB = Math.round(b * (1 - amount));
+    
+    // Convert back to hex
+    return '#' + 
+      newR.toString(16).padStart(2, '0') +
+      newG.toString(16).padStart(2, '0') +
+      newB.toString(16).padStart(2, '0');
+  }
+
+  private lightenColor(hexColor: string, amount: number): string {
+    // Remove # if present
+    const hex = hexColor.replace('#', '');
+    
+    // Parse RGB values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Lighten each component
+    const newR = Math.round(r + (255 - r) * amount);
+    const newG = Math.round(g + (255 - g) * amount);
+    const newB = Math.round(b + (255 - b) * amount);
+    
+    // Convert back to hex
+    return '#' + 
+      newR.toString(16).padStart(2, '0') +
+      newG.toString(16).padStart(2, '0') +
+      newB.toString(16).padStart(2, '0');
   }
 
   // Removed mapColorToDataColor method - no longer needed
