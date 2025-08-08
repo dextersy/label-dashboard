@@ -33,6 +33,7 @@ export class FinancialPaymentsTabComponent {
   @Input() onSetDefaultPaymentMethod: (paymentMethodId: number) => Promise<void> = async () => {};
 
   isAdmin = false;
+  isAddPaymentMethodCollapsed = true;
 
   constructor(private router: Router, private authService: AuthService) {}
 
@@ -65,6 +66,10 @@ export class FinancialPaymentsTabComponent {
 
   navigateToNewPayment(): void {
     this.router.navigate(['/financial/payments/new']);
+  }
+
+  toggleAddPaymentMethodCollapse(): void {
+    this.isAddPaymentMethodCollapsed = !this.isAddPaymentMethodCollapsed;
   }
 
 }

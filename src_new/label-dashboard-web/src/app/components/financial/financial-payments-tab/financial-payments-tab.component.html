@@ -36,7 +36,7 @@
             <div class="btn-group btn-group-sm mt-1" role="group">
               <button 
                 type="button" 
-                class="btn btn-outline-primary btn-sm"
+                class="btn btn-outline-primary btn-sm btn-icon-only"
                 [disabled]="method.is_default_for_artist"
                 (click)="setDefaultPaymentMethod(method.id)"
                 title="Set as default">
@@ -44,7 +44,7 @@
               </button>
               <button 
                 type="button" 
-                class="btn btn-outline-danger btn-sm"
+                class="btn btn-outline-danger btn-sm btn-icon-only"
                 [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                 (click)="deletePaymentMethod(method.id)"
                 [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
@@ -60,33 +60,41 @@
         
         <hr>
         
-        <h6>Add Payment Method</h6>
-        <form (ngSubmit)="onSubmitPaymentMethod()">
-          <div class="form-group">
-            <label>Bank Selection</label>
-            <select class="form-control" [(ngModel)]="addPaymentMethodForm.bank_selection" name="bank_selection" required>
-              <option value="">Select Bank</option>
-              <option *ngFor="let bank of supportedBanks" [value]="bank.bank_code + ',' + bank.bank_name">
-                {{ bank.bank_name }}
-              </option>
-            </select>
+        <div class="collapsible-section">
+          <div class="collapsible-header" (click)="toggleAddPaymentMethodCollapse()">
+            <h6 class="mb-0">Add Payment Method</h6>
+            <i class="fa" [class.fa-chevron-down]="isAddPaymentMethodCollapsed" [class.fa-chevron-up]="!isAddPaymentMethodCollapsed"></i>
           </div>
           
-          <div class="form-group">
-            <label>Account Name</label>
-            <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_name" name="account_name" required>
+          <div class="collapsible-content" [class.collapsed]="isAddPaymentMethodCollapsed">
+            <form (ngSubmit)="onSubmitPaymentMethod()">
+              <div class="form-group">
+                <label>Bank Selection</label>
+                <select class="form-control" [(ngModel)]="addPaymentMethodForm.bank_selection" name="bank_selection" required>
+                  <option value="">Select Bank</option>
+                  <option *ngFor="let bank of supportedBanks" [value]="bank.bank_code + ',' + bank.bank_name">
+                    {{ bank.bank_name }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Account Name</label>
+                <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_name" name="account_name" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Account Number/Email</label>
+                <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_number_or_email" name="account_number_or_email" required>
+              </div>
+              
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="addingPaymentMethod">
+                <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                {{ addingPaymentMethod ? 'Adding...' : 'Add Payment Method' }}
+              </button>
+            </form>
           </div>
-          
-          <div class="form-group">
-            <label>Account Number/Email</label>
-            <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_number_or_email" name="account_number_or_email" required>
-          </div>
-          
-          <button type="submit" class="btn btn-primary btn-sm" [disabled]="addingPaymentMethod">
-            <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            {{ addingPaymentMethod ? 'Adding...' : 'Add Payment Method' }}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
     
