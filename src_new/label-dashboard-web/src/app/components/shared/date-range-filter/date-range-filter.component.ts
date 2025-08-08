@@ -16,7 +16,7 @@ export interface DateRangeSelection {
   styleUrls: ['./date-range-filter.component.scss']
 })
 export class DateRangeFilterComponent implements OnInit {
-  @Input() initialPreset: string = 'last30days';
+  @Input() initialPreset: string = 'alltime';
   @Input() showComparison: boolean = false;
   @Input() showExport: boolean = false;
   @Input() loading: boolean = false;
@@ -30,7 +30,7 @@ export class DateRangeFilterComponent implements OnInit {
   startDate: string = '';
   endDate: string = '';
   maxDate: string = '';
-  selectedPreset: string = 'last30days';
+  selectedPreset: string = 'alltime';
   lastUpdated: Date = new Date();
   showComparisonToggle: boolean = false;
   isExpanded: boolean = false; // Track if the date fields are expanded
@@ -77,8 +77,15 @@ export class DateRangeFilterComponent implements OnInit {
         startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         endDate = new Date(today.getFullYear(), today.getMonth(), 0);
         break;
+      case 'alltime':
+        // Set a very early date for "all time" (e.g., January 1, 2000)
+        startDate = new Date(2000, 0, 1);
+        endDate = new Date(today);
+        break;
       default:
-        startDate.setDate(today.getDate() - 29);
+        // Default to all time if preset is not recognized
+        startDate = new Date(2000, 0, 1);
+        endDate = new Date(today);
         break;
     }
 
@@ -134,6 +141,11 @@ export class DateRangeFilterComponent implements OnInit {
   }
 
   getDaysDifference(): number {
+    // For "All Time" preset, don't calculate days as it would be too large
+    if (this.selectedPreset === 'alltime') {
+      return 0; // This will be handled specially in the template
+    }
+    
     const start = new Date(this.startDate);
     const end = new Date(this.endDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -166,10 +178,12 @@ export class DateRangeFilterComponent implements OnInit {
         return 'This month';
       case 'lastmonth':
         return 'Last month';
+      case 'alltime':
+        return 'All Time';
       case 'custom':
         return 'Custom range';
       default:
-        return 'Last 30 days';
+        return 'All Time';
     }
   }
 }

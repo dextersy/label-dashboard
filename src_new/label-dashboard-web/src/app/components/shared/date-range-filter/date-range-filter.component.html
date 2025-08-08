@@ -14,7 +14,8 @@
           </button>
           <span class="text-muted small me-3" [class.d-none]="compact" [class.d-sm-inline]="compact">
             {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
-            <span class="text-success ms-1">({{ getDaysDifference() }} days)</span>
+            <span class="text-success ms-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
+            <span class="text-success ms-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
           </span>
         </div>
       </div>
@@ -109,6 +110,14 @@
                     [class.btn-outline-secondary]="selectedPreset !== 'lastmonth'"
                     (click)="applyDatePreset('lastmonth')">
               Last month
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'alltime'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'alltime'"
+                    (click)="applyDatePreset('alltime')">
+              All Time
             </button>
           </div>
         </div>
