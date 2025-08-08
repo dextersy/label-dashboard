@@ -2,19 +2,38 @@
   margin-bottom: 25px;
 }
 
-// Page header styling moved to global styles.scss as .page-header
+.event-selection-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
 .event-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  
   .btn {
     font-size: 13px;
     padding: 6px 12px;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    
+    .btn-text {
+      white-space: nowrap;
+    }
   }
 }
 
 .dropdown {
   position: relative;
   display: inline-block;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .event-dropdown-btn {
@@ -448,6 +467,10 @@
 
 // Responsive adjustments
 @media (max-width: 768px) {
+  .event-selection-row {
+    gap: 10px;
+  }
+  
   .event-dropdown-btn {
     min-height: 70px;
     padding: 12px 15px;
@@ -463,8 +486,22 @@
     gap: 2px;
   }
   
-  .event-actions .btn span {
-    display: none !important;
+  .event-actions {
+    gap: 6px;
+    
+    .btn {
+      min-width: 40px;
+      padding: 8px;
+      font-size: 14px;
+      
+      .btn-text {
+        display: none; // Hide text on mobile, show icons only
+      }
+      
+      i {
+        margin: 0; // Remove margin when text is hidden
+      }
+    }
   }
   
   .dropdown-menu {

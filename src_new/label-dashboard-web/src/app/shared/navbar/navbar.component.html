@@ -25,6 +25,17 @@
       </span>
     </span>
     
+    <!-- Mobile icons (visible on mobile) -->
+    <div class="navbar-mobile-icons">
+      <a class="mobile-icon-link" routerLink="/profile" title="Edit Profile">
+        <i class="fa-solid fa-edit"></i>
+      </a>
+      <a class="mobile-icon-link" (click)="logout()" style="cursor: pointer;" title="Log Out">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    </div>
+    
+    <!-- Desktop menu (visible on desktop) -->
     <div class="collapse navbar-collapse" id="navigation-example-2">
       <ul class="navbar-nav">
         <li class="nav-item">

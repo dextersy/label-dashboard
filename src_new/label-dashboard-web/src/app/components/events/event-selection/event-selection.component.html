@@ -1,26 +1,6 @@
 <div class="event-selection-container">
-  <div class="page-header d-flex justify-content-end align-items-center mb-3">
-    <div class="event-actions">
-      <button 
-        class="btn btn-outline-primary btn-sm me-2" 
-        (click)="refreshEvents()"
-        [disabled]="loading"
-        title="Refresh events">
-        <i class="fa" [class.fa-sync]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
-        <span class="d-none d-md-inline ms-1">Refresh</span>
-      </button>
-      <button 
-        class="btn btn-primary btn-sm" 
-        *ngIf="isAdmin"
-        (click)="createEvent()"
-        title="Create new event">
-        <i class="fa fa-plus me-1"></i>
-        <span class="d-none d-md-inline">New Event</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="dropdown" [class.open]="isDropdownOpen">
+  <div class="event-selection-row">
+    <div class="dropdown" [class.open]="isDropdownOpen">
     <button class="btn btn-default event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
       <div class="event-info" *ngIf="selectedEvent">
         <div class="event-poster">
@@ -146,6 +126,27 @@
         </a>
       </li>
     </ul>
+    </div>
+    
+    <!-- Event action buttons moved to the right -->
+    <div class="event-actions">
+      <button 
+        class="btn btn-outline-primary btn-sm" 
+        (click)="refreshEvents()"
+        [disabled]="loading"
+        title="Refresh events">
+        <i class="fa" [class.fa-sync]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
+        <span class="btn-text">Refresh</span>
+      </button>
+      <button 
+        class="btn btn-primary btn-sm" 
+        *ngIf="isAdmin"
+        (click)="createEvent()"
+        title="Create new event">
+        <i class="fa fa-plus"></i>
+        <span class="btn-text">New Event</span>
+      </button>
+    </div>
   </div>
   
   <!-- Event search results summary -->

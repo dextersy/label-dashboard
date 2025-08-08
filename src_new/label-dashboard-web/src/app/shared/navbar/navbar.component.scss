@@ -75,6 +75,62 @@
       min-width: 280px;
     }
   }
+  
+  // Make artist selection more compact on mobile
+  @media (max-width: 991px) {
+    max-width: 200px; // Set max width for the entire component
+    
+    ::ng-deep .artist-dropdown-btn {
+      min-height: 40px;
+      padding: 6px 8px;
+      overflow: hidden; // Ensure button content doesn't overflow
+    }
+    
+    ::ng-deep .artist-info {
+      overflow: hidden; // Enable truncation at the container level
+      max-width: 100%; // Ensure it respects parent width
+    }
+    
+    ::ng-deep .artist-photo {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0; // Prevent photo from shrinking
+    }
+    
+    ::ng-deep .artist-details {
+      overflow: hidden; // Enable text truncation
+      min-width: 0; // Allow flex item to shrink below content width
+      flex: 1; // Take up remaining space
+    }
+    
+    ::ng-deep .artist-name {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%; // Ensure it takes full width of its container
+    }
+    
+    ::ng-deep .artist-members {
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%; // Ensure it takes full width of its container
+    }
+    
+    ::ng-deep .no-artist {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    ::ng-deep .caret {
+      flex-shrink: 0; // Prevent caret from being compressed
+      margin-left: 6px;
+    }
+  }
 }
 
 /* Spacer to push content to the right */
@@ -92,23 +148,65 @@
   margin-right: 20px;
 }
 
+/* Mobile icons styling */
+.navbar-mobile-icons {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  margin-left: 8px;
+  
+  .mobile-icon-link {
+    color: #333;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    text-align: center;
+    
+    &:hover {
+      color: #007bff;
+      background-color: rgba(0, 123, 255, 0.1);
+      text-decoration: none;
+    }
+    
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
 /* Show hamburger menu on mobile */
 @media (max-width: 991px) {
   .navbar-toggle {
     display: flex;
+    margin-right: 8px;
+    margin-left: 8px;
   }
   
   .navbar-artist-selection {
-    margin-left: 10px;
+    margin-left: 6px;
+    margin-right: 6px;
     flex: 1;
+    min-width: 0; // Allow flex item to shrink below content size
   }
   
   .navbar-welcome {
     display: none; // Hide welcome message on mobile to save space
   }
   
+  .navbar-mobile-icons {
+    display: flex; // Show mobile icons on mobile
+    flex-shrink: 0; // Prevent icons from shrinking
+  }
+  
   .navbar-collapse {
     display: none !important; // Hide regular menu items on mobile
+  }
+  
+  .navbar-spacer {
+    display: none; // Hide spacer on mobile to save space
   }
 }
 
@@ -116,6 +214,10 @@
 @media (min-width: 992px) {
   .navbar-toggle {
     display: none; // Hide hamburger on desktop
+  }
+  
+  .navbar-mobile-icons {
+    display: none; // Hide mobile icons on desktop
   }
   
   .navbar-collapse {
