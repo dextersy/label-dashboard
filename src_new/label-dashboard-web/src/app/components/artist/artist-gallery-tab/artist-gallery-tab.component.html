@@ -76,18 +76,18 @@
             
             <div class="photo-overlay">
               <div class="photo-actions">
-                <button class="btn btn-sm btn-info" 
+                <button class="btn btn-sm btn-info btn-icon-only" 
                         (click)="openLightbox(photo)"
                         title="View photo">
                   <i class="fa fa-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-light" 
+                <button class="btn btn-sm btn-info btn-icon-only" 
                         (click)="startEditingCaption(photo)"
                         *ngIf="!editingCaptions[photo.id]"
                         title="Edit caption">
                   <i class="fa fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" 
+                <button class="btn btn-sm btn-danger btn-icon-only" 
                         (click)="deletePhoto(photo)"
                         title="Delete photo">
                   <i class="fa fa-trash"></i>

@@ -84,7 +84,7 @@
               {{ formatCurrency(release.recuperable_expense_balance) }}
               <button 
                 type="button"
-                class="btn btn-link btn-sm p-0 ml-2"
+                class="btn btn-link btn-sm btn-icon-only ml-2"
                 (click)="openExpensesDialog(release.id, release.title)"
                 title="View expenses">
                 <i class="fa fa-eye"></i>
@@ -92,7 +92,7 @@
               <button 
                 *ngIf="isAdmin" 
                 type="button"
-                class="btn btn-link btn-sm p-0 ml-2"
+                class="btn btn-link btn-sm btn-icon-only ml-2"
                 (click)="openAddExpenseDialog(release.id, release.title)"
                 title="Add recuperable expense">
                 <i class="fa fa-plus"></i>

@@ -253,6 +253,206 @@ textarea.form-control {
   }
 }
 
+/* Modern Secondary/Outline Button - Borderless style */
+.btn-secondary,
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-info,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-light,
+.btn-default {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  border: none !important; /* Remove all borders */
+  padding: 12px 24px;
+  font-size: 15px;
+  line-height: 1.5;
+  border-radius: 8px;
+  user-select: none;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #ffffff;
+  color: #374151;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    color: #374151;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f9fafb;
+    box-shadow: none;
+    transform: none;
+    color: #9ca3af;
+  }
+  
+  i {
+    margin-right: 8px;
+    font-size: 14px;
+  }
+}
+
+/* Color variants for borderless buttons */
+.btn-outline-primary {
+  color: #3b82f6;
+  
+  &:hover:not(:disabled) {
+    color: #2563eb;
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+}
+
+.btn-outline-success {
+  color: #10b981;
+  
+  &:hover:not(:disabled) {
+    color: #059669;
+    background-color: rgba(16, 185, 129, 0.05);
+  }
+}
+
+.btn-outline-info {
+  color: #06b6d4;
+  
+  &:hover:not(:disabled) {
+    color: #0891b2;
+    background-color: rgba(6, 182, 212, 0.05);
+  }
+}
+
+.btn-outline-warning {
+  color: #f59e0b;
+  
+  &:hover:not(:disabled) {
+    color: #d97706;
+    background-color: rgba(245, 158, 11, 0.05);
+  }
+}
+
+.btn-outline-danger {
+  color: #ef4444;
+  
+  &:hover:not(:disabled) {
+    color: #dc2626;
+    background-color: rgba(239, 68, 68, 0.05);
+  }
+}
+
+/* Small button variants */
+.btn-sm {
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  
+  i {
+    margin-right: 6px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Icon-only buttons - Completely borderless and shadowless */
+.btn-icon-only {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 8px !important;
+  color: inherit;
+  
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  
+  &:active:not(:disabled) {
+    background: rgba(0, 0, 0, 0.1) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  
+  &:focus {
+    background: rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
+  }
+  
+  &:disabled {
+    background: transparent !important;
+    color: #9ca3af !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  
+  i {
+    margin: 0 !important;
+  }
+}
+
+/* Specific styling for different button types when icon-only */
+.btn-outline-primary.btn-icon-only {
+  color: #3b82f6 !important;
+  
+  &:hover:not(:disabled) {
+    color: #2563eb !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+  }
+}
+
+.btn-outline-success.btn-icon-only {
+  color: #10b981 !important;
+  
+  &:hover:not(:disabled) {
+    color: #059669 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+  }
+}
+
+.btn-outline-danger.btn-icon-only {
+  color: #ef4444 !important;
+  
+  &:hover:not(:disabled) {
+    color: #dc2626 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+  }
+}
+
+.btn-outline-info.btn-icon-only {
+  color: #06b6d4 !important;
+  
+  &:hover:not(:disabled) {
+    color: #0891b2 !important;
+    background: rgba(6, 182, 212, 0.1) !important;
+  }
+}
+
+.btn-outline-warning.btn-icon-only {
+  color: #f59e0b !important;
+  
+  &:hover:not(:disabled) {
+    color: #d97706 !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+  }
+}
+
 /* Modern Grid System - Override Bootstrap defaults */
 .row {
   margin-left: -12px;
