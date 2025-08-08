@@ -21,6 +21,7 @@ interface PayMongoLink {
     checkout_url: string;
     reference_number: string;
     status: string;
+    payments?: any[];
   };
 }
 
@@ -364,7 +365,7 @@ export class PaymentService {
     }
   }
   
-  private async updateTicketPaymentStatus(ticketId: number, processingFee: number): Promise<boolean> {
+  async updateTicketPaymentStatus(ticketId: number, processingFee: number): Promise<boolean> {
     try {
       const ticket = await Ticket.findByPk(ticketId);
       if (!ticket) {

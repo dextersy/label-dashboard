@@ -364,6 +364,18 @@ export class EventService {
   }
 
   /**
+   * Verify all payments for pending tickets in an event
+   */
+  verifyAllPayments(eventId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/events/tickets/verify-payments`, 
+      { event_id: eventId },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Refresh verification PIN for an event
    */
   refreshVerificationPIN(eventId: number): Observable<{verification_pin: string}> {

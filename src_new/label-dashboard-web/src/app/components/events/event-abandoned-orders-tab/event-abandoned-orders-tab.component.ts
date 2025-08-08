@@ -244,11 +244,43 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   }
 
   onVerifyPayments(): void {
-    // TODO: Implement API call to verify payments
+    if (!this.selectedEvent) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'No event selected'
+      });
+      return;
+    }
+
+    // Show loading state
+    this.loading = true;
+    
     this.alertMessage.emit({
       type: 'info',
-      text: 'Payment verification started.'
+      text: 'Verifying payments with PayMongo...'
     });
+
+    this.subscriptions.add(
+      this.eventService.verifyAllPayments(this.selectedEvent.id).subscribe({
+        next: (response) => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: response.message || `Payment verification completed. ${response.verified_count} payments verified.`
+          });
+          
+          // Refresh the abandoned orders list to show updated statuses
+          this.loadAbandonedOrders();
+        },
+        error: (error) => {
+          console.error('Failed to verify payments:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error?.error?.error || 'Failed to verify payments'
+          });
+          this.loading = false;
+        }
+      })
+    );
   }
 
   onSendPaymentReminders(): void {

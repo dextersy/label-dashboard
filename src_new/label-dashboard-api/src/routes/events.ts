@@ -16,6 +16,7 @@ import {
   createEventReferrer,
   updateEventReferrer,
   deleteEventReferrer,
+  verifyAllPayments,
   upload
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -39,6 +40,7 @@ router.post('/tickets/mark-paid', requireAdmin, markTicketPaid);
 router.post('/tickets/cancel', requireAdmin, cancelTicket);
 router.post('/tickets/resend', requireAdmin, resendTicket);
 router.post('/tickets/cancel-all-unpaid', requireAdmin, cancelAllUnpaidTickets);
+router.post('/tickets/verify-payments', requireAdmin, verifyAllPayments);
 
 // Referrer operations (specific routes before /:id)
 router.get('/referrers', getEventReferrers);

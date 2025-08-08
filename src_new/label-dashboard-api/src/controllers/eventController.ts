@@ -1306,3 +1306,113 @@ export const cancelAllUnpaidTickets = async (req: AuthRequest, res: Response) =>
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const verifyAllPayments = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { event_id } = req.body;
+
+    if (!event_id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const eventIdNum = parseInt(event_id, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Find all tickets with payment links (similar to PHP logic)
+    const ticketsToVerify = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum,
+        status: 'New',
+        payment_link_id: { [Op.not]: null }
+      }
+    });
+
+    if (ticketsToVerify.length === 0) {
+      return res.json({
+        message: 'No tickets with payment links found to verify',
+        verified_count: 0,
+        event_id: eventIdNum
+      });
+    }
+
+    let verifiedCount = 0;
+    const verificationResults = [];
+
+    // Process each ticket's payment verification
+    for (const ticket of ticketsToVerify) {
+      try {
+        // Get payment information from PayMongo using the payment_link_id
+        const paymentLink = await paymentService.getPaymentLink(ticket.payment_link_id);
+        
+        if (paymentLink && paymentLink.attributes?.status === 'paid') {
+          // Calculate processing fee from payments
+          let processingFee = 0;
+          if (paymentLink.attributes?.payments) {
+            processingFee = paymentLink.attributes.payments.reduce((total: number, payment: any) => {
+              return total + ((payment.data?.attributes?.amount - payment.data?.attributes?.net_amount) / 100);
+            }, 0);
+          }
+
+          // Update ticket payment status
+          const success = await paymentService.updateTicketPaymentStatus(ticket.id, processingFee);
+          
+          if (success) {
+            verifiedCount++;
+            verificationResults.push({
+              ticket_id: ticket.id,
+              status: 'verified',
+              processing_fee: processingFee
+            });
+          } else {
+            verificationResults.push({
+              ticket_id: ticket.id,
+              status: 'failed_to_update'
+            });
+          }
+        } else {
+          verificationResults.push({
+            ticket_id: ticket.id,
+            status: 'payment_not_confirmed'
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to verify payment for ticket ${ticket.id}:`, error);
+        verificationResults.push({
+          ticket_id: ticket.id,
+          status: 'verification_error',
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      message: `Payment verification completed. ${verifiedCount} out of ${ticketsToVerify.length} tickets were verified`,
+      verified_count: verifiedCount,
+      total_checked: ticketsToVerify.length,
+      event_id: eventIdNum,
+      details: verificationResults
+    });
+  } catch (error) {
+    console.error('Verify all payments error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
