@@ -46,6 +46,7 @@ export class AddNewArtistComponent {
   creating = false;
   selectedFile: File | null = null;
   uploadProgress = 0;
+  previewImageUrl: string | null = null;
 
   constructor(
     private http: HttpClient, 
@@ -83,6 +84,13 @@ export class AddNewArtistComponent {
       }
 
       this.selectedFile = file;
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.previewImageUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -184,6 +192,7 @@ export class AddNewArtistComponent {
     };
     this.selectedFile = null;
     this.uploadProgress = 0;
+    this.previewImageUrl = null;
   }
 
   cancel(): void {
