@@ -1,44 +1,5 @@
 <div class="artist-team-tab">
   
-  <!-- Invite New Member Section -->
-  <div class="card invite-section">
-    <div class="card-header">
-      <h5>Invite Team Member</h5>
-    </div>
-    <div class="card-body">
-      <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
-        <div class="row">
-          <div class="col-md-8">
-            <div class="form-group">
-              <label for="inviteEmail">Email Address</label>
-              <input type="email" 
-                     class="form-control" 
-                     id="inviteEmail"
-                     name="inviteEmail"
-                     [(ngModel)]="inviteEmail"
-                     required
-                     email
-                     placeholder="Enter team member's email address"
-                     [disabled]="sendingInvite">
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="form-group">
-              <label>&nbsp;</label>
-              <button type="submit" 
-                      class="btn btn-primary btn-block invite-btn"
-                      [disabled]="!inviteForm.form.valid || sendingInvite">
-                <div class="loading-spinner" *ngIf="sendingInvite"></div>
-                <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>
-                {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <!-- Team Members Section -->
   <div class="card team-section">
     <div class="card-header">
@@ -112,6 +73,44 @@
         </div>
       </div>
       
+    </div>
+  </div>
+
+  <!-- Invite New Member Section -->
+  <div class="card invite-section mt-4">
+    <div class="card-header">
+      <h5>Invite Team Member</h5>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
+        <div class="row align-items-end">
+          <div class="col-md-8">
+            <div class="form-group mb-0">
+              <label for="inviteEmail" class="form-label">Email Address</label>
+              <input type="email" 
+                     class="form-control" 
+                     id="inviteEmail"
+                     name="inviteEmail"
+                     [(ngModel)]="inviteEmail"
+                     required
+                     email
+                     placeholder="Enter team member's email address"
+                     [disabled]="sendingInvite">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group mb-0">
+              <button type="submit" 
+                      class="btn btn-primary w-100"
+                      [disabled]="!inviteForm.form.valid || sendingInvite">
+                <div class="loading-spinner" *ngIf="sendingInvite"></div>
+                <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>
+                {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
   
