@@ -55,6 +55,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   onArtistSelected(artist: Artist): void {
     this.artistStateService.setSelectedArtist(artist);
+    
+    // Navigate to appropriate default tab when artist selection changes
+    const currentRoute = this.router.url;
+    if (currentRoute.includes('/artist')) {
+      this.router.navigate(['/artist/profile']);
+    } else if (currentRoute.includes('/financial')) {
+      this.router.navigate(['/financial/summary']);
+    }
   }
 
   shouldShowArtistSelection(): boolean {
