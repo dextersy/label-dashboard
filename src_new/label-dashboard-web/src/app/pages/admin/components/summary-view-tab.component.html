@@ -11,10 +11,11 @@
 </app-date-range-filter>
 
 <div *ngIf="loading" class="text-center">
-  <div class="spinner-border" role="status">
-    <span class="sr-only">Loading...</span>
+  <div class="loading-dots">
+    <div></div>
+    <div></div>
+    <div></div>
   </div>
-  <p>Loading summary data...</p>
 </div>
 
 <div *ngIf="!loading">

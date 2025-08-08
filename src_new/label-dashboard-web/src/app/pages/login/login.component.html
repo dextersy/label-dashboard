@@ -76,7 +76,9 @@
         class="fadeIn fourth btn btn-primary btn-block btn-md"
         [disabled]="loading || loginForm.invalid">
         <span *ngIf="!loading">Log In <i class="fas fa-sign-in-alt"></i></span>
-        <span *ngIf="loading">Logging in... <i class="fa fa-spinner fa-spin"></i></span>
+        <span *ngIf="loading" class="loading-inline">
+          <div class="loading-spinner"></div>Logging in...
+        </span>
       </button>
     </form>
   </div>

@@ -27,8 +27,8 @@
       <div *ngIf="!selectedArtist && !loading && !isNewArtistMode" class="no-artist">
         Select an Artist
       </div>
-      <div *ngIf="loading && !isNewArtistMode" class="loading">
-        <i class="fa fa-spinner fa-spin"></i> Loading...
+      <div *ngIf="loading && !isNewArtistMode" class="loading-inline">
+        <div class="loading-spinner"></div>Loading...
       </div>
       <span class="caret" *ngIf="!isNewArtistMode"></span>
     </button>

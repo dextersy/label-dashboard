@@ -28,7 +28,7 @@
               <button type="submit" 
                       class="btn btn-primary btn-block invite-btn"
                       [disabled]="!inviteForm.form.valid || sendingInvite">
-                <i class="fa fa-spinner fa-spin" *ngIf="sendingInvite"></i>
+                <div class="loading-spinner" *ngIf="sendingInvite"></div>
                 <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>
                 {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
               </button>
@@ -47,8 +47,11 @@
     <div class="card-body">
       
       <div *ngIf="loading" class="text-center loading">
-        <i class="fa fa-spinner fa-spin fa-2x"></i>
-        <p>Loading team members...</p>
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
       </div>
       
       <div *ngIf="!loading && teamMembers.length === 0" class="text-center text-muted empty-team">

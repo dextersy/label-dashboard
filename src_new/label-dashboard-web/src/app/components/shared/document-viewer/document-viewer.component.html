@@ -36,10 +36,11 @@
     <div class="document-viewer-content">
       <!-- Loading indicator -->
       <div *ngIf="loading" class="document-loading">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
         </div>
-        <p class="mt-2">Loading document...</p>
       </div>
 
       <!-- PDF Viewer -->

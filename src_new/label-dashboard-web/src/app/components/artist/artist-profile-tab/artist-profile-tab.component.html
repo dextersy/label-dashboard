@@ -178,7 +178,7 @@
                   class="btn btn-primary btn-lg" 
                   [disabled]="saving || !isFormValid()"
                   (click)="saveProfile()">
-            <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+            <div class="loading-spinner" *ngIf="saving"></div>
             <i class="fa fa-save" *ngIf="!saving"></i>
             {{ saving ? 'Saving...' : 'Save Changes' }}
           </button>

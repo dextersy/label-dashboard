@@ -41,7 +41,7 @@
               class="btn btn-primary upload-btn" 
               (click)="uploadPhotos()"
               [disabled]="!selectedFiles || selectedFiles.length === 0 || uploading">
-        <i class="fa fa-spinner fa-spin" *ngIf="uploading"></i>
+        <div class="loading-spinner" *ngIf="uploading"></div>
         <i class="fa fa-upload" *ngIf="!uploading"></i>
         {{ uploading ? 'Uploading...' : 'Upload Photos' }}
       </button>
@@ -56,8 +56,11 @@
     <div class="card-body">
       
       <div *ngIf="loading" class="text-center">
-        <i class="fa fa-spinner fa-spin fa-2x"></i>
-        <p>Loading photos...</p>
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
       </div>
       
       <div *ngIf="!loading && photos.length === 0" class="text-center text-muted empty-gallery">

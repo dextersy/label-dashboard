@@ -137,8 +137,11 @@
     </div>
 
     <div *ngIf="loadingArtists" class="text-center py-3">
-      <i class="fa fa-spinner fa-spin"></i>
-      Loading artists...
+      <div class="loading-dots">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
     </div>
 
     <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">

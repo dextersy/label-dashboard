@@ -61,9 +61,8 @@
         <i class="fa fa-calendar-plus me-2"></i>
         Select an Event
       </div>
-      <div *ngIf="loading" class="loading">
-        <i class="fa fa-spinner fa-spin me-2"></i> 
-        Loading events...
+      <div *ngIf="loading" class="loading-inline">
+        <div class="loading-spinner"></div>Loading events...
       </div>
       <span class="caret"></span>
     </button>

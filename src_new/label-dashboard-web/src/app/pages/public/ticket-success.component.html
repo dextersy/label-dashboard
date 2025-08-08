@@ -2,8 +2,11 @@
   <div class="card mb-3">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="card-body text-center py-5">
-      <i class="fas fa-spinner fa-spin fa-3x text-muted mb-3"></i>
-      <h5>Loading...</h5>
+      <div class="loading-dots">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
     </div>
 
     <!-- Error State (404) -->

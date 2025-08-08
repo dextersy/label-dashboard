@@ -19,8 +19,11 @@
     <div class="card-body">
       
       <div *ngIf="loading" class="text-center loading">
-        <i class="fa fa-spinner fa-spin fa-2x"></i>
-        <p>Loading releases...</p>
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
       </div>
       
       <div *ngIf="!loading && releases.length === 0" class="text-center text-muted empty-releases">
