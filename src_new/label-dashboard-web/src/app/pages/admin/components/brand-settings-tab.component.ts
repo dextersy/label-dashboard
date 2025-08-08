@@ -9,7 +9,8 @@ import { BrandService } from '../../../services/brand.service';
   selector: 'app-brand-settings-tab',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './brand-settings-tab.component.html'
+  templateUrl: './brand-settings-tab.component.html',
+  styleUrls: ['./brand-settings-tab.component.scss']
 })
 export class BrandSettingsTabComponent implements OnInit {
   loading: boolean = false;
@@ -17,6 +18,7 @@ export class BrandSettingsTabComponent implements OnInit {
   brandForm: FormGroup;
   domains: any[] = [];
   newDomainName: string = '';
+  showPaymongoWalletId: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -30,6 +32,7 @@ export class BrandSettingsTabComponent implements OnInit {
       brand_color: ['#800080', Validators.required],
       catalog_prefix: [''],
       release_submission_url: [''],
+      paymongo_wallet_id: [''],
       payment_processing_fee_for_payouts: [0, [Validators.min(0)]]
     });
   }
@@ -140,6 +143,10 @@ export class BrandSettingsTabComponent implements OnInit {
     if (hexPattern.test(hexValue)) {
       this.brandForm.patchValue({ brand_color: hexValue.toLowerCase() });
     }
+  }
+
+  togglePaymongoWalletIdVisibility(): void {
+    this.showPaymongoWalletId = !this.showPaymongoWalletId;
   }
 
   onFaviconFileSelected(event: any): void {

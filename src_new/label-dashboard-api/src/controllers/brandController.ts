@@ -86,6 +86,7 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       favicon_url: brand.favicon_url,
       release_submission_url: brand.release_submission_url,
       catalog_prefix: brand.catalog_prefix || 'REL',
+      paymongo_wallet_id: brand.paymongo_wallet_id,
       payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts || 0
     });
 
@@ -104,6 +105,7 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       brand_color,
       catalog_prefix,
       release_submission_url,
+      paymongo_wallet_id,
       payment_processing_fee_for_payouts
     } = req.body;
 
@@ -120,6 +122,7 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       brand_color: brand_color || brand.brand_color,
       catalog_prefix: catalog_prefix || brand.catalog_prefix,
       release_submission_url: release_submission_url || null,
+      paymongo_wallet_id: paymongo_wallet_id || null,
       payment_processing_fee_for_payouts: payment_processing_fee_for_payouts || 0
     });
 
@@ -134,6 +137,7 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         favicon_url: brand.favicon_url,
         release_submission_url: brand.release_submission_url,
         catalog_prefix: brand.catalog_prefix,
+        paymongo_wallet_id: brand.paymongo_wallet_id,
         payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts
       }
     });

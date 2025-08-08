@@ -96,6 +96,23 @@
         <div class="card-header"><h5>Payments</h5></div>
         <div class="card-body">
           <div class="form-group mb-3">
+            <label for="paymongo_wallet_id">Paymongo Wallet ID (optional)</label>
+            <div class="input-group">
+              <input [type]="showPaymongoWalletId ? 'text' : 'password'" 
+                     class="form-control" 
+                     id="paymongo_wallet_id" 
+                     formControlName="paymongo_wallet_id" 
+                     placeholder="Paymongo Wallet ID">
+              <button type="button" 
+                      class="btn btn-outline-secondary password-toggle-btn" 
+                      (click)="togglePaymongoWalletIdVisibility()"
+                      title="Toggle password visibility">
+                <i class="fas" [class.fa-eye]="!showPaymongoWalletId" [class.fa-eye-slash]="showPaymongoWalletId"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group mb-3">
             <label for="processing_fee">Processing fee for payouts</label>
             <div class="input-group">
               <div class="input-group-text">₱</div>
