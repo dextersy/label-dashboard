@@ -12,64 +12,54 @@
       (createEventRequested)="openCreateEventModal()">
     </app-event-selection>
     
+    <!-- Page Header -->
+    <div class="page-header mb-3">
+      <app-breadcrumb></app-breadcrumb>
+    </div>
+    
     <!-- Main Content -->
     <div class="row" *ngIf="selectedEvent">
       <div class="col-12">
         
-        <!-- Tab Navigation -->
-        <div class="card tab-navigation">
-          <ul class="nav nav-tabs events-tabs" role="tablist">
-              <li class="nav-item" *ngFor="let tab of tabs" [hidden]="!shouldShowTab(tab)">
-                <a class="nav-link" 
-                   [class]="getTabClass(tab.id)"
-                   (click)="setActiveTab(tab.id)"
-                   role="tab">
-                  <i class="fa" [class]="tab.icon"></i>
-                  {{ tab.label }}
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-            <!-- Event Details Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'details'" *ngIf="activeTab === 'details'">
-              <app-event-details-tab
-                [selectedEvent]="selectedEvent"
-                [isAdmin]="isAdmin"
-                (eventUpdated)="onEventUpdated($event)"
-                (alertMessage)="onAlertMessage($event)">
-              </app-event-details-tab>
-            </div>
-            
-            <!-- Event Tickets Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'tickets'" *ngIf="activeTab === 'tickets'">
-              <app-event-tickets-tab
-                [selectedEvent]="selectedEvent"
-                [isAdmin]="isAdmin"
-                (alertMessage)="onAlertMessage($event)">
-              </app-event-tickets-tab>
-            </div>
-            
-            <!-- Abandoned Orders Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'abandoned'" *ngIf="activeTab === 'abandoned'">
-              <app-event-abandoned-orders-tab
-                [selectedEvent]="selectedEvent"
-                [isAdmin]="isAdmin"
-                (alertMessage)="onAlertMessage($event)">
-              </app-event-abandoned-orders-tab>
-            </div>
-            
-            <!-- Referrals Tab -->
-            <div class="tab-pane" [class.active]="activeTab === 'referrals'" *ngIf="activeTab === 'referrals'">
-              <app-event-referrals-tab
-                [selectedEvent]="selectedEvent"
-                [isAdmin]="isAdmin"
-                (alertMessage)="onAlertMessage($event)">
-              </app-event-referrals-tab>
-            </div>
-            
+        <!-- Tab Content (no navigation needed, handled by sidebar) -->
+        <!-- Event Details Tab -->
+        <div *ngIf="activeTab === 'details'">
+          <app-event-details-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (eventUpdated)="onEventUpdated($event)"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-details-tab>
         </div>
         
+        <!-- Event Tickets Tab -->
+        <div *ngIf="activeTab === 'tickets'">
+          <app-event-tickets-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-tickets-tab>
+        </div>
+        
+        <!-- Abandoned Orders Tab -->
+        <div *ngIf="activeTab === 'abandoned'">
+          <app-event-abandoned-orders-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-abandoned-orders-tab>
+        </div>
+        
+        <!-- Referrals Tab -->
+        <div *ngIf="activeTab === 'referrals'">
+          <app-event-referrals-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-referrals-tab>
+        </div>
+        
+      </div>
     </div>
     
     <!-- Loading Events -->

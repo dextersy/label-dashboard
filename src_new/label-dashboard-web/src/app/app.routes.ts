@@ -65,7 +65,17 @@ export const routes: Routes = [
     ]
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { path: 'events', component: EventsComponent, canActivate: [adminGuard] },
+  { 
+    path: 'events', 
+    canActivate: [adminGuard],
+    children: [
+      { path: '', redirectTo: 'details', pathMatch: 'full' },
+      { path: 'details', component: EventsComponent, data: { tab: 'details' } },
+      { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },
+      { path: 'abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
+      { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } }
+    ]
+  },
   { 
     path: 'admin', 
     canActivate: [adminGuard],

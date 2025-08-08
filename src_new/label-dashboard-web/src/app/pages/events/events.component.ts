@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -14,6 +15,7 @@ import { EventAbandonedOrdersTabComponent } from '../../components/events/event-
 import { EventReferralsTabComponent } from '../../components/events/event-referrals-tab/event-referrals-tab.component';
 import { CreateEventModalComponent, CreateEventForm } from '../../components/events/create-event-modal/create-event-modal.component';
 import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 export type EventsTabType = 'details' | 'tickets' | 'abandoned' | 'referrals';
 
@@ -38,7 +40,8 @@ export type EventSelection = Event;
     EventAbandonedOrdersTabComponent,
     EventReferralsTabComponent,
     CreateEventModalComponent,
-    EventSelectionComponent
+    EventSelectionComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './events.component.html',
   styleUrl: './events.component.scss'
@@ -73,7 +76,9 @@ export class EventsComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private notificationService: NotificationService,
-    private eventService: EventService
+    private eventService: EventService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -89,6 +94,15 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.selectedEvent$.subscribe(event => {
         if (event && event !== this.selectedEvent) {
           this.selectedEvent = event;
+        }
+      })
+    );
+
+    // Subscribe to route data changes to determine active tab
+    this.subscriptions.add(
+      this.route.data.subscribe(data => {
+        if (data['tab']) {
+          this.activeTab = data['tab'] as EventsTabType;
         }
       })
     );
@@ -289,6 +303,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   setActiveTab(tabId: EventsTabType): void {
     this.activeTab = tabId;
+    this.router.navigate(['/events', tabId]);
   }
 
   getTabClass(tabId: EventsTabType): string {

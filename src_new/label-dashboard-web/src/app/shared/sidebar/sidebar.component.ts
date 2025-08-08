@@ -57,7 +57,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/financial/release', title: 'Release Information', adminOnly: false }
       ]
     },
-    { route: '/events', icon: 'fas fa-ticket-alt', title: 'Events', adminOnly: true },
+    { 
+      route: '/events', 
+      icon: 'fas fa-ticket-alt', 
+      title: 'Events', 
+      adminOnly: true,
+      children: [
+        { route: '/events/details', title: 'Details', adminOnly: true },
+        { route: '/events/tickets', title: 'Tickets', adminOnly: true },
+        { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
+        { route: '/events/referrals', title: 'Referrals', adminOnly: true }
+      ]
+    },
     { 
       route: '/admin', 
       icon: 'fas fa-cogs', 
