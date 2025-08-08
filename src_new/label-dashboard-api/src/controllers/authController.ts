@@ -100,6 +100,10 @@ export const login = async (req: Request, res: Response) => {
       // Don't fail login if email fails
     });
 
+    // Check if user is superadmin based on admin email env variable
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const isSuperadmin = adminEmail && user.email_address === adminEmail;
+
     res.json({
       message: 'Login successful',
       token,
@@ -110,6 +114,7 @@ export const login = async (req: Request, res: Response) => {
         first_name: user.first_name,
         last_name: user.last_name,
         is_admin: user.is_admin,
+        is_superadmin: isSuperadmin,
         brand_id: user.brand_id
       }
     });
@@ -128,6 +133,11 @@ export const logout = async (req: Request, res: Response) => {
 export const checkAuth = async (req: any, res: Response) => {
   try {
     const user = req.user;
+    
+    // Check if user is superadmin based on admin email env variable
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const isSuperadmin = adminEmail && user.email_address === adminEmail;
+    
     res.json({
       user: {
         id: user.id,
@@ -136,6 +146,7 @@ export const checkAuth = async (req: any, res: Response) => {
         first_name: user.first_name,
         last_name: user.last_name,
         is_admin: user.is_admin,
+        is_superadmin: isSuperadmin,
         brand_id: user.brand_id
       }
     });

@@ -287,6 +287,34 @@
   transition: all 0.2s ease-in-out;
 }
 
+/* Superadmin chip styling */
+.superadmin-chip {
+  background: linear-gradient(135deg, #dc3545, #b02a37);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  i {
+    font-size: 10px;
+  }
+  
+  &:hover {
+    background: linear-gradient(135deg, #b02a37, #8b1f2b);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(220, 53, 69, 0.4);
+  }
+  
+  transition: all 0.2s ease-in-out;
+}
+
 /* Standard navbar items */
 .navbar-nav {
   .nav-item {

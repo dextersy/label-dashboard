@@ -10,6 +10,7 @@ export interface User {
   first_name: string;
   last_name: string;
   is_admin: boolean;
+  is_superadmin: boolean;
   brand_id: number;
 }
 
@@ -69,6 +70,11 @@ export class AuthService {
   isAdmin(): boolean {
     const user = this.currentUserValue;
     return user ? user.is_admin : false;
+  }
+
+  isSuperadmin(): boolean {
+    const user = this.currentUserValue;
+    return user ? user.is_superadmin : false;
   }
 
   // Refresh user data from backend and update local state

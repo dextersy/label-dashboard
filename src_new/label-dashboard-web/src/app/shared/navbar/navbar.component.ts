@@ -18,6 +18,7 @@ import { Subscription } from 'rxjs';
 export class NavbarComponent implements OnInit, OnDestroy {
   userFirstName: string = 'User';
   isAdmin: boolean = false;
+  isSuperadmin: boolean = false;
   selectedArtist: Artist | null = null;
   private authSubscription: Subscription = new Subscription();
 
@@ -35,9 +36,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         if (user) {
           this.userFirstName = user.first_name || 'User';
           this.isAdmin = user.is_admin || false;
+          this.isSuperadmin = user.is_superadmin || false;
         } else {
           this.userFirstName = 'User';
           this.isAdmin = false;
+          this.isSuperadmin = false;
         }
       })
     );

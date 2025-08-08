@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { AuthService } from '../../../services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 export interface EventTicket {
   id: number;
@@ -27,6 +29,8 @@ export interface TicketSummary {
   net_revenue: number;
   platform_fee: number;
   grand_total: number;
+  tax: number;
+  admin_grand_total: number;
 }
 
 @Component({
@@ -70,7 +74,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private eventService: EventService,
-    private csvService: CsvService
+    private csvService: CsvService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -139,16 +144,15 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.add(
       this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
         next: (response) => {
-          // Convert API tickets to component format and filter for sent tickets only
-          this.tickets = response.tickets
-            .filter(ticket => {
-              // Show only tickets with "Ticket sent." status
-              return ticket.status === 'Ticket sent.';
-            })
-            .map(ticket => this.convertServiceTicketToComponentTicket(ticket));
+          // Convert API tickets to component format - include all confirmed tickets for summary calculation
+          const allTickets = response.tickets.map(ticket => this.convertServiceTicketToComponentTicket(ticket));
           
+          // Filter for display (only "Ticket sent." status)
+          this.tickets = allTickets.filter(ticket => ticket.status === 'Ticket sent.');
+          
+          // Calculate summary using all confirmed tickets (not just the filtered display tickets)
+          this.calculateTicketSummary(allTickets);
           this.pagination = response.pagination;
-          this.calculateTicketSummary();
           this.loading = false;
         },
         error: (error) => {
@@ -176,13 +180,13 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       name: ticket.name,
       email_address: ticket.email_address,
       contact_number: ticket.contact_number || '',
-      number_of_entries: ticket.number_of_entries,
+      number_of_entries: Number(ticket.number_of_entries) || 0,
       ticket_code: ticket.ticket_code,
-      price_per_ticket: ticket.price_per_ticket,
-      payment_processing_fee: ticket.payment_processing_fee,
+      price_per_ticket: Number(ticket.price_per_ticket) || 0,
+      payment_processing_fee: Number(ticket.payment_processing_fee) || 0,
       referrer_name: referrerName,
       order_timestamp: ticket.order_timestamp,
-      number_of_claimed_entries: ticket.number_of_claimed_entries,
+      number_of_claimed_entries: Number(ticket.number_of_claimed_entries) || 0,
       status: this.normalizeTicketStatus(ticket.status)
     };
   }
@@ -205,27 +209,59 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private calculateTicketSummary(): void {
-    const confirmedTickets = this.tickets.filter(t => 
+  private calculateTicketSummary(tickets: EventTicket[] = this.tickets): void {
+    const confirmedTickets = tickets.filter(t => 
       t.status === 'Ticket sent.' || t.status === 'Payment Confirmed'
     );
     
-    const totalTicketsSold = confirmedTickets.reduce((sum, ticket) => 
-      sum + ticket.number_of_entries, 0
-    );
+    // Count only "Ticket sent." tickets (matching PHP: if($ticket->status == 'Ticket sent.'))
+    const totalTicketsSold = tickets
+      .filter(t => t.status === 'Ticket sent.')
+      .reduce((sum, ticket) => sum + ticket.number_of_entries, 0);
     
+    // Calculate total revenue from confirmed/sent tickets
     const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
-      const ticketRevenue = ticket.price_per_ticket * ticket.number_of_entries;
+      const price = Number(ticket.price_per_ticket) || 0;
+      const entries = Number(ticket.number_of_entries) || 0;
+      const ticketRevenue = price * entries;
       return sum + ticketRevenue;
     }, 0);
     
-    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => 
-      sum + ticket.payment_processing_fee, 0
-    );
+    // Calculate total processing fees from confirmed/sent tickets
+    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => {
+      const fee = Number(ticket.payment_processing_fee) || 0;
+      return sum + fee;
+    }, 0);
     
-    const netRevenue = totalRevenue - totalProcessingFee;
-    const platformFee = netRevenue * 0.05; // 5% platform fee
-    const grandTotal = netRevenue - platformFee;
+    // Platform fee is 5% of total revenue (matching PHP: $total_sold * .05)
+    const platformFee = Number((totalRevenue * 0.05).toFixed(2)) || 0;
+    
+    // Grand total after platform fee (matching PHP: $total_sold * .95)
+    const grandTotal = Number((totalRevenue * 0.95).toFixed(2)) || 0;
+    
+    // Net revenue after processing fees (for admin view)
+    const netRevenue = Number((totalRevenue - totalProcessingFee).toFixed(2)) || 0;
+    
+    // Tax calculation (0.5% of net revenue, matching PHP: ($total_sold - $total_processing_fee)*.005)
+    const tax = Number((netRevenue * 0.005).toFixed(2)) || 0;
+    
+    // Admin grand total after processing fees and tax (matching PHP: ($total_sold - $total_processing_fee)*.995)
+    const adminGrandTotal = Number((netRevenue * 0.995).toFixed(2)) || 0;
+    
+    // Log debug info only in development
+    if (!environment.production) {
+      console.log('Ticket Summary Calculated:', {
+        confirmedTicketsCount: confirmedTickets.length,
+        totalTicketsSold,
+        totalRevenue,
+        totalProcessingFee,
+        netRevenue,
+        tax,
+        platformFee,
+        grandTotal,
+        adminGrandTotal
+      });
+    }
     
     this.summary = {
       total_tickets_sold: totalTicketsSold,
@@ -233,7 +269,9 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       total_processing_fee: totalProcessingFee,
       net_revenue: netRevenue,
       platform_fee: platformFee,
-      grand_total: grandTotal
+      grand_total: grandTotal,
+      tax: tax,
+      admin_grand_total: adminGrandTotal
     };
   }
 
@@ -360,6 +398,10 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   isTicketResendable(ticket: EventTicket): boolean {
     return Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries) && !!this.isAdmin;
+  }
+
+  isSuperadmin(): boolean {
+    return this.authService.isSuperadmin();
   }
 
   // Pagination event handlers

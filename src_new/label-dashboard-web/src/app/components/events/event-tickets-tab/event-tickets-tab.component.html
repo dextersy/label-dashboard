@@ -46,34 +46,53 @@
     </ng-template>
   </app-paginated-table>
 
-  <!-- Summary Footer -->
+  <!-- Summary Footer - Matching PHP layout -->
   <div class="card mt-3" *ngIf="summary">
-    <div class="card-body bg-light">
-      <strong class="me-3">Totals:</strong>
+    <div class="card-footer sticky-bottom bg-light">
+      <strong>Totals </strong>&nbsp;&nbsp;
       
       <span class="me-3" title="Number of paid tickets">
-        <i class="far fa-dot-circle text-success"></i>
-        {{ summary.total_tickets_sold }} tickets
+        <i class="fas fa-dot-circle text-success"></i> 
+        {{ summary.total_tickets_sold }}&nbsp;&nbsp;
       </span>
       
       <span class="me-3" title="Total revenue">
-        <i class="fas fa-money-bill text-primary"></i>
-        {{ summary.total_revenue | currency:'PHP':'symbol':'1.2-2' }}
+        <i class="fas fa-money-bill"></i> 
+        {{ (summary.total_revenue | number:'1.2-2') }}&nbsp;&nbsp;
       </span>
       
-      <span class="me-3 text-muted" title="Total processing fee">
-        <i class="fa fa-credit-card"></i>
-        -{{ summary.total_processing_fee | currency:'PHP':'symbol':'1.2-2' }}
+      <!-- Superadmin-specific stats (matching PHP condition for admin_email env variable) -->
+      <span class="text-muted" *ngIf="isSuperadmin()">
+        <span class="me-2" title="Total processing fee">
+          <i class="fas fa-credit-card"></i> 
+          -{{ (summary.total_processing_fee || 0) | number:'1.2-2' }}&nbsp;&nbsp;
+        </span>
+        
+        <span class="me-2" title="Net amount">
+          <i class="fas fa-plus"></i> 
+          {{ (summary.net_revenue || 0) | number:'1.2-2' }}&nbsp;&nbsp;
+        </span>
+        
+        <span class="me-2" title="Tax">
+          <i class="fas fa-percentage"></i> 
+          -{{ (summary.tax || 0) | number:'1.2-2' }}&nbsp;&nbsp;
+        </span>
+        
+        <span class="me-3 fw-bold" title="Admin grand total">
+          <i class="fas fa-plus-square"></i> 
+          <strong>₱{{ (summary.admin_grand_total || 0) | number:'1.2-2' }}</strong>
+          &nbsp;&nbsp;&nbsp;
+        </span>
       </span>
       
-      <span class="me-3 text-muted" title="Platform fee (5%)">
-        <i class="fa fa-percentage"></i>
-        -{{ summary.platform_fee | currency:'PHP':'symbol':'1.2-2' }}
+      <span class="me-2" title="Platform fee">
+        <i class="fas fa-money-bill"></i> 
+        -{{ (summary.platform_fee | number:'1.2-2') }}&nbsp;&nbsp;
       </span>
       
       <span class="fw-bold" title="Grand total">
-        <i class="fa fa-plus-square text-success"></i>
-        {{ summary.grand_total | currency:'PHP':'symbol':'1.2-2' }}
+        <i class="fas fa-plus-square"></i> 
+        <strong>₱{{ (summary.grand_total | number:'1.2-2') }}</strong>
       </span>
     </div>
   </div>

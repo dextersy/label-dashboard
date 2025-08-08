@@ -18,7 +18,15 @@
     border-top: 1px solid #dee2e6;
     
     .fa {
-      margin-right: 5px;
+      margin-right: 2px;
+    }
+    
+    &.sticky-bottom {
+      z-index: 10;
+    }
+    
+    .text-muted {
+      opacity: 0.8;
     }
   }
 

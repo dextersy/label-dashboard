@@ -20,7 +20,10 @@
     <!-- Welcome message and admin chip on the right -->
     <span class="navbar-welcome">
       <i class="fa-solid fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!
-      <span *ngIf="isAdmin" class="admin-chip">
+      <span *ngIf="isSuperadmin" class="superadmin-chip">
+        <i class="fa-solid fa-crown"></i> Superadmin
+      </span>
+      <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
         <i class="fa-solid fa-shield"></i> Admin
       </span>
     </span>
