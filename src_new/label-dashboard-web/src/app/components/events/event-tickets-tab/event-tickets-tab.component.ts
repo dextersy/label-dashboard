@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
+import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 
@@ -43,6 +43,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   tickets: EventTicket[] = [];
   summary: TicketSummary | null = null;
+  referrers: EventReferrer[] = [];
   loading = false;
   selectedTicketId: number | null = null;
 
@@ -73,17 +74,48 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadEventTickets();
+    this.loadEventData();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedEvent']) {
-      this.loadEventTickets();
+      this.loadEventData();
     }
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  private loadEventData(): void {
+    if (!this.selectedEvent) {
+      this.tickets = [];
+      this.summary = null;
+      this.pagination = null;
+      this.referrers = [];
+      return;
+    }
+
+    // Load referrers first, then tickets
+    this.loadEventReferrers();
+  }
+
+  private loadEventReferrers(): void {
+    if (!this.selectedEvent) return;
+
+    this.subscriptions.add(
+      this.eventService.getEventReferrers(this.selectedEvent.id).subscribe({
+        next: (referrers) => {
+          this.referrers = referrers;
+          this.loadEventTickets(); // Load tickets after referrers are loaded
+        },
+        error: (error) => {
+          console.error('Failed to load event referrers:', error);
+          this.referrers = [];
+          this.loadEventTickets(); // Continue loading tickets even if referrers fail
+        }
+      })
+    );
   }
 
   private loadEventTickets(page: number = 1): void {
@@ -132,6 +164,13 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private convertServiceTicketToComponentTicket(ticket: ServiceEventTicket): EventTicket {
+    // Find referrer name by referrer_id
+    let referrerName = '';
+    if (ticket.referrer_id) {
+      const referrer = this.referrers.find(r => r.id === ticket.referrer_id);
+      referrerName = referrer ? referrer.name : `ID: ${ticket.referrer_id}`;
+    }
+
     return {
       id: ticket.id,
       name: ticket.name,
@@ -141,6 +180,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       ticket_code: ticket.ticket_code,
       price_per_ticket: ticket.price_per_ticket,
       payment_processing_fee: ticket.payment_processing_fee,
+      referrer_name: referrerName,
       order_timestamp: ticket.order_timestamp,
       number_of_claimed_entries: ticket.number_of_claimed_entries,
       status: this.normalizeTicketStatus(ticket.status)
@@ -279,6 +319,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       ticket.contact_number,
       ticket.number_of_entries.toString(),
       ticket.ticket_code,
+      ticket.referrer_name || '', // Include referrer info
       '' // Notes column (empty in PHP version)
     ]);
 
@@ -286,7 +327,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     
     this.csvService.downloadCsv({
       title: `Ticket list for ${this.selectedEvent.title}`,
-      headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Notes'],
+      headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Referred By', 'Notes'],
       data: csvData,
       filename: filename
     });
