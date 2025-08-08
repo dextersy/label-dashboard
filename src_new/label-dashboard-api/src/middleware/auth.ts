@@ -39,3 +39,14 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
   }
   next();
 };
+
+export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  // Check if user is superadmin based on admin email env variable
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const isSuperadmin = adminEmail && req.user && req.user.email_address === adminEmail;
+  
+  if (!isSuperadmin) {
+    return res.status(403).json({ error: 'Superadmin access required' });
+  }
+  next();
+};

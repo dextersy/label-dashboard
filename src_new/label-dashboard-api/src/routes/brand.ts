@@ -1,6 +1,6 @@
 import express from 'express';
-import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, getChildBrands } from '../controllers/brandController';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, getChildBrands, createSublabel } from '../controllers/brandController';
+import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -20,6 +20,7 @@ router.delete('/:brandId/domains/:domainName', authenticateToken, requireAdmin, 
 router.put('/:brandId/domains/:domainName/verify', authenticateToken, requireAdmin, verifyDomain);
 
 // Child brands (sublabel) routes
-router.get('/:brandId/child-brands', authenticateToken, requireAdmin, getChildBrands);
+router.get('/:brandId/sublabels', authenticateToken, requireAdmin, getChildBrands);
+router.post('/:brandId/sublabels', authenticateToken, requireSuperAdmin, createSublabel);
 
 export default router;

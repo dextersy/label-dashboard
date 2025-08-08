@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
+import User from '../models/User';
 import { Earning, Royalty, Ticket, Event, Release } from '../models';
 import { Op, literal } from 'sequelize';
 import multer from 'multer';
@@ -712,6 +713,95 @@ export const getChildBrands = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error fetching child brands:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Create Sublabel
+export const createSublabel = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+    const { brand_name, domain_name } = req.body;
+    const currentUserId = (req as any).user?.id;
+
+    // Validate input
+    if (!brand_name || !domain_name) {
+      return res.status(400).json({ error: 'Brand name and domain name are required' });
+    }
+
+    // Validate domain name format
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!domainRegex.test(domain_name)) {
+      return res.status(400).json({ error: 'Invalid domain name format' });
+    }
+
+    // Check if parent brand exists
+    const parentBrand = await Brand.findByPk(brandId);
+    if (!parentBrand) {
+      return res.status(404).json({ error: 'Parent brand not found' });
+    }
+
+    // Check if current user exists and get their information
+    const currentUser = await User.findByPk(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({ error: 'Current user not found' });
+    }
+
+    // Check if domain already exists
+    const existingDomain = await Domain.findOne({
+      where: { domain_name: domain_name.toLowerCase().trim() }
+    });
+    if (existingDomain) {
+      return res.status(409).json({ error: 'Domain already exists' });
+    }
+
+    // Create new brand (sublabel)
+    const newBrand = await Brand.create({
+      brand_name: brand_name.trim(),
+      parent_brand: parseInt(brandId),
+      logo_url: null,
+      brand_color: '#6c757d', // Default gray color
+      brand_website: '',
+      favicon_url: null,
+      paymongo_wallet_id: '',
+      payment_processing_fee_for_payouts: 10.00, // Default 10%
+      release_submission_url: '',
+      catalog_prefix: ''
+    });
+
+    // Create domain for the new brand
+    const newDomain = await Domain.create({
+      brand_id: newBrand.id,
+      domain_name: domain_name.toLowerCase().trim(),
+      status: 'Unverified'
+    });
+
+    // Create admin user for the new brand (copy current user's info)
+    const newUser = await User.create({
+      username: currentUser.username,
+      password_md5: currentUser.password_md5,
+      email_address: currentUser.email_address,
+      first_name: currentUser.first_name,
+      last_name: currentUser.last_name,
+      profile_photo: currentUser.profile_photo,
+      is_admin: true, // New sublabel user is admin for their brand
+      brand_id: newBrand.id,
+      reset_hash: null, // Clear reset hash for new user
+      last_logged_in: null // Clear last login for new user
+    });
+
+    res.status(201).json({
+      message: 'Sublabel created successfully',
+      sublabel: {
+        id: newBrand.id,
+        brand_name: newBrand.brand_name,
+        domain_name: newDomain.domain_name,
+        admin_user_id: newUser.id
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creating sublabel:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

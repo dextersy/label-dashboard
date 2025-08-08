@@ -239,7 +239,7 @@ export class AdminService {
   }
 
   // Child Brands (Sublabels) Management
-  getChildBrands(startDate?: string, endDate?: string): Observable<ChildBrand[]> {
+  getSublabels(startDate?: string, endDate?: string): Observable<ChildBrand[]> {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = currentUser.brand_id;
     
@@ -252,7 +252,23 @@ export class AdminService {
       queryParams = `?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`;
     }
     
-    return this.http.get<ChildBrand[]>(`${environment.apiUrl}/brands/${brandId}/child-brands${queryParams}`, {
+    return this.http.get<ChildBrand[]>(`${environment.apiUrl}/brands/${brandId}/sublabels${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  createSublabel(brandName: string, domainName: string): Observable<any> {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+    
+    return this.http.post(`${environment.apiUrl}/brands/${brandId}/sublabels`, {
+      brand_name: brandName,
+      domain_name: domainName
+    }, {
       headers: this.getAuthHeaders()
     });
   }

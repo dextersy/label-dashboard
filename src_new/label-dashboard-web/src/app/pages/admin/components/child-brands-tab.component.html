@@ -8,8 +8,20 @@
   </app-date-range-filter>
 
   <!-- Sublabels Table -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Sublabels</h4>
+    <button 
+      *ngIf="isSuperAdmin()" 
+      class="btn btn-primary"
+      (click)="openAddSublabelModal()"
+      [disabled]="loading">
+      <i class="fas fa-plus me-2"></i>
+      Add Sublabel
+    </button>
+  </div>
+  
   <app-paginated-table
-    title="Sublabels"
+    title=""
     [data]="sortedChildBrands"
     [columns]="tableColumns"
     [loading]="loading"
@@ -58,4 +70,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Add Sublabel Modal -->
+  <app-add-sublabel-modal
+    [show]="showAddSublabelModal"
+    (close)="closeAddSublabelModal()"
+    (submit)="onCreateSublabel($event)">
+  </app-add-sublabel-modal>
 </div>

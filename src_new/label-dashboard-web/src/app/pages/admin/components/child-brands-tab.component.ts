@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, ChildBrand } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { AddSublabelModalComponent } from '../../../components/shared/add-sublabel-modal/add-sublabel-modal.component';
 
 @Component({
   selector: 'app-child-brands-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent],
   templateUrl: './child-brands-tab.component.html',
   styleUrls: ['./child-brands-tab.component.scss']
 })
@@ -20,6 +22,9 @@ export class ChildBrandsTabComponent implements OnInit {
   startDate: string = '';
   endDate: string = '';
   sortInfo: SortInfo | null = null;
+  showAddSublabelModal: boolean = false;
+
+  @ViewChild(AddSublabelModalComponent) addSublabelModal!: AddSublabelModalComponent;
   
   // Commission rates - matching PHP implementation
   readonly MUSIC_COMMISSION = 0.2; // 20%
@@ -97,7 +102,8 @@ export class ChildBrandsTabComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -107,7 +113,7 @@ export class ChildBrandsTabComponent implements OnInit {
   loadChildBrands(): void {
     this.loading = true;
     
-    this.adminService.getChildBrands(
+    this.adminService.getSublabels(
       this.startDate || undefined, 
       this.endDate || undefined
     ).subscribe({
@@ -191,5 +197,39 @@ export class ChildBrandsTabComponent implements OnInit {
 
   getTotalPayments(): number {
     return this.childBrands.reduce((total, brand) => total + brand.payments, 0);
+  }
+
+  // Superadmin check
+  isSuperAdmin(): boolean {
+    const currentUser = this.authService.currentUserValue;
+    return currentUser?.is_superadmin || false;
+  }
+
+  // Modal handlers
+  openAddSublabelModal(): void {
+    this.showAddSublabelModal = true;
+  }
+
+  closeAddSublabelModal(): void {
+    this.showAddSublabelModal = false;
+  }
+
+  onCreateSublabel(data: { brandName: string, domainName: string }): void {
+    this.adminService.createSublabel(data.brandName, data.domainName).subscribe({
+      next: (response) => {
+        this.notificationService.showSuccess('Sublabel created successfully');
+        this.closeAddSublabelModal();
+        this.loadChildBrands(); // Refresh the list
+      },
+      error: (error) => {
+        console.error('Error creating sublabel:', error);
+        const errorMessage = error.error?.error || 'Failed to create sublabel';
+        this.notificationService.showError(errorMessage);
+        // Reset the modal's submitting state to allow retry
+        if (this.addSublabelModal) {
+          this.addSublabelModal.resetSubmittingState();
+        }
+      }
+    });
   }
 }
