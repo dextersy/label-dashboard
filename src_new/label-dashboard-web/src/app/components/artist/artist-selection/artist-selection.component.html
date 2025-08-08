@@ -1,7 +1,22 @@
 <div class="artist-selection-container">
-  <div class="dropdown" [class.open]="isDropdownOpen">
-    <button class="btn btn-default artist-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
-      <div class="artist-info" *ngIf="selectedArtist">
+  <div class="dropdown" [class.open]="isDropdownOpen && !isNewArtistMode">
+    <button class="btn btn-default artist-dropdown-btn" 
+            type="button" 
+            (click)="toggleDropdown()" 
+            [disabled]="loading || isNewArtistMode">
+      
+      <!-- New Artist Mode -->
+      <div class="artist-info" *ngIf="isNewArtistMode">
+        <img src="assets/img/placeholder.jpg" 
+             class="artist-photo" 
+             alt="New artist placeholder">
+        <div class="artist-details">
+          <div class="artist-name new-artist-name">New artist</div>
+        </div>
+      </div>
+      
+      <!-- Normal Mode -->
+      <div class="artist-info" *ngIf="selectedArtist && !isNewArtistMode">
         <img [src]="getProfilePhotoUrl(selectedArtist.profile_photo)" 
              class="artist-photo" 
              [alt]="selectedArtist.name">
@@ -9,16 +24,16 @@
           <div class="artist-name">{{ selectedArtist.name }}</div>
         </div>
       </div>
-      <div *ngIf="!selectedArtist && !loading" class="no-artist">
+      <div *ngIf="!selectedArtist && !loading && !isNewArtistMode" class="no-artist">
         Select an Artist
       </div>
-      <div *ngIf="loading" class="loading">
+      <div *ngIf="loading && !isNewArtistMode" class="loading">
         <i class="fa fa-spinner fa-spin"></i> Loading...
       </div>
-      <span class="caret"></span>
+      <span class="caret" *ngIf="!isNewArtistMode"></span>
     </button>
     
-    <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+    <ul class="dropdown-menu" *ngIf="isDropdownOpen && !isNewArtistMode">
       <!-- Search input -->
       <li class="search-container">
         <div class="search-input-wrapper">

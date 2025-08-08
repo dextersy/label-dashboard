@@ -59,6 +59,12 @@
   font-size: 14px;
   color: #333;
   margin-bottom: 2px;
+  
+  &.new-artist-name {
+    font-style: italic;
+    color: #666;
+    font-weight: 500;
+  }
 }
 
 .artist-members {

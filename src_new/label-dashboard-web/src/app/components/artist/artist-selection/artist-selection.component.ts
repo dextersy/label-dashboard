@@ -2,9 +2,10 @@ import { Component, OnInit, OnChanges, OnDestroy, Output, EventEmitter, Input } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { ArtistStateService } from '../../../services/artist-state.service';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 
 export interface Artist {
@@ -32,6 +33,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   isDropdownOpen = false;
   isAdmin = false;
   searchTerm: string = '';
+  isNewArtistMode = false;
   private refreshSubscription: Subscription = new Subscription();
 
   constructor(
@@ -49,6 +51,18 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
         this.refreshArtistsAndSelect(selectArtistId);
       })
     );
+
+    // Check initial route
+    this.checkNewArtistMode();
+
+    // Subscribe to route changes
+    this.refreshSubscription.add(
+      this.router.events.pipe(
+        filter(event => event instanceof NavigationEnd)
+      ).subscribe(() => {
+        this.checkNewArtistMode();
+      })
+    );
   }
 
   ngOnChanges(): void {
@@ -64,6 +78,10 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
         }
       }
     }
+  }
+
+  private checkNewArtistMode(): void {
+    this.isNewArtistMode = this.router.url === '/artist/new';
   }
 
   private getAuthHeaders(): HttpHeaders {
