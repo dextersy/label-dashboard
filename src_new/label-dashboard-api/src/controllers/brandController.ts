@@ -10,7 +10,6 @@ import AWS from 'aws-sdk';
 import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
-import https from 'https';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -437,75 +436,6 @@ export const deleteDomain = async (req: Request, res: Response) => {
 
 const dnsResolve4 = promisify(dns.resolve4);
 
-// Cache for server IP (valid for 1 hour)
-let serverIPCache: { ip: string; timestamp: number } | null = null;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-
-// Function to get server's public IP address dynamically
-const getServerPublicIP = async (): Promise<string> => {
-  // Check cache first
-  if (serverIPCache && (Date.now() - serverIPCache.timestamp) < CACHE_DURATION) {
-    console.log(`Using cached server IP: ${serverIPCache.ip}`);
-    return serverIPCache.ip;
-  }
-
-  return new Promise((resolve, reject) => {
-    // Try multiple IP detection services for reliability
-    const ipServices = [
-      'https://api.ipify.org',
-      'https://ipinfo.io/ip',
-      'https://icanhazip.com'
-    ];
-
-    let attempts = 0;
-    const tryService = (serviceIndex: number) => {
-      if (serviceIndex >= ipServices.length) {
-        reject(new Error('Unable to determine server public IP from any service'));
-        return;
-      }
-
-      const url = ipServices[serviceIndex];
-      console.log(`Attempting to get server IP from: ${url}`);
-
-      const request = https.get(url, (response) => {
-        let data = '';
-        
-        response.on('data', (chunk) => {
-          data += chunk;
-        });
-
-        response.on('end', () => {
-          const ip = data.trim();
-          // Validate IP format
-          const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
-          if (ipRegex.test(ip)) {
-            console.log(`Server public IP detected: ${ip}`);
-            // Cache the IP
-            serverIPCache = { ip, timestamp: Date.now() };
-            resolve(ip);
-          } else {
-            console.warn(`Invalid IP format from ${url}: ${ip}`);
-            tryService(serviceIndex + 1);
-          }
-        });
-      });
-
-      request.on('error', (error) => {
-        console.warn(`Error getting IP from ${url}:`, error.message);
-        tryService(serviceIndex + 1);
-      });
-
-      // Set timeout for each request
-      request.setTimeout(5000, () => {
-        request.destroy();
-        console.warn(`Timeout getting IP from ${url}`);
-        tryService(serviceIndex + 1);
-      });
-    };
-
-    tryService(0);
-  });
-};
 
 export const verifyDomain = async (req: Request, res: Response) => {
   try {
@@ -530,17 +460,20 @@ export const verifyDomain = async (req: Request, res: Response) => {
     }
 
     try {
-      // Get server's public IP dynamically
-      console.log('Getting server public IP...');
-      const serverIP = await getServerPublicIP();
-      console.log(`Verifying domain ${domainName} against server IP ${serverIP}`);
+      // Get frontend server IP from environment variable
+      const frontendIP = process.env.FRONTEND_IP;
+      if (!frontendIP) {
+        throw new Error('FRONTEND_IP environment variable is not configured');
+      }
+      
+      console.log(`Verifying domain ${domainName} against frontend IP ${frontendIP}`);
       
       // Resolve domain's A record
       const addresses = await dnsResolve4(domainName);
       console.log(`Domain ${domainName} resolves to:`, addresses);
       
-      // Check if any of the resolved addresses match our server IP
-      const isVerified = addresses.some(addr => addr === serverIP);
+      // Check if any of the resolved addresses match our frontend IP
+      const isVerified = addresses.some(addr => addr === frontendIP);
       console.log(`Domain verification result: ${isVerified ? 'VERIFIED' : 'FAILED'}`);
       
       // Update domain status - either Verified or Unverified
@@ -554,11 +487,11 @@ export const verifyDomain = async (req: Request, res: Response) => {
         });
       } else {
         res.status(400).json({
-          error: 'Domain verification failed. Domain does not point to our server.',
+          error: 'Domain verification failed. Domain does not point to our frontend server.',
           status: 'Unverified',
-          serverIP,
+          expectedIP: frontendIP,
           resolvedIPs: addresses,
-          hint: `Please update your domain's A record to point to ${serverIP}`
+          hint: `Please update your domain's A record to point to ${frontendIP}`
         });
       }
 
@@ -568,9 +501,9 @@ export const verifyDomain = async (req: Request, res: Response) => {
       // All errors result in Unverified status
       await domain.update({ status: 'Unverified' });
       
-      if (error.message.includes('Unable to determine server public IP')) {
+      if (error.message.includes('FRONTEND_IP environment variable is not configured')) {
         res.status(500).json({
-          error: 'Unable to determine server IP address for verification',
+          error: 'Frontend IP configuration is missing. Please contact system administrator.',
           status: 'Unverified'
         });
       } else {
