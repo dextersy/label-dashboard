@@ -37,10 +37,43 @@ export class FinancialEarningsTabComponent {
 
   // Define table columns for search and sort functionality
   earningsColumns: TableColumn[] = [
-    { key: 'date_recorded', label: 'Date Recorded', type: 'date', searchable: false, sortable: true },
-    { key: 'release_title', label: 'For Release', type: 'text', searchable: true, sortable: true },
-    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: true },
-    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true, align: 'right' }
+    { 
+      key: 'date_recorded', 
+      label: 'Date', 
+      type: 'date', 
+      searchable: false, 
+      sortable: true,
+      mobileClass: 'mobile-narrow',
+      tabletClass: ''
+    },
+    { 
+      key: 'release_title', 
+      label: 'Release', 
+      type: 'text', 
+      searchable: true, 
+      sortable: true,
+      mobileClass: 'mobile-text',
+      tabletClass: ''
+    },
+    { 
+      key: 'description', 
+      label: 'Description', 
+      type: 'text', 
+      searchable: true, 
+      sortable: true,
+      mobileClass: '',
+      tabletClass: 'tablet-hide'
+    },
+    { 
+      key: 'amount', 
+      label: 'Amount', 
+      type: 'number', 
+      searchable: true, 
+      sortable: true, 
+      align: 'right',
+      mobileClass: 'mobile-narrow mobile-number',
+      tabletClass: ''
+    }
   ];
 
   onPageChange(page: number): void {

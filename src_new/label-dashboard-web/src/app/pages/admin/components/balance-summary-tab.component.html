@@ -14,55 +14,57 @@
       
       <ng-template #tableContent let-data>
         <div class="table-responsive" *ngIf="!balanceLoading">
-          <table class="table">
+          <table class="table table-financial">
             <thead>
               <tr>
-                <th style="cursor: pointer;" (click)="onBalanceSortToggle('name')">
+                <th class="mobile-text" style="cursor: pointer;" (click)="onBalanceSortToggle('name')">
                   Artist 
                   <i class="fas fa-sort ms-1" 
                      [class.fa-sort-up]="balanceSort?.column === 'name' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
+                <th class="mobile-hide tablet-hide text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
                   Total royalties (₱)
                   <i class="fas fa-sort ms-1"
                      [class.fa-sort-up]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
+                <th class="mobile-hide tablet-hide text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
                   Total payments (₱)
                   <i class="fas fa-sort ms-1"
                      [class.fa-sort-up]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_balance')">
-                  Total balance (₱)
+                <th class="mobile-narrow mobile-number text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_balance')">
+                  Balance (₱)
                   <i class="fas fa-sort ms-1"
                      [class.fa-sort-up]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('payout_point')">
+                <th class="mobile-hide text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('payout_point')">
                   Payout point (₱)
                   <i class="fas fa-sort ms-1"
                      [class.fa-sort-up]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="text-center">Due for payment</th>
-                <th class="text-center">Payouts paused</th>
+                <th class="mobile-narrow text-center">Due</th>
+                <th class="mobile-hide text-center">Paused</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let artist of data" [class.table-success]="artist.ready_for_payment">
-                <td>{{ artist.name }}</td>
-                <td class="text-end">{{ formatCurrency(artist.total_royalties) }}</td>
-                <td class="text-end">{{ formatCurrency(artist.total_payments) }}</td>
-                <td class="text-end fw-bold">{{ formatCurrency(artist.total_balance) }}</td>
-                <td class="text-end">{{ formatCurrency(artist.payout_point) }}</td>
-                <td class="text-center">
+                <td class="mobile-text" data-label="Artist">{{ artist.name }}</td>
+                <td class="mobile-hide tablet-hide text-end" data-label="Total royalties">{{ formatCurrency(artist.total_royalties) }}</td>
+                <td class="mobile-hide tablet-hide text-end" data-label="Total payments">{{ formatCurrency(artist.total_payments) }}</td>
+                <td class="mobile-narrow mobile-number text-end fw-bold" data-label="Balance">{{ formatCurrency(artist.total_balance) }}</td>
+                <td class="mobile-hide text-end" data-label="Payout point">{{ formatCurrency(artist.payout_point) }}</td>
+                <td class="mobile-narrow text-center" data-label="Due for payment">
                   <i class="fas fa-check text-success" *ngIf="artist.due_for_payment"></i>
+                  <span *ngIf="!artist.due_for_payment" class="text-muted">-</span>
                 </td>
-                <td class="text-center">
+                <td class="mobile-hide text-center" data-label="Payouts paused">
                   <i class="fas fa-pause-circle text-warning" *ngIf="artist.hold_payouts"></i>
+                  <span *ngIf="!artist.hold_payouts" class="text-muted">-</span>
                 </td>
               </tr>
             </tbody>
@@ -133,6 +135,7 @@
       [columns]="expensesColumns"
       [showSortableHeaders]="true"
       [sortInfo]="expensesSort"
+      [responsiveMode]="'financial'"
       (pageChange)="onExpensesPageChange($event)"
       (filtersChange)="onExpensesFiltersChange($event)"
       (sortChange)="onExpensesSortChange($event)">

@@ -68,9 +68,35 @@ export class BalanceSummaryTabComponent implements OnInit {
 
   // Expenses table columns
   expensesColumns: TableColumn[] = [
-    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true },
-    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true },
-    { key: 'remaining_expense', label: 'Remaining Recuperable Expense (₱)', type: 'number', searchable: true, sortable: true, align: 'right', formatter: (item) => this.formatCurrency(item.remaining_expense) }
+    { 
+      key: 'catalog_no', 
+      label: 'Catalog No.', 
+      type: 'text', 
+      searchable: true, 
+      sortable: true,
+      mobileClass: 'mobile-hide',
+      tabletClass: ''
+    },
+    { 
+      key: 'title', 
+      label: 'Release', 
+      type: 'text', 
+      searchable: true, 
+      sortable: true,
+      mobileClass: 'mobile-text',
+      tabletClass: ''
+    },
+    { 
+      key: 'remaining_expense', 
+      label: 'Remaining Expense (₱)', 
+      type: 'number', 
+      searchable: true, 
+      sortable: true, 
+      align: 'right', 
+      formatter: (item) => this.formatCurrency(item.remaining_expense),
+      mobileClass: 'mobile-narrow mobile-number',
+      tabletClass: ''
+    }
   ];
 
   constructor(

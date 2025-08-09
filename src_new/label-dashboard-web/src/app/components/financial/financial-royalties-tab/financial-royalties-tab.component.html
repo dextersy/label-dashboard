@@ -26,6 +26,7 @@
   [columns]="royaltiesColumns"
   [showSortableHeaders]="true"
   [sortInfo]="royaltiesSort"
+  [responsiveMode]="'financial'"
   (pageChange)="onPageChange($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">

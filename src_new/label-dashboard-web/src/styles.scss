@@ -839,13 +839,25 @@ div .table tbody {
   }
 }
 
-/* Extra small screens - card-like layout */
+/* Extra small screens - card-like layout for non-financial tables */
 @media (max-width: 576px) {
   .table-responsive {
     border: none;
   }
   
-  .table {
+  /* Payments and Royalties Summary mobile fix */
+  .payments-royalties-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    .col-lg-6 {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+  }
+  
+  /* Card-style layout for general tables (releases, artists, etc.) */
+  .table:not(.table-financial) {
     thead {
       display: none;
     }
@@ -900,6 +912,153 @@ div .table tbody {
             display: none;
           }
         }
+      }
+    }
+  }
+
+  /* Fixed-width two-row layout for financial tables */
+  .table-financial {
+    font-size: 11px;
+    
+    thead {
+      tr {
+        th {
+          padding: 6px 4px !important;
+          font-size: 10px !important;
+          line-height: 1.2;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          
+          /* Hide less important columns on mobile */
+          &.mobile-hide {
+            display: none;
+          }
+          
+          /* Make essential columns narrower */
+          &.mobile-narrow {
+            width: 60px;
+            max-width: 60px;
+          }
+        }
+      }
+      
+      /* Add second header row for numerical data labels */
+      tr:first-child th {
+        border-bottom: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+      }
+      
+      /* Create virtual second row for numerical headers */
+      tr:first-child th.has-subheader:after {
+        content: attr(data-subheader);
+        display: block;
+        font-size: 9px;
+        color: #666;
+        margin-top: 2px;
+        font-weight: 500;
+        text-transform: none;
+      }
+    }
+    
+    tbody {
+      tr {
+        /* Create two-row layout for each data item */
+        td {
+          padding: 4px !important;
+          font-size: 11px;
+          line-height: 1.2;
+          vertical-align: top !important;
+          
+          /* Hide less important columns */
+          &.mobile-hide {
+            display: none;
+          }
+          
+          /* Narrow columns for dates and numbers */
+          &.mobile-narrow {
+            width: 60px;
+            max-width: 60px;
+            word-wrap: break-word;
+            word-break: break-word;
+            white-space: nowrap;
+            min-width: fit-content;
+          }
+          
+          /* Override narrow width for dates to allow full display */
+          &.mobile-narrow:not(.mobile-number) {
+            width: auto !important;
+            max-width: none !important;
+            min-width: 80px;
+          }
+          
+          /* Right align numerical data - prevent wrapping */
+          &.mobile-number {
+            text-align: right !important;
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap !important;
+            word-wrap: normal !important;
+            word-break: normal !important;
+            min-width: fit-content;
+          }
+          
+          /* Override narrow width for numbers to allow full display */
+          &.mobile-narrow.mobile-number {
+            width: auto !important;
+            max-width: none !important;
+            min-width: 80px;
+          }
+          
+          /* Style for description/title columns with text wrapping */
+          &.mobile-text {
+            font-size: 10px;
+            color: #666;
+            max-width: 120px;
+            word-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Tablet responsive adjustments for financial tables */
+@media (max-width: 768px) {
+  .table-financial {
+    font-size: 12px;
+    
+    thead th {
+      padding: 8px 6px !important;
+      font-size: 11px !important;
+      
+      &.tablet-hide {
+        display: none;
+      }
+    }
+    
+    tbody td {
+      padding: 8px 6px !important;
+      font-size: 12px;
+      
+      &.tablet-hide {
+        display: none;
+      }
+      
+      &.tablet-narrow {
+        max-width: 100px;
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: nowrap;
+        min-width: fit-content;
+      }
+      
+      /* Override tablet narrow for dates to allow full display */
+      &.tablet-narrow:not(.mobile-number) {
+        max-width: none !important;
+        min-width: 100px;
       }
     }
   }

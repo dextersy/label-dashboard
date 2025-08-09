@@ -20,6 +20,8 @@ export interface TableColumn {
   options?: { value: string; label: string }[]; // For select type
   formatter?: (item: any) => string; // Custom formatter function
   align?: 'left' | 'center' | 'right'; // Column alignment
+  mobileClass?: string; // CSS classes for mobile responsiveness
+  tabletClass?: string; // CSS classes for tablet responsiveness
 }
 
 export interface SearchFilters {
@@ -48,6 +50,7 @@ export class PaginatedTableComponent implements OnInit {
   @Input() showSortableHeaders: boolean = false;
   @Input() sortInfo: SortInfo | null = null;
   @Input() showActionsColumn: boolean = false;
+  @Input() responsiveMode: 'card' | 'financial' = 'card'; // Choose responsive behavior
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
@@ -155,6 +158,10 @@ export class PaginatedTableComponent implements OnInit {
       case 'date':
         if (!value) return 'Never';
         const date = new Date(value);
+        // For financial responsive mode, show only date without time
+        if (this.responsiveMode === 'financial') {
+          return date.toLocaleDateString('en-US');
+        }
         return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US');
       case 'number':
         // Special formatting for currency columns
@@ -190,5 +197,27 @@ export class PaginatedTableComponent implements OnInit {
     }
     
     return pages;
+  }
+
+  getTableClasses(): string {
+    const baseClass = 'table';
+    if (this.responsiveMode === 'financial') {
+      return `${baseClass} table-financial`;
+    }
+    return baseClass;
+  }
+
+  getColumnClasses(column: TableColumn): string {
+    const classes: string[] = [];
+    
+    if (column.mobileClass) {
+      classes.push(column.mobileClass);
+    }
+    
+    if (column.tabletClass) {
+      classes.push(column.tabletClass);
+    }
+    
+    return classes.join(' ');
   }
 }

@@ -1,17 +1,17 @@
 <div *ngIf="expenses.length > 0" class="table-responsive">
-  <table class="table">
+  <table class="table table-financial">
     <thead *ngIf="showHeader">
       <tr>
-        <th>Date</th>
-        <th>Description</th>
-        <th class="text-right">Amount</th>
+        <th class="mobile-narrow">Date</th>
+        <th class="mobile-text">Description</th>
+        <th class="mobile-narrow mobile-number text-right">Amount</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let expense of expenses">
-        <td>{{ formatDate(expense.date_recorded) }}</td>
-        <td>{{ expense.expense_description }}</td>
-        <td class="text-right">{{ formatCurrency(expense.expense_amount) }}</td>
+        <td class="mobile-narrow" data-label="Date">{{ formatDate(expense.date_recorded) }}</td>
+        <td class="mobile-text" data-label="Description">{{ expense.expense_description }}</td>
+        <td class="mobile-narrow mobile-number text-right" data-label="Amount">{{ formatCurrency(expense.expense_amount) }}</td>
       </tr>
     </tbody>
   </table>

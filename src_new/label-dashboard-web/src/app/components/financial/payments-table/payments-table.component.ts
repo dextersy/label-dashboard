@@ -21,18 +21,54 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   // Define table columns for search and sort functionality
   paymentsColumns: TableColumn[] = [
-    { key: 'date_paid', label: 'Date Paid', type: 'date', searchable: true, sortable: true },
-    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: true },
     { 
-      key: 'paid_thru_type', 
-      label: 'Paid Through', 
+      key: 'date_paid', 
+      label: 'Date', 
+      type: 'date', 
+      searchable: true, 
+      sortable: true,
+      mobileClass: 'mobile-narrow',
+      tabletClass: ''
+    },
+    { 
+      key: 'description', 
+      label: 'Description', 
       type: 'text', 
       searchable: true, 
       sortable: true,
-      formatter: (payment: any) => this.formatPaymentMethod(payment)
+      mobileClass: 'mobile-text',
+      tabletClass: ''
     },
-    { key: 'amount', label: 'Amount', type: 'number', searchable: true, sortable: true, align: 'right' },
-    { key: 'payment_processing_fee', label: 'Processing Fee', type: 'number', searchable: true, sortable: true, align: 'right' }
+    { 
+      key: 'paid_thru_type', 
+      label: 'Method', 
+      type: 'text', 
+      searchable: true, 
+      sortable: true,
+      formatter: (payment: any) => this.formatPaymentMethod(payment),
+      mobileClass: '',
+      tabletClass: 'tablet-hide'
+    },
+    { 
+      key: 'amount', 
+      label: 'Amount', 
+      type: 'number', 
+      searchable: true, 
+      sortable: true, 
+      align: 'right',
+      mobileClass: 'mobile-narrow mobile-number',
+      tabletClass: ''
+    },
+    { 
+      key: 'payment_processing_fee', 
+      label: 'Fee', 
+      type: 'number', 
+      searchable: true, 
+      sortable: true, 
+      align: 'right',
+      mobileClass: 'mobile-narrow mobile-number',
+      tabletClass: 'tablet-hide'
+    }
   ];
 
   ngOnInit() {

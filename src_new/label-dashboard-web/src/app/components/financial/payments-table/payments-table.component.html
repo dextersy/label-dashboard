@@ -6,6 +6,7 @@
   [columns]="paymentsColumns"
   [showSortableHeaders]="true"
   [sortInfo]="sortInfo"
+  [responsiveMode]="'financial'"
   (pageChange)="pageChange.emit($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">

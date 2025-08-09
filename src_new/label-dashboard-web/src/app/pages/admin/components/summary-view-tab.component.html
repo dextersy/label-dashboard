@@ -74,9 +74,9 @@
     Payments and Royalties Summary
   </h3>
   
-  <div class="row" *ngIf="paymentsRoyaltiesSummary">
+  <div class="row payments-royalties-row" *ngIf="paymentsRoyaltiesSummary">
     <div class="col-lg-6 mb-4">
-      <div class="card h-100">
+      <div class="card h-100 artist-breakdown-card">
         <div class="card-header">
           <h5 class="card-title mb-0">
             <i class="fa fa-table text-secondary me-2"></i>
@@ -85,19 +85,19 @@
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-financial table-hover mb-0">
               <thead class="table-light">
                 <tr>
-                  <th class="border-0">Artist</th>
-                  <th class="border-0 text-end">Payments</th>
-                  <th class="border-0 text-end">Royalties</th>
+                  <th class="border-0 mobile-text">Artist</th>
+                  <th class="border-0 mobile-narrow mobile-number text-end">Payments</th>
+                  <th class="border-0 mobile-narrow mobile-number text-end">Royalties</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let artist of paymentsRoyaltiesSummary.artist_summaries">
-                  <td class="fw-medium">{{ artist.artist_name }}</td>
-                  <td class="text-end text-success">{{ formatCurrency(artist.total_payments) }}</td>
-                  <td class="text-end text-primary">{{ formatCurrency(artist.total_royalties) }}</td>
+                  <td class="fw-medium mobile-text" data-label="Artist">{{ artist.artist_name }}</td>
+                  <td class="mobile-narrow mobile-number text-end text-success" data-label="Payments">{{ formatCurrency(artist.total_payments) }}</td>
+                  <td class="mobile-narrow mobile-number text-end text-primary" data-label="Royalties">{{ formatCurrency(artist.total_royalties) }}</td>
                 </tr>
                 <tr *ngIf="paymentsRoyaltiesSummary.artist_summaries.length === 0">
                   <td colspan="3" class="text-muted text-center py-4">

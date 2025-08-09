@@ -23,8 +23,8 @@
         </thead>
         <tbody>
           <tr *ngFor="let release of releases; let i = index">
-            <td style="width: 25%"><strong>{{ release.title }}</strong></td>
-            <td class="text-right">
+            <td style="width: 25%" data-label="For Release"><strong>{{ release.title }}</strong></td>
+            <td class="text-right" data-label="Sync royalty %">
               <div class="input-group">
                 <input 
                   type="number" 
@@ -39,7 +39,7 @@
                 <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
               </div>
             </td>
-            <td class="text-right">
+            <td class="text-right" data-label="Streaming royalty %">
               <div class="input-group">
                 <input 
                   type="number" 
@@ -54,7 +54,7 @@
                 <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
               </div>
             </td>
-            <td class="text-right">
+            <td class="text-right" data-label="Downloads royalty %">
               <div class="input-group">
                 <input 
                   type="number" 
@@ -69,7 +69,7 @@
                 <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
               </div>
             </td>
-            <td class="text-right">
+            <td class="text-right" data-label="Physical royalty %">
               <div class="input-group">
                 <input 
                   type="number" 
@@ -84,7 +84,7 @@
                 <div class="input-group-addon">% of {{ release.physical_royalty_type }}</div>
               </div>
             </td>
-            <td class="text-right">
+            <td class="text-right" data-label="Remaining Recuperable Expense">
               <div class="d-flex align-items-center justify-content-end">
                 <span>{{ formatCurrency(release.recuperable_expense_balance) }}</span>
                 <button 
@@ -104,8 +104,8 @@
                 </button>
               </div>
             </td>
-            <td style="text-align: right;">{{ formatCurrency(release.total_earnings) }}</td>
-            <td style="text-align: right;">{{ formatCurrency(release.total_royalties) }}</td>
+            <td style="text-align: right;" data-label="Total earnings">{{ formatCurrency(release.total_earnings) }}</td>
+            <td style="text-align: right;" data-label="Total royalties earned">{{ formatCurrency(release.total_royalties) }}</td>
           </tr>
         </tbody>
       </table>

@@ -86,10 +86,11 @@
         <div *ngIf="!loading">
           <!-- Sortable headers (optional) -->
           <div *ngIf="showSortableHeaders && columns.length > 0" class="table-responsive">
-            <table class="table">
+            <table [class]="getTableClasses()">
               <thead>
                 <tr>
                   <th *ngFor="let column of columns" 
+                      [class]="getColumnClasses(column)"
                       [class.sortable]="column.sortable"
                       [style.text-align]="column.align || 'left'"
                       (click)="onSort(column)"
@@ -104,7 +105,10 @@
               </thead>
               <tbody>
                 <tr *ngFor="let item of data">
-                  <td *ngFor="let column of columns" [style.text-align]="column.align || 'left'">
+                  <td *ngFor="let column of columns" 
+                      [class]="getColumnClasses(column)"
+                      [style.text-align]="column.align || 'left'"
+                      [attr.data-label]="column.label">
                     <!-- Payment link special handling -->
                     <span *ngIf="column.key === 'payment_link'">
                       <a 
