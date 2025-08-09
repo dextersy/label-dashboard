@@ -1,6 +1,11 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
+interface ReleaseAssociation {
+  id: number;
+  title: string;
+}
+
 interface RoyaltyAttributes {
   id: number;
   artist_id: number;
@@ -23,6 +28,9 @@ class Royalty extends Model<RoyaltyAttributes, RoyaltyCreationAttributes> implem
   public release_id?: number;
   public description?: string;
   public date_recorded!: Date;
+
+  // Association
+  public release?: ReleaseAssociation;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;

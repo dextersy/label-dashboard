@@ -3,6 +3,11 @@ import { sequelize } from '../config/database';
 
 type EarningType = 'Sync' | 'Streaming' | 'Downloads' | 'Physical';
 
+interface ReleaseAssociation {
+  id: number;
+  title: string;
+}
+
 interface EarningAttributes {
   id: number;
   release_id: number;
@@ -21,6 +26,9 @@ class Earning extends Model<EarningAttributes, EarningCreationAttributes> implem
   public amount?: number;
   public description?: string;
   public date_recorded!: Date;
+
+  // Association
+  public release?: ReleaseAssociation;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
