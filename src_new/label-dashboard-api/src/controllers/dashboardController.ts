@@ -112,6 +112,7 @@ export const getTopEarningReleases = async (req: AuthRequest, res: Response) => 
         catalog_no: release.catalog_no,
         title: release.title,
         total_earnings: totalEarnings,
+        cover_art: release.cover_art,
         artist_name: release.releaseArtists && release.releaseArtists.length > 0 
           ? release.releaseArtists[0].artist?.name 
           : 'Unknown Artist'
@@ -180,7 +181,8 @@ export const getBalanceSummary = async (req: AuthRequest, res: Response) => {
         return {
           id: artist.id,
           name: artist.name,
-          balance: balance
+          balance: balance,
+          profile_photo: artist.profile_photo
         };
       })
     );
@@ -408,6 +410,7 @@ async function getTopEarningReleasesData(req: AuthRequest) {
       catalog_no: release.catalog_no,
       title: release.title,
       total_earnings: totalEarnings,
+      cover_art: release.cover_art,
       artist_name: release.releaseArtists && release.releaseArtists.length > 0 
         ? release.releaseArtists[0].artist?.name 
         : 'Unknown Artist'
@@ -463,7 +466,8 @@ async function getBalanceSummaryData(req: AuthRequest) {
       return {
         id: artist.id,
         name: artist.name,
-        balance: balance
+        balance: balance,
+        profile_photo: artist.profile_photo
       };
     })
   );
