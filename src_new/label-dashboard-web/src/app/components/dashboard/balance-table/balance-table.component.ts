@@ -6,6 +6,7 @@ export interface ArtistBalance {
   id: number;
   name: string;
   balance: number;
+  profile_photo?: string;
 }
 
 @Component({
@@ -33,5 +34,14 @@ export class BalanceTableComponent {
 
   getBalanceClass(balance: number): string {
     return balance >= 0 ? 'text-success' : 'text-danger';
+  }
+
+  getProfilePhotoUrl(profilePhoto: string | undefined): string {
+    if (!profilePhoto || !profilePhoto.startsWith('http')) {
+      return 'assets/img/default-avatar.png'; // Default placeholder
+    }
+    
+    // If it's already a full URL, return as is
+    return profilePhoto;
   }
 }

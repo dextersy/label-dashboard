@@ -8,6 +8,7 @@ export interface TopEarningRelease {
   title: string;
   artist_name: string;
   total_earnings: number;
+  cover_art?: string;
 }
 
 @Component({
@@ -23,7 +24,7 @@ export class TopAlbumsComponent {
   constructor(private router: Router) {}
 
   goToFinancial(): void {
-    this.router.navigate(['/financial'], { fragment: 'release' });
+    this.router.navigate(['/financial/release']);
   }
 
   formatCurrency(amount: number): string {
@@ -31,5 +32,14 @@ export class TopAlbumsComponent {
       style: 'currency',
       currency: 'PHP'
     }).format(amount);
+  }
+
+  getCoverArtUrl(coverArt: string | undefined): string {
+    if (!coverArt || !coverArt.startsWith('http')) {
+      return 'assets/img/placeholder.jpg'; // Default placeholder
+    }
+    
+    // If it's already a full URL, return as is
+    return coverArt;
   }
 }

@@ -24,7 +24,7 @@ export interface Artist {
 })
 export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentArtist: Artist | null = null;
-  @Output() artistSelected = new EventEmitter<Artist>();
+  @Output() artistSelected = new EventEmitter<{artist: Artist, userInitiated: boolean}>();
   
   artists: Artist[] = [];
   filteredArtists: Artist[] = [];
@@ -121,7 +121,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
         }
         
         if (artistToSelect) {
-          this.selectArtist(artistToSelect);
+          this.selectArtist(artistToSelect, false);
         }
         
         this.loading = false;
@@ -133,11 +133,11 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  selectArtist(artist: Artist): void {
+  selectArtist(artist: Artist, userInitiated: boolean = false): void {
     this.selectedArtist = artist;
     this.isDropdownOpen = false;
     this.saveArtistId(artist.id);
-    this.artistSelected.emit(artist);
+    this.artistSelected.emit({artist, userInitiated});
   }
 
   toggleDropdown(): void {
@@ -211,7 +211,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
         if (selectArtistId) {
           const artistToSelect = this.artists.find(artist => artist.id === selectArtistId);
           if (artistToSelect) {
-            this.selectArtist(artistToSelect);
+            this.selectArtist(artistToSelect, false);
             this.loading = false;
             return;
           }
@@ -248,7 +248,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
     }
     
     if (artistToSelect) {
-      this.selectArtist(artistToSelect);
+      this.selectArtist(artistToSelect, false);
     }
   }
 

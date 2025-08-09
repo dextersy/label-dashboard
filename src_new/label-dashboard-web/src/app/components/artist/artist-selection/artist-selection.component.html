@@ -61,7 +61,7 @@
       <!-- Artist list -->
       <li *ngFor="let artist of filteredArtists" 
           [class.active]="selectedArtist?.id === artist.id">
-        <a (click)="selectArtist(artist)">
+        <a (click)="selectArtist(artist, true)">
           <img [src]="getProfilePhotoUrl(artist.profile_photo)" 
                class="dropdown-artist-photo" 
                [alt]="artist.name">

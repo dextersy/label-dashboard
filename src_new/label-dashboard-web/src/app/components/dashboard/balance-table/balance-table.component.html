@@ -4,22 +4,28 @@
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table class="table table-financial">
+      <table class="table">
         <thead>
           <tr>
-            <th class="mobile-text">Artist</th>
-            <th class="mobile-narrow mobile-number">Balance</th>
+            <th>Photo</th>
+            <th>Artist</th>
+            <th>Balance</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let artist of artists">
-            <td class="mobile-text" data-label="Artist">{{ artist.name }}</td>
-            <td class="mobile-narrow mobile-number text-right" style="font-weight:bold;" [ngClass]="getBalanceClass(artist.balance)" data-label="Balance">
+            <td class="cover-cell">
+              <img [src]="getProfilePhotoUrl(artist.profile_photo)" 
+                   [alt]="artist.name + ' photo'"
+                   class="cover-thumbnail">
+            </td>
+            <td>{{ artist.name }}</td>
+            <td class="text-right" style="font-weight:bold;" [ngClass]="getBalanceClass(artist.balance)">
               {{ formatCurrency(artist.balance) }}
             </td>
           </tr>
           <tr *ngIf="artists.length === 0">
-            <td colspan="2" class="text-center text-muted">No artists found</td>
+            <td colspan="3" class="text-center text-muted">No artists found</td>
           </tr>
         </tbody>
       </table>

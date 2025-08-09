@@ -4,24 +4,34 @@
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table class="table table-financial">
+      <table class="table">
         <thead>
           <tr>
-            <th class="mobile-hide">Catalog Number</th>
-            <th class="mobile-text">Artist</th>
-            <th class="mobile-text">Title</th>
-            <th class="mobile-narrow mobile-number">Total earnings</th>
+            <th>Cover</th>
+            <th>Catalog Number</th>
+            <th>Artist</th>
+            <th>Title</th>
+            <th>Total earnings</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let release of releases">
-            <td class="mobile-hide" data-label="Catalog Number">{{ release.catalog_no }}</td>
-            <td class="mobile-text" data-label="Artist">{{ release.artist_name }}</td>
-            <td class="mobile-text" data-label="Title">{{ release.title }}</td>
-            <td class="mobile-narrow mobile-number text-right" data-label="Total earnings">{{ formatCurrency(release.total_earnings) }}</td>
+            <td class="cover-cell">
+              <img [src]="getCoverArtUrl(release.cover_art)" 
+                   [alt]="release.title + ' cover'"
+                   class="cover-thumbnail">
+            </td>
+            <td class="catalog-cell">
+              <span class="catalog-number">{{ release.catalog_no }}</span>
+            </td>
+            <td>{{ release.artist_name }}</td>
+            <td class="title-cell">
+              <div class="release-title">{{ release.title }}</div>
+            </td>
+            <td class="text-right">{{ formatCurrency(release.total_earnings) }}</td>
           </tr>
           <tr *ngIf="releases.length === 0">
-            <td colspan="4" class="text-center text-muted">No earnings data found</td>
+            <td colspan="5" class="text-center text-muted">No earnings data found</td>
           </tr>
         </tbody>
       </table>

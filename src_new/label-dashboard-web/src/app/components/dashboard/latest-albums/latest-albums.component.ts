@@ -24,7 +24,7 @@ export class LatestAlbumsComponent {
   constructor(private router: Router) {}
 
   goToReleases(): void {
-    this.router.navigate(['/artist'], { fragment: 'releases' });
+    this.router.navigate(['/artist/releases']);
   }
 
   getImageSrc(coverArt: string): string {
