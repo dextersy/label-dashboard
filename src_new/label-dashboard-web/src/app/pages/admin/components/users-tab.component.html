@@ -1,5 +1,5 @@
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-8">
     <app-paginated-table 
       title="Users"
       [data]="users"
@@ -13,14 +13,20 @@
       (filtersChange)="onUsersFiltersChange($event)"
       (sortChange)="onUsersSortChange($event)">
       <ng-template #actionsContent let-user>
-        <a (click)="toggleAdminStatus(user.id)" class="btn btn-link btn-sm">
-          {{ user.is_admin ? 'Remove admin' : 'Make admin' }}
+        <a (click)="toggleAdminStatus(user.id)" 
+           class="btn btn-link btn-sm"
+           [title]="user.is_admin ? 'Remove admin' : 'Make admin'">
+          <i class="fa" 
+             [class.fa-user-shield]="!user.is_admin" 
+             [class.fa-user-times]="user.is_admin"
+             [class.text-success]="!user.is_admin"
+             [class.text-danger]="user.is_admin"></i>
         </a>
       </ng-template>
     </app-paginated-table>
   </div>
 
-  <div class="col-md-6">
+  <div class="col-md-4">
     <app-paginated-table 
       title="Recent Login Attempts"
       [data]="loginAttempts"

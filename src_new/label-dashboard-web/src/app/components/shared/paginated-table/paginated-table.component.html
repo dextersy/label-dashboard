@@ -100,7 +100,7 @@
                        class="fa ms-1" 
                        [class]="getSortIcon(column)"></i>
                   </th>
-                  <th *ngIf="showActionsColumn">Actions</th>
+                  <th *ngIf="showActionsColumn" class="actions-column">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,7 +141,7 @@
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>
-                  <td *ngIf="showActionsColumn">
+                  <td *ngIf="showActionsColumn" class="actions-column">
                     <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item }"></ng-container>
                   </td>
                 </tr>
