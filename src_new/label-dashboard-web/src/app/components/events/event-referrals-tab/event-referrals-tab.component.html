@@ -23,12 +23,12 @@
       </thead>
       <tbody>
         <tr *ngFor="let referrer of referrers">
-          <td>{{ referrer.name }}</td>
-          <td><code>{{ referrer.referral_code }}</code></td>
-          <td class="text-center">{{ referrer.tickets_sold }}</td>
-          <td class="text-end">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
-          <td class="text-end">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
-          <td class="text-center">
+          <td data-label="Name">{{ referrer.name }}</td>
+          <td data-label="Referral Code"><code>{{ referrer.referral_code }}</code></td>
+          <td class="text-center" data-label="Tickets Sold">{{ referrer.tickets_sold }}</td>
+          <td class="text-end" data-label="Gross Sales">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
+          <td class="text-end" data-label="Net Sales">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
+          <td class="text-center" data-label="Referral Link">
             <button 
               class="btn btn-sm btn-outline-primary"
               (click)="copyToClipboard(referrer.referral_shortlink)"

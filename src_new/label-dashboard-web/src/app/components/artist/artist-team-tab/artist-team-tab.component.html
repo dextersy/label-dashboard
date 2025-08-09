@@ -35,22 +35,22 @@
             </thead>
             <tbody>
               <tr *ngFor="let member of teamMembers">
-                <td class="name-cell">
+                <td class="name-cell" data-label="Name">
                   <div class="member-name">{{ member.name }}</div>
                 </td>
-                <td class="email-cell">
+                <td class="email-cell" data-label="Email">
                   <div class="member-email">{{ member.email }}</div>
                 </td>
-                <td class="status-cell">
+                <td class="status-cell" data-label="Status">
                   <span class="badge" [class]="getStatusClass(member.status)">
                     <i class="fa" [class]="getStatusIcon(member.status)"></i>
                     {{ member.status }}
                   </span>
                 </td>
-                <td class="date-cell">
+                <td class="date-cell" data-label="Invited Date">
                   {{ formatDate(member.invited_date) }}
                 </td>
-                <td class="actions-cell">
+                <td class="actions-cell" data-label="Actions">
                   <div class="btn-group">
                     <button *ngIf="member.status === 'Pending'" 
                             class="btn btn-sm btn-secondary" 

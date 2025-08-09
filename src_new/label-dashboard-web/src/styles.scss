@@ -858,6 +858,10 @@ div .table tbody {
   
   /* Card-style layout for general tables (releases, artists, etc.) */
   .table:not(.table-financial) {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    
     thead {
       display: none;
     }
@@ -870,6 +874,8 @@ div .table tbody {
         margin-bottom: 10px;
         padding: 15px;
         background-color: #fff;
+        width: 100%;
+        box-sizing: border-box;
         
         &:hover {
           background-color: #f8f9fa;
@@ -879,15 +885,20 @@ div .table tbody {
       td {
         display: block;
         border: none;
-        padding: 5px 0;
+        padding: 2px !important;
+        margin: 2px 0;
         text-align: left !important;
         
-        &:before {
+        &[data-label]:not([data-label=""]):before {
           content: attr(data-label) ": ";
           font-weight: 600;
           color: #333;
           display: inline-block;
           min-width: 100px;
+        }
+        
+        &:not([data-label]) {
+          text-align: center !important;
         }
         
         &.cover-cell {

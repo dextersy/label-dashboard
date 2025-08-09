@@ -25,15 +25,15 @@
                   (dblclick)="openDocument(document)" 
                   style="cursor: pointer;"
                   title="Double-click to view document">
-                <td class="text-center">
+                <td class="text-center" data-label="">
                   <i [class]="'fa ' + getFileIcon(document.filename)"></i>
                 </td>
-                <td>
+                <td data-label="Document Title">
                   <strong>{{ document.title }}</strong><br>
                   <small class="text-muted">{{ document.filename }}</small>
                 </td>
-                <td>{{ formatDate(document.upload_date) }}</td>
-                <td>
+                <td data-label="Upload Date">{{ formatDate(document.upload_date) }}</td>
+                <td data-label="Actions">
                   <div class="btn-group btn-group-sm" role="group">
                     <button 
                       type="button" 
