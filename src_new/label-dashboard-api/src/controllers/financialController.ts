@@ -1827,3 +1827,228 @@ export const payAllBalances = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// CSV EXPORT FUNCTIONS
+export const downloadEarningsCSV = async (req: AuthRequest, res: Response) => {
+  try {
+    const { artist_id } = req.query;
+    let artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
+    
+    if (!artistIdNum || isNaN(artistIdNum)) {
+      return res.status(400).json({ error: 'Valid artist ID is required' });
+    }
+
+    // Verify artist access
+    if (!req.user.is_admin) {
+      const artistAccess = await ArtistAccess.findOne({
+        where: {
+          artist_id: artistIdNum,
+          user_id: req.user.id
+        }
+      });
+      if (!artistAccess) {
+        return res.status(403).json({ error: 'Access denied to this artist' });
+      }
+    }
+
+    const { sortBy, sortDirection, start_date, end_date, ...filters } = req.query;
+
+    // Build where conditions
+    const where: any = {};
+    const releaseWhere: any = {};
+    
+    // Add date range filter
+    if (start_date && end_date) {
+      where.date_recorded = {
+        [require('sequelize').Op.between]: [start_date, end_date]
+      };
+    }
+
+    // Add text filters - separate filters for earnings table vs release table
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && typeof filters[key] === 'string' && filters[key].trim() !== '') {
+        if (key === 'release_title') {
+          // This filter belongs to the release table
+          releaseWhere.title = {
+            [require('sequelize').Op.like]: `%${filters[key]}%`
+          };
+        } else if (key === 'artist_id') {
+          // artist_id is already handled by the ReleaseArtist join condition
+          // Don't add to where clause as earning table doesn't have artist_id column
+        } else {
+          // These filters belong to the earnings table
+          where[key] = {
+            [require('sequelize').Op.like]: `%${filters[key]}%`
+          };
+        }
+      }
+    });
+
+    // Build order array for sorting
+    let order: any[] = [['date_recorded', 'DESC']];
+    if (sortBy && sortDirection) {
+      order = [[sortBy as string, sortDirection === 'desc' ? 'DESC' : 'ASC']];
+    }
+
+    // Get earnings data
+    const earnings = await Earning.findAll({
+      include: [
+        {
+          model: Release,
+          as: 'release',
+          required: true, // INNER JOIN to ensure only earnings with releases
+          where: Object.keys(releaseWhere).length > 0 ? releaseWhere : undefined,
+          include: [
+            {
+              model: ReleaseArtist,
+              as: 'releaseArtists',
+              required: true, // INNER JOIN to ensure only releases for this artist
+              where: { artist_id: artistIdNum },
+              attributes: []
+            }
+          ],
+          attributes: ['title']
+        }
+      ],
+      where,
+      order,
+      raw: false
+    });
+
+    // Convert to CSV format
+    const csvHeaders = ['Date', 'Release', 'Description', 'Amount'];
+    const csvRows = earnings.map(earning => [
+      new Date(earning.date_recorded).toLocaleDateString(),
+      earning.release?.title || '',
+      earning.description || '',
+      `${parseFloat(earning.amount.toString()).toFixed(2)}`
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvRows.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Set headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="earnings.csv"');
+    
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Download earnings CSV error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const downloadRoyaltiesCSV = async (req: AuthRequest, res: Response) => {
+  try {
+    const { artist_id } = req.query;
+    let artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
+    
+    if (!artistIdNum || isNaN(artistIdNum)) {
+      return res.status(400).json({ error: 'Valid artist ID is required' });
+    }
+
+    // Verify artist access
+    if (!req.user.is_admin) {
+      const artistAccess = await ArtistAccess.findOne({
+        where: {
+          artist_id: artistIdNum,
+          user_id: req.user.id
+        }
+      });
+      if (!artistAccess) {
+        return res.status(403).json({ error: 'Access denied to this artist' });
+      }
+    }
+
+    const { sortBy, sortDirection, start_date, end_date, ...filters } = req.query;
+
+    // Build where conditions - separate filters for royalty table vs release table
+    const where: any = {};
+    const releaseWhere: any = {};
+    
+    // Add date range filter
+    if (start_date && end_date) {
+      where.date_recorded = {
+        [require('sequelize').Op.between]: [start_date, end_date]
+      };
+    }
+
+    // Add text filters - separate filters for royalty table vs release table
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && typeof filters[key] === 'string' && filters[key].trim() !== '') {
+        if (key === 'release_title') {
+          // This filter belongs to the release table
+          releaseWhere.title = {
+            [require('sequelize').Op.like]: `%${filters[key]}%`
+          };
+        } else if (key === 'artist_id') {
+          // artist_id is already handled by the ReleaseArtist join condition
+          // Don't add to where clause as royalty table doesn't have artist_id column
+        } else {
+          // These filters belong to the royalty table
+          where[key] = {
+            [require('sequelize').Op.like]: `%${filters[key]}%`
+          };
+        }
+      }
+    });
+
+    // Build order array for sorting
+    let order: any[] = [['date_recorded', 'DESC']];
+    if (sortBy && sortDirection) {
+      order = [[sortBy as string, sortDirection === 'desc' ? 'DESC' : 'ASC']];
+    }
+
+    // Get royalties data
+    const royalties = await Royalty.findAll({
+      include: [
+        {
+          model: Release,
+          as: 'release',
+          required: true, // INNER JOIN to ensure only royalties with releases
+          where: Object.keys(releaseWhere).length > 0 ? releaseWhere : undefined,
+          include: [
+            {
+              model: ReleaseArtist,
+              as: 'releaseArtists',
+              required: true, // INNER JOIN to ensure only releases for this artist
+              where: { artist_id: artistIdNum },
+              attributes: []
+            }
+          ],
+          attributes: ['title']
+        }
+      ],
+      where,
+      order,
+      raw: false
+    });
+
+    // Convert to CSV format
+    const csvHeaders = ['Date', 'Release', 'Description', 'Amount'];
+    const csvRows = royalties.map(royalty => [
+      new Date(royalty.date_recorded).toLocaleDateString(),
+      royalty.release?.title || '',
+      royalty.description || '',
+      `${parseFloat(royalty.amount.toString()).toFixed(2)}`
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvRows.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Set headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="royalties.csv"');
+    
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Download royalties CSV error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

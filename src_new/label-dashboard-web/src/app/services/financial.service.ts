@@ -301,4 +301,79 @@ export class FinancialService {
       pagination: response?.pagination || {}
     };
   }
+
+  // CSV Download Methods
+  async downloadEarningsCSV(artistId: number, filters: any = {}, sortBy?: string, sortDirection?: string, startDate?: string, endDate?: string): Promise<void> {
+    let queryParams = `artist_id=${artistId}`;
+    
+    // Add date range parameters
+    if (startDate && endDate) {
+      queryParams += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+
+    const response = await this.http.get(`${environment.apiUrl}/financial/earnings/csv?${queryParams}`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    }).toPromise();
+
+    // Create download link
+    const blob = new Blob([response as any], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `earnings-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  async downloadRoyaltiesCSV(artistId: number, filters: any = {}, sortBy?: string, sortDirection?: string, startDate?: string, endDate?: string): Promise<void> {
+    let queryParams = `artist_id=${artistId}`;
+    
+    // Add date range parameters
+    if (startDate && endDate) {
+      queryParams += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    // Add filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    
+    // Add sort parameters
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+
+    const response = await this.http.get(`${environment.apiUrl}/financial/royalties/csv?${queryParams}`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    }).toPromise();
+
+    // Create download link
+    const blob = new Blob([response as any], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `royalties-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
 }

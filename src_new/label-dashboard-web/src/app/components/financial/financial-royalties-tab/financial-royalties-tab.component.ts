@@ -6,6 +6,9 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
 import { DateRangeFilterComponent, DateRangeSelection } from '../../shared/date-range-filter/date-range-filter.component';
 import { Royalty } from '../../../pages/financial/financial.component';
 import { AuthService } from '../../../services/auth.service';
+import { FinancialService } from '../../../services/financial.service';
+import { NotificationService } from '../../../services/notification.service';
+import { ArtistStateService } from '../../../services/artist-state.service';
 
 @Component({
   selector: 'app-financial-royalties-tab',
@@ -19,6 +22,8 @@ export class FinancialRoyaltiesTabComponent {
   @Input() pagination: PaginationInfo | null = null;
   @Input() loading: boolean = false;
   @Input() royaltiesSort: SortInfo | null = null;
+  @Input() currentFilters: SearchFilters = {};
+  @Input() currentDateRange: DateRangeSelection | null = null;
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
@@ -26,12 +31,25 @@ export class FinancialRoyaltiesTabComponent {
   @Output() refresh = new EventEmitter<void>();
 
   isAdmin = false;
+  selectedArtist: any = null;
+  downloadingCSV = false;
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(
+    private router: Router, 
+    private authService: AuthService,
+    private financialService: FinancialService,
+    private notificationService: NotificationService,
+    private artistStateService: ArtistStateService
+  ) {}
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe(user => {
       this.isAdmin = user ? user.is_admin : false;
+    });
+
+    // Subscribe to selected artist changes
+    this.artistStateService.selectedArtist$.subscribe(artist => {
+      this.selectedArtist = artist;
     });
   }
 
@@ -90,5 +108,27 @@ export class FinancialRoyaltiesTabComponent {
 
   navigateToNewRoyalty(): void {
     this.router.navigate(['/financial/royalties/new']);
+  }
+
+  async downloadCSV(): Promise<void> {
+    if (!this.selectedArtist || this.downloadingCSV) return;
+
+    this.downloadingCSV = true;
+    try {
+      await this.financialService.downloadRoyaltiesCSV(
+        this.selectedArtist.id,
+        this.currentFilters,
+        this.royaltiesSort?.column,
+        this.royaltiesSort?.direction,
+        this.currentDateRange?.startDate,
+        this.currentDateRange?.endDate
+      );
+      this.notificationService.showSuccess('Royalties CSV downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading royalties CSV:', error);
+      this.notificationService.showError('Failed to download royalties CSV');
+    } finally {
+      this.downloadingCSV = false;
+    }
   }
 }

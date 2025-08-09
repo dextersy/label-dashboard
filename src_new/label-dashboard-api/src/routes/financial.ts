@@ -18,7 +18,9 @@ import {
   getAdminBalanceSummary,
   getAdminRecuperableExpenses,
   getArtistsReadyForPayment,
-  payAllBalances
+  payAllBalances,
+  downloadEarningsCSV,
+  downloadRoyaltiesCSV
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -30,12 +32,14 @@ router.use(authenticateToken);
 // Earnings management
 router.post('/earnings', requireAdmin, addEarning);
 router.post('/earnings/bulk', requireAdmin, bulkAddEarnings);
+router.get('/earnings/csv', downloadEarningsCSV); // CSV route before :id route
 router.get('/earnings', getEarnings);
 router.get('/earnings/:id', getEarningById);
 router.get('/artists/:artist_id/earnings', getEarningsByArtist);
 
 // Royalties management
 router.post('/royalties', requireAdmin, addRoyalty);
+router.get('/royalties/csv', downloadRoyaltiesCSV); // CSV route before any parameterized routes
 router.get('/royalties', getRoyalties);
 
 // Payments management
