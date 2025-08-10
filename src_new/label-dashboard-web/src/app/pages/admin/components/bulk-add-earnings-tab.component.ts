@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, BulkEarning } from '../../../services/admin.service';
+import { AdminService, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
 import { ReleaseService, Release } from '../../../services/release.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
@@ -103,10 +103,17 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   // CSV Import properties
   csvFile: File | null = null;
-  csvData: CsvEarningRow[] = [];
+  csvData: ProcessedEarningRow[] = [];
+  csvDataAll: ProcessedEarningRow[] = []; // Store all data
   csvTotalAmount: number = 0;
   csvTotalCount: number = 0;
+  csvTotalUnmatched: number = 0;
   csvCalculateRoyalties: boolean = true;
+  csvEarningType: string = 'Streaming';
+  csvDescription: string = 'Import from CSV';
+  mobileFormCollapsed: boolean = true;
+  manualFormCollapsed: boolean = true;
+  csvProcessingResult: CsvProcessingResult | null = null;
   csvPagination: PaginationInfo = {
     current_page: 1,
     total_pages: 1,
@@ -117,10 +124,28 @@ export class BulkAddEarningsTabComponent implements OnInit {
   };
 
   csvTableColumns: TableColumn[] = [
-    { key: 'catalog_no', label: 'Catalog No', searchable: true, sortable: true },
-    { key: 'release_title', label: 'Release Title', searchable: true, sortable: true },
-    { key: 'artist_name', label: 'Artist Name', searchable: true, sortable: true },
-    { key: 'earning_amount', label: 'Amount', type: 'number', searchable: false, sortable: true, formatter: (item) => this.formatCurrency(item.earning_amount) }
+    { 
+      key: 'matched_release', 
+      label: 'Catalog No', 
+      searchable: true, 
+      sortable: true,
+      formatter: (item) => item.matched_release?.catalog_no || ''
+    },
+    { 
+      key: 'matched_release', 
+      label: 'Release Title', 
+      searchable: true, 
+      sortable: true,
+      formatter: (item) => item.matched_release?.title || ''
+    },
+    { 
+      key: 'earning_amount', 
+      label: 'Earning Amount', 
+      type: 'number', 
+      searchable: false, 
+      sortable: true, 
+      formatter: (item) => this.formatCurrency(item.earning_amount) 
+    }
   ];
 
   constructor(
@@ -290,7 +315,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     const file = event.target.files[0];
     if (file && file.type === 'text/csv') {
       this.csvFile = file;
-      this.processCsvFile(file);
+      this.previewCsvFile(file);
     } else {
       this.notificationService.showError('Please select a valid CSV file');
     }
@@ -315,71 +340,85 @@ export class BulkAddEarningsTabComponent implements OnInit {
       const file = files[0];
       if (file.type === 'text/csv') {
         this.csvFile = file;
-        this.processCsvFile(file);
+        this.previewCsvFile(file);
       } else {
         this.notificationService.showError('Please drop a valid CSV file');
       }
     }
   }
 
-  processCsvFile(file: File): void {
-    // Placeholder for CSV processing
-    // TODO: Implement CSV parsing and mapping logic
+  previewCsvFile(file: File): void {
     this.loading = true;
     
-    // Simulate processing delay
-    setTimeout(() => {
-      // Mock data for now (more entries to test pagination)
-      this.csvData = [
-        { catalog_no: 'MR001', release_title: 'Sample Album 1', artist_name: 'Artist One', earning_amount: 1500.00 },
-        { catalog_no: 'MR002', release_title: 'Sample Album 2', artist_name: 'Artist Two', earning_amount: 2300.50 },
-        { catalog_no: 'MR003', release_title: 'Sample Album 3', artist_name: 'Artist Three', earning_amount: 890.25 },
-        { catalog_no: 'MR004', release_title: 'Sample Album 4', artist_name: 'Artist Four', earning_amount: 1750.00 },
-        { catalog_no: 'MR005', release_title: 'Sample Album 5', artist_name: 'Artist Five', earning_amount: 3200.75 },
-        { catalog_no: 'MR006', release_title: 'Dance Revolution', artist_name: 'DJ Electric', earning_amount: 1250.30 },
-        { catalog_no: 'MR007', release_title: 'Midnight Dreams', artist_name: 'Luna Eclipse', earning_amount: 1850.90 },
-        { catalog_no: 'MR008', release_title: 'Rock Anthems', artist_name: 'Thunder Strike', earning_amount: 2150.45 },
-        { catalog_no: 'MR009', release_title: 'Jazz Fusion', artist_name: 'Smooth Operator', earning_amount: 1650.80 },
-        { catalog_no: 'MR010', release_title: 'Pop Hits Collection', artist_name: 'Star Bright', earning_amount: 2750.60 },
-        { catalog_no: 'MR011', release_title: 'Acoustic Sessions', artist_name: 'Folk Hero', earning_amount: 950.25 },
-        { catalog_no: 'MR012', release_title: 'Electronic Waves', artist_name: 'Synth Master', earning_amount: 1450.15 },
-        { catalog_no: 'MR013', release_title: 'Classical Remixed', artist_name: 'Orchestra Digital', earning_amount: 1750.85 },
-        { catalog_no: 'MR014', release_title: 'Hip Hop Chronicles', artist_name: 'Rap Legend', earning_amount: 2850.40 },
-        { catalog_no: 'MR015', release_title: 'Country Roads', artist_name: 'Nashville Dreams', earning_amount: 1550.70 }
-      ];
-      
-      this.updateCsvSummary();
-      this.loading = false;
-      this.notificationService.showSuccess(`CSV file processed: ${this.csvTotalCount} entries found`);
-    }, 1500);
+    this.adminService.previewCsvForEarnings(file).subscribe({
+      next: (result: CsvProcessingResult) => {
+        this.csvProcessingResult = result;
+        // Only show rows that have matched releases
+        this.csvDataAll = result.data.filter(row => row.matched_release !== null);
+        this.updateCsvSummary();
+        this.updatePaginatedData();
+        this.loading = false;
+        
+        const matchedCount = result.summary.total_rows - result.summary.total_unmatched;
+        this.notificationService.showSuccess(
+          `CSV processed: ${result.summary.total_rows} rows, ${matchedCount} matched, ${result.summary.total_unmatched} unmatched`
+        );
+      },
+      error: (error) => {
+        console.error('CSV processing error:', error);
+        this.loading = false;
+        this.notificationService.showError(
+          error.error?.error || 'Error processing CSV file. Please check the format and try again.'
+        );
+      }
+    });
   }
 
   updateCsvSummary(): void {
-    this.csvTotalCount = this.csvData.length;
-    this.csvTotalAmount = this.csvData.reduce((sum, row) => sum + row.earning_amount, 0);
+    if (this.csvProcessingResult) {
+      this.csvTotalCount = this.csvProcessingResult.summary.total_rows;
+      this.csvTotalAmount = this.csvProcessingResult.summary.total_earning_amount;
+      this.csvTotalUnmatched = this.csvProcessingResult.summary.total_unmatched;
+    } else {
+      this.csvTotalCount = this.csvDataAll.length;
+      this.csvTotalAmount = this.csvDataAll.reduce((sum, row) => sum + row.earning_amount, 0);
+      this.csvTotalUnmatched = this.csvDataAll.filter(row => !row.matched_release).length;
+    }
     
-    // Update pagination
-    const totalPages = Math.ceil(this.csvTotalCount / this.csvPagination.per_page);
+    // Update pagination based on matched data count
+    const matchedCount = this.csvDataAll.length;
+    const totalPages = Math.ceil(matchedCount / this.csvPagination.per_page);
     this.csvPagination = {
       current_page: 1,
       total_pages: totalPages,
-      total_count: this.csvTotalCount,
+      total_count: matchedCount,
       per_page: this.csvPagination.per_page,
       has_next: totalPages > 1,
       has_prev: false
     };
   }
 
+  updatePaginatedData(): void {
+    const startIndex = (this.csvPagination.current_page - 1) * this.csvPagination.per_page;
+    const endIndex = startIndex + this.csvPagination.per_page;
+    this.csvData = this.csvDataAll.slice(startIndex, endIndex);
+  }
+
   onCsvPageChange(page: number): void {
     this.csvPagination.current_page = page;
-    // TODO: Implement pagination logic for CSV data
+    this.csvPagination.has_prev = page > 1;
+    this.csvPagination.has_next = page < this.csvPagination.total_pages;
+    this.updatePaginatedData();
   }
 
   removeCsvFile(): void {
     this.csvFile = null;
     this.csvData = [];
+    this.csvDataAll = [];
+    this.csvProcessingResult = null;
     this.csvTotalAmount = 0;
     this.csvTotalCount = 0;
+    this.csvTotalUnmatched = 0;
     this.csvPagination.current_page = 1;
     this.csvPagination.total_pages = 1;
     this.csvPagination.total_count = 0;
@@ -391,14 +430,113 @@ export class BulkAddEarningsTabComponent implements OnInit {
       return;
     }
 
-    // TODO: Implement CSV earnings save logic
+    // Filter out rows that don't have matched releases
+    const matchedRows = this.csvDataAll.filter(row => row.matched_release);
+    
+    if (matchedRows.length === 0) {
+      this.notificationService.showError('No matched releases to save. Please ensure your CSV contains valid catalog numbers or release titles.');
+      return;
+    }
+
+    // Convert processed CSV data to BulkEarning format
+    const bulkEarnings: BulkEarning[] = matchedRows.map(row => ({
+      release_id: row.matched_release!.id,
+      date_recorded: new Date().toISOString().split('T')[0], // Use current date
+      type: this.csvEarningType, // Use selected earning type
+      description: this.csvDescription,
+      amount: row.earning_amount,
+      calculate_royalties: this.csvCalculateRoyalties
+    }));
+
     this.loading = true;
     
-    setTimeout(() => {
-      this.loading = false;
-      this.notificationService.showSuccess(`${this.csvTotalCount} earnings imported successfully`);
-      this.removeCsvFile();
-    }, 2000);
+    this.adminService.bulkAddEarnings(bulkEarnings).subscribe({
+      next: (response) => {
+        this.loading = false;
+        const skippedCount = this.csvDataAll.length - matchedRows.length;
+        let message = `${matchedRows.length} earnings imported successfully`;
+        if (skippedCount > 0) {
+          message += `, ${skippedCount} rows skipped (no matching releases)`;
+        }
+        this.notificationService.showSuccess(message);
+        this.removeCsvFile();
+      },
+      error: (error) => {
+        console.error('Error saving CSV earnings:', error);
+        this.loading = false;
+        this.notificationService.showError('Error importing earnings from CSV');
+      }
+    });
+  }
+
+  downloadUnmatchedCsv(): void {
+    if (!this.csvProcessingResult) {
+      return;
+    }
+
+    // Get all unmatched rows from the original processing result
+    const unmatchedRows = this.csvProcessingResult.data.filter(row => row.matched_release === null);
+    
+    if (unmatchedRows.length === 0) {
+      this.notificationService.showInfo('No unmatched rows to download');
+      return;
+    }
+
+    // Get headers from the first row's original_data
+    const headers = Object.keys(unmatchedRows[0].original_data);
+    
+    // Generate CSV content
+    const csvContent = this.generateCsvContent(headers, unmatchedRows.map(row => row.original_data));
+    
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+      const originalFilename = this.csvFile?.name?.replace('.csv', '') || 'earnings';
+      link.setAttribute('download', `${originalFilename}_unmatched_${timestamp}.csv`);
+      
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      this.notificationService.showSuccess(`Downloaded ${unmatchedRows.length} unmatched rows as CSV`);
+    }
+  }
+
+  private generateCsvContent(headers: string[], rows: { [key: string]: string }[]): string {
+    // Escape CSV values that contain commas, quotes, or newlines
+    const escapeCsvValue = (value: string): string => {
+      if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+
+    // Create header row
+    const csvHeaders = headers.map(header => escapeCsvValue(header)).join(',');
+    
+    // Create data rows
+    const csvRows = rows.map(row => 
+      headers.map(header => escapeCsvValue(row[header] || '')).join(',')
+    );
+    
+    // Combine headers and data
+    return [csvHeaders, ...csvRows].join('\n');
+  }
+
+  toggleMobileForm(): void {
+    this.mobileFormCollapsed = !this.mobileFormCollapsed;
+  }
+
+  toggleManualForm(): void {
+    this.manualFormCollapsed = !this.manualFormCollapsed;
   }
 
   formatCurrency(amount: number): string {

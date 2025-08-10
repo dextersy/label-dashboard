@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
 import { sendEarningsNotification, sendPaymentNotification } from '../utils/emailService';
 import { PaymentService } from '../utils/paymentService';
+import csv from 'csv-parser';
+import * as fuzz from 'fuzzball';
+import { Readable } from 'stream';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -41,11 +44,11 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    // Create earning record
+    // Create earning record (round to 2 decimal places)
     const earning = await Earning.create({
       release_id,
       type: type || 'Streaming',
-      amount,
+      amount: parseFloat(amount.toFixed(2)),
       description,
       date_recorded: new Date(date_recorded)
     });
@@ -103,7 +106,7 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
         const earning = await Earning.create({
           release_id: earningData.release_id,
           type: earningData.type || 'Streaming',
-          amount: earningData.amount,
+          amount: parseFloat(earningData.amount.toFixed(2)),
           description: earningData.description,
           date_recorded: new Date(earningData.date_recorded)
         });
@@ -128,6 +131,236 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Bulk add earnings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+interface CsvRow {
+  [key: string]: string;
+}
+
+interface ProcessedEarningRow {
+  original_data: CsvRow;
+  catalog_no: string;
+  release_title: string;
+  earning_amount: number;
+  matched_release: {
+    id: number;
+    catalog_no: string;
+    title: string;
+  } | null;
+  fuzzy_match_score?: number;
+}
+
+// Fuzzy match column headers to expected fields
+const fuzzyMatchColumns = (headers: string[]): { [key: string]: string } => {
+  const expectedFields = {
+    catalog_no: ['catalog', 'catalog_no', 'catalog_number', 'cat_no', 'catno'],
+    release_title: ['title', 'release_title', 'release', 'album', 'song'],
+    earning_amount: ['amount', 'earning_amount', 'earnings', 'revenue', 'total']
+  };
+
+  const columnMapping: { [key: string]: string } = {};
+
+  Object.keys(expectedFields).forEach(field => {
+    const candidates = expectedFields[field];
+    let bestMatch = '';
+    let bestScore = 0;
+
+    headers.forEach(header => {
+      candidates.forEach(candidate => {
+        const score = fuzz.ratio(header.toLowerCase().trim(), candidate.toLowerCase());
+        if (score > bestScore && score >= 60) { // 60% similarity threshold
+          bestScore = score;
+          bestMatch = header;
+        }
+      });
+    });
+
+    if (bestMatch) {
+      columnMapping[field] = bestMatch;
+    }
+  });
+
+  return columnMapping;
+};
+
+// Find exact matching release for a given catalog number and title
+const findMatchingRelease = async (
+  releases: Release[], 
+  catalogNo: string, 
+  releaseTitle: string
+): Promise<{ release: Release | null; score: number }> => {
+  // Determine which fields are available for matching
+  const hasCatalogNo = catalogNo && catalogNo.trim() !== '';
+  const hasReleaseTitle = releaseTitle && releaseTitle.trim() !== '';
+
+  // If neither field is provided, no match is possible
+  if (!hasCatalogNo && !hasReleaseTitle) {
+    return { release: null, score: 0 };
+  }
+
+  // Step 1: If catalog number is present, use that for exact matching
+  if (hasCatalogNo) {
+    const catalogMatches = releases.filter(release => 
+      (release.catalog_no || '').toLowerCase().trim() === catalogNo.toLowerCase().trim()
+    );
+    
+    if (catalogMatches.length === 1) {
+      return { release: catalogMatches[0], score: 100 };
+    } else if (catalogMatches.length > 1) {
+      // Multiple catalog matches - this shouldn't happen but if it does, take the first one
+      return { release: catalogMatches[0], score: 100 };
+    }
+    // If no catalog match found, don't fall back to title matching
+    return { release: null, score: 0 };
+  }
+
+  // Step 2: If no catalog number provided, use release title for exact matching
+  if (hasReleaseTitle) {
+    const titleMatches = releases.filter(release => 
+      (release.title || '').toLowerCase().trim() === releaseTitle.toLowerCase().trim()
+    );
+    
+    if (titleMatches.length === 1) {
+      return { release: titleMatches[0], score: 100 };
+    } else if (titleMatches.length > 1) {
+      // Multiple title matches - consider unmatched as requested
+      console.log(`MULTIPLE TITLE MATCHES for "${releaseTitle}": Found ${titleMatches.length} releases with same title`);
+      return { release: null, score: 0 };
+    } else {
+      console.log(`NO TITLE MATCH for "${releaseTitle}": No exact match found in ${releases.length} releases`);
+    }
+  }
+
+  return { release: null, score: 0 };
+};
+
+export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'CSV file is required' });
+    }
+
+    // Get all releases for the brand
+    const releases = await Release.findAll({
+      where: { brand_id: req.user.brand_id }
+    });
+
+    const csvData: CsvRow[] = [];
+    const processedRows: ProcessedEarningRow[] = [];
+
+    // Parse CSV file
+    const csvContent = req.file.buffer.toString();
+    const stream = Readable.from(csvContent);
+
+    return new Promise((resolve, reject) => {
+      stream
+        .pipe(csv())
+        .on('data', (data: CsvRow) => {
+          csvData.push(data);
+        })
+        .on('end', async () => {
+          try {
+            if (csvData.length === 0) {
+              return res.status(400).json({ error: 'CSV file is empty' });
+            }
+
+            // Get headers and perform fuzzy matching
+            const headers = Object.keys(csvData[0]);
+            const columnMapping = fuzzyMatchColumns(headers);
+
+            if (!columnMapping.earning_amount) {
+              return res.status(400).json({ 
+                error: 'Could not identify earning amount column. Expected columns like: amount, earning_amount, earnings, revenue, total' 
+              });
+            }
+
+            let totalMatchedAmount = 0;
+            let unmatchedCount = 0;
+
+            // Process each row
+            for (const row of csvData) {
+              const catalogNo = columnMapping.catalog_no ? (row[columnMapping.catalog_no] || '').trim() : '';
+              const releaseTitle = columnMapping.release_title ? (row[columnMapping.release_title] || '').trim() : '';
+              const earningAmountStr = row[columnMapping.earning_amount] || '0';
+              
+              // Parse earning amount
+              const earningAmount = parseFloat(earningAmountStr.replace(/[^\d.-]/g, ''));
+              
+              if (isNaN(earningAmount)) {
+                continue; // Skip rows with invalid amounts
+              }
+
+              const processedRow: ProcessedEarningRow = {
+                original_data: row,
+                catalog_no: catalogNo,
+                release_title: releaseTitle,
+                earning_amount: earningAmount,
+                matched_release: null
+              };
+
+              // Try to find matching release
+              if (catalogNo || releaseTitle) {
+                const { release, score } = await findMatchingRelease(releases, catalogNo, releaseTitle);
+                if (release) {
+                  processedRow.matched_release = {
+                    id: release.id,
+                    catalog_no: release.catalog_no || '',
+                    title: release.title || ''
+                  };
+                  processedRow.fuzzy_match_score = score;
+                  // Only add to total if there's a match
+                  totalMatchedAmount += earningAmount;
+                } else {
+                  unmatchedCount++;
+                  // Log unmatched entries for debugging
+                  console.log('UNMATCHED ROW:', {
+                    catalog_no: catalogNo || '(not provided)',
+                    release_title: releaseTitle || '(not provided)',
+                    earning_amount: earningAmount,
+                    reason: catalogNo ? 'No exact catalog match found' : 
+                            releaseTitle ? 'No unique title match found' : 'No identifiers provided'
+                  });
+                }
+              } else {
+                unmatchedCount++;
+                console.log('UNMATCHED ROW: No catalog number or release title provided');
+              }
+
+              processedRows.push(processedRow);
+            }
+
+            const summary = {
+              total_rows: processedRows.length,
+              total_unmatched: unmatchedCount,
+              total_earning_amount: parseFloat(totalMatchedAmount.toFixed(2)),
+              column_mapping: columnMapping
+            };
+
+            res.json({
+              message: 'CSV processed successfully',
+              data: processedRows,
+              summary
+            });
+
+          } catch (error) {
+            console.error('CSV processing error:', error);
+            res.status(500).json({ error: 'Error processing CSV file' });
+          }
+        })
+        .on('error', (error) => {
+          console.error('CSV parsing error:', error);
+          res.status(500).json({ error: 'Error parsing CSV file' });
+        });
+    });
+
+  } catch (error) {
+    console.error('Preview CSV for earnings error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -159,7 +392,7 @@ async function processEarningRoyalties(earning: any) {
     }
 
     if (royaltyPercentage > 0) {
-      const royaltyAmount = earning.amount * royaltyPercentage;
+      const royaltyAmount = parseFloat((earning.amount * royaltyPercentage).toFixed(2));
       
       await Royalty.create({
         artist_id: releaseArtist.artist_id,

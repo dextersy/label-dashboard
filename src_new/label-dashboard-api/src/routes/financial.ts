@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   addEarning,
   bulkAddEarnings,
+  previewCsvForEarnings,
   getEarnings,
   getEarningById,
   getEarningsByArtist,
@@ -24,6 +26,21 @@ import {
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
+// Configure multer for CSV file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.mimetype === 'application/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
 const router = Router();
 
 // All routes require authentication
@@ -32,6 +49,7 @@ router.use(authenticateToken);
 // Earnings management
 router.post('/earnings', requireAdmin, addEarning);
 router.post('/earnings/bulk', requireAdmin, bulkAddEarnings);
+router.post('/earnings/preview-csv', requireAdmin, upload.single('csv_file'), previewCsvForEarnings);
 router.get('/earnings/csv', downloadEarningsCSV); // CSV route before :id route
 router.get('/earnings', getEarnings);
 router.get('/earnings/:id', getEarningById);

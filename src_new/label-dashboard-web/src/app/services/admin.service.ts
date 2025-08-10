@@ -97,6 +97,30 @@ export interface BulkEarning {
   calculate_royalties: boolean;
 }
 
+export interface ProcessedEarningRow {
+  original_data: { [key: string]: string };
+  catalog_no: string;
+  release_title: string;
+  earning_amount: number;
+  matched_release: {
+    id: number;
+    catalog_no: string;
+    title: string;
+  } | null;
+  fuzzy_match_score?: number;
+}
+
+export interface CsvProcessingResult {
+  message: string;
+  data: ProcessedEarningRow[];
+  summary: {
+    total_rows: number;
+    total_unmatched: number;
+    total_earning_amount: number;
+    column_mapping: { [key: string]: string };
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -399,6 +423,20 @@ export class AdminService {
         return of({ message: `${earnings.length} earnings added successfully (mock)` });
       })
     );
+  }
+
+  // Preview CSV for Earnings
+  previewCsvForEarnings(csvFile: File): Observable<CsvProcessingResult> {
+    const formData = new FormData();
+    formData.append('csv_file', csvFile);
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+    });
+
+    return this.http.post<CsvProcessingResult>(`${environment.apiUrl}/financial/earnings/preview-csv`, formData, {
+      headers: headers
+    });
   }
 
   // Wallet Balance
