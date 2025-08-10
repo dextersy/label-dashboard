@@ -7,21 +7,8 @@
     (refresh)="onRefreshData()">
   </app-date-range-filter>
 
-  <!-- Sublabels Table -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>Sublabels</h4>
-    <button 
-      *ngIf="isSuperAdmin()" 
-      class="btn btn-primary"
-      (click)="openAddSublabelModal()"
-      [disabled]="loading">
-      <i class="fas fa-plus me-2"></i>
-      Add Sublabel
-    </button>
-  </div>
-  
   <app-paginated-table
-    title=""
+    title="Sublabels"
     [data]="sortedChildBrands"
     [columns]="tableColumns"
     [loading]="loading"
@@ -30,6 +17,15 @@
     [showSortableHeaders]="true"
     [sortInfo]="sortInfo"
     (sortChange)="onSortChange($event)">
+    
+    <ng-template #customButtons>
+      <button *ngIf="isSuperAdmin()" 
+              class="btn btn-primary btn-sm"
+              (click)="openAddSublabelModal()"
+              [disabled]="loading">
+        <i class="fas fa-plus"></i> Add
+      </button>
+    </ng-template>
   </app-paginated-table>
 
   <!-- Summary Cards -->

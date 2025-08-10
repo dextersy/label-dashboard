@@ -1,7 +1,9 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Payment } from '../../../pages/financial/financial.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-payments-table',
@@ -18,6 +20,8 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<{ column: string; direction: 'asc' | 'desc' } | null>();
+
+  isAdmin = false;
 
   // Define table columns for search and sort functionality
   paymentsColumns: TableColumn[] = [
@@ -71,7 +75,15 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     }
   ];
 
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
   ngOnInit() {
+    this.authService.currentUser.subscribe(user => {
+      this.isAdmin = user ? user.is_admin : false;
+    });
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -131,5 +143,9 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     const hasLegacyData = payment.paid_thru_type && payment.paid_thru_type.trim() !== '';
     
     return !hasPaymentMethod && !hasLegacyData;
+  }
+
+  navigateToNewPayment(): void {
+    this.router.navigate(['/financial/payments/new']);
   }
 }
