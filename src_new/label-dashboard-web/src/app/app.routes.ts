@@ -11,6 +11,8 @@ import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { SetProfileComponent } from './pages/set-profile/set-profile.component';
 import { InviteComponent } from './pages/invite/invite.component';
+import { AdminInviteComponent } from './pages/admin-invite/admin-invite.component';
+import { AdminSetupComponent } from './pages/admin-setup/admin-setup.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { TicketBuyComponent } from './pages/public/ticket-buy.component';
 import { TicketSuccessComponent } from './pages/public/ticket-success.component';
@@ -25,6 +27,8 @@ export const routes: Routes = [
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'set-profile', component: SetProfileComponent }, // No auth guard - standalone
   { path: 'invite/accept', component: InviteComponent }, // No auth guard - standalone
+  { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone
+  { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
   
   // Public Routes (no authentication required)
   { path: 'public/tickets/buy/:id', component: TicketBuyComponent },

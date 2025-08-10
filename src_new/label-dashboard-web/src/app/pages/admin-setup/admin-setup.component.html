@@ -1,0 +1,143 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header text-center" [style.background-color]="brandColor" style="color: white;">
+          <img [src]="brandLogo" alt="Logo" class="mb-2" style="max-height: 60px; width: auto;">
+          <h4>{{ brandName }} - Admin Setup</h4>
+          <p class="mb-0">Complete your admin profile setup</p>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center p-4">
+            <div class="loading-dots">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <p class="mt-3">Loading...</p>
+          </div>
+          
+          <div *ngIf="!loading && profile">
+            <!-- General error message -->
+            <div *ngIf="message" [class]="'alert alert-' + (messageType === 'success' ? 'success' : 'danger')">
+              {{ message }}
+            </div>
+            
+            <form (ngSubmit)="onSubmit()" #setupForm="ngForm">
+              <!-- Email (read-only) -->
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" 
+                       [value]="profile.email_address" readonly>
+              </div>
+              
+              <!-- Username -->
+              <div class="mb-3" *ngIf="canChangeUsername">
+                <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="username"
+                       [(ngModel)]="profile.username" 
+                       name="username"
+                       (input)="onUsernameChange(profile.username)"
+                       [class.is-invalid]="errors.username || usernameExists || usernameInvalid"
+                       [class.is-valid]="usernameValid && !errors.username"
+                       placeholder="Choose a username"
+                       required>
+                
+                <!-- Username validation feedback -->
+                <div class="invalid-feedback" *ngIf="errors.username">
+                  {{ errors.username }}
+                </div>
+                <div class="invalid-feedback" *ngIf="usernameExists && !errors.username">
+                  Sorry, this username is already in use. Please choose another.
+                </div>
+                <div class="invalid-feedback" *ngIf="usernameInvalid && !errors.username">
+                  Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed.
+                </div>
+                <div class="valid-feedback" *ngIf="usernameValid && !errors.username">
+                  Username is available!
+                </div>
+              </div>
+              
+              <!-- First Name -->
+              <div class="mb-3">
+                <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="firstName"
+                       [(ngModel)]="profile.first_name" 
+                       name="firstName"
+                       [class.is-invalid]="errors.first_name"
+                       placeholder="Enter your first name"
+                       required>
+                <div class="invalid-feedback" *ngIf="errors.first_name">
+                  {{ errors.first_name }}
+                </div>
+              </div>
+              
+              <!-- Last Name -->
+              <div class="mb-3">
+                <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="lastName"
+                       [(ngModel)]="profile.last_name" 
+                       name="lastName"
+                       [class.is-invalid]="errors.last_name"
+                       placeholder="Enter your last name"
+                       required>
+                <div class="invalid-feedback" *ngIf="errors.last_name">
+                  {{ errors.last_name }}
+                </div>
+              </div>
+              
+              <!-- Password -->
+              <div class="mb-3">
+                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="password"
+                       [(ngModel)]="password" 
+                       name="password"
+                       [class.is-invalid]="errors.password || errors.passwordMismatch"
+                       placeholder="Choose a password"
+                       required>
+                <div class="invalid-feedback" *ngIf="errors.password">
+                  {{ errors.password }}
+                </div>
+              </div>
+              
+              <!-- Confirm Password -->
+              <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="confirmPassword"
+                       [(ngModel)]="confirmPassword" 
+                       name="confirmPassword"
+                       [class.is-invalid]="errors.confirmPassword || errors.passwordMismatch"
+                       placeholder="Confirm your password"
+                       required>
+                <div class="invalid-feedback" *ngIf="errors.confirmPassword">
+                  {{ errors.confirmPassword }}
+                </div>
+                <div class="invalid-feedback" *ngIf="errors.passwordMismatch">
+                  {{ errors.passwordMismatch }}
+                </div>
+              </div>
+              
+              <!-- Submit Button -->
+              <div class="d-grid mb-3">
+                <button type="submit" 
+                        class="btn btn-primary"
+                        [disabled]="saving || !setupForm.form.valid || (canChangeUsername && (usernameExists || usernameInvalid))"
+                        [style.background-color]="brandColor"
+                        [style.border-color]="brandColor">
+                  <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {{ saving ? 'Setting up...' : 'Complete Setup' }}
+                </button>
+              </div>
+            </form>
+            
+            <div class="text-center">
+              <small class="text-muted">
+                Already have an account? <a href="#" (click)="goToLogin()" class="text-decoration-none">Sign in here</a>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

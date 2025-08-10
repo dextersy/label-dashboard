@@ -57,6 +57,7 @@ export class PaginatedTableComponent implements OnInit {
 
   @ContentChild('tableContent', { static: false }) tableContent!: TemplateRef<any>;
   @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;
+  @ContentChild('customButtons', { static: false }) customButtons!: TemplateRef<any>;
 
   searchFilters: SearchFilters = {};
   private searchTimeout: any;

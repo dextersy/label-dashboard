@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AdminService, User, LoginAttempt } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
@@ -7,7 +8,7 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
 @Component({
   selector: 'app-users-tab',
   standalone: true,
-  imports: [CommonModule, PaginatedTableComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent],
   templateUrl: './users-tab.component.html'
 })
 export class UsersTabComponent implements OnInit {
@@ -24,6 +25,15 @@ export class UsersTabComponent implements OnInit {
   loginAttemptsLoading: boolean = false;
   loginAttemptsFilters: any = {};
   loginAttemptsSort: SortInfo | null = null;
+
+  // Admin invite modal
+  showInviteModal: boolean = false;
+  inviteForm = {
+    email_address: '',
+    first_name: '',
+    last_name: ''
+  };
+  inviteLoading: boolean = false;
 
   // Table column definitions
   usersColumns: TableColumn[] = [
@@ -125,5 +135,70 @@ export class UsersTabComponent implements OnInit {
   onLoginAttemptsSortChange(sort: SortInfo | null): void {
     this.loginAttemptsSort = sort;
     this.loadLoginAttempts(this.loginAttemptsPagination?.current_page || 1, this.loginAttemptsFilters, this.loginAttemptsSort);
+  }
+
+  // Admin invite functions
+  openInviteModal(): void {
+    this.showInviteModal = true;
+    this.inviteForm = {
+      email_address: '',
+      first_name: '',
+      last_name: ''
+    };
+  }
+
+  closeInviteModal(): void {
+    this.showInviteModal = false;
+    this.inviteForm = {
+      email_address: '',
+      first_name: '',
+      last_name: ''
+    };
+  }
+
+  sendInvite(): void {
+    if (!this.inviteForm.email_address.trim()) {
+      this.notificationService.showError('Email address is required');
+      return;
+    }
+
+    this.inviteLoading = true;
+    this.adminService.inviteAdmin(this.inviteForm).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Admin invitation sent successfully');
+        this.closeInviteModal();
+        this.loadUsers(this.usersPagination?.current_page || 1);
+        this.inviteLoading = false;
+      },
+      error: (error) => {
+        this.notificationService.showError(error.error?.error || 'Failed to send invitation');
+        this.inviteLoading = false;
+      }
+    });
+  }
+
+  resendInvite(userId: number): void {
+    this.adminService.resendAdminInvite(userId).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Admin invitation resent successfully');
+      },
+      error: (error) => {
+        this.notificationService.showError(error.error?.error || 'Failed to resend invitation');
+      }
+    });
+  }
+
+  cancelInvite(userId: number): void {
+    if (confirm('Are you sure you want to cancel this admin invitation?')) {
+      this.adminService.cancelAdminInvite(userId).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Admin invitation cancelled successfully');
+          this.loadUsers(this.usersPagination?.current_page || 1);
+        },
+        error: (error) => {
+          this.notificationService.showError(error.error?.error || 'Failed to cancel invitation');
+        }
+      });
+    }
   }
 }

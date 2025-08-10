@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
-export interface UserProfile {
+export interface AdminProfile {
   id: number;
   username: string;
   email_address: string;
@@ -15,29 +15,34 @@ export interface UserProfile {
   last_name: string;
   is_admin: boolean;
   brand_id: number;
-  last_login?: Date;
-  created_at?: Date;
+}
+
+export interface BrandInfo {
+  id: number;
+  name: string;
+  primary_color: string;
 }
 
 @Component({
-  selector: 'app-set-profile',
+  selector: 'app-admin-setup',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './set-profile.component.html',
-  styleUrl: './set-profile.component.scss'
+  templateUrl: './admin-setup.component.html',
+  styleUrl: './admin-setup.component.scss'
 })
-export class SetProfileComponent implements OnInit, OnDestroy {
-  profile: UserProfile | null = null;
+export class AdminSetupComponent implements OnInit, OnDestroy {
+  profile: AdminProfile | null = null;
+  brand: BrandInfo | null = null;
   loading: boolean = false;
   saving: boolean = false;
   message: string = '';
   messageType: 'success' | 'error' | '' = '';
   
-  // Password fields (matching setprofile.php)
+  // Password fields
   password: string = '';
   confirmPassword: string = '';
 
-  // Form validation (matching setprofile.php validation)
+  // Form validation
   errors: any = {};
   
   // Username validation
@@ -45,18 +50,17 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   usernameInvalid: boolean = false;
   usernameValid: boolean = false;
   
-  // Real-time validation (matching setprofile.php)
+  // Real-time validation
   private usernameSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
   
-  // Track if username can be changed (matching setprofile.php logic)
+  // Track if username can be changed
   canChangeUsername: boolean = true;
   
   // Invite handling
-  inviteHash: string = '';
-  artistAccessId: number | null = null;
+  inviteToken: string = '';
 
-  // Brand settings (matching original PHP defaults)
+  // Brand settings
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
@@ -70,14 +74,14 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // First logout any existing session (matching setprofile.php behavior)
+    // First logout any existing session
     this.authService.logout();
     
-    // Get invite hash from query parameters (matching invite email links)
+    // Get invite token from query parameters
     this.route.queryParams.subscribe(params => {
-      this.inviteHash = params['hash'];
-      if (!this.inviteHash) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
+      this.inviteToken = params['token'];
+      if (!this.inviteToken) {
+        this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
         return;
       }
       this.loadInviteData();
@@ -94,13 +98,13 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   loadBrandSettings(): void {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Herepng';
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
         
         // Apply brand styling to the page
         document.documentElement.style.setProperty('--brand-color', this.brandColor);
-        document.title = `${this.brandName} - Login`;
+        document.title = `${this.brandName} - Admin Setup`;
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
@@ -110,7 +114,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   }
 
   private setupUsernameValidation(): void {
-    // Real-time username validation (matching setprofile.php)
+    // Real-time username validation
     this.usernameSubject.pipe(
       debounceTime(500),
       distinctUntilChanged()
@@ -121,19 +125,19 @@ export class SetProfileComponent implements OnInit, OnDestroy {
 
   loadInviteData(): void {
     this.loading = true;
-    this.apiService.getInviteData(this.inviteHash).subscribe({
+    this.apiService.getAdminInviteData(this.inviteToken).subscribe({
       next: (data) => {
         this.profile = data.user;
-        this.artistAccessId = data.artist_access_id;
-        // Check if username can be changed (matching setprofile.php logic)
+        this.brand = data.brand;
+        // Check if username can be changed
         this.canChangeUsername = !this.profile?.username || this.profile.username === '';
         this.loading = false;
       },
       error: (error) => {
         this.loading = false;
-        console.error('Error loading invite data:', error);
+        console.error('Error loading admin invite data:', error);
         if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
+          this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
         } else {
           this.showMessage('Error loading invite data', 'error');
         }
@@ -153,7 +157,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.usernameInvalid = false;
     this.usernameValid = false;
 
-    // Check username pattern (matching setprofile.php validation)
+    // Check username pattern
     const pattern = /^[A-Za-z0-9_]+$/;
     if (!pattern.test(username)) {
       this.usernameInvalid = true;
@@ -188,25 +192,21 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.message = '';
 
     const setupData = {
-      id: this.profile.id,
+      invite_hash: this.inviteToken,
       username: this.canChangeUsername ? this.profile.username : undefined,
       first_name: this.profile.first_name,
       last_name: this.profile.last_name,
-      password: this.password,
-      brand_id: this.profile.brand_id,
-      is_admin: this.profile.is_admin,
-      invite_hash: this.inviteHash,
-      artist_access_id: this.artistAccessId
+      password: this.password
     };
 
-    this.apiService.setupUserProfile(setupData).subscribe({
+    this.apiService.setupAdminProfile(setupData).subscribe({
       next: (response) => {
         this.saving = false;
-        // Store auth token and redirect to dashboard (matching setprofile.php)
+        // Store auth token and redirect to admin dashboard
         if (response.token) {
           localStorage.setItem('auth_token', response.token);
           localStorage.setItem('currentUser', JSON.stringify(response.user));
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/admin']);
         }
       },
       error: (error) => {
@@ -214,17 +214,16 @@ export class SetProfileComponent implements OnInit, OnDestroy {
         if (error.status === 400 && error.error.errors) {
           this.errors = error.error.errors;
         } else {
-          this.showMessage(error.error?.message || 'Error setting up profile', 'error');
+          this.showMessage(error.error?.error || 'Error setting up profile', 'error');
         }
       }
     });
   }
 
-
   private validateForm(): boolean {
     const errors: any = {};
 
-    // Username validation (matching setprofile.php)
+    // Username validation
     if (this.canChangeUsername) {
       if (!this.profile?.username?.trim()) {
         errors.username = 'Username is required';
@@ -235,7 +234,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Required fields (matching setprofile.php)
+    // Required fields
     if (!this.profile?.first_name?.trim()) {
       errors.first_name = 'First name is required';
     }
@@ -244,7 +243,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       errors.last_name = 'Last name is required';
     }
 
-    // Password validation (matching setprofile.php)
+    // Password validation
     if (!this.password?.trim()) {
       errors.password = 'Password is required';
     }

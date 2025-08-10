@@ -68,6 +68,15 @@ The system supports multiple labels/brands through:
 - Isolated data per brand with proper access controls
 - Brand hierarchy support (parent/child brands)
 
+### CRITICAL SECURITY RULE: Multi-Brand URL Generation
+**NEVER use fallback URLs (like `process.env.FRONTEND_URL`) in multi-brand contexts, especially for invite links, password resets, or any user-facing URLs.** This is a serious security vulnerability that can expose users to the wrong brand context or allow cross-brand data access.
+
+**Always use brand-specific domains:**
+- Use `getBrandFrontendUrl(brandId)` from `src/utils/brandUtils.ts` to get the correct domain
+- If no domain is found for a brand, return an error rather than falling back to a generic URL
+- This ensures that all user interactions happen within the correct brand context
+- Example: Admin invites must only work on the specific brand's domain that sent the invite
+
 ## Authentication & Authorization
 
 - JWT-based authentication with role-based access control

@@ -1,0 +1,28 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body text-center">
+          <div *ngIf="loading" class="p-4">
+            <div class="loading-dots">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <h5 class="mt-3">Processing Admin Invitation...</h5>
+            <p class="text-muted">Please wait while we process your invitation.</p>
+          </div>
+          
+          <div *ngIf="!loading && message" class="p-4">
+            <div [class]="'alert alert-' + (messageType === 'success' ? 'success' : 'danger')">
+              {{ message }}
+            </div>
+            <button class="btn btn-primary" (click)="router.navigate(['/login'])">
+              Return to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

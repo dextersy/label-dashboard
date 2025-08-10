@@ -436,4 +436,23 @@ export class AdminService {
       headers: this.getAuthHeaders()
     });
   }
+
+  // Admin Invite Management
+  inviteAdmin(adminData: { email_address: string; first_name?: string; last_name?: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/users/invite-admin`, adminData, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  resendAdminInvite(userId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/users/${userId}/resend-invite`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  cancelAdminInvite(userId: number): Observable<any> {
+    return this.http.delete(`${environment.apiUrl}/users/${userId}/invite`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }

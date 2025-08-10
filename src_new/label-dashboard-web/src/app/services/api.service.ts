@@ -43,8 +43,12 @@ export class ApiService {
   }
 
   // Profile Management
-  checkUsernameExists(username: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/users/check-username`, { username }, { headers: this.getAuthHeaders() });
+  checkUsernameExists(username: string, brandId?: number): Observable<any> {
+    const payload: any = { username };
+    if (brandId) {
+      payload.brand_id = brandId;
+    }
+    return this.http.post(`${this.baseUrl}/users/check-username`, payload, { headers: this.getAuthHeaders() });
   }
 
   // Invite handling
@@ -58,5 +62,18 @@ export class ApiService {
 
   setupUserProfile(setupData: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/invite/setup-profile`, setupData);
+  }
+
+  // Admin invite handling
+  processAdminInvite(inviteToken: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invite/admin/process`, { invite_hash: inviteToken });
+  }
+
+  getAdminInviteData(inviteToken: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/invite/admin/${inviteToken}`);
+  }
+
+  setupAdminProfile(setupData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invite/admin/setup`, setupData);
   }
 }

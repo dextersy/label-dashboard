@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
 
@@ -627,6 +628,238 @@ export const getLoginAttempts = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Get login attempts error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ======================================
+// ADMIN INVITE SYSTEM
+// ======================================
+
+export const inviteAdmin = async (req: AuthRequest, res: Response) => {
+  let user: any = null; // Declare user variable at function scope for cleanup
+  
+  try {
+    const { email_address, first_name, last_name } = req.body;
+
+    // Only superadmins can invite other admins
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    if (!email_address) {
+      return res.status(400).json({ error: 'Email address is required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email_address)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      where: { 
+        email_address,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    // Generate invite hash
+    const inviteHash = crypto.randomBytes(32).toString('hex');
+
+    // Create new admin user
+    user = await User.create({
+      email_address,
+      first_name: first_name?.trim() || null,
+      last_name: last_name?.trim() || null,
+      brand_id: req.user.brand_id,
+      is_admin: true,
+      reset_hash: inviteHash // Using reset_hash field for invite
+    });
+
+    // Get brand details for email
+    const brand = await Brand.findByPk(req.user.brand_id);
+
+    // Get brand frontend URL - NEVER use fallback URL for multi-brand security
+    let inviteLink: string;
+    try {
+      const brandUrl = await getBrandFrontendUrl(req.user.brand_id);
+      inviteLink = `${brandUrl}/admin-invite?token=${inviteHash}`;
+    } catch (error) {
+      console.error(`No domains found for brand ${req.user.brand_id}. Cannot send admin invite without proper brand domain.`);
+      // Clean up user if domain lookup failed
+      await user.destroy();
+      return res.status(400).json({ error: 'No domains configured for this brand. Please configure a domain before sending invites.' });
+    }
+    
+    // Load email template
+    const fs = require('fs');
+    const path = require('path');
+    const templatePath = path.join(__dirname, '../assets/templates/admin_invite_email.html');
+    let emailTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    // Replace template variables
+    const inviterName = `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || 'Admin';
+    emailTemplate = emailTemplate
+      .replace(/%MEMBER_NAME%/g, inviterName)
+      .replace(/%BRAND_NAME%/g, brand?.brand_name || 'Label Dashboard')
+      .replace(/%URL%/g, inviteLink)
+      .replace(/%LOGO%/g, brand?.logo_url || '')
+      .replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
+
+    const emailSent = await sendEmail(
+      [user.email_address],
+      `You're invited to be an admin for ${brand?.brand_name || 'Label Dashboard'}`,
+      emailTemplate,
+      req.user.brand_id
+    );
+
+    if (emailSent) {
+      res.json({ 
+        message: 'Admin invitation sent successfully',
+        user: {
+          id: user.id,
+          email_address: user.email_address,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          is_admin: user.is_admin,
+          brand_id: user.brand_id
+        }
+      });
+    } else {
+      // Clean up user if email failed
+      await user.destroy();
+      res.status(500).json({ error: 'Failed to send invitation email' });
+    }
+  } catch (error) {
+    console.error('Invite admin error:', error);
+    // Clean up user if any unexpected error occurred during invite process
+    if (user && user.id) {
+      try {
+        await user.destroy();
+      } catch (cleanupError) {
+        console.error('Error cleaning up user after failed invite:', cleanupError);
+      }
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Find user
+    const user = await User.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id,
+        is_admin: true
+      },
+      include: [{
+        model: Brand,
+        as: 'brand'
+      }]
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Admin user not found' });
+    }
+
+    // Check if user has already set up their account
+    if (user.password_md5) {
+      return res.status(400).json({ error: 'User has already set up their account' });
+    }
+
+    // Generate new invite hash
+    const inviteHash = crypto.randomBytes(32).toString('hex');
+    await user.update({ reset_hash: inviteHash });
+
+    // Get brand frontend URL - NEVER use fallback URL for multi-brand security
+    let inviteLink: string;
+    try {
+      const brandUrl = await getBrandFrontendUrl(req.user.brand_id);
+      inviteLink = `${brandUrl}/admin-invite?token=${inviteHash}`;
+    } catch (error) {
+      console.error(`No domains found for brand ${req.user.brand_id}. Cannot send admin invite without proper brand domain.`);
+      return res.status(400).json({ error: 'No domains configured for this brand. Please configure a domain before sending invites.' });
+    }
+    
+    // Load email template
+    const fs = require('fs');
+    const path = require('path');
+    const templatePath = path.join(__dirname, '../assets/templates/admin_invite_email.html');
+    let emailTemplate = fs.readFileSync(templatePath, 'utf8');
+
+    // Replace template variables
+    const inviterName = `${req.user.first_name || ''} ${req.user.last_name || ''}`.trim() || 'Admin';
+    const brand = user.brand;
+    emailTemplate = emailTemplate
+      .replace(/%MEMBER_NAME%/g, inviterName)
+      .replace(/%BRAND_NAME%/g, brand?.brand_name || 'Label Dashboard')
+      .replace(/%URL%/g, inviteLink)
+      .replace(/%LOGO%/g, brand?.logo_url || '')
+      .replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
+
+    const emailSent = await sendEmail(
+      [user.email_address],
+      `You're invited to be an admin for ${brand?.brand_name || 'Label Dashboard'}`,
+      emailTemplate,
+      req.user.brand_id
+    );
+
+    if (emailSent) {
+      res.json({ message: 'Admin invitation resent successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to resend invitation email' });
+    }
+  } catch (error) {
+    console.error('Resend admin invite error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    // Find user
+    const user = await User.findOne({
+      where: { 
+        id,
+        brand_id: req.user.brand_id,
+        is_admin: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Admin user not found' });
+    }
+
+    // Check if user has already set up their account
+    if (user.password_md5) {
+      return res.status(400).json({ error: 'Cannot cancel - user has already set up their account' });
+    }
+
+    // Remove the user
+    await user.destroy();
+
+    res.json({ message: 'Admin invitation cancelled successfully' });
+  } catch (error) {
+    console.error('Cancel admin invite error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -7,7 +7,10 @@ import {
   toggleAdmin,
   removeTeamMember,
   getAllUsers,
-  getLoginAttempts
+  getLoginAttempts,
+  inviteAdmin,
+  resendAdminInvite,
+  cancelAdminInvite
 } from '../controllers/userController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -22,6 +25,9 @@ router.post('/init', initUser);
 router.get('/', authenticateToken, requireAdmin, getAllUsers);
 router.get('/login-attempts', authenticateToken, requireAdmin, getLoginAttempts);
 router.post('/invite', authenticateToken, requireAdmin, inviteUser);
+router.post('/invite-admin', authenticateToken, requireAdmin, inviteAdmin);
+router.post('/:id/resend-invite', authenticateToken, requireAdmin, resendAdminInvite);
+router.delete('/:id/invite', authenticateToken, requireAdmin, cancelAdminInvite);
 router.post('/toggle-admin', authenticateToken, requireAdmin, toggleAdmin);
 router.post('/remove-team-member', authenticateToken, requireAdmin, removeTeamMember);
 
