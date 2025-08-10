@@ -91,6 +91,7 @@ The system supports multiple labels/brands through:
 3. **Follow Patterns**: Mimic existing code patterns for consistency
 4. **Bootstrap Styling**: Use Bootstrap classes whenever possible
 5. **Never Modify Legacy**: Do not change files in `src/` (legacy PHP code)
+6. **No Automatic Building/Testing**: By default, do not build or test code unless specifically requested by the user. The user will report any build errors or issues that need to be addressed.
 
 ## Database Configuration
 
