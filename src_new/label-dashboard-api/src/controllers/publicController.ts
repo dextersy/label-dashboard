@@ -733,7 +733,7 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
 };
 
 // Generate SEO page on-demand for social media crawlers
-export const generateSEOPage = async (req: Request, res: Response) => {
+export const generateEventSEOPage = async (req: Request, res: Response) => {
   try {
     const eventId = parseInt(req.params.id, 10);
     
@@ -1005,5 +1005,362 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Get brand by domain error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get all events for a domain (brand and its sublabels)
+export const getAllEventsForDomain = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.params;
+
+    // Find the brand by domain
+    const domainRecord = await Domain.findOne({
+      where: { domain_name: domain },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          required: true
+        }
+      ]
+    });
+
+    if (!domainRecord || !domainRecord.brand) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    const mainBrand = domainRecord.brand;
+
+    // Get all child brands (sublabels)
+    const childBrands = await Brand.findAll({
+      where: { parent_brand: mainBrand.id }
+    });
+
+    // Combine main brand and child brands
+    const allBrands = [mainBrand, ...childBrands];
+    const brandIds = allBrands.map(brand => brand.id);
+
+    // Get all events for these brands
+    const events = await Event.findAll({
+      where: { 
+        brand_id: { [Op.in]: brandIds },
+        date_and_time: { [Op.gte]: new Date() } // Only future events
+      },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        }
+      ],
+      order: [['date_and_time', 'ASC']]
+    });
+
+    // Group events by brand
+    const brandEvents = allBrands.map(brand => {
+      const brandEventsFiltered = events
+        .filter(event => event.brand_id === brand.id)
+        .map(event => ({
+          id: event.id,
+          title: event.title,
+          date_and_time: event.date_and_time,
+          venue: event.venue,
+          poster_url: event.poster_url,
+          ticket_price: event.ticket_price,
+          ticket_naming: event.ticket_naming,
+          buy_shortlink: event.buy_shortlink,
+          is_closed: new Date() > new Date(event.close_time || event.date_and_time)
+        }));
+
+      return {
+        id: brand.id,
+        name: brand.brand_name,
+        color: brand.brand_color,
+        logo_url: brand.logo_url,
+        events: brandEventsFiltered
+      };
+    }).filter(brand => brand.events.length > 0); // Only include brands with events
+
+    res.json({
+      brands: brandEvents
+    });
+
+  } catch (error) {
+    console.error('Get all events for domain error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Generate SEO page for public events listing
+export const generateEventsListSEOPage = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.params;
+    
+    // Find the brand by domain
+    const domainRecord = await Domain.findOne({
+      where: { domain_name: domain },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          required: true
+        }
+      ]
+    });
+
+    if (!domainRecord || !domainRecord.brand) {
+      return res.status(404).send('Domain not found');
+    }
+
+    const mainBrand = domainRecord.brand;
+
+    // Get all child brands (sublabels)
+    const childBrands = await Brand.findAll({
+      where: { parent_brand: mainBrand.id }
+    });
+
+    // Combine main brand and child brands
+    const allBrands = [mainBrand, ...childBrands];
+    const brandIds = allBrands.map(brand => brand.id);
+
+    // Get latest events for SEO
+    const events = await Event.findAll({
+      where: { 
+        brand_id: { [Op.in]: brandIds },
+        date_and_time: { [Op.gte]: new Date() } // Only future events
+      },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        }
+      ],
+      order: [['date_and_time', 'ASC']],
+      limit: 10 // Limit for SEO purposes
+    });
+
+    // Find the latest event with a poster for og:image
+    let latestEventPoster = '';
+    for (const event of events) {
+      const isTimeClosed = new Date() > new Date(event.close_time || event.date_and_time);
+      
+      // Check if sold out (if max_tickets is set)
+      let isSoldOut = false;
+      if (event.max_tickets && event.max_tickets > 0) {
+        const ticketsSold = await getTotalTicketsSold(event.id);
+        isSoldOut = ticketsSold >= event.max_tickets;
+      }
+      
+      const isClosed = isTimeClosed || isSoldOut;
+      
+      if (event.poster_url && !isClosed) {
+        latestEventPoster = event.poster_url;
+        break;
+      }
+    }
+
+    // Generate meta tags for social sharing
+    const title = `Live Music Directory by ${mainBrand.brand_name}`;
+    const description = `Check out upcoming events from ${mainBrand.brand_name} and affiliated labels. Get your tickets now!`;
+    const siteName = mainBrand.brand_name;
+    const frontendUrl = `https://${domain}/public/events`;
+
+    // Generate structured data for events listing
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": title,
+      "description": description,
+      "numberOfItems": events.length,
+      "itemListElement": events.slice(0, 5).map((event, index) => ({
+        "@type": "Event",
+        "position": index + 1,
+        "name": event.title,
+        "startDate": event.date_and_time,
+        "location": {
+          "@type": "Place",
+          "name": event.venue
+        },
+        "image": event.poster_url,
+        "offers": {
+          "@type": "Offer",
+          "price": event.ticket_price,
+          "priceCurrency": "PHP",
+          "availability": "https://schema.org/InStock",
+          "url": `https://${domain}/public/tickets/buy/${event.id}`
+        },
+        "organizer": {
+          "@type": "Organization",
+          "name": event.brand?.brand_name || siteName
+        }
+      }))
+    };
+
+    // Generate SEO-optimized HTML
+    const seoHTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${title.replace(/"/g, '&quot;')}</title>
+  <base href="/">
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+  
+  <!-- SEO Meta Tags for ${mainBrand.brand_name} Events -->
+  <meta name="description" content="${description.replace(/"/g, '&quot;')}">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="${siteName}">
+  <meta property="og:url" content="${frontendUrl}">
+  ${latestEventPoster ? `<meta property="og:image" content="${latestEventPoster}">` : ''}
+  ${latestEventPoster ? `<meta property="og:image:width" content="1200">` : ''}
+  ${latestEventPoster ? `<meta property="og:image:height" content="630">` : ''}
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}">
+  ${latestEventPoster ? `<meta name="twitter:image" content="${latestEventPoster}">` : ''}
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${frontendUrl}">
+  
+  <!-- Meta refresh backup for non-crawler users -->
+  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+${JSON.stringify(structuredData, null, 4)}
+  </script>
+  
+  <!-- Auto-redirect for regular users (non-crawlers) -->
+  <script>
+    (function() {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot/i.test(userAgent);
+      
+      if (!isCrawler) {
+        window.location.replace('${frontendUrl}');
+      }
+    })();
+  </script>
+  
+  <!-- Styles for crawler display -->
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background: linear-gradient(to bottom, #6c757d 0%, #ffffff 100%);
+      min-height: 100vh;
+    }
+    .container { 
+      max-width: 800px; 
+      margin: 0 auto;
+      background: white; 
+      border-radius: 12px; 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+      overflow: hidden;
+      padding: 2rem;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #495057;
+    }
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .event-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f8f9fa;
+    }
+    .event-poster {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .event-details {
+      padding: 1rem;
+    }
+    .event-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+    }
+    .event-info {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 0.25rem;
+    }
+    .event-price {
+      font-weight: 600;
+      color: #28a745;
+    }
+    .cta {
+      text-align: center;
+      margin-top: 2rem;
+      padding: 2rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .cta a {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>${title}</h1>
+      <p>${description}</p>
+    </div>
+    
+    <div class="events-grid">
+      ${events.slice(0, 6).map(event => `
+        <div class="event-card">
+          ${event.poster_url ? `<img src="${event.poster_url}" alt="${event.title}" class="event-poster">` : ''}
+          <div class="event-details">
+            <div class="event-title">${event.title}</div>
+            <div class="event-info">${new Date(event.date_and_time).toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            })}</div>
+            <div class="event-info">${event.venue}</div>
+            <div class="event-price">₱${event.ticket_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    
+    <div class="cta">
+      <p>View all events and get your tickets!</p>
+      <a href="${frontendUrl}">Browse All Events</a>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(seoHTML);
+
+  } catch (error) {
+    console.error('Generate events list SEO page error:', error);
+    res.status(500).send('Internal server error');
   }
 };

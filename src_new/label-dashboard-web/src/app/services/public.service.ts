@@ -115,6 +115,26 @@ export interface BrandInfo {
   };
 }
 
+export interface PublicEventsList {
+  brands: Array<{
+    id: number;
+    name: string;
+    color?: string;
+    logo_url?: string;
+    events: Array<{
+      id: number;
+      title: string;
+      date_and_time: string;
+      venue: string;
+      poster_url?: string;
+      ticket_price: number;
+      ticket_naming?: string;
+      buy_shortlink?: string;
+      is_closed: boolean;
+    }>;
+  }>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -286,5 +306,12 @@ export class PublicService {
         };
       };
     }>(`${this.apiUrl}/public/events/${eventId}/info`);
+  }
+
+  /**
+   * Get all public events for a domain (brand and its sublabels)
+   */
+  getAllEventsForDomain(domain: string): Observable<PublicEventsList> {
+    return this.http.get<PublicEventsList>(`${this.apiUrl}/public/events/domain/${domain}`);
   }
 }

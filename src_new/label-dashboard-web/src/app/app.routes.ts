@@ -17,6 +17,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { TicketBuyComponent } from './pages/public/ticket-buy.component';
 import { TicketSuccessComponent } from './pages/public/ticket-success.component';
 import { TicketVerifyComponent } from './pages/public/ticket-verify.component';
+import { PublicEventsComponent } from './pages/public/public-events.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
@@ -31,6 +32,7 @@ export const routes: Routes = [
   { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
   
   // Public Routes (no authentication required)
+  { path: 'public/events', component: PublicEventsComponent },
   { path: 'public/tickets/buy/:id', component: TicketBuyComponent },
   { path: 'public/tickets/success/:id', component: TicketSuccessComponent },
   { path: 'public/tickets/verify/:id', component: TicketVerifyComponent },

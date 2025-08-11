@@ -9,18 +9,22 @@ import {
   getBrandByDomain,
   getEventForPublic,
   getPublicEventInfo,
-  generateSEOPage
+  generateEventSEOPage,
+  getAllEventsForDomain,
+  generateEventsListSEOPage
 } from '../controllers/publicController';
 
 const router = Router();
 
 // Public API routes (no authentication required)
 router.get('/brand/domain/:domain', getBrandByDomain);
+router.get('/events/domain/:domain', getAllEventsForDomain);
 router.get('/events/:id', getEventForPublic);
 router.get('/events/:id/info', getPublicEventInfo);
 
 // On-demand SEO page generation for social media crawlers
-router.get('/seo/event-:id.html', generateSEOPage);
+router.get('/seo/event-:id.html', generateEventSEOPage);
+router.get('/seo/events-:domain.html', generateEventsListSEOPage);
 
 router.post('/tickets/get-from-code', getTicketFromCode);
 router.post('/tickets/buy', buyTicket);
