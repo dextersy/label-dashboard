@@ -281,7 +281,7 @@ export class AdminService {
     });
   }
 
-  createSublabel(brandName: string, domainName: string): Observable<any> {
+  createSublabel(brandName: string, domainName: string, subdomainName?: string): Observable<any> {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = currentUser.brand_id;
     
@@ -289,10 +289,19 @@ export class AdminService {
       throw new Error('No brand ID found for current user');
     }
     
-    return this.http.post(`${environment.apiUrl}/brands/${brandId}/sublabels`, {
-      brand_name: brandName,
-      domain_name: domainName
-    }, {
+    const payload: any = {
+      brand_name: brandName
+    };
+    
+    // Add subdomain name if provided (new format)
+    if (subdomainName) {
+      payload.subdomain_name = subdomainName;
+    } else if (domainName) {
+      // Legacy format - use domain name
+      payload.domain_name = domainName;
+    }
+    
+    return this.http.post(`${environment.apiUrl}/brands/${brandId}/sublabels`, payload, {
       headers: this.getAuthHeaders()
     });
   }

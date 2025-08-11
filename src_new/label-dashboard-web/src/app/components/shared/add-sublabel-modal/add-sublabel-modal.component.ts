@@ -12,11 +12,11 @@ import { FormsModule, NgForm } from '@angular/forms';
 export class AddSublabelModalComponent {
   @Input() show: boolean = false;
   @Output() close = new EventEmitter<void>();
-  @Output() submit = new EventEmitter<{brandName: string, domainName: string}>();
+  @Output() submit = new EventEmitter<{brandName: string, subdomainName: string}>();
 
   formData = {
     brandName: '',
-    domainName: ''
+    subdomainName: ''
   };
 
   submitting: boolean = false;
@@ -29,9 +29,10 @@ export class AddSublabelModalComponent {
   onSubmit(form: NgForm): void {
     if (form.valid && !this.submitting) {
       this.submitting = true;
+      const subdomainName = this.formData.subdomainName.trim().toLowerCase();
       this.submit.emit({
         brandName: this.formData.brandName.trim(),
-        domainName: this.formData.domainName.trim().toLowerCase()
+        subdomainName: subdomainName
       });
     }
   }
@@ -40,10 +41,14 @@ export class AddSublabelModalComponent {
     this.submitting = false;
   }
 
+  resetFormAfterSuccess(): void {
+    this.resetForm();
+  }
+
   private resetForm(): void {
     this.formData = {
       brandName: '',
-      domainName: ''
+      subdomainName: ''
     };
     this.submitting = false;
   }
@@ -54,9 +59,9 @@ export class AddSublabelModalComponent {
     }
   }
 
-  // Domain validation
-  isValidDomain(domain: string): boolean {
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    return domainRegex.test(domain);
+  // Subdomain validation
+  isValidSubdomain(subdomain: string): boolean {
+    const subdomainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
+    return subdomainRegex.test(subdomain);
   }
 }

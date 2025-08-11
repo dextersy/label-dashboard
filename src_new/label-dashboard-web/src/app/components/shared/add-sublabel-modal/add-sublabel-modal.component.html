@@ -13,7 +13,8 @@
         </button>
       </div>
 
-      <form #addSublabelForm="ngForm" (ngSubmit)="onSubmit(addSublabelForm)" novalidate>
+      <div class="form-container">
+        <form #addSublabelForm="ngForm" (ngSubmit)="false" novalidate>
         <div class="modal-body">
           <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
@@ -41,30 +42,34 @@
             </div>
           </div>
 
-          <!-- Domain Name Field -->
+          <!-- Subdomain Name Field -->
           <div class="mb-3">
-            <label for="domainName" class="form-label">
-              Domain Name <span class="text-danger">*</span>
+            <label for="subdomainName" class="form-label">
+              Subdomain <span class="text-danger">*</span>
             </label>
-            <input
-              type="text"
-              class="form-control"
-              id="domainName"
-              name="domainName"
-              [(ngModel)]="formData.domainName"
-              #domainName="ngModel"
-              required
-              maxlength="255"
-              placeholder="example.com"
-              pattern="^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$">
-            
-            <div class="form-text text-muted">
-              Enter the domain that will be used to access this sublabel (e.g., sublabel.example.com)
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                id="subdomainName"
+                name="subdomainName"
+                [(ngModel)]="formData.subdomainName"
+                #subdomainName="ngModel"
+                required
+                maxlength="63"
+                placeholder="sublabel"
+                pattern="^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$">
+              <span class="input-group-text">.melt-records.com</span>
             </div>
             
-            <div class="invalid-feedback" *ngIf="domainName.invalid && (domainName.dirty || domainName.touched)">
-              <div *ngIf="domainName.errors?.['required']">Domain name is required.</div>
-              <div *ngIf="domainName.errors?.['pattern']">Please enter a valid domain name.</div>
+            <div class="form-text text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              This will create a subdomain under melt-records.com. You can add custom domains later in brand settings.
+            </div>
+            
+            <div class="invalid-feedback" *ngIf="subdomainName.invalid && (subdomainName.dirty || subdomainName.touched)">
+              <div *ngIf="subdomainName.errors?.['required']">Subdomain is required.</div>
+              <div *ngIf="subdomainName.errors?.['pattern']">Please enter a valid subdomain (letters, numbers, and hyphens only).</div>
             </div>
           </div>
 
@@ -77,7 +82,7 @@
               </h6>
               <ul class="mb-0 small">
                 <li>New brand record as a sublabel of your current brand</li>
-                <li>Domain record for "{{ formData.domainName || 'the entered domain' }}" (unverified status)</li>
+                <li>Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.melt-records.com" with automatic DNS configuration</li>
                 <li>Admin user account for the new sublabel (copy of your account)</li>
                 <li>Default settings: Gray brand color, 10% payment processing fee</li>
               </ul>
@@ -90,15 +95,17 @@
             Cancel
           </button>
           <button
-            type="submit"
+            type="button"
             class="btn btn-primary"
+            (click)="onSubmit(addSublabelForm)"
             [disabled]="!addSublabelForm.form.valid || submitting">
             <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             <i *ngIf="!submitting" class="fas fa-plus me-2"></i>
             {{ submitting ? 'Creating...' : 'Create Sublabel' }}
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </div>

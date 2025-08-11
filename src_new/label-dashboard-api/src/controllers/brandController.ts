@@ -10,6 +10,7 @@ import AWS from 'aws-sdk';
 import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
+import { createSubdomainARecord } from '../utils/lightsailDNSService';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -654,18 +655,43 @@ export const getChildBrands = async (req: Request, res: Response) => {
 export const createSublabel = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { brand_name, domain_name } = req.body;
+    const { brand_name, domain_name, subdomain_name } = req.body;
     const currentUserId = (req as any).user?.id;
 
+
     // Validate input
-    if (!brand_name || !domain_name) {
-      return res.status(400).json({ error: 'Brand name and domain name are required' });
+    if (!brand_name) {
+      return res.status(400).json({ error: 'Brand name is required' });
     }
 
-    // Validate domain name format
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    if (!domainRegex.test(domain_name)) {
-      return res.status(400).json({ error: 'Invalid domain name format' });
+    if (!subdomain_name && !domain_name) {
+      return res.status(400).json({ error: 'Subdomain name is required' });
+    }
+
+    let finalDomainName: string;
+    let isSubdomainOfMeltRecords = false;
+
+    // Handle new subdomain format
+    if (subdomain_name) {
+      // Validate subdomain format
+      const subdomainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
+      if (!subdomainRegex.test(subdomain_name)) {
+        return res.status(400).json({ error: 'Invalid subdomain format. Use only letters, numbers, and hyphens.' });
+      }
+      
+      const baseDomain = process.env.LIGHTSAIL_DOMAIN;
+      if (!baseDomain) {
+        return res.status(500).json({ error: 'LIGHTSAIL_DOMAIN environment variable is not configured' });
+      }
+      finalDomainName = `${subdomain_name.toLowerCase()}.${baseDomain}`;
+      isSubdomainOfMeltRecords = true;
+    } else {
+      // Handle legacy domain format
+      const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      if (!domainRegex.test(domain_name)) {
+        return res.status(400).json({ error: 'Invalid domain name format' });
+      }
+      finalDomainName = domain_name.toLowerCase().trim();
     }
 
     // Check if parent brand exists
@@ -682,7 +708,7 @@ export const createSublabel = async (req: Request, res: Response) => {
 
     // Check if domain already exists
     const existingDomain = await Domain.findOne({
-      where: { domain_name: domain_name.toLowerCase().trim() }
+      where: { domain_name: finalDomainName }
     });
     if (existingDomain) {
       return res.status(409).json({ error: 'Domain already exists' });
@@ -703,10 +729,30 @@ export const createSublabel = async (req: Request, res: Response) => {
     });
 
     // Create domain for the new brand
+    let domainStatus: 'Verified' | 'Unverified' = 'Unverified';
+    
+    // Create DNS A record for melt-records.com subdomains
+    if (isSubdomainOfMeltRecords && subdomain_name) {
+      try {
+        console.log(`Creating DNS A record for ${subdomain_name}.melt-records.com`);
+        const dnsCreated = await createSubdomainARecord(subdomain_name.toLowerCase());
+        if (dnsCreated) {
+          domainStatus = 'Verified'; // Auto-verify since we created the DNS record
+          console.log(`DNS A record created successfully for ${subdomain_name}.melt-records.com`);
+        } else {
+          console.warn(`DNS A record creation failed for ${subdomain_name}.melt-records.com`);
+        }
+      } catch (dnsError) {
+        console.error(`DNS creation error for ${subdomain_name}.melt-records.com:`, dnsError);
+        // Don't fail the entire operation if DNS creation fails
+        // The domain will remain unverified and can be configured manually
+      }
+    }
+
     const newDomain = await Domain.create({
       brand_id: newBrand.id,
-      domain_name: domain_name.toLowerCase().trim(),
-      status: 'Unverified'
+      domain_name: finalDomainName,
+      status: domainStatus
     });
 
     // Create admin user for the new brand (copy current user's info)
@@ -724,12 +770,16 @@ export const createSublabel = async (req: Request, res: Response) => {
     });
 
     res.status(201).json({
-      message: 'Sublabel created successfully',
+      message: isSubdomainOfMeltRecords ? 
+        'Sublabel created successfully with automatic DNS configuration' : 
+        'Sublabel created successfully',
       sublabel: {
         id: newBrand.id,
         brand_name: newBrand.brand_name,
         domain_name: newDomain.domain_name,
-        admin_user_id: newUser.id
+        domain_status: newDomain.status,
+        admin_user_id: newUser.id,
+        dns_configured: isSubdomainOfMeltRecords && domainStatus === 'Verified'
       }
     });
 

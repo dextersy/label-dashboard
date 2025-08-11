@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-lightsail": "^3.864.0",
     "@types/node": "^24.1.0",
     "@types/qrcode": "^1.5.5",
     "aws-sdk": "^2.1692.0",

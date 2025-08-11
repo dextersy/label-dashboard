@@ -214,10 +214,15 @@ export class ChildBrandsTabComponent implements OnInit {
     this.showAddSublabelModal = false;
   }
 
-  onCreateSublabel(data: { brandName: string, domainName: string }): void {
-    this.adminService.createSublabel(data.brandName, data.domainName).subscribe({
+  onCreateSublabel(data: { brandName: string, subdomainName: string }): void {
+    this.adminService.createSublabel(data.brandName, '', data.subdomainName).subscribe({
       next: (response) => {
-        this.notificationService.showSuccess('Sublabel created successfully');
+        const message = response.message || 'Sublabel created successfully';
+        this.notificationService.showSuccess(message);
+        // Reset form fields after successful creation
+        if (this.addSublabelModal) {
+          this.addSublabelModal.resetFormAfterSuccess();
+        }
         this.closeAddSublabelModal();
         this.loadChildBrands(); // Refresh the list
       },
