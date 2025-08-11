@@ -92,6 +92,7 @@ The system supports multiple labels/brands through:
 4. **Bootstrap Styling**: Use Bootstrap classes whenever possible
 5. **Never Modify Legacy**: Do not change files in `src/` (legacy PHP code)
 6. **No Automatic Building/Testing**: By default, do not build or test code unless specifically requested by the user. The user will report any build errors or issues that need to be addressed.
+7. **Never Build the App**: Do not run `npm run build`, `npm start`, or any build/test commands. The user will handle building and testing themselves.
 
 ## Database Configuration
 
