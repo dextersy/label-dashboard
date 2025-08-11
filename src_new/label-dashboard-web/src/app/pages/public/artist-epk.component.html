@@ -1,0 +1,197 @@
+<div class="artist-epk-page" (keydown)="onKeyDown($event)" tabindex="0">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading artist information...</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="isError && !isLoading" class="alert alert-danger text-center">
+    <h4>Artist Not Found</h4>
+    <p class="mb-0">The requested artist could not be found or is not available.</p>
+  </div>
+
+  <!-- EPK Content -->
+  <div *ngIf="!isLoading && !isError && epkData" class="epk-content">
+    
+    <!-- Hero Section -->
+    <div class="hero-section" [style.background-image]="'url(' + getProfilePhotoUrl(epkData.artist.profile_photo) + ')'">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+              <div class="profile-photo-wrapper">
+                <img 
+                  [src]="getProfilePhotoUrl(epkData.artist.profile_photo)" 
+                  [alt]="epkData.artist.name + ' Profile Photo'"
+                  class="hero-profile-photo">
+              </div>
+              <h1 class="hero-title">{{ epkData.artist.name }}</h1>
+              <div *ngIf="epkData.brand" class="hero-label">
+                <span class="brand-tag" 
+                      [style.color]="getBrandColor()" 
+                      [style.background-color]="getBrandTagBackgroundColor()">
+                  {{ epkData.brand.name }}
+                </span>
+              </div>
+              
+              <!-- Social Media Links -->
+              <div *ngIf="getSocialMediaLinks().length > 0" class="hero-social-links">
+                <a 
+                  *ngFor="let link of getSocialMediaLinks()" 
+                  [href]="link.url" 
+                  target="_blank" 
+                  class="hero-social-link"
+                  [title]="link.name">
+                  <i [class]="link.icon"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artist Bio -->
+    <div *ngIf="epkData.artist.bio" class="content-section bio-section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="section-header">
+              <h2 class="section-title">About</h2>
+            </div>
+            <div class="bio-content" [innerHTML]="epkData.artist.bio"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Releases Section -->
+    <div *ngIf="epkData.releases.length > 0" class="content-section releases-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <h2 class="section-title">Music</h2>
+          <p class="section-subtitle">Latest releases and discography</p>
+        </div>
+        <div class="releases-grid">
+          <div *ngFor="let release of epkData.releases" class="release-item">
+            <div class="release-artwork">
+              <img 
+                [src]="getCoverArtUrl(release.cover_art_url)" 
+                [alt]="release.title + ' Cover Art'"
+                class="release-image">
+              <div class="release-overlay">
+                <div class="streaming-icons" *ngIf="getStreamingLinks(release).length > 0">
+                  <a 
+                    *ngFor="let link of getStreamingLinks(release)" 
+                    [href]="link.url" 
+                    target="_blank" 
+                    class="stream-icon"
+                    [title]="link.name">
+                    <i [class]="link.icon"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="release-details">
+              <h3 class="release-name">{{ release.title }}</h3>
+              <p class="release-meta">{{ formatReleaseDate(release.release_date) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Gallery Section -->
+    <div *ngIf="epkData.gallery.length > 0" class="content-section gallery-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <h2 class="section-title">Gallery</h2>
+          <p class="section-subtitle">Behind the scenes and live moments</p>
+        </div>
+        <div class="gallery-grid">
+          <div *ngFor="let item of epkData.gallery; let i = index" class="gallery-photo" (click)="openLightbox(i)">
+            <img 
+              [src]="getGalleryImageUrl(item.image_url)" 
+              [alt]="item.caption || 'Gallery Image'"
+              class="gallery-img">
+            <div class="gallery-hover">
+              <div class="gallery-hover-content">
+                <i class="fas fa-expand"></i>
+                <span *ngIf="item.caption" class="hover-caption">{{ item.caption }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="epk-footer">
+      <div class="container">
+        <div class="footer-content text-center">
+          <div class="footer-branding">
+            <p class="powered-by">Powered by <strong>Melt Records Dashboard</strong></p>
+          </div>
+          <div class="footer-contact">
+            <p class="contact-text">
+              Need help? <a [href]="'mailto:support@melt-records.com?subject=EPK Support - ' + epkData.artist.name" class="contact-link">Contact us</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div *ngIf="lightboxOpen" class="lightbox-overlay" (click)="closeLightbox()">
+    <div class="lightbox-container" (click)="$event.stopPropagation()">
+      
+      <!-- Close Button -->
+      <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close lightbox">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <!-- Navigation Arrows -->
+      <button 
+        *ngIf="galleryImages.length > 1" 
+        class="lightbox-nav lightbox-prev" 
+        (click)="prevImage()" 
+        aria-label="Previous image">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <button 
+        *ngIf="galleryImages.length > 1" 
+        class="lightbox-nav lightbox-next" 
+        (click)="nextImage()" 
+        aria-label="Next image">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      
+      <!-- Image Container -->
+      <div class="lightbox-image-container">
+        <img 
+          [src]="getCurrentImage()?.url" 
+          [alt]="getCurrentImage()?.caption || 'Gallery Image'"
+          class="lightbox-image"
+          (load)="onImageLoad($event)">
+      </div>
+      
+      <!-- Caption -->
+      <div *ngIf="getCurrentImage()?.caption" class="lightbox-caption">
+        {{ getCurrentImage()?.caption }}
+      </div>
+      
+      <!-- Image Counter -->
+      <div *ngIf="galleryImages.length > 1" class="lightbox-counter">
+        {{ currentImageIndex + 1 }} of {{ galleryImages.length }}
+      </div>
+      
+    </div>
+  </div>
+
+</div>

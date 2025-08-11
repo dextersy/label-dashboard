@@ -30,6 +30,7 @@ export class BreadcrumbService {
     '/artist/gallery': { label: 'Upload Media', parent: '/artist' },
     '/artist/releases': { label: 'View Releases', parent: '/artist' },
     '/artist/team': { label: 'Manage Team', parent: '/artist' },
+    '/artist/epk': { label: 'Manage EPK', parent: '/artist' },
     '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
     '/artist/releases/submit': { label: 'Submit Release', parent: '/artist/releases' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },

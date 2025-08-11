@@ -41,7 +41,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/artist/profile', title: 'Manage Profile', adminOnly: false },
         { route: '/artist/gallery', title: 'Upload Media', adminOnly: false },
         { route: '/artist/releases', title: 'View Releases', adminOnly: false },
-        { route: '/artist/team', title: 'Manage Team', adminOnly: false }
+        { route: '/artist/team', title: 'Manage Team', adminOnly: false },
+        { route: '/artist/epk', title: 'Manage EPK', adminOnly: false }
       ]
     },
     { 

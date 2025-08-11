@@ -1,0 +1,62 @@
+.manage-epk-tab {
+  .card {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    
+    h5 {
+      color: #495057;
+      font-weight: 600;
+    }
+    
+    i {
+      color: #6c757d;
+    }
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+
+  .input-group {
+    .form-control {
+      background-color: #f8f9fa;
+      border: 1px solid #ced4da;
+      
+      &:focus {
+        background-color: #fff;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+    }
+    
+    .btn-outline-secondary {
+      border-color: #ced4da;
+      
+      &:hover:not(:disabled) {
+        background-color: #6c757d;
+        border-color: #6c757d;
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .text-muted {
+    color: #6c757d !important;
+  }
+}

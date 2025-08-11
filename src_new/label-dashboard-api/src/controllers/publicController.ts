@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode } from '../utils/ticketEmailService';
@@ -1361,6 +1361,307 @@ ${JSON.stringify(structuredData, null, 4)}
 
   } catch (error) {
     console.error('Generate events list SEO page error:', error);
+    res.status(500).send('Internal server error');
+  }
+};
+
+// Get public EPK (Electronic Press Kit) for an artist
+export const getArtistEPK = async (req: Request, res: Response) => {
+  try {
+    const { artist_id } = req.params;
+    const artistId = parseInt(artist_id, 10);
+
+    if (isNaN(artistId)) {
+      return res.status(400).json({ error: 'Invalid artist ID' });
+    }
+
+    // Extract domain from referer URL for multibrand validation
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let requestDomain = '';
+    
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+
+    // Get artist with brand and domain information for validation
+    const artist = await Artist.findOne({
+      where: { id: artistId },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          include: [
+            {
+              model: Domain,
+              as: 'domains',
+              attributes: ['domain_name']
+            }
+          ]
+        }
+      ],
+      attributes: [
+        'id',
+        'name',
+        'bio',
+        'profile_photo',
+        'instagram_handle',
+        'facebook_handle', 
+        'twitter_handle',
+        'tiktok_handle',
+        'youtube_channel',
+        'website_page_url'
+      ]
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Validate that the artist belongs to the brand associated with the current domain
+    if (artist.brand && artist.brand.domains && requestDomain) {
+      const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = artistBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(404).json({ error: 'Artist not found' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Get artist's media gallery using ArtistImage model
+    const gallery = await ArtistImage.findAll({
+      where: { artist_id: artistId },
+      attributes: ['id', 'path', 'credits', 'date_uploaded'],
+      order: [['date_uploaded', 'DESC']]
+    });
+
+    // Get artist's releases using the proper many-to-many relationship
+    const releases = await Release.findAll({
+      include: [{
+        model: Artist,
+        as: 'artists',
+        where: { id: artistId },
+        attributes: [],
+        through: { attributes: [] } // Don't include junction table data
+      }],
+      attributes: [
+        'id',
+        'title',
+        'description',
+        'cover_art',
+        'release_date',
+        'spotify_link',
+        'apple_music_link',
+        'youtube_link'
+      ],
+      order: [['release_date', 'DESC']]
+    });
+
+    // Format the response
+    const epkData = {
+      artist: {
+        id: artist.id,
+        name: artist.name,
+        bio: artist.bio,
+        profile_photo: artist.profile_photo,
+        social_media: {
+          instagram: artist.instagram_handle,
+          facebook: artist.facebook_handle,
+          twitter: artist.twitter_handle,
+          youtube: artist.youtube_channel,
+          tiktok: artist.tiktok_handle,
+          website: artist.website_page_url
+        }
+      },
+      brand: artist.brand ? {
+        id: artist.brand.id,
+        name: artist.brand.brand_name,
+        color: artist.brand.brand_color,
+        logo_url: artist.brand.logo_url
+      } : null,
+      gallery: gallery.map(item => ({
+        id: item.id,
+        image_url: item.path,
+        caption: item.credits
+      })),
+      releases: releases.map(release => ({
+        id: release.id,
+        title: release.title,
+        description: release.description,
+        cover_art_url: release.cover_art,
+        release_date: release.release_date,
+        release_type: 'Release', // Default since not in model
+        streaming_links: {
+          spotify: release.spotify_link,
+          apple_music: release.apple_music_link,
+          youtube: release.youtube_link,
+          soundcloud: null,
+          bandcamp: null
+        }
+      }))
+    };
+
+    res.json(epkData);
+
+  } catch (error) {
+    console.error('Get artist EPK error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Generate SEO page on-demand for social media crawlers (Artist EPK)
+export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
+  try {
+    const artistId = parseInt(req.params.id, 10);
+    
+    if (isNaN(artistId)) {
+      return res.status(404).send('Artist not found');
+    }
+
+    // Get artist details with brand information (no domain validation for SEO pages)
+    const artist = await Artist.findOne({
+      where: { id: artistId },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          include: [{
+            model: Domain,
+            as: 'domains',
+            attributes: ['domain_name']
+          }]
+        }
+      ]
+    });
+
+    if (!artist) {
+      return res.status(404).send('Artist not found');
+    }
+
+    // Generate meta tags for social sharing
+    const title = `${artist.name} - Electronic Press Kit`;
+    const description = artist.bio 
+      ? artist.bio.replace(/<[^>]*>/g, '').substring(0, 160) + '...'
+      : `Check out ${artist.name}'s music, bio, and latest releases.`;
+    const image = artist.profile_photo 
+      ? (artist.profile_photo.startsWith('http') ? artist.profile_photo : `https://dashboard-uploads-test.s3.ap-southeast-1.amazonaws.com/${artist.profile_photo}`)
+      : '';
+    const siteName = artist.brand?.brand_name || 'Melt Records';
+    
+    // Use the brand's primary domain for the frontend URL
+    const brandDomain = artist.brand?.domains?.[0]?.domain_name || 'testbrand.melt-records.com';
+    const frontendUrl = `https://${brandDomain}/public/epk/${artist.id}`;
+
+    // Generate structured data for Artist/MusicGroup
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "MusicGroup",
+      "name": artist.name,
+      "description": description,
+      "image": image,
+      "url": frontendUrl,
+      "sameAs": [
+        artist.website_page_url,
+        artist.instagram_handle ? `https://instagram.com/${artist.instagram_handle.replace('@', '')}` : null,
+        artist.facebook_handle ? `https://facebook.com/${artist.facebook_handle}` : null,
+        artist.twitter_handle ? `https://twitter.com/${artist.twitter_handle.replace('@', '')}` : null,
+        artist.tiktok_handle ? `https://tiktok.com/@${artist.tiktok_handle.replace('@', '')}` : null,
+        artist.youtube_channel
+      ].filter(Boolean),
+      "recordLabel": {
+        "@type": "Organization",
+        "name": siteName
+      }
+    };
+
+    // Generate SEO-optimized HTML
+    const seoHTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${title.replace(/"/g, '&quot;')}</title>
+  <base href="/">
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+  
+  <!-- SEO Meta Tags for ${artist.name.replace(/"/g, '&quot;')} -->
+  <meta name="description" content="${description.replace(/"/g, '&quot;')}">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
+  <meta property="og:type" content="profile">
+  <meta property="og:site_name" content="${siteName}">
+  <meta property="og:url" content="${frontendUrl}">
+  ${image ? `<meta property="og:image" content="${image}">` : ''}
+  ${image ? `<meta property="og:image:width" content="1200">` : ''}
+  ${image ? `<meta property="og:image:height" content="630">` : ''}
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}">
+  ${image ? `<meta name="twitter:image" content="${image}">` : ''}
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${frontendUrl}">
+  
+  <!-- Meta refresh backup for non-crawler users -->
+  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+${JSON.stringify(structuredData, null, 4)}
+  </script>
+  
+  <link rel="icon" type="image/x-icon" href="${artist.brand?.favicon_url || '/favicon.ico'}">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, ${artist.brand?.brand_color || '#667eea'} 0%, #ffffff 100%); min-height: 100vh;">
+  <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; padding: 2rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      ${image ? `<img src="${image}" alt="${artist.name}" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 4px solid white; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">` : ''}
+      <h1 style="color: #2c3e50; margin: 1rem 0;">${artist.name}</h1>
+      ${artist.brand ? `<span style="display: inline-block; padding: 0.5rem 1rem; border-radius: 20px; background: ${artist.brand.brand_color || '#667eea'}; color: white; font-weight: 600; font-size: 0.9rem; text-transform: uppercase;">${siteName}</span>` : ''}
+    </div>
+    
+    ${artist.bio ? `
+    <div style="margin-bottom: 2rem;">
+      <h2 style="color: #2c3e50; border-bottom: 2px solid ${artist.brand?.brand_color || '#667eea'}; padding-bottom: 0.5rem;">About</h2>
+      <div style="line-height: 1.7; color: #495057;">${artist.bio}</div>
+    </div>
+    ` : ''}
+    
+    <div style="text-align: center; margin-top: 2rem;">
+      <p style="color: #6c757d;">This is a preview for social media crawlers.</p>
+      <p><a href="${frontendUrl}" style="color: ${artist.brand?.brand_color || '#667eea'}; text-decoration: none; font-weight: 600;">View Full EPK →</a></p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+      <p style="font-size: 12px; color: #6c757d;">Powered by Melt Records Dashboard</p>
+    </div>
+  </div>
+  
+  <script>
+    // Redirect non-crawlers immediately
+    if (!/bot|crawler|spider|crawling/i.test(navigator.userAgent)) {
+      window.location.href = '${frontendUrl}';
+    }
+  </script>
+</body>
+</html>`;
+
+    res.set('Content-Type', 'text/html');
+    res.send(seoHTML);
+    
+  } catch (error) {
+    console.error('Generate artist EPK SEO page error:', error);
     res.status(500).send('Internal server error');
   }
 };

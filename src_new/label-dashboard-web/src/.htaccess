@@ -12,6 +12,10 @@ RewriteRule ^public/tickets/buy/([0-9]+)$ https://api.melt-records.com:3001/api/
 RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot) [NC]
 RewriteRule ^public/events$ https://api.melt-records.com:3001/api/public/seo/events-%{HTTP_HOST}.html [R=302,L]
 
+# Detect social media crawlers for artist EPK pages
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot) [NC]
+RewriteRule ^public/epk/([0-9]+)$ https://api.melt-records.com:3001/api/public/seo/epk-$1.html [R=302,L]
+
 # Handle Angular Router (client-side routing)
 # If the requested resource doesn't exist as a file or directory
 # Serve the index.html file instead (except for API calls)

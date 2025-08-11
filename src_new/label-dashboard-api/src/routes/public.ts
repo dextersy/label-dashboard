@@ -11,7 +11,9 @@ import {
   getPublicEventInfo,
   generateEventSEOPage,
   getAllEventsForDomain,
-  generateEventsListSEOPage
+  generateEventsListSEOPage,
+  getArtistEPK,
+  generateArtistEPKSEOPage
 } from '../controllers/publicController';
 
 const router = Router();
@@ -21,10 +23,12 @@ router.get('/brand/domain/:domain', getBrandByDomain);
 router.get('/events/domain/:domain', getAllEventsForDomain);
 router.get('/events/:id', getEventForPublic);
 router.get('/events/:id/info', getPublicEventInfo);
+router.get('/epk/:artist_id', getArtistEPK);
 
 // On-demand SEO page generation for social media crawlers
 router.get('/seo/event-:id.html', generateEventSEOPage);
 router.get('/seo/events-:domain.html', generateEventsListSEOPage);
+router.get('/seo/epk-:id.html', generateArtistEPKSEOPage);
 
 router.post('/tickets/get-from-code', getTicketFromCode);
 router.post('/tickets/buy', buyTicket);

@@ -10,13 +10,14 @@ import { ArtistReleasesTabComponent, ArtistRelease } from '../../components/arti
 import { ArtistTeamTabComponent } from '../../components/artist/artist-team-tab/artist-team-tab.component';
 import { ArtistNewReleaseTabComponent } from '../../components/artist/artist-new-release-tab/artist-new-release-tab.component';
 import { ArtistSubmitReleaseTabComponent } from '../../components/artist/artist-submit-release-tab/artist-submit-release-tab.component';
+import { ArtistManageEpkTabComponent } from '../../components/artist/artist-manage-epk-tab/artist-manage-epk-tab.component';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from '../../../environments/environment';
 
-export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release';
+export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'submit-release' | 'manage-epk';
 
 @Component({
   selector: 'app-artist',
@@ -29,6 +30,7 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
     ArtistTeamTabComponent,
     ArtistNewReleaseTabComponent,
     ArtistSubmitReleaseTabComponent,
+    ArtistManageEpkTabComponent,
     BreadcrumbComponent
   ],
   templateUrl: './artist.component.html',
@@ -85,6 +87,8 @@ export class ArtistComponent implements OnInit, OnDestroy {
             this.activeTab = 'new-release';
           } else if (currentUrl.includes('/artist/submit-release')) {
             this.activeTab = 'submit-release';
+          } else if (currentUrl.includes('/artist/epk')) {
+            this.activeTab = 'manage-epk';
           }
         }
       })

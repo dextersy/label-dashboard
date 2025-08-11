@@ -314,4 +314,11 @@ export class PublicService {
   getAllEventsForDomain(domain: string): Observable<PublicEventsList> {
     return this.http.get<PublicEventsList>(`${this.apiUrl}/public/events/domain/${domain}`);
   }
+
+  /**
+   * Get public EPK (Electronic Press Kit) for an artist
+   */
+  getArtistEPK(artistId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/public/epk/${artistId}`);
+  }
 }

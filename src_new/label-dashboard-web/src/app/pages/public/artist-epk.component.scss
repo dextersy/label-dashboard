@@ -1,0 +1,708 @@
+// Modern color palette and variables
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --dark-text: #1a1a1a;
+  --light-text: #666;
+  --section-spacing: 5rem;
+  --border-radius: 20px;
+  --shadow-light: 0 10px 40px rgba(0,0,0,0.08);
+  --shadow-medium: 0 20px 60px rgba(0,0,0,0.12);
+}
+
+.artist-epk-page {
+  min-height: 100vh;
+  background: #fafafa;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  // Hero Section - Profile photo background with overlay
+  .hero-section {
+    position: relative;
+    background: var(--primary-gradient);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.6) 100%),
+        radial-gradient(circle at 30% 70%, rgba(0,0,0,0.3) 0%, transparent 70%);
+      backdrop-filter: blur(1px);
+    }
+    
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      width: 100%;
+      
+      .profile-photo-wrapper {
+        margin-bottom: 1rem;
+        
+        .hero-profile-photo {
+          width: 200px;
+          height: 200px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 6px solid rgba(255,255,255,0.9);
+          box-shadow: 
+            0 20px 60px rgba(0,0,0,0.4),
+            0 0 0 2px rgba(255,255,255,0.1);
+          transition: all 0.4s ease;
+          backdrop-filter: blur(2px);
+          
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 
+              0 30px 80px rgba(0,0,0,0.5),
+              0 0 0 3px rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,1);
+          }
+        }
+      }
+      
+      .hero-title {
+        font-size: 4rem;
+        font-weight: 800;
+        color: white;
+        margin: 0.5rem 0 1rem 0;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        text-align: center;
+        width: 100%;
+        text-shadow: 
+          0 2px 4px rgba(0,0,0,0.5),
+          0 4px 8px rgba(0,0,0,0.3),
+          0 8px 16px rgba(0,0,0,0.2);
+      }
+      
+      .hero-label {
+        margin-bottom: 1.5rem;
+        
+        .brand-tag {
+          font-size: 1.1rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          opacity: 0.95;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+        }
+      }
+      
+      .hero-social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        
+        .hero-social-link {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 50px;
+          height: 50px;
+          background: rgba(0,0,0,0.3);
+          border: 2px solid rgba(255,255,255,0.2);
+          border-radius: 50%;
+          color: white;
+          font-size: 1.3rem;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(15px);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          
+          &:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+          }
+        }
+      }
+    }
+  }
+  
+  // Content Sections - Modern layout
+  .content-section {
+    padding: var(--section-spacing) 0;
+    
+    &:nth-child(even) {
+      background: white;
+    }
+    
+    .section-header {
+      margin-bottom: 4rem;
+      
+      .section-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: var(--dark-text);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.01em;
+      }
+      
+      .section-subtitle {
+        font-size: 1.2rem;
+        color: var(--light-text);
+        font-weight: 400;
+        margin: 0;
+      }
+    }
+  }
+  
+  // Bio Section
+  .bio-section {
+    .bio-content {
+      font-size: 1.2rem;
+      line-height: 1.8;
+      color: var(--dark-text);
+      max-width: none;
+      padding-bottom: 2rem;
+      
+      p {
+        margin-bottom: 1.8rem;
+        font-weight: 400;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        &:first-child {
+          font-size: 1.3rem;
+          font-weight: 500;
+          color: var(--light-text);
+        }
+      }
+      
+      strong {
+        color: var(--dark-text);
+        font-weight: 600;
+      }
+    }
+  }
+  
+  // Releases Section - Modern grid layout
+  .releases-section {
+    .releases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2.5rem;
+      
+      .release-item {
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-light);
+        transition: all 0.4s ease;
+        
+        &:hover {
+          transform: translateY(-8px);
+          box-shadow: var(--shadow-medium);
+        }
+        
+        .release-artwork {
+          position: relative;
+          aspect-ratio: 1;
+          overflow: hidden;
+          
+          .release-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+          }
+          
+          .release-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            
+            .streaming-icons {
+              display: flex;
+              gap: 1rem;
+              
+              .stream-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 45px;
+                height: 45px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 50%;
+                color: white;
+                font-size: 1.2rem;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+                
+                &:hover {
+                  background: rgba(255,255,255,0.3);
+                  transform: scale(1.1);
+                }
+              }
+            }
+          }
+          
+          &:hover {
+            .release-image {
+              transform: scale(1.05);
+            }
+            
+            .release-overlay {
+              opacity: 1;
+            }
+          }
+        }
+        
+        .release-details {
+          padding: 1.8rem;
+          
+          .release-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+          }
+          
+          .release-meta {
+            color: var(--light-text);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+          }
+          
+          .release-desc {
+            color: var(--light-text);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            
+            p {
+              margin-bottom: 1rem;
+              
+              &:last-child {
+                margin-bottom: 0;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Gallery Section - Modern masonry-style grid
+  .gallery-section {
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      
+      .gallery-photo {
+        position: relative;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: var(--shadow-light);
+        transition: all 0.4s ease;
+        
+        &:hover {
+          transform: translateY(-5px) scale(1.02);
+          box-shadow: var(--shadow-medium);
+          
+          .gallery-hover {
+            opacity: 1;
+          }
+          
+          .gallery-img {
+            transform: scale(1.05);
+          }
+        }
+        
+        .gallery-img {
+          width: 100%;
+          height: 250px;
+          object-fit: cover;
+          transition: transform 0.4s ease;
+        }
+        
+        .gallery-hover {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(45deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: all 0.3s ease;
+          
+          .gallery-hover-content {
+            text-align: center;
+            color: white;
+            
+            i {
+              font-size: 2.5rem;
+              margin-bottom: 1rem;
+              display: block;
+            }
+            
+            .hover-caption {
+              font-size: 1rem;
+              font-weight: 500;
+              max-width: 200px;
+              line-height: 1.4;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Footer - Modern minimal design
+  .epk-footer {
+    background: var(--dark-text);
+    padding: 3rem 0;
+    
+    .footer-content {
+      .footer-branding {
+        margin-bottom: 1rem;
+        
+        .powered-by {
+          color: rgba(255,255,255,0.7);
+          font-size: 0.9rem;
+          margin: 0;
+          
+          strong {
+            color: white;
+          }
+        }
+      }
+      
+      .footer-contact {
+        .contact-text {
+          color: rgba(255,255,255,0.6);
+          font-size: 0.85rem;
+          margin: 0;
+          
+          .contact-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            
+            &:hover {
+              color: #764ba2;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Loading spinner styling
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+// Modern responsive design
+@media (max-width: 1024px) {
+  .artist-epk-page {
+    .releases-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    
+    .gallery-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .artist-epk-page {
+    .hero-section {
+      min-height: 55vh;
+      padding: 2rem 0;
+      
+      .hero-content {
+        .profile-photo-wrapper {
+          margin-bottom: 0.8rem;
+        }
+        
+        .hero-profile-photo {
+          width: 150px;
+          height: 150px;
+        }
+        
+        .hero-title {
+          font-size: 2.8rem;
+          margin: 0.3rem 0 0.8rem 0;
+        }
+        
+        .hero-social-links {
+          gap: 0.8rem;
+          
+          .hero-social-link {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+          }
+        }
+      }
+    }
+    
+    .content-section {
+      padding: 3rem 0;
+      
+      .section-header {
+        margin-bottom: 2.5rem;
+        
+        .section-title {
+          font-size: 2.2rem;
+        }
+        
+        .section-subtitle {
+          font-size: 1.1rem;
+        }
+      }
+    }
+    
+    .bio-section .bio-content {
+      font-size: 1.1rem;
+    }
+    
+    .releases-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .gallery-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      
+      .gallery-img {
+        height: 200px;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .artist-epk-page {
+    .hero-section {
+      .hero-content {
+        .profile-photo-wrapper {
+          margin-bottom: 0.6rem;
+        }
+        
+        .hero-title {
+          font-size: 2.2rem;
+          margin: 0.2rem 0 0.6rem 0;
+        }
+        
+        .hero-social-links {
+          justify-content: center;
+          
+          .hero-social-link {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+    
+    .content-section {
+      padding: 2.5rem 0;
+      
+      .section-header .section-title {
+        font-size: 1.8rem;
+      }
+    }
+    
+    .releases-grid {
+      gap: 1.5rem;
+      
+      .release-item .release-details {
+        padding: 1.5rem;
+      }
+    }
+    
+    .gallery-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Lightbox Styles
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+  
+  .lightbox-container {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    cursor: default;
+    
+    .lightbox-image-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .lightbox-image {
+        max-width: 90vw;
+        max-height: 80vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        
+        &.loaded {
+          opacity: 1;
+        }
+      }
+    }
+    
+    .lightbox-close {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 10001;
+      padding: 10px;
+      transition: opacity 0.3s ease;
+      
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+    
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      padding: 15px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 5px;
+      z-index: 10001;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-50%) scale(1.1);
+      }
+      
+      &.lightbox-prev {
+        left: -60px;
+      }
+      
+      &.lightbox-next {
+        right: -60px;
+      }
+    }
+    
+    .lightbox-caption {
+      position: absolute;
+      bottom: -50px;
+      left: 0;
+      right: 0;
+      color: white;
+      text-align: center;
+      font-size: 1.1rem;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 5px;
+    }
+    
+    .lightbox-counter {
+      position: absolute;
+      top: -50px;
+      left: 0;
+      color: white;
+      font-size: 0.9rem;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 5px;
+    }
+  }
+}
+
+// Mobile responsiveness for lightbox
+@media (max-width: 768px) {
+  .lightbox-overlay {
+    .lightbox-container {
+      .lightbox-close {
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+      }
+      
+      .lightbox-nav {
+        &.lightbox-prev {
+          left: 10px;
+        }
+        
+        &.lightbox-next {
+          right: 10px;
+        }
+      }
+      
+      .lightbox-caption {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        font-size: 1rem;
+      }
+      
+      .lightbox-counter {
+        top: 10px;
+        left: 10px;
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
