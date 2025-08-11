@@ -54,6 +54,22 @@
     background-color: #007bff;
     border-color: #007bff;
   }
+
+  // Ensure quill editor takes full width
+  quill-editor {
+    display: block;
+    width: 100%;
+    
+    .ql-container,
+    .ql-toolbar {
+      width: 100%;
+    }
+  }
+
+  // Add padding to Event Description card body
+  .card-body quill-editor {
+    margin-bottom: 2em;
+  }
 }
 
 // Responsive adjustments for mobile spacing

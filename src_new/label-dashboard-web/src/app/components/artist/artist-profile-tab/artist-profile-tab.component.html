@@ -33,12 +33,14 @@
             
             <div class="form-group">
               <label for="bio">Biography</label>
-              <textarea class="form-control" 
-                        id="bio"
-                        name="bio"
-                        rows="4"
-                        [(ngModel)]="editingProfile.bio"
-                        placeholder="Tell us about the artist..."></textarea>
+              <quill-editor 
+                id="bio"
+                name="bio"
+                [(ngModel)]="editingProfile.bio"
+                [modules]="quillConfig"
+                placeholder="Tell us about the artist..."
+                [style.height.px]="120">
+              </quill-editor>
             </div>
           </div>
         </div>

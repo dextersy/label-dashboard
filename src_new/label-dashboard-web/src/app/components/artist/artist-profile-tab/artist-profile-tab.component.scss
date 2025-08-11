@@ -21,6 +21,14 @@
   
   // Add bottom padding to ensure content isn't hidden behind floating button
   padding-bottom: 100px !important;
+
+  // Quill editor specific spacing
+  quill-editor {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
 }
 
 // Responsive adjustments for mobile spacing

@@ -19,3 +19,4 @@ src_new/label-dashboard-api/dist
 # Deployment configuration (contains sensitive server details)
 deploy.config
 src_new/label-dashboard-api/webhook.log
+SECURITY_ASSESSMENT_REPORT.md

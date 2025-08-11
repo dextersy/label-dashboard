@@ -6,6 +6,7 @@ import { ArtistRelease } from '../../artist/artist-releases-tab/artist-releases-
 import { ReleaseService, ReleaseFormData } from '../../../services/release.service';
 import { AuthService } from '../../../services/auth.service';
 import { ApiService } from '../../../services/api.service';
+import { QuillModule } from 'ngx-quill';
 
 export interface ReleaseFormSubmitData {
   formData: ReleaseFormData;
@@ -16,7 +17,7 @@ export interface ReleaseFormSubmitData {
 @Component({
   selector: 'app-release-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
   templateUrl: './release-form.component.html',
   styleUrl: './release-form.component.scss'
 })
@@ -41,6 +42,14 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
   defaultCatalogNumber = '';
   allArtists: Artist[] = [];
   loadingArtists = false;
+
+  quillConfig = {
+    toolbar: [
+      ['bold', 'italic'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['clean']
+    ]
+  };
 
   constructor(
     private fb: FormBuilder,

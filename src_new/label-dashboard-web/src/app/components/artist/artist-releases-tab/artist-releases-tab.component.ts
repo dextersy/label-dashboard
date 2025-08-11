@@ -185,4 +185,15 @@ export class ArtistReleasesTabComponent {
   navigateToSubmitRelease(): void {
     this.router.navigate(['/artist/releases/submit']);
   }
+
+  stripHtmlTags(html: string): string {
+    if (!html) return '';
+    
+    // Create a temporary div element to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Get text content and clean up extra whitespace
+    return tempDiv.textContent || tempDiv.innerText || '';
+  }
 }

@@ -58,7 +58,7 @@
                 <td class="title-cell">
                   <div class="release-title">{{ release.title }}</div>
                   <div *ngIf="release.description" class="release-description">
-                    {{ release.description }}
+                    {{ stripHtmlTags(release.description || '') }}
                   </div>
                 </td>
                 <td class="date-cell">

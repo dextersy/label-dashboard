@@ -351,19 +351,24 @@
             </div>
           </div>
         </div>
-        
-        <!-- Event Description -->
+      </div>
+    </div>
+
+    <!-- Event Description - Full Width -->
+    <div class="row">
+      <div class="col-12">
         <div class="card">
           <div class="card-header">
             <h6 class="mb-0">Event Description</h6>
           </div>
           <div class="card-body">
-            <textarea 
-              class="form-control" 
-              [(ngModel)]="event.description" 
+            <quill-editor 
+              [(ngModel)]="event.description"
               name="description"
-              rows="8"
-              placeholder="Describe your event..."></textarea>
+              [modules]="quillConfig"
+              placeholder="Describe your event..."
+              [style.height.px]="160">
+            </quill-editor>
           </div>
         </div>
       </div>

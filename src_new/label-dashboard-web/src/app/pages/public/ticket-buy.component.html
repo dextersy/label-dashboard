@@ -32,7 +32,7 @@
               <h5>Get tickets to</h5>
               <h1><strong>{{ event.title }}</strong></h1>
               <h5><strong>{{ formatEventDate(event.date_and_time) }}</strong> at <strong>{{ event.venue }}</strong></h5>
-              <small>{{ event.description }}</small>
+              <small [innerHTML]="event.description"></small>
             </div>
             <div *ngIf="event.is_closed || (event.remaining_tickets != null && event.remaining_tickets <= 0)">
               <h1 style="font-size:2.5rem;font-weight:bold;">Sorry, we're closed...</h1>

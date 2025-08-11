@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
+import { QuillModule } from 'ngx-quill';
 
 export interface ArtistProfile extends Artist {
   bio?: string;
@@ -19,7 +20,7 @@ export interface ArtistProfile extends Artist {
 @Component({
   selector: 'app-artist-profile-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, QuillModule],
   templateUrl: './artist-profile-tab.component.html',
   styleUrl: './artist-profile-tab.component.scss'
 })
@@ -43,6 +44,14 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   saving = false;
   selectedFile: File | null = null;
   uploadProgress = 0;
+
+  quillConfig = {
+    toolbar: [
+      ['bold', 'italic'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['clean']
+    ]
+  };
 
   constructor(private http: HttpClient, private router: Router) {}
 

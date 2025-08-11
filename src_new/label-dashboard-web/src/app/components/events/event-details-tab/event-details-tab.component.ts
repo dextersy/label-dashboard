@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
+import { QuillModule } from 'ngx-quill';
 
 export interface EventDetails {
   id?: number;
@@ -34,7 +35,7 @@ export interface EventDetails {
 @Component({
   selector: 'app-event-details-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
   templateUrl: './event-details-tab.component.html',
   styleUrl: './event-details-tab.component.scss'
 })
@@ -51,6 +52,14 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   uploading = false;
+
+  quillConfig = {
+    toolbar: [
+      ['bold', 'italic'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['clean']
+    ]
+  };
 
   private subscriptions = new Subscription();
 
