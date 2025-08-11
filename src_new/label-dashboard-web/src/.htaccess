@@ -16,6 +16,22 @@ RewriteRule ^public/events$ https://api.melt-records.com:3001/api/public/seo/eve
 RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot) [NC]
 RewriteRule ^public/epk/([0-9]+)$ https://api.melt-records.com:3001/api/public/seo/epk-$1.html [R=302,L]
 
+# Backward compatibility for old ticket URLs
+# Redirect /public/tickets/buy.php?id=<x> to /public/tickets/buy/<x>
+RewriteCond %{REQUEST_URI} ^/public/tickets/buy\.php$
+RewriteCond %{QUERY_STRING} ^id=([0-9]+)(&.*)?$
+RewriteRule ^public/tickets/buy\.php$ /public/tickets/buy/%1? [R=301,L]
+
+# Redirect /public/tickets/verify.php?id=<x> to /public/tickets/verify/<x>
+RewriteCond %{REQUEST_URI} ^/public/tickets/verify\.php$
+RewriteCond %{QUERY_STRING} ^id=([0-9]+)(&.*)?$
+RewriteRule ^public/tickets/verify\.php$ /public/tickets/verify/%1? [R=301,L]
+
+# Redirect /public/tickets/buy.php?id=<x>&ref=<code> to /public/tickets/buy/<x>?ref=<code>
+RewriteCond %{REQUEST_URI} ^/public/tickets/buy\.php$
+RewriteCond %{QUERY_STRING} ^id=([0-9]+)&ref=([^&]+)(&.*)?$
+RewriteRule ^public/tickets/buy\.php$ /public/tickets/buy/%1?ref=%2 [R=301,L]
+
 # Handle Angular Router (client-side routing)
 # If the requested resource doesn't exist as a file or directory
 # Serve the index.html file instead (except for API calls)
