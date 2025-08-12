@@ -18,6 +18,7 @@ import { filter } from 'rxjs/operators';
 export class AppComponent implements OnInit {
   title = 'label-dashboard-web';
   currentRoute = '';
+  brandLoaded = false;
 
   constructor(
     private router: Router,
@@ -30,9 +31,11 @@ export class AppComponent implements OnInit {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
         this.applyBrandStyling(brandSettings);
+        this.brandLoaded = true;
       },
       error: (error) => {
         console.error('Failed to load brand settings:', error);
+        this.brandLoaded = true; // Allow rendering even on error to show error page
         this.router.navigate(['/domain-not-found']);
       }
     });

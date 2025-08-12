@@ -1,20 +1,31 @@
-<div *ngIf="isStandalonePage(); else layoutTemplate">
-  <router-outlet />
+<!-- Loading screen while brand settings load -->
+<div *ngIf="!brandLoaded" class="brand-loading">
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
 </div>
 
-<ng-template #layoutTemplate>
-  <div class="wrapper">
-    <app-sidebar></app-sidebar>
-    
-    <div class="main-panel">
-      <app-navbar></app-navbar>
+<!-- Main app content - only shown after brand is loaded -->
+<div *ngIf="brandLoaded">
+  <div *ngIf="isStandalonePage(); else layoutTemplate">
+    <router-outlet />
+  </div>
+
+  <ng-template #layoutTemplate>
+    <div class="wrapper">
+      <app-sidebar></app-sidebar>
       
-      <div class="content">
-        <router-outlet />
+      <div class="main-panel">
+        <app-navbar></app-navbar>
+        
+        <div class="content">
+          <router-outlet />
+        </div>
       </div>
     </div>
-  </div>
-</ng-template>
+  </ng-template>
 
-<!-- Global notification - always visible at app level -->
-<app-global-notification></app-global-notification>
+  <!-- Global notification - always visible at app level -->
+  <app-global-notification></app-global-notification>
+</div>

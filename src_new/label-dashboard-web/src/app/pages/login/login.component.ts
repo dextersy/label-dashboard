@@ -70,22 +70,30 @@ export class LoginComponent implements OnInit {
   }
 
   loadBrandSettings(): void {
-    this.brandService.loadBrandByDomain().subscribe({
-      next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
-        this.brandName = brandSettings.name;
-        this.brandColor = brandSettings.brand_color;
-        this.brandId = brandSettings.id;
-        
-        // Apply brand styling to the page
-        document.documentElement.style.setProperty('--brand-color', this.brandColor);
-        document.title = `${this.brandName} - Login`;
-      },
-      error: (error) => {
-        console.error('Error loading brand settings:', error);
-        this.router.navigate(['/domain-not-found']);
+    // First check if brand settings are already loaded (from app component)
+    const currentBrandSettings = this.brandService.getCurrentBrandSettings();
+    if (currentBrandSettings) {
+      this.setBrandSettings(currentBrandSettings);
+      return;
+    }
+
+    // Subscribe to brand settings changes (will be triggered when app component loads brand)
+    this.brandService.brandSettings$.subscribe(brandSettings => {
+      if (brandSettings) {
+        this.setBrandSettings(brandSettings);
       }
     });
+  }
+
+  private setBrandSettings(brandSettings: any): void {
+    this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
+    this.brandName = brandSettings.name;
+    this.brandColor = brandSettings.brand_color;
+    this.brandId = brandSettings.id;
+    
+    // Apply brand styling to the page
+    document.documentElement.style.setProperty('--brand-color', this.brandColor);
+    document.title = `${this.brandName} - Login`;
   }
 
   private setupLoadingOverlay(): void {
