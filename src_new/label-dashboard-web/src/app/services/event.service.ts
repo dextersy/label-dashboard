@@ -455,6 +455,40 @@ export class EventService {
   }
 
   /**
+   * Get ticket holders count for an event
+   */
+  getEventTicketHoldersCount(eventId: number): Observable<{recipients_count: number, total_confirmed_tickets: number}> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.get<{recipients_count: number, total_confirmed_tickets: number}>(`${environment.apiUrl}/events/ticket-holders-count`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Send email to all confirmed ticket holders for an event
+   */
+  sendEventEmail(eventId: number, emailData: { subject: string; message: string; include_banner?: boolean }): Observable<any> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+
+    return this.http.post(`${environment.apiUrl}/events/send-email`, {
+      event_id: eventId,
+      ...emailData
+    }, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Clear all cached data (useful for logout)
    */
   clearCache(): void {

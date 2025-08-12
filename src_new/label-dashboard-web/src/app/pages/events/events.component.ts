@@ -13,11 +13,12 @@ import { EventDetailsTabComponent } from '../../components/events/event-details-
 import { EventTicketsTabComponent } from '../../components/events/event-tickets-tab/event-tickets-tab.component';
 import { EventAbandonedOrdersTabComponent } from '../../components/events/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
 import { EventReferralsTabComponent } from '../../components/events/event-referrals-tab/event-referrals-tab.component';
+import { EventEmailTabComponent } from '../../components/events/event-email-tab/event-email-tab.component';
 import { CreateEventModalComponent, CreateEventForm } from '../../components/events/create-event-modal/create-event-modal.component';
 import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
-export type EventsTabType = 'details' | 'tickets' | 'abandoned' | 'referrals';
+export type EventsTabType = 'details' | 'tickets' | 'abandoned' | 'referrals' | 'email';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -39,6 +40,7 @@ export type EventSelection = Event;
     EventTicketsTabComponent,
     EventAbandonedOrdersTabComponent,
     EventReferralsTabComponent,
+    EventEmailTabComponent,
     CreateEventModalComponent,
     EventSelectionComponent,
     BreadcrumbComponent
@@ -70,7 +72,8 @@ export class EventsComponent implements OnInit, OnDestroy {
     { id: 'details' as EventsTabType, label: 'Details', icon: 'fa-solid fa-info-circle' },
     { id: 'tickets' as EventsTabType, label: 'Tickets', icon: 'fas fa-ticket-alt' },
     { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'fa-solid fa-shopping-cart' },
-    { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'fa-solid fa-user-plus' }
+    { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'fa-solid fa-user-plus' },
+    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'fas fa-envelope', adminOnly: true }
   ];
 
   constructor(

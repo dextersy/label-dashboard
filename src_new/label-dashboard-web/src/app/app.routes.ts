@@ -82,7 +82,8 @@ export const routes: Routes = [
       { path: 'details', component: EventsComponent, data: { tab: 'details' } },
       { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
-      { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } }
+      { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } },
+      { path: 'email', component: EventsComponent, data: { tab: 'email' } }
     ]
   },
   { 

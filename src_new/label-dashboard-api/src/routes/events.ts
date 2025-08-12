@@ -17,6 +17,8 @@ import {
   updateEventReferrer,
   deleteEventReferrer,
   verifyAllPayments,
+  sendEventEmail,
+  getEventTicketHoldersCount,
   upload
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -47,6 +49,10 @@ router.get('/referrers', getEventReferrers);
 router.post('/referrers', requireAdmin, createEventReferrer);
 router.put('/referrers/:id', requireAdmin, updateEventReferrer);
 router.delete('/referrers/:id', requireAdmin, deleteEventReferrer);
+
+// Email operations (specific routes before /:id)
+router.get('/ticket-holders-count', getEventTicketHoldersCount);
+router.post('/send-email', requireAdmin, sendEventEmail);
 
 // Event CRUD operations with :id (these must come last)
 router.get('/:id', getEvent);

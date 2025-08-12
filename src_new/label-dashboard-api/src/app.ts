@@ -19,8 +19,11 @@ const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Increase payload limits for email with images
+// 50MB limit to handle multiple large base64 images in email content
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Static file serving for uploads (legacy local uploads)
 app.use('/api/uploads/artist-photos', express.static(path.join(__dirname, '../uploads/artist-photos')));

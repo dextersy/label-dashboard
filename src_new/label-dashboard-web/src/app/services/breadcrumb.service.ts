@@ -49,6 +49,7 @@ export class BreadcrumbService {
     '/events/tickets': { label: 'Tickets', parent: '/events' },
     '/events/abandoned': { label: 'Pending Orders', parent: '/events' },
     '/events/referrals': { label: 'Referrals', parent: '/events' },
+    '/events/email': { label: 'Send Email', parent: '/events' },
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
     '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
     '/admin/summary': { label: 'Summary View', parent: '/admin' },

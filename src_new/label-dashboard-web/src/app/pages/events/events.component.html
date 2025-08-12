@@ -59,6 +59,15 @@
           </app-event-referrals-tab>
         </div>
         
+        <!-- Email Tab -->
+        <div *ngIf="activeTab === 'email'">
+          <app-event-email-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-email-tab>
+        </div>
+        
       </div>
     </div>
     

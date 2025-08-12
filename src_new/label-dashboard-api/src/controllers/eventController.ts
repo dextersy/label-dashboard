@@ -4,6 +4,7 @@ import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { sendEmail } from '../utils/emailService';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
@@ -78,6 +79,94 @@ const generateBuyLink = async (eventId: number, slug: string, brandId: number): 
   const originalUrl = `${frontendUrl}/public/tickets/buy/${eventId}`;
   const path = `Buy${slug}`;
   return await createShortLink(originalUrl, path);
+};
+
+// Helper function to process base64 images in HTML and upload to S3
+const processImagesInHtml = async (htmlContent: string, eventId: number): Promise<{html: string, stats: {processed: number, skipped: number, reasons: string[]}}> => {
+  // Regular expression to find base64 images in HTML
+  const base64ImageRegex = /<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/gi;
+  let processedHtml = htmlContent;
+  let match;
+  
+  // Image size limits
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB per image
+  const MAX_TOTAL_IMAGES = 10; // Maximum 10 images per email
+  let imageCount = 0;
+  let processedCount = 0;
+  let skippedCount = 0;
+  const skipReasons: string[] = [];
+  
+  while ((match = base64ImageRegex.exec(htmlContent)) !== null) {
+    try {
+      const [fullMatch, imageType, base64Data] = match;
+      
+      // Check image count limit
+      imageCount++;
+      if (imageCount > MAX_TOTAL_IMAGES) {
+        skippedCount++;
+        skipReasons.push(`Image limit exceeded (max: ${MAX_TOTAL_IMAGES} images)`);
+        console.warn(`Email image limit exceeded: skipping image ${imageCount} (max: ${MAX_TOTAL_IMAGES})`);
+        continue;
+      }
+      
+      // Validate image type
+      const allowedTypes = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+      if (!allowedTypes.includes(imageType.toLowerCase())) {
+        skippedCount++;
+        skipReasons.push(`Unsupported image type: ${imageType}`);
+        console.warn(`Unsupported image type: ${imageType}, skipping image`);
+        continue;
+      }
+      
+      // Convert base64 to buffer
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+      
+      // Check image size limit
+      if (imageBuffer.length > MAX_IMAGE_SIZE) {
+        skippedCount++;
+        skipReasons.push(`Image too large: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB (max: ${MAX_IMAGE_SIZE / 1024 / 1024}MB)`);
+        console.warn(`Image too large: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB (max: ${MAX_IMAGE_SIZE / 1024 / 1024}MB), skipping image`);
+        continue;
+      }
+      
+      // Generate unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const fileName = `email-image-${eventId}-${uniqueSuffix}.${imageType}`;
+      
+      // Upload to S3
+      const uploadParams = {
+        Bucket: process.env.S3_BUCKET!,
+        Key: fileName,
+        Body: imageBuffer,
+        ContentType: `image/${imageType}`,
+        ACL: 'public-read' // Make images publicly accessible for emails
+      };
+      
+      const result = await s3.upload(uploadParams).promise();
+      
+      // Replace the base64 src with S3 URL in the HTML
+      const newImgTag = fullMatch.replace(/src="data:image\/[^;]+;base64,[^"]+"/, `src="${result.Location}"`);
+      processedHtml = processedHtml.replace(fullMatch, newImgTag);
+      
+      processedCount++;
+      console.log(`Successfully uploaded email image: ${fileName} (${(imageBuffer.length / 1024).toFixed(2)}KB)`);
+      
+    } catch (error) {
+      skippedCount++;
+      skipReasons.push(`Upload failed: ${error.message}`);
+      console.error('Failed to upload email image to S3:', error);
+      // Continue processing other images even if one fails
+    }
+  }
+  
+  return {
+    html: processedHtml,
+    stats: {
+      processed: processedCount,
+      skipped: skippedCount,
+      reasons: skipReasons
+    }
+  };
 };
 
 export const getEvents = async (req: AuthRequest, res: Response) => {
@@ -1417,6 +1506,182 @@ export const verifyAllPayments = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Verify all payments error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const sendEventEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { event_id, subject, message, include_banner = true } = req.body;
+
+    if (!event_id || !subject || !message) {
+      return res.status(400).json({ 
+        error: 'Event ID, subject, and message are required' 
+      });
+    }
+
+    // Additional validation to prevent abuse
+    if (subject.length > 500) {
+      return res.status(400).json({ 
+        error: 'Subject line too long (maximum 500 characters)' 
+      });
+    }
+
+    if (message.length > 10 * 1024 * 1024) { // 10MB limit for message content
+      return res.status(400).json({ 
+        error: 'Message content too large (maximum 10MB)' 
+      });
+    }
+
+    const eventIdNum = parseInt(event_id, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get all confirmed ticket holders (Payment Confirmed or Ticket sent)
+    const tickets = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum,
+        status: ['Payment Confirmed', 'Ticket sent.']
+      }
+    });
+
+    if (tickets.length === 0) {
+      return res.json({
+        message: 'No confirmed ticket holders found for this event',
+        recipients_count: 0,
+        success_count: 0,
+        failed_count: 0
+      });
+    }
+
+    // Get unique email addresses from ticket holders
+    const uniqueEmails = [...new Set(tickets.map(ticket => ticket.email_address))];
+    
+    // Process any base64 images in the message and upload to S3
+    let processedMessage = message;
+    let imageStats = { processed: 0, skipped: 0, reasons: [] };
+    try {
+      const imageResult = await processImagesInHtml(message, eventIdNum);
+      processedMessage = imageResult.html;
+      imageStats = imageResult.stats;
+    } catch (error) {
+      console.error('Failed to process images in email:', error);
+      // Continue with original message if image processing fails
+    }
+    
+    let htmlMessage = processedMessage;
+    
+    // Add email banner if requested
+    if (include_banner && event.brand) {
+      const brandColor = event.brand.brand_color || '#1595e7';
+      const brandLogo = event.brand.logo_url || '';
+      
+      const bannerHtml = `
+        <div style="background-color: ${brandColor}; padding: 20px; text-align: center; margin-bottom: 20px;">
+          ${brandLogo ? `<img src="${brandLogo}" alt="${event.brand.brand_name}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
+          <h2 style="color: white; margin: 0; font-family: Arial, sans-serif;">${event.title}</h2>
+        </div>
+      `;
+      
+      htmlMessage = bannerHtml + processedMessage;
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    // Send email to each unique recipient
+    for (const email of uniqueEmails) {
+      try {
+        const success = await sendEmail([email], subject, htmlMessage, req.user.brand_id);
+        if (success) {
+          successCount++;
+        } else {
+          failedCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to send email to ${email}:`, error);
+        failedCount++;
+      }
+    }
+
+    res.json({
+      message: `Email sending completed. ${successCount} sent successfully, ${failedCount} failed.`,
+      recipients_count: uniqueEmails.length,
+      success_count: successCount,
+      failed_count: failedCount,
+      event_title: event.title,
+      image_stats: imageStats
+    });
+  } catch (error) {
+    console.error('Send event email error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getEventTicketHoldersCount = async (req: AuthRequest, res: Response) => {
+  try {
+    const { event_id } = req.query;
+
+    if (!event_id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const eventIdNum = parseInt(event_id as string, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get confirmed ticket holders count
+    const tickets = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum,
+        status: ['Payment Confirmed', 'Ticket sent.']
+      },
+      attributes: ['email_address']
+    });
+
+    // Count unique email addresses
+    const uniqueEmails = [...new Set(tickets.map(ticket => ticket.email_address))];
+    
+    res.json({
+      event_id: eventIdNum,
+      recipients_count: uniqueEmails.length,
+      total_confirmed_tickets: tickets.length
+    });
+  } catch (error) {
+    console.error('Get event ticket holders count error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
