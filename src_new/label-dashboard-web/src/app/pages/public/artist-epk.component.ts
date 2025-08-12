@@ -310,7 +310,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     }
   }
 
-  getCurrentImage() {
+  getCurrentImage(): {url: string, caption?: string} | undefined {
     return this.galleryImages[this.currentImageIndex];
   }
 
