@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -13,7 +13,7 @@ import 'quill/dist/quill.snow.css';
   templateUrl: './event-email-tab.component.html',
   styleUrl: './event-email-tab.component.scss'
 })
-export class EventEmailTabComponent implements OnInit, OnDestroy {
+export class EventEmailTabComponent implements OnInit, OnDestroy, OnChanges {
   @Input() selectedEvent: Event | null = null;
   @Input() isAdmin: boolean = false;
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
@@ -54,6 +54,20 @@ export class EventEmailTabComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (this.selectedEvent) {
       this.loadTicketHoldersCount();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedEvent']) {
+      if (this.selectedEvent) {
+        this.loadTicketHoldersCount();
+        // Reset form when event changes
+        this.resetForm();
+      } else {
+        // Clear recipients count when no event is selected
+        this.recipientsCount = 0;
+        this.resetForm();
+      }
     }
   }
 
@@ -157,10 +171,7 @@ export class EventEmailTabComponent implements OnInit, OnDestroy {
           }
           
           // Reset form
-          this.subject = '';
-          this.message = '';
-          this.includeBanner = true;
-          this.sending = false;
+          this.resetForm();
         },
         error: (error) => {
           console.error('Error sending email:', error);
@@ -171,15 +182,12 @@ export class EventEmailTabComponent implements OnInit, OnDestroy {
     );
   }
 
-  onEventChange(): void {
-    // Called when the parent component changes the selected event
-    if (this.selectedEvent) {
-      this.loadTicketHoldersCount();
-      // Reset form when event changes
-      this.subject = '';
-      this.message = '';
-      this.includeBanner = true;
-    }
+  resetForm(): void {
+    this.subject = '';
+    this.message = '';
+    this.includeBanner = true;
+    this.sending = false;
+    this.loading = false;
   }
 
   getContentSizeText(): string {
