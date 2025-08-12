@@ -532,6 +532,11 @@ interface ChildBrandData {
   payments: number;
   commission: number;
   balance: number;
+  domains: Array<{
+    domain_name: string;
+    status: string;
+    brand_id: number;
+  }>;
 }
 
 export const getChildBrands = async (req: Request, res: Response) => {
@@ -632,6 +637,13 @@ export const getChildBrands = async (req: Request, res: Response) => {
       // Calculate balance
       const balance = musicEarnings + eventEarnings - commission - payments;
 
+      // Get domains for this child brand
+      const domains = await Domain.findAll({
+        where: { brand_id: childBrand.id },
+        attributes: ['domain_name', 'status'],
+        order: [['status', 'DESC']] // Verified domains first
+      });
+
       childBrandData.push({
         brand_id: childBrand.id,
         brand_name: childBrand.brand_name,
@@ -639,7 +651,12 @@ export const getChildBrands = async (req: Request, res: Response) => {
         event_earnings: eventEarnings,
         payments: payments,
         commission: commission,
-        balance: balance
+        balance: balance,
+        domains: domains.map(d => ({
+          domain_name: d.domain_name,
+          status: d.status,
+          brand_id: childBrand.id
+        }))
       });
     }
 

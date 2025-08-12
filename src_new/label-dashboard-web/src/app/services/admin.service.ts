@@ -57,6 +57,7 @@ export interface ChildBrand {
   payments: number;
   commission: number;
   balance: number;
+  domains?: Domain[];
 }
 
 export interface EmailDetail {

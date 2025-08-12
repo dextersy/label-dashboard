@@ -15,6 +15,7 @@
     [pagination]="pagination"
     [showSearch]="true"
     [showSortableHeaders]="true"
+    [showActionsColumn]="true"
     [sortInfo]="sortInfo"
     (sortChange)="onSortChange($event)">
     
@@ -24,6 +25,24 @@
               (click)="openAddSublabelModal()"
               [disabled]="loading">
         <i class="fas fa-plus"></i> Add
+      </button>
+    </ng-template>
+
+    <ng-template #actionsContent let-item>
+      <button
+        class="btn btn-sm btn-outline-primary d-none d-md-inline-block"
+        [disabled]="!hasDomains(item)"
+        (click)="openSublabelDashboard(item)"
+        [title]="hasDomains(item) ? 'Go to ' + item.brand_name + ' dashboard' : 'No domain configured'">
+        <i class="fas fa-external-link-alt"></i>
+      </button>
+      
+      <button
+        class="btn btn-sm btn-outline-primary d-md-none d-block w-100"
+        [disabled]="!hasDomains(item)"
+        (click)="openSublabelDashboard(item)">
+        <i class="fas fa-external-link-alt me-2"></i>
+        Go to Dashboard
       </button>
     </ng-template>
   </app-paginated-table>

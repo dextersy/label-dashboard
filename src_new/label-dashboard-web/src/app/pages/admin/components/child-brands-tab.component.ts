@@ -237,4 +237,36 @@ export class ChildBrandsTabComponent implements OnInit {
       }
     });
   }
+
+  // Get the best domain for a sublabel (prioritize verified domains)
+  getBestDomainForSublabel(childBrand: ChildBrand): string | null {
+    if (!childBrand.domains || childBrand.domains.length === 0) {
+      return null;
+    }
+
+    // First, try to find a verified domain
+    const verifiedDomain = childBrand.domains.find(domain => domain.status === 'verified');
+    if (verifiedDomain) {
+      return verifiedDomain.domain_name;
+    }
+
+    // If no verified domain, use the first available domain
+    return childBrand.domains[0].domain_name;
+  }
+
+  // Open sublabel dashboard in new tab
+  openSublabelDashboard(childBrand: ChildBrand): void {
+    const domain = this.getBestDomainForSublabel(childBrand);
+    if (domain) {
+      const url = `https://${domain}`;
+      window.open(url, '_blank');
+    } else {
+      this.notificationService.showError('No domain found for this sublabel');
+    }
+  }
+
+  // Check if a sublabel has any domains configured
+  hasDomains(childBrand: ChildBrand): boolean {
+    return !!(childBrand.domains && childBrand.domains.length > 0);
+  }
 }
