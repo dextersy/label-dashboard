@@ -27,7 +27,7 @@
           <div class="col-md-4 event-poster-container" *ngIf="event.poster_url">
             <img [src]="event.poster_url" class="event-poster" alt="Event poster">
           </div>
-          <div [class]="event.poster_url ? 'col-md-8' : 'col-md-12 text-center'" style="padding:30px;">
+          <div [class]="event.poster_url ? 'col-md-8' : 'col-md-12 text-center'" style="padding:20px;">
             <div *ngIf="!event.is_closed && (!event.remaining_tickets || (event.remaining_tickets != null && event.remaining_tickets > 0))">
               <h5>Get tickets to</h5>
               <h1><strong>{{ event.title }}</strong></h1>

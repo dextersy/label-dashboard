@@ -19,14 +19,28 @@
   .hero-section {
     position: relative;
     background: var(--primary-gradient);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     min-height: 60vh;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    
+    // Blurred background image pseudo-element
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: inherit;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      filter: blur(8px);
+      transform: scale(1.1); // Prevent blur edge artifacts
+      z-index: 1;
+    }
     
     .hero-overlay {
       position: absolute;
@@ -37,12 +51,12 @@
       background: 
         linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.6) 100%),
         radial-gradient(circle at 30% 70%, rgba(0,0,0,0.3) 0%, transparent 70%);
-      backdrop-filter: blur(1px);
+      z-index: 2;
     }
     
     .hero-content {
       position: relative;
-      z-index: 2;
+      z-index: 3;
       text-align: center;
       width: 100%;
       
@@ -475,6 +489,13 @@
         }
       }
     }
+
+    // Ensure consistent horizontal padding for content sections on mobile
+    .content-section .container,
+    .hero-section .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
     
     .content-section {
       padding: 3rem 0;
@@ -535,6 +556,13 @@
           }
         }
       }
+    }
+
+    // Consistent horizontal padding for small mobile
+    .content-section .container,
+    .hero-section .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
     }
     
     .content-section {
