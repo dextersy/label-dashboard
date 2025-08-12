@@ -16,6 +16,7 @@ import {
   getArtistPhotos,
   uploadArtistPhotos,
   updatePhotoCaption,
+  setAsProfilePhoto,
   deleteArtistPhoto,
   getArtistReleases,
   updateRoyalties,
@@ -59,6 +60,7 @@ router.put('/:id/payment-methods/:paymentMethodId/set-default', setDefaultPaymen
 router.get('/:id/photos', getArtistPhotos);
 router.post('/:id/photos', upload.array('photos', 10), uploadArtistPhotos);
 router.put('/:id/photos/:photoId/caption', updatePhotoCaption);
+router.put('/:id/photos/:photoId/set-profile', setAsProfilePhoto);
 router.delete('/:id/photos/:photoId', deleteArtistPhoto);
 
 // Release operations

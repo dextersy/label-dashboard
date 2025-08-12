@@ -198,12 +198,15 @@ clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
 cd "$SCRIPT_DIR/src_new/label-dashboard-api"
 upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
 
-# Also upload package.json and other necessary files for API
-print_status "Uploading API package.json and dependencies info..."
+# Also upload package.json and migration files for API
+print_status "Uploading API package.json and migration files..."
 sftp_batch=$(mktemp)
 cat > "$sftp_batch" << EOF
 put package.json $BACKEND_DEPLOY_PATH/
 put package-lock.json $BACKEND_DEPLOY_PATH/
+put .sequelizerc $BACKEND_DEPLOY_PATH/
+-mkdir $BACKEND_DEPLOY_PATH/migrations
+put -r migrations/* $BACKEND_DEPLOY_PATH/migrations/
 quit
 EOF
 
@@ -236,8 +239,11 @@ ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST
     echo "Installing/updating API dependencies..."
     npm install --production
     
+    echo "Running database migrations..."
+    NODE_ENV=production npx sequelize-cli db:migrate
+    
     echo "Restarting PM2 application: $PM2_APP_NAME"
-    pm2 restart $PM2_APP_NAME || pm2 start $PM2_APP_NAME
+    pm2 restart $PM2_APP_NAME || pm2 start app.js --name $PM2_APP_NAME
     
     echo "Checking PM2 status..."
     pm2 status

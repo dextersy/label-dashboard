@@ -44,7 +44,7 @@ EmailAttempt.init(
       allowNull: false,
     },
     body: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT('long'),
       allowNull: false,
     },
     timestamp: {
@@ -60,7 +60,7 @@ EmailAttempt.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'brands',
+        model: 'brand',
         key: 'id',
       },
     },

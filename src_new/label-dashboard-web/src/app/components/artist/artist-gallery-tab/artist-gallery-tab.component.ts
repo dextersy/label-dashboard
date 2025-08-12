@@ -24,6 +24,7 @@ export interface ArtistPhoto {
 export class ArtistGalleryTabComponent {
   @Input() artist: Artist | null = null;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
+  @Output() profilePhotoUpdated = new EventEmitter<Artist>();
 
   photos: ArtistPhoto[] = [];
   loading = false;
@@ -296,5 +297,56 @@ export class ArtistGalleryTabComponent {
 
   onPhotoDoubleClick(photo: ArtistPhoto): void {
     this.openLightbox(photo);
+  }
+
+  setAsProfilePhoto(photo: ArtistPhoto): void {
+    if (!this.artist) return;
+
+    if (!confirm('Set this photo as the profile photo?')) {
+      return;
+    }
+
+    this.http.put<{success: boolean, message: string}>(
+      `${environment.apiUrl}/artists/${this.artist.id}/photos/${photo.id}/set-profile`,
+      {},
+      { headers: this.getAuthHeaders() }
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Update the local artist object with the new profile photo info
+          const updatedArtist: Artist = {
+            ...this.artist!,
+            profile_photo: photo.url,
+            profile_photo_id: photo.id,
+            profilePhotoImage: {
+              id: photo.id,
+              path: photo.url,
+              credits: photo.caption,
+              date_uploaded: new Date(photo.upload_date)
+            }
+          };
+
+          // Emit the updated artist so parent components can update their state
+          this.profilePhotoUpdated.emit(updatedArtist);
+          
+          this.alertMessage.emit({
+            type: 'success',
+            message: 'Profile photo updated successfully!'
+          });
+        } else {
+          this.alertMessage.emit({
+            type: 'error',
+            message: response.message || 'Failed to set profile photo.'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error setting profile photo:', error);
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'An error occurred while setting the profile photo.'
+        });
+      }
+    });
   }
 }

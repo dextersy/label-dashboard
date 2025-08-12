@@ -15,6 +15,13 @@ export interface ArtistProfile extends Artist {
   twitter_handle?: string;
   tiktok_handle?: string;
   youtube_channel?: string;
+  profile_photo_id?: number;
+  profilePhotoImage?: {
+    id: number;
+    path: string;
+    credits?: string;
+    date_uploaded: Date;
+  };
 }
 
 @Component({
@@ -180,7 +187,13 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     if (this.editingProfile.profile_photo && this.editingProfile.profile_photo.startsWith('data:')) {
       return this.editingProfile.profile_photo; // Preview image
     }
+
+    // Use gallery image if available (profile_photo_id)
+    if (this.editingProfile.profilePhotoImage?.path) {
+      return this.editingProfile.profilePhotoImage.path;
+    }
     
+    // Fallback to legacy profile_photo field
     if (this.editingProfile.profile_photo) {
       return this.editingProfile.profile_photo.startsWith('http') 
         ? this.editingProfile.profile_photo 

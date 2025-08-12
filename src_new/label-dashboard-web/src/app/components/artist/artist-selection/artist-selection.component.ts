@@ -13,6 +13,13 @@ export interface Artist {
   name: string;
   profile_photo: string;
   band_members?: string;
+  profile_photo_id?: number;
+  profilePhotoImage?: {
+    id: number;
+    path: string;
+    credits?: string;
+    date_uploaded: Date;
+  };
 }
 
 @Component({
@@ -270,11 +277,18 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  getProfilePhotoUrl(photo: string): string {
-    if (!photo) {
-      return 'assets/img/placeholder.jpg';
+  getProfilePhotoUrl(artist: Artist): string {
+    // Use gallery image if available (profile_photo_id)
+    if (artist.profilePhotoImage?.path) {
+      return artist.profilePhotoImage.path;
     }
-    return photo.startsWith('http') ? photo : `${environment.apiUrl}/uploads/artists/${photo}`;
+    
+    // Fallback to legacy profile_photo field
+    if (artist.profile_photo) {
+      return artist.profile_photo.startsWith('http') ? artist.profile_photo : `${environment.apiUrl}/uploads/artists/${artist.profile_photo}`;
+    }
+    
+    return 'assets/img/placeholder.jpg';
   }
 
   ngOnDestroy(): void {

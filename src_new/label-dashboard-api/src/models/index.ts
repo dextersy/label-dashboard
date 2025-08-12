@@ -66,6 +66,7 @@ Artist.belongsToMany(Release, {
   otherKey: 'release_id',
   as: 'releases' 
 });
+Artist.belongsTo(ArtistImage, { foreignKey: 'profile_photo_id', as: 'profilePhotoImage' });
 
 // Release relationships
 Release.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
@@ -168,9 +169,13 @@ export const initializeDatabase = async () => {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
-    // Sync all models (use force: false in production)
-    await sequelize.sync({ force: false });
-    console.log('✅ Database models synchronized.');
+    // Skip auto-sync in production - use migrations instead
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ force: false });
+      console.log('✅ Database models synchronized.');
+    } else {
+      console.log('✅ Production mode: Skipping auto-sync (using migrations instead).');
+    }
     
     return true;
   } catch (error) {

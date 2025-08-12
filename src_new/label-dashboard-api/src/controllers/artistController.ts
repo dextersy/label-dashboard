@@ -57,7 +57,8 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
         include: [
           { model: Brand, as: 'brand' },
           { model: Release, as: 'releases' },
-          { model: ArtistImage, as: 'images' }
+          { model: ArtistImage, as: 'images' },
+          { model: ArtistImage, as: 'profilePhotoImage' }
         ],
         order: [['name', 'ASC']]
       });
@@ -76,7 +77,8 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
             include: [
               { model: Brand, as: 'brand' },
               { model: Release, as: 'releases' },
-              { model: ArtistImage, as: 'images' }
+              { model: ArtistImage, as: 'images' },
+              { model: ArtistImage, as: 'profilePhotoImage' }
             ]
           }
         ],
@@ -117,7 +119,8 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
         { model: Payment, as: 'payments' },
         { model: Royalty, as: 'royalties' },
         { model: ArtistImage, as: 'images' },
-        { model: ArtistDocument, as: 'documents' }
+        { model: ArtistDocument, as: 'documents' },
+        { model: ArtistImage, as: 'profilePhotoImage' }
       ]
     });
 
@@ -188,6 +191,8 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
         };
 
         const result = await s3.upload(uploadParams).promise();
+
+        // Store the S3 URL temporarily for gallery entry creation after artist creation
         profilePhotoUrl = result.Location;
       } catch (uploadError) {
         console.error('Error uploading profile photo:', uploadError);
@@ -209,6 +214,26 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
       profile_photo: profilePhotoUrl,
       brand_id: req.user.brand_id
     });
+
+    // If we uploaded a profile photo, create gallery entry and update artist
+    if (profilePhotoUrl && req.file) {
+      try {
+        const artistImage = await ArtistImage.create({
+          path: profilePhotoUrl,
+          credits: 'Profile photo',
+          artist_id: artist.id,
+          date_uploaded: new Date()
+        });
+
+        // Update artist to reference the gallery image
+        await artist.update({ 
+          profile_photo_id: artistImage.id 
+        });
+      } catch (galleryError) {
+        console.error('Error creating gallery entry for profile photo:', galleryError);
+        // Continue - artist is created, just without gallery reference
+      }
+    }
 
     res.status(201).json({
       message: 'Artist created successfully',
@@ -249,7 +274,10 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
         id: artistId,
         brand_id: req.user.brand_id 
       },
-      include: [{ model: Brand, as: 'brand' }]
+      include: [
+        { model: Brand, as: 'brand' },
+        { model: ArtistImage, as: 'profilePhotoImage' }
+      ]
     });
 
     if (!artist) {
@@ -258,6 +286,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
 
     // Handle profile photo upload if provided
     let profilePhotoUrl = artist.profile_photo;
+    let newProfilePhotoId = artist.profile_photo_id;
     if (req.file) {
       // Generate unique filename for S3
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -276,16 +305,41 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
         const result = await s3.upload(uploadParams).promise();
         profilePhotoUrl = result.Location;
 
-        // Delete old profile photo from S3 if it exists
+        // Create gallery entry
+        const artistImage = await ArtistImage.create({
+          path: result.Location,
+          credits: 'Profile photo',
+          artist_id: parseInt(id),
+          date_uploaded: new Date()
+        });
+
+        newProfilePhotoId = artistImage.id;
+
+        // Delete old profile photo from S3 only if it's not in the gallery
         if (artist.profile_photo && artist.profile_photo.startsWith('https://')) {
           try {
-            const oldUrl = new URL(artist.profile_photo);
-            const oldKey = oldUrl.pathname.substring(1);
-            
-            await s3.deleteObject({
-              Bucket: process.env.S3_BUCKET!,
-              Key: oldKey
-            }).promise();
+            // Check if the old profile photo exists in the gallery
+            const existsInGallery = await ArtistImage.findOne({
+              where: { 
+                path: artist.profile_photo,
+                artist_id: parseInt(id)
+              }
+            });
+
+            // Only delete from S3 if it's not in the gallery
+            if (!existsInGallery) {
+              const oldUrl = new URL(artist.profile_photo);
+              const oldKey = oldUrl.pathname.substring(1);
+              
+              await s3.deleteObject({
+                Bucket: process.env.S3_BUCKET!,
+                Key: oldKey
+              }).promise();
+              
+              console.log('Deleted old profile photo from S3 (not in gallery)');
+            } else {
+              console.log('Old profile photo preserved (exists in gallery)');
+            }
           } catch (deleteError) {
             console.error('Error deleting old profile photo:', deleteError);
           }
@@ -321,7 +375,8 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       band_members,
       youtube_channel,
       payout_point: payout_point || artist.payout_point,
-      profile_photo: profilePhotoUrl
+      profile_photo: profilePhotoUrl,
+      profile_photo_id: newProfilePhotoId
     });
 
     // Refresh artist data to get updated values
@@ -406,9 +461,21 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Fetch updated artist with all relationships for the response
+    const updatedArtist = await Artist.findOne({
+      where: { 
+        id: artistId,
+        brand_id: req.user.brand_id 
+      },
+      include: [
+        { model: Brand, as: 'brand' },
+        { model: ArtistImage, as: 'profilePhotoImage' }
+      ]
+    });
+
     res.json({
       message: 'Artist updated successfully',
-      artist
+      artist: updatedArtist
     });
   } catch (error) {
     console.error('Update artist error:', error);
@@ -862,6 +929,53 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Update photo caption error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Set artist photo as profile photo
+export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, photoId } = req.params;
+    const artistId = parseInt(id, 10);
+    const photoIdNum = parseInt(photoId, 10);
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id: artistId,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find the photo
+    const photo = await ArtistImage.findOne({
+      where: { 
+        id: photoIdNum,
+        artist_id: artistId 
+      }
+    });
+
+    if (!photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    // Update artist to use this photo as profile photo
+    await artist.update({ 
+      profile_photo: photo.path,
+      profile_photo_id: photo.id
+    });
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated successfully'
+    });
+  } catch (error) {
+    console.error('Set as profile photo error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

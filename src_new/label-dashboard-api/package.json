@@ -39,6 +39,7 @@
     "png-to-ico": "^2.1.8",
     "qrcode": "^1.5.4",
     "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
@@ -50,7 +51,6 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
-    "nodemon": "^3.1.10",
-    "sequelize-cli": "^6.6.2"
+    "nodemon": "^3.1.10"
   }
 }

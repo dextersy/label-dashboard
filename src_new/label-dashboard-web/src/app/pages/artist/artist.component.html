@@ -23,7 +23,8 @@
         <div *ngIf="activeTab === 'gallery'">
           <app-artist-gallery-tab 
             [artist]="selectedArtist"
-            (alertMessage)="onAlertMessage($event)">
+            (alertMessage)="onAlertMessage($event)"
+            (profilePhotoUpdated)="onArtistUpdated($event)">
           </app-artist-gallery-tab>
         </div>
         

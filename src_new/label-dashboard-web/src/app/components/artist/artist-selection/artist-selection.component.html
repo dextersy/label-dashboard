@@ -17,7 +17,7 @@
       
       <!-- Normal Mode -->
       <div class="artist-info" *ngIf="selectedArtist && !isNewArtistMode">
-        <img [src]="getProfilePhotoUrl(selectedArtist.profile_photo)" 
+        <img [src]="getProfilePhotoUrl(selectedArtist)" 
              class="artist-photo" 
              [alt]="selectedArtist.name">
         <div class="artist-details">
@@ -62,7 +62,7 @@
       <li *ngFor="let artist of filteredArtists" 
           [class.active]="selectedArtist?.id === artist.id">
         <a (click)="selectArtist(artist, true)">
-          <img [src]="getProfilePhotoUrl(artist.profile_photo)" 
+          <img [src]="getProfilePhotoUrl(artist)" 
                class="dropdown-artist-photo" 
                [alt]="artist.name">
           <div class="dropdown-artist-info">

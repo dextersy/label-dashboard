@@ -85,6 +85,11 @@
                   <i class="fa fa-eye"></i>
                 </button>
                 <button class="btn btn-sm btn-info btn-icon-only" 
+                        (click)="setAsProfilePhoto(photo)"
+                        title="Set as profile photo">
+                  <i class="fa fa-user"></i>
+                </button>
+                <button class="btn btn-sm btn-info btn-icon-only" 
                         (click)="startEditingCaption(photo)"
                         *ngIf="!editingCaptions[photo.id]"
                         title="Edit caption">

@@ -10,6 +10,7 @@ interface ArtistAttributes {
   bio?: string;
   website_page_url?: string;
   profile_photo?: string;
+  profile_photo_id?: number;
   brand_id: number;
   tiktok_handle?: string;
   band_members?: string;
@@ -29,6 +30,7 @@ class Artist extends Model<ArtistAttributes, ArtistCreationAttributes> implement
   public bio?: string;
   public website_page_url?: string;
   public profile_photo?: string;
+  public profile_photo_id?: number;
   public brand_id!: number;
   public tiktok_handle?: string;
   public band_members?: string;
@@ -39,6 +41,7 @@ class Artist extends Model<ArtistAttributes, ArtistCreationAttributes> implement
   // Association properties
   public brand?: any;
   public releaseArtists?: any[];
+  public profilePhotoImage?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -78,6 +81,14 @@ Artist.init(
     profile_photo: {
       type: DataTypes.STRING(255),
       allowNull: true,
+    },
+    profile_photo_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'artist_image',
+        key: 'id'
+      },
     },
     brand_id: {
       type: DataTypes.INTEGER,

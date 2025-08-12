@@ -53,7 +53,7 @@ ReleaseArtist.init(
       primaryKey: true,
     },
     streaming_royalty_percentage: {
-      type: DataTypes.DECIMAL(3, 3),
+      type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
       defaultValue: 0.500,
     },
@@ -63,7 +63,7 @@ ReleaseArtist.init(
       defaultValue: 'Revenue',
     },
     sync_royalty_percentage: {
-      type: DataTypes.DECIMAL(3, 3),
+      type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
       defaultValue: 0.500,
     },
@@ -73,7 +73,7 @@ ReleaseArtist.init(
       defaultValue: 'Revenue',
     },
     download_royalty_percentage: {
-      type: DataTypes.DECIMAL(3, 3),
+      type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
       defaultValue: 0.500,
     },
@@ -83,7 +83,7 @@ ReleaseArtist.init(
       defaultValue: 'Revenue',
     },
     physical_royalty_percentage: {
-      type: DataTypes.DECIMAL(3, 3),
+      type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
       defaultValue: 0.200,
     },
