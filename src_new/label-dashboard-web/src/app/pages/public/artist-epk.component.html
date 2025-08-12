@@ -174,17 +174,21 @@
       
       <!-- Image Container -->
       <div class="lightbox-image-container">
-        <img 
-          [src]="getCurrentImage()?.url" 
-          [alt]="getCurrentImage()?.caption || 'Gallery Image'"
-          class="lightbox-image"
-          (load)="onImageLoad($event)">
+        <ng-container *ngIf="getCurrentImage() as currentImage">
+          <img 
+            [src]="currentImage.url" 
+            [alt]="currentImage.caption || 'Gallery Image'"
+            class="lightbox-image"
+            (load)="onImageLoad($event)">
+        </ng-container>
       </div>
       
       <!-- Caption -->
-      <div *ngIf="getCurrentImage()?.caption" class="lightbox-caption">
-        {{ getCurrentImage()?.caption }}
-      </div>
+      <ng-container *ngIf="getCurrentImage() as currentImage">
+        <div *ngIf="currentImage.caption" class="lightbox-caption">
+          {{ currentImage.caption }}
+        </div>
+      </ng-container>
       
       <!-- Image Counter -->
       <div *ngIf="galleryImages.length > 1" class="lightbox-counter">
