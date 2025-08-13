@@ -169,12 +169,12 @@ export const initializeDatabase = async () => {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
-    // Skip auto-sync in production - use migrations instead
-    if (process.env.NODE_ENV !== 'production') {
+    // Skip auto-sync in production and development - use migrations instead
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'development') {
       await sequelize.sync({ force: false });
       console.log('✅ Database models synchronized.');
     } else {
-      console.log('✅ Production mode: Skipping auto-sync (using migrations instead).');
+      console.log('✅ Auto-sync disabled: Using migrations instead.');
     }
     
     return true;

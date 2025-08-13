@@ -208,6 +208,7 @@ export class EventService {
       per_page?: number;
       sort_column?: string;
       sort_direction?: 'asc' | 'desc';
+      status_filter?: 'sent' | 'pending' | string;
       filters?: { [key: string]: string };
     }
   ): Observable<{ tickets: EventTicket[], pagination?: any }> {
@@ -222,6 +223,7 @@ export class EventService {
       if (params.per_page) queryParams.per_page = params.per_page.toString();
       if (params.sort_column) queryParams.sort_column = params.sort_column;
       if (params.sort_direction) queryParams.sort_direction = params.sort_direction;
+      if (params.status_filter) queryParams.status_filter = params.status_filter;
       
       // Add filter parameters
       if (params.filters) {
@@ -468,6 +470,32 @@ export class EventService {
       headers: this.getAuthHeaders(),
       params: { event_id: eventId.toString() }
     }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get ticket summary statistics for an event (always includes all tickets)
+   */
+  getEventTicketSummary(eventId: number): Observable<{
+    total_tickets_sold: number;
+    total_revenue: number;
+    total_processing_fee: number;
+    net_revenue: number;
+    platform_fee: number;
+    grand_total: number;
+    tax: number;
+    admin_grand_total: number;
+  }> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.get<{summary: any}>(`${environment.apiUrl}/events/ticket-summary`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(
+      map(response => response.summary),
       catchError(this.handleError)
     );
   }

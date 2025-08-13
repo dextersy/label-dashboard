@@ -101,8 +101,9 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    // Load referrers first, then tickets
+    // Load referrers and summary first, then tickets
     this.loadEventReferrers();
+    this.loadTicketSummary();
   }
 
   private loadEventReferrers(): void {
@@ -123,6 +124,22 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
+  private loadTicketSummary(): void {
+    if (!this.selectedEvent) return;
+
+    this.subscriptions.add(
+      this.eventService.getEventTicketSummary(this.selectedEvent.id).subscribe({
+        next: (summary) => {
+          this.summary = summary;
+        },
+        error: (error) => {
+          console.error('Failed to load ticket summary:', error);
+          // Don't show error for summary - it's not critical for the page to work
+        }
+      })
+    );
+  }
+
   private loadEventTickets(page: number = 1): void {
     if (!this.selectedEvent) {
       this.tickets = [];
@@ -138,20 +155,15 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       per_page: 20,
       sort_column: this.currentSort?.column,
       sort_direction: this.currentSort?.direction,
+      status_filter: 'sent',  // Only get "Ticket sent." tickets from backend
       filters: this.currentFilters
     };
 
     this.subscriptions.add(
       this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
         next: (response) => {
-          // Convert API tickets to component format - include all confirmed tickets for summary calculation
-          const allTickets = response.tickets.map(ticket => this.convertServiceTicketToComponentTicket(ticket));
-          
-          // Filter for display (only "Ticket sent." status)
-          this.tickets = allTickets.filter(ticket => ticket.status === 'Ticket sent.');
-          
-          // Calculate summary using all confirmed tickets (not just the filtered display tickets)
-          this.calculateTicketSummary(allTickets);
+          // Convert API tickets to component format
+          this.tickets = response.tickets.map(ticket => this.convertServiceTicketToComponentTicket(ticket));
           this.pagination = response.pagination;
           this.loading = false;
         },
@@ -209,71 +221,6 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private calculateTicketSummary(tickets: EventTicket[] = this.tickets): void {
-    const confirmedTickets = tickets.filter(t => 
-      t.status === 'Ticket sent.' || t.status === 'Payment Confirmed'
-    );
-    
-    // Count only "Ticket sent." tickets (matching PHP: if($ticket->status == 'Ticket sent.'))
-    const totalTicketsSold = tickets
-      .filter(t => t.status === 'Ticket sent.')
-      .reduce((sum, ticket) => sum + ticket.number_of_entries, 0);
-    
-    // Calculate total revenue from confirmed/sent tickets
-    const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
-      const price = Number(ticket.price_per_ticket) || 0;
-      const entries = Number(ticket.number_of_entries) || 0;
-      const ticketRevenue = price * entries;
-      return sum + ticketRevenue;
-    }, 0);
-    
-    // Calculate total processing fees from confirmed/sent tickets
-    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => {
-      const fee = Number(ticket.payment_processing_fee) || 0;
-      return sum + fee;
-    }, 0);
-    
-    // Platform fee is 5% of total revenue (matching PHP: $total_sold * .05)
-    const platformFee = Number((totalRevenue * 0.05).toFixed(2)) || 0;
-    
-    // Grand total after platform fee (matching PHP: $total_sold * .95)
-    const grandTotal = Number((totalRevenue * 0.95).toFixed(2)) || 0;
-    
-    // Net revenue after processing fees (for admin view)
-    const netRevenue = Number((totalRevenue - totalProcessingFee).toFixed(2)) || 0;
-    
-    // Tax calculation (0.5% of net revenue, matching PHP: ($total_sold - $total_processing_fee)*.005)
-    const tax = Number((netRevenue * 0.005).toFixed(2)) || 0;
-    
-    // Admin grand total after processing fees and tax (matching PHP: ($total_sold - $total_processing_fee)*.995)
-    const adminGrandTotal = Number((netRevenue * 0.995).toFixed(2)) || 0;
-    
-    // Log debug info only in development
-    if (!environment.production) {
-      console.log('Ticket Summary Calculated:', {
-        confirmedTicketsCount: confirmedTickets.length,
-        totalTicketsSold,
-        totalRevenue,
-        totalProcessingFee,
-        netRevenue,
-        tax,
-        platformFee,
-        grandTotal,
-        adminGrandTotal
-      });
-    }
-    
-    this.summary = {
-      total_tickets_sold: totalTicketsSold,
-      total_revenue: totalRevenue,
-      total_processing_fee: totalProcessingFee,
-      net_revenue: netRevenue,
-      platform_fee: platformFee,
-      grand_total: grandTotal,
-      tax: tax,
-      admin_grand_total: adminGrandTotal
-    };
-  }
 
   onResendTicket(ticketId: number): void {
     this.subscriptions.add(
@@ -325,9 +272,9 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
               type: 'success',
               text: 'Ticket cancelled successfully!'
             });
-            // Remove ticket from list and recalculate summary
+            // Remove ticket from list and reload summary from backend
             this.tickets = this.tickets.filter(t => t.id !== ticketId);
-            this.calculateTicketSummary();
+            this.loadTicketSummary();
           },
           error: (error) => {
             console.error('Failed to cancel ticket:', error);

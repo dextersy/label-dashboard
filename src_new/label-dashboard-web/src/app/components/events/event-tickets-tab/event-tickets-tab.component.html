@@ -48,53 +48,54 @@
   </app-paginated-table>
 
   <!-- Summary Footer - Matching PHP layout -->
-  <div class="card mt-3" *ngIf="summary">
-    <div class="card-footer sticky-bottom bg-light">
-      <strong>Totals </strong>&nbsp;&nbsp;
-      
-      <span class="me-3" title="Number of paid tickets">
-        <i class="fas fa-dot-circle text-success"></i> 
-        {{ summary.total_tickets_sold }}&nbsp;&nbsp;
-      </span>
-      
-      <span class="me-3" title="Total revenue">
-        <i class="fas fa-money-bill"></i> 
-        {{ (summary.total_revenue | number:'1.2-2') }}&nbsp;&nbsp;
-      </span>
-      
-      <!-- Superadmin-specific stats (matching PHP condition for admin_email env variable) -->
-      <span class="text-muted" *ngIf="isSuperadmin()">
-        <span class="me-2" title="Total processing fee">
-          <i class="fas fa-credit-card"></i> 
-          -{{ (summary.total_processing_fee || 0) | number:'1.2-2' }}&nbsp;&nbsp;
+  <div class="sticky-bottom mt-3" *ngIf="summary">
+    <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
+      <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+        <strong class="text-primary fs-5">Totals</strong>
+        
+        <span class="summary-stat" title="Number of paid tickets">
+          <i class="fas fa-dot-circle text-success me-2"></i> 
+          {{ summary.total_tickets_sold }}
         </span>
         
-        <span class="me-2" title="Net amount">
-          <i class="fas fa-plus"></i> 
-          {{ (summary.net_revenue || 0) | number:'1.2-2' }}&nbsp;&nbsp;
+        <span class="summary-stat" title="Total revenue">
+          <i class="fas fa-money-bill text-info me-2"></i> 
+          ₱{{ (summary.total_revenue | number:'1.2-2') }}
         </span>
         
-        <span class="me-2" title="Tax">
-          <i class="fas fa-percentage"></i> 
-          -{{ (summary.tax || 0) | number:'1.2-2' }}&nbsp;&nbsp;
+        <!-- Superadmin-specific stats (matching PHP condition for admin_email env variable) -->
+        <ng-container *ngIf="isSuperadmin()">
+          <span class="summary-stat text-muted" title="Total processing fee">
+            <i class="fas fa-credit-card me-2"></i> 
+            -₱{{ (summary.total_processing_fee || 0) | number:'1.2-2' }}
+          </span>
+          
+          <span class="summary-stat text-muted" title="Net amount">
+            <i class="fas fa-plus me-2"></i> 
+            ₱{{ (summary.net_revenue || 0) | number:'1.2-2' }}
+          </span>
+          
+          <span class="summary-stat text-muted" title="Tax">
+            <i class="fas fa-percentage me-2"></i> 
+            -₱{{ (summary.tax || 0) | number:'1.2-2' }}
+          </span>
+          
+          <span class="summary-stat text-muted" title="Admin grand total">
+            <i class="fas fa-plus-square me-2"></i> 
+            <strong>₱{{ (summary.admin_grand_total || 0) | number:'1.2-2' }}</strong>
+          </span>
+        </ng-container>
+        
+        <span class="summary-stat" title="Platform fee">
+          <i class="fas fa-money-bill text-warning me-2"></i> 
+          -₱{{ (summary.platform_fee | number:'1.2-2') }}
         </span>
         
-        <span class="me-3 fw-bold" title="Admin grand total">
-          <i class="fas fa-plus-square"></i> 
-          <strong>₱{{ (summary.admin_grand_total || 0) | number:'1.2-2' }}</strong>
-          &nbsp;&nbsp;&nbsp;
+        <span class="summary-stat-highlight" title="Grand total">
+          <i class="fas fa-plus-square me-2"></i> 
+          <strong>₱{{ (summary.grand_total | number:'1.2-2') }}</strong>
         </span>
-      </span>
-      
-      <span class="me-2" title="Platform fee">
-        <i class="fas fa-money-bill"></i> 
-        -{{ (summary.platform_fee | number:'1.2-2') }}&nbsp;&nbsp;
-      </span>
-      
-      <span class="fw-bold" title="Grand total">
-        <i class="fas fa-plus-square"></i> 
-        <strong>₱{{ (summary.grand_total | number:'1.2-2') }}</strong>
-      </span>
+      </div>
     </div>
   </div>
 

@@ -51,12 +51,38 @@
     }
   }
 
-  .card-footer {
-    background-color: #f6f6f6 !important;
-    border-top: 1px solid #dee2e6;
+  .sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
     
-    .fa {
-      margin-right: 5px;
+    .card-footer {
+      background-color: #f8f9fa !important;
+      border-top: 2px solid #dee2e6;
+      margin: 0;
+      padding: 1rem 2rem;
+      min-height: 60px;
+      
+      .summary-stat {
+        font-size: 1rem;
+        font-weight: 500;
+        
+        .fa, .fas, .far {
+          font-size: 0.9em;
+        }
+      }
+      
+      .fs-5 {
+        font-size: 1.2rem !important;
+      }
+      
+      .gap-4 {
+        gap: 1.5rem !important;
+        
+        @media (max-width: 767.98px) {
+          gap: 0.75rem !important;
+        }
+      }
     }
   }
 

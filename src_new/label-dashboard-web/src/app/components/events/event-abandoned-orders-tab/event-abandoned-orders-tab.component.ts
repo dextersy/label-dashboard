@@ -116,17 +116,15 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       per_page: 20,
       sort_column: this.currentSort?.column,
       sort_direction: this.currentSort?.direction,
-      filters: this.currentFilters // Remove status filter to get both New and Payment Confirmed
+      status_filter: 'pending',  // Only get "New" and "Payment Confirmed" tickets from backend
+      filters: this.currentFilters
     };
 
     this.subscriptions.add(
       this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
         next: (response) => {
-          // Filter for pending tickets (New and Payment Confirmed statuses)
-          this.orders = response.tickets
-            .filter(ticket => ticket.status === 'New' || ticket.status === 'Payment Confirmed')
-            .map(ticket => this.convertServiceTicketToAbandonedOrder(ticket));
-          
+          // Convert API tickets to abandoned orders format
+          this.orders = response.tickets.map(ticket => this.convertServiceTicketToAbandonedOrder(ticket));
           this.pagination = response.pagination;
           this.loading = false;
         },

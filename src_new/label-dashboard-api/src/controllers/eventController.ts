@@ -670,6 +670,7 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
       per_page = '20', 
       sort_column, 
       sort_direction = 'desc',
+      status_filter,  // Add status filter for specific tab filtering
       ...filters 
     } = req.query;
     
@@ -709,6 +710,19 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
       where.event_id = eventIdNum;
     }
 
+    // Apply status filter for specific tabs
+    if (status_filter) {
+      if (status_filter === 'sent') {
+        // For tickets tab - only show "Ticket sent." tickets
+        where.status = 'Ticket sent.';
+      } else if (status_filter === 'pending') {
+        // For abandoned orders tab - show "New" and "Payment Confirmed"
+        where.status = ['New', 'Payment Confirmed'];
+      } else if (typeof status_filter === 'string') {
+        where.status = status_filter;
+      }
+    }
+
     // Apply search filters
     if (filters.name) {
       where.name = { [Op.like]: `%${filters.name}%` };
@@ -722,7 +736,7 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
     if (filters.ticket_code) {
       where.ticket_code = { [Op.like]: `%${filters.ticket_code}%` };
     }
-    if (filters.status) {
+    if (filters.status && !status_filter) {
       where.status = filters.status;
     }
     if (filters.number_of_entries) {
@@ -1682,6 +1696,101 @@ export const getEventTicketHoldersCount = async (req: AuthRequest, res: Response
     });
   } catch (error) {
     console.error('Get event ticket holders count error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getEventTicketSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const { event_id } = req.query;
+
+    if (!event_id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const eventIdNum = parseInt(event_id as string, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get ALL tickets for this event to calculate summary statistics
+    const allTickets = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum
+      },
+      attributes: [
+        'status', 
+        'number_of_entries', 
+        'price_per_ticket', 
+        'payment_processing_fee'
+      ]
+    });
+
+    // Filter confirmed tickets (both Payment Confirmed and Ticket sent)
+    const confirmedTickets = allTickets.filter(ticket => 
+      ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed'
+    );
+
+    // Count only "Ticket sent." tickets for tickets sold (matching PHP logic)
+    const totalTicketsSold = allTickets
+      .filter(ticket => ticket.status === 'Ticket sent.')
+      .reduce((sum, ticket) => sum + ticket.number_of_entries, 0);
+
+    // Calculate total revenue from confirmed/sent tickets
+    const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
+      const price = Number(ticket.price_per_ticket) || 0;
+      const entries = Number(ticket.number_of_entries) || 0;
+      return sum + (price * entries);
+    }, 0);
+
+    // Calculate total processing fees from confirmed/sent tickets
+    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => {
+      return sum + (Number(ticket.payment_processing_fee) || 0);
+    }, 0);
+
+    // Platform fee is 5% of total revenue
+    const platformFee = Number((totalRevenue * 0.05).toFixed(2)) || 0;
+    
+    // Grand total after platform fee
+    const grandTotal = Number((totalRevenue * 0.95).toFixed(2)) || 0;
+    
+    // Net revenue after processing fees
+    const netRevenue = Number((totalRevenue - totalProcessingFee).toFixed(2)) || 0;
+    
+    // Tax calculation (0.5% of net revenue)
+    const tax = Number((netRevenue * 0.005).toFixed(2)) || 0;
+    
+    // Admin grand total after processing fees and tax
+    const adminGrandTotal = Number((netRevenue * 0.995).toFixed(2)) || 0;
+
+    res.json({
+      event_id: eventIdNum,
+      summary: {
+        total_tickets_sold: totalTicketsSold,
+        total_revenue: totalRevenue,
+        total_processing_fee: totalProcessingFee,
+        net_revenue: netRevenue,
+        platform_fee: platformFee,
+        grand_total: grandTotal,
+        tax: tax,
+        admin_grand_total: adminGrandTotal
+      }
+    });
+  } catch (error) {
+    console.error('Get event ticket summary error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

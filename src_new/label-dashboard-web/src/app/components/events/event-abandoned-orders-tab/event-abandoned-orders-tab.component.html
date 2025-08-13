@@ -78,12 +78,17 @@
     </ng-template>
   </app-paginated-table>
 
-  <div class="card-footer bg-light" *ngIf="orders.length > 0">
-    <strong class="me-3">Totals:</strong>
-    <span title="Number of pending tickets">
-      <i class="far fa-dot-circle text-muted"></i>
-      {{ getTotalPendingOrders() }} pending tickets
-    </span>
+  <div class="sticky-bottom" *ngIf="orders.length > 0">
+    <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
+      <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+        <strong class="text-primary fs-5">Totals</strong>
+        
+        <span class="summary-stat text-warning" title="Number of pending tickets">
+          <i class="far fa-dot-circle me-2"></i>
+          {{ getTotalPendingOrders() }} pending tickets
+        </span>
+      </div>
+    </div>
   </div>
 
   <!-- Event Past Message -->
