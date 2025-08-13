@@ -229,6 +229,23 @@ sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USE
 rm -f "$sftp_batch"
 print_success ".htaccess file uploaded successfully"
 
+# Upload SSL domain management script
+print_status "Uploading add-ssl-domain.sh script..."
+cd "$SCRIPT_DIR"
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put scripts/add-ssl-domain.sh /home/bitnami/
+quit
+EOF
+
+sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
+if [ $? -eq 0 ]; then
+    print_success "add-ssl-domain.sh script uploaded successfully"
+else
+    print_warning "Failed to upload add-ssl-domain.sh script (non-critical)"
+fi
+rm -f "$sftp_batch"
+
 # SSH into server and restart PM2
 print_status "Restarting PM2 application: $PM2_APP_NAME"
 

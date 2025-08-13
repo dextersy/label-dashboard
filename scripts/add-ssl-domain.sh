@@ -58,27 +58,22 @@ show_usage() {
     echo "Usage: $0 [OPTIONS] <domain-name>"
     echo
     echo "Options:"
-    echo "  -r, --auto-renew    Automatically run SSL renewal without confirmation"
     echo "  -h, --help          Show this help message"
     echo
     echo "Examples:"
     echo "  $0 newdomain.melt-records.com"
-    echo "  $0 --auto-renew newdomain.melt-records.com"
-    echo "  $0 -r newdomain.melt-records.com"
+    echo
+    echo "Note: This script will automatically test the SSL certificate generation"
+    echo "      before adding the domain to the cron job to ensure it works properly."
 }
 
 # Main function
 main() {
-    local auto_renew=false
     local new_domain=""
     
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -r|--auto-renew)
-                auto_renew=true
-                shift
-                ;;
             -h|--help)
                 show_usage
                 exit 0
@@ -147,13 +142,58 @@ main() {
     # Extract the existing domains and add the new one
     print_info "Adding domain '$new_domain' to the cron job..."
     
-    # Create new cron line with additional domain
+    # Create new cron line with additional domain at the end
     local new_cron_line
-    new_cron_line=$(echo "$letsencrypt_line" | sed "s/--domains=/--domains=$new_domain --domains=/")
+    new_cron_line=$(echo "$letsencrypt_line" | sed "s/\(--domains=[^[:space:]]*\)/\1 --domains=$new_domain/")
     
-    # Replace the old line with the new one in the crontab
+    # Test the lego command first before updating crontab
+    print_info "Testing lego command with new domain..."
+    
+    # Extract just the command part (everything after the schedule)
+    local command_part
+    command_part=$(echo "$new_cron_line" | sed 's/^[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*//')
+    
+    # Add --days 999 flag for testing to force certificate generation
+    local test_command_part
+    test_command_part=$(echo "$command_part" | sed 's/ renew / renew --days 999 /')
+    
+    print_info "Testing command (with --days 999): $test_command_part"
+    echo
+    
+    # Execute the lego command as a test
+    if eval "$test_command_part"; then
+        print_info "Lego command executed successfully!"
+        print_info "Proceeding to update crontab..."
+    else
+        print_error "Lego command failed! Domain '$new_domain' may not be properly configured or accessible."
+        print_error "Crontab will NOT be updated to prevent future failures."
+        print_warning "Please verify that:"
+        print_warning "  1. The domain '$new_domain' is correctly pointed to this server"
+        print_warning "  2. Port 80/443 are accessible for domain validation"
+        print_warning "  3. No firewall is blocking Let's Encrypt validation"
+        exit 1
+    fi
+    
+    # Create a wrapper script to avoid crontab command length limits
+    local wrapper_script="/tmp/ssl-renew-wrapper.sh"
+    print_info "Creating wrapper script at $wrapper_script"
+    
+    # Extract just the command part for the wrapper script
+    cat > "$wrapper_script" << EOF
+#!/bin/bash
+$command_part
+EOF
+    
+    chmod +x "$wrapper_script"
+    
+    # Create new cron line that calls the wrapper script instead of the long command
+    local schedule_part
+    schedule_part=$(echo "$letsencrypt_line" | sed 's/^\([^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*\).*/\1/')
+    local wrapper_cron_line="${schedule_part}${wrapper_script} # bncert-autorenew"
+    
+    # Replace the old line with the new wrapper-based cron line
     local new_crontab
-    new_crontab=$(echo "$current_cron" | sed "s|$(echo "$letsencrypt_line" | sed 's/[[\.*^$()+?{|]/\\&/g')|$new_cron_line|")
+    new_crontab=$(echo "$current_cron" | sed "s|$(echo "$letsencrypt_line" | sed 's/[[\.*^$()+?{|]/\\&/g')|$wrapper_cron_line|")
     
     # Install the new crontab
     print_info "Updating crontab..."
@@ -169,45 +209,10 @@ main() {
     
     # Display the updated cron job
     print_info "Updated letsencrypt cron job:"
-    echo "$new_cron_line"
-    
-    # Determine if we should run SSL renewal
-    local should_renew=false
-    
-    if [[ "$auto_renew" == true ]]; then
-        print_info "Auto-renew flag detected. Proceeding with SSL renewal..."
-        should_renew=true
-    else
-        echo
-        read -p "Do you want to run the SSL renewal command now? (y/N): " -n 1 -r
-        echo
-        
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            should_renew=true
-        fi
-    fi
-    
-    if [[ "$should_renew" == true ]]; then
-        print_info "Running SSL renewal command..."
-        
-        # Extract just the command part (everything after the schedule)
-        local command_part
-        command_part=$(echo "$new_cron_line" | sed 's/^[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*//')
-        
-        print_info "Executing: $command_part"
-        echo
-        
-        # Execute the command
-        if eval "$command_part"; then
-            print_info "SSL renewal completed successfully!"
-        else
-            print_error "SSL renewal failed. Please check the logs and verify the domain configuration."
-            print_warning "The domain has been added to crontab but manual intervention may be required."
-            exit 1
-        fi
-    else
-        print_info "SSL renewal skipped. The domain has been added to the cron job and will be renewed on the next scheduled run."
-    fi
+    echo "$wrapper_cron_line"
+    print_info "Wrapper script created at: $wrapper_script"
+    print_info "Wrapper script contains:"
+    echo "$command_part"
     
     print_info "Domain management completed successfully!"
 }
