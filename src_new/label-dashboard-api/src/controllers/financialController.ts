@@ -54,12 +54,13 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     });
 
     // Calculate and create royalties if requested
+    let recuperationInfo = null;
     if (calculate_royalties) {
-      await processEarningRoyalties(earning);
+      recuperationInfo = await processEarningRoyalties(earning);
     }
 
     // Send earning notification emails (matching PHP logic)
-    await sendEarningNotifications(earning, req.user.brand_id);
+    await sendEarningNotifications(earning, req.user.brand_id, recuperationInfo);
 
     res.status(201).json({
       message: 'Earning added successfully',
@@ -111,12 +112,13 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
           date_recorded: new Date(earningData.date_recorded)
         });
 
+        let recuperationInfo = null;
         if (earningData.calculate_royalties) {
-          await processEarningRoyalties(earning);
+          recuperationInfo = await processEarningRoyalties(earning);
         }
 
         // Send earning notification emails (matching PHP logic)
-        await sendEarningNotifications(earning, req.user.brand_id);
+        await sendEarningNotifications(earning, req.user.brand_id, recuperationInfo);
 
         createdEarnings.push(earning);
       } catch (error) {
@@ -365,46 +367,101 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
   }
 };
 
-// Helper function to process earning royalties
+// Helper function to process earning royalties with recuperable expense handling
 async function processEarningRoyalties(earning: any) {
-  const releaseArtists = await ReleaseArtist.findAll({
-    where: { release_id: earning.release_id },
-    include: [{ model: Artist, as: 'artist' }]
+  // Get the release to find the brand_id
+  const release = await Release.findByPk(earning.release_id);
+  if (!release) {
+    throw new Error('Release not found');
+  }
+
+  // Calculate current recuperable expense balance for this release
+  const recuperableExpenses = await RecuperableExpense.findAll({
+    where: { 
+      release_id: earning.release_id,
+      brand_id: release.brand_id 
+    }
   });
 
-  for (const releaseArtist of releaseArtists) {
-    let royaltyPercentage = 0;
-    
-    // Get royalty percentage based on earning type
-    switch (earning.type) {
-      case 'Streaming':
-        royaltyPercentage = releaseArtist.streaming_royalty_percentage;
-        break;
-      case 'Sync':
-        royaltyPercentage = releaseArtist.sync_royalty_percentage;
-        break;
-      case 'Downloads':
-        royaltyPercentage = releaseArtist.download_royalty_percentage;
-        break;
-      case 'Physical':
-        royaltyPercentage = releaseArtist.physical_royalty_percentage;
-        break;
+  const recuperableBalance = recuperableExpenses.reduce(
+    (sum, expense) => sum + parseFloat((expense.expense_amount || 0).toString()), 
+    0
+  );
+
+  let remainingEarningAmount = earning.amount;
+  let recuperatedAmount = 0;
+
+  // If there are recuperable expenses remaining, deduct from them first
+  if (recuperableBalance > 0) {
+    if (earning.amount >= recuperableBalance) {
+      // Earning covers all remaining recuperable expenses
+      recuperatedAmount = recuperableBalance;
+      remainingEarningAmount = earning.amount - recuperableBalance;
+    } else {
+      // Earning partially covers recuperable expenses
+      recuperatedAmount = earning.amount;
+      remainingEarningAmount = 0;
     }
 
-    if (royaltyPercentage > 0) {
-      const royaltyAmount = parseFloat((earning.amount * royaltyPercentage).toFixed(2));
-      
-      await Royalty.create({
-        artist_id: releaseArtist.artist_id,
-        earning_id: earning.id,
+    // Create negative recuperable expense entry to track the deduction
+    if (recuperatedAmount > 0) {
+      await RecuperableExpense.create({
         release_id: earning.release_id,
-        percentage_of_earning: royaltyPercentage,
-        amount: royaltyAmount,
-        description: `${earning.type} royalty from ${earning.description || 'earning'}`,
+        brand_id: release.brand_id,
+        expense_description: `Recuperated from ${earning.type}`,
+        expense_amount: -recuperatedAmount, // Negative value to reduce balance
         date_recorded: earning.date_recorded
       });
     }
   }
+
+  // Only calculate royalties on the remaining amount after recuperable expense deduction
+  if (remainingEarningAmount > 0) {
+    const releaseArtists = await ReleaseArtist.findAll({
+      where: { release_id: earning.release_id },
+      include: [{ model: Artist, as: 'artist' }]
+    });
+
+    for (const releaseArtist of releaseArtists) {
+      let royaltyPercentage = 0;
+      
+      // Get royalty percentage based on earning type
+      switch (earning.type) {
+        case 'Streaming':
+          royaltyPercentage = releaseArtist.streaming_royalty_percentage;
+          break;
+        case 'Sync':
+          royaltyPercentage = releaseArtist.sync_royalty_percentage;
+          break;
+        case 'Downloads':
+          royaltyPercentage = releaseArtist.download_royalty_percentage;
+          break;
+        case 'Physical':
+          royaltyPercentage = releaseArtist.physical_royalty_percentage;
+          break;
+      }
+
+      if (royaltyPercentage > 0) {
+        const royaltyAmount = parseFloat((remainingEarningAmount * royaltyPercentage).toFixed(2));
+        
+        await Royalty.create({
+          artist_id: releaseArtist.artist_id,
+          earning_id: earning.id,
+          release_id: earning.release_id,
+          percentage_of_earning: royaltyPercentage,
+          amount: royaltyAmount,
+          description: `${earning.type} royalty from ${earning.description || 'earning'} (after recuperable expense deduction)`,
+          date_recorded: earning.date_recorded
+        });
+      }
+    }
+  }
+
+  // Return recuperation info for notification emails
+  return {
+    recuperatedAmount,
+    remainingRecuperableBalance: Math.max(0, recuperableBalance - recuperatedAmount)
+  };
 }
 
 // ROYALTY MANAGEMENT
@@ -1415,7 +1472,7 @@ export const getAdminPaymentsRoyaltiesSummary = async (req: AuthRequest, res: Re
 };
 
 // Helper function to send earning notifications (matching PHP logic)
-async function sendEarningNotifications(earning: any, brandId: number) {
+async function sendEarningNotifications(earning: any, brandId: number, recuperationInfo: any = null) {
   try {
     // Get release with associated artists and brand
     const release = await Release.findByPk(earning.release_id, {
@@ -1472,9 +1529,9 @@ async function sendEarningNotifications(earning: any, brandId: number) {
         continue;
       }
 
-      // Calculate recuperable expenses and royalties (simplified for now)
-      const recuperatedAmount = 0; // TODO: Implement recuperable expense calculation
-      const recuperableBalance = 0; // TODO: Implement recuperable balance calculation
+      // Use recuperable expense information from royalty processing
+      const recuperatedAmount = recuperationInfo?.recuperatedAmount || 0;
+      const recuperableBalance = recuperationInfo?.remainingRecuperableBalance || 0;
       
       // Get royalty amount for this artist if it exists
       const royalty = await Royalty.findOne({

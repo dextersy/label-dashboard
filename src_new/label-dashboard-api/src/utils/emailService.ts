@@ -462,6 +462,16 @@ export const sendPayoutPointNotification = async (
   }
 };
 
+// Helper function to format currency with thousands separator and 2 decimal places
+const formatCurrency = (value: string | number): string => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(numValue)) return '0.00';
+  return numValue.toLocaleString('en-US', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  });
+};
+
 // Send earnings notification (matching PHP logic)
 export const sendEarningsNotification = async (
   recipients: string[],
@@ -482,15 +492,21 @@ export const sendEarningsNotification = async (
     const templatePath = path.join(__dirname, '../assets/templates/earning_notification.html');
     let template = fs.readFileSync(templatePath, 'utf8');
 
+    // Format all monetary values with thousands separator and 2 decimal places
+    const formattedEarningAmount = formatCurrency(earningAmount);
+    const formattedRecuperatedExpense = formatCurrency(recuperatedExpense);
+    const formattedRecuperableBalance = formatCurrency(recuperableBalance);
+    const formattedRoyalty = royaltyAmount ? formatCurrency(royaltyAmount) : '(Not applied)';
+
     // Replace template variables (matching PHP logic)
     template = template.replace(/%LOGO%/g, brandLogo);
     template = template.replace(/%ARTIST_NAME%/g, artistName);
     template = template.replace(/%RELEASE_TITLE%/g, releaseTitle);
     template = template.replace(/%EARNING_DESC%/g, earningDescription);
-    template = template.replace(/%EARNING_AMOUNT%/g, earningAmount);
-    template = template.replace(/%RECUPERATED_EXPENSE%/g, recuperatedExpense);
-    template = template.replace(/%RECUPERABLE_BALANCE%/g, recuperableBalance);
-    template = template.replace(/%ROYALTY%/g, royaltyAmount || '(Not applied)');
+    template = template.replace(/%EARNING_AMOUNT%/g, formattedEarningAmount);
+    template = template.replace(/%RECUPERATED_EXPENSE%/g, formattedRecuperatedExpense);
+    template = template.replace(/%RECUPERABLE_BALANCE%/g, formattedRecuperableBalance);
+    template = template.replace(/%ROYALTY%/g, formattedRoyalty);
     template = template.replace(/%BRAND_NAME%/g, brandName);
     template = template.replace(/%BRAND_COLOR%/g, brandColor);
     template = template.replace(/%URL%/g, dashboardUrl);
