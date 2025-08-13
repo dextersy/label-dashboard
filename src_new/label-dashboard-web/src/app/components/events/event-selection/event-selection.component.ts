@@ -17,7 +17,6 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   @Input() isAdmin = false;
   
   @Output() eventSelected = new EventEmitter<Event>();
-  @Output() refreshRequested = new EventEmitter<void>();
   @Output() createEventRequested = new EventEmitter<void>();
 
   isDropdownOpen = false;
@@ -52,10 +51,6 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
     this.eventSelected.emit(event);
     this.isDropdownOpen = false;
     this.clearSearch();
-  }
-
-  refreshEvents(): void {
-    this.refreshRequested.emit();
   }
 
   createEvent(): void {

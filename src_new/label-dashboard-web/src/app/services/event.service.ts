@@ -72,6 +72,8 @@ export interface EventSummary {
 export class EventService {
   private selectedEventSubject = new BehaviorSubject<Event | null>(null);
   public selectedEvent$ = this.selectedEventSubject.asObservable();
+  private dataRefreshSubject = new BehaviorSubject<void>(undefined);
+  public dataRefresh$ = this.dataRefreshSubject.asObservable();
   private readonly SELECTED_EVENT_KEY = 'melt_selected_event';
 
   constructor(private http: HttpClient) {
@@ -486,6 +488,13 @@ export class EventService {
     }).pipe(
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Trigger data refresh for all tab components
+   */
+  triggerDataRefresh(): void {
+    this.dataRefreshSubject.next();
   }
 
   /**

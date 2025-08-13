@@ -1,15 +1,4 @@
 <div class="event-tickets-tab">
-  <!-- Header with download button -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <button 
-      class="btn btn-outline-primary" 
-      (click)="onDownloadCSV()"
-      *ngIf="isAdmin"
-      [disabled]="loading">
-      <i class="fa fa-download me-1"></i>Download CSV
-    </button>
-  </div>
-
   <!-- Paginated Table -->
   <app-paginated-table
     title=""
@@ -24,6 +13,18 @@
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
     (sortChange)="onSortChange($event)">
+    
+    <!-- Custom buttons template -->
+    <ng-template #customButtons>
+      <button 
+        class="btn btn-sm btn-outline-primary" 
+        (click)="onDownloadCSV()"
+        *ngIf="isAdmin"
+        [disabled]="loading">
+        <i class="fa fa-download me-1"></i>
+        Download CSV
+      </button>
+    </ng-template>
     
     <!-- Actions template -->
     <ng-template #actionsContent let-ticket>

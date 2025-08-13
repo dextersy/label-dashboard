@@ -221,6 +221,8 @@ export class EventsComponent implements OnInit, OnDestroy {
   onEventSelection(event: EventSelection): void {
     this.selectedEvent = event;
     this.eventService.setSelectedEvent(event);
+    // Auto-refresh data when event selection changes
+    this.refreshCurrentTabData();
   }
 
   onEventSelectionChange(event: any): void {
@@ -276,6 +278,8 @@ export class EventsComponent implements OnInit, OnDestroy {
           this.availableEvents.unshift(newEvent);
           this.selectedEvent = newEvent;
           this.eventService.setSelectedEvent(newEvent);
+          // Auto-refresh data when new event is created
+          this.refreshCurrentTabData();
         },
         error: (error) => {
           console.error('Failed to create event:', error);
@@ -307,6 +311,8 @@ export class EventsComponent implements OnInit, OnDestroy {
   setActiveTab(tabId: EventsTabType): void {
     this.activeTab = tabId;
     this.router.navigate(['/events', tabId]);
+    // Auto-refresh data when tab changes
+    this.refreshCurrentTabData();
   }
 
   getTabClass(tabId: EventsTabType): string {
@@ -339,5 +345,17 @@ export class EventsComponent implements OnInit, OnDestroy {
     } else if (message.type === 'info') {
       this.notificationService.showInfo(message.text);
     }
+  }
+
+  /**
+   * Auto-refresh data for the current active tab
+   */
+  private refreshCurrentTabData(): void {
+    // Add a small delay to ensure the tab component is ready
+    setTimeout(() => {
+      // Emit a refresh event that tab components can listen to
+      // This triggers the individual tab components to reload their data
+      this.eventService.triggerDataRefresh();
+    }, 100);
   }
 }

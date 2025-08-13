@@ -1,87 +1,82 @@
 <div class="abandoned-orders-tab">
-  <div class="btn-toolbar" role="toolbar">
-    <div class="btn-group me-2" role="group">
+  <!-- Paginated Table -->
+  <app-paginated-table
+    title=""
+    [data]="orders"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="tableColumns"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [sortInfo]="currentSort"
+    [showActionsColumn]="isAdmin"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)"
+    (sortChange)="onSortChange($event)">
+    
+    <!-- Custom buttons template -->
+    <ng-template #customButtons>
       <button 
         type="button" 
-        class="btn btn-outline-primary btn-sm"
+        class="btn btn-sm btn-outline-primary"
         (click)="onDownloadCSV()"
         [disabled]="loading">
-        <i class="fa fa-download me-1"></i>Download CSV
+        <i class="fa fa-download me-1"></i>
+        Download CSV
       </button>
-    </div>
-    <div class="btn-group me-2" role="group">
       <button 
         type="button" 
-        class="btn btn-outline-success btn-sm"
+        class="btn btn-sm btn-outline-success"
         (click)="onVerifyPayments()"
         [disabled]="loading">
-        <i class="fa fa-check me-1"></i>Verify Payments
+        <i class="fa fa-check me-1"></i>
+        Verify Payments
       </button>
-    </div>
-    <div class="btn-group me-2" role="group">
       <button 
         type="button" 
-        class="btn btn-outline-info btn-sm"
+        class="btn btn-sm btn-outline-info"
         (click)="onSendPaymentReminders()"
         [disabled]="loading">
-        <i class="fa fa-bell me-1"></i>Send Payment Reminders
+        <i class="fa fa-bell me-1"></i>
+        Send Reminders
       </button>
-    </div>
-    <div class="btn-group" role="group">
       <button 
         type="button" 
-        class="btn btn-outline-danger btn-sm"
+        class="btn btn-sm btn-outline-danger"
         (click)="onCancelAllUnpaid()"
         [disabled]="loading">
-        <i class="fa fa-times me-1"></i>Cancel All Unpaid
+        <i class="fa fa-times me-1"></i>
+        Cancel All Unpaid
       </button>
-    </div>
-  </div>
-
-  <div class="card-body p-0">
-    <!-- Paginated Table -->
-    <app-paginated-table
-      title=""
-      [data]="orders"
-      [pagination]="pagination"
-      [loading]="loading"
-      [columns]="tableColumns"
-      [showSearch]="true"
-      [showSortableHeaders]="true"
-      [sortInfo]="currentSort"
-      [showActionsColumn]="isAdmin"
-      (pageChange)="onPageChange($event)"
-      (filtersChange)="onFiltersChange($event)"
-      (sortChange)="onSortChange($event)">
-      
-      <!-- Actions template -->
-      <ng-template #actionsContent let-order>
-        <div class="btn-group" role="group">
-          <button 
-            class="btn btn-sm btn-outline-primary"
-            (click)="onSendTicket(order.id)"
-            *ngIf="order.status === 'Payment Confirmed'"
-            title="Send ticket">
-            Send Ticket
-          </button>
-          <button 
-            class="btn btn-sm btn-outline-success"
-            (click)="onMarkAsPaid(order.id)"
-            *ngIf="order.status === 'New'"
-            title="Mark as paid">
-            Mark Paid
-          </button>
-          <button 
-            class="btn btn-sm btn-outline-danger"
-            (click)="onCancelOrder(order.id)"
-            *ngIf="order.status === 'New'"
-            title="Cancel order">
-            Cancel
-          </button>
-        </div>
-      </ng-template>
-    </app-paginated-table>
-  </div>
+    </ng-template>
+    
+    <!-- Actions template -->
+    <ng-template #actionsContent let-order>
+      <div class="btn-group" role="group">
+        <button 
+          class="btn btn-sm btn-outline-primary"
+          (click)="onSendTicket(order.id)"
+          *ngIf="order.status === 'Payment Confirmed'"
+          title="Send ticket">
+          Send Ticket
+        </button>
+        <button 
+          class="btn btn-sm btn-outline-success"
+          (click)="onMarkAsPaid(order.id)"
+          *ngIf="order.status === 'New'"
+          title="Mark as paid">
+          Mark Paid
+        </button>
+        <button 
+          class="btn btn-sm btn-outline-danger"
+          (click)="onCancelOrder(order.id)"
+          *ngIf="order.status === 'New'"
+          title="Cancel order">
+          Cancel
+        </button>
+      </div>
+    </ng-template>
+  </app-paginated-table>
 
   <div class="card-footer bg-light" *ngIf="orders.length > 0">
     <strong class="me-3">Totals:</strong>

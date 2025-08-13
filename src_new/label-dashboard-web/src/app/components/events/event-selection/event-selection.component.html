@@ -129,25 +129,6 @@
     </ul>
     </div>
     
-    <!-- Event action buttons moved to the right -->
-    <div class="event-actions">
-      <button 
-        class="btn btn-outline-primary btn-sm" 
-        (click)="refreshEvents()"
-        [disabled]="loading"
-        title="Refresh events">
-        <i class="fa" [class.fa-sync]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
-        <span class="btn-text">Refresh</span>
-      </button>
-      <button 
-        class="btn btn-primary btn-sm" 
-        *ngIf="isAdmin"
-        (click)="createEvent()"
-        title="Create new event">
-        <i class="fa fa-plus"></i>
-        <span class="btn-text">New Event</span>
-      </button>
-    </div>
   </div>
   
   <!-- Event search results summary -->
