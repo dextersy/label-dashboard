@@ -1,33 +1,39 @@
 <div class="row">
   <div class="col-md-12">
     <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5>{{ title }}</h5>
-        <div class="d-flex align-items-center gap-2">
-          <!-- Custom buttons slot -->
-          <ng-container *ngIf="customButtons">
-            <ng-container *ngTemplateOutlet="customButtons"></ng-container>
-          </ng-container>
-          <button 
-            *ngIf="showSearch && columns.length > 0"
-            class="btn btn-sm btn-outline-primary"
-            (click)="toggleSearchFilters()"
-            [title]="showSearchFilters ? 'Hide search filters' : 'Show search filters'">
-            <i class="fa fa-search"></i> 
-            {{ showSearchFilters ? 'Hide' : 'Search' }}
-          </button>
-          <button 
-            *ngIf="showSearch && columns.length > 0 && hasActiveFilters()"
-            class="btn btn-sm btn-outline-secondary"
-            (click)="clearFilters()"
-            title="Clear all filters">
-            <i class="fa fa-times"></i> Clear
-          </button>
-          <span class="text-muted" *ngIf="pagination">
+      <div class="card-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <h5 class="mb-0">{{ title }}</h5>
+          <div class="table-actions d-flex flex-wrap align-items-center gap-2">
+            <!-- Custom buttons slot -->
+            <ng-container *ngIf="customButtons">
+              <ng-container *ngTemplateOutlet="customButtons"></ng-container>
+            </ng-container>
+            <button 
+              *ngIf="showSearch && columns.length > 0"
+              class="btn btn-sm btn-outline-primary flex-shrink-0"
+              (click)="toggleSearchFilters()"
+              [title]="showSearchFilters ? 'Hide search filters' : 'Show search filters'">
+              <i class="fa fa-search"></i> 
+              {{ showSearchFilters ? 'Hide' : 'Search' }}
+            </button>
+            <button 
+              *ngIf="showSearch && columns.length > 0 && hasActiveFilters()"
+              class="btn btn-sm btn-outline-secondary flex-shrink-0"
+              (click)="clearFilters()"
+              title="Clear all filters">
+              <i class="fa fa-times"></i> 
+              <span class="d-none d-sm-inline">Clear</span>
+            </button>
+          </div>
+        </div>
+        <!-- Pagination info moved to its own line on mobile -->
+        <div class="pagination-info mt-2" *ngIf="pagination">
+          <small class="text-muted">
             Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
             {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }} 
             of {{ pagination.total_count }} entries
-          </span>
+          </small>
         </div>
       </div>
       

@@ -171,3 +171,58 @@
     min-width: 100%;
   }
 }
+
+// Responsive table header actions
+.table-actions {
+  min-width: 0; // Allow flexbox to shrink below content size
+  
+  .btn {
+    white-space: nowrap; // Prevent button text from wrapping
+  }
+}
+
+// Card header responsive improvements
+.card-header {
+  .d-flex.flex-wrap {
+    gap: 0.75rem !important; // Ensure consistent gap
+  }
+}
+
+.pagination-info {
+  width: 100%;
+  
+  @media (min-width: 576px) {
+    width: auto;
+  }
+}
+
+// Mobile-specific adjustments for table actions
+@media (max-width: 575px) {
+  .table-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    
+    // Only hide text for the Clear button on mobile (it has title attribute for accessibility)
+    button[title="Clear all filters"] .d-none.d-sm-inline {
+      display: none !important;
+    }
+  }
+  
+  .card-header .d-flex.flex-wrap {
+    flex-direction: column;
+    align-items: stretch !important;
+    
+    h5 {
+      align-self: flex-start;
+    }
+  }
+  
+  .pagination-info {
+    order: 3; // Move to bottom on mobile
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+}
+
+// Tablet adjustments - no special rules needed since we're not hiding text anymore
