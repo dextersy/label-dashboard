@@ -128,9 +128,9 @@
                  placeholder="Description">
         </td>
         <td>
-          <div class="input-group">
-            <div class="input-group-text">₱</div>
-            <input type="number" class="form-control" step="0.01" min="0" 
+          <div class="amount-input-container">
+            <span class="peso-sign">₱</span>
+            <input type="number" class="form-control amount-input" step="0.01" min="0" 
                    [(ngModel)]="earning.amount" placeholder="Amount" 
                    (ngModelChange)="onBulkAmountChange()">
           </div>
@@ -164,33 +164,33 @@
         <div class="panel-content">
           <!-- Mobile: Stack everything vertically -->
           <div class="d-block d-lg-none">
-            <!-- Collapsible Add Row Buttons -->
-            <div *ngIf="!manualFormCollapsed">
-              <div class="row mb-3">
-                <div class="col-12">
-                  <div class="btn-group w-100" role="group">
+            <!-- Add Row Buttons -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <div class="w-100">
+                  <div class="btn-group w-100 add-rows-dropdown" role="group">
                     <button type="button" class="btn btn-outline-primary" (click)="addRows(1)">
-                      Add 1 Row
+                      Add Row
                     </button>
-                    <button type="button" class="btn btn-outline-primary" (click)="addRows(5)">
-                      Add 5 Rows
+                    <button type="button" 
+                            class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" 
+                            (click)="toggleAddRowsDropdown()">
+                      <i class="fa fa-caret-up" *ngIf="showAddRowsDropdown"></i>
+                      <i class="fa fa-caret-down" *ngIf="!showAddRowsDropdown"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-primary" (click)="addRows(10)">
-                      Add 10 Rows
-                    </button>
+                  </div>
+                  <div class="dropdown-menu-wrapper" *ngIf="showAddRowsDropdown">
+                    <div class="dropdown-menu-simple">
+                      <div class="dropdown-item" (click)="addRows(5); hideAddRowsDropdown()">Add 5 Rows</div>
+                      <div class="dropdown-item" (click)="addRows(10); hideAddRowsDropdown()">Add 10 Rows</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             
-            <!-- Toggle and Summary Row -->
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <button type="button" 
-                      class="btn btn-link p-0 text-decoration-none" 
-                      (click)="toggleManualForm()">
-                <i class="fa" [class.fa-caret-down]="manualFormCollapsed" [class.fa-caret-up]="!manualFormCollapsed" style="margin-right: 6px;"></i>
-                <span style="font-size: 14px; color: #666;">Add Rows</span>
-              </button>
+            <!-- Summary Row -->
+            <div class="d-flex align-items-center justify-content-center mb-2">
               <small class="text-muted">
                 Total: {{ formatCurrency(totalEarnings) }} • {{ bulkEarnings.length }} rows
               </small>
@@ -218,16 +218,24 @@
               <div class="text-muted">
                 Total rows: {{ bulkEarnings.length }}
               </div>
-              <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(1)">
-                  Add 1 Row
-                </button>
-                <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(5)">
-                  Add 5 Rows
-                </button>
-                <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(10)">
-                  Add 10 Rows
-                </button>
+              <div class="add-rows-container">
+                <div class="btn-group add-rows-dropdown" role="group">
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(1)">
+                    Add Row
+                  </button>
+                  <button type="button" 
+                          class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" 
+                          (click)="toggleAddRowsDropdown()">
+                    <i class="fa fa-caret-up" *ngIf="showAddRowsDropdown"></i>
+                    <i class="fa fa-caret-down" *ngIf="!showAddRowsDropdown"></i>
+                  </button>
+                </div>
+                <div class="dropdown-menu-wrapper" *ngIf="showAddRowsDropdown">
+                  <div class="dropdown-menu-simple">
+                    <div class="dropdown-item" (click)="addRows(5); hideAddRowsDropdown()">Add 5 Rows</div>
+                    <div class="dropdown-item" (click)="addRows(10); hideAddRowsDropdown()">Add 10 Rows</div>
+                  </div>
+                </div>
               </div>
             </div>
 

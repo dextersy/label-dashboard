@@ -18,77 +18,8 @@ interface CsvEarningRow {
   standalone: true,
   imports: [CommonModule, FormsModule, PaginatedTableComponent],
   templateUrl: './bulk-add-earnings-tab.component.html',
-  styles: [`
-    .release-option:hover {
-      background-color: #f8f9fa !important;
-    }
-    .view-toggle {
-      background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-      border-radius: 12px;
-      padding: 6px;
-      border: 1px solid #dee2e6;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-      display: inline-flex;
-      position: relative;
-    }
-    .view-toggle .btn {
-      border: none;
-      border-radius: 8px;
-      padding: 14px 28px;
-      font-weight: 500;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      background: transparent;
-      color: #6c757d;
-      position: relative;
-      z-index: 1;
-      margin: 0;
-      font-size: 14px;
-      letter-spacing: 0.025em;
-    }
-    .view-toggle .btn:hover:not(.active) {
-      background: rgba(13, 110, 253, 0.08);
-      color: #0d6efd;
-      transform: translateY(-1px);
-    }
-    .view-toggle .btn.active {
-      background: linear-gradient(145deg, #ffffff, #f8f9fa);
-      color: #0d6efd;
-      box-shadow: 
-        0 4px 12px rgba(13, 110, 253, 0.15),
-        0 2px 4px rgba(0,0,0,0.1),
-        inset 0 1px 2px rgba(255,255,255,0.9);
-      font-weight: 600;
-      transform: translateY(-2px);
-    }
-    .view-toggle .btn:focus {
-      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
-      outline: none;
-    }
-    .view-toggle .btn i {
-      transition: transform 0.2s ease;
-    }
-    .view-toggle .btn.active i {
-      transform: scale(1.1);
-    }
-    .csv-upload-area {
-      border: 2px dashed #dee2e6;
-      border-radius: 10px;
-      padding: 40px;
-      text-align: center;
-      background-color: #f8f9fa;
-      transition: all 0.3s ease;
-    }
-    .csv-upload-area:hover {
-      border-color: #007bff;
-      background-color: #e3f2fd;
-    }
-    .csv-upload-area.dragover {
-      border-color: #007bff;
-      background-color: #e3f2fd;
-    }
-  `]
+  styleUrl: './bulk-add-earnings-tab.component.scss'
 })
-
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;
   releases: Release[] = [];
@@ -114,6 +45,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   mobileFormCollapsed: boolean = true;
   manualFormCollapsed: boolean = true;
   csvProcessingResult: CsvProcessingResult | null = null;
+  showAddRowsDropdown: boolean = false;
   csvPagination: PaginationInfo = {
     current_page: 1,
     total_pages: 1,
@@ -537,6 +469,16 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   toggleManualForm(): void {
     this.manualFormCollapsed = !this.manualFormCollapsed;
+  }
+
+  toggleAddRowsDropdown(): void {
+    console.log('Toggle dropdown clicked, current state:', this.showAddRowsDropdown);
+    this.showAddRowsDropdown = !this.showAddRowsDropdown;
+    console.log('New state:', this.showAddRowsDropdown);
+  }
+
+  hideAddRowsDropdown(): void {
+    this.showAddRowsDropdown = false;
   }
 
   formatCurrency(amount: number): string {
