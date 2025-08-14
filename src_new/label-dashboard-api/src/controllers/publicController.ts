@@ -791,15 +791,28 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
       return res.status(404).send('Event not found');
     }
 
+    // Use the brand's primary domain for the frontend URL
+    const brandDomain = event.brand?.domains?.[0]?.domain_name;
+    if (!brandDomain) {
+      return res.status(404).send('Event not found');
+    }
+    const frontendUrl = `https://${brandDomain}/public/tickets/buy/${event.id}`;
+
+    // Check if this is a social media crawler
+    const userAgent = req.get('User-Agent') || '';
+    const isSocialCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot/i.test(userAgent);
+
+    // For social media crawlers, serve SEO page with meta tags
+    // For regular users and browsers, redirect immediately with HTTP 302
+    if (!isSocialCrawler) {
+      return res.redirect(302, frontendUrl);
+    }
+
     // Generate meta tags for social sharing
     const title = `Buy tickets to ${event.title}`;
     const description = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
     const image = event.poster_url || '';
     const siteName = event.brand?.brand_name || 'Melt Records';
-    
-    // Use the brand's primary domain for the frontend URL
-    const brandDomain = event.brand?.domains?.[0]?.domain_name || 'testbrand.melt-records.com';
-    const frontendUrl = `https://${brandDomain}/public/tickets/buy/${event.id}`;
 
     // Generate structured data
     const structuredData = {
@@ -826,7 +839,7 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
       }
     };
 
-    // Generate SEO-optimized HTML
+    // Generate SEO-optimized HTML for social media crawlers only
     const seoHTML = `<!doctype html>
 <html lang="en">
 <head>
@@ -857,24 +870,9 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
   
-  <!-- Meta refresh backup for non-crawler users -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-  
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
-  </script>
-  
-  <!-- Auto-redirect for regular users (non-crawlers) -->
-  <script>
-    (function() {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot/i.test(userAgent);
-      
-      if (!isCrawler) {
-        window.location.replace('${frontendUrl}');
-      }
-    })();
   </script>
   
   <!-- Styles for crawler display -->
