@@ -194,17 +194,16 @@ EOF
 clean_directory "$BACKEND_DEPLOY_PATH" "API server"
 clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
 
-# Upload API files (dist only)
+# Phase 1: Upload migration setup with config.js for Sequelize CLI
 cd "$SCRIPT_DIR/src_new/label-dashboard-api"
-upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
-
-# Also upload package.json and migration files for API
-print_status "Uploading API package.json and migration files..."
+print_status "Phase 1: Uploading migration setup..."
 sftp_batch=$(mktemp)
 cat > "$sftp_batch" << EOF
 put package.json $BACKEND_DEPLOY_PATH/
 put package-lock.json $BACKEND_DEPLOY_PATH/
 put .sequelizerc $BACKEND_DEPLOY_PATH/
+-mkdir $BACKEND_DEPLOY_PATH/config
+put -r config/* $BACKEND_DEPLOY_PATH/config/
 -mkdir $BACKEND_DEPLOY_PATH/migrations
 put -r migrations/* $BACKEND_DEPLOY_PATH/migrations/
 quit
@@ -212,6 +211,40 @@ EOF
 
 sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
 rm -f "$sftp_batch"
+
+# Phase 2: Run database migrations on server using Sequelize CLI
+print_status "Phase 2: Running database migrations on server..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    echo "Navigating to API directory for migrations..."
+    cd $BACKEND_DEPLOY_PATH
+    
+    echo "Installing dependencies for migrations..."
+    npm install --production
+    
+    echo "Running database migrations..."
+    NODE_ENV=production npx sequelize-cli db:migrate
+EOF
+
+if [ $? -ne 0 ]; then
+    print_error "Database migrations failed"
+    exit 1
+fi
+
+print_success "Database migrations completed successfully"
+
+# Phase 3: Remove config.js to avoid conflicts with compiled API
+print_status "Phase 3: Removing config.js to avoid conflicts..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    echo "Removing config.js to prevent conflicts with compiled API..."
+    rm -f $BACKEND_DEPLOY_PATH/config/config.js
+    rm -f $BACKEND_DEPLOY_PATH/config/database.js
+EOF
+
+print_success "Conflicting config files removed"
+
+# Phase 4: Upload compiled API service files
+print_status "Phase 4: Uploading compiled API service files..."
+upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
 
 # Upload Web files
 cd "$SCRIPT_DIR/src_new/label-dashboard-web"
@@ -246,18 +279,12 @@ else
 fi
 rm -f "$sftp_batch"
 
-# SSH into server and restart PM2
-print_status "Restarting PM2 application: $PM2_APP_NAME"
+# Phase 5: Restart PM2 application with compiled API
+print_status "Phase 5: Restarting PM2 application: $PM2_APP_NAME"
 
 ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
     echo "Navigating to API directory..."
     cd $BACKEND_DEPLOY_PATH
-    
-    echo "Installing/updating API dependencies..."
-    npm install --production
-    
-    echo "Running database migrations..."
-    NODE_ENV=production npx sequelize-cli db:migrate
     
     echo "Restarting PM2 application: $PM2_APP_NAME"
     pm2 restart $PM2_APP_NAME || pm2 start app.js --name $PM2_APP_NAME
@@ -267,12 +294,15 @@ ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST
 EOF
 
 if [ $? -eq 0 ]; then
-    print_success "Deployment completed successfully!"
-    print_success "API deployed to: $BACKEND_DEPLOY_PATH"
+    print_success "🎉 5-Phase Deployment completed successfully!"
+    print_success "✅ Phase 1: Migration setup uploaded"
+    print_success "✅ Phase 2: Database migrations executed"
+    print_success "✅ Phase 3: Config conflicts resolved"
+    print_success "✅ Phase 4: API service deployed to $BACKEND_DEPLOY_PATH"
+    print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted"
     print_success "Web deployed to: $FRONTEND_DEPLOY_PATH"
-    print_success "PM2 application '$PM2_APP_NAME' restarted"
 else
-    print_error "Failed to restart PM2 application"
+    print_error "Failed to restart PM2 application in Phase 5"
     exit 1
 fi
 
