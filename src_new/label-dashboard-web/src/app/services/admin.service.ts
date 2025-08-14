@@ -60,6 +60,20 @@ export interface ChildBrand {
   domains?: Domain[];
 }
 
+export interface CreateSublabelResponse {
+  message: string;
+  sublabel: {
+    id: number;
+    brand_name: string;
+    domain_name: string;
+    domain_status: string;
+    admin_user_id: number;
+    dns_configured: boolean;
+    ssl_configured: boolean;
+    ssl_message: string;
+  };
+}
+
 export interface EmailDetail {
   id: number;
   recipients: string;
@@ -282,7 +296,7 @@ export class AdminService {
     });
   }
 
-  createSublabel(brandName: string, domainName: string, subdomainName?: string): Observable<any> {
+  createSublabel(brandName: string, domainName: string, subdomainName?: string): Observable<CreateSublabelResponse> {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = currentUser.brand_id;
     
@@ -302,7 +316,7 @@ export class AdminService {
       payload.domain_name = domainName;
     }
     
-    return this.http.post(`${environment.apiUrl}/brands/${brandId}/sublabels`, payload, {
+    return this.http.post<CreateSublabelResponse>(`${environment.apiUrl}/brands/${brandId}/sublabels`, payload, {
       headers: this.getAuthHeaders()
     });
   }

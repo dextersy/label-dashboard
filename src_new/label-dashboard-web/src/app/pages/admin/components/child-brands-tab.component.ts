@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, ChildBrand } from '../../../services/admin.service';
+import { AdminService, ChildBrand, CreateSublabelResponse } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
@@ -216,9 +216,21 @@ export class ChildBrandsTabComponent implements OnInit {
 
   onCreateSublabel(data: { brandName: string, subdomainName: string }): void {
     this.adminService.createSublabel(data.brandName, '', data.subdomainName).subscribe({
-      next: (response) => {
+      next: (response: CreateSublabelResponse) => {
         const message = response.message || 'Sublabel created successfully';
         this.notificationService.showSuccess(message);
+        
+        // Check SSL configuration status and show warning if needed
+        if (response.sublabel?.ssl_configured === false && response.sublabel?.ssl_message) {
+          const sslMessage = response.sublabel.ssl_message;
+          // Check if this is a DNS success but SSL failure scenario
+          if (sslMessage.includes('DNS configured successfully, but SSL certificate')) {
+            this.notificationService.showWarning(
+              `SSL Configuration Required: ${sslMessage}`
+            );
+          }
+        }
+        
         // Reset form fields after successful creation
         if (this.addSublabelModal) {
           this.addSublabelModal.resetFormAfterSuccess();

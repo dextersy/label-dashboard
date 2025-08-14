@@ -11,6 +11,7 @@ import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
+import { addDomainToSSL, shouldAutoAddToSSL, validateDomainForSSL, logSSLOperation } from '../utils/sslManagementService';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -379,9 +380,10 @@ export const addDomain = async (req: Request, res: Response) => {
     }
 
     // Create new domain
+    const finalDomainName = domain_name.toLowerCase().trim();
     const newDomain = await Domain.create({
       brand_id: parseInt(brandId),
-      domain_name: domain_name.toLowerCase().trim(),
+      domain_name: finalDomainName,
       status: 'Unverified'
     });
 
@@ -748,6 +750,10 @@ export const createSublabel = async (req: Request, res: Response) => {
     // Create domain for the new brand
     let domainStatus: 'Verified' | 'Unverified' = 'Unverified';
     
+    // Initialize SSL status variables
+    let sslConfigured = false;
+    let sslMessage = 'SSL certificate not configured (DNS not created automatically)';
+    
     // Create DNS A record for melt-records.com subdomains
     if (isSubdomainOfMeltRecords && subdomain_name) {
       try {
@@ -756,6 +762,31 @@ export const createSublabel = async (req: Request, res: Response) => {
         if (dnsCreated) {
           domainStatus = 'Verified'; // Auto-verify since we created the DNS record
           console.log(`DNS A record created successfully for ${subdomain_name}.melt-records.com`);
+          
+          // Automatically add domain to SSL certificate when DNS is successfully created
+          if (shouldAutoAddToSSL(finalDomainName) && validateDomainForSSL(finalDomainName)) {
+            try {
+              console.log(`[SSL] Attempting to add ${finalDomainName} to SSL certificate`);
+              const sslResult = await addDomainToSSL(finalDomainName);
+              logSSLOperation(finalDomainName, sslResult);
+              
+              sslConfigured = sslResult.success;
+              sslMessage = sslResult.message;
+              
+              if (!sslResult.success) {
+                console.warn(`[SSL] Failed to add ${finalDomainName} to SSL certificate: ${sslResult.error}`);
+                sslMessage = `DNS configured successfully, but SSL certificate update failed: ${sslResult.error || 'Unknown error'}. Manual SSL configuration required.`;
+                // Don't fail the entire operation if SSL fails - the domain can be added manually later
+              }
+            } catch (sslError) {
+              console.error(`[SSL] Error during SSL certificate update for ${finalDomainName}:`, sslError);
+              sslMessage = 'DNS configured successfully, but SSL certificate update failed due to connection error. Manual SSL configuration required.';
+              // Don't fail the entire operation
+            }
+          } else {
+            console.log(`[SSL] Skipping SSL certificate update for ${finalDomainName} (not a melt-records.com subdomain or invalid format)`);
+            sslMessage = 'DNS configured successfully, but SSL certificate not updated (custom domain or invalid format). Manual SSL configuration required.';
+          }
         } else {
           console.warn(`DNS A record creation failed for ${subdomain_name}.melt-records.com`);
         }
@@ -788,7 +819,7 @@ export const createSublabel = async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: isSubdomainOfMeltRecords ? 
-        'Sublabel created successfully with automatic DNS configuration' : 
+        'Sublabel created successfully with automatic DNS and SSL configuration' : 
         'Sublabel created successfully',
       sublabel: {
         id: newBrand.id,
@@ -796,7 +827,9 @@ export const createSublabel = async (req: Request, res: Response) => {
         domain_name: newDomain.domain_name,
         domain_status: newDomain.status,
         admin_user_id: newUser.id,
-        dns_configured: isSubdomainOfMeltRecords && domainStatus === 'Verified'
+        dns_configured: isSubdomainOfMeltRecords && domainStatus === 'Verified',
+        ssl_configured: sslConfigured,
+        ssl_message: sslMessage
       }
     });
 
