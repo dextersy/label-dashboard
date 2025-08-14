@@ -9,6 +9,34 @@ import crypto from 'crypto';
 
 const paymentService = new PaymentService();
 
+// Helper function to determine if countdown should be shown for an event
+const shouldShowCountdown = (event: any): boolean => {
+  const now = new Date();
+  
+  // Use close_time if available, otherwise fall back to event date
+  const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+  const timeDiff = closeTime.getTime() - now.getTime();
+  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+  // Don't show countdown if ticket sales have already closed
+  if (timeDiff <= 0) {
+    return false;
+  }
+
+  switch (event.countdown_display) {
+    case 'always':
+      return true;
+    case '1_week':
+      return daysDiff <= 7;
+    case '3_days':
+      return daysDiff <= 3;
+    case '1_day':
+      return daysDiff <= 1;
+    case 'never':
+    default:
+      return false;
+  }
+};
 
 // Helper function to get total tickets sold for an event
 const getTotalTicketsSold = async (eventId: number): Promise<number> => {
@@ -95,6 +123,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         title: event.title,
         description: event.description,
         date_and_time: event.date_and_time,
+        close_time: event.close_time,
         venue: event.venue,
         poster_url: event.poster_url,
         ticket_price: event.ticket_price,
@@ -102,6 +131,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         max_tickets: event.max_tickets,
         remaining_tickets: remainingTickets,
         is_closed: isEventClosed,
+        show_countdown: shouldShowCountdown(event),
         supports_card: event.supports_card,
         supports_gcash: event.supports_gcash,
         supports_qrph: event.supports_qrph,

@@ -1,4 +1,13 @@
 <div class="public-page" [style.background-color]="brandColor">
+  <!-- Countdown Notification Bar -->
+  <app-countdown-notification 
+    *ngIf="event && event.show_countdown && !isLoading && !isError"
+    [eventDate]="event.date_and_time"
+    [closeTime]="event.close_time"
+    [eventTitle]="event.title"
+    [brandColor]="brandColor">
+  </app-countdown-notification>
+
   <!-- Loading Overlay -->
   <div *ngIf="isLoading" class="loading-overlay">
     <div class="loading"></div>
@@ -19,7 +28,9 @@
   </div>
 
   <!-- Content shown only when event is loaded -->
-  <div *ngIf="!isLoading && !isError && event" class="wrapper fadeInDown h-100">
+  <div *ngIf="!isLoading && !isError && event" 
+       class="wrapper fadeInDown h-100"
+       [class.with-countdown]="event.show_countdown">
     <!-- Header Section -->
     <div class="header-section">
       <div class="container">

@@ -21,16 +21,13 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label required">Date & Time</label>
-              <div class="input-group">
-                <input 
-                  type="datetime-local" 
-                  class="form-control" 
-                  [(ngModel)]="event.date_and_time" 
-                  name="date_and_time"
-                  required>
-                <span class="input-group-text">GMT+8 (PH)</span>
-              </div>
+              <label class="form-label required">Date & Time <span class="text-muted">(GMT+8 PH)</span></label>
+              <input 
+                type="datetime-local" 
+                class="form-control" 
+                [(ngModel)]="event.date_and_time" 
+                name="date_and_time"
+                required>
             </div>
 
             <div class="mb-3">
@@ -146,64 +143,85 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h6 class="mb-0">Ticketing</h6>
-          </div>
-          <div class="card-body">
-            <div class="mb-3">
-              <strong>Ticket sales: </strong>
-              <span class="badge" [class]="event.status === 'Open' ? 'badge-success' : 'badge-danger'">
+            <h6 class="mb-0">
+              Ticketing 
+              <span class="badge ms-2" [class]="event.status === 'Open' ? 'badge-success' : 'badge-danger'">
                 {{ event.status || 'Open' }}
               </span>
-            </div>
+            </h6>
+          </div>
+          <div class="card-body">
 
-            <div class="mb-3">
-              <label class="form-label">Ticket Naming</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                [(ngModel)]="event.ticket_naming" 
-                name="ticket_naming"
-                placeholder="e.g. Early Bird, General Admission">
-              <small class="form-text text-muted">E.g. "Early bird", "Promo", etc.</small>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label required">Ticket Price</label>
-              <div class="input-group">
-                <span class="input-group-text">₱</span>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  [(ngModel)]="event.ticket_price" 
-                  name="ticket_price"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  required>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">Ticket Naming</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="event.ticket_naming" 
+                    name="ticket_naming"
+                    placeholder="e.g. Early Bird, General Admission">
+                  <small class="form-text text-muted">E.g. "Early bird", "Promo", etc.</small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label required">Ticket Price <span class="text-muted">(₱)</span></label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="event.ticket_price" 
+                    name="ticket_price"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    required>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label">Maximum Number of Tickets</label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="event.max_tickets" 
+                    name="max_tickets"
+                    placeholder="0"
+                    min="0">
+                  <small class="form-text text-muted">Set "0" for unlimited tickets.</small>
+                </div>
               </div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Maximum Number of Tickets</label>
-              <input 
-                type="number" 
-                class="form-control" 
-                [(ngModel)]="event.max_tickets" 
-                name="max_tickets"
-                placeholder="0"
-                min="0">
-              <small class="form-text text-muted">Set "0" for unlimited tickets.</small>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Close Ticket Sales On</label>
-              <div class="input-group">
-                <input 
-                  type="datetime-local" 
-                  class="form-control" 
-                  [(ngModel)]="event.close_time" 
-                  name="close_time">
-                <span class="input-group-text">GMT+8 (PH)</span>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Close Ticket Sales On <span class="text-muted">(GMT+8 PH)</span></label>
+                  <input 
+                    type="datetime-local" 
+                    class="form-control" 
+                    [(ngModel)]="event.close_time" 
+                    name="close_time">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Show Countdown on Ticket Page</label>
+                  <select 
+                    class="form-control" 
+                    [(ngModel)]="event.countdown_display" 
+                    name="countdown_display">
+                    <option value="always">Always show</option>
+                    <option value="1_week">1 week before</option>
+                    <option value="3_days">3 days before</option>
+                    <option value="1_day">1 day before</option>
+                    <option value="never">Never show</option>
+                  </select>
+                  <small class="form-text text-muted">
+                    <i class="fa fa-info-circle"></i> Choose when to display a countdown timer on the ticket purchase page.
+                  </small>
+                </div>
               </div>
             </div>
 
@@ -229,7 +247,7 @@
             <!-- Payment Methods -->
             <h6 class="mt-4">Payment Methods</h6>
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="form-check form-switch mb-2">
                   <input 
                     class="form-check-input" 
@@ -257,6 +275,8 @@
                     id="switchCard">
                   <label class="form-check-label" for="switchCard">Credit Card</label>
                 </div>
+              </div>
+              <div class="col-md-4">
                 <div class="form-check form-switch mb-2">
                   <input 
                     class="form-check-input" 
@@ -266,8 +286,6 @@
                     id="switchUBP">
                   <label class="form-check-label" for="switchUBP">Unionbank Transfer</label>
                 </div>
-              </div>
-              <div class="col-md-6">
                 <div class="form-check form-switch mb-2">
                   <input 
                     class="form-check-input" 
@@ -286,6 +304,8 @@
                     id="switchMaya">
                   <label class="form-check-label" for="switchMaya">Maya</label>
                 </div>
+              </div>
+              <div class="col-md-4">
                 <div class="form-check form-switch mb-2">
                   <input 
                     class="form-check-input" 
@@ -305,49 +325,54 @@
 
             <!-- Verification Section -->
             <div class="mt-4">
-              <div class="mb-3">
-                <label class="form-label">Verification URL</label>
-                <div class="input-group">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    [value]="event.verification_link || 'Save to generate verification link'" 
-                    readonly>
-                  <button 
-                    type="button" 
-                    class="btn btn-outline-secondary"
-                    (click)="copyToClipboard(event.verification_link!, 'Verification link')"
-                    [disabled]="!event.verification_link">
-                    <i class="fa fa-copy"></i>
-                  </button>
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="mb-3">
+                    <label class="form-label">Verification URL</label>
+                    <div class="input-group">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        [value]="event.verification_link || 'Save to generate verification link'" 
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn btn-outline-secondary"
+                        (click)="copyToClipboard(event.verification_link!, 'Verification link')"
+                        [disabled]="!event.verification_link">
+                        <i class="fa fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Verification PIN</label>
+                    <div class="input-group">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        [value]="event.verification_pin" 
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn btn-outline-secondary"
+                        (click)="copyToClipboard(event.verification_pin, 'Verification PIN')">
+                        <i class="fa fa-copy"></i>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-outline-secondary"
+                        (click)="resetPIN()"
+                        [disabled]="!event.id || refreshingPIN"
+                        [title]="!event.id ? 'Save event first to refresh PIN' : 'Refresh verification PIN'">
+                        <i class="fa" [class]="refreshingPIN ? 'fa-spinner fa-spin' : 'fa-sync'"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label">Verification PIN</label>
-                <div class="input-group">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    [value]="event.verification_pin" 
-                    readonly>
-                  <button 
-                    type="button" 
-                    class="btn btn-outline-secondary"
-                    (click)="copyToClipboard(event.verification_pin, 'Verification PIN')">
-                    <i class="fa fa-copy"></i>
-                  </button>
-                  <button 
-                    type="button" 
-                    class="btn btn-outline-secondary"
-                    (click)="resetPIN()"
-                    [disabled]="!event.id || refreshingPIN"
-                    [title]="!event.id ? 'Save event first to refresh PIN' : 'Refresh verification PIN'">
-                    <i class="fa" [class]="refreshingPIN ? 'fa-spinner fa-spin' : 'fa-sync'"></i>
-                  </button>
-                </div>
-                <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>
-              </div>
+              <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>
             </div>
           </div>
         </div>

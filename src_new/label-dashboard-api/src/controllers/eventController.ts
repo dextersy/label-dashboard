@@ -247,7 +247,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       max_tickets,
       ticket_naming,
       buy_shortlink,
-      slug
+      slug,
+      countdown_display
     } = req.body;
 
     if (!title || !date_and_time || !venue || !ticket_price) {
@@ -307,6 +308,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       max_tickets: max_tickets || 0,
       ticket_naming: ticket_naming || 'Regular',
       buy_shortlink: buy_shortlink || '', // Placeholder, will be updated below
+      countdown_display: countdown_display || '1_week',
       brand_id: req.user.brand_id
     });
 
@@ -382,7 +384,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       max_tickets,
       ticket_naming,
       buy_shortlink,
-      slug
+      slug,
+      countdown_display
     } = req.body;
 
     const event = await Event.findOne({
@@ -479,7 +482,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       supports_grabpay: supports_grabpay !== undefined ? supports_grabpay : event.supports_grabpay,
       max_tickets: max_tickets !== undefined ? max_tickets : event.max_tickets,
       ticket_naming: ticket_naming || event.ticket_naming,
-      buy_shortlink: updatedBuyLink
+      buy_shortlink: updatedBuyLink,
+      countdown_display: countdown_display !== undefined ? countdown_display : event.countdown_display
     });
 
     res.json({

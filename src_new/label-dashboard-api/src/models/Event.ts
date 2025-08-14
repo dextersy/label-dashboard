@@ -24,6 +24,7 @@ interface EventAttributes {
   supports_grabpay: boolean;
   max_tickets?: number;
   ticket_naming: string;
+  countdown_display: 'always' | '1_week' | '3_days' | '1_day' | 'never';
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -51,6 +52,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public supports_grabpay!: boolean;
   public max_tickets?: number;
   public ticket_naming!: string;
+  public countdown_display!: 'always' | '1_week' | '3_days' | '1_day' | 'never';
 
   // Association properties
   public brand?: any;
@@ -167,6 +169,11 @@ Event.init(
       type: DataTypes.STRING(45),
       allowNull: false,
       defaultValue: 'Regular',
+    },
+    countdown_display: {
+      type: DataTypes.ENUM('always', '1_week', '3_days', '1_day', 'never'),
+      allowNull: false,
+      defaultValue: '1_week',
     },
   },
   {

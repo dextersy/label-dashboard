@@ -21,6 +21,7 @@ export interface EventDetails {
   buy_shortlink?: string;
   ticket_naming: string;
   slug?: string;
+  countdown_display: 'always' | '1_week' | '3_days' | '1_day' | 'never';
   supports_gcash: boolean;
   supports_qrph: boolean;
   supports_card: boolean;
@@ -122,6 +123,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       buy_shortlink: event.buy_shortlink,
       ticket_naming: event.ticket_naming,
       slug: '', // Slug is input-only, not stored in API
+      countdown_display: (event as any).countdown_display || '1_week',
       supports_gcash: event.supports_gcash,
       supports_qrph: event.supports_qrph,
       supports_card: event.supports_card,
@@ -214,6 +216,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       buy_shortlink: '',
       ticket_naming: 'Regular',
       slug: '',
+      countdown_display: '1_week',
       supports_gcash: true,
       supports_qrph: true,
       supports_card: true,
@@ -336,6 +339,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       formData.append('rsvp_link', this.event.rsvp_link || '');
       formData.append('ticket_naming', this.event.ticket_naming || 'Regular');
       formData.append('max_tickets', (this.event.max_tickets || 0).toString());
+      formData.append('countdown_display', this.event.countdown_display);
       
       // Add payment method support flags
       formData.append('supports_gcash', this.event.supports_gcash.toString());
@@ -386,6 +390,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         buy_shortlink: this.event.buy_shortlink,
         ticket_naming: this.event.ticket_naming,
         slug: this.event.slug,
+        countdown_display: this.event.countdown_display,
         supports_gcash: this.event.supports_gcash,
         supports_qrph: this.event.supports_qrph,
         supports_card: this.event.supports_card,

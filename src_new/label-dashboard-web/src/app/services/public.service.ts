@@ -8,6 +8,7 @@ export interface PublicEvent {
   title: string;
   description?: string;
   date_and_time: string;
+  close_time?: string;
   venue: string;
   poster_url?: string;
   ticket_price: number;
@@ -15,6 +16,7 @@ export interface PublicEvent {
   max_tickets?: number;
   remaining_tickets?: number;
   is_closed: boolean;
+  show_countdown: boolean;
   supports_card: boolean;
   supports_gcash: boolean;
   supports_qrph: boolean;

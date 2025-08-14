@@ -1,0 +1,32 @@
+<div class="countdown-notification" [style.background-color]="brandColor" *ngIf="hasTimeLeft">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <div class="countdown-text">
+          <i class="fas fa-clock me-2"></i>
+          Ticket sales for <strong>{{ eventTitle }}</strong> close in:
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="countdown-timer">
+          <div class="time-unit" *ngIf="timeLeft.days > 0">
+            <span class="time-value">{{ timeLeft.days }}</span>
+            <span class="time-label">{{ timeLeft.days === 1 ? 'day' : 'days' }}</span>
+          </div>
+          <div class="time-unit">
+            <span class="time-value">{{ timeLeft.hours.toString().padStart(2, '0') }}</span>
+            <span class="time-label">hours</span>
+          </div>
+          <div class="time-unit">
+            <span class="time-value">{{ timeLeft.minutes.toString().padStart(2, '0') }}</span>
+            <span class="time-label">minutes</span>
+          </div>
+          <div class="time-unit">
+            <span class="time-value">{{ timeLeft.seconds.toString().padStart(2, '0') }}</span>
+            <span class="time-label">seconds</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -6,6 +6,7 @@ import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { PublicService, PublicEvent, TicketPurchaseRequest } from '../../services/public.service';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { MetaService } from '../../services/meta.service';
+import { CountdownNotificationComponent } from '../../shared/countdown-notification/countdown-notification.component';
 
 // Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -23,7 +24,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    CountdownNotificationComponent
   ],
   templateUrl: './ticket-buy.component.html',
   styleUrls: ['./ticket-buy.component.scss']
