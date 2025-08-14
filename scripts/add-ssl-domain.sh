@@ -33,7 +33,7 @@ validate_domain() {
     fi
 }
 
-# Function to check if domain already exists in crontab
+# Function to check if domain already exists in lego command
 check_domain_exists() {
     local domain="$1"
     local current_cron="$2"
@@ -108,50 +108,50 @@ main() {
     # Validate domain format
     validate_domain "$new_domain"
     
-    # Get current crontab
-    print_info "Reading current crontab..."
-    local current_cron
-    current_cron=$(crontab -l 2>/dev/null) || {
-        print_error "Failed to read crontab or crontab is empty"
-        exit 1
-    }
+    # Get current lego command from SSL wrapper script
+    local wrapper_script="/tmp/ssl-renew-wrapper.sh"
+    print_info "Reading lego command from SSL wrapper script..."
     
-    # Find the letsencrypt line
-    local letsencrypt_line
-    letsencrypt_line=$(echo "$current_cron" | grep -E "lego.*--domains.*renew.*bncert-autorenew" | head -n 1)
-    
-    if [[ -z "$letsencrypt_line" ]]; then
-        print_error "No letsencrypt cron job found. Please ensure the letsencrypt cron job exists."
+    if [[ ! -f "$wrapper_script" ]]; then
+        print_error "SSL wrapper script not found at: $wrapper_script"
+        print_error "Please ensure the SSL wrapper script exists."
         exit 1
     fi
     
-    print_info "Found letsencrypt cron job"
+    # Find the letsencrypt line in the wrapper script
+    local letsencrypt_line
+    letsencrypt_line=$(grep -E "lego.*--domains.*renew.*bncert-autorenew" "$wrapper_script" | head -n 1)
+    
+    if [[ -z "$letsencrypt_line" ]]; then
+        print_error "No letsencrypt command found in wrapper script."
+        print_error "Please ensure the wrapper script contains a valid lego command."
+        exit 1
+    fi
+    
+    print_info "Found letsencrypt command in wrapper script"
     
     # Check if domain already exists
     if check_domain_exists "$new_domain" "$letsencrypt_line"; then
-        print_warning "Domain '$new_domain' already exists in the cron job"
+        print_warning "Domain '$new_domain' already exists in the SSL renewal command"
         print_info "Current letsencrypt command:"
         echo "$letsencrypt_line"
         exit 0
     fi
     
-    # Backup current crontab
-    local backup_file
-    backup_file=$(backup_crontab)
     
     # Extract the existing domains and add the new one
-    print_info "Adding domain '$new_domain' to the cron job..."
+    print_info "Adding domain '$new_domain' to the SSL renewal command..."
     
-    # Create new cron line with additional domain at the end
-    local new_cron_line
-    new_cron_line=$(echo "$letsencrypt_line" | sed "s/\(--domains=[^[:space:]]*\)/\1 --domains=$new_domain/")
+    # Create new command line with additional domain at the end
+    local new_lego_line
+    new_lego_line=$(echo "$letsencrypt_line" | sed "s/\(--domains=[^[:space:]]*\)/\1 --domains=$new_domain/")
     
-    # Test the lego command first before updating crontab
+    # Test the lego command first before updating wrapper script
     print_info "Testing lego command with new domain..."
     
-    # Extract just the command part (everything after the schedule)
+    # Extract just the command part (the lego command without any cron schedule)
     local command_part
-    command_part=$(echo "$new_cron_line" | sed 's/^[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*//')
+    command_part="$new_lego_line"
     
     # Add --days 999 flag for testing to force certificate generation
     local test_command_part
@@ -163,10 +163,10 @@ main() {
     # Execute the lego command as a test
     if eval "$test_command_part"; then
         print_info "Lego command executed successfully!"
-        print_info "Proceeding to update crontab..."
+        print_info "Proceeding to update wrapper script..."
     else
         print_error "Lego command failed! Domain '$new_domain' may not be properly configured or accessible."
-        print_error "Crontab will NOT be updated to prevent future failures."
+        print_error "Wrapper script will NOT be updated to prevent future failures."
         print_warning "Please verify that:"
         print_warning "  1. The domain '$new_domain' is correctly pointed to this server"
         print_warning "  2. Port 80/443 are accessible for domain validation"
@@ -174,11 +174,15 @@ main() {
         exit 1
     fi
     
-    # Create a wrapper script to avoid crontab command length limits
-    local wrapper_script="/tmp/ssl-renew-wrapper.sh"
-    print_info "Creating wrapper script at $wrapper_script"
+    # Update the existing wrapper script with the new command
+    print_info "Updating wrapper script at $wrapper_script"
     
-    # Extract just the command part for the wrapper script
+    # Create backup of the wrapper script
+    local wrapper_backup="${wrapper_script}.backup.$(date +%Y%m%d_%H%M%S)"
+    cp "$wrapper_script" "$wrapper_backup"
+    print_info "Wrapper script backed up to: $wrapper_backup"
+    
+    # Update the wrapper script with the new command
     cat > "$wrapper_script" << EOF
 #!/bin/bash
 $command_part
@@ -186,33 +190,12 @@ EOF
     
     chmod +x "$wrapper_script"
     
-    # Create new cron line that calls the wrapper script instead of the long command
-    local schedule_part
-    schedule_part=$(echo "$letsencrypt_line" | sed 's/^\([^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*\).*/\1/')
-    local wrapper_cron_line="${schedule_part}${wrapper_script} # bncert-autorenew"
+    print_info "Wrapper script updated successfully"
     
-    # Replace the old line with the new wrapper-based cron line
-    local new_crontab
-    new_crontab=$(echo "$current_cron" | sed "s|$(echo "$letsencrypt_line" | sed 's/[[\.*^$()+?{|]/\\&/g')|$wrapper_cron_line|")
-    
-    # Install the new crontab
-    print_info "Updating crontab..."
-    echo "$new_crontab" | crontab -
-    
-    if [[ $? -eq 0 ]]; then
-        print_info "Crontab updated successfully"
-    else
-        print_error "Failed to update crontab. Restoring from backup..."
-        cat "$backup_file" | crontab -
-        exit 1
-    fi
-    
-    # Display the updated cron job
-    print_info "Updated letsencrypt cron job:"
-    echo "$wrapper_cron_line"
-    print_info "Wrapper script created at: $wrapper_script"
-    print_info "Wrapper script contains:"
+    # Display the updated wrapper script contents
+    print_info "Updated letsencrypt command in wrapper script:"
     echo "$command_part"
+    print_info "Wrapper script location: $wrapper_script"
     
     print_info "Domain management completed successfully!"
 }
