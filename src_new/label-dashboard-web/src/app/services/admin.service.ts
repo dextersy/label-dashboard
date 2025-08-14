@@ -19,7 +19,7 @@ export interface BrandSettings {
 
 export interface Domain {
   domain_name: string;
-  status: string;
+  status: 'Unverified' | 'Pending' | 'No SSL' | 'Connected';
   brand_id: number;
 }
 
@@ -151,6 +151,26 @@ export interface SublabelCompletionEvent {
   brandId?: number;
 }
 
+export interface DomainVerificationState {
+  inProgress: boolean;
+  pendingDomain: string;
+  pollCount: number;
+  maxPollCount: number;
+}
+
+export interface DomainVerificationEvent {
+  domainName: string;
+  status: 'Unverified' | 'Pending' | 'No SSL' | 'Connected';
+  message: string;
+}
+
+export interface DomainVerificationResponse {
+  message: string;
+  status?: string;
+  domain_name?: string;
+  estimated_completion?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -171,6 +191,22 @@ export class AdminService {
   public sublabelCompletion$ = this.sublabelCompletionSubject.asObservable();
   
   private pollTimeoutId: any = null;
+  
+  // Domain verification state management
+  private domainVerificationState: DomainVerificationState = {
+    inProgress: false,
+    pendingDomain: '',
+    pollCount: 0,
+    maxPollCount: 60 // 5 minutes at 10-second intervals
+  };
+  
+  private domainVerificationStateSubject = new BehaviorSubject<DomainVerificationState>(this.domainVerificationState);
+  public domainVerificationState$ = this.domainVerificationStateSubject.asObservable();
+  
+  private domainVerificationCompletionSubject = new BehaviorSubject<DomainVerificationEvent | null>(null);
+  public domainVerificationCompletion$ = this.domainVerificationCompletionSubject.asObservable();
+  
+  private domainPollTimeoutId: any = null;
 
   constructor(private http: HttpClient) { }
   
@@ -289,6 +325,129 @@ export class AdminService {
     // Start polling after 10 seconds (give time for initial creation)
     console.log(`[Global Polling] Starting global polling for sublabel "${this.sublabelCreationState.pendingName}" creation`);
     this.pollTimeoutId = setTimeout(poll, 10000);
+  }
+
+  // Domain verification state management methods
+  startDomainVerificationTracking(domainName: string): void {
+    this.domainVerificationState = {
+      inProgress: true,
+      pendingDomain: domainName,
+      pollCount: 0,
+      maxPollCount: 60
+    };
+    this.domainVerificationStateSubject.next(this.domainVerificationState);
+    this.startPollingForDomainVerification();
+  }
+  
+  stopDomainVerificationTracking(): void {
+    this.domainVerificationState = {
+      inProgress: false,
+      pendingDomain: '',
+      pollCount: 0,
+      maxPollCount: 60
+    };
+    this.domainVerificationStateSubject.next(this.domainVerificationState);
+    
+    if (this.domainPollTimeoutId) {
+      clearTimeout(this.domainPollTimeoutId);
+      this.domainPollTimeoutId = null;
+    }
+  }
+  
+  getDomainVerificationState(): DomainVerificationState {
+    return this.domainVerificationState;
+  }
+  
+  checkDomainVerificationProgress(domains: Domain[]): Domain | null {
+    if (!this.domainVerificationState.inProgress || !this.domainVerificationState.pendingDomain) {
+      return null;
+    }
+    
+    const matchingDomain = domains.find(domain => 
+      domain.domain_name.toLowerCase() === this.domainVerificationState.pendingDomain.toLowerCase()
+    );
+    
+    if (matchingDomain && matchingDomain.status !== 'Pending') {
+      // Domain verification is complete (success or failure)
+      return matchingDomain;
+    }
+    
+    return null;
+  }
+  
+  private startPollingForDomainVerification(): void {
+    if (!this.domainVerificationState.inProgress) return;
+    
+    const poll = () => {
+      if (!this.domainVerificationState.inProgress || 
+          this.domainVerificationState.pollCount >= this.domainVerificationState.maxPollCount) {
+        return;
+      }
+      
+      this.domainVerificationState.pollCount++;
+      this.domainVerificationStateSubject.next(this.domainVerificationState);
+      
+      console.log(`[Domain Verification Polling] Checking for domain "${this.domainVerificationState.pendingDomain}" completion, attempt ${this.domainVerificationState.pollCount}/${this.domainVerificationState.maxPollCount}`);
+      
+      // Check domains to see if verification is complete
+      this.getDomains().subscribe({
+        next: (domains) => {
+          const verifiedDomain = domains.find(domain => 
+            domain.domain_name.toLowerCase() === this.domainVerificationState.pendingDomain.toLowerCase()
+          );
+          
+          if (verifiedDomain && verifiedDomain.status !== 'Pending') {
+            console.log(`[Domain Verification Polling] Domain "${verifiedDomain.domain_name}" verification completed with status: ${verifiedDomain.status}`);
+            
+            let message = '';
+            switch (verifiedDomain.status) {
+              case 'Connected':
+                message = 'Domain verified and SSL certificate configured successfully!';
+                break;
+              case 'No SSL':
+                message = 'Domain verified but SSL certificate configuration failed. Please check your SSL settings.';
+                break;
+              case 'Unverified':
+                message = 'Domain verification failed. Please check your DNS configuration.';
+                break;
+              default:
+                message = `Domain verification completed with status: ${verifiedDomain.status}`;
+            }
+            
+            // Emit completion event
+            this.domainVerificationCompletionSubject.next({
+              domainName: verifiedDomain.domain_name,
+              status: verifiedDomain.status,
+              message: message
+            });
+            
+            this.stopDomainVerificationTracking();
+            return;
+          }
+          
+          // Continue polling if still in progress
+          if (this.domainVerificationState.inProgress && 
+              this.domainVerificationState.pollCount < this.domainVerificationState.maxPollCount) {
+            this.domainPollTimeoutId = setTimeout(poll, 10000); // 10 seconds
+          } else if (this.domainVerificationState.pollCount >= this.domainVerificationState.maxPollCount) {
+            console.warn(`[Domain Verification Polling] Domain verification polling timeout reached for "${this.domainVerificationState.pendingDomain}"`);
+            this.stopDomainVerificationTracking();
+          }
+        },
+        error: (error) => {
+          console.error('[Domain Verification Polling] Error checking domains:', error);
+          // Continue polling despite error
+          if (this.domainVerificationState.inProgress && 
+              this.domainVerificationState.pollCount < this.domainVerificationState.maxPollCount) {
+            this.domainPollTimeoutId = setTimeout(poll, 10000);
+          }
+        }
+      });
+    };
+    
+    // Start polling after 5 seconds (give time for initial verification to start)
+    console.log(`[Domain Verification Polling] Starting polling for domain "${this.domainVerificationState.pendingDomain}" verification`);
+    this.domainPollTimeoutId = setTimeout(poll, 5000);
   }
 
   private getAuthHeaders(): HttpHeaders {

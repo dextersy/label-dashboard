@@ -11,7 +11,7 @@ import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
-import { addDomainToSSL, shouldAutoAddToSSL, validateDomainForSSL, logSSLOperation } from '../utils/sslManagementService';
+import { addDomainToSSL, shouldAutoAddToSSL, validateDomainForSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -439,6 +439,141 @@ export const deleteDomain = async (req: Request, res: Response) => {
 
 const dnsResolve4 = promisify(dns.resolve4);
 
+// Domain verification response interface
+export interface DomainVerificationResponse {
+  message: string;
+  status?: string;
+  domain_name?: string;
+  estimated_completion?: string;
+  domain?: {
+    domain_name: string;
+    status: 'Unverified' | 'Pending' | 'No SSL' | 'Connected';
+    brand_id: number;
+    verification_message: string;
+    ssl_configured: boolean;
+    ssl_message: string;
+  };
+}
+
+
+// Async function to handle the heavy lifting of domain verification
+const verifyDomainAsync = async (
+  brandId: string,
+  domainName: string,
+  brandName: string
+) => {
+  try {
+    console.log(`[Async] Starting domain verification for: ${domainName}`);
+    
+    // Find the domain
+    const domain = await Domain.findOne({
+      where: {
+        brand_id: brandId,
+        domain_name: domainName
+      }
+    });
+
+    if (!domain) {
+      throw new Error('Domain not found');
+    }
+
+    // Get frontend server IP from environment variable
+    const frontendIP = process.env.FRONTEND_IP;
+    if (!frontendIP) {
+      throw new Error('FRONTEND_IP environment variable is not configured');
+    }
+    
+    console.log(`[Async] Verifying domain ${domainName} against frontend IP ${frontendIP}`);
+    
+    // Resolve domain's A record
+    const addresses = await dnsResolve4(domainName);
+    console.log(`[Async] Domain ${domainName} resolves to:`, addresses);
+    
+    // Check if any of the resolved addresses match our frontend IP
+    const isVerified = addresses.some(addr => addr === frontendIP);
+    console.log(`[Async] Domain verification result: ${isVerified ? 'VERIFIED' : 'FAILED'}`);
+    
+    let finalStatus: 'Unverified' | 'No SSL' | 'Connected' = 'Unverified';
+    let resultMessage = '';
+    let sslConfigured = false;
+    let sslMessage = '';
+    
+    // If domain is pointing to correct IP, try to add to SSL certificate
+    if (isVerified) {
+      // All verified domains should have SSL certificates added
+      if (shouldAutoAddToSSL(domainName)) {
+        try {
+          console.log(`[Async][SSL] Attempting to add ${domainName} to SSL certificate`);
+          const sslResult = await addDomainToSSL(domainName);
+          logSSLOperation(domainName, sslResult);
+          
+          finalStatus = sslResult.success ? 'Connected' : 'No SSL';
+          sslConfigured = sslResult.success;
+          sslMessage = sslResult.message;
+          
+          if (sslResult.success) {
+            resultMessage = 'Domain verified and SSL certificate updated successfully';
+          } else {
+            resultMessage = `Domain points to correct IP but SSL certificate update failed: ${sslResult.error || 'SSL certificate update failed'}`;
+          }
+        } catch (sslError) {
+          console.error(`[Async][SSL] Error during SSL certificate update for ${domainName}:`, sslError);
+          finalStatus = 'No SSL';
+          resultMessage = 'Domain points to correct IP but SSL certificate update failed due to connection error';
+          sslMessage = 'SSL service connection error';
+        }
+      } else {
+        // Domain verified but SSL validation failed (invalid domain format)
+        finalStatus = 'No SSL';
+        resultMessage = 'Domain verified but SSL certificate could not be created (invalid domain format)';
+      }
+    } else {
+      // Domain not pointing to correct IP
+      finalStatus = 'Unverified';
+      resultMessage = `Domain verification failed. Domain does not point to our frontend server. Expected IP: ${frontendIP}, Resolved IPs: ${addresses.join(', ')}`;
+    }
+    
+    // Update domain status
+    await domain.update({ status: finalStatus });
+    
+    console.log(`[Async] Domain verification completed for ${domainName} with status: ${finalStatus}`);
+    
+    return {
+      success: true,
+      domain: {
+        domain_name: domainName,
+        status: finalStatus,
+        brand_id: parseInt(brandId),
+        verification_message: resultMessage,
+        ssl_configured: sslConfigured,
+        ssl_message: sslMessage
+      }
+    };
+
+  } catch (error) {
+    console.error(`[Async] Error verifying domain "${domainName}":`, error);
+    
+    // Set domain to Unverified on any error
+    try {
+      const domain = await Domain.findOne({
+        where: {
+          brand_id: brandId,
+          domain_name: domainName
+        }
+      });
+      if (domain) {
+        await domain.update({ status: 'Unverified' });
+      }
+    } catch (updateError) {
+      console.error(`[Async] Failed to update domain status to Unverified:`, updateError);
+    }
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+};
 
 export const verifyDomain = async (req: Request, res: Response) => {
   try {
@@ -462,64 +597,24 @@ export const verifyDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Domain not found' });
     }
 
-    try {
-      // Get frontend server IP from environment variable
-      const frontendIP = process.env.FRONTEND_IP;
-      if (!frontendIP) {
-        throw new Error('FRONTEND_IP environment variable is not configured');
-      }
-      
-      console.log(`Verifying domain ${domainName} against frontend IP ${frontendIP}`);
-      
-      // Resolve domain's A record
-      const addresses = await dnsResolve4(domainName);
-      console.log(`Domain ${domainName} resolves to:`, addresses);
-      
-      // Check if any of the resolved addresses match our frontend IP
-      const isVerified = addresses.some(addr => addr === frontendIP);
-      console.log(`Domain verification result: ${isVerified ? 'VERIFIED' : 'FAILED'}`);
-      
-      // Update domain status - either Verified or Unverified
-      const newStatus = isVerified ? 'Verified' : 'Unverified';
-      await domain.update({ status: newStatus });
+    // Set domain status to Pending while verification is in progress
+    await domain.update({ status: 'Pending' });
 
-      if (isVerified) {
-        res.json({
-          message: 'Domain verified successfully',
-          status: 'Verified'
-        });
-      } else {
-        res.status(400).json({
-          error: 'Domain verification failed. Domain does not point to our frontend server.',
-          status: 'Unverified',
-          expectedIP: frontendIP,
-          resolvedIPs: addresses,
-          hint: `Please update your domain's A record to point to ${frontendIP}`
-        });
-      }
+    // Start async domain verification process
+    setImmediate(() => {
+      verifyDomainAsync(brandId, domainName, brand.brand_name);
+    });
 
-    } catch (error: any) {
-      console.error(`Error during domain verification for ${domainName}:`, error.message);
-      
-      // All errors result in Unverified status
-      await domain.update({ status: 'Unverified' });
-      
-      if (error.message.includes('FRONTEND_IP environment variable is not configured')) {
-        res.status(500).json({
-          error: 'Frontend IP configuration is missing. Please contact system administrator.',
-          status: 'Unverified'
-        });
-      } else {
-        res.status(400).json({
-          error: 'Domain verification failed. Please check your DNS configuration.',
-          status: 'Unverified',
-          dnsError: error.message
-        });
-      }
-    }
+    // Return immediately with job started response
+    res.status(202).json({
+      message: 'Domain verification started',
+      status: 'processing',
+      domain_name: domainName,
+      estimated_completion: 'A few minutes'
+    });
 
   } catch (error) {
-    console.error('Error verifying domain:', error);
+    console.error('Error starting domain verification:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -720,7 +815,7 @@ const createSublabelAsync = async (
     console.log(`[Async] Created brand with ID: ${newBrand.id}`);
 
     // Create domain for the new brand
-    let domainStatus: 'Verified' | 'Unverified' = 'Unverified';
+    let domainStatus: 'Unverified' | 'Pending' | 'No SSL' | 'Connected' = 'Unverified';
     
     // Initialize SSL status variables
     let sslConfigured = false;
@@ -732,11 +827,12 @@ const createSublabelAsync = async (
         console.log(`[Async] Creating DNS A record for ${subdomain_name}.melt-records.com`);
         const dnsCreated = await createSubdomainARecord(subdomain_name.toLowerCase());
         if (dnsCreated) {
-          domainStatus = 'Verified'; // Auto-verify since we created the DNS record
+          domainStatus = 'Pending'; // Set to Pending while SSL is being configured
           console.log(`[Async] DNS A record created successfully for ${subdomain_name}.melt-records.com`);
           
           // Automatically add domain to SSL certificate when DNS is successfully created
-          if (shouldAutoAddToSSL(finalDomainName) && validateDomainForSSL(finalDomainName)) {
+          // For melt-records.com subdomains, we know they will point to the correct IP after DNS creation
+          if (isMeltRecordsSubdomain(finalDomainName) && shouldAutoAddToSSL(finalDomainName)) {
             try {
               console.log(`[Async][SSL] Attempting to add ${finalDomainName} to SSL certificate`);
               const sslResult = await addDomainToSSL(finalDomainName);
@@ -745,7 +841,10 @@ const createSublabelAsync = async (
               sslConfigured = sslResult.success;
               sslMessage = sslResult.message;
               
-              if (!sslResult.success) {
+              if (sslResult.success) {
+                domainStatus = 'Connected';
+              } else {
+                domainStatus = 'No SSL';
                 console.warn(`[Async][SSL] Failed to add ${finalDomainName} to SSL certificate: ${sslResult.error}`);
                 sslMessage = `DNS configured successfully, but SSL certificate update failed: ${sslResult.error || 'Unknown error'}. Manual SSL configuration required.`;
               }
@@ -754,8 +853,8 @@ const createSublabelAsync = async (
               sslMessage = 'DNS configured successfully, but SSL certificate update failed due to connection error. Manual SSL configuration required.';
             }
           } else {
-            console.log(`[Async][SSL] Skipping SSL certificate update for ${finalDomainName} (not a melt-records.com subdomain or invalid format)`);
-            sslMessage = 'DNS configured successfully, but SSL certificate not updated (custom domain or invalid format). Manual SSL configuration required.';
+            console.log(`[Async][SSL] Skipping SSL certificate update for ${finalDomainName} during creation (not a melt-records.com subdomain or invalid format). Use verify domain to add SSL after IP verification.`);
+            sslMessage = 'DNS configured successfully. Use "Verify Domain" after confirming IP points to server to add SSL certificate.';
           }
         } else {
           console.warn(`[Async] DNS A record creation failed for ${subdomain_name}.melt-records.com`);
@@ -804,7 +903,7 @@ const createSublabelAsync = async (
         domain_name: newDomain.domain_name,
         domain_status: newDomain.status,
         admin_user_id: newUser.id,
-        dns_configured: isSubdomainOfMeltRecords && domainStatus === 'Verified',
+        dns_configured: isSubdomainOfMeltRecords && (domainStatus === 'Connected' || domainStatus === 'No SSL' || domainStatus === 'Pending'),
         ssl_configured: sslConfigured,
         ssl_message: sslMessage
       }

@@ -152,15 +152,22 @@
                   {{ domain.domain_name }}
                 </td>
                 <td>
-                  <a *ngIf="domain.status !== 'Verified'" 
+                  <button *ngIf="shouldShowVerifyButton(domain.status)" 
                      (click)="verifyDomain(domain.domain_name)" 
                      class="btn btn-link btn-sm"
-                     title="Click to verify domain">
-                    [ Verify ]
-                  </a>
-                  <span *ngIf="domain.status === 'Verified'" 
+                     [disabled]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
+                     [class.text-muted]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
+                     [title]="getVerifyButtonTooltip(domain.domain_name, domain.status)"
+                     style="padding: 0; border: none; background: none; text-decoration: underline;">
+                    [ {{ getVerifyButtonText(domain.status) }} ]
+                  </button>
+                  <span *ngIf="domain.status === 'Connected'" 
                         class="text-success small">
-                    <i class="fas fa-check"></i> Verified
+                    <i class="fas fa-check"></i> Connected
+                  </span>
+                  <span *ngIf="domain.status === 'Pending'" 
+                        class="text-info small">
+                    <i class="fas fa-clock fa-spin"></i> Processing...
                   </span>
                   <a (click)="deleteDomain(domain.domain_name)" 
                      class="btn btn-link btn-sm text-danger ms-2"

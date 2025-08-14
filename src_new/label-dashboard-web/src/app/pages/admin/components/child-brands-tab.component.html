@@ -23,13 +23,16 @@
       <button *ngIf="isSuperAdmin()" 
               class="btn btn-primary btn-sm"
               (click)="openAddSublabelModal()"
-              [disabled]="loading || sublabelCreationState.inProgress"
-              [title]="sublabelCreationState.inProgress ? 'Please wait for current sublabel creation to complete' : 'Add new sublabel'">
-        <span *ngIf="!sublabelCreationState.inProgress">
+              [disabled]="loading || isAnyPollingInProgress()"
+              [title]="getAddSublabelButtonTooltip()">
+        <span *ngIf="!isAnyPollingInProgress()">
           <i class="fas fa-plus"></i> Add
         </span>
         <span *ngIf="sublabelCreationState.inProgress">
           <i class="fas fa-spinner fa-spin"></i> Creating {{ sublabelCreationState.pendingName }}...
+        </span>
+        <span *ngIf="domainVerificationState.inProgress && !sublabelCreationState.inProgress">
+          <i class="fas fa-spinner fa-spin"></i> Verifying {{ domainVerificationState.pendingDomain }}...
         </span>
       </button>
     </ng-template>

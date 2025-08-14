@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { AdminService, ChildBrand, CreateSublabelResponse, SublabelCreationState, SublabelCompletionEvent } from '../../../services/admin.service';
+import { AdminService, ChildBrand, CreateSublabelResponse, SublabelCreationState, SublabelCompletionEvent, DomainVerificationState } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
@@ -26,6 +26,7 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   sortInfo: SortInfo | null = null;
   showAddSublabelModal: boolean = false;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
+  domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
 
   @ViewChild(AddSublabelModalComponent) addSublabelModal!: AddSublabelModalComponent;
@@ -121,6 +122,14 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       }
     );
     this.subscriptions.push(stateSubscription);
+    
+    // Subscribe to domain verification state
+    const domainVerificationSubscription = this.adminService.domainVerificationState$.subscribe(
+      (state) => {
+        this.domainVerificationState = state;
+      }
+    );
+    this.subscriptions.push(domainVerificationSubscription);
     
     // Subscribe to sublabel completion events to refresh the list
     const completionSubscription = this.adminService.sublabelCompletion$.subscribe(
@@ -237,11 +246,25 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
 
   // Modal handlers
   openAddSublabelModal(): void {
-    // Don't open modal if sublabel creation is in progress
-    if (this.sublabelCreationState.inProgress) {
+    // Don't open modal if any polling operation is in progress
+    if (this.isAnyPollingInProgress()) {
       return;
     }
     this.showAddSublabelModal = true;
+  }
+  
+  isAnyPollingInProgress(): boolean {
+    return this.sublabelCreationState.inProgress || this.domainVerificationState.inProgress;
+  }
+  
+  getAddSublabelButtonTooltip(): string {
+    if (this.sublabelCreationState.inProgress) {
+      return `Please wait - sublabel creation in progress for "${this.sublabelCreationState.pendingName}"`;
+    }
+    if (this.domainVerificationState.inProgress) {
+      return `Please wait - domain verification in progress for "${this.domainVerificationState.pendingDomain}"`;
+    }
+    return 'Create a new sublabel';
   }
 
   closeAddSublabelModal(): void {
@@ -318,10 +341,16 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    // First, try to find a verified domain
-    const verifiedDomain = childBrand.domains.find(domain => domain.status === 'verified');
-    if (verifiedDomain) {
-      return verifiedDomain.domain_name;
+    // First, try to find a connected domain
+    const connectedDomain = childBrand.domains.find(domain => domain.status === 'Connected');
+    if (connectedDomain) {
+      return connectedDomain.domain_name;
+    }
+
+    // Next, try to find a domain with SSL issues but working DNS
+    const noSslDomain = childBrand.domains.find(domain => domain.status === 'No SSL');
+    if (noSslDomain) {
+      return noSslDomain.domain_name;
     }
 
     // If no verified domain, use the first available domain

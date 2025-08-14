@@ -2,7 +2,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 import Brand from './Brand';
 
-type DomainStatus = 'Verified' | 'Unverified';
+type DomainStatus = 'Unverified' | 'Pending' | 'No SSL' | 'Connected';
 
 interface DomainAttributes {
   brand_id: number;
@@ -37,7 +37,7 @@ Domain.init(
       primaryKey: true,
     },
     status: {
-      type: DataTypes.ENUM('Verified', 'Unverified'),
+      type: DataTypes.ENUM('Unverified', 'Pending', 'No SSL', 'Connected'),
       allowNull: true,
       defaultValue: 'Unverified',
     },
