@@ -13,6 +13,16 @@
   animation: slideInCenter 0.3s ease-out;
   backface-visibility: hidden;
   perspective: 1000px;
+
+  &.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      filter: brightness(0.95);
+    }
+  }
 }
 
 .alert-success {
@@ -25,6 +35,18 @@
   color: #a94442;
   background-color: #f2dede;
   border-color: #ebccd1;
+}
+
+.alert-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+.alert-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
 }
 
 .global-notification .fa {

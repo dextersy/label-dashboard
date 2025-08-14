@@ -4,6 +4,8 @@ import { BehaviorSubject } from 'rxjs';
 export interface NotificationMessage {
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
+  clickable?: boolean;
+  clickAction?: () => void;
 }
 
 @Injectable({
@@ -13,20 +15,40 @@ export class NotificationService {
   private notificationSubject = new BehaviorSubject<NotificationMessage | null>(null);
   public notification$ = this.notificationSubject.asObservable();
 
-  showSuccess(message: string): void {
-    this.notificationSubject.next({ type: 'success', message });
+  showSuccess(message: string, clickAction?: () => void): void {
+    this.notificationSubject.next({ 
+      type: 'success', 
+      message, 
+      clickable: !!clickAction,
+      clickAction 
+    });
   }
 
-  showError(message: string): void {
-    this.notificationSubject.next({ type: 'error', message });
+  showError(message: string, clickAction?: () => void): void {
+    this.notificationSubject.next({ 
+      type: 'error', 
+      message, 
+      clickable: !!clickAction,
+      clickAction 
+    });
   }
 
-  showInfo(message: string): void {
-    this.notificationSubject.next({ type: 'info', message });
+  showInfo(message: string, clickAction?: () => void): void {
+    this.notificationSubject.next({ 
+      type: 'info', 
+      message, 
+      clickable: !!clickAction,
+      clickAction 
+    });
   }
 
-  showWarning(message: string): void {
-    this.notificationSubject.next({ type: 'warning', message });
+  showWarning(message: string, clickAction?: () => void): void {
+    this.notificationSubject.next({ 
+      type: 'warning', 
+      message, 
+      clickable: !!clickAction,
+      clickAction 
+    });
   }
 
   clear(): void {

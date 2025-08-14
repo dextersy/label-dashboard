@@ -670,13 +670,161 @@ export const getChildBrands = async (req: Request, res: Response) => {
   }
 };
 
-// Create Sublabel
+// Async function to handle the heavy lifting of sublabel creation
+const createSublabelAsync = async (
+  brandId: string,
+  brand_name: string,
+  domain_name: string | undefined,
+  subdomain_name: string | undefined,
+  currentUserId: number,
+  parentBrandName: string
+) => {
+  try {
+    console.log(`[Async] Starting sublabel creation for: ${brand_name}`);
+    
+    let finalDomainName: string;
+    let isSubdomainOfMeltRecords = false;
+
+    // Handle new subdomain format
+    if (subdomain_name) {
+      const baseDomain = process.env.LIGHTSAIL_DOMAIN;
+      if (!baseDomain) {
+        throw new Error('LIGHTSAIL_DOMAIN environment variable is not configured');
+      }
+      finalDomainName = `${subdomain_name.toLowerCase()}.${baseDomain}`;
+      isSubdomainOfMeltRecords = true;
+    } else {
+      finalDomainName = domain_name!.toLowerCase().trim();
+    }
+
+    // Get user information
+    const currentUser = await User.findByPk(currentUserId);
+    if (!currentUser) {
+      throw new Error('Current user not found');
+    }
+
+    // Create new brand (sublabel)
+    const newBrand = await Brand.create({
+      brand_name: brand_name.trim(),
+      parent_brand: parseInt(brandId),
+      logo_url: null,
+      brand_color: '#6c757d', // Default gray color
+      brand_website: '',
+      favicon_url: null,
+      paymongo_wallet_id: '',
+      payment_processing_fee_for_payouts: 10.00, // Default 10%
+      release_submission_url: '',
+      catalog_prefix: ''
+    });
+
+    console.log(`[Async] Created brand with ID: ${newBrand.id}`);
+
+    // Create domain for the new brand
+    let domainStatus: 'Verified' | 'Unverified' = 'Unverified';
+    
+    // Initialize SSL status variables
+    let sslConfigured = false;
+    let sslMessage = 'SSL certificate not configured (DNS not created automatically)';
+    
+    // Create DNS A record for melt-records.com subdomains
+    if (isSubdomainOfMeltRecords && subdomain_name) {
+      try {
+        console.log(`[Async] Creating DNS A record for ${subdomain_name}.melt-records.com`);
+        const dnsCreated = await createSubdomainARecord(subdomain_name.toLowerCase());
+        if (dnsCreated) {
+          domainStatus = 'Verified'; // Auto-verify since we created the DNS record
+          console.log(`[Async] DNS A record created successfully for ${subdomain_name}.melt-records.com`);
+          
+          // Automatically add domain to SSL certificate when DNS is successfully created
+          if (shouldAutoAddToSSL(finalDomainName) && validateDomainForSSL(finalDomainName)) {
+            try {
+              console.log(`[Async][SSL] Attempting to add ${finalDomainName} to SSL certificate`);
+              const sslResult = await addDomainToSSL(finalDomainName);
+              logSSLOperation(finalDomainName, sslResult);
+              
+              sslConfigured = sslResult.success;
+              sslMessage = sslResult.message;
+              
+              if (!sslResult.success) {
+                console.warn(`[Async][SSL] Failed to add ${finalDomainName} to SSL certificate: ${sslResult.error}`);
+                sslMessage = `DNS configured successfully, but SSL certificate update failed: ${sslResult.error || 'Unknown error'}. Manual SSL configuration required.`;
+              }
+            } catch (sslError) {
+              console.error(`[Async][SSL] Error during SSL certificate update for ${finalDomainName}:`, sslError);
+              sslMessage = 'DNS configured successfully, but SSL certificate update failed due to connection error. Manual SSL configuration required.';
+            }
+          } else {
+            console.log(`[Async][SSL] Skipping SSL certificate update for ${finalDomainName} (not a melt-records.com subdomain or invalid format)`);
+            sslMessage = 'DNS configured successfully, but SSL certificate not updated (custom domain or invalid format). Manual SSL configuration required.';
+          }
+        } else {
+          console.warn(`[Async] DNS A record creation failed for ${subdomain_name}.melt-records.com`);
+        }
+      } catch (dnsError) {
+        console.error(`[Async] DNS creation error for ${subdomain_name}.melt-records.com:`, dnsError);
+      }
+    }
+
+    const newDomain = await Domain.create({
+      brand_id: newBrand.id,
+      domain_name: finalDomainName,
+      status: domainStatus
+    });
+
+    console.log(`[Async] Created domain: ${finalDomainName} with status: ${domainStatus}`);
+
+    // Create admin user for the new brand (copy current user's info)
+    const newUser = await User.create({
+      username: currentUser.username,
+      password_md5: currentUser.password_md5,
+      email_address: currentUser.email_address,
+      first_name: currentUser.first_name,
+      last_name: currentUser.last_name,
+      profile_photo: currentUser.profile_photo,
+      is_admin: true, // New sublabel user is admin for their brand
+      brand_id: newBrand.id,
+      reset_hash: null, // Clear reset hash for new user
+      last_logged_in: null // Clear last login for new user
+    });
+
+    console.log(`[Async] Created admin user with ID: ${newUser.id}`);
+
+    // Log successful completion
+    console.log(`[Async] Sublabel "${brand_name}" created successfully for parent brand "${parentBrandName}"`);
+
+    // TODO: For production, implement WebSocket or Server-Sent Events for real-time notifications
+    // For now, we'll rely on the frontend to detect completion through other means
+    // The completion notification will be handled when user checks brand settings or refreshes sublabels list
+
+    return {
+      success: true,
+      sublabel: {
+        id: newBrand.id,
+        brand_name: newBrand.brand_name,
+        domain_name: newDomain.domain_name,
+        domain_status: newDomain.status,
+        admin_user_id: newUser.id,
+        dns_configured: isSubdomainOfMeltRecords && domainStatus === 'Verified',
+        ssl_configured: sslConfigured,
+        ssl_message: sslMessage
+      }
+    };
+
+  } catch (error) {
+    console.error(`[Async] Error creating sublabel "${brand_name}":`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+};
+
+// Create Sublabel (now async)
 export const createSublabel = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
     const { brand_name, domain_name, subdomain_name } = req.body;
     const currentUserId = (req as any).user?.id;
-
 
     // Validate input
     if (!brand_name) {
@@ -688,7 +836,6 @@ export const createSublabel = async (req: Request, res: Response) => {
     }
 
     let finalDomainName: string;
-    let isSubdomainOfMeltRecords = false;
 
     // Handle new subdomain format
     if (subdomain_name) {
@@ -703,7 +850,6 @@ export const createSublabel = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'LIGHTSAIL_DOMAIN environment variable is not configured' });
       }
       finalDomainName = `${subdomain_name.toLowerCase()}.${baseDomain}`;
-      isSubdomainOfMeltRecords = true;
     } else {
       // Handle legacy domain format
       const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -733,108 +879,21 @@ export const createSublabel = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Domain already exists' });
     }
 
-    // Create new brand (sublabel)
-    const newBrand = await Brand.create({
+    // Start async sublabel creation process
+    setImmediate(() => {
+      createSublabelAsync(brandId, brand_name, domain_name, subdomain_name, currentUserId, parentBrand.brand_name);
+    });
+
+    // Return immediately with job started response
+    res.status(202).json({
+      message: 'Sublabel creation started',
+      status: 'processing',
       brand_name: brand_name.trim(),
-      parent_brand: parseInt(brandId),
-      logo_url: null,
-      brand_color: '#6c757d', // Default gray color
-      brand_website: '',
-      favicon_url: null,
-      paymongo_wallet_id: '',
-      payment_processing_fee_for_payouts: 10.00, // Default 10%
-      release_submission_url: '',
-      catalog_prefix: ''
-    });
-
-    // Create domain for the new brand
-    let domainStatus: 'Verified' | 'Unverified' = 'Unverified';
-    
-    // Initialize SSL status variables
-    let sslConfigured = false;
-    let sslMessage = 'SSL certificate not configured (DNS not created automatically)';
-    
-    // Create DNS A record for melt-records.com subdomains
-    if (isSubdomainOfMeltRecords && subdomain_name) {
-      try {
-        console.log(`Creating DNS A record for ${subdomain_name}.melt-records.com`);
-        const dnsCreated = await createSubdomainARecord(subdomain_name.toLowerCase());
-        if (dnsCreated) {
-          domainStatus = 'Verified'; // Auto-verify since we created the DNS record
-          console.log(`DNS A record created successfully for ${subdomain_name}.melt-records.com`);
-          
-          // Automatically add domain to SSL certificate when DNS is successfully created
-          if (shouldAutoAddToSSL(finalDomainName) && validateDomainForSSL(finalDomainName)) {
-            try {
-              console.log(`[SSL] Attempting to add ${finalDomainName} to SSL certificate`);
-              const sslResult = await addDomainToSSL(finalDomainName);
-              logSSLOperation(finalDomainName, sslResult);
-              
-              sslConfigured = sslResult.success;
-              sslMessage = sslResult.message;
-              
-              if (!sslResult.success) {
-                console.warn(`[SSL] Failed to add ${finalDomainName} to SSL certificate: ${sslResult.error}`);
-                sslMessage = `DNS configured successfully, but SSL certificate update failed: ${sslResult.error || 'Unknown error'}. Manual SSL configuration required.`;
-                // Don't fail the entire operation if SSL fails - the domain can be added manually later
-              }
-            } catch (sslError) {
-              console.error(`[SSL] Error during SSL certificate update for ${finalDomainName}:`, sslError);
-              sslMessage = 'DNS configured successfully, but SSL certificate update failed due to connection error. Manual SSL configuration required.';
-              // Don't fail the entire operation
-            }
-          } else {
-            console.log(`[SSL] Skipping SSL certificate update for ${finalDomainName} (not a melt-records.com subdomain or invalid format)`);
-            sslMessage = 'DNS configured successfully, but SSL certificate not updated (custom domain or invalid format). Manual SSL configuration required.';
-          }
-        } else {
-          console.warn(`DNS A record creation failed for ${subdomain_name}.melt-records.com`);
-        }
-      } catch (dnsError) {
-        console.error(`DNS creation error for ${subdomain_name}.melt-records.com:`, dnsError);
-        // Don't fail the entire operation if DNS creation fails
-        // The domain will remain unverified and can be configured manually
-      }
-    }
-
-    const newDomain = await Domain.create({
-      brand_id: newBrand.id,
-      domain_name: finalDomainName,
-      status: domainStatus
-    });
-
-    // Create admin user for the new brand (copy current user's info)
-    const newUser = await User.create({
-      username: currentUser.username,
-      password_md5: currentUser.password_md5,
-      email_address: currentUser.email_address,
-      first_name: currentUser.first_name,
-      last_name: currentUser.last_name,
-      profile_photo: currentUser.profile_photo,
-      is_admin: true, // New sublabel user is admin for their brand
-      brand_id: newBrand.id,
-      reset_hash: null, // Clear reset hash for new user
-      last_logged_in: null // Clear last login for new user
-    });
-
-    res.status(201).json({
-      message: isSubdomainOfMeltRecords ? 
-        'Sublabel created successfully with automatic DNS and SSL configuration' : 
-        'Sublabel created successfully',
-      sublabel: {
-        id: newBrand.id,
-        brand_name: newBrand.brand_name,
-        domain_name: newDomain.domain_name,
-        domain_status: newDomain.status,
-        admin_user_id: newUser.id,
-        dns_configured: isSubdomainOfMeltRecords && domainStatus === 'Verified',
-        ssl_configured: sslConfigured,
-        ssl_message: sslMessage
-      }
+      estimated_completion: 'A few minutes'
     });
 
   } catch (error) {
-    console.error('Error creating sublabel:', error);
+    console.error('Error starting sublabel creation:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

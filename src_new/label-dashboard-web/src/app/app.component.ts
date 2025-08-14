@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { GlobalNotificationComponent } from './components/global-notification/global-notification.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
+import { AdminService, SublabelCompletionEvent } from './services/admin.service';
+import { NotificationService } from './services/notification.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -15,15 +18,18 @@ import { filter } from 'rxjs/operators';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'label-dashboard-web';
   currentRoute = '';
   brandLoaded = false;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private router: Router,
     private brandService: BrandService,
-    private authService: AuthService
+    private authService: AuthService,
+    private adminService: AdminService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +58,27 @@ export class AppComponent implements OnInit {
       .subscribe((event) => {
         this.currentRoute = (event as NavigationEnd).url;
       });
+    
+    // Global sublabel completion listener - works regardless of current page
+    const completionSubscription = this.adminService.sublabelCompletion$.subscribe(
+      (event: SublabelCompletionEvent | null) => {
+        if (event && this.authService.isLoggedIn()) {
+          // Show completion notification with clickable action to go to brand settings
+          this.notificationService.showSuccess(
+            `Your new label "${event.sublabelName}" is ready! Click here to go to Brand Settings.`,
+            () => {
+              // Navigate to brand settings
+              this.router.navigate(['/admin/brand']);
+            }
+          );
+        }
+      }
+    );
+    this.subscriptions.push(completionSubscription);
+  }
+  
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   private applyBrandStyling(brandSettings: any): void {

@@ -39,8 +39,18 @@ export class GlobalNotificationComponent implements OnInit, OnDestroy {
     }
   }
 
-  closeNotification(): void {
+  closeNotification(event?: Event): void {
+    if (event) {
+      event.stopPropagation(); // Prevent triggering click action when closing
+    }
     this.notificationService.clear();
+  }
+
+  onNotificationClick(): void {
+    if (this.currentNotification?.clickable && this.currentNotification.clickAction) {
+      this.currentNotification.clickAction();
+      this.closeNotification(); // Close notification after action
+    }
   }
 
   getNotificationClass(): string {

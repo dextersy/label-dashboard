@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, BehaviorSubject } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -62,7 +62,10 @@ export interface ChildBrand {
 
 export interface CreateSublabelResponse {
   message: string;
-  sublabel: {
+  status?: string; // 'processing' for async operations
+  brand_name?: string; // For async operations
+  estimated_completion?: string; // For async operations
+  sublabel?: {
     id: number;
     brand_name: string;
     domain_name: string;
@@ -136,12 +139,157 @@ export interface CsvProcessingResult {
   };
 }
 
+export interface SublabelCreationState {
+  inProgress: boolean;
+  pendingName: string;
+  pollCount: number;
+  maxPollCount: number;
+}
+
+export interface SublabelCompletionEvent {
+  sublabelName: string;
+  brandId?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AdminService {
+  
+  // Sublabel creation state management
+  private sublabelCreationState: SublabelCreationState = {
+    inProgress: false,
+    pendingName: '',
+    pollCount: 0,
+    maxPollCount: 60 // 10 minutes at 10-second intervals
+  };
+  
+  private sublabelCreationStateSubject = new BehaviorSubject<SublabelCreationState>(this.sublabelCreationState);
+  public sublabelCreationState$ = this.sublabelCreationStateSubject.asObservable();
+  
+  private sublabelCompletionSubject = new BehaviorSubject<SublabelCompletionEvent | null>(null);
+  public sublabelCompletion$ = this.sublabelCompletionSubject.asObservable();
+  
+  private pollTimeoutId: any = null;
 
   constructor(private http: HttpClient) { }
+  
+  // Sublabel creation state management methods
+  startSublabelCreationTracking(sublabelName: string): void {
+    this.sublabelCreationState = {
+      inProgress: true,
+      pendingName: sublabelName,
+      pollCount: 0,
+      maxPollCount: 60
+    };
+    this.sublabelCreationStateSubject.next(this.sublabelCreationState);
+    this.startPollingForSublabelCompletion();
+  }
+  
+  stopSublabelCreationTracking(): void {
+    this.sublabelCreationState = {
+      inProgress: false,
+      pendingName: '',
+      pollCount: 0,
+      maxPollCount: 60
+    };
+    this.sublabelCreationStateSubject.next(this.sublabelCreationState);
+    
+    if (this.pollTimeoutId) {
+      clearTimeout(this.pollTimeoutId);
+      this.pollTimeoutId = null;
+    }
+  }
+  
+  getSublabelCreationState(): SublabelCreationState {
+    return this.sublabelCreationState;
+  }
+  
+  checkSublabelCreationProgress(brands: ChildBrand[]): ChildBrand | null {
+    if (!this.sublabelCreationState.inProgress || !this.sublabelCreationState.pendingName) {
+      return null;
+    }
+    
+    const matchingBrand = brands.find(brand => 
+      brand.brand_name.toLowerCase() === this.sublabelCreationState.pendingName.toLowerCase()
+    );
+    
+    if (matchingBrand) {
+      // Check if the sublabel is truly ready using the same logic as the "Go to dashboard" button
+      const hasDomains = !!(matchingBrand.domains && matchingBrand.domains.length > 0);
+      return hasDomains ? matchingBrand : null;
+    }
+    
+    return null;
+  }
+  
+  private startPollingForSublabelCompletion(): void {
+    if (!this.sublabelCreationState.inProgress) return;
+    
+    const poll = () => {
+      if (!this.sublabelCreationState.inProgress || 
+          this.sublabelCreationState.pollCount >= this.sublabelCreationState.maxPollCount) {
+        return;
+      }
+      
+      this.sublabelCreationState.pollCount++;
+      this.sublabelCreationStateSubject.next(this.sublabelCreationState);
+      
+      console.log(`[Global Polling] Checking for sublabel "${this.sublabelCreationState.pendingName}" completion, attempt ${this.sublabelCreationState.pollCount}/${this.sublabelCreationState.maxPollCount}`);
+      
+      // Check sublabels to see if the new one has been created AND is truly ready
+      this.getSublabels().subscribe({
+        next: (brands) => {
+          const newBrand = brands.find(brand => 
+            brand.brand_name.toLowerCase() === this.sublabelCreationState.pendingName.toLowerCase()
+          );
+          
+          if (newBrand) {
+            // Check if the sublabel is truly ready using the same logic as the "Go to dashboard" button
+            const hasDomains = !!(newBrand.domains && newBrand.domains.length > 0);
+            
+            console.log(`[Global Polling] Sublabel "${newBrand.brand_name}" found! Has domains: ${hasDomains ? 'YES' : 'NO'}`);
+            
+            if (hasDomains) {
+              console.log(`[Global Polling] Sublabel "${newBrand.brand_name}" is ready! Completion detected.`);
+              
+              // Emit completion event
+              this.sublabelCompletionSubject.next({
+                sublabelName: newBrand.brand_name,
+                brandId: newBrand.brand_id
+              });
+              
+              this.stopSublabelCreationTracking();
+              return;
+            } else {
+              console.log(`[Global Polling] Sublabel "${newBrand.brand_name}" exists but no domains yet. Continuing to poll...`);
+            }
+          }
+          
+          // Continue polling if still in progress
+          if (this.sublabelCreationState.inProgress && 
+              this.sublabelCreationState.pollCount < this.sublabelCreationState.maxPollCount) {
+            this.pollTimeoutId = setTimeout(poll, 10000); // 10 seconds
+          } else if (this.sublabelCreationState.pollCount >= this.sublabelCreationState.maxPollCount) {
+            console.warn(`[Global Polling] Sublabel creation polling timeout reached for "${this.sublabelCreationState.pendingName}"`);
+            this.stopSublabelCreationTracking();
+          }
+        },
+        error: (error) => {
+          console.error('[Global Polling] Error checking sublabels:', error);
+          // Continue polling despite error
+          if (this.sublabelCreationState.inProgress && 
+              this.sublabelCreationState.pollCount < this.sublabelCreationState.maxPollCount) {
+            this.pollTimeoutId = setTimeout(poll, 10000);
+          }
+        }
+      });
+    };
+    
+    // Start polling after 10 seconds (give time for initial creation)
+    console.log(`[Global Polling] Starting global polling for sublabel "${this.sublabelCreationState.pendingName}" creation`);
+    this.pollTimeoutId = setTimeout(poll, 10000);
+  }
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token');

@@ -1,7 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, ChildBrand, CreateSublabelResponse } from '../../../services/admin.service';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { AdminService, ChildBrand, CreateSublabelResponse, SublabelCreationState, SublabelCompletionEvent } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
@@ -15,7 +17,7 @@ import { AddSublabelModalComponent } from '../../../components/shared/add-sublab
   templateUrl: './child-brands-tab.component.html',
   styleUrls: ['./child-brands-tab.component.scss']
 })
-export class ChildBrandsTabComponent implements OnInit {
+export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   loading: boolean = false;
   childBrands: ChildBrand[] = [];
   sortedChildBrands: ChildBrand[] = [];
@@ -23,6 +25,8 @@ export class ChildBrandsTabComponent implements OnInit {
   endDate: string = '';
   sortInfo: SortInfo | null = null;
   showAddSublabelModal: boolean = false;
+  sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
+  private subscriptions: Subscription[] = [];
 
   @ViewChild(AddSublabelModalComponent) addSublabelModal!: AddSublabelModalComponent;
   
@@ -103,11 +107,36 @@ export class ChildBrandsTabComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadChildBrands();
+    
+    // Subscribe to global sublabel creation state
+    const stateSubscription = this.adminService.sublabelCreationState$.subscribe(
+      (state) => {
+        this.sublabelCreationState = state;
+      }
+    );
+    this.subscriptions.push(stateSubscription);
+    
+    // Subscribe to sublabel completion events to refresh the list
+    const completionSubscription = this.adminService.sublabelCompletion$.subscribe(
+      (event: SublabelCompletionEvent | null) => {
+        if (event) {
+          // Refresh the child brands list to show the new sublabel
+          this.loadChildBrands();
+        }
+      }
+    );
+    this.subscriptions.push(completionSubscription);
+    
+  }
+  
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   loadChildBrands(): void {
@@ -118,6 +147,7 @@ export class ChildBrandsTabComponent implements OnInit {
       this.endDate || undefined
     ).subscribe({
       next: (brands) => {
+        
         this.childBrands = brands;
         this.applySorting();
         this.pagination.total_count = brands.length;
@@ -207,6 +237,10 @@ export class ChildBrandsTabComponent implements OnInit {
 
   // Modal handlers
   openAddSublabelModal(): void {
+    // Don't open modal if sublabel creation is in progress
+    if (this.sublabelCreationState.inProgress) {
+      return;
+    }
     this.showAddSublabelModal = true;
   }
 
@@ -217,6 +251,31 @@ export class ChildBrandsTabComponent implements OnInit {
   onCreateSublabel(data: { brandName: string, subdomainName: string }): void {
     this.adminService.createSublabel(data.brandName, '', data.subdomainName).subscribe({
       next: (response: CreateSublabelResponse) => {
+        console.log('[Sublabel Creation] API Response:', response);
+        
+        // Check if this is an async operation
+        if (response.status === 'processing') {
+          // Start tracking through global service
+          const sublabelName = response.brand_name || data.brandName;
+          this.adminService.startSublabelCreationTracking(sublabelName);
+          
+          console.log(`[Sublabel Creation] Starting async creation for "${sublabelName}"`);
+          
+          // Show initial async notification
+          this.notificationService.showInfo(
+            `We are building your new sublabel! This may take a few minutes. We'll notify you when it's ready!`
+          );
+          
+          // Reset form and close modal immediately
+          if (this.addSublabelModal) {
+            this.addSublabelModal.resetFormAfterSuccess();
+          }
+          this.closeAddSublabelModal();
+          
+          return;
+        }
+        
+        // Handle legacy synchronous response
         const message = response.message || 'Sublabel created successfully';
         this.notificationService.showSuccess(message);
         
@@ -239,7 +298,10 @@ export class ChildBrandsTabComponent implements OnInit {
         this.loadChildBrands(); // Refresh the list
       },
       error: (error) => {
-        console.error('Error creating sublabel:', error);
+        console.error('[Sublabel Creation] Error response:', error);
+        console.error('[Sublabel Creation] Error status:', error.status);
+        console.error('[Sublabel Creation] Error body:', error.error);
+        
         const errorMessage = error.error?.error || 'Failed to create sublabel';
         this.notificationService.showError(errorMessage);
         // Reset the modal's submitting state to allow retry
@@ -281,4 +343,5 @@ export class ChildBrandsTabComponent implements OnInit {
   hasDomains(childBrand: ChildBrand): boolean {
     return !!(childBrand.domains && childBrand.domains.length > 0);
   }
+
 }
