@@ -621,6 +621,42 @@ export const verifyDomain = async (req: Request, res: Response) => {
 
 // Child Brands (Sublabel) Management
 
+// Helper function to calculate sublabel status based on domains
+const calculateSublabelStatus = (domains: Array<{ status: string }>): string => {
+  if (domains.length === 0) {
+    return 'No domains';
+  }
+  
+  const statuses = domains.map(d => d.status);
+  const connectedCount = statuses.filter(s => s === 'Connected').length;
+  const unverifiedCount = statuses.filter(s => s === 'Unverified').length;
+  const noSslCount = statuses.filter(s => s === 'No SSL').length;
+  const pendingCount = statuses.filter(s => s === 'Pending').length;
+  
+  // At least one domain is pending
+  if (pendingCount > 0) {
+    return 'Pending';
+  }
+  
+  // All domains are connected
+  if (connectedCount === statuses.length) {
+    return 'OK';
+  }
+  
+  // All domains are unverified
+  if (unverifiedCount === statuses.length) {
+    return 'Unverified';
+  }
+  
+  // Some domains are unverified or have no SSL
+  if (unverifiedCount > 0 || noSslCount > 0) {
+    return 'Warning';
+  }
+  
+  // Default case - should not happen but return warning for safety
+  return 'Warning';
+};
+
 interface ChildBrandData {
   brand_id: number;
   brand_name: string;
@@ -629,6 +665,7 @@ interface ChildBrandData {
   payments: number;
   commission: number;
   balance: number;
+  status: string;
   domains: Array<{
     domain_name: string;
     status: string;
@@ -741,6 +778,12 @@ export const getChildBrands = async (req: Request, res: Response) => {
         order: [['status', 'DESC']] // Verified domains first
       });
 
+      const domainData = domains.map(d => ({
+        domain_name: d.domain_name,
+        status: d.status,
+        brand_id: childBrand.id
+      }));
+
       childBrandData.push({
         brand_id: childBrand.id,
         brand_name: childBrand.brand_name,
@@ -749,11 +792,8 @@ export const getChildBrands = async (req: Request, res: Response) => {
         payments: payments,
         commission: commission,
         balance: balance,
-        domains: domains.map(d => ({
-          domain_name: d.domain_name,
-          status: d.status,
-          brand_id: childBrand.id
-        }))
+        status: calculateSublabelStatus(domainData),
+        domains: domainData
       });
     }
 

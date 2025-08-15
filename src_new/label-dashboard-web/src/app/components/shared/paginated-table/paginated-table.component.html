@@ -139,6 +139,9 @@
                       {{ item[column.key] }}
                     </span>
                     
+                    <!-- Status badge special handling -->
+                    <span *ngIf="column.key === 'status'" [innerHTML]="getColumnValue(item, column)"></span>
+                    
                     <!-- Balance column with color coding -->
                     <span *ngIf="column.key === 'balance'">
                       <strong [class]="item.balance > 0 ? 'text-success' : (item.balance < 0 ? 'text-danger' : 'text-muted')">
@@ -147,7 +150,7 @@
                     </span>
                     
                     <!-- Default handling -->
-                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance'">
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status'">
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>

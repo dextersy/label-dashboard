@@ -54,6 +54,31 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       align: 'left'
     },
     { 
+      key: 'status', 
+      label: 'Status', 
+      type: 'text',
+      searchable: true,
+      sortable: true,
+      align: 'center',
+      formatter: (item: ChildBrand) => {
+        const status = item.status || 'Unknown';
+        switch (status) {
+          case 'OK':
+            return '<span title="All the domains are connected and SSL certified."><i class="fas fa-check-circle text-success me-1"></i><span class="text-success">OK</span></span>';
+          case 'Pending':
+            return '<span title="Working on it. Please check again in a few minutes."><i class="fas fa-clock text-info me-1"></i><span class="text-info">Pending</span></span>';
+          case 'Warning':
+            return '<span title="Some domains are unverified or have SSL issues"><i class="fas fa-exclamation-triangle text-warning me-1"></i><span class="text-warning">Warning</span></span>';
+          case 'Unverified':
+            return '<span title="You don\'t have any verified domains for this sublabel."><i class="fas fa-times-circle text-danger me-1"></i><span class="text-danger">Unverified</span></span>';
+          case 'No domains':
+            return '<i class="fas fa-minus-circle text-secondary me-1"></i><span class="text-secondary">No domains</span>';
+          default:
+            return '<i class="fas fa-question-circle text-muted me-1"></i><span class="text-muted">Unknown</span>';
+        }
+      }
+    },
+    { 
       key: 'music_earnings', 
       label: 'Net Music Earnings', 
       type: 'number',
@@ -135,12 +160,25 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     const completionSubscription = this.adminService.sublabelCompletion$.subscribe(
       (event: SublabelCompletionEvent | null) => {
         if (event) {
+          console.log('[ChildBrands] Sublabel creation completed, refreshing table:', event);
           // Refresh the child brands list to show the new sublabel
           this.loadChildBrands();
         }
       }
     );
     this.subscriptions.push(completionSubscription);
+    
+    // Subscribe to domain verification completion events to refresh the list
+    const domainVerificationCompletionSubscription = this.adminService.domainVerificationCompletion$.subscribe(
+      (event: any) => {
+        if (event) {
+          console.log('[ChildBrands] Domain verification completed, refreshing table:', event);
+          // Refresh the child brands list to show updated domain statuses
+          this.loadChildBrands();
+        }
+      }
+    );
+    this.subscriptions.push(domainVerificationCompletionSubscription);
     
   }
   
@@ -372,5 +410,6 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   hasDomains(childBrand: ChildBrand): boolean {
     return !!(childBrand.domains && childBrand.domains.length > 0);
   }
+
 
 }
