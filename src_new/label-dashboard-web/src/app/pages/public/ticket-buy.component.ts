@@ -162,10 +162,60 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
+      weekday: 'long',
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     });
+  }
+
+  formatEventTime(dateString?: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  formatVenueDisplay(event: PublicEvent): string {
+    if (!event) return '';
+    
+    // If we have venue address, show structured format: "Venue Name, Address"
+    if (event.venue_address && event.venue_address.trim()) {
+      return `${event.venue}, ${event.venue_address}`;
+    }
+    
+    // Fallback to just venue name
+    return event.venue;
+  }
+
+  hasVenueAddress(event: PublicEvent): boolean {
+    return !!(event?.venue_address && event.venue_address.trim());
+  }
+
+  hasVenueMapsLink(event: PublicEvent): boolean {
+    if (!event) return false;
+    
+    // Only show maps link if we have specific location data (not just venue name)
+    return !!(event.venue_maps_url && event.venue_maps_url.trim()) ||
+           !!(event.venue_latitude && event.venue_longitude) ||
+           !!(event.venue_address && event.venue_address.trim());
+  }
+
+  getVenueMapsLink(event: PublicEvent): string {
+    if (!event) return '';
+    
+    // Only generate maps links for specific location data (not just venue name)
+    if (event.venue_maps_url && event.venue_maps_url.trim()) {
+      return event.venue_maps_url;
+    } else if (event.venue_latitude && event.venue_longitude) {
+      return `https://www.google.com/maps?q=${event.venue_latitude},${event.venue_longitude}`;
+    } else if (event.venue_address && event.venue_address.trim()) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue_address)}`;
+    }
+    return '';
   }
 
   onSubmit() {
@@ -208,4 +258,5 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     const brandName = this.currentBrand?.name || this.event.brand?.name;
     this.metaService.updateEventTicketMetadata(this.event, brandName);
   }
+
 }

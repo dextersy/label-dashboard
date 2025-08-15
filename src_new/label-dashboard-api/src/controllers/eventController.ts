@@ -248,7 +248,14 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       ticket_naming,
       buy_shortlink,
       slug,
-      countdown_display
+      countdown_display,
+      google_place_id,
+      venue_address,
+      venue_latitude,
+      venue_longitude,
+      venue_phone,
+      venue_website,
+      venue_maps_url
     } = req.body;
 
     if (!title || !date_and_time || !venue || !ticket_price) {
@@ -309,7 +316,14 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       ticket_naming: ticket_naming || 'Regular',
       buy_shortlink: buy_shortlink || '', // Placeholder, will be updated below
       countdown_display: countdown_display || '1_week',
-      brand_id: req.user.brand_id
+      brand_id: req.user.brand_id,
+      google_place_id: google_place_id || null,
+      venue_address: venue_address || null,
+      venue_latitude: venue_latitude || null,
+      venue_longitude: venue_longitude || null,
+      venue_phone: venue_phone || null,
+      venue_website: venue_website || null,
+      venue_maps_url: venue_maps_url || null
     });
 
     // Generate shortlinks with actual event ID
@@ -385,7 +399,14 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ticket_naming,
       buy_shortlink,
       slug,
-      countdown_display
+      countdown_display,
+      google_place_id,
+      venue_address,
+      venue_latitude,
+      venue_longitude,
+      venue_phone,
+      venue_website,
+      venue_maps_url
     } = req.body;
 
     const event = await Event.findOne({
@@ -483,7 +504,14 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       max_tickets: max_tickets !== undefined ? max_tickets : event.max_tickets,
       ticket_naming: ticket_naming || event.ticket_naming,
       buy_shortlink: updatedBuyLink,
-      countdown_display: countdown_display !== undefined ? countdown_display : event.countdown_display
+      countdown_display: countdown_display !== undefined ? countdown_display : event.countdown_display,
+      google_place_id: google_place_id !== undefined ? (google_place_id === '' ? null : google_place_id) : event.google_place_id,
+      venue_address: venue_address !== undefined ? (venue_address === '' ? null : venue_address) : event.venue_address,
+      venue_latitude: venue_latitude !== undefined ? (venue_latitude === '' ? null : venue_latitude) : event.venue_latitude,
+      venue_longitude: venue_longitude !== undefined ? (venue_longitude === '' ? null : venue_longitude) : event.venue_longitude,
+      venue_phone: venue_phone !== undefined ? (venue_phone === '' ? null : venue_phone) : event.venue_phone,
+      venue_website: venue_website !== undefined ? (venue_website === '' ? null : venue_website) : event.venue_website,
+      venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url
     });
 
     res.json({
@@ -1321,7 +1349,11 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
         title: ticket.event.title,
         date_and_time: ticket.event.date_and_time,
         venue: ticket.event.venue,
-        rsvp_link: ticket.event.rsvp_link
+        rsvp_link: ticket.event.rsvp_link,
+        venue_address: ticket.event.venue_address,
+        venue_latitude: ticket.event.venue_latitude,
+        venue_longitude: ticket.event.venue_longitude,
+        venue_maps_url: ticket.event.venue_maps_url
       },
       {
         brand_name: ticket.event.brand?.brand_name

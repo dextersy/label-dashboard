@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, Input, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Event } from '../../../services/event.service';
+import { VenueAutocompleteComponent, VenueSelection } from '../../shared/venue-autocomplete/venue-autocomplete.component';
 
 export interface CreateEventForm {
   title: string;
@@ -14,12 +15,19 @@ export interface CreateEventForm {
   poster_file?: File;
   rsvp_link: string;
   slug: string;
+  google_place_id?: string;
+  venue_address?: string;
+  venue_latitude?: number;
+  venue_longitude?: number;
+  venue_phone?: string;
+  venue_website?: string;
+  venue_maps_url?: string;
 }
 
 @Component({
   selector: 'app-create-event-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VenueAutocompleteComponent],
   templateUrl: './create-event-modal.component.html',
   styles: [`
     .modal {
@@ -43,6 +51,7 @@ export class CreateEventModalComponent implements OnChanges {
   eventForm: FormGroup;
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
+  selectedVenue: VenueSelection | null = null;
 
   constructor(private fb: FormBuilder) {
     this.eventForm = this.fb.group({
@@ -71,6 +80,19 @@ export class CreateEventModalComponent implements OnChanges {
       if (this.selectedPosterFile) {
         formData.poster_file = this.selectedPosterFile;
       }
+      
+      // Include venue data from Google Places
+      if (this.selectedVenue) {
+        formData.venue = this.selectedVenue.venue;
+        formData.google_place_id = this.selectedVenue.google_place_id;
+        formData.venue_address = this.selectedVenue.venue_address;
+        formData.venue_latitude = this.selectedVenue.venue_latitude;
+        formData.venue_longitude = this.selectedVenue.venue_longitude;
+        formData.venue_phone = this.selectedVenue.venue_phone;
+        formData.venue_website = this.selectedVenue.venue_website;
+        formData.venue_maps_url = this.selectedVenue.venue_maps_url;
+      }
+      
       this.eventCreate.emit(formData);
     } else {
       // Mark all fields as touched to show validation errors
@@ -120,6 +142,13 @@ export class CreateEventModalComponent implements OnChanges {
     }
   }
 
+  onVenueSelected(venue: VenueSelection): void {
+    this.selectedVenue = venue;
+    this.eventForm.patchValue({
+      venue: venue.venue
+    });
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     // Reset and set default values when modal is opened
     if (changes['isOpen'] && this.isOpen) {
@@ -133,6 +162,9 @@ export class CreateEventModalComponent implements OnChanges {
     
     // Clear poster selection
     this.removePoster();
+    
+    // Clear venue selection
+    this.selectedVenue = null;
     
     // Set default values
     const tomorrow = new Date();

@@ -16,3 +16,7 @@ WEB_BUILD_COMMAND="npm run build -- --configuration production"
 
 # PM2 Configuration
 PM2_APP_NAME="app"
+
+# API Keys Configuration (Optional)
+# If not set here, the script will check environment variables
+# GOOGLE_MAPS_API_KEY_CONFIG="your-google-maps-api-key-here"

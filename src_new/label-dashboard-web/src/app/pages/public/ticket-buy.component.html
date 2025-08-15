@@ -40,10 +40,25 @@
           </div>
           <div [class]="event.poster_url ? 'col-md-8' : 'col-md-12 text-center'" style="padding:20px;">
             <div *ngIf="!event.is_closed && (!event.remaining_tickets || (event.remaining_tickets != null && event.remaining_tickets > 0))">
-              <h5>Get tickets to</h5>
-              <h1><strong>{{ event.title }}</strong></h1>
-              <h5><strong>{{ formatEventDate(event.date_and_time) }}</strong> at <strong>{{ event.venue }}</strong></h5>
-              <small [innerHTML]="event.description"></small>
+              <h5 class="mb-0">Get tickets to</h5>
+              <h1 style="margin-top: 0 !important;"><strong>{{ event.title }}</strong></h1>
+              
+              <!-- Event Details Section -->
+              <div class="event-details mt-3 mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="mb-2">
+                  <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
+                </div>
+                <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
+                  <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
+                    🗺️ View on Google Maps
+                  </a>
+                </div>
+              </div>
+              
+              <small [innerHTML]="event.description" style="font-size: 0.8rem;" class="description-text"></small>
             </div>
             <div *ngIf="event.is_closed || (event.remaining_tickets != null && event.remaining_tickets <= 0)">
               <h1 style="font-size:2.5rem;font-weight:bold;">Sorry, we're closed...</h1>
@@ -261,3 +276,4 @@
     </div>
   </div>
 </div>
+

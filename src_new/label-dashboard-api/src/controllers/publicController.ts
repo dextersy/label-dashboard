@@ -140,6 +140,13 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         supports_maya: event.supports_maya,
         supports_grabpay: event.supports_grabpay,
         buy_shortlink: event.buy_shortlink,
+        google_place_id: event.google_place_id,
+        venue_address: event.venue_address,
+        venue_latitude: event.venue_latitude,
+        venue_longitude: event.venue_longitude,
+        venue_phone: event.venue_phone,
+        venue_website: event.venue_website,
+        venue_maps_url: event.venue_maps_url,
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,

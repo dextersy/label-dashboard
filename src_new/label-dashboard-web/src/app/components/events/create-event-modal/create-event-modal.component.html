@@ -43,13 +43,13 @@
             <!-- Venue -->
             <div class="col-md-6 mb-3">
               <label class="form-label required">Venue</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                formControlName="venue"
-                placeholder="Enter venue name"
-                [class.is-invalid]="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
-              <div class="invalid-feedback" *ngIf="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
+              <app-venue-autocomplete
+                placeholder="Search for venue or enter manually..."
+                [required]="true"
+                [hasError]="!!(eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched)"
+                (venueSelected)="onVenueSelected($event)">
+              </app-venue-autocomplete>
+              <div class="invalid-feedback d-block" *ngIf="eventForm.get('venue')?.invalid && eventForm.get('venue')?.touched">
                 Venue is required
               </div>
             </div>

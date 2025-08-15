@@ -685,6 +685,16 @@ input.material:not(:focus)::placeholder {
       overflow-wrap: break-word !important;
     }
   }
+  
+  // Handle paragraph elements within the description to make them more compact
+  .description-text {
+    ::ng-deep p {
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1.3 !important;
+      font-size: 1.5em;
+    }
+  }
 }
 
 /* Utility classes */

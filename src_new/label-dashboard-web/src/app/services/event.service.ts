@@ -30,6 +30,13 @@ export interface Event {
   ticket_naming: string;
   tickets?: EventTicket[];
   referrers?: EventReferrer[];
+  google_place_id?: string | null;
+  venue_address?: string | null;
+  venue_latitude?: number | null;
+  venue_longitude?: number | null;
+  venue_phone?: string | null;
+  venue_website?: string | null;
+  venue_maps_url?: string | null;
 }
 
 export interface EventTicket {

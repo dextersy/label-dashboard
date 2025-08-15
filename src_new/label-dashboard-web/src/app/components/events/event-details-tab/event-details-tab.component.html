@@ -32,13 +32,15 @@
 
             <div class="mb-3">
               <label class="form-label required">Venue</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                [(ngModel)]="event.venue" 
+              <app-venue-autocomplete
+                placeholder="Search for venue or enter manually..."
+                [required]="true"
+                [hasError]="false"
+                [ngModel]="currentVenueSelection"
                 name="venue"
-                placeholder="Event Venue"
-                required>
+                (ngModelChange)="onVenueSelected($event)"
+                (venueSelected)="onVenueSelected($event)">
+              </app-venue-autocomplete>
             </div>
 
             <div class="mb-3">

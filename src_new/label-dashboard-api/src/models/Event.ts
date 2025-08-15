@@ -25,6 +25,13 @@ interface EventAttributes {
   max_tickets?: number;
   ticket_naming: string;
   countdown_display: 'always' | '1_week' | '3_days' | '1_day' | 'never';
+  google_place_id?: string;
+  venue_address?: string;
+  venue_latitude?: number;
+  venue_longitude?: number;
+  venue_phone?: string;
+  venue_website?: string;
+  venue_maps_url?: string;
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -53,6 +60,13 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public max_tickets?: number;
   public ticket_naming!: string;
   public countdown_display!: 'always' | '1_week' | '3_days' | '1_day' | 'never';
+  public google_place_id?: string;
+  public venue_address?: string;
+  public venue_latitude?: number;
+  public venue_longitude?: number;
+  public venue_phone?: string;
+  public venue_website?: string;
+  public venue_maps_url?: string;
 
   // Association properties
   public brand?: any;
@@ -174,6 +188,34 @@ Event.init(
       type: DataTypes.ENUM('always', '1_week', '3_days', '1_day', 'never'),
       allowNull: false,
       defaultValue: '1_week',
+    },
+    google_place_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    venue_address: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    venue_latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+    },
+    venue_longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+    },
+    venue_phone: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    venue_website: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    venue_maps_url: {
+      type: DataTypes.STRING(1000),
+      allowNull: true,
     },
   },
   {

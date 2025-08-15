@@ -25,6 +25,13 @@ export interface PublicEvent {
   supports_maya: boolean;
   supports_grabpay: boolean;
   buy_shortlink?: string;
+  google_place_id?: string;
+  venue_address?: string;
+  venue_latitude?: number;
+  venue_longitude?: number;
+  venue_phone?: string;
+  venue_website?: string;
+  venue_maps_url?: string;
   brand?: {
     id: number;
     name: string;

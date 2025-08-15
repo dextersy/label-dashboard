@@ -414,7 +414,11 @@ export class PaymentService {
           title: ticket.event.title,
           date_and_time: ticket.event.date_and_time,
           venue: ticket.event.venue,
-          rsvp_link: ticket.event.rsvp_link
+          rsvp_link: ticket.event.rsvp_link,
+          venue_address: ticket.event.venue_address,
+          venue_latitude: ticket.event.venue_latitude,
+          venue_longitude: ticket.event.venue_longitude,
+          venue_maps_url: ticket.event.venue_maps_url
         },
         {
           brand_name: ticket.event.brand.brand_name

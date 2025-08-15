@@ -60,6 +60,10 @@ export const sendTicketEmail = async (
     date_and_time: Date;
     venue: string;
     rsvp_link?: string;
+    venue_address?: string;
+    venue_latitude?: number;
+    venue_longitude?: number;
+    venue_maps_url?: string;
   },
   brand: {
     brand_name?: string;
@@ -70,18 +74,67 @@ export const sendTicketEmail = async (
     // Get or create QR code from S3
     const qrCodeUrl = await QRCodeService.getOrCreateQRCodeUrl(event.id, ticket.ticket_code);
 
+    // Format event date and time
+    const eventDate = new Date(event.date_and_time);
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const formattedTime = eventDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    // Generate Google Maps link only if specific location data is available
+    let mapsLink = '';
+    if (event.venue_maps_url && event.venue_maps_url.trim()) {
+      mapsLink = event.venue_maps_url;
+    } else if (event.venue_latitude && event.venue_longitude) {
+      mapsLink = `https://www.google.com/maps?q=${event.venue_latitude},${event.venue_longitude}`;
+    } else if (event.venue_address && event.venue_address.trim()) {
+      mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue_address)}`;
+    }
+
+    // Prepare template data with conditional sections
+    const templateData: any = {
+      name: ticket.name,
+      event_name: event.title,
+      event_date: formattedDate,
+      event_time: formattedTime,
+      event_venue: event.venue,
+      event_venue_address: event.venue_address || '',
+      event_maps_link: mapsLink,
+      qr_code: qrCodeUrl,
+      ticket_code: ticket.ticket_code,
+      no_of_entries: ticket.number_of_entries,
+      rsvp_link: event.rsvp_link || '',
+      brand_name: brand.brand_name || 'Melt Records'
+    };
+
+    // Add conditional sections
+    if (event.venue_address && event.venue_address.trim()) {
+      templateData.show_address = '';
+      templateData['/show_address'] = '';
+    } else {
+      templateData.show_address = '<!--';
+      templateData['/show_address'] = '-->';
+    }
+
+    if (mapsLink && mapsLink.trim()) {
+      templateData.show_maps_link = '';
+      templateData['/show_maps_link'] = '';
+    } else {
+      templateData.show_maps_link = '<!--';
+      templateData['/show_maps_link'] = '-->';
+    }
+
     await sendBrandedEmail(
       ticket.email_address,
       'event_ticket_email',
-      {
-        name: ticket.name,
-        event_name: event.title,
-        qr_code: qrCodeUrl,
-        ticket_code: ticket.ticket_code,
-        no_of_entries: ticket.number_of_entries,
-        rsvp_link: event.rsvp_link || '',
-        brand_name: brand.brand_name || 'Melt Records'
-      },
+      templateData,
       brandId
     );
 

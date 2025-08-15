@@ -4,12 +4,20 @@ import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
 import { QuillModule } from 'ngx-quill';
+import { VenueAutocompleteComponent, VenueSelection } from '../../shared/venue-autocomplete/venue-autocomplete.component';
 
 export interface EventDetails {
   id?: number;
   title: string;
   date_and_time: string;
   venue: string;
+  google_place_id?: string;
+  venue_address?: string;
+  venue_latitude?: number;
+  venue_longitude?: number;
+  venue_phone?: string;
+  venue_website?: string;
+  venue_maps_url?: string;
   description: string;
   poster_url?: string;
   rsvp_link: string;
@@ -36,7 +44,7 @@ export interface EventDetails {
 @Component({
   selector: 'app-event-details-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, VenueAutocompleteComponent],
   templateUrl: './event-details-tab.component.html',
   styleUrl: './event-details-tab.component.scss'
 })
@@ -48,6 +56,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('eventForm') eventForm!: NgForm;
 
   event: EventDetails | null = null;
+  currentVenueSelection: VenueSelection | null = null;
   loading = false;
   refreshingPIN = false;
   selectedPosterFile: File | null = null;
@@ -92,6 +101,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         next: (event) => {
           this.event = this.convertEventToDetails(event);
           this.formatDatesForDisplay();
+          this.updateCurrentVenueSelection();
           this.loading = false;
         },
         error: (error) => {
@@ -112,6 +122,13 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       title: event.title,
       date_and_time: event.date_and_time,
       venue: event.venue,
+      google_place_id: (event as any).google_place_id,
+      venue_address: (event as any).venue_address,
+      venue_latitude: (event as any).venue_latitude,
+      venue_longitude: (event as any).venue_longitude,
+      venue_phone: (event as any).venue_phone,
+      venue_website: (event as any).venue_website,
+      venue_maps_url: (event as any).venue_maps_url,
       description: event.description || '',
       poster_url: event.poster_url,
       rsvp_link: event.rsvp_link || '',
@@ -225,6 +242,8 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       supports_maya: true,
       supports_grabpay: true
     };
+    
+    this.updateCurrentVenueSelection();
   }
 
   generateVerificationPIN(): string {
@@ -243,6 +262,52 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     if (this.event && !this.event.id && !this.event.slug) {
       this.generateSlug();
     }
+  }
+
+  onVenueSelected(venueSelection: VenueSelection | null): void {
+    if (this.event && venueSelection) {
+      this.event.venue = venueSelection.venue || '';
+      this.event.google_place_id = venueSelection.google_place_id;
+      this.event.venue_address = venueSelection.venue_address;
+      this.event.venue_latitude = venueSelection.venue_latitude;
+      this.event.venue_longitude = venueSelection.venue_longitude;
+      this.event.venue_phone = venueSelection.venue_phone;
+      this.event.venue_website = venueSelection.venue_website;
+      this.event.venue_maps_url = venueSelection.venue_maps_url;
+      
+      // Update the current selection to prevent infinite loops
+      this.currentVenueSelection = { ...venueSelection };
+    } else if (this.event && !venueSelection) {
+      // Handle case where venue is cleared
+      this.event.venue = '';
+      this.event.google_place_id = undefined;
+      this.event.venue_address = undefined;
+      this.event.venue_latitude = undefined;
+      this.event.venue_longitude = undefined;
+      this.event.venue_phone = undefined;
+      this.event.venue_website = undefined;
+      this.event.venue_maps_url = undefined;
+      
+      this.currentVenueSelection = null;
+    }
+  }
+
+  private updateCurrentVenueSelection(): void {
+    if (!this.event) {
+      this.currentVenueSelection = null;
+      return;
+    }
+    
+    this.currentVenueSelection = {
+      venue: this.event.venue || '',
+      google_place_id: this.event.google_place_id,
+      venue_address: this.event.venue_address,
+      venue_latitude: this.event.venue_latitude,
+      venue_longitude: this.event.venue_longitude,
+      venue_phone: this.event.venue_phone,
+      venue_website: this.event.venue_website,
+      venue_maps_url: this.event.venue_maps_url
+    };
   }
 
   resetPIN(): void {
@@ -341,6 +406,15 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       formData.append('max_tickets', (this.event.max_tickets || 0).toString());
       formData.append('countdown_display', this.event.countdown_display);
       
+      // Add venue location data (always include to allow clearing)
+      formData.append('google_place_id', this.event.google_place_id || '');
+      formData.append('venue_address', this.event.venue_address || '');
+      formData.append('venue_latitude', this.event.venue_latitude?.toString() || '');
+      formData.append('venue_longitude', this.event.venue_longitude?.toString() || '');
+      formData.append('venue_phone', this.event.venue_phone || '');
+      formData.append('venue_website', this.event.venue_website || '');
+      formData.append('venue_maps_url', this.event.venue_maps_url || '');
+      
       // Add payment method support flags
       formData.append('supports_gcash', this.event.supports_gcash.toString());
       formData.append('supports_qrph', this.event.supports_qrph.toString());
@@ -380,6 +454,13 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         title: this.event.title,
         date_and_time: this.formatDateForAPI(this.event.date_and_time),
         venue: this.event.venue,
+        google_place_id: this.event.google_place_id ?? null,
+        venue_address: this.event.venue_address ?? null,
+        venue_latitude: this.event.venue_latitude ?? null,
+        venue_longitude: this.event.venue_longitude ?? null,
+        venue_phone: this.event.venue_phone ?? null,
+        venue_website: this.event.venue_website ?? null,
+        venue_maps_url: this.event.venue_maps_url ?? null,
         description: this.event.description,
         poster_url: this.event.poster_url,
         rsvp_link: this.event.rsvp_link,

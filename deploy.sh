@@ -2,6 +2,7 @@
 
 # Label Dashboard Deployment Script
 # This script builds and deploys both the API and Web applications to production
+# Incorporates environment variable handling from deploy-example.sh
 
 set -e  # Exit on any error
 
@@ -123,9 +124,47 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
+# Handle environment configuration for Web application
+print_status "Configuring production environment..."
+
+# Check if Google Maps API key is set in environment or config
+GOOGLE_MAPS_API_KEY_SOURCE=""
+if [ ! -z "$GOOGLE_MAPS_API_KEY" ]; then
+    GOOGLE_MAPS_API_KEY_SOURCE="environment variable"
+elif [ ! -z "$GOOGLE_MAPS_API_KEY_CONFIG" ]; then
+    GOOGLE_MAPS_API_KEY="$GOOGLE_MAPS_API_KEY_CONFIG"
+    GOOGLE_MAPS_API_KEY_SOURCE="deploy.config"
+fi
+
+if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+    print_warning "Google Maps API key not found in environment variables or deploy.config"
+    print_warning "The application will build but Google Places autocomplete may not work"
+    print_warning "To fix this, set GOOGLE_MAPS_API_KEY environment variable or add GOOGLE_MAPS_API_KEY_CONFIG to deploy.config"
+else
+    print_status "Using Google Maps API key from $GOOGLE_MAPS_API_KEY_SOURCE"
+    
+    # Create production environment file from template
+    if [ -f "src/environments/environment.prod.example.ts" ]; then
+        print_status "Creating production environment file from template..."
+        cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
+        
+        # Replace the placeholder with actual API key
+        sed -i "s/YOUR_PRODUCTION_GOOGLE_PLACES_API_KEY_HERE/$GOOGLE_MAPS_API_KEY/g" src/environments/environment.prod.ts
+        print_success "Environment file configured with API key"
+    else
+        print_warning "environment.prod.example.ts not found, skipping API key replacement"
+    fi
+fi
+
 # Build Web
 print_status "Running Web build command: $WEB_BUILD_COMMAND"
 eval "$WEB_BUILD_COMMAND"
+
+# Clean up temporary environment file
+if [ -f "src/environments/environment.prod.ts" ]; then
+    print_status "Cleaning up temporary environment file..."
+    rm -f src/environments/environment.prod.ts
+fi
 
 if [ ! -d "dist-prod" ]; then
     print_error "Web build failed - dist directory not found"
