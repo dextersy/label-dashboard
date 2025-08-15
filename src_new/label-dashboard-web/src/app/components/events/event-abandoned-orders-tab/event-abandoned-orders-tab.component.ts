@@ -420,6 +420,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       number_of_entries: this.customTicketForm.number_of_entries,
       send_email: this.customTicketForm.send_email,
       price_per_ticket: this.priceOverrideEnabled ? this.customTicketForm.price_per_ticket : undefined,
+      payment_processing_fee: this.customTicketForm.payment_processing_fee,
       referrer_code: this.customTicketForm.referral_code || undefined
     };
     

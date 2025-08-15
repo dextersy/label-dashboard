@@ -574,7 +574,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       number_of_entries = 1,
       referrer_code,
       send_email = true,
-      price_per_ticket
+      price_per_ticket,
+      payment_processing_fee
     } = req.body;
 
     if (!event_id || !name || !email_address) {
@@ -620,9 +621,9 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
     // Use custom price if provided, otherwise use event's default price
     const ticketPrice = price_per_ticket !== undefined ? price_per_ticket : event.ticket_price;
     
-    // Calculate total amount and processing fee (no processing fee for custom tickets)
+    // Calculate total amount and processing fee
     const totalAmount = ticketPrice * number_of_entries;
-    const processingFee = 0; // No processing fee for custom tickets created by admin
+    const processingFee = payment_processing_fee !== undefined ? Number(payment_processing_fee) : 0;
 
     // Create PayMongo payment link
     const paymentLink = await paymentService.createPaymentLink({
