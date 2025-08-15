@@ -620,7 +620,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       payment_link_id: paymentLink.id,
       price_per_ticket: ticketPrice,
       payment_processing_fee: processingFee,
-      referrer_id: referrer?.id || null
+      referrer_id: referrer?.id || null,
+      order_timestamp: new Date()
     });
 
     // Send payment link email if requested

@@ -395,7 +395,8 @@ export const buyTicket = async (req: Request, res: Response) => {
       ticket_code: ticketCode,
       status: 'New',
       price_per_ticket: event.ticket_price,
-      referrer_id: referrer?.id || null
+      referrer_id: referrer?.id || null,
+      order_timestamp: new Date()
     });
 
     // Store checkout session info in ticket
