@@ -508,6 +508,58 @@ export class EventService {
   }
 
   /**
+   * Export all tickets for an event to CSV (bypasses pagination and filters)
+   */
+  exportEventTicketsCsv(eventId: number): Observable<{
+    event_id: number;
+    event_title: string;
+    tickets: any[];
+    total_count: number;
+  }> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.get<{
+      event_id: number;
+      event_title: string;
+      tickets: any[];
+      total_count: number;
+    }>(`${environment.apiUrl}/events/tickets/csv`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Export all pending tickets for an event to CSV (bypasses pagination and filters)
+   */
+  exportEventPendingTicketsCsv(eventId: number): Observable<{
+    event_id: number;
+    event_title: string;
+    tickets: any[];
+    total_count: number;
+  }> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.get<{
+      event_id: number;
+      event_title: string;
+      tickets: any[];
+      total_count: number;
+    }>(`${environment.apiUrl}/events/tickets/pending/csv`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Send email to all confirmed ticket holders for an event
    */
   sendEventEmail(eventId: number, emailData: { subject: string; message: string; include_banner?: boolean }): Observable<any> {

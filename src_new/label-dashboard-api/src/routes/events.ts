@@ -20,6 +20,8 @@ import {
   sendEventEmail,
   getEventTicketHoldersCount,
   getEventTicketSummary,
+  exportEventTicketsCsv,
+  exportEventPendingTicketsCsv,
   upload
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -54,6 +56,8 @@ router.delete('/referrers/:id', requireAdmin, deleteEventReferrer);
 // Email operations (specific routes before /:id)
 router.get('/ticket-holders-count', getEventTicketHoldersCount);
 router.get('/ticket-summary', getEventTicketSummary);
+router.get('/tickets/csv', exportEventTicketsCsv);
+router.get('/tickets/pending/csv', exportEventPendingTicketsCsv);
 router.post('/send-email', requireAdmin, sendEventEmail);
 
 // Event CRUD operations with :id (these must come last)

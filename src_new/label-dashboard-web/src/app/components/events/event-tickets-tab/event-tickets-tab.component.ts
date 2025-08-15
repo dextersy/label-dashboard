@@ -289,38 +289,60 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onDownloadCSV(): void {
-    if (!this.selectedEvent || !this.tickets.length) {
+    if (!this.selectedEvent) {
       this.alertMessage.emit({
         type: 'error',
-        text: 'No tickets to export.'
+        text: 'No event selected.'
       });
       return;
     }
 
-    // Format data according to PHP format
-    const csvData = this.tickets.map(ticket => [
-      ticket.name,
-      ticket.email_address,
-      ticket.contact_number,
-      ticket.number_of_entries.toString(),
-      ticket.ticket_code,
-      ticket.referrer_name || '', // Include referrer info
-      '' // Notes column (empty in PHP version)
-    ]);
+    // Use the new export endpoint to get ALL tickets
+    this.subscriptions.add(
+      this.eventService.exportEventTicketsCsv(this.selectedEvent.id).subscribe({
+        next: (response) => {
+          if (!response.tickets.length) {
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'No tickets to export.'
+            });
+            return;
+          }
 
-    const filename = `${this.selectedEvent.title.replace(/\s+/g, '_')}_tickets.csv`;
-    
-    this.csvService.downloadCsv({
-      title: `Ticket list for ${this.selectedEvent.title}`,
-      headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Referred By', 'Notes'],
-      data: csvData,
-      filename: filename
-    });
+          // Format data according to PHP format using ALL tickets from export
+          const csvData = response.tickets.map(ticket => [
+            ticket.name,
+            ticket.email_address,
+            ticket.contact_number || '',
+            ticket.number_of_entries.toString(),
+            ticket.ticket_code,
+            ticket.referrer_name || '', // Include referrer info
+            '' // Notes column (empty in PHP version)
+          ]);
 
-    this.alertMessage.emit({
-      type: 'success',
-      text: 'Tickets CSV downloaded successfully!'
-    });
+          const filename = `${response.event_title.replace(/\s+/g, '_')}_tickets.csv`;
+          
+          this.csvService.downloadCsv({
+            title: `Ticket list for ${response.event_title}`,
+            headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Referred By', 'Notes'],
+            data: csvData,
+            filename: filename
+          });
+
+          this.alertMessage.emit({
+            type: 'success',
+            text: `${response.total_count} tickets exported successfully!`
+          });
+        },
+        error: (error) => {
+          console.error('Failed to export tickets:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to export tickets CSV'
+          });
+        }
+      })
+    );
   }
 
   getRowClass(ticket: EventTicket): string {

@@ -323,38 +323,61 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   }
 
   onDownloadCSV(): void {
-    if (!this.selectedEvent || !this.orders.length) {
+    if (!this.selectedEvent) {
       this.alertMessage.emit({
         type: 'error',
-        text: 'No pending tickets to export.'
+        text: 'No event selected.'
       });
       return;
     }
 
-    // Format data according to PHP format (pending tickets include status)
-    const csvData = this.orders.map(order => [
-      order.name,
-      order.email_address,
-      order.contact_number,
-      order.number_of_entries.toString(),
-      '', // Ticket code (empty for pending orders)
-      '', // Notes column (empty in PHP version)
-      order.status
-    ]);
+    // Use the new export endpoint to get ALL pending tickets
+    this.subscriptions.add(
+      this.eventService.exportEventPendingTicketsCsv(this.selectedEvent.id).subscribe({
+        next: (response) => {
+          if (!response.tickets.length) {
+            this.alertMessage.emit({
+              type: 'error',
+              text: 'No pending tickets to export.'
+            });
+            return;
+          }
 
-    const filename = `${this.selectedEvent.title.replace(/\s+/g, '_')}_tickets_pending.csv`;
-    
-    this.csvService.downloadCsv({
-      title: `Pending tickets for ${this.selectedEvent.title}`,
-      headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Notes', 'Status'],
-      data: csvData,
-      filename: filename
-    });
+          // Format data according to PHP format using ALL pending tickets from export
+          const csvData = response.tickets.map(ticket => [
+            ticket.name,
+            ticket.email_address,
+            ticket.contact_number || '',
+            ticket.number_of_entries.toString(),
+            '', // Ticket code (empty for pending orders)
+            ticket.referrer_name || '', // Include referrer info
+            '', // Notes column (empty in PHP version)
+            ticket.status
+          ]);
 
-    this.alertMessage.emit({
-      type: 'success',
-      text: 'Pending tickets CSV downloaded successfully!'
-    });
+          const filename = `${response.event_title.replace(/\s+/g, '_')}_tickets_pending.csv`;
+          
+          this.csvService.downloadCsv({
+            title: `Pending tickets for ${response.event_title}`,
+            headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Referred By', 'Notes', 'Status'],
+            data: csvData,
+            filename: filename
+          });
+
+          this.alertMessage.emit({
+            type: 'success',
+            text: `${response.total_count} pending tickets exported successfully!`
+          });
+        },
+        error: (error) => {
+          console.error('Failed to export pending tickets:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to export pending tickets CSV'
+          });
+        }
+      })
+    );
   }
 
   enablePriceOverride(): void {

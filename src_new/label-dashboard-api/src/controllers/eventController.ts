@@ -1831,3 +1831,134 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventIdNum = parseInt(req.query.event_id as string, 10);
+    
+    if (isNaN(eventIdNum)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify event exists and belongs to user's brand
+    const event = await Event.findOne({
+      where: {
+        id: eventIdNum,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get ALL confirmed tickets for this event (no pagination, no filters)
+    const tickets = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum,
+        status: 'Ticket sent.' // Only confirmed tickets like the main view
+      },
+      include: [
+        { 
+          model: Event, 
+          as: 'event',
+          attributes: ['title']
+        },
+        {
+          model: EventReferrer,
+          as: 'referrer',
+          attributes: ['name'],
+          required: false
+        }
+      ],
+      order: [['id', 'DESC']]
+    });
+
+    // Format tickets for CSV export (matching frontend format)
+    const csvData = tickets.map(ticket => ({
+      name: ticket.name,
+      email_address: ticket.email_address,
+      contact_number: ticket.contact_number || '',
+      number_of_entries: ticket.number_of_entries,
+      ticket_code: ticket.ticket_code,
+      referrer_name: ticket.referrer?.name || '',
+      notes: '' // Empty notes column to match PHP format
+    }));
+
+    res.json({
+      event_id: eventIdNum,
+      event_title: event.title,
+      tickets: csvData,
+      total_count: tickets.length
+    });
+  } catch (error) {
+    console.error('Export event tickets CSV error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventIdNum = parseInt(req.query.event_id as string, 10);
+    
+    if (isNaN(eventIdNum)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify event exists and belongs to user's brand
+    const event = await Event.findOne({
+      where: {
+        id: eventIdNum,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get ALL pending tickets for this event (no pagination, no filters)
+    const tickets = await Ticket.findAll({
+      where: {
+        event_id: eventIdNum,
+        status: ['New', 'Payment Confirmed'] // Pending tickets statuses
+      },
+      include: [
+        { 
+          model: Event, 
+          as: 'event',
+          attributes: ['title']
+        },
+        {
+          model: EventReferrer,
+          as: 'referrer',
+          attributes: ['name'],
+          required: false
+        }
+      ],
+      order: [['id', 'DESC']]
+    });
+
+    // Format tickets for CSV export (matching frontend format for pending orders)
+    const csvData = tickets.map(ticket => ({
+      name: ticket.name,
+      email_address: ticket.email_address,
+      contact_number: ticket.contact_number || '',
+      number_of_entries: ticket.number_of_entries,
+      ticket_code: '', // Empty ticket code for pending orders
+      referrer_name: ticket.referrer?.name || '',
+      notes: '', // Empty notes column to match PHP format
+      status: ticket.status
+    }));
+
+    res.json({
+      event_id: eventIdNum,
+      event_title: event.title,
+      tickets: csvData,
+      total_count: tickets.length
+    });
+  } catch (error) {
+    console.error('Export event pending tickets CSV error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
