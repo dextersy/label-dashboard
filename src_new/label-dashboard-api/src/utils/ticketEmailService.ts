@@ -74,18 +74,20 @@ export const sendTicketEmail = async (
     // Get or create QR code from S3
     const qrCodeUrl = await QRCodeService.getOrCreateQRCodeUrl(event.id, ticket.ticket_code);
 
-    // Format event date and time
+    // Format event date and time in Philippine timezone
     const eventDate = new Date(event.date_and_time);
     const formattedDate = eventDate.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Manila'
     });
     const formattedTime = eventDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZone: 'Asia/Manila'
     });
 
     // Generate Google Maps link only if specific location data is available
