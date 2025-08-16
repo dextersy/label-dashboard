@@ -27,65 +27,7 @@ export interface VenueSelection {
       multi: true
     }
   ],
-  template: `
-    <div class="venue-autocomplete-container" [class.has-error]="hasError">
-      <div class="input-group">
-        <input
-          #searchInput
-          type="text"
-          class="form-control"
-          [placeholder]="placeholder"
-          [value]="displayValue"
-          (input)="onInputChange($event)"
-          (focus)="onFocus()"
-          (blur)="onBlur()"
-          [class.is-invalid]="hasError"
-          autocomplete="off"
-        />
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          *ngIf="selectedVenue && selectedVenue.google_place_id"
-          (click)="clearSelection()"
-          title="Clear selection">
-          <i class="fa fa-times"></i>
-        </button>
-      </div>
-      
-      <!-- Loading indicator -->
-      <div class="text-muted small mt-1" *ngIf="isLoading">
-        <i class="fa fa-spinner fa-spin me-1"></i>Searching places...
-      </div>
-      
-      <!-- Manual entry option -->
-      <div class="form-text small mt-1" *ngIf="showDropdown && predictions.length === 0 && searchQuery.length > 2 && !isLoading">
-        No places found. You can enter the venue name manually.
-      </div>
-      
-      <!-- Selected venue info -->
-      <div class="selected-venue-info mt-2" *ngIf="selectedVenue && selectedVenue.google_place_id">
-        <div class="card card-body bg-light small">
-          <div class="d-flex align-items-start">
-            <i class="fa fa-map-marker-alt text-primary me-2 mt-1"></i>
-            <div class="flex-grow-1">
-              <div class="fw-semibold">{{ selectedVenue.venue }}</div>
-              <div class="text-muted" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</div>
-              <div class="mt-1" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
-                <span class="badge bg-secondary me-1" *ngIf="selectedVenue.venue_phone">
-                  <i class="fa fa-phone me-1"></i>{{ selectedVenue.venue_phone }}
-                </span>
-                <a [href]="selectedVenue.venue_website" target="_blank" 
-                   class="badge bg-primary text-decoration-none" 
-                   *ngIf="selectedVenue.venue_website">
-                  <i class="fa fa-globe me-1"></i>Website
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './venue-autocomplete.component.html',
   styles: [`
     .venue-autocomplete-container {
       position: relative;
@@ -227,17 +169,12 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
       takeUntil(this.destroy$)
     ).subscribe({
       next: (predictions) => {
-        console.log('Venue autocomplete received predictions:', predictions);
         this.predictions = predictions || [];
         this.isLoading = false;
         this.selectedIndex = -1;
-        // Calculate position when we have predictions
-        console.log('Received predictions count:', this.predictions.length);
         if (this.predictions.length > 0) {
-          // Use setTimeout to ensure DOM is updated
           setTimeout(() => {
             this.calculateDropdownPosition();
-            this.createOrUpdateDropdown();
           }, 0);
         } else {
           this.removeDropdownFromBody();
@@ -254,7 +191,6 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
   
   onInputChange(event: any): void {
     const value = event.target.value;
-    console.log('onInputChange called with value:', value);
     this.searchQuery = value;
     this.displayValue = value;
     
@@ -283,25 +219,24 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
     
     this.searchSubject.next(value);
     this.showDropdown = true;
-    console.log('Set showDropdown to true in onInputChange');
-    // Calculate position when showing dropdown
     setTimeout(() => this.calculateDropdownPosition(), 0);
   }
   
   onFocus(): void {
-    console.log('onFocus called, predictions.length:', this.predictions.length, 'searchQuery.length:', this.searchQuery.length);
     this.showDropdown = this.predictions.length > 0 || this.searchQuery.length >= 3;
-    console.log('Set showDropdown to', this.showDropdown, 'in onFocus');
     if (this.showDropdown) {
       this.calculateDropdownPosition();
     }
   }
+
+  private isInputVisible(): boolean {
+    // Check if input should be visible based on our conditional logic
+    return !this.selectedVenue || !this.selectedVenue.google_place_id;
+  }
   
   onBlur(): void {
-    console.log('onBlur called, will hide dropdown in 200ms');
     // Delay hiding dropdown to allow click events on dropdown items
     setTimeout(() => {
-      console.log('onBlur timeout executed, removing dropdown');
       this.removeDropdownFromBody();
       this.onTouched();
     }, 200);
@@ -344,11 +279,19 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
     this.predictions = [];
     this.showDropdown = false;
     
+    // Remove any existing dropdown
+    this.removeDropdownFromBody();
+    
     const emptyVenue: VenueSelection = { venue: '' };
     this.onChange(emptyVenue);
     this.venueSelected.emit(emptyVenue);
     
-    this.searchInput.nativeElement.focus();
+    // Focus the input after the DOM updates to show it
+    setTimeout(() => {
+      if (this.searchInput && this.searchInput.nativeElement) {
+        this.searchInput.nativeElement.focus();
+      }
+    }, 0);
   }
   
   trackByPlaceId(index: number, prediction: GooglePlacesPrediction): string {
@@ -375,28 +318,52 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
   }
 
   private calculateDropdownPosition(): void {
-    console.log('calculateDropdownPosition called, searchInput:', !!this.searchInput);
-    
-    if (!this.searchInput || !this.searchInput.nativeElement) {
-      console.log('No search input found');
+    // Don't show dropdown if we have a selected Google Place
+    if (this.selectedVenue && this.selectedVenue.google_place_id) {
+      this.removeDropdownFromBody();
       return;
     }
     
-    const inputElement = this.searchInput.nativeElement;
-    const rect = inputElement.getBoundingClientRect();
+    let inputElement: HTMLElement | null = null;
     
-    console.log('Input rect:', rect);
+    // Try ViewChild first
+    if (this.searchInput && this.searchInput.nativeElement) {
+      inputElement = this.searchInput.nativeElement;
+    } else {
+      // Fallback: find input in our component's element
+      const containerElement = this.elementRef.nativeElement;
+      inputElement = containerElement.querySelector('input[type="text"]') as HTMLElement;
+    }
     
+    if (!inputElement) {
+      return;
+    }
+    
+    // Wait a tick to ensure element is rendered
+    setTimeout(() => {
+      const rect = inputElement!.getBoundingClientRect();
+      
+      // Ensure we have valid dimensions
+      if (rect.width === 0 || rect.height === 0) {
+        // Retry once after a short delay
+        setTimeout(() => {
+          const retryRect = inputElement!.getBoundingClientRect();
+          if (retryRect.width > 0 && retryRect.height > 0) {
+            this.setDropdownPosition(retryRect);
+          }
+        }, 50);
+        return;
+      }
+      
+      this.setDropdownPosition(rect);
+    }, 0);
+  }
+  
+  private setDropdownPosition(rect: DOMRect): void {
     // Position dropdown below the input
     this.dropdownTop = rect.bottom + window.scrollY + 2; // Add 2px gap
     this.dropdownLeft = rect.left + window.scrollX;
     this.dropdownWidth = rect.width;
-    
-    console.log('Calculated position:', {
-      top: this.dropdownTop,
-      left: this.dropdownLeft,
-      width: this.dropdownWidth
-    });
     
     // Ensure dropdown doesn't go off screen
     const maxHeight = 300;
@@ -407,8 +374,10 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
     // If not enough space below but more space above, position above the input
     if (spaceBelow < maxHeight && spaceAbove > spaceBelow) {
       this.dropdownTop = rect.top + window.scrollY - Math.min(maxHeight, spaceAbove - 10);
-      console.log('Positioned above input, new top:', this.dropdownTop);
     }
+    
+    // Now create or update the dropdown with the calculated position
+    this.createOrUpdateDropdown();
   }
 
   private createOrUpdateDropdown(): void {

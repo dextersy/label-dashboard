@@ -123,17 +123,14 @@ export class GooglePlacesService {
                 this.autocompleteService = new placesLib.AutocompleteService();
               }
               this.isNewApiAvailable = true;
-              console.log('Initialized Google Places with new AutocompleteSuggestion API');
               return;
             } else if (placesLib.AutocompleteService) {
               // Fallback to AutocompleteService within new API
               this.autocompleteService = new placesLib.AutocompleteService();
               this.isNewApiAvailable = true;
-              console.log('Initialized Google Places with AutocompleteService via new API');
               return;
             }
           } catch (importError) {
-            console.warn('New Places API import failed, falling back to legacy API:', importError);
             this.isNewApiAvailable = false;
           }
         }
@@ -141,9 +138,6 @@ export class GooglePlacesService {
         // Fallback to legacy API if new method not available or fails
         if (google.maps.places && google.maps.places.AutocompleteService) {
           this.autocompleteService = new google.maps.places.AutocompleteService();
-          console.log('Initialized Google Places with legacy API');
-        } else {
-          console.error('Neither new nor legacy Google Places API is available');
         }
       }
     } catch (error) {
@@ -156,23 +150,15 @@ export class GooglePlacesService {
    */
   getPlacePredictions(input: string): Observable<GooglePlacesPrediction[]> {
     return new Observable(observer => {
-      console.log('getPlacePredictions called with input:', input);
-      
       // Return empty results if API key not configured
       if (!environment.googleMapsApiKey) {
-        console.log('No API key configured');
         observer.next([]);
         observer.complete();
         return;
       }
 
-      console.log('AutocompleteService available:', !!this.autocompleteService);
-      console.log('New API available:', this.isNewApiAvailable);
-
       if (!this.autocompleteService && !this.isNewApiAvailable) {
-        console.log('Initializing Google Places...');
         this.initializeGooglePlaces().then(() => {
-          console.log('Google Places initialized, performing search');
           this.performSearch(input, observer);
         }).catch(error => {
           console.error('Failed to initialize Google Places for search:', error);
@@ -180,23 +166,17 @@ export class GooglePlacesService {
           observer.complete();
         });
       } else {
-        console.log('Using existing service for search');
         this.performSearch(input, observer);
       }
     });
   }
 
   private async performSearch(input: string, observer: any): Promise<void> {
-    console.log('performSearch called with input:', input);
-    
     try {
       // Try the new AutocompleteSuggestion API first if available
       if (this.isNewApiAvailable && google.maps.importLibrary) {
-        console.log('Trying new AutocompleteSuggestion API...');
         try {
           const placesLib = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
-          console.log('Places library loaded:', !!placesLib);
-          console.log('AutocompleteSuggestion available:', !!placesLib.AutocompleteSuggestion);
           
           if (placesLib.AutocompleteSuggestion) {
             const request = {
@@ -204,9 +184,7 @@ export class GooglePlacesService {
               includedPrimaryTypes: ['restaurant', 'bar', 'night_club', 'tourist_attraction', 'establishment']
             };
 
-            console.log('Making AutocompleteSuggestion request with:', request);
             const suggestions = await placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
-            console.log('AutocompleteSuggestion response:', suggestions);
             
             this.ngZone.run(() => {
               const formattedPredictions: GooglePlacesPrediction[] = suggestions.suggestions.map((suggestion: any) => ({
@@ -218,21 +196,18 @@ export class GooglePlacesService {
                 },
                 types: suggestion.placePrediction?.types || []
               }));
-              console.log('Formatted predictions:', formattedPredictions);
               observer.next(formattedPredictions);
               observer.complete();
             });
             return;
           }
         } catch (newApiError) {
-          console.warn('New AutocompleteSuggestion API failed, falling back to legacy:', newApiError);
+          // Fall back to legacy API
         }
       }
 
       // Fallback to legacy AutocompleteService
-      console.log('Using legacy AutocompleteService fallback');
       if (!this.autocompleteService) {
-        console.error('Google Places Autocomplete service not available');
         observer.error(new Error('Google Places Autocomplete service not available'));
         return;
       }
@@ -243,9 +218,7 @@ export class GooglePlacesService {
         componentRestrictions: { country: [] } // Allow worldwide search
       };
 
-      console.log('Making legacy AutocompleteService request with:', request);
       this.autocompleteService.getPlacePredictions(request, (predictions: google.maps.places.QueryAutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
-        console.log('Legacy AutocompleteService response - status:', status, 'predictions:', predictions);
         this.ngZone.run(() => {
           if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
             const formattedPredictions: GooglePlacesPrediction[] = predictions.map((prediction: google.maps.places.QueryAutocompletePrediction) => ({
@@ -257,10 +230,8 @@ export class GooglePlacesService {
               },
               types: (prediction as any).types || []
             }));
-            console.log('Legacy formatted predictions:', formattedPredictions);
             observer.next(formattedPredictions);
           } else {
-            console.log('Legacy API returned no results');
             observer.next([]);
           }
           observer.complete();
@@ -268,7 +239,6 @@ export class GooglePlacesService {
       });
     } catch (error) {
       this.ngZone.run(() => {
-        console.error('Failed to perform search:', error);
         observer.error(error);
       });
     }
@@ -346,7 +316,7 @@ export class GooglePlacesService {
           });
           return;
         } catch (newApiError) {
-          console.warn('New Places API failed for place details, falling back to legacy:', newApiError);
+          // Fall back to legacy API
         }
       }
 
