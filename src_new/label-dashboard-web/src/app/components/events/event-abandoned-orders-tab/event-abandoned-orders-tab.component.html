@@ -10,9 +10,12 @@
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
     [showActionsColumn]="isAdmin"
+    [enableBulkOperations]="isAdmin"
+    [bulkOperationsLoading]="bulkOperationsLoading"
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
-    (sortChange)="onSortChange($event)">
+    (sortChange)="onSortChange($event)"
+    (selectedItemsChange)="onSelectedItemsChange($event)">
     
     <!-- Custom buttons template -->
     <ng-template #customButtons>
@@ -63,12 +66,31 @@
       </button>
     </ng-template>
     
+    <!-- Bulk operations template -->
+    <ng-template #bulkOperationsContent let-selectedOrders let-disabled="disabled">
+      <div class="bulk-operations d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="onBulkSendTickets(selectedOrders)" [disabled]="disabled || !canBulkSendTickets(selectedOrders)" title="Send tickets for selected orders (only Payment Confirmed)">
+          <i class="fa fa-paper-plane me-1"></i>
+          Send {{ getBulkSendCount(selectedOrders) }} Ticket(s)
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" (click)="onBulkMarkAsPaid(selectedOrders)" [disabled]="disabled || !canBulkMarkAsPaid(selectedOrders)" title="Mark selected orders as paid (only New)">
+          <i class="fa fa-check me-1"></i>
+          Mark {{ getBulkMarkPaidCount(selectedOrders) }} as Paid
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" (click)="onBulkCancel(selectedOrders)" [disabled]="disabled || !canBulkCancel(selectedOrders)" title="Cancel selected orders (only New)">
+          <i class="fa fa-times me-1"></i>
+          Cancel {{ getBulkCancelCount(selectedOrders) }}
+        </button>
+      </div>
+    </ng-template>
+    
     <!-- Actions template -->
-    <ng-template #actionsContent let-order>
+    <ng-template #actionsContent let-order let-disabled="disabled">
       <div class="btn-group" role="group">
         <button 
           class="btn btn-sm btn-outline-primary"
           (click)="onSendTicket(order.id)"
+          [disabled]="disabled"
           *ngIf="order.status === 'Payment Confirmed'"
           title="Send ticket">
           Send Ticket
@@ -76,6 +98,7 @@
         <button 
           class="btn btn-sm btn-outline-success"
           (click)="onMarkAsPaid(order.id)"
+          [disabled]="disabled"
           *ngIf="order.status === 'New'"
           title="Mark as paid">
           Mark Paid
@@ -83,6 +106,7 @@
         <button 
           class="btn btn-sm btn-outline-danger"
           (click)="onCancelOrder(order.id)"
+          [disabled]="disabled"
           *ngIf="order.status === 'New'"
           title="Cancel order">
           Cancel

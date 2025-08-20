@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, TemplateRef, ContentChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, TemplateRef, ContentChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -40,7 +40,7 @@ export interface SortInfo {
   templateUrl: './paginated-table.component.html',
   styleUrl: './paginated-table.component.scss'
 })
-export class PaginatedTableComponent implements OnInit {
+export class PaginatedTableComponent implements OnInit, OnChanges {
   @Input() title: string = '';
   @Input() data: any[] = [];
   @Input() pagination: PaginationInfo | null = null;
@@ -51,17 +51,26 @@ export class PaginatedTableComponent implements OnInit {
   @Input() sortInfo: SortInfo | null = null;
   @Input() showActionsColumn: boolean = false;
   @Input() responsiveMode: 'card' | 'financial' = 'card'; // Choose responsive behavior
+  @Input() enableBulkOperations: boolean = false; // Enable bulk operations functionality
+  @Input() bulkOperationsLoading: boolean = false; // Loading state for bulk operations
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
+  @Output() selectedItemsChange = new EventEmitter<any[]>(); // Emit selected items for bulk operations
 
   @ContentChild('tableContent', { static: false }) tableContent!: TemplateRef<any>;
   @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;
   @ContentChild('customButtons', { static: false }) customButtons!: TemplateRef<any>;
+  @ContentChild('bulkOperationsContent', { static: false }) bulkOperationsContent!: TemplateRef<any>;
 
   searchFilters: SearchFilters = {};
   private searchTimeout: any;
   showSearchFilters: boolean = false;
+  
+  // Bulk operations state
+  selectedItems: Set<any> = new Set();
+  selectAllChecked: boolean = false;
+  selectAllIndeterminate: boolean = false;
 
   // Expose Math to template
   Math = Math;
@@ -75,7 +84,67 @@ export class PaginatedTableComponent implements OnInit {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    // Clear selection when data changes (e.g., after refresh, filter, or bulk operations)
+    if (changes['data'] && !changes['data'].firstChange) {
+      this.clearSelection();
+    }
+  }
+  
+  // Bulk operations methods
+  onSelectAll(checked: boolean): void {
+    if (checked) {
+      this.data.forEach(item => this.selectedItems.add(item));
+    } else {
+      this.selectedItems.clear();
+    }
+    this.updateSelectAllState();
+    this.selectedItemsChange.emit(Array.from(this.selectedItems));
+  }
+  
+  onSelectItem(item: any, checked: boolean): void {
+    if (checked) {
+      this.selectedItems.add(item);
+    } else {
+      this.selectedItems.delete(item);
+    }
+    this.updateSelectAllState();
+    this.selectedItemsChange.emit(Array.from(this.selectedItems));
+  }
+  
+  isItemSelected(item: any): boolean {
+    return this.selectedItems.has(item);
+  }
+  
+  private updateSelectAllState(): void {
+    const selectedCount = this.selectedItems.size;
+    const totalCount = this.data.length;
+    
+    this.selectAllChecked = selectedCount === totalCount && totalCount > 0;
+    this.selectAllIndeterminate = selectedCount > 0 && selectedCount < totalCount;
+  }
+  
+  getSelectedCount(): number {
+    return this.selectedItems.size;
+  }
+  
+  clearSelection(): void {
+    this.selectedItems.clear();
+    this.updateSelectAllState();
+    this.selectedItemsChange.emit([]);
+  }
+  
+  getSelectedItemsArray(): any[] {
+    return Array.from(this.selectedItems);
+  }
+  
+  isOperationsDisabled(): boolean {
+    return this.bulkOperationsLoading;
+  }
+
   loadPage(page: number): void {
+    // Clear selection when changing pages
+    this.clearSelection();
     this.pageChange.emit(page);
   }
 
@@ -89,6 +158,7 @@ export class PaginatedTableComponent implements OnInit {
     
     // Debounce search to avoid too many API calls
     this.searchTimeout = setTimeout(() => {
+      this.clearSelection();
       this.filtersChange.emit({ ...this.searchFilters });
     }, 500);
   }
@@ -100,6 +170,7 @@ export class PaginatedTableComponent implements OnInit {
         this.searchFilters[column.key] = '';
       }
     });
+    this.clearSelection();
     this.filtersChange.emit({ ...this.searchFilters });
   }
 
@@ -129,6 +200,7 @@ export class PaginatedTableComponent implements OnInit {
       newSortInfo = { column: column.key, direction: 'asc' };
     }
 
+    this.clearSelection();
     this.sortChange.emit(newSortInfo);
   }
 

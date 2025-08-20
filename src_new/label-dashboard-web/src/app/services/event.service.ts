@@ -327,11 +327,12 @@ export class EventService {
   }
 
   /**
-   * Mark a ticket as paid
+   * Mark ticket(s) as paid - accepts single ID or array of IDs
    */
-  markTicketPaid(ticketId: number): Observable<any> {
+  markTicketPaid(ticketId: number | number[]): Observable<any> {
+    const ticketIds = Array.isArray(ticketId) ? ticketId : [ticketId];
     return this.http.post(`${environment.apiUrl}/events/tickets/mark-paid`, 
-      { ticket_id: ticketId },
+      { ticket_ids: ticketIds },
       { headers: this.getAuthHeaders() }
     ).pipe(
       catchError(this.handleError)
@@ -339,11 +340,12 @@ export class EventService {
   }
 
   /**
-   * Cancel a ticket
+   * Cancel ticket(s) - accepts single ID or array of IDs
    */
-  cancelTicket(ticketId: number): Observable<any> {
+  cancelTicket(ticketId: number | number[]): Observable<any> {
+    const ticketIds = Array.isArray(ticketId) ? ticketId : [ticketId];
     return this.http.post(`${environment.apiUrl}/events/tickets/cancel`, 
-      { ticket_id: ticketId },
+      { ticket_ids: ticketIds },
       { headers: this.getAuthHeaders() }
     ).pipe(
       catchError(this.handleError)
@@ -351,11 +353,12 @@ export class EventService {
   }
 
   /**
-   * Resend ticket email
+   * Resend ticket(s) email - accepts single ID or array of IDs
    */
-  resendTicket(ticketId: number): Observable<any> {
+  resendTicket(ticketId: number | number[]): Observable<any> {
+    const ticketIds = Array.isArray(ticketId) ? ticketId : [ticketId];
     return this.http.post(`${environment.apiUrl}/events/tickets/resend`, 
-      { ticket_id: ticketId },
+      { ticket_ids: ticketIds },
       { headers: this.getAuthHeaders() }
     ).pipe(
       catchError(this.handleError)

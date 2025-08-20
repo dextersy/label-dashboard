@@ -34,6 +34,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
   orders: AbandonedOrder[] = [];
   loading = false;
+  bulkOperationsLoading = false;
   
   // Pagination properties
   pagination: PaginationInfo | null = null;
@@ -57,6 +58,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   ];
 
   private subscriptions = new Subscription();
+  selectedOrders: AbandonedOrder[] = [];
 
   constructor(
     private eventService: EventService,
@@ -437,5 +439,152 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   onSortChange(sortInfo: SortInfo | null): void {
     this.currentSort = sortInfo;
     this.loadAbandonedOrders(1); // Reset to page 1 when sorting
+  }
+
+  // Bulk operations event handlers
+  onSelectedItemsChange(selectedItems: AbandonedOrder[]): void {
+    this.selectedOrders = selectedItems;
+  }
+
+  // Bulk operations constraint logic
+  canBulkSendTickets(selectedOrders: AbandonedOrder[]): boolean {
+    return this.getBulkSendCount(selectedOrders) > 0;
+  }
+
+  canBulkMarkAsPaid(selectedOrders: AbandonedOrder[]): boolean {
+    return this.getBulkMarkPaidCount(selectedOrders) > 0;
+  }
+
+  canBulkCancel(selectedOrders: AbandonedOrder[]): boolean {
+    return this.getBulkCancelCount(selectedOrders) > 0;
+  }
+
+  getBulkSendCount(selectedOrders: AbandonedOrder[]): number {
+    return selectedOrders.filter(order => order.status === 'Payment Confirmed').length;
+  }
+
+  getBulkMarkPaidCount(selectedOrders: AbandonedOrder[]): number {
+    return selectedOrders.filter(order => order.status === 'New').length;
+  }
+
+  getBulkCancelCount(selectedOrders: AbandonedOrder[]): number {
+    return selectedOrders.filter(order => order.status === 'New').length;
+  }
+
+  // Bulk operations methods
+  onBulkSendTickets(selectedOrders: AbandonedOrder[]): void {
+    const eligibleOrders = selectedOrders.filter(order => order.status === 'Payment Confirmed');
+    
+    if (eligibleOrders.length === 0) {
+      this.alertMessage.emit({
+        type: 'warning',
+        text: 'No orders eligible for sending tickets (only Payment Confirmed orders can send tickets)'
+      });
+      return;
+    }
+
+    const ticketIds = eligibleOrders.map(order => order.id);
+    this.bulkOperationsLoading = true;
+    
+    this.subscriptions.add(
+      this.eventService.resendTicket(ticketIds).subscribe({
+        next: (response) => {
+          this.bulkOperationsLoading = false;
+          this.alertMessage.emit({
+            type: 'success',
+            text: response.message || `${response.success_count} tickets sent successfully`
+          });
+          // Refresh the list to show updated statuses
+          this.loadAbandonedOrders();
+        },
+        error: (error) => {
+          this.bulkOperationsLoading = false;
+          console.error('Failed to send tickets:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error?.error?.error || 'Failed to send tickets'
+          });
+        }
+      })
+    );
+  }
+
+  onBulkMarkAsPaid(selectedOrders: AbandonedOrder[]): void {
+    const eligibleOrders = selectedOrders.filter(order => order.status === 'New');
+    
+    if (eligibleOrders.length === 0) {
+      this.alertMessage.emit({
+        type: 'warning',
+        text: 'No orders eligible for marking as paid (only New orders can be marked as paid)'
+      });
+      return;
+    }
+
+    const ticketIds = eligibleOrders.map(order => order.id);
+    this.bulkOperationsLoading = true;
+    
+    this.subscriptions.add(
+      this.eventService.markTicketPaid(ticketIds).subscribe({
+        next: (response) => {
+          this.bulkOperationsLoading = false;
+          this.alertMessage.emit({
+            type: 'success',
+            text: response.message || `${response.updated_count} orders marked as paid successfully`
+          });
+          // Refresh the list to show updated statuses
+          this.loadAbandonedOrders();
+        },
+        error: (error) => {
+          this.bulkOperationsLoading = false;
+          console.error('Failed to mark orders as paid:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error?.error?.error || 'Failed to mark orders as paid'
+          });
+        }
+      })
+    );
+  }
+
+  onBulkCancel(selectedOrders: AbandonedOrder[]): void {
+    const eligibleOrders = selectedOrders.filter(order => order.status === 'New');
+    
+    if (eligibleOrders.length === 0) {
+      this.alertMessage.emit({
+        type: 'warning',
+        text: 'No orders eligible for cancellation (only New orders can be cancelled)'
+      });
+      return;
+    }
+
+    const confirmed = confirm(`Are you sure you want to cancel ${eligibleOrders.length} order(s)? This action cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    const ticketIds = eligibleOrders.map(order => order.id);
+    this.bulkOperationsLoading = true;
+    
+    this.subscriptions.add(
+      this.eventService.cancelTicket(ticketIds).subscribe({
+        next: (response) => {
+          this.bulkOperationsLoading = false;
+          this.alertMessage.emit({
+            type: 'success',
+            text: response.message || `${response.cancelled_count} orders cancelled successfully`
+          });
+          // Refresh the list to show updated statuses
+          this.loadAbandonedOrders();
+        },
+        error: (error) => {
+          this.bulkOperationsLoading = false;
+          console.error('Failed to cancel orders:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error?.error?.error || 'Failed to cancel orders'
+          });
+        }
+      })
+    );
   }
 }

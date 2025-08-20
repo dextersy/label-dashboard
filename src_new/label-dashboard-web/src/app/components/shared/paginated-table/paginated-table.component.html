@@ -99,6 +99,16 @@
             <table [class]="getTableClasses()">
               <thead>
                 <tr>
+                  <!-- Bulk select checkbox column -->
+                  <th *ngIf="enableBulkOperations" class="checkbox-column" style="width: 50px;">
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input"
+                      [checked]="selectAllChecked"
+                      [indeterminate]="selectAllIndeterminate"
+                      [disabled]="isOperationsDisabled()"
+                      (change)="onSelectAll($any($event.target).checked)">
+                  </th>
                   <th *ngFor="let column of columns" 
                       [class]="getColumnClasses(column)"
                       [class.sortable]="column.sortable"
@@ -114,7 +124,42 @@
                 </tr>
               </thead>
               <tbody>
+                <!-- Bulk operations row (appears when items are selected) -->
+                <tr *ngIf="enableBulkOperations && getSelectedCount() > 0" class="bulk-operations-row bg-light">
+                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="fw-bold text-primary">
+                        <i class="fa fa-check-circle me-2" *ngIf="!bulkOperationsLoading"></i>
+                        <i class="fa fa-spinner fa-spin me-2" *ngIf="bulkOperationsLoading"></i>
+                        {{ getSelectedCount() }} item(s) selected
+                        <span *ngIf="bulkOperationsLoading" class="ms-2 text-muted">- Processing...</span>
+                      </span>
+                      <div class="bulk-actions">
+                        <ng-container *ngIf="bulkOperationsContent">
+                          <ng-container *ngTemplateOutlet="bulkOperationsContent; context: { $implicit: getSelectedItemsArray(), disabled: isOperationsDisabled() }"></ng-container>
+                        </ng-container>
+                        <button 
+                          type="button" 
+                          class="btn btn-sm btn-outline-secondary ms-2"
+                          [disabled]="isOperationsDisabled()"
+                          (click)="clearSelection()"
+                          title="Clear selection">
+                          <i class="fa fa-times"></i> Clear
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
                 <tr *ngFor="let item of data">
+                  <!-- Bulk select checkbox -->
+                  <td *ngIf="enableBulkOperations" class="checkbox-column">
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input"
+                      [checked]="isItemSelected(item)"
+                      [disabled]="isOperationsDisabled()"
+                      (change)="onSelectItem(item, $any($event.target).checked)">
+                  </td>
                   <td *ngFor="let column of columns" 
                       [class]="getColumnClasses(column)"
                       [style.text-align]="column.align || 'left'"
@@ -155,11 +200,11 @@
                     </span>
                   </td>
                   <td *ngIf="showActionsColumn" class="actions-column">
-                    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item }"></ng-container>
+                    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
                   </td>
                 </tr>
                 <tr *ngIf="data.length === 0">
-                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0)" class="text-center">No data available.</td>
+                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="text-center">No data available.</td>
                 </tr>
               </tbody>
             </table>

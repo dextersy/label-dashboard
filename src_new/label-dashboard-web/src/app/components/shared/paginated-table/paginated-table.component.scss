@@ -226,3 +226,35 @@
 }
 
 // Tablet adjustments - no special rules needed since we're not hiding text anymore
+
+// Bulk operations styling
+.checkbox-column {
+  width: 50px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.bulk-operations-row {
+  border-top: 2px solid #007bff;
+  border-bottom: 2px solid #007bff;
+  
+  .bulk-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    
+    .btn {
+      white-space: nowrap;
+    }
+  }
+}
+
+.form-check-input {
+  margin: 0;
+  
+  &:indeterminate {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+}

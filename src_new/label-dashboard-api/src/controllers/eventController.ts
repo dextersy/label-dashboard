@@ -950,14 +950,35 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { ticket_id } = req.body;
+    const { ticket_id, ticket_ids } = req.body;
 
-    if (!ticket_id) {
-      return res.status(400).json({ error: 'Ticket ID is required' });
+    // Handle both single ticket_id and array of ticket_ids
+    let ticketIds: number[];
+    if (ticket_ids) {
+      // Array format (bulk operations)
+      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
+        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
+      }
+      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
+      if (ticketIds.length !== ticket_ids.length) {
+        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
+      }
+    } else if (ticket_id) {
+      // Single ticket format (backward compatibility)
+      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
+        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
+      }
+      ticketIds = [ticket_id];
+    } else {
+      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
     }
 
-    const ticket = await Ticket.findOne({
-      where: { id: ticket_id },
+    // Find tickets that belong to user's brand and can be marked as paid (New status)
+    const tickets = await Ticket.findAll({
+      where: { 
+        id: ticketIds,
+        status: 'New'
+      },
       include: [
         { 
           model: Event, 
@@ -968,35 +989,58 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
       ]
     });
 
-    if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' });
+    if (tickets.length === 0) {
+      return res.status(404).json({ error: 'No eligible tickets found for marking as paid (only New status tickets can be marked as paid)' });
     }
 
-    await ticket.update({ status: 'Payment Confirmed' });
-
-    // Send payment confirmation email using helper function
-    const emailSent = await sendPaymentConfirmationEmail(
-      {
-        email_address: ticket.email_address,
-        name: ticket.name,
-        ticket_code: ticket.ticket_code
-      },
-      {
-        title: ticket.event.title
-      },
-      {
-        brand_name: ticket.event.brand?.brand_name
-      },
-      req.user.brand_id
+    // Update all tickets to 'Payment Confirmed' status
+    await Ticket.update(
+      { status: 'Payment Confirmed' },
+      { 
+        where: { 
+          id: tickets.map(t => t.id)
+        }
+      }
     );
 
-    if (!emailSent) {
-      console.warn('Failed to send payment confirmation email, but ticket was marked as paid');
+    // Send payment confirmation emails
+    let emailErrors = 0;
+    for (const ticket of tickets) {
+      try {
+        const emailSent = await sendPaymentConfirmationEmail(
+          {
+            email_address: ticket.email_address,
+            name: ticket.name,
+            ticket_code: ticket.ticket_code
+          },
+          {
+            title: ticket.event.title
+          },
+          {
+            brand_name: ticket.event.brand?.brand_name
+          },
+          req.user.brand_id
+        );
+
+        if (!emailSent) {
+          emailErrors++;
+          console.warn(`Failed to send payment confirmation email for ticket ${ticket.id}`);
+        }
+      } catch (error) {
+        emailErrors++;
+        console.error(`Error sending payment confirmation email for ticket ${ticket.id}:`, error);
+      }
     }
 
+    const message = tickets.length === 1 
+      ? 'Ticket marked as paid successfully'
+      : `${tickets.length} tickets marked as paid successfully`;
+
     res.json({ 
-      message: 'Ticket marked as paid successfully',
-      ticket
+      message: emailErrors > 0 ? `${message} (${emailErrors} email notifications failed)` : message,
+      updated_count: tickets.length,
+      ticket_ids: tickets.map(t => t.id),
+      tickets: tickets.length === 1 ? tickets[0] : tickets
     });
   } catch (error) {
     console.error('Mark ticket paid error:', error);
@@ -1313,14 +1357,35 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { ticket_id } = req.body;
+    const { ticket_id, ticket_ids } = req.body;
 
-    if (!ticket_id) {
-      return res.status(400).json({ error: 'Ticket ID is required' });
+    // Handle both single ticket_id and array of ticket_ids
+    let ticketIds: number[];
+    if (ticket_ids) {
+      // Array format (bulk operations)
+      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
+        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
+      }
+      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
+      if (ticketIds.length !== ticket_ids.length) {
+        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
+      }
+    } else if (ticket_id) {
+      // Single ticket format (backward compatibility)
+      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
+        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
+      }
+      ticketIds = [ticket_id];
+    } else {
+      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
     }
 
-    const ticket = await Ticket.findOne({
-      where: { id: ticket_id },
+    // Find tickets that belong to user's brand and are not already canceled
+    const tickets = await Ticket.findAll({
+      where: { 
+        id: ticketIds,
+        status: { [Op.ne]: 'Canceled' }
+      },
       include: [
         { 
           model: Event, 
@@ -1331,53 +1396,84 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
       ]
     });
 
-    if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' });
+    if (tickets.length === 0) {
+      return res.status(404).json({ error: 'No eligible tickets found for cancellation (tickets may already be canceled or not found)' });
     }
 
-    if (ticket.status === 'Canceled') {
-      return res.status(400).json({ error: 'Ticket is already canceled' });
+    // Update all tickets to 'Canceled' status
+    await Ticket.update(
+      { status: 'Canceled' },
+      { 
+        where: { 
+          id: tickets.map(t => t.id)
+        }
+      }
+    );
+
+    // Process cancellation emails and QR code deletion for paid/sent tickets
+    let emailErrors = 0;
+    let qrCodeErrors = 0;
+    for (const ticket of tickets) {
+      const originalStatus = ticket.status;
+      
+      // Send cancellation email if ticket was already paid/sent
+      if (originalStatus === 'Payment Confirmed' || originalStatus === 'Ticket sent.') {
+        try {
+          const emailSent = await sendTicketCancellationEmail(
+            {
+              email_address: ticket.email_address,
+              name: ticket.name,
+              ticket_code: ticket.ticket_code
+            },
+            {
+              title: ticket.event.title
+            },
+            {
+              brand_name: ticket.event.brand?.brand_name
+            },
+            req.user.brand_id
+          );
+          
+          if (!emailSent) {
+            emailErrors++;
+            console.warn(`Failed to send cancellation email for ticket ${ticket.id}`);
+          }
+        } catch (error) {
+          emailErrors++;
+          console.error(`Error sending cancellation email for ticket ${ticket.id}:`, error);
+        }
+        
+        // Delete QR code from S3
+        try {
+          const qrDeleted = await deleteTicketQRCode(ticket.event.id, ticket.ticket_code);
+          if (!qrDeleted) {
+            qrCodeErrors++;
+            console.warn(`Failed to delete QR code from S3 for ticket ${ticket.id}`);
+          }
+        } catch (error) {
+          qrCodeErrors++;
+          console.error(`Error deleting QR code for ticket ${ticket.id}:`, error);
+        }
+      }
     }
 
-    const originalStatus = ticket.status;
+    const message = tickets.length === 1 
+      ? 'Ticket canceled successfully'
+      : `${tickets.length} tickets canceled successfully`;
 
-    // Update ticket status to canceled
-    await ticket.update({ status: 'Canceled' });
-
-    // Send cancellation email if ticket was already paid/sent
-    if (originalStatus === 'Payment Confirmed' || originalStatus === 'Ticket sent.') {
-      const emailSent = await sendTicketCancellationEmail(
-        {
-          email_address: ticket.email_address,
-          name: ticket.name,
-          ticket_code: ticket.ticket_code
-        },
-        {
-          title: ticket.event.title
-        },
-        {
-          brand_name: ticket.event.brand?.brand_name
-        },
-        req.user.brand_id
-      );
-      
-      if (!emailSent) {
-        console.warn('Failed to send cancellation email, but continuing with cancellation');
-      }
-      
-      // Delete QR code from S3 when canceling paid/sent tickets
-      const qrDeleted = await deleteTicketQRCode(ticket.event.id, ticket.ticket_code);
-      if (!qrDeleted) {
-        console.warn('Failed to delete QR code from S3, but continuing with cancellation');
-      }
+    let warningMessage = '';
+    if (emailErrors > 0 || qrCodeErrors > 0) {
+      const warnings = [];
+      if (emailErrors > 0) warnings.push(`${emailErrors} cancellation emails failed`);
+      if (qrCodeErrors > 0) warnings.push(`${qrCodeErrors} QR code deletions failed`);
+      warningMessage = ` (${warnings.join(', ')})`;
     }
 
     res.json({ 
-      message: 'Ticket canceled successfully',
-      ticket: {
-        id: ticket.id,
-        status: 'Canceled'
-      }
+      message: `${message}${warningMessage}`,
+      cancelled_count: tickets.length,
+      ticket_ids: tickets.map(t => t.id),
+      tickets: tickets.length === 1 ? { id: tickets[0].id, status: 'Canceled' } : tickets.map(t => ({ id: t.id, status: 'Canceled' }))
     });
   } catch (error) {
     console.error('Cancel ticket error:', error);
@@ -1391,14 +1487,35 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { ticket_id } = req.body;
+    const { ticket_id, ticket_ids } = req.body;
 
-    if (!ticket_id) {
-      return res.status(400).json({ error: 'Ticket ID is required' });
+    // Handle both single ticket_id and array of ticket_ids
+    let ticketIds: number[];
+    if (ticket_ids) {
+      // Array format (bulk operations)
+      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
+        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
+      }
+      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
+      if (ticketIds.length !== ticket_ids.length) {
+        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
+      }
+    } else if (ticket_id) {
+      // Single ticket format (backward compatibility)
+      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
+        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
+      }
+      ticketIds = [ticket_id];
+    } else {
+      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
     }
 
-    const ticket = await Ticket.findOne({
-      where: { id: ticket_id },
+    // Find tickets that belong to user's brand and can be resent (Payment Confirmed or Ticket sent status)
+    const tickets = await Ticket.findAll({
+      where: { 
+        id: ticketIds,
+        status: ['Payment Confirmed', 'Ticket sent.']
+      },
       include: [
         { 
           model: Event, 
@@ -1409,56 +1526,76 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
       ]
     });
 
-    if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' });
+    if (tickets.length === 0) {
+      return res.status(404).json({ error: 'No eligible tickets found for resending (only Payment Confirmed and Ticket sent tickets can be resent)' });
     }
 
-    if (ticket.status === 'New' || ticket.status === 'Canceled') {
-      return res.status(400).json({ 
-        error: 'Cannot resend ticket - ticket must be paid or already sent' 
+    let successCount = 0;
+    let failedCount = 0;
+    const errors: string[] = [];
+
+    // Process each ticket
+    for (const ticket of tickets) {
+      try {
+        // Send ticket email using helper function
+        const emailSent = await sendTicketEmail(
+          {
+            email_address: ticket.email_address,
+            name: ticket.name,
+            ticket_code: ticket.ticket_code,
+            number_of_entries: ticket.number_of_entries
+          },
+          {
+            id: ticket.event.id,
+            title: ticket.event.title,
+            date_and_time: ticket.event.date_and_time,
+            venue: ticket.event.venue,
+            rsvp_link: ticket.event.rsvp_link,
+            venue_address: ticket.event.venue_address,
+            venue_latitude: ticket.event.venue_latitude,
+            venue_longitude: ticket.event.venue_longitude,
+            venue_maps_url: ticket.event.venue_maps_url
+          },
+          {
+            brand_name: ticket.event.brand?.brand_name
+          },
+          req.user.brand_id
+        );
+
+        if (emailSent) {
+          // Update status to "Ticket sent." if it wasn't already
+          if (ticket.status !== 'Ticket sent.') {
+            await ticket.update({ status: 'Ticket sent.' });
+          }
+          successCount++;
+        } else {
+          failedCount++;
+          errors.push(`Ticket ${ticket.id}: Failed to send email`);
+        }
+      } catch (error) {
+        console.error(`Failed to resend ticket ${ticket.id}:`, error);
+        failedCount++;
+        errors.push(`Ticket ${ticket.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    if (successCount === 0) {
+      return res.status(500).json({ 
+        error: 'Failed to send any tickets',
+        errors: errors
       });
     }
 
-    // Send ticket email using helper function
-    const emailSent = await sendTicketEmail(
-      {
-        email_address: ticket.email_address,
-        name: ticket.name,
-        ticket_code: ticket.ticket_code,
-        number_of_entries: ticket.number_of_entries
-      },
-      {
-        id: ticket.event.id,
-        title: ticket.event.title,
-        date_and_time: ticket.event.date_and_time,
-        venue: ticket.event.venue,
-        rsvp_link: ticket.event.rsvp_link,
-        venue_address: ticket.event.venue_address,
-        venue_latitude: ticket.event.venue_latitude,
-        venue_longitude: ticket.event.venue_longitude,
-        venue_maps_url: ticket.event.venue_maps_url
-      },
-      {
-        brand_name: ticket.event.brand?.brand_name
-      },
-      req.user.brand_id
-    );
-
-    if (!emailSent) {
-      return res.status(500).json({ error: 'Failed to send ticket email' });
-    }
-
-    // Update status to "Ticket sent." if it wasn't already
-    if (ticket.status !== 'Ticket sent.') {
-      await ticket.update({ status: 'Ticket sent.' });
-    }
+    const message = tickets.length === 1 
+      ? 'Ticket resent successfully'
+      : `${successCount} ticket(s) resent successfully${failedCount > 0 ? `, ${failedCount} failed` : ''}`;
 
     res.json({ 
-      message: 'Ticket resent successfully',
-      ticket: {
-        id: ticket.id,
-        status: 'Ticket sent.'
-      }
+      message: message,
+      success_count: successCount,
+      failed_count: failedCount,
+      errors: failedCount > 0 ? errors : undefined,
+      tickets: tickets.length === 1 ? { id: tickets[0].id, status: 'Ticket sent.' } : tickets.map(t => ({ id: t.id, status: 'Ticket sent.' }))
     });
   } catch (error) {
     console.error('Resend ticket error:', error);
