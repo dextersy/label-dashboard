@@ -148,9 +148,11 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
 
   onSendTicket(orderId: number): void {
+    this.bulkOperationsLoading = true;
     this.subscriptions.add(
       this.eventService.resendTicket(orderId).subscribe({
         next: () => {
+          this.bulkOperationsLoading = false;
           this.alertMessage.emit({
             type: 'success',
             text: 'Ticket sent successfully!'
@@ -159,6 +161,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
           this.orders = this.orders.filter(o => o.id !== orderId);
         },
         error: (error) => {
+          this.bulkOperationsLoading = false;
           console.error('Failed to send ticket:', error);
           this.alertMessage.emit({
             type: 'error',
@@ -170,9 +173,11 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   }
 
   onMarkAsPaid(orderId: number): void {
+    this.bulkOperationsLoading = true;
     this.subscriptions.add(
       this.eventService.markTicketPaid(orderId).subscribe({
         next: () => {
+          this.bulkOperationsLoading = false;
           this.alertMessage.emit({
             type: 'success',
             text: 'Order marked as paid!'
@@ -181,6 +186,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
           this.loadAbandonedOrders();
         },
         error: (error) => {
+          this.bulkOperationsLoading = false;
           console.error('Failed to mark order as paid:', error);
           this.alertMessage.emit({
             type: 'error',
@@ -194,9 +200,11 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   onCancelOrder(orderId: number): void {
     const confirmed = confirm('Are you sure you want to cancel this order?');
     if (confirmed) {
+      this.bulkOperationsLoading = true;
       this.subscriptions.add(
         this.eventService.cancelTicket(orderId).subscribe({
           next: () => {
+            this.bulkOperationsLoading = false;
             this.alertMessage.emit({
               type: 'success',
               text: 'Order cancelled successfully!'
@@ -205,6 +213,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
             this.orders = this.orders.filter(o => o.id !== orderId);
           },
           error: (error) => {
+            this.bulkOperationsLoading = false;
             console.error('Failed to cancel order:', error);
             this.alertMessage.emit({
               type: 'error',

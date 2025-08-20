@@ -52,7 +52,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
   @Input() showActionsColumn: boolean = false;
   @Input() responsiveMode: 'card' | 'financial' = 'card'; // Choose responsive behavior
   @Input() enableBulkOperations: boolean = false; // Enable bulk operations functionality
-  @Input() bulkOperationsLoading: boolean = false; // Loading state for bulk operations
+  @Input() bulkOperationsLoading: boolean = false; // Loading state for all operations (single and bulk)
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
@@ -134,12 +134,16 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
     this.selectedItemsChange.emit([]);
   }
   
+  isAnyOperationLoading(): boolean {
+    return this.bulkOperationsLoading || this.loading;
+  }
+  
   getSelectedItemsArray(): any[] {
     return Array.from(this.selectedItems);
   }
   
   isOperationsDisabled(): boolean {
-    return this.bulkOperationsLoading;
+    return this.isAnyOperationLoading();
   }
 
   loadPage(page: number): void {

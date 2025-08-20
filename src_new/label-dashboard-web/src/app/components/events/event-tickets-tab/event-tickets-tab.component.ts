@@ -50,6 +50,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   summary: TicketSummary | null = null;
   referrers: EventReferrer[] = [];
   loading = false;
+  bulkOperationsLoading = false;
   selectedTicketId: number | null = null;
 
   // Pagination properties
@@ -225,15 +226,18 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
 
   onResendTicket(ticketId: number): void {
+    this.bulkOperationsLoading = true;
     this.subscriptions.add(
       this.eventService.resendTicket(ticketId).subscribe({
         next: () => {
+          this.bulkOperationsLoading = false;
           this.alertMessage.emit({
             type: 'success',
             text: 'Ticket resent successfully!'
           });
         },
         error: (error) => {
+          this.bulkOperationsLoading = false;
           console.error('Failed to resend ticket:', error);
           this.alertMessage.emit({
             type: 'error',
@@ -267,9 +271,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
     const confirmed = confirm(confirmMessage);
     if (confirmed) {
+      this.bulkOperationsLoading = true;
       this.subscriptions.add(
         this.eventService.cancelTicket(ticketId).subscribe({
           next: () => {
+            this.bulkOperationsLoading = false;
             this.alertMessage.emit({
               type: 'success',
               text: 'Ticket cancelled successfully!'
@@ -279,6 +285,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
             this.loadTicketSummary();
           },
           error: (error) => {
+            this.bulkOperationsLoading = false;
             console.error('Failed to cancel ticket:', error);
             this.alertMessage.emit({
               type: 'error',

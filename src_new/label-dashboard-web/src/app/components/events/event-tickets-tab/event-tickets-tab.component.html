@@ -10,6 +10,7 @@
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
     [showActionsColumn]="isAdmin"
+    [bulkOperationsLoading]="bulkOperationsLoading"
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
     (sortChange)="onSortChange($event)">
@@ -39,11 +40,12 @@
     </ng-template>
     
     <!-- Actions template -->
-    <ng-template #actionsContent let-ticket>
+    <ng-template #actionsContent let-ticket let-disabled="disabled">
       <div class="btn-group" role="group">
         <button 
           class="btn btn-sm btn-outline-primary"
           (click)="onResendTicket(ticket.id)"
+          [disabled]="disabled"
           *ngIf="isTicketResendable(ticket)"
           title="Resend ticket">
           Resend
@@ -51,6 +53,7 @@
         <button 
           class="btn btn-sm btn-outline-danger"
           (click)="onCancelTicket(ticket.id)"
+          [disabled]="disabled"
           *ngIf="isTicketCancellable(ticket)"
           title="Cancel ticket">
           Cancel
