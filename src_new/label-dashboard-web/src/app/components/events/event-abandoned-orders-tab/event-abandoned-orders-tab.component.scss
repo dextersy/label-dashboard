@@ -90,4 +90,21 @@
     background-color: #e9ecef;
     border-color: #ced4da;
   }
+
+  // Custom button styling
+  .btn-outline-success {
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      border-color: #6c757d;
+      color: #6c757d;
+      background-color: transparent;
+      
+      &:hover {
+        border-color: #6c757d;
+        color: #6c757d;
+        background-color: transparent;
+      }
+    }
+  }
 }

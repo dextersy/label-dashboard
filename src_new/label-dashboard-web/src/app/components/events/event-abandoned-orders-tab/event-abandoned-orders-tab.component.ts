@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
@@ -18,17 +19,6 @@ export interface AbandonedOrder {
   status: 'New' | 'Payment Confirmed' | 'Canceled';
 }
 
-export interface CustomTicketForm {
-  name: string;
-  email_address: string;
-  contact_number: string;
-  number_of_entries: number;
-  price_per_ticket: number;
-  referral_code?: string;
-  ticket_paid: boolean;
-  payment_processing_fee: number;
-  send_email: boolean;
-}
 
 @Component({
   selector: 'app-event-abandoned-orders-tab',
@@ -65,36 +55,22 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       { value: 'Canceled', label: 'Canceled' }
     ]},
   ];
-  
-  customTicketForm: CustomTicketForm = {
-    name: '',
-    email_address: '',
-    contact_number: '',
-    number_of_entries: 1,
-    price_per_ticket: 0,
-    referral_code: '',
-    ticket_paid: false,
-    payment_processing_fee: 0,
-    send_email: true
-  };
 
-  priceOverrideEnabled = false;
   private subscriptions = new Subscription();
 
   constructor(
     private eventService: EventService,
-    private csvService: CsvService
+    private csvService: CsvService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadAbandonedOrders();
-    this.initializeCustomTicketForm();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedEvent']) {
       this.loadAbandonedOrders();
-      this.initializeCustomTicketForm();
     }
   }
 
@@ -168,9 +144,6 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     }
   }
 
-  private initializeCustomTicketForm(): void {
-    this.customTicketForm.price_per_ticket = this.selectedEvent?.ticket_price || 0;
-  }
 
   onSendTicket(orderId: number): void {
     this.subscriptions.add(
@@ -380,101 +353,22 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     );
   }
 
-  enablePriceOverride(): void {
-    this.priceOverrideEnabled = true;
-  }
-
-  onToggleMarkAsPaid(): void {
-    if (this.customTicketForm.ticket_paid) {
-      this.customTicketForm.send_email = false;
-    } else {
-      this.customTicketForm.payment_processing_fee = 0;
+  onCreateCustomTicket(): void {
+    if (!this.canCreateCustomTickets()) {
+      return; // Do nothing if tickets can't be created
     }
-  }
 
-  onSubmitCustomTicket(): void {
-    if (!this.selectedEvent) return;
-    
-    // Basic validation
-    if (!this.customTicketForm.name || !this.customTicketForm.email_address || !this.customTicketForm.contact_number) {
+    if (!this.selectedEvent) {
       this.alertMessage.emit({
         type: 'error',
-        text: 'Please fill in all required fields.'
+        text: 'No event selected'
       });
       return;
     }
 
-    if (this.customTicketForm.number_of_entries <= 0) {
-      this.alertMessage.emit({
-        type: 'error',
-        text: 'Number of entries must be greater than 0.'
-      });
-      return;
-    }
-
-    const ticketData = {
-      event_id: this.selectedEvent.id,
-      name: this.customTicketForm.name,
-      email_address: this.customTicketForm.email_address,
-      contact_number: this.customTicketForm.contact_number,
-      number_of_entries: this.customTicketForm.number_of_entries,
-      send_email: this.customTicketForm.send_email,
-      price_per_ticket: this.priceOverrideEnabled ? this.customTicketForm.price_per_ticket : undefined,
-      payment_processing_fee: this.customTicketForm.payment_processing_fee,
-      referrer_code: this.customTicketForm.referral_code || undefined
-    };
-    
-    this.subscriptions.add(
-      this.eventService.addTicket(ticketData).subscribe({
-        next: (response) => {
-          this.alertMessage.emit({
-            type: 'success',
-            text: 'Custom ticket created successfully!'
-          });
-          
-          // If ticket is marked as paid, mark it as paid immediately
-          if (this.customTicketForm.ticket_paid && response.ticket?.id) {
-            this.subscriptions.add(
-              this.eventService.markTicketPaid(response.ticket.id).subscribe({
-                next: () => {
-                  this.loadAbandonedOrders(); // Refresh data
-                },
-                error: (error) => {
-                  console.error('Failed to mark custom ticket as paid:', error);
-                }
-              })
-            );
-          } else {
-            // Refresh data to show new ticket
-            this.loadAbandonedOrders();
-          }
-          
-          this.resetCustomTicketForm();
-        },
-        error: (error) => {
-          console.error('Failed to create custom ticket:', error);
-          this.alertMessage.emit({
-            type: 'error',
-            text: 'Failed to create custom ticket'
-          });
-        }
-      })
-    );
-  }
-
-  resetCustomTicketForm(): void {
-    this.customTicketForm = {
-      name: '',
-      email_address: '',
-      contact_number: '',
-      number_of_entries: 1,
-      price_per_ticket: this.selectedEvent?.ticket_price || 0,
-      referral_code: '',
-      ticket_paid: false,
-      payment_processing_fee: 0,
-      send_email: true
-    };
-    this.priceOverrideEnabled = false;
+    this.router.navigate(['/events/custom-ticket'], {
+      queryParams: { eventId: this.selectedEvent.id, from: 'abandoned' }
+    });
   }
 
   getStatusText(status: string): string {
@@ -519,8 +413,16 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   }
 
   canCreateCustomTickets(): boolean {
-    return this.isAdmin && !this.isEventPast();
+    return !this.isEventPast(); // Allow even when sales closed, but not for past events
   }
+
+  getCustomTicketButtonTooltip(): string {
+    if (this.isEventPast()) {
+      return 'Cannot create custom tickets for past events';
+    }
+    return 'Create a custom ticket for special invites';
+  }
+
 
   // Pagination event handlers
   onPageChange(page: number): void {

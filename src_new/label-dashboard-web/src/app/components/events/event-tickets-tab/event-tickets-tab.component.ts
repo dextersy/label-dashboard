@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
@@ -75,7 +76,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   constructor(
     private eventService: EventService,
     private csvService: CsvService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -386,6 +388,46 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   onSortChange(sortInfo: SortInfo | null): void {
     this.currentSort = sortInfo;
     this.loadEventTickets(1); // Reset to page 1 when sorting
+  }
+
+  onCreateCustomTicket(): void {
+    if (!this.canCreateCustomTickets()) {
+      return; // Do nothing if tickets can't be created
+    }
+
+    if (!this.selectedEvent) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'No event selected'
+      });
+      return;
+    }
+
+    this.router.navigate(['/events/custom-ticket'], {
+      queryParams: { eventId: this.selectedEvent.id, from: 'tickets' }
+    });
+  }
+
+  isEventPast(): boolean {
+    if (!this.selectedEvent || !this.selectedEvent.date_and_time) {
+      return false;
+    }
+    
+    const eventDate = new Date(this.selectedEvent.date_and_time);
+    const now = new Date();
+    
+    return now > eventDate;
+  }
+
+  canCreateCustomTickets(): boolean {
+    return !this.isEventPast(); // Allow even when sales closed, but not for past events
+  }
+
+  getCustomTicketButtonTooltip(): string {
+    if (this.isEventPast()) {
+      return 'Cannot create custom tickets for past events';
+    }
+    return 'Create a custom ticket for special invites';
   }
 
   // Helper methods

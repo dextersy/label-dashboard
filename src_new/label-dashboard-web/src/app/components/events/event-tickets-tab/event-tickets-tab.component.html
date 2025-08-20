@@ -16,6 +16,18 @@
     
     <!-- Custom buttons template -->
     <ng-template #customButtons>
+      <span 
+        class="d-inline-block" 
+        [title]="getCustomTicketButtonTooltip()"
+        *ngIf="isAdmin">
+        <button 
+          class="btn btn-sm btn-outline-success" 
+          (click)="onCreateCustomTicket()"
+          [disabled]="loading || !canCreateCustomTickets()">
+          <i class="fa fa-plus me-1"></i>
+          Custom Ticket
+        </button>
+      </span>
       <button 
         class="btn btn-sm btn-outline-primary" 
         (click)="onDownloadCSV()"
@@ -97,11 +109,5 @@
         </span>
       </div>
     </div>
-  </div>
-
-  <!-- Info Alert -->
-  <div class="alert alert-info mt-3">
-    <h6><i class="fa fa-user-plus me-2"></i>Want to invite someone?</h6>
-    <p class="mb-0">Switch to the "Pending Tickets" tab to create a custom ticket.</p>
   </div>
 </div>

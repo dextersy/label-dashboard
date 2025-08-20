@@ -1,0 +1,283 @@
+<div class="custom-ticket-page">
+  <!-- Breadcrumb -->
+  <app-breadcrumb></app-breadcrumb>
+
+  <div class="container-fluid" *ngIf="!loading">
+
+    <!-- Event Status Information -->
+    <div class="alert alert-danger mb-4" *ngIf="isEventPast()">
+      <i class="far fa-clock me-2"></i>
+      <strong>Event Past:</strong> {{ getEventStatusMessage() }} Custom ticket creation is disabled for past events.
+    </div>
+
+    <div class="alert alert-warning mb-4" *ngIf="isEventClosed() && !isEventPast()">
+      <i class="fas fa-lock me-2"></i>
+      <strong>Sales Closed:</strong> {{ getEventStatusMessage() }} You can still create custom tickets for special invites.
+    </div>
+
+    <!-- Access Denied for Past Events -->
+    <div class="alert alert-danger" *ngIf="selectedEvent && !canCreateCustomTickets()">
+      <i class="fa fa-lock me-2"></i>
+      <strong>Access Denied:</strong> Custom ticket creation is disabled for past events.
+    </div>
+
+    <!-- Custom Ticket Form -->
+    <div class="row" *ngIf="canCreateCustomTickets()">
+      <div class="col-lg-8 col-xl-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fa fa-ticket-alt me-2"></i>Ticket Details
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">
+              <small>Use this for special invites. Create a custom ticket and optionally send a payment link. You can override the ticket price for this payment.</small>
+            </div>
+
+            <form (ngSubmit)="onSubmitCustomTicket()" #customTicketFormRef="ngForm">
+              <!-- Event Name -->
+              <div class="mb-4" *ngIf="selectedEvent">
+                <h6 class="text-muted mb-2">
+                  <i class="fa fa-calendar me-2"></i>Event
+                </h6>
+                <h5 class="mb-0">{{ selectedEvent.title }}</h5>
+                <small class="text-muted" *ngIf="selectedEvent.date_and_time">
+                  {{ selectedEvent.date_and_time | date:'medium' }}
+                  <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
+                </small>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Name</label>
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.name"
+                      name="name"
+                      placeholder="Full Name"
+                      required>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Email Address</label>
+                    <input 
+                      type="email" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.email_address"
+                      name="email_address"
+                      placeholder="email@example.com"
+                      required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Contact Number</label>
+                    <input 
+                      type="tel" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.contact_number"
+                      name="contact_number"
+                      placeholder="+639xxxxxxxxx"
+                      required>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Number of Entries</label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.number_of_entries"
+                      name="number_of_entries"
+                      placeholder="1"
+                      min="1"
+                      required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Price per Ticket</label>
+                <div class="input-group">
+                  <span class="input-group-text">₱</span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="customTicketForm.price_per_ticket"
+                    name="price_per_ticket"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    [disabled]="!priceOverrideEnabled">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="enablePriceOverride()"
+                    *ngIf="!priceOverrideEnabled">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                </div>
+                <div class="form-text" *ngIf="!priceOverrideEnabled">
+                  Default price: ₱{{ selectedEvent?.ticket_price || 0 | number:'1.2-2' }}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Referral Code (Optional)</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.referral_code"
+                  name="referral_code"
+                  placeholder="Enter referral code">
+              </div>
+
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [(ngModel)]="customTicketForm.ticket_paid"
+                    name="ticket_paid"
+                    id="ticket_paid"
+                    (change)="onToggleMarkAsPaid()">
+                  <label class="form-check-label" for="ticket_paid">
+                    Mark as paid
+                  </label>
+                </div>
+
+                <div class="mt-2" *ngIf="customTicketForm.ticket_paid">
+                  <label class="form-label">Payment Processing Fee</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.payment_processing_fee"
+                      name="payment_processing_fee"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0">
+                  </div>
+                </div>
+
+                <div class="form-check form-switch mt-2" *ngIf="!customTicketForm.ticket_paid">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [(ngModel)]="customTicketForm.send_email"
+                    name="send_email"
+                    id="send_email">
+                  <label class="form-check-label" for="send_email">
+                    Send payment email
+                  </label>
+                </div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button 
+                  type="submit" 
+                  class="btn btn-primary"
+                  [disabled]="!customTicketFormRef.form.valid || submitting">
+                  <i class="fa fa-plus me-1" *ngIf="!submitting"></i>
+                  <i class="fa fa-spinner fa-spin me-1" *ngIf="submitting"></i>
+                  <span *ngIf="submitting">Creating...</span>
+                  <span *ngIf="!submitting">Create Ticket</span>
+                </button>
+                
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  (click)="onCancel()"
+                  [disabled]="submitting">
+                  Cancel
+                </button>
+
+                <button 
+                  type="button" 
+                  class="btn btn-outline-info"
+                  (click)="resetCustomTicketForm()"
+                  [disabled]="submitting">
+                  <i class="fa fa-undo me-1"></i>
+                  Reset Form
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Card -->
+      <div class="col-lg-4 col-xl-6">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="fa fa-info-circle me-2"></i>Ticket Summary
+            </h6>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless table-sm">
+              <tr *ngIf="selectedEvent">
+                <td><strong>Event:</strong></td>
+                <td>{{ selectedEvent.title }}</td>
+              </tr>
+              <tr *ngIf="selectedEvent?.date_and_time">
+                <td><strong>Date:</strong></td>
+                <td>{{ selectedEvent?.date_and_time | date:'medium' }}</td>
+              </tr>
+              <tr *ngIf="selectedEvent?.venue">
+                <td><strong>Venue:</strong></td>
+                <td>{{ selectedEvent?.venue }}</td>
+              </tr>
+              <tr>
+                <td><strong>Entries:</strong></td>
+                <td>{{ customTicketForm.number_of_entries || 0 }}</td>
+              </tr>
+              <tr>
+                <td><strong>Price per ticket:</strong></td>
+                <td>₱{{ customTicketForm.price_per_ticket || 0 | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Total:</strong></td>
+                <td><strong>₱{{ (customTicketForm.price_per_ticket * customTicketForm.number_of_entries) || 0 | number:'1.2-2' }}</strong></td>
+              </tr>
+              <tr *ngIf="customTicketForm.ticket_paid && customTicketForm.payment_processing_fee > 0">
+                <td><strong>Processing Fee:</strong></td>
+                <td>₱{{ customTicketForm.payment_processing_fee | number:'1.2-2' }}</td>
+              </tr>
+            </table>
+
+            <div class="alert alert-info mt-3" *ngIf="customTicketForm.ticket_paid">
+              <small><i class="fa fa-check-circle me-1"></i>This ticket will be marked as paid immediately after creation.</small>
+            </div>
+
+            <div class="alert alert-warning mt-3" *ngIf="!customTicketForm.ticket_paid && customTicketForm.send_email">
+              <small><i class="fa fa-envelope me-1"></i>A payment email will be sent to the customer.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Non-Admin Access Denied -->
+    <div class="alert alert-danger" *ngIf="!isAdmin && !loading">
+      <i class="fa fa-lock me-2"></i>
+      <strong>Access Denied:</strong> You don't have permission to create custom tickets. Only administrators can create custom tickets.
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="text-center py-5" *ngIf="loading">
+    <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+    <p class="text-muted mt-2">Loading...</p>
+  </div>
+</div>

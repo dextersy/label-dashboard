@@ -599,9 +599,9 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Check if event is closed
-    if (event.close_time && new Date() > event.close_time) {
-      return res.status(400).json({ error: 'Ticket sales are closed for this event' });
+    // Check if event is past (admins can create custom tickets even when sales are closed)
+    if (event.date_and_time && new Date() > new Date(event.date_and_time)) {
+      return res.status(400).json({ error: 'Cannot create tickets for past events' });
     }
 
     // Find referrer if code provided

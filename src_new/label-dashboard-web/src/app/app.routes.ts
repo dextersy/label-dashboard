@@ -14,6 +14,7 @@ import { InviteComponent } from './pages/invite/invite.component';
 import { AdminInviteComponent } from './pages/admin-invite/admin-invite.component';
 import { AdminSetupComponent } from './pages/admin-setup/admin-setup.component';
 import { ProfileComponent } from './pages/profile/profile.component';
+import { CustomTicketComponent } from './pages/events/custom-ticket/custom-ticket.component';
 import { TicketBuyComponent } from './pages/public/ticket-buy.component';
 import { TicketSuccessComponent } from './pages/public/ticket-success.component';
 import { TicketVerifyComponent } from './pages/public/ticket-verify.component';
@@ -83,7 +84,8 @@ export const routes: Routes = [
       { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } },
-      { path: 'email', component: EventsComponent, data: { tab: 'email' } }
+      { path: 'email', component: EventsComponent, data: { tab: 'email' } },
+      { path: 'custom-ticket', component: CustomTicketComponent }
     ]
   },
   { 

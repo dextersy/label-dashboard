@@ -50,6 +50,7 @@ export class BreadcrumbService {
     '/events/abandoned': { label: 'Pending Orders', parent: '/events' },
     '/events/referrals': { label: 'Referrals', parent: '/events' },
     '/events/email': { label: 'Send Email', parent: '/events' },
+    '/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/events' },
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
     '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
     '/admin/summary': { label: 'Summary View', parent: '/admin' },
