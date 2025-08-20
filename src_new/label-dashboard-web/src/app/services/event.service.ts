@@ -316,9 +316,9 @@ export class EventService {
   }
 
   /**
-   * Add a ticket to an event
+   * Add a ticket to an event (supports both single ticket and array of tickets)
    */
-  addTicket(ticketData: any): Observable<any> {
+  addTicket(ticketData: any | any[]): Observable<any> {
     return this.http.post(`${environment.apiUrl}/events/tickets`, ticketData, {
       headers: this.getAuthHeaders()
     }).pipe(

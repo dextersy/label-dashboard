@@ -566,135 +566,217 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const {
-      event_id,
-      name,
-      email_address,
-      contact_number,
-      number_of_entries = 1,
-      referrer_code,
-      send_email = true,
-      price_per_ticket,
-      payment_processing_fee
-    } = req.body;
+    // Check if request body contains an array of tickets or a single ticket
+    const isArrayRequest = Array.isArray(req.body) || Array.isArray(req.body.tickets);
+    const ticketsData = isArrayRequest 
+      ? (Array.isArray(req.body) ? req.body : req.body.tickets)
+      : [req.body]; // Wrap single ticket in array
 
-    if (!event_id || !name || !email_address) {
+    if (!Array.isArray(ticketsData) || ticketsData.length === 0) {
       return res.status(400).json({ 
-        error: 'Event ID, name, and email are required' 
+        error: 'Ticket data is required' 
       });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    // Validate all tickets first
+    for (let i = 0; i < ticketsData.length; i++) {
+      const ticket = ticketsData[i];
+      const {
+        event_id,
+        name,
+        email_address,
+        contact_number,
+        number_of_entries = 1
+      } = ticket;
 
-    // Get event details
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      },
-      include: [{ model: Brand, as: 'brand' }]
-    });
+      if (!event_id || !name || !email_address) {
+        const errorMsg = ticketsData.length > 1 
+          ? `Ticket ${i + 1}: Event ID, name, and email are required` 
+          : 'Event ID, name, and email are required';
+        return res.status(400).json({ error: errorMsg });
+      }
 
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Check if event is past (admins can create custom tickets even when sales are closed)
-    if (event.date_and_time && new Date() > new Date(event.date_and_time)) {
-      return res.status(400).json({ error: 'Cannot create tickets for past events' });
-    }
-
-    // Find referrer if code provided
-    let referrer = null;
-    if (referrer_code) {
-      referrer = await EventReferrer.findOne({
-        where: { 
-          referral_code: referrer_code,
-          event_id 
-        }
-      });
-    }
-
-    // Generate unique ticket code for this event
-    const ticketCode = await generateUniqueTicketCode(eventIdNum);
-
-    // Use custom price if provided, otherwise use event's default price
-    const ticketPrice = price_per_ticket !== undefined ? price_per_ticket : event.ticket_price;
-    
-    // Calculate total amount and processing fee
-    const totalAmount = ticketPrice * number_of_entries;
-    const processingFee = payment_processing_fee !== undefined ? Number(payment_processing_fee) : 0;
-
-    // Create PayMongo payment link
-    const paymentLink = await paymentService.createPaymentLink({
-      amount: totalAmount * 100, // Convert to cents (no processing fee added)
-      description: `${event.title} - ${number_of_entries} ticket(s)`,
-      remarks: `Ticket code: ${ticketCode}`
-    });
-
-    if (!paymentLink) {
-      return res.status(500).json({ error: 'Failed to create payment link' });
-    }
-
-    // Create ticket record
-    const ticket = await Ticket.create({
-      event_id: eventIdNum,
-      name,
-      email_address,
-      contact_number,
-      number_of_entries,
-      ticket_code: ticketCode,
-      status: 'New',
-      payment_link: paymentLink.attributes.checkout_url,
-      payment_link_id: paymentLink.id,
-      price_per_ticket: ticketPrice,
-      payment_processing_fee: processingFee,
-      referrer_id: referrer?.id || null,
-      order_timestamp: new Date()
-    });
-
-    // Send payment link email if requested
-    if (send_email) {
-      const emailSent = await sendPaymentLinkEmail(
-        {
-          email_address,
-          name,
-          ticket_code: ticketCode,
-          number_of_entries,
-          price_per_ticket: ticketPrice,
-          payment_processing_fee: processingFee
-        },
-        {
-          title: event.title,
-          date_and_time: event.date_and_time,
-          venue: event.venue
-        },
-        paymentLink.attributes.checkout_url,
-        {
-          brand_name: event.brand?.brand_name
-        },
-        req.user.brand_id
-      );
-
-      if (!emailSent) {
-        console.warn('Failed to send payment link email, but ticket was created successfully');
+      if (!contact_number) {
+        const errorMsg = ticketsData.length > 1 
+          ? `Ticket ${i + 1}: Contact number is required` 
+          : 'Contact number is required';
+        return res.status(400).json({ error: errorMsg });
       }
     }
 
-    res.status(201).json({
-      message: 'Ticket created successfully',
-      ticket: {
+    const createdTickets = [];
+
+    // Process each ticket
+    for (const ticketData of ticketsData) {
+      const {
+        event_id,
+        name,
+        email_address,
+        contact_number,
+        number_of_entries = 1,
+        referrer_code,
+        send_email = true,
+        price_per_ticket,
+        payment_processing_fee,
+        ticket_paid = false
+      } = ticketData;
+
+      const eventIdNum = parseInt(event_id, 10);
+
+      // Get event details (validate each ticket against its event)
+      const event = await Event.findOne({
+        where: { 
+          id: eventIdNum,
+          brand_id: req.user.brand_id
+        },
+        include: [{ model: Brand, as: 'brand' }]
+      });
+
+      if (!event) {
+        const errorMsg = ticketsData.length > 1 
+          ? `Event not found for ticket: ${name}` 
+          : 'Event not found';
+        return res.status(404).json({ error: errorMsg });
+      }
+
+      // Check if event is past (admins can create custom tickets even when sales are closed)
+      if (event.date_and_time && new Date() > new Date(event.date_and_time)) {
+        const errorMsg = ticketsData.length > 1 
+          ? `Cannot create tickets for past event: ${event.title}` 
+          : 'Cannot create tickets for past events';
+        return res.status(400).json({ error: errorMsg });
+      }
+
+      // Find referrer if code provided
+      let referrer = null;
+      if (referrer_code) {
+        referrer = await EventReferrer.findOne({
+          where: { 
+            referral_code: referrer_code,
+            event_id 
+          }
+        });
+      }
+
+      // Generate unique ticket code for this event
+      const ticketCode = await generateUniqueTicketCode(eventIdNum);
+
+      // Use custom price if provided, otherwise use event's default price
+      const ticketPrice = price_per_ticket !== undefined ? price_per_ticket : event.ticket_price;
+      
+      // Calculate total amount and processing fee
+      const totalAmount = ticketPrice * number_of_entries;
+      const processingFee = payment_processing_fee !== undefined ? Number(payment_processing_fee) : 0;
+
+      let paymentLink = null;
+      let ticket;
+
+      if (ticket_paid) {
+        // For paid tickets, create without payment link
+        ticket = await Ticket.create({
+          event_id: eventIdNum,
+          name,
+          email_address,
+          contact_number,
+          number_of_entries,
+          ticket_code: ticketCode,
+          status: 'Payment Confirmed',
+          price_per_ticket: ticketPrice,
+          payment_processing_fee: processingFee,
+          referrer_id: referrer?.id || null,
+          order_timestamp: new Date()
+        });
+      } else {
+        // Create PayMongo payment link for unpaid tickets
+        paymentLink = await paymentService.createPaymentLink({
+          amount: totalAmount * 100, // Convert to cents
+          description: `${event.title} - ${number_of_entries} ticket(s)`,
+          remarks: `Ticket code: ${ticketCode}`
+        });
+
+        if (!paymentLink) {
+          const errorMsg = ticketsData.length > 1 
+            ? `Failed to create payment link for ticket: ${name}` 
+            : 'Failed to create payment link';
+          return res.status(500).json({ error: errorMsg });
+        }
+
+        ticket = await Ticket.create({
+          event_id: eventIdNum,
+          name,
+          email_address,
+          contact_number,
+          number_of_entries,
+          ticket_code: ticketCode,
+          status: 'New',
+          payment_link: paymentLink.attributes.checkout_url,
+          payment_link_id: paymentLink.id,
+          price_per_ticket: ticketPrice,
+          payment_processing_fee: processingFee,
+          referrer_id: referrer?.id || null,
+          order_timestamp: new Date()
+        });
+
+        // Send payment link email if requested
+        if (send_email) {
+          const emailSent = await sendPaymentLinkEmail(
+            {
+              email_address,
+              name,
+              ticket_code: ticketCode,
+              number_of_entries,
+              price_per_ticket: ticketPrice,
+              payment_processing_fee: processingFee
+            },
+            {
+              title: event.title,
+              date_and_time: event.date_and_time,
+              venue: event.venue
+            },
+            paymentLink.attributes.checkout_url,
+            {
+              brand_name: event.brand?.brand_name
+            },
+            req.user.brand_id
+          );
+
+          if (!emailSent) {
+            console.warn(`Failed to send payment link email for ticket: ${name}, but ticket was created successfully`);
+          }
+        }
+      }
+
+      createdTickets.push({
         id: ticket.id,
         ticket_code: ticketCode,
-        payment_link: paymentLink.attributes.checkout_url,
-        total_amount: totalAmount // No processing fee for custom tickets
-      }
-    });
+        name,
+        email_address,
+        status: ticket.status,
+        payment_link: paymentLink?.attributes?.checkout_url || null,
+        total_amount: totalAmount
+      });
+    }
+
+    // Return appropriate response based on single vs multiple tickets
+    if (ticketsData.length === 1) {
+      // Single ticket response (backward compatibility)
+      res.status(201).json({
+        message: 'Ticket created successfully',
+        ticket: createdTickets[0]
+      });
+    } else {
+      // Multiple tickets response
+      res.status(201).json({
+        message: `${createdTickets.length} tickets created successfully`,
+        tickets: createdTickets
+      });
+    }
   } catch (error) {
     console.error('Add ticket error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 export const getTickets = async (req: AuthRequest, res: Response) => {
   try {

@@ -21,8 +21,37 @@
       <strong>Access Denied:</strong> Custom ticket creation is disabled for past events.
     </div>
 
-    <!-- Custom Ticket Form -->
-    <div class="row" *ngIf="canCreateCustomTickets()">
+    <!-- View Toggle -->
+    <div class="row mb-4" *ngIf="canCreateCustomTickets()">
+      <div class="col-12">
+        <div class="d-flex justify-content-center align-items-center flex-column">
+          <div class="btn-group view-toggle" role="group" aria-label="Ticket creation mode toggle">
+            <button type="button" 
+                    class="btn"
+                    [class.active]="currentView === 'single'"
+                    (click)="switchToSingleView()"
+                    [attr.aria-pressed]="currentView === 'single'">
+              <i class="fa fa-user me-2"></i>Single Ticket
+            </button>
+            <button type="button" 
+                    class="btn"
+                    [class.active]="currentView === 'bulk'"
+                    (click)="switchToBulkView()"
+                    [attr.aria-pressed]="currentView === 'bulk'">
+              <i class="fa fa-users me-2"></i>Bulk Create
+            </button>
+          </div>
+          <small class="text-muted mt-2">
+            <i class="fa fa-info-circle me-1"></i>
+            <span *ngIf="currentView === 'single'">Create individual custom tickets with detailed options</span>
+            <span *ngIf="currentView === 'bulk'">Create multiple tickets at once with bulk editing features</span>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Single Ticket Form -->
+    <div class="row" *ngIf="canCreateCustomTickets() && currentView === 'single'">
       <div class="col-lg-8 col-xl-6">
         <div class="card">
           <div class="card-header">
@@ -262,6 +291,295 @@
 
             <div class="alert alert-warning mt-3" *ngIf="!customTicketForm.ticket_paid && customTicketForm.send_email">
               <small><i class="fa fa-envelope me-1"></i>A payment email will be sent to the customer.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Ticket Creation View -->
+    <div *ngIf="canCreateCustomTickets() && currentView === 'bulk'">
+      <!-- Event Information for Bulk View -->
+      <div class="row mb-3" *ngIf="selectedEvent">
+        <div class="col-12">
+          <div class="card border-primary">
+            <div class="card-body py-2">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <h6 class="mb-1 text-primary">
+                    <i class="fa fa-calendar me-2"></i>{{ selectedEvent.title }}
+                  </h6>
+                  <small class="text-muted">
+                    {{ selectedEvent.date_and_time | date:'medium' }}
+                    <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
+                  </small>
+                </div>
+                <div class="text-end">
+                  <small class="text-muted d-block">Default Price</small>
+                  <strong>₱{{ selectedEvent.ticket_price | number:'1.2-2' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Contact</th>
+              <th>Entries</th>
+              <th>Price</th>
+              <th>Send Payment Link</th>
+              <th>Mark Paid</th>
+              <th>Processing Fee</th>
+              <th>Referral Code</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Apply to all row -->
+            <tr class="table-light">
+              <td><em>Apply to all</em></td>
+              <td></td>
+              <td></td>
+              <td>
+                <input type="number" 
+                       class="form-control form-control-md" 
+                       #applyAllEntriesInput 
+                       placeholder="1"
+                       min="1"
+                       (change)="applyAllEntries(applyAllEntriesInput.value); applyAllEntriesInput.value = ''">
+              </td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         #applyAllPriceInput 
+                         placeholder="{{ selectedEvent?.ticket_price || 0 }}"
+                         step="0.01"
+                         min="0"
+                         (change)="applyAllPrice(applyAllPriceInput.value); applyAllPriceInput.value = ''">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         #applyAllEmailInput 
+                         [(ngModel)]="applyAllSendEmailState"
+                         [disabled]="applyAllPaidState"
+                         (change)="applyAllSendEmail(applyAllEmailInput.checked)">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         #applyAllPaidInput 
+                         [(ngModel)]="applyAllPaidState"
+                         (change)="applyAllPaid(applyAllPaidInput.checked)">
+                </div>
+              </td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         #applyAllProcessingFeeInput 
+                         placeholder="0.00"
+                         step="0.01"
+                         min="0"
+                         [disabled]="!applyAllPaidState"
+                         (change)="applyAllProcessingFee(applyAllProcessingFeeInput.value); applyAllProcessingFeeInput.value = ''">
+                </div>
+              </td>
+              <td>
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       #applyAllReferralInput 
+                       placeholder="Referral code"
+                       (change)="applyAllReferralCode(applyAllReferralInput.value); applyAllReferralInput.value = ''">
+              </td>
+              <td></td>
+            </tr>
+
+            <!-- Data rows -->
+            <tr *ngFor="let ticket of bulkTickets; let i = index">
+              <td>
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.name"
+                       placeholder="Full Name"
+                       required>
+              </td>
+              <td>
+                <input type="email" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.email_address"
+                       placeholder="email@example.com"
+                       required>
+              </td>
+              <td>
+                <input type="tel" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.contact_number"
+                       placeholder="+639xxxxxxxxx"
+                       required>
+              </td>
+              <td>
+                <input type="number" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.number_of_entries"
+                       placeholder="1"
+                       min="1"
+                       required>
+              </td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         [(ngModel)]="ticket.price_per_ticket"
+                         placeholder="0.00"
+                         step="0.01"
+                         min="0">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         [(ngModel)]="ticket.send_email"
+                         [disabled]="ticket.ticket_paid">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         [(ngModel)]="ticket.ticket_paid"
+                         (change)="ticket.ticket_paid ? (ticket.send_email = false) : (ticket.payment_processing_fee = 0)">
+                </div>
+              </td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         [(ngModel)]="ticket.payment_processing_fee"
+                         placeholder="0.00"
+                         step="0.01"
+                         min="0"
+                         [disabled]="!ticket.ticket_paid">
+                </div>
+              </td>
+              <td>
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.referral_code"
+                       placeholder="Optional">
+              </td>
+              <td>
+                <button type="button" 
+                        class="btn btn-outline-danger btn-sm" 
+                        (click)="removeBulkRow(i)"
+                        title="Remove row">
+                  <i class="fa fa-times"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bulk Action Panel -->
+      <div class="sticky-bottom bg-white border-top p-3 mt-3">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-12">
+              <!-- Mobile Layout -->
+              <div class="d-block d-lg-none">
+                <div class="row mb-3">
+                  <div class="col-12">
+                    <div class="btn-group w-100" role="group">
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(1)">
+                        Add Row
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(5)">
+                        Add 5
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(10)">
+                        Add 10
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                  <small class="text-muted">
+                    Total: ₱{{ getBulkTotal() | number:'1.2-2' }} • {{ bulkTickets.length }} tickets
+                  </small>
+                </div>
+                <button type="button" 
+                        class="btn btn-success btn-lg w-100" 
+                        (click)="onSubmitBulkTickets()" 
+                        [disabled]="submitting || bulkTickets.length === 0">
+                  <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
+                  <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
+                  <span *ngIf="submitting">Creating...</span>
+                  <span *ngIf="!submitting && bulkTickets.length > 0">Create {{ bulkTickets.length }} Tickets</span>
+                  <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+                </button>
+              </div>
+
+              <!-- Desktop Layout -->
+              <div class="d-none d-lg-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-4">
+                  <div>
+                    <strong>Total Amount:</strong> 
+                    <span class="text-success">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="text-muted">
+                    Tickets: {{ bulkTickets.length }}
+                  </div>
+                  <div>
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(1)">
+                        Add Row
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(5)">
+                        Add 5
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(10)">
+                        Add 10
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button type="button" 
+                          class="btn btn-outline-secondary" 
+                          (click)="onCancel()"
+                          [disabled]="submitting">
+                    Cancel
+                  </button>
+                  <button type="button" 
+                          class="btn btn-success btn-lg" 
+                          (click)="onSubmitBulkTickets()" 
+                          [disabled]="submitting || bulkTickets.length === 0">
+                    <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
+                    <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
+                    <span *ngIf="submitting">Creating...</span>
+                    <span *ngIf="!submitting && bulkTickets.length > 0">Create All Tickets</span>
+                    <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

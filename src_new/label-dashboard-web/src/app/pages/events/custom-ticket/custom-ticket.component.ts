@@ -21,6 +21,18 @@ export interface CustomTicketForm {
   send_email: boolean;
 }
 
+export interface BulkTicketRow {
+  name: string;
+  email_address: string;
+  contact_number: string;
+  number_of_entries: number;
+  price_per_ticket: number;
+  referral_code?: string;
+  ticket_paid: boolean;
+  payment_processing_fee: number;
+  send_email: boolean;
+}
+
 
 @Component({
   selector: 'app-custom-ticket',
@@ -35,6 +47,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
   loading = false;
   submitting = false;
   returnRoute = '/events/abandoned'; // Default to pending orders
+  currentView: 'single' | 'bulk' = 'single';
   
   customTicketForm: CustomTicketForm = {
     name: '',
@@ -48,7 +61,10 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     send_email: true
   };
 
+  bulkTickets: BulkTicketRow[] = [];
   priceOverrideEnabled = false;
+  applyAllPaidState = false;
+  applyAllSendEmailState = true;
   private subscriptions = new Subscription();
 
   constructor(
@@ -281,5 +297,158 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
         { label: 'Create Custom Ticket' } // Current page - no route
       ]);
     }
+  }
+
+  // View toggle methods
+  switchToSingleView(): void {
+    this.currentView = 'single';
+  }
+
+  switchToBulkView(): void {
+    this.currentView = 'bulk';
+    if (this.bulkTickets.length === 0) {
+      this.addBulkRows(1);
+    }
+  }
+
+  // Bulk ticket methods
+  addBulkRows(count: number): void {
+    for (let i = 0; i < count; i++) {
+      this.bulkTickets.push({
+        name: '',
+        email_address: '',
+        contact_number: '',
+        number_of_entries: 1,
+        price_per_ticket: this.selectedEvent?.ticket_price || 0,
+        referral_code: '',
+        ticket_paid: false,
+        payment_processing_fee: 0,
+        send_email: true
+      });
+    }
+  }
+
+  removeBulkRow(index: number): void {
+    this.bulkTickets.splice(index, 1);
+  }
+
+  // Apply to all methods for bulk creation
+  applyAllPaid(paid: boolean): void {
+    this.applyAllPaidState = paid;
+    if (paid) {
+      this.applyAllSendEmailState = false;
+    }
+    
+    this.bulkTickets.forEach(ticket => {
+      ticket.ticket_paid = paid;
+      if (paid) {
+        ticket.send_email = false;
+      } else {
+        ticket.payment_processing_fee = 0;
+      }
+    });
+  }
+
+  applyAllProcessingFee(fee: string): void {
+    const feeNum = parseFloat(fee);
+    if (!isNaN(feeNum) && feeNum >= 0) {
+      this.bulkTickets.forEach(ticket => {
+        if (ticket.ticket_paid) {
+          ticket.payment_processing_fee = feeNum;
+        }
+      });
+    }
+  }
+
+  applyAllSendEmail(sendEmail: boolean): void {
+    this.bulkTickets.forEach(ticket => {
+      if (!ticket.ticket_paid) {
+        ticket.send_email = sendEmail;
+      }
+    });
+  }
+
+  applyAllPrice(price: string): void {
+    const priceNum = parseFloat(price);
+    if (!isNaN(priceNum) && priceNum >= 0) {
+      this.bulkTickets.forEach(ticket => {
+        ticket.price_per_ticket = priceNum;
+      });
+    }
+  }
+
+  applyAllEntries(entries: string): void {
+    const entriesNum = parseInt(entries, 10);
+    if (!isNaN(entriesNum) && entriesNum > 0) {
+      this.bulkTickets.forEach(ticket => {
+        ticket.number_of_entries = entriesNum;
+      });
+    }
+  }
+
+  applyAllReferralCode(referralCode: string): void {
+    this.bulkTickets.forEach(ticket => {
+      ticket.referral_code = referralCode.trim();
+    });
+  }
+
+  getBulkTotal(): number {
+    return this.bulkTickets.reduce((total, ticket) => {
+      return total + (ticket.price_per_ticket * ticket.number_of_entries);
+    }, 0);
+  }
+
+  getBulkProcessingFeeTotal(): number {
+    return this.bulkTickets.reduce((total, ticket) => {
+      return total + (ticket.ticket_paid ? ticket.payment_processing_fee : 0);
+    }, 0);
+  }
+
+  onSubmitBulkTickets(): void {
+    if (!this.selectedEvent) return;
+    
+    // Validate all tickets
+    const invalidTickets = this.bulkTickets.filter(ticket => 
+      !ticket.name || !ticket.email_address || !ticket.contact_number || ticket.number_of_entries <= 0
+    );
+    
+    if (invalidTickets.length > 0) {
+      this.notificationService.showError(`Please fill in all required fields for all tickets.`);
+      return;
+    }
+
+    this.submitting = true;
+
+    const ticketsData = this.bulkTickets.map(ticket => ({
+      event_id: this.selectedEvent!.id,
+      name: ticket.name,
+      email_address: ticket.email_address,
+      contact_number: ticket.contact_number,
+      number_of_entries: ticket.number_of_entries,
+      send_email: ticket.send_email,
+      price_per_ticket: ticket.price_per_ticket,
+      payment_processing_fee: ticket.payment_processing_fee,
+      referrer_code: ticket.referral_code || undefined,
+      ticket_paid: ticket.ticket_paid
+    }));
+    
+    this.subscriptions.add(
+      this.eventService.addTicket(ticketsData).subscribe({
+        next: (response) => {
+          this.notificationService.showSuccess(`${this.bulkTickets.length} custom tickets created successfully!`);
+          this.bulkTickets = [];
+          this.submitting = false;
+          // Always navigate to pending orders after creation since that's where new tickets appear
+          this.router.navigate(['/events/abandoned'], { 
+            queryParams: { eventId: this.selectedEvent?.id } 
+          });
+        },
+        error: (error) => {
+          console.error('Failed to create bulk tickets:', error);
+          this.notificationService.showError('Failed to create bulk tickets');
+          this.submitting = false;
+        }
+      })
+    );
   }
 }
