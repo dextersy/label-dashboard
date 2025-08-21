@@ -15,6 +15,7 @@ export class FinancialSummaryTabComponent {
   @Input() summary: FinancialSummary | null = null;
   @Input() latestEarnings: Earning[] = [];
   @Input() latestRoyalties: Royalty[] = [];
+  @Input() isAdmin: boolean = false;
   @Input() onPayNow: () => Promise<void> = async () => {};
   
   @Output() viewEarningsDetails = new EventEmitter<void>();

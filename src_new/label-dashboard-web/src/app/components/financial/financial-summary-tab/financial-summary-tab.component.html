@@ -1,23 +1,23 @@
 <div class="row" *ngIf="summary">
   <div class="col-md-3">
-    <div class="card text-center">
-      <div class="card-body">
-        <h3 class="card-title">Current Balance</h3>
-        <h2 class="text-primary">{{ formatCurrency(summary.currentBalance) }}</h2>
-        <button class="btn btn-success" 
-                (click)="onPayNow()"
-                [disabled]="summary.currentBalance <= 0">
-          Pay Now
-        </button>
-      </div>
+    <div class="current-balance-section text-center p-4">
+      <h2 class="balance-title">Current Balance</h2>
+      <h1 class="balance-amount">{{ formatCurrency(summary.currentBalance) }}</h1>
+      <p class="balance-subtitle" *ngIf="!isAdmin">This is your total earned royalties less payments and advances made to you. Once this reaches your set payout point, this will be transferred to you on the 15th of the month.</p>
+      <button class="btn btn-primary pay-now-btn" 
+              *ngIf="isAdmin"
+              (click)="onPayNow()"
+              [disabled]="summary.currentBalance <= 0">
+        <i class="fas fa-credit-card me-2"></i>Pay Now
+      </button>
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card text-center">
+    <div class="card text-center financial-card">
       <div class="card-body">
         <h3 class="card-title">Total Earnings</h3>
-        <h2 class="text-success">{{ formatCurrency(summary.totalEarnings) }}</h2>
-        <button class="btn btn-outline-success btn-sm" 
+        <h2>{{ formatCurrency(summary.totalEarnings) }}</h2>
+        <button class="btn btn-outline-secondary btn-sm" 
                 (click)="viewEarningsDetails.emit()">
           View Details
         </button>
@@ -25,11 +25,11 @@
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card text-center">
+    <div class="card text-center financial-card">
       <div class="card-body">
         <h3 class="card-title">Total Royalties</h3>
-        <h2 class="text-info">{{ formatCurrency(summary.totalRoyalties) }}</h2>
-        <button class="btn btn-outline-info btn-sm" 
+        <h2>{{ formatCurrency(summary.totalRoyalties) }}</h2>
+        <button class="btn btn-outline-secondary btn-sm" 
                 (click)="viewRoyaltiesDetails.emit()">
           View Details
         </button>
@@ -37,11 +37,11 @@
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card text-center">
+    <div class="card text-center financial-card">
       <div class="card-body">
         <h3 class="card-title">Total Payments</h3>
-        <h2 class="text-warning">{{ formatCurrency(summary.totalPayments) }}</h2>
-        <button class="btn btn-outline-warning btn-sm" 
+        <h2>{{ formatCurrency(summary.totalPayments) }}</h2>
+        <button class="btn btn-outline-secondary btn-sm" 
                 (click)="viewPaymentsDetails.emit()">
           View Details
         </button>
