@@ -13,6 +13,13 @@ interface BrandAttributes {
   release_submission_url?: string;
   catalog_prefix?: string;
   parent_brand?: number;
+  monthly_fee?: number;
+  music_transaction_fixed_fee?: number;
+  music_revenue_percentage_fee?: number;
+  music_fee_revenue_type?: 'net' | 'gross';
+  event_transaction_fixed_fee?: number;
+  event_revenue_percentage_fee?: number;
+  event_fee_revenue_type?: 'net' | 'gross';
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -29,6 +36,13 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public release_submission_url?: string;
   public catalog_prefix?: string;
   public parent_brand?: number;
+  public monthly_fee?: number;
+  public music_transaction_fixed_fee?: number;
+  public music_revenue_percentage_fee?: number;
+  public music_fee_revenue_type?: 'net' | 'gross';
+  public event_transaction_fixed_fee?: number;
+  public event_revenue_percentage_fee?: number;
+  public event_fee_revenue_type?: 'net' | 'gross';
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -96,6 +110,76 @@ Brand.init(
         model: 'brand',
         key: 'id'
       }
+    },
+    monthly_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('monthly_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('monthly_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    music_transaction_fixed_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('music_transaction_fixed_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('music_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    music_revenue_percentage_fee: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('music_revenue_percentage_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('music_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    music_fee_revenue_type: {
+      type: DataTypes.ENUM('net', 'gross'),
+      allowNull: true,
+      defaultValue: 'net'
+    },
+    event_transaction_fixed_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('event_transaction_fixed_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('event_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    event_revenue_percentage_fee: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('event_revenue_percentage_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('event_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    event_fee_revenue_type: {
+      type: DataTypes.ENUM('net', 'gross'),
+      allowNull: true,
+      defaultValue: 'net'
     },
   },
   {

@@ -38,21 +38,37 @@
     </ng-template>
 
     <ng-template #actionsContent let-item>
-      <button
-        class="btn btn-sm btn-outline-primary d-none d-md-inline-block"
-        [disabled]="!hasDomains(item)"
-        (click)="openSublabelDashboard(item)"
-        [title]="hasDomains(item) ? 'Go to ' + item.brand_name + ' dashboard' : 'No domain configured'">
-        <i class="fas fa-external-link-alt"></i>
-      </button>
-      
-      <button
-        class="btn btn-sm btn-outline-primary d-md-none d-block w-100"
-        [disabled]="!hasDomains(item)"
-        (click)="openSublabelDashboard(item)">
-        <i class="fas fa-external-link-alt me-2"></i>
-        Go to Dashboard
-      </button>
+      <div class="d-flex gap-2 flex-wrap">
+        <button
+          class="btn btn-sm btn-outline-primary d-none d-md-inline-block"
+          [disabled]="!hasDomains(item)"
+          (click)="openSublabelDashboard(item)"
+          [title]="hasDomains(item) ? 'Go to ' + item.brand_name + ' dashboard' : 'No domain configured'">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-secondary d-none d-md-inline-block"
+          (click)="openFeeSettingsModal(item)"
+          title="Configure fee settings for {{ item.brand_name }}">
+          <i class="fas fa-dollar-sign"></i>
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2"
+          [disabled]="!hasDomains(item)"
+          (click)="openSublabelDashboard(item)">
+          <i class="fas fa-external-link-alt me-2"></i>
+          Go to Dashboard
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-secondary d-md-none d-block w-100"
+          (click)="openFeeSettingsModal(item)">
+          <i class="fas fa-dollar-sign me-2"></i>
+          Fee Settings
+        </button>
+      </div>
     </ng-template>
   </app-paginated-table>
 
@@ -101,4 +117,13 @@
     (close)="closeAddSublabelModal()"
     (submit)="onCreateSublabel($event)">
   </app-add-sublabel-modal>
+
+  <!-- Fee Settings Modal -->
+  <app-fee-settings-modal
+    [show]="showFeeSettingsModal"
+    [brandId]="selectedSublabelForFees?.brand_id || null"
+    [sublabelName]="selectedSublabelForFees?.brand_name || ''"
+    (close)="closeFeeSettingsModal()"
+    (saved)="onFeeSettingsSaved($event)">
+  </app-fee-settings-modal>
 </div>

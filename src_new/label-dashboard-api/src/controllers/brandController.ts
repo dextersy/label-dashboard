@@ -91,7 +91,14 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       release_submission_url: brand.release_submission_url,
       catalog_prefix: brand.catalog_prefix || 'REL',
       paymongo_wallet_id: brand.paymongo_wallet_id,
-      payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts || 0
+      payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts || 0,
+      monthly_fee: brand.monthly_fee || 0,
+      music_transaction_fixed_fee: brand.music_transaction_fixed_fee || 0,
+      music_revenue_percentage_fee: brand.music_revenue_percentage_fee || 0,
+      music_fee_revenue_type: brand.music_fee_revenue_type || 'net',
+      event_transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
+      event_revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
+      event_fee_revenue_type: brand.event_fee_revenue_type || 'net'
     });
 
   } catch (error) {
@@ -110,7 +117,14 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       catalog_prefix,
       release_submission_url,
       paymongo_wallet_id,
-      payment_processing_fee_for_payouts
+      payment_processing_fee_for_payouts,
+      monthly_fee,
+      music_transaction_fixed_fee,
+      music_revenue_percentage_fee,
+      music_fee_revenue_type,
+      event_transaction_fixed_fee,
+      event_revenue_percentage_fee,
+      event_fee_revenue_type
     } = req.body;
 
     const brand = await Brand.findByPk(brandId);
@@ -127,7 +141,14 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       catalog_prefix: catalog_prefix || brand.catalog_prefix,
       release_submission_url: release_submission_url || null,
       paymongo_wallet_id: paymongo_wallet_id || null,
-      payment_processing_fee_for_payouts: payment_processing_fee_for_payouts || 0
+      payment_processing_fee_for_payouts: payment_processing_fee_for_payouts || 0,
+      monthly_fee: monthly_fee !== undefined ? monthly_fee : brand.monthly_fee,
+      music_transaction_fixed_fee: music_transaction_fixed_fee !== undefined ? music_transaction_fixed_fee : brand.music_transaction_fixed_fee,
+      music_revenue_percentage_fee: music_revenue_percentage_fee !== undefined ? music_revenue_percentage_fee : brand.music_revenue_percentage_fee,
+      music_fee_revenue_type: music_fee_revenue_type || brand.music_fee_revenue_type,
+      event_transaction_fixed_fee: event_transaction_fixed_fee !== undefined ? event_transaction_fixed_fee : brand.event_transaction_fixed_fee,
+      event_revenue_percentage_fee: event_revenue_percentage_fee !== undefined ? event_revenue_percentage_fee : brand.event_revenue_percentage_fee,
+      event_fee_revenue_type: event_fee_revenue_type || brand.event_fee_revenue_type
     });
 
     res.json({
@@ -142,12 +163,135 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         release_submission_url: brand.release_submission_url,
         catalog_prefix: brand.catalog_prefix,
         paymongo_wallet_id: brand.paymongo_wallet_id,
-        payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts
+        payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts,
+        monthly_fee: brand.monthly_fee,
+        music_transaction_fixed_fee: brand.music_transaction_fixed_fee,
+        music_revenue_percentage_fee: brand.music_revenue_percentage_fee,
+        music_fee_revenue_type: brand.music_fee_revenue_type,
+        event_transaction_fixed_fee: brand.event_transaction_fixed_fee,
+        event_revenue_percentage_fee: brand.event_revenue_percentage_fee,
+        event_fee_revenue_type: brand.event_fee_revenue_type
       }
     });
 
   } catch (error) {
     console.error('Error updating brand settings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getFeeSettings = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+
+    const brand = await Brand.findByPk(brandId);
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    res.json({
+      id: brand.id,
+      monthly_fee: brand.monthly_fee || 0,
+      music: {
+        transaction_fixed_fee: brand.music_transaction_fixed_fee || 0,
+        revenue_percentage_fee: brand.music_revenue_percentage_fee || 0,
+        fee_revenue_type: brand.music_fee_revenue_type || 'net'
+      },
+      event: {
+        transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
+        revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
+        fee_revenue_type: brand.event_fee_revenue_type || 'net'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching fee settings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateFeeSettings = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+    const { monthly_fee, music, event } = req.body;
+
+    const brand = await Brand.findByPk(brandId);
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Validate monthly fee
+    if (monthly_fee !== undefined && (isNaN(monthly_fee) || monthly_fee < 0)) {
+      return res.status(400).json({ error: 'Monthly fee must be a non-negative number' });
+    }
+
+    // Validate music fee values
+    if (music) {
+      if (music.transaction_fixed_fee !== undefined && (isNaN(music.transaction_fixed_fee) || music.transaction_fixed_fee < 0)) {
+        return res.status(400).json({ error: 'Music transaction fixed fee must be a non-negative number' });
+      }
+      if (music.revenue_percentage_fee !== undefined && (isNaN(music.revenue_percentage_fee) || music.revenue_percentage_fee < 0 || music.revenue_percentage_fee > 100)) {
+        return res.status(400).json({ error: 'Music revenue percentage fee must be between 0 and 100' });
+      }
+      if (music.fee_revenue_type && !['net', 'gross'].includes(music.fee_revenue_type)) {
+        return res.status(400).json({ error: 'Music fee revenue type must be either "net" or "gross"' });
+      }
+    }
+
+    // Validate event fee values
+    if (event) {
+      if (event.transaction_fixed_fee !== undefined && (isNaN(event.transaction_fixed_fee) || event.transaction_fixed_fee < 0)) {
+        return res.status(400).json({ error: 'Event transaction fixed fee must be a non-negative number' });
+      }
+      if (event.revenue_percentage_fee !== undefined && (isNaN(event.revenue_percentage_fee) || event.revenue_percentage_fee < 0 || event.revenue_percentage_fee > 100)) {
+        return res.status(400).json({ error: 'Event revenue percentage fee must be between 0 and 100' });
+      }
+      if (event.fee_revenue_type && !['net', 'gross'].includes(event.fee_revenue_type)) {
+        return res.status(400).json({ error: 'Event fee revenue type must be either "net" or "gross"' });
+      }
+    }
+
+    // Update fee settings
+    const updateData: any = {};
+    
+    if (monthly_fee !== undefined) updateData.monthly_fee = monthly_fee;
+    
+    if (music) {
+      if (music.transaction_fixed_fee !== undefined) updateData.music_transaction_fixed_fee = music.transaction_fixed_fee;
+      if (music.revenue_percentage_fee !== undefined) updateData.music_revenue_percentage_fee = music.revenue_percentage_fee;
+      if (music.fee_revenue_type !== undefined) updateData.music_fee_revenue_type = music.fee_revenue_type;
+    }
+    
+    if (event) {
+      if (event.transaction_fixed_fee !== undefined) updateData.event_transaction_fixed_fee = event.transaction_fixed_fee;
+      if (event.revenue_percentage_fee !== undefined) updateData.event_revenue_percentage_fee = event.revenue_percentage_fee;
+      if (event.fee_revenue_type !== undefined) updateData.event_fee_revenue_type = event.fee_revenue_type;
+    }
+
+    await brand.update(updateData);
+
+    res.json({
+      message: 'Fee settings updated successfully',
+      feeSettings: {
+        id: brand.id,
+        monthly_fee: brand.monthly_fee,
+        music: {
+          transaction_fixed_fee: brand.music_transaction_fixed_fee,
+          revenue_percentage_fee: brand.music_revenue_percentage_fee,
+          fee_revenue_type: brand.music_fee_revenue_type
+        },
+        event: {
+          transaction_fixed_fee: brand.event_transaction_fixed_fee,
+          revenue_percentage_fee: brand.event_revenue_percentage_fee,
+          fee_revenue_type: brand.event_fee_revenue_type
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating fee settings:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

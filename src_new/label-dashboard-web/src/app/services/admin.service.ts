@@ -15,6 +15,26 @@ export interface BrandSettings {
   release_submission_url?: string;
   paymongo_wallet_id?: string;
   payment_processing_fee_for_payouts?: number;
+  monthly_fee?: number;
+  music_transaction_fixed_fee?: number;
+  music_revenue_percentage_fee?: number;
+  music_fee_revenue_type?: 'net' | 'gross';
+  event_transaction_fixed_fee?: number;
+  event_revenue_percentage_fee?: number;
+  event_fee_revenue_type?: 'net' | 'gross';
+}
+
+export interface FeeSettingsSection {
+  transaction_fixed_fee: number;
+  revenue_percentage_fee: number;
+  fee_revenue_type: 'net' | 'gross';
+}
+
+export interface FeeSettings {
+  id: number;
+  monthly_fee: number;
+  music: FeeSettingsSection;
+  event: FeeSettingsSection;
 }
 
 export interface Domain {
@@ -822,6 +842,19 @@ export class AdminService {
 
   cancelAdminInvite(userId: number): Observable<any> {
     return this.http.delete(`${environment.apiUrl}/users/${userId}/invite`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Fee Settings Management
+  getFeeSettings(brandId: number): Observable<FeeSettings> {
+    return this.http.get<FeeSettings>(`${environment.apiUrl}/brands/${brandId}/fee-settings`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateFeeSettings(brandId: number, feeSettings: Partial<FeeSettings>): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/fee-settings`, feeSettings, {
       headers: this.getAuthHeaders()
     });
   }

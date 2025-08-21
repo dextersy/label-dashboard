@@ -9,11 +9,13 @@ import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { AddSublabelModalComponent } from '../../../components/shared/add-sublabel-modal/add-sublabel-modal.component';
+import { FeeSettingsModalComponent } from '../../../components/shared/fee-settings-modal/fee-settings-modal.component';
+import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-child-brands-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent],
   templateUrl: './child-brands-tab.component.html',
   styleUrls: ['./child-brands-tab.component.scss']
 })
@@ -25,6 +27,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   endDate: string = '';
   sortInfo: SortInfo | null = null;
   showAddSublabelModal: boolean = false;
+  showFeeSettingsModal: boolean = false;
+  selectedSublabelForFees: ChildBrand | null = null;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
@@ -411,5 +415,22 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     return !!(childBrand.domains && childBrand.domains.length > 0);
   }
 
+  // Fee Settings Modal handlers
+  openFeeSettingsModal(childBrand: ChildBrand): void {
+    this.selectedSublabelForFees = childBrand;
+    this.showFeeSettingsModal = true;
+  }
+
+  closeFeeSettingsModal(): void {
+    this.showFeeSettingsModal = false;
+    this.selectedSublabelForFees = null;
+  }
+
+  onFeeSettingsSaved(feeSettings: FeeSettings): void {
+    this.notificationService.showSuccess(`Fee settings updated for ${this.selectedSublabelForFees?.brand_name}`);
+    this.closeFeeSettingsModal();
+    // Optionally refresh the data if needed
+    // this.loadChildBrands();
+  }
 
 }
