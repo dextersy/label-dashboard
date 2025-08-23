@@ -207,4 +207,38 @@ export class CreateEventModalComponent implements OnChanges {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // PascalCase
       .join('');
   }
+
+  setSuggestedCloseTime(interval: string): void {
+    const eventDateValue = this.eventForm.get('date_and_time')?.value;
+    if (!eventDateValue) return;
+
+    // Parse the datetime-local value directly (it's already in local timezone)
+    const eventDate = new Date(eventDateValue);
+    let closeDate = new Date(eventDate);
+
+    switch (interval) {
+      case '4h':
+        closeDate.setHours(closeDate.getHours() - 4);
+        break;
+      case '1d':
+        closeDate.setDate(closeDate.getDate() - 1);
+        break;
+      case '2d':
+        closeDate.setDate(closeDate.getDate() - 2);
+        break;
+      case '1w':
+        closeDate.setDate(closeDate.getDate() - 7);
+        break;
+    }
+
+    // Format for datetime-local input without timezone conversion
+    const year = closeDate.getFullYear();
+    const month = String(closeDate.getMonth() + 1).padStart(2, '0');
+    const day = String(closeDate.getDate()).padStart(2, '0');
+    const hours = String(closeDate.getHours()).padStart(2, '0');
+    const minutes = String(closeDate.getMinutes()).padStart(2, '0');
+    
+    const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+    this.eventForm.get('close_time')?.setValue(formattedDate);
+  }
 }

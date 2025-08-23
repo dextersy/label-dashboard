@@ -114,6 +114,41 @@
               <small class="form-text text-muted">
                 Leave empty to close ticket sales at event time
               </small>
+              <div class="mt-2 d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
+                <small class="text-muted">Quick suggestions:</small>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                  (click)="setSuggestedCloseTime('4h')"
+                  [disabled]="!eventForm.get('date_and_time')?.value">
+                  4h before
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                  (click)="setSuggestedCloseTime('1d')"
+                  [disabled]="!eventForm.get('date_and_time')?.value">
+                  1d before
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                  (click)="setSuggestedCloseTime('2d')"
+                  [disabled]="!eventForm.get('date_and_time')?.value">
+                  2d before
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                  (click)="setSuggestedCloseTime('1w')"
+                  [disabled]="!eventForm.get('date_and_time')?.value">
+                  1w before
+                </button>
+              </div>
             </div>
             
             <!-- Poster Upload -->

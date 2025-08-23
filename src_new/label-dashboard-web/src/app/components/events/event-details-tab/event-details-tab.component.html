@@ -224,6 +224,41 @@
                     class="form-control" 
                     [(ngModel)]="event.close_time" 
                     name="close_time">
+                  <div class="mt-2 d-flex flex-wrap align-items-center" style="gap: 0.5rem;">
+                    <small class="text-muted">Quick suggestions:</small>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                      (click)="setSuggestedCloseTime('4h')"
+                      [disabled]="!event.date_and_time">
+                      4h before
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                      (click)="setSuggestedCloseTime('1d')"
+                      [disabled]="!event.date_and_time">
+                      1d before
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                      (click)="setSuggestedCloseTime('2d')"
+                      [disabled]="!event.date_and_time">
+                      2d before
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary"
+                      style="font-size: 0.7rem; padding: 0.15rem 0.4rem;"
+                      (click)="setSuggestedCloseTime('1w')"
+                      [disabled]="!event.date_and_time">
+                      1w before
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="col-md-6">

@@ -695,4 +695,40 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.'
     ).length || 0) > 0;
   }
+
+  setSuggestedCloseTime(interval: string): void {
+    if (!this.event?.date_and_time) return;
+
+    const eventDate = new Date(this.event.date_and_time);
+    let closeDate = new Date(eventDate);
+
+    switch (interval) {
+      case '4h':
+        closeDate.setHours(closeDate.getHours() - 4);
+        break;
+      case '1d':
+        closeDate.setDate(closeDate.getDate() - 1);
+        break;
+      case '2d':
+        closeDate.setDate(closeDate.getDate() - 2);
+        break;
+      case '1w':
+        closeDate.setDate(closeDate.getDate() - 7);
+        break;
+    }
+
+    // Format for datetime-local input (YYYY-MM-DDTHH:MM)
+    const formattedDate = this.formatDateForInput(closeDate.toISOString());
+    this.event.close_time = formattedDate;
+
+    // Mark the form as dirty to enable the "Save Changes" button
+    if (this.eventForm) {
+      this.eventForm.form.markAsDirty();
+      const closeTimeControl = this.eventForm.controls['close_time'];
+      if (closeTimeControl) {
+        closeTimeControl.markAsDirty();
+        closeTimeControl.markAsTouched();
+      }
+    }
+  }
 }
