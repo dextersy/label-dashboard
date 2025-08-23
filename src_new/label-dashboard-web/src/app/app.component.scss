@@ -43,6 +43,9 @@
   top: 0;
   height: 100vh;
   min-height: 100vh;
+  width: 100%; // Default full width for mobile
+  margin-left: 0; // Default for mobile
+  transition: all 0.3s ease; // Animate both margin and width
   
   // Override any login page wrapper styles for dashboard layout
   display: block;
@@ -55,8 +58,7 @@
 .main-panel {
   position: relative;
   z-index: 2;
-  float: right;
-  width: calc(100% - 260px);
+  width: 100%;
   min-height: 100vh;
 }
 
@@ -75,23 +77,30 @@
 
 // Navbar positioning for fixed layout
 .navbar.fixed {
-  width: calc(100% - 260px);
-  right: 0;
-  left: auto;
+  width: 100%;
+  left: 0;
   border-radius: 0;
   padding-bottom: 0px;
 }
 
-// Responsive layout
+// Desktop layout - use direct class binding approach
+@media (min-width: 992px) {
+  // Default state: sidebar collapsed (no margin)
+  .wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  // When sidebar is open: add margin and constrain width
+  .wrapper.sidebar-open {
+    margin-left: 260px !important;
+    width: calc(100% - 260px) !important;
+  }
+}
+
+// Mobile layout - full width layout
 @media (max-width: 991px) {
-  .main-panel {
-    width: 100%;
-    float: none;
+  .wrapper {
+    margin-left: 0; // No margin on mobile
   }
-  
-  .navbar.fixed {
-    width: 100%;
-    left: 0;
-  }
-  
 }

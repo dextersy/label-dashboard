@@ -12,11 +12,23 @@ export class SidebarService {
     // Handle window resize to auto-close sidebar on mobile
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', () => this.handleResize());
+      
+      // Initialize DOM state based on initial sidebar state
+      this.initializeDOMState();
+    }
+  }
+  
+  private initializeDOMState(): void {
+    // Ensure DOM state matches service state
+    if (this.isOpenSubject.value) {
+      document.documentElement.classList.add('nav-open');
+    } else {
+      document.documentElement.classList.remove('nav-open');
     }
   }
 
   private getInitialState(): boolean {
-    // Always start closed on mobile
+    // Always start closed on mobile, expanded on desktop
     return !this.isMobile();
   }
 
@@ -24,6 +36,9 @@ export class SidebarService {
     if (this.isMobile()) {
       // Close sidebar when switching to mobile view
       this.closeSidebar();
+    } else {
+      // Open sidebar when switching to desktop view
+      this.openSidebar();
     }
   }
 
@@ -40,15 +55,23 @@ export class SidebarService {
 
   toggleSidebar(): void {
     const currentState = this.isOpenSubject.value;
-    this.isOpenSubject.next(!currentState);
+    const newState = !currentState;
     
-    if (!currentState) {
+    this.isOpenSubject.next(newState);
+    
+    if (newState) {
       document.documentElement.classList.add('nav-open');
-      this.addBodyClickHandler();
+      this.addBodyClickHandler(); // Only adds handler on mobile
     } else {
       document.documentElement.classList.remove('nav-open');
       this.removeBodyClickHandler();
     }
+  }
+
+  openSidebar(): void {
+    this.isOpenSubject.next(true);
+    document.documentElement.classList.add('nav-open');
+    this.addBodyClickHandler();
   }
 
   closeSidebar(): void {

@@ -9,6 +9,7 @@ import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
 import { NotificationService } from './services/notification.service';
+import { SidebarService } from './services/sidebar.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -22,6 +23,7 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'label-dashboard-web';
   currentRoute = '';
   brandLoaded = false;
+  sidebarOpen = false;
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -29,7 +31,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private brandService: BrandService,
     private authService: AuthService,
     private adminService: AdminService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private sidebarService: SidebarService
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +78,12 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     );
     this.subscriptions.push(completionSubscription);
+    
+    // Subscribe to sidebar state for wrapper class binding
+    const sidebarSubscription = this.sidebarService.isOpen$.subscribe(isOpen => {
+      this.sidebarOpen = isOpen;
+    });
+    this.subscriptions.push(sidebarSubscription);
   }
   
   ngOnDestroy(): void {

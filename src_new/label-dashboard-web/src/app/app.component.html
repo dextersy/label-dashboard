@@ -13,7 +13,7 @@
   </div>
 
   <ng-template #layoutTemplate>
-    <div class="wrapper">
+    <div class="wrapper" [class.sidebar-open]="sidebarOpen">
       <app-sidebar></app-sidebar>
       
       <div class="main-panel">

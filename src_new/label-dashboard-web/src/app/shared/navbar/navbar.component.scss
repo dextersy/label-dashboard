@@ -17,31 +17,43 @@
   gap: 8px;
 }
 
-/* Hamburger menu button - only visible on mobile */
+/* Hamburger menu button - visible on all screen sizes, smaller design */
 .navbar-toggle {
   background: none;
   border: none;
-  padding: 4px 6px;
+  padding: 6px 8px;
   margin-top: 8px;
   margin-right: 15px;
   margin-bottom: 8px;
   margin-left: 15px;
-  display: none;
+  display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.3s ease;
   
   .icon-bar {
     display: block;
-    width: 22px;
+    width: 18px; // Smaller width (was 22px)
     height: 2px;
     border-radius: 1px;
     background-color: #333;
-    margin: 4px 0;
-    transition: all 0.3s;
+    margin: 2px 0; // Smaller spacing (was 4px)
+    transition: all 0.3s ease;
   }
   
-  &:hover .icon-bar {
-    background-color: #666;
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    
+    .icon-bar {
+      background-color: #000;
+    }
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 }
 
@@ -177,10 +189,9 @@
   }
 }
 
-/* Show hamburger menu on mobile */
+/* Adjust hamburger menu margins on mobile */
 @media (max-width: 991px) {
   .navbar-toggle {
-    display: flex;
     margin-right: 8px;
     margin-left: 8px;
   }
@@ -212,9 +223,6 @@
 
 /* Desktop navbar layout */
 @media (min-width: 992px) {
-  .navbar-toggle {
-    display: none; // Hide hamburger on desktop
-  }
   
   .navbar-mobile-icons {
     display: none; // Hide mobile icons on desktop
@@ -242,11 +250,13 @@
   }
 }
 
-/* Animation for hamburger to X */
+/* Hamburger to X animation - smaller design */
 :global(html.nav-open) {
   .navbar-toggle {
+    background-color: rgba(0, 0, 0, 0.1);
+    
     .icon-bar:nth-child(1) {
-      transform: rotate(45deg) translate(5px, 5px);
+      transform: rotate(45deg) translate(3px, 3px); // Adjusted for smaller size
     }
     
     .icon-bar:nth-child(2) {
@@ -254,7 +264,7 @@
     }
     
     .icon-bar:nth-child(3) {
-      transform: rotate(-45deg) translate(7px, -6px);
+      transform: rotate(-45deg) translate(4px, -4px); // Adjusted for smaller size
     }
   }
 }
