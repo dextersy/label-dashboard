@@ -15,6 +15,7 @@ export interface CreateEventForm {
   poster_file?: File;
   rsvp_link: string;
   slug: string;
+  status: 'draft' | 'published';
   google_place_id?: string;
   venue_address?: string;
   venue_latitude?: number;
@@ -52,6 +53,7 @@ export class CreateEventModalComponent implements OnChanges {
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   selectedVenue: VenueSelection | null = null;
+  actionType: 'draft' | 'published' | null = null;
 
   constructor(private fb: FormBuilder) {
     this.eventForm = this.fb.group({
@@ -74,9 +76,13 @@ export class CreateEventModalComponent implements OnChanges {
     });
   }
 
-  onSubmit(): void {
+  onSubmit(status: 'draft' | 'published'): void {
     if (this.eventForm.valid) {
+      this.actionType = status;
+      
       const formData = this.eventForm.value as CreateEventForm;
+      formData.status = status;
+      
       if (this.selectedPosterFile) {
         formData.poster_file = this.selectedPosterFile;
       }
@@ -165,6 +171,9 @@ export class CreateEventModalComponent implements OnChanges {
     
     // Clear venue selection
     this.selectedVenue = null;
+    
+    // Reset action type
+    this.actionType = null;
     
     // Set default values
     const tomorrow = new Date();

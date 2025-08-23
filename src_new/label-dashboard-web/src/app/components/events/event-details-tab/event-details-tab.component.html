@@ -1,4 +1,15 @@
 <div class="event-details-tab">  
+  <!-- Draft Mode Info Box -->
+  <div class="alert alert-info d-flex align-items-center mb-4" *ngIf="event && event.status === 'draft'">
+    <i class="fa fa-info-circle me-3 fs-5"></i>
+    <div>
+      <strong>Draft Mode</strong> - This event is not yet visible to the public. 
+      <span class="d-block small mt-1">
+        Complete the event details and click "Publish" to make it live and generate ticket purchase links.
+      </span>
+    </div>
+  </div>
+
   <form (ngSubmit)="onSaveEvent()" #eventForm="ngForm" *ngIf="event">
     <div class="row">
       <!-- General Information Column -->
@@ -57,7 +68,7 @@
               </small>
             </div>
 
-            <div class="mb-3" *ngIf="!event.id">
+            <div class="mb-3" *ngIf="(!event.id || event.status === 'draft') && !event.buy_shortlink && !event.verification_link">
               <label class="form-label">URL Slug</label>
               <div class="input-group">
                 <input 
@@ -65,17 +76,22 @@
                   class="form-control" 
                   [(ngModel)]="event.slug" 
                   name="slug"
-                  placeholder="BuyEventTitle">
+                  placeholder="BuyMyAwesomeEvent"
+                  [disabled]="event.status === 'published'">
                 <button 
                   type="button" 
                   class="btn btn-outline-secondary"
                   (click)="generateSlug()"
+                  [disabled]="event.status === 'published'"
                   title="Auto-generate from title">
                   <i class="fas fa-sync"></i>
                 </button>
               </div>
               <small class="form-text text-muted">
-                <i class="fa fa-info-circle"></i> Custom URL path for shortened links. Leave empty to auto-generate from title when saving.
+                <i class="fa fa-info-circle"></i> 
+                <span *ngIf="event.status === 'draft'">Custom URL path for shortened links. Leave empty to auto-generate from title when publishing.</span>
+                <span *ngIf="event.status === 'published'">Slug cannot be changed after publishing.</span>
+                <span *ngIf="!event.id">Custom URL path for shortened links. Leave empty to auto-generate from title when saving.</span>
               </small>
             </div>
           </div>
@@ -147,8 +163,11 @@
           <div class="card-header">
             <h6 class="mb-0">
               Ticketing 
-              <span class="badge ms-2" [class]="event.status === 'Open' ? 'badge-success' : 'badge-danger'">
-                {{ event.status || 'Open' }}
+              <span class="badge ms-2" [class]="event.status === 'published' ? 'badge-success' : 'badge-secondary'">
+                {{ event.status === 'published' ? 'Published' : 'Draft' }}
+              </span>
+              <span class="badge badge-secondary ms-1" *ngIf="event.status === 'published'" [class]="event.backend_status === 'Open' ? 'badge-success' : 'badge-danger'">
+                {{ event.backend_status || 'Open' }}
               </span>
             </h6>
           </div>
@@ -233,7 +252,7 @@
                 <input 
                   type="text" 
                   class="form-control" 
-                  [value]="event.buy_shortlink || 'Save to generate buy link'" 
+                  [value]="event.buy_shortlink || (event.status === 'draft' ? 'Shortlinks will be generated once the event is published' : 'Save to generate buy link')" 
                   readonly>
                 <button 
                   type="button" 
@@ -243,7 +262,11 @@
                   <i class="fa fa-copy"></i>
                 </button>
               </div>
-              <small class="form-text text-muted">Share this link to ticket buyers.</small>
+              <small class="form-text text-muted">
+                <span *ngIf="!event.buy_shortlink && event.status === 'draft'">This link will be generated when you publish the event.</span>
+                <span *ngIf="event.buy_shortlink && event.status === 'draft'">Link generated from previous publish. Event is currently in draft mode.</span>
+                <span *ngIf="event.status === 'published'">Share this link to ticket buyers.</span>
+              </small>
             </div>
 
             <!-- Payment Methods -->
@@ -335,7 +358,7 @@
                       <input 
                         type="text" 
                         class="form-control" 
-                        [value]="event.verification_link || 'Save to generate verification link'" 
+                        [value]="event.verification_link || (event.status === 'draft' ? 'Shortlinks will be generated once the event is published' : 'Save to generate verification link')" 
                         readonly>
                       <button 
                         type="button" 
@@ -415,15 +438,47 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
-        <div class="panel-content">
-          <button type="button" 
-                  class="btn btn-primary btn-lg" 
-                  [disabled]="loading || !isFormDirty()"
-                  (click)="onSaveEvent()">
-            <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
-            <i class="fa fa-save" *ngIf="!loading"></i>
-            {{ loading ? 'Saving...' : 'Save Changes' }}
-          </button>
+        <div class="panel-content d-flex gap-2">
+          <!-- Draft Event Buttons -->
+          <div *ngIf="event.status === 'draft'" class="d-flex gap-2">
+            <button type="button" 
+                    class="btn btn-secondary btn-lg" 
+                    [disabled]="loading"
+                    (click)="onSaveEvent()">
+              <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+              <i class="fa fa-save" *ngIf="!loading"></i>
+              {{ loading ? 'Saving...' : 'Save as Draft' }}
+            </button>
+            <button type="button" 
+                    class="btn btn-success btn-lg" 
+                    [disabled]="loading"
+                    (click)="onPublishEvent()">
+              <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+              <i class="fa fa-rocket" *ngIf="!loading"></i>
+              {{ loading ? 'Publishing...' : 'Publish' }}
+            </button>
+          </div>
+
+          <!-- Published Event Buttons -->
+          <div *ngIf="event.status === 'published'" class="d-flex gap-2">
+            <button type="button" 
+                    class="btn btn-primary btn-lg" 
+                    [disabled]="loading || !isFormDirty()"
+                    (click)="onSaveEvent()">
+              <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+              <i class="fa fa-save" *ngIf="!loading"></i>
+              {{ loading ? 'Saving...' : 'Save Changes' }}
+            </button>
+            <button type="button" 
+                    class="btn btn-warning btn-lg" 
+                    [disabled]="loading"
+                    (click)="onUnpublishEvent()"
+                    *ngIf="!hasConfirmedTickets()">
+              <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+              <i class="fa fa-eye-slash" *ngIf="!loading"></i>
+              {{ loading ? 'Unpublishing...' : 'Unpublish' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>

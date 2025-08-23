@@ -22,7 +22,9 @@ import {
   getEventTicketSummary,
   exportEventTicketsCsv,
   exportEventPendingTicketsCsv,
-  upload
+  upload,
+  publishEvent,
+  unpublishEvent
 } from '../controllers/eventController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -64,5 +66,9 @@ router.post('/send-email', requireAdmin, sendEventEmail);
 router.get('/:id', getEvent);
 router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
 router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
+
+// Event status operations
+router.post('/:id/publish', requireAdmin, publishEvent);
+router.post('/:id/unpublish', requireAdmin, unpublishEvent);
 
 export default router;

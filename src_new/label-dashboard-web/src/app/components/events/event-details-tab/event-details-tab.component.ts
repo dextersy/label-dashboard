@@ -37,7 +37,8 @@ export interface EventDetails {
   supports_dob: boolean;
   supports_maya: boolean;
   supports_grabpay: boolean;
-  status?: 'Open' | 'Closed';
+  status?: 'draft' | 'published';
+  backend_status?: 'Open' | 'Closed';
   remaining_tickets?: number;
 }
 
@@ -102,6 +103,12 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
           this.event = this.convertEventToDetails(event);
           this.formatDatesForDisplay();
           this.updateCurrentVenueSelection();
+          
+          // Auto-generate slug for draft events if not set
+          if (this.event && this.event.status === 'draft' && !this.event.slug && this.event.title) {
+            this.generateSlug();
+          }
+          
           this.loading = false;
         },
         error: (error) => {
@@ -148,7 +155,8 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       supports_dob: event.supports_dob,
       supports_maya: event.supports_maya,
       supports_grabpay: event.supports_grabpay,
-      status: this.getEventStatus(event) as 'Open' | 'Closed'
+      status: (event as any).status || 'draft',
+      backend_status: this.getEventStatus(event) as 'Open' | 'Closed'
     };
   }
 
@@ -240,10 +248,16 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       supports_ubp: true,
       supports_dob: true,
       supports_maya: true,
-      supports_grabpay: true
+      supports_grabpay: true,
+      status: 'draft'
     };
     
     this.updateCurrentVenueSelection();
+    
+    // Auto-generate slug if title is provided for new events
+    if (this.event.title) {
+      this.generateSlug();
+    }
   }
 
   generateVerificationPIN(): string {
@@ -252,14 +266,20 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   generateSlug(): void {
     if (this.event?.title) {
-      const slug = 'Buy' + this.event.title.replace(/[^A-Z0-9]/gi, '');
-      this.event.slug = slug;
+      // Convert to PascalCase: split by spaces/special chars, capitalize each word, then join
+      const pascalCase = this.event.title
+        .split(/[\s\W]+/) // Split by spaces and non-word characters
+        .filter(word => word.length > 0) // Remove empty strings
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize first letter, lowercase rest
+        .join(''); // Join without spaces
+      
+      this.event.slug = pascalCase;
     }
   }
 
   onTitleChange(): void {
-    // Auto-generate slug only for new events (no ID) and if slug is empty
-    if (this.event && !this.event.id && !this.event.slug) {
+    // Auto-generate slug for new events or draft events if slug is empty
+    if (this.event && (!this.event.id || this.event.status === 'draft') && !this.event.slug) {
       this.generateSlug();
     }
   }
@@ -371,10 +391,10 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.event) return;
     
     // Basic validation
-    if (!this.event.title || !this.event.venue || !this.event.date_and_time || !this.event.rsvp_link) {
+    if (!this.event.title || !this.event.venue || !this.event.date_and_time) {
       this.alertMessage.emit({
         type: 'error',
-        text: 'Please fill in all required fields (Title, Date & Time, Venue, RSVP Link).'
+        text: 'Please fill in all required fields (Title, Date & Time, Venue).'
       });
       return;
     }
@@ -423,6 +443,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       formData.append('supports_dob', this.event.supports_dob.toString());
       formData.append('supports_maya', this.event.supports_maya.toString());
       formData.append('supports_grabpay', this.event.supports_grabpay.toString());
+      formData.append('status', this.event.status || 'draft');
 
       this.subscriptions.add(
         this.eventService.updateEventWithFile(this.event.id, formData).subscribe({
@@ -479,7 +500,8 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         supports_dob: this.event.supports_dob,
         supports_maya: this.event.supports_maya,
         supports_grabpay: this.event.supports_grabpay,
-        max_tickets: this.event.max_tickets
+        max_tickets: this.event.max_tickets,
+        status: this.event.status
       };
 
       this.subscriptions.add(
@@ -591,5 +613,86 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     
     // Also check if there's a poster file selected for upload
     return this.selectedPosterFile !== null;
+  }
+
+  onPublishEvent(): void {
+    if (!this.event || !this.event.id) return;
+
+    const confirmation = confirm(
+      'Are you sure you want to publish this event?\n\n' +
+      '⚠️ WARNING: Once published, the shortlinks can no longer be changed and the event will be visible to the public.\n\n' +
+      'Click OK to proceed with publishing.'
+    );
+
+    if (!confirmation) return;
+
+    const slug = this.event.slug;
+    this.loading = true;
+
+    this.subscriptions.add(
+      this.eventService.publishEvent(this.event.id, slug).subscribe({
+        next: (updatedEvent) => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Event published successfully! Shortlinks have been generated.'
+          });
+          this.event = this.convertEventToDetails(updatedEvent);
+          this.formatDatesForDisplay();
+          this.eventUpdated.emit(updatedEvent);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to publish event:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error.message || 'Failed to publish event'
+          });
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  onUnpublishEvent(): void {
+    if (!this.event || !this.event.id) return;
+
+    const confirmation = confirm(
+      'Are you sure you want to unpublish this event? It will no longer be visible to the public and ticket sales will stop.'
+    );
+
+    if (!confirmation) return;
+
+    this.loading = true;
+
+    this.subscriptions.add(
+      this.eventService.unpublishEvent(this.event.id).subscribe({
+        next: (updatedEvent) => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Event unpublished successfully!'
+          });
+          this.event = this.convertEventToDetails(updatedEvent);
+          this.formatDatesForDisplay();
+          this.eventUpdated.emit(updatedEvent);
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Failed to unpublish event:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error.message || 'Failed to unpublish event'
+          });
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  hasConfirmedTickets(): boolean {
+    // Check if the event has any confirmed tickets by looking at the tickets array
+    // This is a simple check - in a real scenario, you might want to make an API call
+    return (this.selectedEvent?.tickets?.filter(ticket => 
+      ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.'
+    ).length || 0) > 0;
   }
 }

@@ -28,14 +28,27 @@ const generateEventSlug = (title: string): string => {
 
 // Helper function to create Short.io link
 const createShortLink = async (originalUrl: string, path: string): Promise<string> => {
+  console.log('createShortLink called with:', { originalUrl, path });
+  
   const shortIoDomain = process.env.SHORT_IO_DOMAIN;
   const shortIoKey = process.env.SHORT_IO_KEY;
   
+  console.log('Environment variables:', { 
+    shortIoDomain: shortIoDomain ? 'configured' : 'missing',
+    shortIoKey: shortIoKey ? 'configured' : 'missing'
+  });
+  
+  // If Short.io is not configured, create a fallback short link
   if (!shortIoDomain || !shortIoKey) {
-    throw new Error('SHORT_IO_DOMAIN and SHORT_IO_KEY environment variables are required but not configured');
+    console.log('Short.io not configured, using fallback URL');
+    return originalUrl;
   }
 
   try {
+    // Set a timeout for the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
     const response = await fetch('https://api.short.io/links', {
       method: 'POST',
       headers: {
@@ -47,8 +60,11 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
         domain: shortIoDomain,
         originalURL: originalUrl,
         path: path
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -57,10 +73,12 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
     }
 
     const data = await response.json() as { secureShortURL: string };
+    console.log('Short.io success:', data.secureShortURL);
     return data.secureShortURL;
   } catch (error) {
-    console.error('Failed to create short link:', error);
-    throw error;
+    console.error('Failed to create short link, using fallback:', error);
+    // Return the original URL as fallback instead of throwing
+    return originalUrl;
   }
 };
 
@@ -226,6 +244,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    console.log('createEvent status field:', req.body.status);
+
     const {
       title,
       date_and_time,
@@ -255,7 +275,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       venue_longitude,
       venue_phone,
       venue_website,
-      venue_maps_url
+      venue_maps_url,
+      status
     } = req.body;
 
     if (!title || !date_and_time || !venue || !ticket_price) {
@@ -323,35 +344,39 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       venue_longitude: venue_longitude || null,
       venue_phone: venue_phone || null,
       venue_website: venue_website || null,
-      venue_maps_url: venue_maps_url || null
+      venue_maps_url: venue_maps_url || null,
+      status: status || 'draft'
     });
 
-    // Generate shortlinks with actual event ID
-    try {
-      let finalVerificationLink = verification_link;
-      let finalBuyLink = buy_shortlink;
-      
-      // Only generate shortlinks if not provided
-      if (!verification_link) {
-        finalVerificationLink = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
+    // Only generate shortlinks if event is being published    
+    if (event.status === 'published') {
+      try {
+        const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(event.title);
+        let finalVerificationLink = verification_link;
+        let finalBuyLink = buy_shortlink;
+        
+        // Generate shortlinks if not provided for published events
+        if (!verification_link || verification_link.trim() === '') {
+          finalVerificationLink = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
+        }
+        
+        if (!buy_shortlink || buy_shortlink.trim() === '') {
+          finalBuyLink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
+        }
+        
+        // Update event with generated shortlinks
+        await event.update({
+          verification_link: finalVerificationLink || '',
+          buy_shortlink: finalBuyLink || ''
+        });
+        
+        // Refresh event to get updated values
+        await event.reload();
+      } catch (error) {
+        console.error('URL generation error:', error);
+        // Event was created but URL generation failed - still return success but log error
+        console.warn('Event created but shortlink generation failed:', error.message);
       }
-      
-      if (!buy_shortlink) {
-        finalBuyLink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
-      }
-      
-      // Update event with generated shortlinks
-      await event.update({
-        verification_link: finalVerificationLink,
-        buy_shortlink: finalBuyLink
-      });
-      
-      // Refresh event to get updated values
-      await event.reload();
-    } catch (error) {
-      console.error('URL generation error:', error);
-      // Event was created but URL generation failed - still return success but log error
-      console.warn('Event created but shortlink generation failed:', error.message);
     }
 
     res.status(201).json({
@@ -406,7 +431,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_longitude,
       venue_phone,
       venue_website,
-      venue_maps_url
+      venue_maps_url,
+      status
     } = req.body;
 
     const event = await Event.findOne({
@@ -464,8 +490,10 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     let updatedVerificationLink = verification_link || event.verification_link;
     let updatedBuyLink = buy_shortlink || event.buy_shortlink;
     
-    // If slug is provided or title is being updated and no explicit links provided, regenerate them
-    const needsUrlRegeneration = (slug || (title && title !== event.title)) && (!verification_link || !buy_shortlink);
+    // Only regenerate URLs for published events
+    const isPublished = (status !== undefined ? status : event.status) === 'published';
+    const needsUrlRegeneration = isPublished && (slug || (title && title !== event.title)) && (!verification_link || !buy_shortlink);
+
     if (needsUrlRegeneration) {
       try {
         const newSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title || event.title);
@@ -511,7 +539,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_longitude: venue_longitude !== undefined ? (venue_longitude === '' ? null : venue_longitude) : event.venue_longitude,
       venue_phone: venue_phone !== undefined ? (venue_phone === '' ? null : venue_phone) : event.venue_phone,
       venue_website: venue_website !== undefined ? (venue_website === '' ? null : venue_website) : event.venue_website,
-      venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url
+      venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url,
+      status: status !== undefined ? status : event.status
     });
 
     res.json({
@@ -2179,6 +2208,124 @@ export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Respon
     });
   } catch (error) {
     console.error('Export event pending tickets CSV error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const publishEvent = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { slug } = req.body;
+    const eventId = parseInt(id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const event = await Event.findOne({
+      where: { 
+        id: eventId,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (event.status === 'published') {
+      return res.status(400).json({ error: 'Event is already published' });
+    }
+
+    // Generate shortlinks when publishing if they don't exist
+    let updatedFields: any = { status: 'published' };
+    
+    if (!event.verification_link || !event.buy_shortlink) {
+      // Use provided slug or generate from title
+      const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(event.title);
+      console.log('Publishing event with slug:', eventSlug);
+      
+      if (!event.verification_link) {
+        console.log('Generating verification link...');
+        updatedFields.verification_link = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
+        console.log('Generated verification link:', updatedFields.verification_link);
+      }
+      
+      if (!event.buy_shortlink) {
+        console.log('Generating buy link...');
+        updatedFields.buy_shortlink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
+        console.log('Generated buy link:', updatedFields.buy_shortlink);
+      }
+    }
+
+    await event.update(updatedFields);
+    await event.reload(); // Reload to get the updated data
+
+    res.json({
+      message: 'Event published successfully',
+      event: event
+    });
+  } catch (error) {
+    console.error('Publish event error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const unpublishEvent = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const eventId = parseInt(id, 10);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const event = await Event.findOne({
+      where: { 
+        id: eventId,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (event.status === 'draft') {
+      return res.status(400).json({ error: 'Event is already a draft' });
+    }
+
+    // Check if there are any confirmed tickets
+    const confirmedTicketsCount = await Ticket.count({
+      where: {
+        event_id: eventId,
+        status: ['Payment Confirmed', 'Ticket sent.']
+      }
+    });
+
+    if (confirmedTicketsCount > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot unpublish event with confirmed tickets' 
+      });
+    }
+
+    await event.update({ status: 'draft' });
+    await event.reload(); // Reload to get the updated data
+
+    res.json({
+      message: 'Event unpublished successfully',
+      event: event
+    });
+  } catch (error) {
+    console.error('Unpublish event error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

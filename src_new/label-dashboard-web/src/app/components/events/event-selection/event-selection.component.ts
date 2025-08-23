@@ -76,6 +76,11 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   }
 
   getEventStatusText(event: Event): string {
+    // Check for draft status first
+    if ((event as any).status === 'draft') {
+      return 'Draft';
+    }
+    
     const now = new Date();
     const eventDate = new Date(event.date_and_time);
     const closeTime = event.close_time ? new Date(event.close_time) : eventDate;
@@ -92,6 +97,8 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   getEventStatusClass(event: Event): string {
     const status = this.getEventStatusText(event);
     switch (status) {
+      case 'Draft':
+        return 'badge-secondary';
       case 'Open':
         return 'badge-success';
       case 'Closed':

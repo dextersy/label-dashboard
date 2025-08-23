@@ -270,6 +270,16 @@ export class EventService {
       formData.append('close_time', formEventData.close_time || '');
       formData.append('rsvp_link', formEventData.rsvp_link || '');
       formData.append('slug', formEventData.slug);
+      formData.append('status', formEventData.status || 'draft');
+      
+      // Add venue data if available
+      if (formEventData.google_place_id) formData.append('google_place_id', formEventData.google_place_id);
+      if (formEventData.venue_address) formData.append('venue_address', formEventData.venue_address);
+      if (formEventData.venue_latitude !== undefined) formData.append('venue_latitude', formEventData.venue_latitude.toString());
+      if (formEventData.venue_longitude !== undefined) formData.append('venue_longitude', formEventData.venue_longitude.toString());
+      if (formEventData.venue_phone) formData.append('venue_phone', formEventData.venue_phone);
+      if (formEventData.venue_website) formData.append('venue_website', formEventData.venue_website);
+      if (formEventData.venue_maps_url) formData.append('venue_maps_url', formEventData.venue_maps_url);
       
       // Add the poster file
       formData.append('poster', formEventData.poster_file);
@@ -593,6 +603,40 @@ export class EventService {
   clearCache(): void {
     this.selectedEventSubject.next(null);
     localStorage.removeItem(this.SELECTED_EVENT_KEY);
+  }
+
+  /**
+   * Publish an event
+   */
+  publishEvent(eventId: number, slug?: string): Observable<Event> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    const requestBody = slug ? { slug } : {};
+    
+    return this.http.post<{event: Event}>(`${environment.apiUrl}/events/${eventId}/publish`, requestBody, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.event),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Unpublish an event
+   */
+  unpublishEvent(eventId: number): Observable<Event> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.post<{event: Event}>(`${environment.apiUrl}/events/${eventId}/unpublish`, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.event),
+      catchError(this.handleError)
+    );
   }
   
   /**

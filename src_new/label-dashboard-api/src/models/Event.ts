@@ -32,6 +32,7 @@ interface EventAttributes {
   venue_phone?: string;
   venue_website?: string;
   venue_maps_url?: string;
+  status: 'draft' | 'published';
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -67,6 +68,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public venue_phone?: string;
   public venue_website?: string;
   public venue_maps_url?: string;
+  public status!: 'draft' | 'published';
 
   // Association properties
   public brand?: any;
@@ -216,6 +218,11 @@ Event.init(
     venue_maps_url: {
       type: DataTypes.STRING(1000),
       allowNull: true,
+    },
+    status: {
+      type: DataTypes.ENUM('draft', 'published'),
+      allowNull: false,
+      defaultValue: 'draft',
     },
   },
   {

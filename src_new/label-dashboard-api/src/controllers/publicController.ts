@@ -74,7 +74,10 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     }
 
     const event = await Event.findOne({
-      where: { id: eventId },
+      where: { 
+        id: eventId,
+        status: 'published'
+      },
       include: [
         { 
           model: Brand, 
@@ -720,7 +723,10 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
     }
 
     const event = await Event.findOne({
-      where: { id },
+      where: { 
+        id,
+        status: 'published'
+      },
       include: [{
         model: Brand,
         as: 'brand',
@@ -781,7 +787,10 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
 
     // Get event details with brand information (no domain validation for SEO pages)
     const event = await Event.findOne({
-      where: { id: eventId },
+      where: { 
+        id: eventId,
+        status: 'published'
+      },
       include: [
         { 
           model: Brand, 
@@ -1080,7 +1089,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
     const events = await Event.findAll({
       where: { 
         brand_id: { [Op.in]: brandIds },
-        date_and_time: { [Op.gte]: new Date() } // Only future events
+        date_and_time: { [Op.gte]: new Date() }, // Only future events
+        status: 'published' // Only published events
       },
       include: [
         {
@@ -1163,7 +1173,8 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
     const events = await Event.findAll({
       where: { 
         brand_id: { [Op.in]: brandIds },
-        date_and_time: { [Op.gte]: new Date() } // Only future events
+        date_and_time: { [Op.gte]: new Date() }, // Only future events
+        status: 'published' // Only published events
       },
       include: [
         {

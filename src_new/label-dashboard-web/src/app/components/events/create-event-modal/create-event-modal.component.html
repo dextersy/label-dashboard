@@ -9,7 +9,7 @@
         <button type="button" class="btn-close" (click)="close()"></button>
       </div>
       
-      <form [formGroup]="eventForm" (ngSubmit)="onSubmit()">
+      <form [formGroup]="eventForm">
         <div class="modal-body">
           <div class="row">
             
@@ -61,7 +61,7 @@
                 type="text" 
                 class="form-control" 
                 formControlName="slug"
-                placeholder="EventNameInPascalCase"
+                placeholder="MyAwesomeEvent"
                 [class.is-invalid]="eventForm.get('slug')?.invalid && eventForm.get('slug')?.touched">
               <div class="invalid-feedback" *ngIf="eventForm.get('slug')?.invalid && eventForm.get('slug')?.touched">
                 URL slug is required and can only contain letters and numbers
@@ -149,17 +149,29 @@
         </div>
         
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="close()">
+          <button type="button" class="btn btn-outline-secondary" (click)="close()">
             Cancel
           </button>
-          <button 
-            type="submit" 
-            class="btn btn-primary" 
-            [disabled]="eventForm.invalid || loading">
-            <i class="fa fa-spinner fa-spin me-1" *ngIf="loading"></i>
-            <i class="fa fa-plus me-1" *ngIf="!loading"></i>
-            {{ loading ? 'Creating...' : 'Create Event' }}
-          </button>
+          <div class="ms-auto d-flex gap-2">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              [disabled]="eventForm.invalid || loading"
+              (click)="onSubmit('draft')">
+              <i class="fa fa-spinner fa-spin me-1" *ngIf="loading && actionType === 'draft'"></i>
+              <i class="fa fa-file-alt me-1" *ngIf="!loading || actionType !== 'draft'"></i>
+              {{ (loading && actionType === 'draft') ? 'Saving Draft...' : 'Save as Draft' }}
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-success btn-lg" 
+              [disabled]="eventForm.invalid || loading"
+              (click)="onSubmit('published')">
+              <i class="fa fa-spinner fa-spin me-1" *ngIf="loading && actionType === 'published'"></i>
+              <i class="fa fa-rocket me-1" *ngIf="!loading || actionType !== 'published'"></i>
+              {{ (loading && actionType === 'published') ? 'Publishing...' : 'Publish' }}
+            </button>
+          </div>
         </div>
       </form>
       
