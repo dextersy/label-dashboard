@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
 import { sendEarningsNotification, sendPaymentNotification } from '../utils/emailService';
 import { PaymentService } from '../utils/paymentService';
+import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
 import csv from 'csv-parser';
 import * as fuzz from 'fuzzball';
 import { Readable } from 'stream';
@@ -44,19 +45,34 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    // Create earning record (round to 2 decimal places)
+    // Create earning record with 0 platform fee initially (will be calculated after processing)
     const earning = await Earning.create({
       release_id,
       type: type || 'Streaming',
       amount: parseFloat(amount.toFixed(2)),
       description,
-      date_recorded: new Date(date_recorded)
+      date_recorded: new Date(date_recorded),
+      platform_fee: 0
     });
 
-    // Calculate and create royalties if requested
+    // Process recuperable expenses and royalties if requested
     let recuperationInfo = null;
     if (calculate_royalties) {
+      // Process both recuperable expenses and royalties
       recuperationInfo = await processEarningRoyalties(earning);
+      
+      // Calculate and set the final platform fee
+      const grossAmount = parseFloat(amount.toFixed(2));
+      const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
+        req.user.brand_id,
+        grossAmount,
+        Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0))
+      );
+      
+      // Update the earning with the final platform fee
+      await earning.update({
+        platform_fee: finalPlatformFeeCalc.totalPlatformFee
+      });
     }
 
     // Send earning notification emails (matching PHP logic)
@@ -104,17 +120,34 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
           continue;
         }
 
+        // Create earning record with 0 platform fee initially (will be calculated after processing)
         const earning = await Earning.create({
           release_id: earningData.release_id,
           type: earningData.type || 'Streaming',
           amount: parseFloat(earningData.amount.toFixed(2)),
           description: earningData.description,
-          date_recorded: new Date(earningData.date_recorded)
+          date_recorded: new Date(earningData.date_recorded),
+          platform_fee: 0
         });
 
+        // Process recuperable expenses and royalties if requested
         let recuperationInfo = null;
         if (earningData.calculate_royalties) {
+          // Process both recuperable expenses and royalties
           recuperationInfo = await processEarningRoyalties(earning);
+          
+          // Calculate and set the final platform fee
+          const grossAmount = parseFloat(earningData.amount.toFixed(2));
+          const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
+            req.user.brand_id,
+            grossAmount,
+            Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0))
+          );
+          
+          // Update the earning with the final platform fee
+          await earning.update({
+            platform_fee: finalPlatformFeeCalc.totalPlatformFee
+          });
         }
 
         // Send earning notification emails (matching PHP logic)
@@ -367,6 +400,7 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
   }
 };
 
+
 // Helper function to process earning royalties with recuperable expense handling
 async function processEarningRoyalties(earning: any) {
   // Get the release to find the brand_id
@@ -416,6 +450,8 @@ async function processEarningRoyalties(earning: any) {
   }
 
   // Only calculate royalties on the remaining amount after recuperable expense deduction
+  let totalRoyalties = 0;
+  
   if (remainingEarningAmount > 0) {
     const releaseArtists = await ReleaseArtist.findAll({
       where: { release_id: earning.release_id },
@@ -453,14 +489,18 @@ async function processEarningRoyalties(earning: any) {
           description: `${earning.type} royalty from ${earning.description || 'earning'} (after recuperable expense deduction)`,
           date_recorded: earning.date_recorded
         });
+        
+        // Track total royalties applied
+        totalRoyalties += royaltyAmount;
       }
     }
   }
 
-  // Return recuperation info for notification emails
+  // Return recuperation and royalty info
   return {
     recuperatedAmount,
-    remainingRecuperableBalance: Math.max(0, recuperableBalance - recuperatedAmount)
+    remainingRecuperableBalance: Math.max(0, recuperableBalance - recuperatedAmount),
+    totalRoyalties: parseFloat(totalRoyalties.toFixed(2))
   };
 }
 

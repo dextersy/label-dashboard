@@ -15,6 +15,7 @@ interface EarningAttributes {
   amount?: number;
   description?: string;
   date_recorded: Date;
+  platform_fee?: number;
 }
 
 interface EarningCreationAttributes extends Optional<EarningAttributes, 'id' | 'type'> {}
@@ -26,6 +27,7 @@ class Earning extends Model<EarningAttributes, EarningCreationAttributes> implem
   public amount?: number;
   public description?: string;
   public date_recorded!: Date;
+  public platform_fee?: number;
 
   // Association
   public release?: ReleaseAssociation;
@@ -61,6 +63,18 @@ Earning.init(
     date_recorded: {
       type: DataTypes.DATEONLY,
       allowNull: false,
+    },
+    platform_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('platform_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('platform_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
     },
   },
   {
