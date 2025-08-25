@@ -196,7 +196,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
     description: '',
     amount: 0,
     date_recorded: new Date().toISOString().split('T')[0],
-    calculate_royalties: false
+    calculate_royalties: true
   };
 
   // Add payment method form
@@ -616,7 +616,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
       description: '',
       amount: 0,
       date_recorded: new Date().toISOString().split('T')[0],
-      calculate_royalties: false
+      calculate_royalties: true
     };
   }
 
