@@ -7,6 +7,7 @@ import PaymentMethod from '../models/PaymentMethod';
 import { Ticket, Event, User, Domain } from '../models';
 import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail } from './emailService';
+import { calculatePlatformFeeForEventTickets } from './platformFeeCalculator';
 
 interface PayMongoLinkData {
   amount: number; // in cents
@@ -367,14 +368,39 @@ export class PaymentService {
   
   async updateTicketPaymentStatus(ticketId: number, processingFee: number): Promise<boolean> {
     try {
-      const ticket = await Ticket.findByPk(ticketId);
+      const ticket = await Ticket.findByPk(ticketId, {
+        include: [
+          {
+            model: Event,
+            as: 'event',
+            attributes: ['brand_id'],
+            include: [
+              {
+                model: Brand,
+                as: 'brand',
+                attributes: ['id']
+              }
+            ]
+          }
+        ]
+      });
+      
       if (!ticket) {
         return false;
       }
       
+      // Calculate platform fee with updated processing fee
+      const platformFeeCalc = await calculatePlatformFeeForEventTickets(
+        ticket.event.brand_id,
+        ticket.price_per_ticket || 0,
+        ticket.number_of_entries,
+        processingFee
+      );
+      
       await ticket.update({
         status: 'Payment Confirmed',
-        payment_processing_fee: processingFee
+        payment_processing_fee: processingFee,
+        platform_fee: platformFeeCalc.totalPlatformFee
       });
       
       return true;

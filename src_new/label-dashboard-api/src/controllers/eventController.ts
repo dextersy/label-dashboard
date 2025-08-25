@@ -4,6 +4,7 @@ import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
 import { sendEmail } from '../utils/emailService';
 import crypto from 'crypto';
 import multer from 'multer';
@@ -696,6 +697,14 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       // Calculate total amount and processing fee
       const totalAmount = ticketPrice * number_of_entries;
       const processingFee = payment_processing_fee !== undefined ? Number(payment_processing_fee) : 0;
+      
+      // Calculate platform fee based on brand settings
+      const platformFeeCalc = await calculatePlatformFeeForEventTickets(
+        event.brand_id,
+        ticketPrice,
+        number_of_entries,
+        processingFee
+      );
 
       let paymentLink = null;
       let ticket;
@@ -712,6 +721,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           status: 'Payment Confirmed',
           price_per_ticket: ticketPrice,
           payment_processing_fee: processingFee,
+          platform_fee: platformFeeCalc.totalPlatformFee,
           referrer_id: referrer?.id || null,
           order_timestamp: new Date()
         });
@@ -742,6 +752,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           payment_link_id: paymentLink.id,
           price_per_ticket: ticketPrice,
           payment_processing_fee: processingFee,
+          platform_fee: platformFeeCalc.totalPlatformFee,
           referrer_id: referrer?.id || null,
           order_timestamp: new Date()
         });
@@ -1022,15 +1033,22 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'No eligible tickets found for marking as paid (only New status tickets can be marked as paid)' });
     }
 
-    // Update all tickets to 'Payment Confirmed' status
-    await Ticket.update(
-      { status: 'Payment Confirmed' },
-      { 
-        where: { 
-          id: tickets.map(t => t.id)
-        }
-      }
-    );
+    // Update all tickets to 'Payment Confirmed' status and set platform fee
+    for (const ticket of tickets) {
+      // Calculate platform fee for this ticket
+      const platformFeeCalc = await calculatePlatformFeeForEventTickets(
+        ticket.event.brand_id,
+        ticket.price_per_ticket || 0,
+        ticket.number_of_entries,
+        ticket.payment_processing_fee || 0
+      );
+
+      // Update individual ticket with platform fee
+      await ticket.update({
+        status: 'Payment Confirmed',
+        platform_fee: platformFeeCalc.totalPlatformFee
+      });
+    }
 
     // Send payment confirmation emails
     let emailErrors = 0;
