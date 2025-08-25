@@ -1,14 +1,8 @@
 <div class="domain-not-found-container">
-  <div class="content-wrapper">
-    <div class="error-icon">
-      <i class="pe-7s-attention"></i>
-    </div>
-    
-    <h1 class="error-title">Oops! We can't find this domain</h1>
-    
-    <p class="error-message">
-      The domain <strong>{{ currentDomain }}</strong> isn't configured in our system yet.
-    </p>
+  <div class="container">
+    <div class="icon">🌐</div>
+    <h1>Oops! We can't find this domain</h1>
+    <p>The domain <strong>{{ currentDomain }}</strong> isn't configured in our system yet.</p>
     
     <div class="suggestions">
       <h3>What you can do:</h3>
@@ -16,9 +10,14 @@
         <li>Double-check the URL you entered</li>
         <li>Contact your administrator to set up this domain</li>
       </ul>
-    </div>    
+    </div>
+    
     <div class="help-text">
       <p>Need help? <a href="mailto:support@melt-records.com">Contact your system administrator or support team.</a></p>
     </div>
+  </div>
+  
+  <div class="footer">
+    Powered by Melt Records Dashboard
   </div>
 </div>
