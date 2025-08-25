@@ -60,20 +60,28 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     if (calculate_royalties) {
       // Process both recuperable expenses and royalties
       recuperationInfo = await processEarningRoyalties(earning);
-      
-      // Calculate and set the final platform fee
-      const grossAmount = parseFloat(amount.toFixed(2));
-      const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-        req.user.brand_id,
-        grossAmount,
-        Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0))
-      );
-      
-      // Update the earning with the final platform fee
-      await earning.update({
-        platform_fee: finalPlatformFeeCalc.totalPlatformFee
-      });
     }
+    
+    // Calculate and set the platform fee (regardless of royalty calculation)
+    const grossAmount = parseFloat(amount.toFixed(2));
+    let netRevenue = grossAmount;
+    
+    if (calculate_royalties && recuperationInfo) {
+      // If royalties are calculated, use net revenue after recuperable expenses and royalties
+      netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
+    }
+    // If royalties are not calculated, use the gross amount as net revenue
+    
+    const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
+      req.user.brand_id,
+      grossAmount,
+      netRevenue
+    );
+    
+    // Update the earning with the final platform fee
+    await earning.update({
+      platform_fee: finalPlatformFeeCalc.totalPlatformFee
+    });
 
     // Send earning notification emails (matching PHP logic)
     await sendEarningNotifications(earning, req.user.brand_id, recuperationInfo);
@@ -135,20 +143,28 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
         if (earningData.calculate_royalties) {
           // Process both recuperable expenses and royalties
           recuperationInfo = await processEarningRoyalties(earning);
-          
-          // Calculate and set the final platform fee
-          const grossAmount = parseFloat(earningData.amount.toFixed(2));
-          const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-            req.user.brand_id,
-            grossAmount,
-            Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0))
-          );
-          
-          // Update the earning with the final platform fee
-          await earning.update({
-            platform_fee: finalPlatformFeeCalc.totalPlatformFee
-          });
         }
+        
+        // Calculate and set the platform fee (regardless of royalty calculation)
+        const grossAmount = parseFloat(earningData.amount.toFixed(2));
+        let netRevenue = grossAmount;
+        
+        if (earningData.calculate_royalties && recuperationInfo) {
+          // If royalties are calculated, use net revenue after recuperable expenses and royalties
+          netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
+        }
+        // If royalties are not calculated, use the gross amount as net revenue
+        
+        const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
+          req.user.brand_id,
+          grossAmount,
+          netRevenue
+        );
+        
+        // Update the earning with the final platform fee
+        await earning.update({
+          platform_fee: finalPlatformFeeCalc.totalPlatformFee
+        });
 
         // Send earning notification emails (matching PHP logic)
         await sendEarningNotifications(earning, req.user.brand_id, recuperationInfo);
