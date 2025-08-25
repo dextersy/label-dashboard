@@ -234,19 +234,19 @@ clean_directory "$BACKEND_DEPLOY_PATH" "API server"
 clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
 
 # Deploy maintenance page and .htaccess after cleaning
-print_status "Deploying maintenance page with catch-all routing..."
+print_status "Deploying maintenance mode..."
 cd "$SCRIPT_DIR"
 sftp_batch=$(mktemp)
 cat > "$sftp_batch" << EOF
-put maintenance.html $FRONTEND_DEPLOY_PATH/index.html
+put maintenance.html $FRONTEND_DEPLOY_PATH/maintenance.html
 put maintenance.htaccess $FRONTEND_DEPLOY_PATH/.htaccess
 quit
 EOF
 
 if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
-    print_success "Maintenance page and routing deployed"
+    print_success "Maintenance mode activated"
 else
-    print_warning "Failed to deploy maintenance page (non-critical)"
+    print_warning "Failed to activate maintenance mode (non-critical)"
 fi
 rm -f "$sftp_batch"
 
@@ -302,14 +302,27 @@ print_success "Conflicting config files removed"
 print_status "Phase 4: Uploading compiled API service files..."
 upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
 
-# Upload Web files (replacing maintenance page)
+# Upload Web files (keeping maintenance.html)
 cd "$SCRIPT_DIR/src_new/label-dashboard-web"
-print_status "Replacing maintenance page with production build..."
-clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
-upload_files "dist-prod/browser" "$FRONTEND_DEPLOY_PATH" "Web files"
+print_status "Uploading production build..."
 
-# Upload .htaccess file separately (replacing maintenance .htaccess)
-print_status "Uploading production .htaccess file..."
+# Upload all files except .htaccess first (preserve maintenance.html)
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put -r dist-prod/browser/* $FRONTEND_DEPLOY_PATH/
+quit
+EOF
+
+if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+    print_success "Production files uploaded"
+else
+    print_error "Failed to upload production files"
+    exit 1
+fi
+rm -f "$sftp_batch"
+
+# Replace .htaccess last to switch from maintenance mode to production
+print_status "Switching from maintenance mode to production..."
 sftp_batch=$(mktemp)
 cat > "$sftp_batch" << EOF
 put dist-prod/browser/.htaccess $FRONTEND_DEPLOY_PATH/
@@ -318,7 +331,14 @@ EOF
 
 sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
 rm -f "$sftp_batch"
-print_success "Production .htaccess file uploaded successfully"
+print_success "Production site is now live!"
+
+# Clean up maintenance.html after successful deployment
+print_status "Cleaning up maintenance files..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    rm -f $FRONTEND_DEPLOY_PATH/maintenance.html
+EOF
+print_success "Maintenance files cleaned up"
 
 # Upload SSL domain management script
 print_status "Uploading add-ssl-domain.sh script..."

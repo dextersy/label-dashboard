@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maintenance - Artist Dashboard</title>
+    <link rel="icon" href="data:,">
     <style>
         * {
             margin: 0;
@@ -107,5 +108,65 @@
     <div class="footer">
         Powered by Melt Records Dashboard
     </div>
+    
+    <script>
+        // Check for maintenance mode periodically and redirect when it's over
+        function checkMaintenanceStatus() {
+            // Get the original URL from query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const originalUrl = urlParams.get('originalUrl');
+            
+            if (!originalUrl) {
+                // No original URL, just check if maintenance is over by trying root
+                fetch('/')
+                    .then(response => {
+                        // If we get a successful response and it's not a redirect to maintenance
+                        if (response.ok && !response.url.includes('maintenance.html')) {
+                            window.location.href = '/';
+                        }
+                    })
+                    .catch(() => {
+                        // Ignore errors, maintenance likely still active
+                    });
+                return;
+            }
+            
+            // Build the full original URL
+            const fullOriginalUrl = originalUrl.startsWith('/') ? originalUrl : '/' + originalUrl;
+            
+            // Try to fetch the original URL
+            fetch(fullOriginalUrl, { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            })
+                .then(response => {
+                    // If we get a successful response and it's not redirecting to maintenance
+                    if (response.ok && !response.url.includes('maintenance.html')) {
+                        // Maintenance is over, redirect to original URL
+                        window.location.href = fullOriginalUrl + window.location.search.replace(/[?&]originalUrl=[^&]*/, '').replace(/^&/, '?');
+                    }
+                })
+                .catch(() => {
+                    // Ignore errors, maintenance likely still active
+                });
+        }
+        
+        // Check immediately on load
+        setTimeout(checkMaintenanceStatus, 2000);
+        
+        // Then check every 10 seconds
+        setInterval(checkMaintenanceStatus, 10000);
+        
+        // Also check when user clicks refresh or when page gets focus
+        window.addEventListener('focus', checkMaintenanceStatus);
+        
+        // Handle manual refresh attempts
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                checkMaintenanceStatus();
+            }
+        });
+    </script>
 </body>
 </html>

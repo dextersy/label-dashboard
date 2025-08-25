@@ -1,9 +1,11 @@
 RewriteEngine On
 
 # Route all requests to the maintenance page during deployment
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^.*$ /index.html [L]
+# Exclude the maintenance.html file itself to prevent redirect loops
+# Pass the original URL as a query parameter
+RewriteCond %{REQUEST_URI} !^/maintenance\.html$
+RewriteCond %{QUERY_STRING} !^originalUrl=
+RewriteRule ^(.*)$ /maintenance.html?originalUrl=$1&%{QUERY_STRING} [L,R=302]
 
 # Set proper MIME types for common files
 <IfModule mod_mime.c>
