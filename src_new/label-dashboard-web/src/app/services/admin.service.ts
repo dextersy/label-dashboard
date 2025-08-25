@@ -75,7 +75,6 @@ export interface ChildBrand {
   music_earnings: number;
   event_earnings: number;
   payments: number;
-  commission: number;
   balance: number;
   status?: string;
   domains?: Domain[];

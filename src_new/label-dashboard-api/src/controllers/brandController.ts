@@ -807,7 +807,6 @@ interface ChildBrandData {
   music_earnings: number;
   event_earnings: number;
   payments: number;
-  commission: number;
   balance: number;
   status: string;
   domains: Array<{
@@ -821,10 +820,6 @@ export const getChildBrands = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
     const { start_date, end_date } = req.query as { start_date?: string; end_date?: string };
-
-    // Commission rates - TODO: Make configurable
-    const MUSIC_COMMISSION = 0.2; // 20%
-    const EVENT_COMMISSION = 0.025; // 2.5%
 
     // Find all child brands
     const childBrands = await Brand.findAll({
@@ -855,7 +850,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
       if (releaseIdList.length === 0) {
         musicEarnings = 0;
       } else {
-        // Calculate music earnings (total earnings minus royalties for this brand's releases)
+        // Calculate music earnings (total earnings minus royalties minus platform fees for this brand's releases)
         const totalEarnings = await Earning.sum('amount', {
           where: {
             release_id: { [Op.in]: releaseIdList },
@@ -878,7 +873,18 @@ export const getChildBrands = async (req: Request, res: Response) => {
           }
         });
 
-        musicEarnings = (totalEarnings || 0) - (totalRoyalties || 0);
+        const totalPlatformFees = await Earning.sum('platform_fee', {
+          where: {
+            release_id: { [Op.in]: releaseIdList },
+            ...(start_date && end_date ? {
+              date_recorded: {
+                [Op.between]: [new Date(start_date), new Date(end_date)]
+              }
+            } : {})
+          }
+        });
+
+        musicEarnings = (totalEarnings || 0) - (totalRoyalties || 0) - (totalPlatformFees || 0);
       }
 
       // Calculate event earnings (ticket sales minus processing fees for this brand's events)
@@ -909,11 +915,8 @@ export const getChildBrands = async (req: Request, res: Response) => {
         eventEarnings = (parseFloat(salesData.total_sales) || 0) - (parseFloat(salesData.total_processing_fee) || 0);
       }
 
-      // Calculate commission
-      const commission = (musicEarnings * MUSIC_COMMISSION) + (eventEarnings * EVENT_COMMISSION);
-      
       // Calculate balance
-      const balance = musicEarnings + eventEarnings - commission - payments;
+      const balance = musicEarnings + eventEarnings - payments;
 
       // Get domains for this child brand
       const domains = await Domain.findAll({
@@ -934,7 +937,6 @@ export const getChildBrands = async (req: Request, res: Response) => {
         music_earnings: musicEarnings,
         event_earnings: eventEarnings,
         payments: payments,
-        commission: commission,
         balance: balance,
         status: calculateSublabelStatus(domainData),
         domains: domainData

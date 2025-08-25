@@ -99,14 +99,6 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       formatter: (item: ChildBrand) => `₱${item.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     },
     { 
-      key: 'commission', 
-      label: 'Commission', 
-      type: 'number',
-      sortable: true,
-      align: 'right',
-      formatter: (item: ChildBrand) => `₱${item.commission.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    },
-    { 
       key: 'payments', 
       label: 'Payments Made', 
       type: 'number',
@@ -272,9 +264,6 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     return this.childBrands.reduce((total, brand) => total + brand.event_earnings, 0);
   }
 
-  getTotalCommission(): number {
-    return this.childBrands.reduce((total, brand) => total + brand.commission, 0);
-  }
 
   getTotalPayments(): number {
     return this.childBrands.reduce((total, brand) => total + brand.payments, 0);
