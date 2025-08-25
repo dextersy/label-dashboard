@@ -887,11 +887,11 @@ export const getChildBrands = async (req: Request, res: Response) => {
         musicEarnings = (totalEarnings || 0) - (totalRoyalties || 0) - (totalPlatformFees || 0);
       }
 
-      // Calculate event earnings (ticket sales minus processing fees for this brand's events)
+      // Calculate event earnings (ticket sales minus platform fees for this brand's events, excluding tickets where platform_fee is NULL)
       const eventQuery = await Ticket.findAll({
         attributes: [
           [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales'],
-          [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+          [literal('SUM(platform_fee)'), 'total_platform_fee']
         ],
         include: [{
           model: Event,
@@ -901,6 +901,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
         }],
         where: {
           status: ['Payment confirmed', 'Ticket sent.'],
+          platform_fee: { [Op.not]: null },
           ...(start_date && end_date ? {
             order_timestamp: {
               [Op.between]: [new Date(start_date), new Date(end_date)]
@@ -912,7 +913,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
 
       if (eventQuery.length > 0 && eventQuery[0]) {
         const salesData = eventQuery[0] as any;
-        eventEarnings = (parseFloat(salesData.total_sales) || 0) - (parseFloat(salesData.total_processing_fee) || 0);
+        eventEarnings = (parseFloat(salesData.total_sales) || 0) - (parseFloat(salesData.total_platform_fee) || 0);
       }
 
       // Calculate balance
