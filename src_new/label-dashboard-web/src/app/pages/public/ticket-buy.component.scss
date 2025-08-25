@@ -704,10 +704,10 @@ input.material:not(:focus)::placeholder {
 
 /* Countdown notification spacing */
 .wrapper.with-countdown {
-  padding-top: 60px;
+  padding-top: 64px;
   
   @media (max-width: 768px) {
-    padding-top: 70px;
+    padding-top: 56px;
   }
 }
 
