@@ -94,7 +94,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   loadBrandSettings(): void {
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
-        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Herepng';
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
         
@@ -104,7 +104,10 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
-        this.router.navigate(['/domain-not-found']);
+        const currentUrl = window.location.href;
+        this.router.navigate(['/domain-not-found'], { 
+          queryParams: { returnUrl: currentUrl } 
+        });
       }
     });
   }

@@ -1,19 +1,28 @@
 <div class="domain-not-found-container">
   <div class="container">
-    <div class="icon">🌐</div>
-    <h1>Oops! We can't find this domain</h1>
-    <p>The domain <strong>{{ currentDomain }}</strong> isn't configured in our system yet.</p>
-    
-    <div class="suggestions">
-      <h3>What you can do:</h3>
-      <ul>
-        <li>Double-check the URL you entered</li>
-        <li>Contact your administrator to set up this domain</li>
-      </ul>
+    <div *ngIf="isChecking" class="checking-state">
+      <div class="icon">🔄</div>
+      <h1>Checking domain...</h1>
+      <p>Verifying if <strong>{{ currentDomain }}</strong> is now configured.</p>
+      <div class="spinner"></div>
     </div>
     
-    <div class="help-text">
-      <p>Need help? <a href="mailto:support@melt-records.com">Contact your system administrator or support team.</a></p>
+    <div *ngIf="!isChecking" class="error-state">
+      <div class="icon">🌐</div>
+      <h1>Oops! We can't find this domain</h1>
+      <p>The domain <strong>{{ currentDomain }}</strong> isn't configured in our system yet.</p>
+      
+      <div class="suggestions">
+        <h3>What you can do:</h3>
+        <ul>
+          <li>Double-check the URL you entered</li>
+          <li>Contact your administrator to set up this domain</li>
+        </ul>
+      </div>
+      
+      <div class="help-text">
+        <p>Need help? <a href="mailto:support@melt-records.com">Contact your system administrator or support team.</a></p>
+      </div>
     </div>
   </div>
   

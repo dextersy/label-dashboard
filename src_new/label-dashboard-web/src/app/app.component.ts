@@ -45,7 +45,25 @@ export class AppComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Failed to load brand settings:', error);
         this.brandLoaded = true; // Allow rendering even on error to show error page
-        this.router.navigate(['/domain-not-found']);
+        
+        if (!window.location.pathname.includes('/domain-not-found')) {
+          // First time redirecting to domain-not-found, capture current URL
+          const currentUrl = window.location.href;
+          this.router.navigate(['/domain-not-found'], { 
+            queryParams: { returnUrl: currentUrl } 
+          });
+        } else {
+          // Already on domain-not-found, preserve existing returnUrl
+          const urlParams = new URLSearchParams(window.location.search);
+          const existingReturnUrl = urlParams.get('returnUrl');
+          if (existingReturnUrl) {
+            this.router.navigate(['/domain-not-found'], { 
+              queryParams: { returnUrl: existingReturnUrl } 
+            });
+          } else {
+            this.router.navigate(['/domain-not-found']);
+          }
+        }
       }
     });
 

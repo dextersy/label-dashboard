@@ -81,7 +81,10 @@ export class ResetPasswordComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
-        this.router.navigate(['/domain-not-found']);
+        const currentUrl = window.location.href;
+        this.router.navigate(['/domain-not-found'], { 
+          queryParams: { returnUrl: currentUrl } 
+        });
       }
     });
   }
