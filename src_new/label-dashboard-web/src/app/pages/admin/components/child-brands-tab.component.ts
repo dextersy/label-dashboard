@@ -10,12 +10,13 @@ import { DateRangeFilterComponent, DateRangeSelection } from '../../../component
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { AddSublabelModalComponent } from '../../../components/shared/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../../components/shared/fee-settings-modal/fee-settings-modal.component';
+import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/shared/sublabel-payout-modal/sublabel-payout-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-child-brands-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent],
   templateUrl: './child-brands-tab.component.html',
   styleUrls: ['./child-brands-tab.component.scss']
 })
@@ -29,15 +30,13 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   showAddSublabelModal: boolean = false;
   showFeeSettingsModal: boolean = false;
   selectedSublabelForFees: ChildBrand | null = null;
+  showPayoutModal: boolean = false;
+  selectedSublabelForPayout: ChildBrand | null = null;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
 
   @ViewChild(AddSublabelModalComponent) addSublabelModal!: AddSublabelModalComponent;
-  
-  // Commission rates - matching PHP implementation
-  readonly MUSIC_COMMISSION = 0.2; // 20%
-  readonly EVENT_COMMISSION = 0.025; // 2.5%
 
   // Table configuration
   tableColumns: TableColumn[] = [
@@ -420,6 +419,45 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     this.closeFeeSettingsModal();
     // Optionally refresh the data if needed
     // this.loadChildBrands();
+  }
+
+  // Payout Modal handlers
+  openPayoutModal(childBrand: ChildBrand): void {
+    if (childBrand.balance <= 0) {
+      this.notificationService.showWarning('This sublabel has no balance to pay out');
+      return;
+    }
+    this.selectedSublabelForPayout = childBrand;
+    this.showPayoutModal = true;
+  }
+
+  closePayoutModal(): void {
+    this.showPayoutModal = false;
+    this.selectedSublabelForPayout = null;
+  }
+
+  onPayoutSubmit(payoutData: SubLabelPayoutData): void {
+    if (!this.selectedSublabelForPayout) {
+      return;
+    }
+
+    const sublabelName = this.selectedSublabelForPayout.brand_name;
+    const sublabelBrandId = this.selectedSublabelForPayout.brand_id; // Use the sublabel's brand ID
+    
+    this.adminService.createLabelPayment(sublabelBrandId, payoutData).subscribe({
+      next: (response) => {
+        this.notificationService.showSuccess(`Payment of ₱${payoutData.amount.toFixed(2)} created successfully for ${sublabelName}`);
+        this.closePayoutModal();
+        
+        // Refresh the child brands list to show updated balances
+        this.loadChildBrands();
+      },
+      error: (error) => {
+        console.error('Error creating label payment:', error);
+        const errorMessage = error.error?.error || 'Failed to create payment';
+        this.notificationService.showError(errorMessage);
+      }
+    });
   }
 
 }

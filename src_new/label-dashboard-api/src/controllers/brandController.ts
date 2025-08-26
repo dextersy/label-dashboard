@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
 import User from '../models/User';
-import { Earning, Royalty, Ticket, Event, Release } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment } from '../models';
 import { Op, literal } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
@@ -836,7 +836,17 @@ export const getChildBrands = async (req: Request, res: Response) => {
     for (const childBrand of childBrands) {
       let musicEarnings = 0;
       let eventEarnings = 0;
-      const payments = 0; // TODO: Implement actual payments calculation
+      // Calculate total payments made to this sublabel from label_payment table
+      const payments = await LabelPayment.sum('amount', {
+        where: {
+          brand_id: childBrand.id,
+          ...(start_date && end_date ? {
+            date_paid: {
+              [Op.between]: [new Date(start_date), new Date(end_date)]
+            }
+          } : {})
+        }
+      }) || 0;
 
       // Get all release IDs for this brand
       const releaseIds = await Release.findAll({

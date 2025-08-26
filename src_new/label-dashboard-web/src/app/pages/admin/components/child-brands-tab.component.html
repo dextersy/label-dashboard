@@ -55,6 +55,14 @@
         </button>
         
         <button
+          class="btn btn-sm btn-outline-success d-none d-md-inline-block"
+          (click)="openPayoutModal(item)"
+          [disabled]="item.balance <= 0"
+          [title]="item.balance > 0 ? 'Pay out balance to ' + item.brand_name : 'No balance to pay out'">
+          <i class="fas fa-money-bill-wave"></i>
+        </button>
+        
+        <button
           class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2"
           [disabled]="!hasDomains(item)"
           (click)="openSublabelDashboard(item)">
@@ -63,10 +71,18 @@
         </button>
         
         <button
-          class="btn btn-sm btn-outline-secondary d-md-none d-block w-100"
+          class="btn btn-sm btn-outline-secondary d-md-none d-block w-100 mb-2"
           (click)="openFeeSettingsModal(item)">
           <i class="fas fa-dollar-sign me-2"></i>
           Fee Settings
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-success d-md-none d-block w-100"
+          (click)="openPayoutModal(item)"
+          [disabled]="item.balance <= 0">
+          <i class="fas fa-money-bill-wave me-2"></i>
+          Pay Out (₱{{ item.balance | number:'1.2-2' }})
         </button>
       </div>
     </ng-template>
@@ -118,4 +134,12 @@
     (close)="closeFeeSettingsModal()"
     (saved)="onFeeSettingsSaved($event)">
   </app-fee-settings-modal>
+
+  <!-- Payout Modal -->
+  <app-sublabel-payout-modal
+    [show]="showPayoutModal"
+    [sublabel]="selectedSublabelForPayout"
+    (close)="closePayoutModal()"
+    (submit)="onPayoutSubmit($event)">
+  </app-sublabel-payout-modal>
 </div>

@@ -20,6 +20,8 @@ import ArtistAccess from './ArtistAccess';
 import Domain from './Domain';
 import LoginAttempt from './LoginAttempt';
 import EmailAttempt from './EmailAttempt';
+import LabelPaymentMethod from './LabelPaymentMethod';
+import LabelPayment from './LabelPayment';
 
 // Define relationships
 // Brand relationships
@@ -31,6 +33,8 @@ Brand.hasMany(RecuperableExpense, { foreignKey: 'brand_id', as: 'expenses' });
 Brand.hasMany(LoginAttempt, { foreignKey: 'brand_id', as: 'loginAttempts' });
 Brand.hasMany(EmailAttempt, { foreignKey: 'brand_id', as: 'emailAttempts' });
 Brand.hasMany(Domain, { foreignKey: 'brand_id', as: 'domains' });
+Brand.hasMany(LabelPaymentMethod, { foreignKey: 'brand_id', as: 'labelPaymentMethods' });
+Brand.hasMany(LabelPayment, { foreignKey: 'brand_id', as: 'labelPayments' });
 
 // Brand self-referencing relationships for parent-child hierarchy
 Brand.hasMany(Brand, { foreignKey: 'parent_brand', as: 'childBrands' });
@@ -139,6 +143,14 @@ LoginAttempt.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 // EmailAttempt relationships
 EmailAttempt.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 
+// LabelPaymentMethod relationships
+LabelPaymentMethod.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+LabelPaymentMethod.hasMany(LabelPayment, { foreignKey: 'payment_method_id', as: 'labelPayments' });
+
+// LabelPayment relationships
+LabelPayment.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+LabelPayment.belongsTo(LabelPaymentMethod, { foreignKey: 'payment_method_id', as: 'paymentMethod' });
+
 // Export all models
 export {
   sequelize,
@@ -161,6 +173,8 @@ export {
   Domain,
   LoginAttempt,
   EmailAttempt,
+  LabelPaymentMethod,
+  LabelPayment,
 };
 
 // Initialize database connection

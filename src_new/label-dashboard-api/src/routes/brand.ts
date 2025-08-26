@@ -1,5 +1,6 @@
 import express from 'express';
 import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings } from '../controllers/brandController';
+import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById } from '../controllers/labelPaymentController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = express.Router();
@@ -26,5 +27,16 @@ router.post('/:brandId/sublabels', authenticateToken, requireSuperAdmin, createS
 // Fee settings routes
 router.get('/:brandId/fee-settings', authenticateToken, requireAdmin, getFeeSettings);
 router.put('/:brandId/fee-settings', authenticateToken, requireAdmin, updateFeeSettings);
+
+// Label payment methods routes
+router.post('/:brandId/payment-methods', authenticateToken, requireAdmin, addLabelPaymentMethod);
+router.get('/:brandId/payment-methods', authenticateToken, requireAdmin, getLabelPaymentMethods);
+router.put('/:brandId/payment-methods/:id', authenticateToken, requireAdmin, updateLabelPaymentMethod);
+router.put('/:brandId/payment-methods/:id/set-default', authenticateToken, requireAdmin, setDefaultLabelPaymentMethod);
+
+// Label payments routes
+router.post('/:brandId/payments', authenticateToken, requireAdmin, addLabelPayment);
+router.get('/:brandId/payments', authenticateToken, requireAdmin, getLabelPayments);
+router.get('/:brandId/payments/:id', authenticateToken, requireAdmin, getLabelPaymentById);
 
 export default router;

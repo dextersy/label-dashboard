@@ -857,4 +857,66 @@ export class AdminService {
       headers: this.getAuthHeaders()
     });
   }
+
+  // Label Payment Methods Management
+  getLabelPaymentMethods(): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+    
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payment-methods`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  addLabelPaymentMethod(paymentMethodData: any): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+    
+    return this.http.post(`${environment.apiUrl}/brands/${brandId}/payment-methods`, paymentMethodData, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateLabelPaymentMethod(methodId: number, paymentMethodData: any): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+    
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/payment-methods/${methodId}`, paymentMethodData, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  setDefaultLabelPaymentMethod(methodId: number): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+    
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/payment-methods/${methodId}/set-default`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Label Payments Management  
+  createLabelPayment(sublabelBrandId: number, paymentData: any): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/brands/${sublabelBrandId}/payments`, paymentData, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getLabelPayments(): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+    
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getLabelPaymentById(paymentId: number): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+    
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments/${paymentId}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }
