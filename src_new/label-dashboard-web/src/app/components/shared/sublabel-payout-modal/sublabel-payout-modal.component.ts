@@ -32,6 +32,7 @@ export interface ChildBrand {
   music_earnings: number;
   event_earnings: number;
   payments: number;
+  platform_fees: number;
 }
 
 @Component({

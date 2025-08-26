@@ -106,6 +106,14 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       formatter: (item: ChildBrand) => `₱${item.payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     },
     { 
+      key: 'platform_fees', 
+      label: 'Platform Fees', 
+      type: 'number',
+      sortable: true,
+      align: 'right',
+      formatter: (item: ChildBrand) => `₱${item.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    },
+    { 
       key: 'balance', 
       label: 'Payable Balance', 
       type: 'number',
@@ -266,6 +274,10 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
 
   getTotalPayments(): number {
     return this.childBrands.reduce((total, brand) => total + brand.payments, 0);
+  }
+
+  getTotalPlatformFees(): number {
+    return this.childBrands.reduce((total, brand) => total + brand.platform_fees, 0);
   }
 
   // Superadmin check

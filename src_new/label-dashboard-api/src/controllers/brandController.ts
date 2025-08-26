@@ -807,6 +807,7 @@ interface ChildBrandData {
   music_earnings: number;
   event_earnings: number;
   payments: number;
+  platform_fees: number;
   balance: number;
   status: string;
   domains: Array<{
@@ -857,8 +858,10 @@ export const getChildBrands = async (req: Request, res: Response) => {
       
       const releaseIdList = releaseIds.map(r => (r as any).id);
       
+      let musicPlatformFees = 0;
       if (releaseIdList.length === 0) {
         musicEarnings = 0;
+        musicPlatformFees = 0;
       } else {
         // Calculate music earnings (total earnings minus royalties minus platform fees for this brand's releases)
         const totalEarnings = await Earning.sum('amount', {
@@ -895,6 +898,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
         });
 
         musicEarnings = (totalEarnings || 0) - (totalRoyalties || 0) - (totalPlatformFees || 0);
+        musicPlatformFees = totalPlatformFees || 0;
       }
 
       // Calculate event earnings (ticket sales minus platform fees for this brand's events, excluding tickets where platform_fee is NULL)
@@ -921,9 +925,11 @@ export const getChildBrands = async (req: Request, res: Response) => {
         raw: true
       });
 
+      let eventPlatformFees = 0;
       if (eventQuery.length > 0 && eventQuery[0]) {
         const salesData = eventQuery[0] as any;
-        eventEarnings = (parseFloat(salesData.total_sales) || 0) - (parseFloat(salesData.total_platform_fee) || 0);
+        eventPlatformFees = parseFloat(salesData.total_platform_fee) || 0;
+        eventEarnings = (parseFloat(salesData.total_sales) || 0) - eventPlatformFees;
       }
 
       // Calculate balance
@@ -948,6 +954,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
         music_earnings: musicEarnings,
         event_earnings: eventEarnings,
         payments: payments,
+        platform_fees: musicPlatformFees + eventPlatformFees,
         balance: balance,
         status: calculateSublabelStatus(domainData),
         domains: domainData
