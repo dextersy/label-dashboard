@@ -18,28 +18,53 @@
         </button>
       </ng-template>
       <ng-template #actionsContent let-user>
-        <a (click)="toggleAdminStatus(user.id)" 
-           class="btn btn-link btn-sm"
-           [title]="user.is_admin ? 'Remove admin' : 'Make admin'">
-          <i class="fa" 
-             [class.fa-user-shield]="!user.is_admin" 
-             [class.fa-user-times]="user.is_admin"
-             [class.text-success]="!user.is_admin"
-             [class.text-danger]="user.is_admin"></i>
-        </a>
-        <!-- Show resend/cancel options for pending admin invites -->
-        <ng-container *ngIf="user.is_admin && !user.username">
-          <a (click)="resendInvite(user.id)" 
-             class="btn btn-link btn-sm text-warning"
-             title="Resend invitation">
-            <i class="fa-solid fa-envelope"></i>
+        <div class="d-flex gap-2 flex-wrap">
+          <!-- Desktop buttons -->
+          <a (click)="toggleAdminStatus(user.id)" 
+             class="btn btn-outline-primary btn-icon-only d-none d-md-inline-block"
+             [title]="user.is_admin ? 'Remove admin' : 'Make admin'">
+            <i class="fa" 
+               [class.fa-user-shield]="!user.is_admin" 
+               [class.fa-user-times]="user.is_admin"></i>
           </a>
-          <a (click)="cancelInvite(user.id)" 
-             class="btn btn-link btn-sm text-danger"
-             title="Cancel invitation">
-            <i class="fa-solid fa-times"></i>
+          
+          <!-- Show resend/cancel options for pending admin invites - Desktop -->
+          <ng-container *ngIf="user.is_admin && !user.username">
+            <a (click)="resendInvite(user.id)" 
+               class="btn btn-outline-primary btn-icon-only d-none d-md-inline-block"
+               title="Resend invitation">
+              <i class="fa-solid fa-envelope"></i>
+            </a>
+            <a (click)="cancelInvite(user.id)" 
+               class="btn btn-outline-primary btn-icon-only d-none d-md-inline-block"
+               title="Cancel invitation">
+              <i class="fa-solid fa-times"></i>
+            </a>
+          </ng-container>
+          
+          <!-- Mobile buttons -->
+          <a (click)="toggleAdminStatus(user.id)" 
+             class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2">
+            <i class="fa me-2" 
+               [class.fa-user-shield]="!user.is_admin" 
+               [class.fa-user-times]="user.is_admin"></i>
+            {{ user.is_admin ? 'Remove Admin' : 'Make Admin' }}
           </a>
-        </ng-container>
+          
+          <!-- Show resend/cancel options for pending admin invites - Mobile -->
+          <ng-container *ngIf="user.is_admin && !user.username">
+            <a (click)="resendInvite(user.id)" 
+               class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2">
+              <i class="fa-solid fa-envelope me-2"></i>
+              Resend Invitation
+            </a>
+            <a (click)="cancelInvite(user.id)" 
+               class="btn btn-sm btn-outline-primary d-md-none d-block w-100">
+              <i class="fa-solid fa-times me-2"></i>
+              Cancel Invitation
+            </a>
+          </ng-container>
+        </div>
       </ng-template>
     </app-paginated-table>
   </div>

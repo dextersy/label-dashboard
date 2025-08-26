@@ -15,10 +15,12 @@
     // Force all buttons to be full width on mobile
     button.btn,
     .btn,
+    a.btn,
     span button.btn,
-    span .btn {
+    span .btn,
+    span a.btn {
       width: 100% !important;
-      margin: 0 !important;
+      margin: 0 0 0.25rem 0 !important;
       display: block !important;
     }
     
