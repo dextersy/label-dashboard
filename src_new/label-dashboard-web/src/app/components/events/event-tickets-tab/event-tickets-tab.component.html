@@ -18,11 +18,11 @@
     <!-- Custom buttons template -->
     <ng-template #customButtons>
       <span 
-        class="d-inline-block" 
+        class="d-inline-block flex-shrink-0" 
         [title]="getCustomTicketButtonTooltip()"
         *ngIf="isAdmin">
         <button 
-          class="btn btn-sm btn-outline-success" 
+          class="btn btn-sm btn-outline-primary" 
           (click)="onCreateCustomTicket()"
           [disabled]="loading || !canCreateCustomTickets()">
           <i class="fa fa-plus me-1"></i>
@@ -30,7 +30,7 @@
         </button>
       </span>
       <button 
-        class="btn btn-sm btn-outline-primary" 
+        class="btn btn-sm btn-outline-primary flex-shrink-0" 
         (click)="onDownloadCSV()"
         *ngIf="isAdmin"
         [disabled]="loading">
