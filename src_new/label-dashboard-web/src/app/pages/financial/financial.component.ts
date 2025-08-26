@@ -220,6 +220,10 @@ export class FinancialComponent implements OnInit, OnDestroy {
   editingRoyalties = false;
   updatingRoyalties = false;
 
+  // Form loading states
+  submittingRoyalty = false;
+  submittingEarning = false;
+
   supportedBanks = [
     { bank_code: 'BPI', bank_name: 'Bank of the Philippine Islands' },
     { bank_code: 'BDO', bank_name: 'Banco de Oro' },
@@ -473,8 +477,9 @@ export class FinancialComponent implements OnInit, OnDestroy {
   }
 
   async onSubmitRoyalty(): Promise<void> {
-    if (!this.selectedArtist) return;
+    if (!this.selectedArtist || this.submittingRoyalty) return;
 
+    this.submittingRoyalty = true;
     try {
       await this.financialService.createRoyalty(this.selectedArtist.id, this.newRoyaltyForm);
       this.notificationService.showSuccess('Royalty added successfully');
@@ -484,6 +489,8 @@ export class FinancialComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error creating royalty:', error);
       this.notificationService.showError('Failed to add royalty');
+    } finally {
+      this.submittingRoyalty = false;
     }
   }
 
@@ -506,8 +513,9 @@ export class FinancialComponent implements OnInit, OnDestroy {
   }
 
   async onSubmitEarning(): Promise<void> {
-    if (!this.selectedArtist) return;
+    if (!this.selectedArtist || this.submittingEarning) return;
 
+    this.submittingEarning = true;
     try {
       await this.financialService.createEarning(this.selectedArtist.id, this.newEarningForm);
       this.notificationService.showSuccess('Earning added successfully');
@@ -517,6 +525,8 @@ export class FinancialComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error creating earning:', error);
       this.notificationService.showError('Failed to add earning');
+    } finally {
+      this.submittingEarning = false;
     }
   }
 

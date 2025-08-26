@@ -106,7 +106,8 @@
           <app-new-royalty-form
             [newRoyaltyForm]="newRoyaltyForm"
             [releases]="releases"
-            [onSubmitRoyalty]="onSubmitRoyalty.bind(this)">
+            [onSubmitRoyalty]="onSubmitRoyalty.bind(this)"
+            [isLoading]="submittingRoyalty">
           </app-new-royalty-form>
         </div>
 
@@ -127,7 +128,8 @@
           <app-new-earning-form
             [newEarningForm]="newEarningForm"
             [releases]="releases"
-            [onSubmitEarning]="onSubmitEarning.bind(this)">
+            [onSubmitEarning]="onSubmitEarning.bind(this)"
+            [isLoading]="submittingEarning">
           </app-new-earning-form>
         </div>
       </div>
