@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -429,7 +430,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
         const brand = await Brand.findByPk(req.user.brand_id);
         
         // Generate dashboard URL
-        const dashboardUrl = `${process.env.FRONTEND_URL}/artist`;
+        const dashboardUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/artist`;
         
         // Get updater name
         const updaterName = req.user.first_name && req.user.last_name 
@@ -1321,7 +1322,7 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
     const brand = await Brand.findByPk(req.user.brand_id);
     
     // Generate invitation URL
-    const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/accept?hash=${inviteHash}`;
+    const inviteUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/invite/accept?hash=${inviteHash}`;
     
     // Send invitation email
     try {
@@ -1399,7 +1400,7 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
     const brand = await Brand.findByPk(req.user.brand_id);
 
     // Generate invitation URL
-    const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/accept?hash=${access.invite_hash}`;
+    const inviteUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/invite/accept?hash=${access.invite_hash}`;
     
     // Send invitation email
     try {

@@ -333,6 +333,26 @@ sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USE
 rm -f "$sftp_batch"
 print_success "Production site is now live!"
 
+# Upload tmp folder if it exists
+if [ -d "tmp" ]; then
+    print_status "Uploading tmp folder..."
+    sftp_batch=$(mktemp)
+    cat > "$sftp_batch" << EOF
+-mkdir $FRONTEND_DEPLOY_PATH/tmp
+put -r tmp/* $FRONTEND_DEPLOY_PATH/tmp/
+quit
+EOF
+    
+    if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+        print_success "tmp folder uploaded successfully"
+    else
+        print_warning "Failed to upload tmp folder (non-critical)"
+    fi
+    rm -f "$sftp_batch"
+else
+    print_status "No tmp folder found, skipping upload"
+fi
+
 # Clean up maintenance.html after successful deployment
 print_status "Cleaning up maintenance files..."
 ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF

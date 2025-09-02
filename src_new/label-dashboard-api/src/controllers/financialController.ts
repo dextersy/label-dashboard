@@ -3,6 +3,7 @@ import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableE
 import { sendEarningsNotification, sendPaymentNotification } from '../utils/emailService';
 import { PaymentService } from '../utils/paymentService';
 import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import csv from 'csv-parser';
 import * as fuzz from 'fuzzball';
 import { Readable } from 'stream';
@@ -1603,10 +1604,8 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
       const brandColor = release.brand?.brand_color || '#667eea';
       const brandLogo = release.brand?.logo_url || '';
       
-      // Generate dashboard URL
-      const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
-      const host = process.env.FRONTEND_HOST || 'localhost:4200';
-      const dashboardUrl = `${protocol}://${host}/financial#earnings`;
+      // Generate dashboard URL using brand-specific domain
+      const dashboardUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial#earnings`;
 
       // Send earnings notification email
       await sendEarningsNotification(

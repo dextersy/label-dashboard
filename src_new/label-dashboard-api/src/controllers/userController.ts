@@ -56,7 +56,7 @@ export const sendResetLink = async (req: Request, res: Response) => {
     await user.update({ reset_hash: resetHash });
 
     // Send reset email
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetHash}`;
+    const resetLink = `${await getBrandFrontendUrl(user.brand_id)}/reset-password?token=${resetHash}`;
     const emailSent = await sendEmail(
       [user.email_address],
       'Password Reset Request',
@@ -195,7 +195,7 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
     });
 
     // Send invite email
-    const inviteLink = `${process.env.FRONTEND_URL}/accept-invite?token=${inviteHash}`;
+    const inviteLink = `${await getBrandFrontendUrl(user.brand_id)}/accept-invite?token=${inviteHash}`;
     const emailSent = await sendEmail(
       [user.email_address],
       'Invitation to Join Label Dashboard',

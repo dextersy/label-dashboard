@@ -4,6 +4,7 @@ import path from 'path';
 import EmailAttempt from '../models/EmailAttempt';
 import User from '../models/User';
 import Brand from '../models/Brand';
+import { getBrandFrontendUrl } from './brandUtils';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -423,7 +424,7 @@ export const sendPaymentMethodNotification = async (
     template = template.replace(/%MEMBER_NAME%/g, updaterName);
     template = template.replace(/%BRAND%/g, brand?.name || 'Your Label');
     template = template.replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
-    template = template.replace(/%LINK%/g, `${process.env.FRONTEND_URL}/financial#payments`);
+    template = template.replace(/%LINK%/g, `${await getBrandFrontendUrl(brand?.id || 1)}/financial#payments`);
 
     const subject = `A new payment method has been added to ${artistName}`;
     return await sendEmail(allRecipients, subject, template, brand?.id || 1);
@@ -452,7 +453,7 @@ export const sendPayoutPointNotification = async (
     template = template.replace(/%BRAND_NAME%/g, brand?.name || 'Your Label');
     template = template.replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
     template = template.replace(/%MEMBER_NAME%/g, updaterName);
-    template = template.replace(/%URL%/g, `${process.env.FRONTEND_URL}/financial#payments`);
+    template = template.replace(/%URL%/g, `${await getBrandFrontendUrl(brand?.id || 1)}/financial#payments`);
 
     const subject = `Payout point for ${artistName} updated.`;
     return await sendEmail(recipients, subject, template, brand?.id || 1);
@@ -640,7 +641,7 @@ export const sendPaymentNotification = async (
     
     // Set dashboard URL (matching PHP logic)
     if (!dashboardUrl) {
-      dashboardUrl = `${process.env.FRONTEND_URL || 'https://dashboard.meltrecords.com'}/financial#payments`;
+      dashboardUrl = `${await getBrandFrontendUrl(brand.id)}/financial#payments`;
     }
     template = template.replace(/%URL%/g, dashboardUrl);
 
