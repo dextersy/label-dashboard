@@ -10,7 +10,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
+  if (!token || token === 'null' || token === 'undefined') {
     return res.status(401).json({ error: 'Access token required' });
   }
 
