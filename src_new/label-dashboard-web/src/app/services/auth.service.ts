@@ -59,6 +59,11 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
+  // Force logout due to session timeout or authorization error
+  forceLogout(): void {
+    this.logout();
+  }
+
   getToken(): string | null {
     return localStorage.getItem('auth_token');
   }
