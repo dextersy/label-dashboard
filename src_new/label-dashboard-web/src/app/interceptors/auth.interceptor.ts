@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+import { ConnectionMonitorService } from '../services/connection-monitor.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -12,7 +13,8 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private connectionMonitor: ConnectionMonitorService
   ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -31,9 +33,25 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     return next.handle(authReq).pipe(
+      tap((response: any) => {
+        // Success response - when disconnected, ignore all non-health responses for connection status
+        if (!req.url.includes('/health') && !this.connectionMonitor.isCurrentlyConnected()) {
+          // Only the health check should restore connection status
+          return;
+        }
+      }),
       catchError((error: HttpErrorResponse) => {
-        // Handle 401 Unauthorized and 403 Forbidden errors (session timeout/unauthorized)
-        if (error.status === 401 || error.status === 403) {
+        // Check if this is a connection/timeout error (skip health check requests)
+        if (!req.url.includes('/health') && this.connectionMonitor.isConnectionError(error)) {
+          this.connectionMonitor.handleConnectionError();
+          return throwError(() => error);
+        }
+
+        // Handle 401 Unauthorized and 403 Forbidden errors for protected endpoints only
+        // Don't handle auth errors for public API calls or login attempts - let components handle them
+        if ((error.status === 401 || error.status === 403) && 
+            !req.url.includes('/public/') && 
+            !req.url.includes('/auth/login')) {
           // Force logout and clear the user session
           this.authService.forceLogout();
           

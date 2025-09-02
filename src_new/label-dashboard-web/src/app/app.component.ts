@@ -5,17 +5,19 @@ import { Subscription } from 'rxjs';
 import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { GlobalNotificationComponent } from './components/global-notification/global-notification.component';
+import { ConnectionOverlayComponent } from './components/connection-overlay/connection-overlay.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
 import { NotificationService } from './services/notification.service';
 import { SidebarService } from './services/sidebar.service';
+import { ConnectionMonitorService } from './services/connection-monitor.service';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -32,7 +34,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private adminService: AdminService,
     private notificationService: NotificationService,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private connectionMonitor: ConnectionMonitorService
   ) {}
 
   ngOnInit(): void {
@@ -46,22 +49,30 @@ export class AppComponent implements OnInit, OnDestroy {
         console.error('Failed to load brand settings:', error);
         this.brandLoaded = true; // Allow rendering even on error to show error page
         
-        if (!window.location.pathname.includes('/domain-not-found')) {
-          // First time redirecting to domain-not-found, capture current URL
-          const currentUrl = window.location.href;
-          this.router.navigate(['/domain-not-found'], { 
-            queryParams: { returnUrl: currentUrl } 
-          });
+        // Check if this is a connection error vs a domain configuration error
+        if (this.connectionMonitor.isConnectionError(error)) {
+          // This is a connection issue - let connection monitor handle it
+          this.connectionMonitor.handleConnectionError();
+          // Don't redirect to domain-not-found for connection errors
         } else {
-          // Already on domain-not-found, preserve existing returnUrl
-          const urlParams = new URLSearchParams(window.location.search);
-          const existingReturnUrl = urlParams.get('returnUrl');
-          if (existingReturnUrl) {
+          // This is likely a real domain configuration issue
+          if (!window.location.pathname.includes('/domain-not-found')) {
+            // First time redirecting to domain-not-found, capture current URL
+            const currentUrl = window.location.href;
             this.router.navigate(['/domain-not-found'], { 
-              queryParams: { returnUrl: existingReturnUrl } 
+              queryParams: { returnUrl: currentUrl } 
             });
           } else {
-            this.router.navigate(['/domain-not-found']);
+            // Already on domain-not-found, preserve existing returnUrl
+            const urlParams = new URLSearchParams(window.location.search);
+            const existingReturnUrl = urlParams.get('returnUrl');
+            if (existingReturnUrl) {
+              this.router.navigate(['/domain-not-found'], { 
+                queryParams: { returnUrl: existingReturnUrl } 
+              });
+            } else {
+              this.router.navigate(['/domain-not-found']);
+            }
           }
         }
       }
