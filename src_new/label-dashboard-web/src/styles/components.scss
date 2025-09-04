@@ -659,6 +659,12 @@ textarea.form-control {
         font-size: 15px;
         min-width: auto;
       }
+      
+      // Ensure button containers take full width on mobile
+      .d-flex {
+        width: 100%;
+        justify-content: center;
+      }
     }
   }
 }

@@ -51,6 +51,14 @@
           Resend
         </button>
         <button 
+          class="btn btn-sm btn-outline-info"
+          (click)="onTransferTicket(ticket)"
+          [disabled]="disabled"
+          *ngIf="isTicketTransferable(ticket)"
+          title="Transfer ticket to another person">
+          Transfer
+        </button>
+        <button 
           class="btn btn-sm btn-outline-danger"
           (click)="onCancelTicket(ticket.id)"
           [disabled]="disabled"
@@ -113,4 +121,12 @@
       </div>
     </div>
   </div>
+
+  <!-- Transfer Ticket Modal -->
+  <app-transfer-ticket-modal
+    [ticket]="selectedTicketForTransfer"
+    [show]="showTransferModal"
+    (transferConfirmed)="onTransferConfirmed($event)"
+    #transferModal>
+  </app-transfer-ticket-modal>
 </div>

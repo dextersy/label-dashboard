@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap } from 'rxjs/operators';
 import { CreateEventForm } from '../components/events/create-event-modal/create-event-modal.component';
 
 export interface Event {
@@ -639,6 +639,52 @@ export class EventService {
     );
   }
   
+  /**
+   * Transfer ticket using existing services
+   * This method combines cancel + create to achieve the transfer
+   */
+  transferTicket(originalTicket: any, transferData: {name: string, contact_number: string, email_address: string}): Observable<any> {
+    // Create new ticket with same details but new info
+    const newTicketData = {
+      event_id: originalTicket.event_id || originalTicket.id, // Handle both formats
+      name: transferData.name,
+      email_address: transferData.email_address,
+      contact_number: transferData.contact_number,
+      number_of_entries: originalTicket.number_of_entries,
+      price_per_ticket: originalTicket.price_per_ticket,
+      payment_processing_fee: originalTicket.payment_processing_fee,
+      ticket_paid: true, // Mark as paid since we're transferring from a paid ticket
+      send_email: false, // Don't send payment link email
+      order_timestamp: originalTicket.order_timestamp // Preserve the original order timestamp
+    };
+
+    // Create the new ticket first
+    return this.addTicket(newTicketData).pipe(
+      switchMap(createResponse => {
+        const newTicketId = createResponse.ticket?.id;
+        if (!newTicketId) {
+          throw new Error('Failed to get new ticket ID');
+        }
+        
+        // Send the actual ticket to the customer using resendTicket
+        return this.resendTicket(newTicketId).pipe(
+          switchMap(() => {
+            // Then cancel the original ticket
+            return this.cancelTicket(originalTicket.id).pipe(
+              map(() => ({
+                message: 'Ticket transferred successfully',
+                new_ticket_code: createResponse.ticket?.ticket_code || 'Generated',
+                original_ticket_id: originalTicket.id,
+                new_ticket_id: newTicketId
+              }))
+            );
+          })
+        );
+      }),
+      catchError(this.handleError)
+    );
+  }
+
   /**
    * Get events with enhanced error information
    */

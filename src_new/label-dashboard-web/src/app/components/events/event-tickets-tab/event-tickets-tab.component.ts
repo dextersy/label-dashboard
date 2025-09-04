@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -7,6 +7,7 @@ import { CsvService } from '../../../services/csv.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
 import { environment } from '../../../../environments/environment';
+import { TransferTicketModalComponent, TransferData } from '../transfer-ticket-modal/transfer-ticket-modal.component';
 
 export interface EventTicket {
   id: number;
@@ -37,7 +38,7 @@ export interface TicketSummary {
 @Component({
   selector: 'app-event-tickets-tab',
   standalone: true,
-  imports: [CommonModule, PaginatedTableComponent],
+  imports: [CommonModule, PaginatedTableComponent, TransferTicketModalComponent],
   templateUrl: './event-tickets-tab.component.html',
   styleUrl: './event-tickets-tab.component.scss'
 })
@@ -46,12 +47,16 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isAdmin: boolean = false;
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
+  @ViewChild('transferModal') transferModal!: TransferTicketModalComponent;
+
   tickets: EventTicket[] = [];
   summary: TicketSummary | null = null;
   referrers: EventReferrer[] = [];
   loading = false;
   bulkOperationsLoading = false;
   selectedTicketId: number | null = null;
+  selectedTicketForTransfer: EventTicket | null = null;
+  showTransferModal = false;
 
   // Pagination properties
   pagination: PaginationInfo | null = null;
@@ -378,6 +383,10 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     return Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries) && !!this.isAdmin;
   }
 
+  isTicketTransferable(ticket: EventTicket): boolean {
+    return (ticket.status === 'Ticket sent.') && Number(ticket.number_of_claimed_entries) === 0 && !!this.isAdmin;
+  }
+
   isSuperadmin(): boolean {
     return this.authService.isSuperadmin();
   }
@@ -435,6 +444,57 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       return 'Cannot create custom tickets for past events';
     }
     return 'Create a custom ticket for special invites';
+  }
+
+  onTransferTicket(ticket: EventTicket): void {
+    this.selectedTicketForTransfer = ticket;
+    this.showTransferModal = true;
+    this.transferModal.showModal(ticket);
+  }
+
+  onTransferConfirmed(transferData: TransferData): void {
+    if (!this.selectedTicketForTransfer) {
+      this.transferModal.setLoading(false);
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'No ticket selected for transfer'
+      });
+      return;
+    }
+
+    // We need to add the event_id to the ticket object for the service
+    const ticketWithEventId = {
+      ...this.selectedTicketForTransfer,
+      event_id: this.selectedEvent?.id
+    };
+
+    this.subscriptions.add(
+      this.eventService.transferTicket(ticketWithEventId, transferData).subscribe({
+        next: (response) => {
+          this.transferModal.setLoading(false);
+          this.showTransferModal = false;
+          this.transferModal.hide();
+          
+          this.alertMessage.emit({
+            type: 'success',
+            text: `Ticket transferred successfully! New ticket code: ${response.new_ticket_code}`
+          });
+
+          // Refresh the entire tickets table to show the new ticket and remove the canceled one
+          this.loadEventTickets(this.pagination?.current_page || 1);
+          this.loadTicketSummary();
+          this.selectedTicketForTransfer = null;
+        },
+        error: (error) => {
+          this.transferModal.setLoading(false);
+          console.error('Failed to transfer ticket:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error.error?.error || 'Failed to transfer ticket'
+          });
+        }
+      })
+    );
   }
 
   // Helper methods

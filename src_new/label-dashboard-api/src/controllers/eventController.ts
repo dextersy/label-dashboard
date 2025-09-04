@@ -648,7 +648,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         send_email = true,
         price_per_ticket,
         payment_processing_fee,
-        ticket_paid = false
+        ticket_paid = false,
+        order_timestamp
       } = ticketData;
 
       const eventIdNum = parseInt(event_id, 10);
@@ -723,7 +724,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           payment_processing_fee: processingFee,
           platform_fee: platformFeeCalc.totalPlatformFee,
           referrer_id: referrer?.id || null,
-          order_timestamp: new Date()
+          order_timestamp: order_timestamp ? new Date(order_timestamp) : new Date()
         });
       } else {
         // Create PayMongo payment link for unpaid tickets
@@ -754,7 +755,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           payment_processing_fee: processingFee,
           platform_fee: platformFeeCalc.totalPlatformFee,
           referrer_id: referrer?.id || null,
-          order_timestamp: new Date()
+          order_timestamp: order_timestamp ? new Date(order_timestamp) : new Date()
         });
 
         // Send payment link email if requested
