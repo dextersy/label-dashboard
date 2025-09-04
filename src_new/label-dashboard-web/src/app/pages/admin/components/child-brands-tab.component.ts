@@ -11,12 +11,13 @@ import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '
 import { AddSublabelModalComponent } from '../../../components/shared/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../../components/shared/fee-settings-modal/fee-settings-modal.component';
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/shared/sublabel-payout-modal/sublabel-payout-modal.component';
+import { EarningsBreakdownModalComponent } from '../child-brands/earnings-breakdown-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-child-brands-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent],
   templateUrl: './child-brands-tab.component.html',
   styleUrls: ['./child-brands-tab.component.scss']
 })
@@ -32,6 +33,9 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   selectedSublabelForFees: ChildBrand | null = null;
   showPayoutModal: boolean = false;
   selectedSublabelForPayout: ChildBrand | null = null;
+  showEarningsBreakdownModal: boolean = false;
+  selectedSublabelForBreakdown: ChildBrand | null = null;
+  earningsBreakdownType: 'music' | 'event' | 'platform_fees' = 'music';
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
@@ -87,7 +91,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       type: 'number',
       sortable: true,
       align: 'right',
-      formatter: (item: ChildBrand) => `₱${item.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      formatter: (item: ChildBrand) => `₱${item.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      showBreakdownButton: true
     },
     { 
       key: 'event_earnings', 
@@ -95,7 +100,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       type: 'number',
       sortable: true,
       align: 'right',
-      formatter: (item: ChildBrand) => `₱${item.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      formatter: (item: ChildBrand) => `₱${item.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      showBreakdownButton: true
     },
     { 
       key: 'payments', 
@@ -111,7 +117,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       type: 'number',
       sortable: true,
       align: 'right',
-      formatter: (item: ChildBrand) => `₱${item.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      formatter: (item: ChildBrand) => `₱${item.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      showBreakdownButton: true
     },
     { 
       key: 'balance', 
@@ -470,6 +477,50 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
         this.notificationService.showError(errorMessage);
       }
     });
+  }
+
+  // Earnings Breakdown Modal handlers
+  openMusicBreakdown(brandId: number): void {
+    const childBrand = this.childBrands.find(b => b.brand_id === brandId);
+    if (childBrand) {
+      this.selectedSublabelForBreakdown = childBrand;
+      this.earningsBreakdownType = 'music';
+      this.showEarningsBreakdownModal = true;
+    }
+  }
+
+  openEventBreakdown(brandId: number): void {
+    const childBrand = this.childBrands.find(b => b.brand_id === brandId);
+    if (childBrand) {
+      this.selectedSublabelForBreakdown = childBrand;
+      this.earningsBreakdownType = 'event';
+      this.showEarningsBreakdownModal = true;
+    }
+  }
+
+  closeEarningsBreakdownModal(): void {
+    this.showEarningsBreakdownModal = false;
+    this.selectedSublabelForBreakdown = null;
+  }
+
+  // Handle breakdown button clicks from the table
+  onBreakdownButtonClick(event: {item: ChildBrand, columnKey: string}): void {
+    if (event.columnKey === 'music_earnings') {
+      this.openMusicBreakdown(event.item.brand_id);
+    } else if (event.columnKey === 'event_earnings') {
+      this.openEventBreakdown(event.item.brand_id);
+    } else if (event.columnKey === 'platform_fees') {
+      this.openPlatformFeesBreakdown(event.item.brand_id);
+    }
+  }
+
+  openPlatformFeesBreakdown(brandId: number): void {
+    const childBrand = this.childBrands.find(b => b.brand_id === brandId);
+    if (childBrand) {
+      this.selectedSublabelForBreakdown = childBrand;
+      this.earningsBreakdownType = 'platform_fees';
+      this.showEarningsBreakdownModal = true;
+    }
   }
 
 }

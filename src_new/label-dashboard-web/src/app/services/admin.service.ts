@@ -73,9 +73,17 @@ export interface ChildBrand {
   brand_id: number;
   brand_name: string;
   music_earnings: number;
+  music_gross_earnings: number;
   event_earnings: number;
+  event_sales: number;
+  event_processing_fees: number;
+  event_estimated_tax: number;
+  total_royalties: number;
+  artist_payments: number;
   payments: number;
   platform_fees: number;
+  music_platform_fees: number;
+  event_platform_fees: number;
   balance: number;
   status?: string;
   domains?: Domain[];

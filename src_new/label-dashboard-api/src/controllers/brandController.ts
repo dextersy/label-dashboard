@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
 import User from '../models/User';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment } from '../models';
 import { Op, literal } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
@@ -805,9 +805,17 @@ interface ChildBrandData {
   brand_id: number;
   brand_name: string;
   music_earnings: number;
+  music_gross_earnings: number;
   event_earnings: number;
+  event_sales: number;
+  event_processing_fees: number;
+  event_estimated_tax: number;
+  total_royalties: number;
+  artist_payments: number;
   payments: number;
   platform_fees: number;
+  music_platform_fees: number;
+  event_platform_fees: number;
   balance: number;
   status: string;
   domains: Array<{
@@ -836,7 +844,14 @@ export const getChildBrands = async (req: Request, res: Response) => {
 
     for (const childBrand of childBrands) {
       let musicEarnings = 0;
+      let musicGrossEarnings = 0;
       let eventEarnings = 0;
+      let eventSales = 0;
+      let eventProcessingFees = 0;
+      let eventEstimatedTax = 0;
+      let totalRoyalties = 0;
+      let artistPayments = 0;
+      
       // Calculate total payments made to this sublabel from label_payment table
       const payments = await LabelPayment.sum('amount', {
         where: {
@@ -861,7 +876,9 @@ export const getChildBrands = async (req: Request, res: Response) => {
       let musicPlatformFees = 0;
       if (releaseIdList.length === 0) {
         musicEarnings = 0;
+        musicGrossEarnings = 0;
         musicPlatformFees = 0;
+        totalRoyalties = 0;
       } else {
         // Calculate music earnings (total earnings minus royalties minus platform fees for this brand's releases)
         const totalEarnings = await Earning.sum('amount', {
@@ -875,7 +892,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
           }
         });
 
-        const totalRoyalties = await Royalty.sum('amount', {
+        totalRoyalties = await Royalty.sum('amount', {
           where: {
             release_id: { [Op.in]: releaseIdList },
             ...(start_date && end_date ? {
@@ -884,7 +901,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
               }
             } : {})
           }
-        });
+        }) || 0;
 
         const totalPlatformFees = await Earning.sum('platform_fee', {
           where: {
@@ -897,15 +914,17 @@ export const getChildBrands = async (req: Request, res: Response) => {
           }
         });
 
-        musicEarnings = (totalEarnings || 0) - (totalRoyalties || 0) - (totalPlatformFees || 0);
+        musicGrossEarnings = totalEarnings || 0;
+        musicEarnings = musicGrossEarnings - totalRoyalties - (totalPlatformFees || 0);
         musicPlatformFees = totalPlatformFees || 0;
       }
 
-      // Calculate event earnings (ticket sales minus platform fees for this brand's events, excluding tickets where platform_fee is NULL)
+      // Calculate event sales, earnings, and fees (ticket sales minus platform fees for this brand's events, excluding tickets where platform_fee is NULL)
       const eventQuery = await Ticket.findAll({
         attributes: [
           [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales'],
-          [literal('SUM(platform_fee)'), 'total_platform_fee']
+          [literal('SUM(platform_fee)'), 'total_platform_fee'],
+          [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
         ],
         include: [{
           model: Event,
@@ -928,8 +947,36 @@ export const getChildBrands = async (req: Request, res: Response) => {
       let eventPlatformFees = 0;
       if (eventQuery.length > 0 && eventQuery[0]) {
         const salesData = eventQuery[0] as any;
+        eventSales = parseFloat(salesData.total_sales) || 0;
         eventPlatformFees = parseFloat(salesData.total_platform_fee) || 0;
-        eventEarnings = (parseFloat(salesData.total_sales) || 0) - eventPlatformFees;
+        eventProcessingFees = parseFloat(salesData.total_processing_fee) || 0;
+        eventEarnings = eventSales - eventPlatformFees;
+        
+        // Calculate estimated tax: 0.5% of (gross event earnings - processing fees)
+        const taxableAmount = eventSales - eventProcessingFees;
+        eventEstimatedTax = taxableAmount * 0.005; // 0.5%
+      }
+
+      // Calculate total artist payments for artists under this sublabel
+      const artistIds = await Artist.findAll({
+        where: { brand_id: childBrand.id },
+        attributes: ['id'],
+        raw: true
+      });
+      
+      const artistIdList = artistIds.map(a => (a as any).id);
+      
+      if (artistIdList.length > 0) {
+        artistPayments = await Payment.sum('amount', {
+          where: {
+            artist_id: { [Op.in]: artistIdList },
+            ...(start_date && end_date ? {
+              date_paid: {
+                [Op.between]: [new Date(start_date), new Date(end_date)]
+              }
+            } : {})
+          }
+        }) || 0;
       }
 
       // Calculate balance
@@ -952,9 +999,17 @@ export const getChildBrands = async (req: Request, res: Response) => {
         brand_id: childBrand.id,
         brand_name: childBrand.brand_name,
         music_earnings: musicEarnings,
+        music_gross_earnings: musicGrossEarnings,
         event_earnings: eventEarnings,
+        event_sales: eventSales,
+        event_processing_fees: eventProcessingFees,
+        event_estimated_tax: eventEstimatedTax,
+        total_royalties: totalRoyalties,
+        artist_payments: artistPayments,
         payments: payments,
         platform_fees: musicPlatformFees + eventPlatformFees,
+        music_platform_fees: musicPlatformFees,
+        event_platform_fees: eventPlatformFees,
         balance: balance,
         status: calculateSublabelStatus(domainData),
         domains: domainData

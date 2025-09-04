@@ -17,7 +17,8 @@
     [showSortableHeaders]="true"
     [showActionsColumn]="true"
     [sortInfo]="sortInfo"
-    (sortChange)="onSortChange($event)">
+    (sortChange)="onSortChange($event)"
+    (breakdownButtonClick)="onBreakdownButtonClick($event)">
     
     <ng-template #customButtons>
       <button *ngIf="isSuperAdmin()" 
@@ -145,4 +146,12 @@
     (close)="closePayoutModal()"
     (submit)="onPayoutSubmit($event)">
   </app-sublabel-payout-modal>
+
+  <!-- Earnings Breakdown Modal -->
+  <app-earnings-breakdown-modal
+    [show]="showEarningsBreakdownModal"
+    [childBrand]="selectedSublabelForBreakdown"
+    [breakdownType]="earningsBreakdownType"
+    (close)="closeEarningsBreakdownModal()">
+  </app-earnings-breakdown-modal>
 </div>

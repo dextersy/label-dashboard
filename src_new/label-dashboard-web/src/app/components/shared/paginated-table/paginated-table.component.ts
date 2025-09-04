@@ -22,6 +22,7 @@ export interface TableColumn {
   align?: 'left' | 'center' | 'right'; // Column alignment
   mobileClass?: string; // CSS classes for mobile responsiveness
   tabletClass?: string; // CSS classes for tablet responsiveness
+  showBreakdownButton?: boolean; // Show breakdown button for earnings columns
 }
 
 export interface SearchFilters {
@@ -57,6 +58,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
   @Output() selectedItemsChange = new EventEmitter<any[]>(); // Emit selected items for bulk operations
+  @Output() breakdownButtonClick = new EventEmitter<{item: any, columnKey: string}>();
 
   @ContentChild('tableContent', { static: false }) tableContent!: TemplateRef<any>;
   @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;
@@ -296,5 +298,9 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
     }
     
     return classes.join(' ');
+  }
+
+  onBreakdownButtonClick(item: any, columnKey: string): void {
+    this.breakdownButtonClick.emit({ item, columnKey });
   }
 }

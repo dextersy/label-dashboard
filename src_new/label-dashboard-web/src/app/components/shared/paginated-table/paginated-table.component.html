@@ -187,6 +187,17 @@
                     <!-- Status badge special handling -->
                     <span *ngIf="column.key === 'status'" [innerHTML]="getColumnValue(item, column)"></span>
                     
+                    <!-- Earnings columns with breakdown buttons -->
+                    <div *ngIf="column.showBreakdownButton" class="d-flex align-items-center justify-content-end">
+                      <span class="me-2">{{ getColumnValue(item, column) }}</span>
+                      <button class="btn btn-sm btn-link text-muted p-1" 
+                              (click)="onBreakdownButtonClick(item, column.key)"
+                              title="View breakdown"
+                              style="border: none; box-shadow: none;">
+                        <i class="fas fa-chart-pie"></i>
+                      </button>
+                    </div>
+                    
                     <!-- Balance column with color coding -->
                     <span *ngIf="column.key === 'balance'">
                       <strong [class]="item.balance > 0 ? 'text-success' : (item.balance < 0 ? 'text-danger' : 'text-muted')">
@@ -195,7 +206,7 @@
                     </span>
                     
                     <!-- Default handling -->
-                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status'">
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status' && !column.showBreakdownButton">
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>
