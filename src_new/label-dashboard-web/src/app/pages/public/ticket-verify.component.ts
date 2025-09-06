@@ -53,6 +53,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   // Event and ticket data
   currentEvent: any = null;
   currentTicket: any = null;
+  lastCheckInEntries: number = 0;
   
   // UI state
   alertType: 'success' | 'error' | 'info' | 'warning' = 'info';
@@ -320,6 +321,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (response) => {
           this.currentTicket = response.ticket;
+          this.lastCheckInEntries = entriesToClaim; // Store the number of entries that were checked in
           this.showPersistentSuccess(response.message);
           this.checkInForm.patchValue({ entriesToClaim: 1 });
           this.isLoading = false;
@@ -335,6 +337,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     this.resetUIState();
     this.ticketForm.reset();
     this.checkInForm.patchValue({ entriesToClaim: 1 });
+    this.lastCheckInEntries = 0;
   }
 
   private showSuccess(message: string): void {

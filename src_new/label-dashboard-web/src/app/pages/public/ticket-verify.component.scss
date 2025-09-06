@@ -107,6 +107,50 @@ input.error {
   animation: fadeOut 0.5s ease-out 2.5s forwards;
 }
 
+/* Prominent entries display for gate staff */
+.entries-display {
+  margin: 20px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  border: 3px solid #28a745;
+}
+
+.entries-label {
+  font-size: 16px;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.entries-number {
+  font-size: 120px;
+  font-weight: 900;
+  color: #28a745;
+  line-height: 1;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  margin: 10px 0;
+}
+
+.entries-subtitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+/* Improve contrast for blue background text */
+.bg-primary {
+  background-color: #007bff !important;
+}
+
+.text-light {
+  color: #f8f9fa !important;
+  font-weight: 300;
+}
+
 @keyframes fadeOut {
   from {
     opacity: 1;
@@ -126,6 +170,35 @@ input.error {
   
   .wrapper, .header-section, .container {
     padding: 0px;
+  }
+  
+  /* Adjust entries display for mobile */
+  .entries-number {
+    font-size: 80px !important;
+  }
+  
+  .entries-display {
+    padding: 15px !important;
+  }
+}
+
+/* Additional mobile responsiveness */
+@media only screen and (max-width: 600px) {
+  .entries-number {
+    font-size: 100px;
+  }
+  
+  .entries-display {
+    margin: 15px 0;
+    padding: 15px;
+  }
+  
+  .entries-label {
+    font-size: 14px;
+  }
+  
+  .entries-subtitle {
+    font-size: 16px;
   }
 }
 
