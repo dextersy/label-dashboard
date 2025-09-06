@@ -21,6 +21,7 @@ interface TicketAttributes {
   platform_fee?: number;
   referrer_id?: number;
   order_timestamp?: Date;
+  date_paid?: Date;
 }
 
 interface TicketCreationAttributes extends Optional<TicketAttributes, 'id' | 'number_of_entries' | 'number_of_claimed_entries' | 'status' | 'order_timestamp'> {}
@@ -43,6 +44,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public platform_fee?: number;
   public referrer_id?: number;
   public order_timestamp?: Date;
+  public date_paid?: Date;
 
   // Association properties
   public event?: any;
@@ -169,6 +171,10 @@ Ticket.init(
       }
     },
     order_timestamp: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    date_paid: {
       type: DataTypes.DATE,
       allowNull: true,
     },

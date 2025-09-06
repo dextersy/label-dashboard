@@ -20,6 +20,7 @@ export interface EventTicket {
   payment_processing_fee: number;
   referrer_name?: string;
   order_timestamp: string;
+  date_paid?: string;
   number_of_claimed_entries: number;
   status: 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled';
 }
@@ -74,6 +75,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'processing_fee', label: 'Processing Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getProcessingFee(item) > 0 ? this.formatCurrency(this.getProcessingFee(item)) : '-' },
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
+    { key: 'date_paid', label: 'Date Paid', sortable: true, type: 'date', formatter: (item) => item.date_paid ? new Date(item.date_paid).toLocaleString() : '-' },
     { key: 'claimed_status', label: 'Claimed', sortable: false, formatter: (item) => `${item.number_of_claimed_entries} / ${item.number_of_entries}` },
   ];
 
@@ -206,6 +208,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       payment_processing_fee: Number(ticket.payment_processing_fee) || 0,
       referrer_name: referrerName,
       order_timestamp: ticket.order_timestamp,
+      date_paid: ticket.date_paid,
       number_of_claimed_entries: Number(ticket.number_of_claimed_entries) || 0,
       status: this.normalizeTicketStatus(ticket.status)
     };

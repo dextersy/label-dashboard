@@ -919,6 +919,18 @@ export const getChildBrands = async (req: Request, res: Response) => {
         musicPlatformFees = totalPlatformFees || 0;
       }
 
+      // Fix date range to include full day
+      let startDateFilter, endDateFilter;
+      if (start_date && end_date) {
+        startDateFilter = new Date(start_date);
+        endDateFilter = new Date(end_date);
+        // If start and end date are the same, extend end date to end of day
+        if (start_date === end_date) {
+          endDateFilter.setHours(23, 59, 59, 999);
+        }
+      }
+
+
       // Calculate event sales, earnings, and fees (ticket sales minus platform fees for this brand's events, excluding tickets where platform_fee is NULL)
       const eventQuery = await Ticket.findAll({
         attributes: [
@@ -933,11 +945,11 @@ export const getChildBrands = async (req: Request, res: Response) => {
           attributes: []
         }],
         where: {
-          status: ['Payment confirmed', 'Ticket sent.'],
+          status: ['Payment Confirmed', 'Ticket sent.'],
           platform_fee: { [Op.not]: null },
-          ...(start_date && end_date ? {
-            order_timestamp: {
-              [Op.between]: [new Date(start_date), new Date(end_date)]
+          ...(startDateFilter && endDateFilter ? {
+            date_paid: {
+              [Op.between]: [startDateFilter, endDateFilter]
             }
           } : {})
         },

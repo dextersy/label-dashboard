@@ -724,7 +724,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           payment_processing_fee: processingFee,
           platform_fee: platformFeeCalc.totalPlatformFee,
           referrer_id: referrer?.id || null,
-          order_timestamp: order_timestamp ? new Date(order_timestamp) : new Date()
+          order_timestamp: order_timestamp ? new Date(order_timestamp) : new Date(),
+          date_paid: new Date()
         });
       } else {
         // Create PayMongo payment link for unpaid tickets
@@ -901,7 +902,7 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
     }
 
     // Build sorting
-    const allowedSortColumns = ['id', 'name', 'email_address', 'contact_number', 'number_of_entries', 'ticket_code', 'status', 'order_timestamp', 'number_of_claimed_entries'];
+    const allowedSortColumns = ['id', 'name', 'email_address', 'contact_number', 'number_of_entries', 'ticket_code', 'status', 'order_timestamp', 'date_paid', 'number_of_claimed_entries'];
     const sortColumn = allowedSortColumns.includes(sort_column as string) ? sort_column as string : 'id';
     const sortDir = ['asc', 'desc'].includes(sort_direction as string) ? sort_direction as string : 'desc';
     
@@ -1047,7 +1048,8 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
       // Update individual ticket with platform fee
       await ticket.update({
         status: 'Payment Confirmed',
-        platform_fee: platformFeeCalc.totalPlatformFee
+        platform_fee: platformFeeCalc.totalPlatformFee,
+        date_paid: new Date()
       });
     }
 

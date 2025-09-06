@@ -54,6 +54,7 @@ export interface EventTicket {
   payment_link?: string;
   referrer_id?: number;
   order_timestamp: string;
+  date_paid?: string;
 }
 
 export interface EventReferrer {

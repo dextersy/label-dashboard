@@ -400,7 +400,8 @@ export class PaymentService {
       await ticket.update({
         status: 'Payment Confirmed',
         payment_processing_fee: processingFee,
-        platform_fee: platformFeeCalc.totalPlatformFee
+        platform_fee: platformFeeCalc.totalPlatformFee,
+        date_paid: new Date()
       });
       
       return true;
