@@ -128,33 +128,42 @@
               <div class="entries-number">{{ currentTicket?.remaining_entries }}</div>
               <div class="entries-subtitle">{{ currentTicket?.name }}</div>
             </div>
+                          
+            <!-- Claim All Button -->
+            <p>
+              <button id="btnClaimAll" 
+                    type="button" 
+                    class="btn-primary btn-block btn btn-lg mt-3"
+                    (click)="claimAllEntries()"
+                    [disabled]="isLoading || (currentTicket?.remaining_entries || 0) <= 0">
+              <i class="fa fa-users"></i> Claim All
+            </button>
+            </p>
+            <p><strong>Or enter number of people checking in</strong></p>
             
-            <p><strong>Please confirm check-in details below</strong></p>
-          </div>
-          
-          <form [formGroup]="checkInForm" (ngSubmit)="checkInTicket()">
-          <div class="form-group">
-            <label for="numberOfAttendees"><strong>How many people are checking in?</strong></label>
-            <input type="number" 
-                   class="form-control form-control-lg text-center" 
-                   min="1" 
-                   [max]="currentTicket?.remaining_entries || 1"
-                   formControlName="entriesToClaim" 
-                   id="numberOfAttendees" 
-                   placeholder="Number of attendees"
-                   [disabled]="isLoading" />
-            <div class="field-error-message" 
-                 [style.display]="checkInForm.get('entriesToClaim')?.invalid && checkInForm.get('entriesToClaim')?.touched ? 'block' : 'none'">
-              Number is more than remaining entries.
+            <form [formGroup]="checkInForm" (ngSubmit)="checkInTicket()">
+            <div class="form-group">
+              <input type="number" 
+                     class="form-control form-control-lg text-center" 
+                     min="1" 
+                     [max]="currentTicket?.remaining_entries || 1"
+                     formControlName="entriesToClaim" 
+                     id="numberOfAttendees" 
+                     placeholder="Number of attendees"
+                     [disabled]="isLoading" />
+              <div class="field-error-message" 
+                   [style.display]="checkInForm.get('entriesToClaim')?.invalid && checkInForm.get('entriesToClaim')?.touched ? 'block' : 'none'">
+                Number is more than remaining entries.
+              </div>
             </div>
+            <button id="btnCheckIn" 
+                    type="submit" 
+                    class="btn-primary btn-block btn btn-lg"
+                    [disabled]="!checkInForm.valid || isLoading">
+              <i class="fa fa-check-circle"></i> Check In
+            </button>
+            </form>
           </div>
-          <button id="btnCheckIn" 
-                  type="submit" 
-                  class="btn-primary btn-block btn btn-lg"
-                  [disabled]="!checkInForm.valid || isLoading">
-            <i class="fa fa-check-circle"></i> Check In
-          </button>
-          </form>
         </div>
         
         <!-- Reset Button -->

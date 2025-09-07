@@ -333,6 +333,42 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
+  claimAllEntries(): void {
+    if (!this.currentTicket || !this.eventId || !this.verificationPin) {
+      return;
+    }
+
+    const allRemainingEntries = this.currentTicket.remaining_entries;
+    if (allRemainingEntries <= 0) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    const request: CheckInRequest = {
+      event_id: this.eventId,
+      verification_pin: this.verificationPin,
+      ticket_code: this.currentTicket.ticket_code,
+      entries_to_claim: allRemainingEntries
+    };
+
+    this.publicService.checkInTicket(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.currentTicket = response.ticket;
+          this.lastCheckInEntries = allRemainingEntries;
+          this.showPersistentSuccess(response.message);
+          this.checkInForm.patchValue({ entriesToClaim: 1 });
+          this.isLoading = false;
+        },
+        error: (error) => {
+          this.showError(error.error?.error || 'Failed to claim all entries.');
+          this.isLoading = false;
+        }
+      });
+  }
+
   resetTicketLookup(): void {
     this.resetUIState();
     this.ticketForm.reset();
