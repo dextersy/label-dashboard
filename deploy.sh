@@ -342,9 +342,30 @@ print_success "Conflicting config files removed"
 print_status "Phase 4: Uploading compiled API service files..."
 upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
 
-# Upload Web files (keeping maintenance.html)
+# Phase 5: Restart PM2 application with compiled API
+print_status "Phase 5: Restarting PM2 application: $PM2_APP_NAME"
+
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    echo "Navigating to API directory..."
+    cd $BACKEND_DEPLOY_PATH
+    
+    echo "Restarting PM2 application: $PM2_APP_NAME"
+    pm2 restart $PM2_APP_NAME || pm2 start app.js --name $PM2_APP_NAME
+    
+    echo "Checking PM2 status..."
+    pm2 status
+EOF
+
+if [ $? -ne 0 ]; then
+    print_error "Failed to restart PM2 application in Phase 5"
+    exit 1
+fi
+
+print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted successfully"
+
+# Phase 6: Upload Web files (keeping maintenance.html)
+print_status "Phase 6: Deploying frontend application..."
 cd "$SCRIPT_DIR/src_new/label-dashboard-web"
-print_status "Uploading production build..."
 
 # Upload all files except .htaccess first (preserve maintenance.html)
 sftp_batch=$(mktemp)
@@ -371,7 +392,10 @@ EOF
 
 sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
 rm -f "$sftp_batch"
-print_success "Production site is now live!"
+print_success "✅ Phase 6: Frontend application deployed and live!"
+
+# Phase 7: Final deployment tasks
+print_status "Phase 7: Completing final deployment tasks..."
 
 # Upload tmp folder if it exists
 if [ -d "tmp" ]; then
@@ -417,31 +441,16 @@ else
 fi
 rm -f "$sftp_batch"
 
-# Phase 5: Restart PM2 application with compiled API
-print_status "Phase 5: Restarting PM2 application: $PM2_APP_NAME"
+print_success "✅ Phase 7: Final deployment tasks completed"
 
-ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
-    echo "Navigating to API directory..."
-    cd $BACKEND_DEPLOY_PATH
-    
-    echo "Restarting PM2 application: $PM2_APP_NAME"
-    pm2 restart $PM2_APP_NAME || pm2 start app.js --name $PM2_APP_NAME
-    
-    echo "Checking PM2 status..."
-    pm2 status
-EOF
-
-if [ $? -eq 0 ]; then
-    print_success "🎉 5-Phase Deployment completed successfully!"
-    print_success "✅ Phase 1: Migration setup uploaded"
-    print_success "✅ Phase 2: Database migrations executed"
-    print_success "✅ Phase 3: Config conflicts resolved"
-    print_success "✅ Phase 4: API service deployed to $BACKEND_DEPLOY_PATH"
-    print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted"
-    print_success "Web deployed to: $FRONTEND_DEPLOY_PATH"
-else
-    print_error "Failed to restart PM2 application in Phase 5"
-    exit 1
-fi
+# Final deployment summary
+print_success "🎉 7-Phase Deployment completed successfully!"
+print_success "✅ Phase 1: Migration setup uploaded"
+print_success "✅ Phase 2: Database migrations executed"
+print_success "✅ Phase 3: Config conflicts resolved"
+print_success "✅ Phase 4: API service deployed to $BACKEND_DEPLOY_PATH"
+print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted"
+print_success "✅ Phase 6: Frontend application deployed to $FRONTEND_DEPLOY_PATH"
+print_success "✅ Phase 7: Final deployment tasks completed"
 
 print_status "Deployment finished!"
