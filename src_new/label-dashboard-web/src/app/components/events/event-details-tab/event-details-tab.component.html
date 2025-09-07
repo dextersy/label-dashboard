@@ -388,17 +388,17 @@
               <div class="row">
                 <div class="col-md-8">
                   <div class="mb-3">
-                    <label class="form-label">Verification URL</label>
+                    <label class="form-label">Scanner URL</label>
                     <div class="input-group">
                       <input 
                         type="text" 
                         class="form-control" 
-                        [value]="event.verification_link || (event.status === 'draft' ? 'Shortlinks will be generated once the event is published' : 'Save to generate verification link')" 
+                        [value]="event.verification_link || (event.status === 'draft' ? 'Shortlinks will be generated once the event is published' : 'Save to generate scanner link')" 
                         readonly>
                       <button 
                         type="button" 
                         class="btn btn-outline-secondary"
-                        (click)="copyToClipboard(event.verification_link!, 'Verification link')"
+                        (click)="copyToClipboard(event.verification_link!, 'Scanner link')"
                         [disabled]="!event.verification_link">
                         <i class="fa fa-copy"></i>
                       </button>
@@ -407,7 +407,7 @@
                 </div>
                 <div class="col-md-4">
                   <div class="mb-3">
-                    <label class="form-label">Verification PIN</label>
+                    <label class="form-label">Scanner PIN</label>
                     <div class="input-group">
                       <input 
                         type="text" 
@@ -417,7 +417,7 @@
                       <button 
                         type="button" 
                         class="btn btn-outline-secondary"
-                        (click)="copyToClipboard(event.verification_pin, 'Verification PIN')">
+                        (click)="copyToClipboard(event.verification_pin, 'Scanner PIN')">
                         <i class="fa fa-copy"></i>
                       </button>
                       <button 
@@ -425,14 +425,14 @@
                         class="btn btn-outline-secondary"
                         (click)="resetPIN()"
                         [disabled]="!event.id || refreshingPIN"
-                        [title]="!event.id ? 'Save event first to refresh PIN' : 'Refresh verification PIN'">
+                        [title]="!event.id ? 'Save event first to refresh PIN' : 'Refresh scanner PIN'">
                         <i class="fa" [class]="refreshingPIN ? 'fa-spinner fa-spin' : 'fa-sync'"></i>
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
-              <small class="form-text text-muted">Share verification link and PIN to gate staff.</small>
+              <small class="form-text text-muted">Share scanner link and PIN to gate staff.</small>
             </div>
           </div>
         </div>
