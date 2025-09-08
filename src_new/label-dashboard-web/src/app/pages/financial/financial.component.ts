@@ -17,6 +17,7 @@ import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
+import { AdminService } from '../../services/admin.service';
 import { DateRangeSelection } from '../../components/shared/date-range-filter/date-range-filter.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
@@ -224,15 +225,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
   submittingRoyalty = false;
   submittingEarning = false;
 
-  supportedBanks = [
-    { bank_code: 'BPI', bank_name: 'Bank of the Philippine Islands' },
-    { bank_code: 'BDO', bank_name: 'Banco de Oro' },
-    { bank_code: 'METRO', bank_name: 'Metropolitan Bank' },
-    { bank_code: 'PNB', bank_name: 'Philippine National Bank' },
-    { bank_code: 'UNION', bank_name: 'Union Bank' },
-    { bank_code: 'GCASH', bank_name: 'GCash' },
-    { bank_code: 'PAYMAYA', bank_name: 'PayMaya' }
-  ];
+  supportedBanks: Array<{bank_code: string, bank_name: string}> = [];
 
 
   constructor(
@@ -240,6 +233,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private artistStateService: ArtistStateService,
     private authService: AuthService,
+    private adminService: AdminService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -247,6 +241,9 @@ export class FinancialComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Check if user is admin
     this.isAdmin = this.authService.isAdmin();
+
+    // Load supported banks for payment method forms
+    this.loadSupportedBanks();
 
     // Initialize payment form with today's date only if not already set
     if (!this.newPaymentForm.date_paid) {
@@ -292,6 +289,18 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routeSubscription.unsubscribe();
+  }
+
+  private loadSupportedBanks(): void {
+    this.adminService.getSupportedBanks().subscribe({
+      next: (banks) => {
+        this.supportedBanks = banks;
+      },
+      error: (error) => {
+        console.error('Error loading supported banks:', error);
+        this.notificationService.showError('Failed to load supported banks. Payment methods may not work properly.');
+      }
+    });
   }
 
 
@@ -538,6 +547,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
       const [bankCode, bankName] = this.addPaymentMethodForm.bank_selection.split(',');
       const paymentMethodData = {
         type: bankName,
+        bank_code: bankCode,
         account_name: this.addPaymentMethodForm.account_name,
         account_number_or_email: this.addPaymentMethodForm.account_number_or_email
       };
