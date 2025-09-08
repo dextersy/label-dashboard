@@ -9,6 +9,7 @@ import { BulkAddEarningsTabComponent } from './components/bulk-add-earnings-tab.
 import { UsersTabComponent } from './components/users-tab.component';
 import { ChildBrandsTabComponent } from './components/child-brands-tab.component';
 import { ToolsTabComponent } from './components/tools-tab.component';
+import { LabelFinanceTabComponent } from './components/label-finance-tab.component';
 
 @Component({
   selector: 'app-admin',
@@ -22,7 +23,8 @@ import { ToolsTabComponent } from './components/tools-tab.component';
     BulkAddEarningsTabComponent, 
     UsersTabComponent, 
     ChildBrandsTabComponent, 
-    ToolsTabComponent
+    ToolsTabComponent,
+    LabelFinanceTabComponent
   ],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'

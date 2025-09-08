@@ -99,6 +99,7 @@ export const routes: Routes = [
       { path: 'bulk-add-earnings', component: AdminComponent, data: { tab: 'bulk-add-earnings' } },
       { path: 'users', component: AdminComponent, data: { tab: 'users' } },
       { path: 'child-brands', component: AdminComponent, data: { tab: 'child-brands' } },
+      { path: 'label-finance', component: AdminComponent, data: { tab: 'label-finance' } },
       { path: 'tools', component: AdminComponent, data: { tab: 'tools' } }
     ]
   },

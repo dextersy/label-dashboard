@@ -79,8 +79,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
       adminOnly: true,
       children: [
         { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
-        { route: '/admin/summary', title: 'Summary View', adminOnly: true },
-        { route: '/admin/balance', title: 'Balance Summary', adminOnly: true },
+        { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
+        { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
+        { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
         { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
         { route: '/admin/users', title: 'Users', adminOnly: true },
         { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },

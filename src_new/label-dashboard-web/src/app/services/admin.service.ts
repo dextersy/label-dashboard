@@ -928,4 +928,8 @@ export class AdminService {
       headers: this.getAuthHeaders()
     });
   }
+
+  getSupportedBanks(): Observable<Array<{bank_code: string, bank_name: string}>> {
+    return this.http.get<Array<{bank_code: string, bank_name: string}>>(`${environment.apiUrl}/brands/supported-banks`);
+  }
 }
