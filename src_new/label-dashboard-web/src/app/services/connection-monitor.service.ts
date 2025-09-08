@@ -81,11 +81,15 @@ export class ConnectionMonitorService {
 
   // Check if an error is a connection/timeout error
   isConnectionError(error: HttpErrorResponse): boolean {
-    return error.status === 0 || // Network error
+    return error.status === 0 || // Network error (no connection)
            error.status === 408 || // Request timeout
-           error.status >= 500 || // Server errors
+           error.status === 502 || // Bad Gateway (server down)
+           error.status === 503 || // Service Unavailable
+           error.status === 504 || // Gateway Timeout
            (error as any).name === 'TimeoutError' ||
-           error.message?.includes('timeout');
+           error.message?.includes('timeout') ||
+           error.message?.includes('ERR_NETWORK') ||
+           error.message?.includes('ERR_INTERNET_DISCONNECTED');
   }
 
   // Get current connection status synchronously

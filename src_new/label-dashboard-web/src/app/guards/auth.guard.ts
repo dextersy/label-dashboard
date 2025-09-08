@@ -1,6 +1,6 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -32,12 +32,18 @@ export const authGuard: CanActivateFn = (route, state) => {
         return false;
       }
     }),
-    catchError(() => {
-      // Token is invalid, clear storage and redirect to login
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('currentUser');
-      router.navigate(['/login']);
-      return of(false);
+    catchError((error: HttpErrorResponse) => {
+      // Only logout on actual authentication/authorization errors
+      if (error.status === 401 || error.status === 403) {
+        // Token is invalid or expired - clear storage and redirect to login
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('currentUser');
+        router.navigate(['/login']);
+        return of(false);
+      }
+      
+      // For all other errors (network, server, etc.), allow access and let other systems handle it
+      return of(true);
     })
   );
 };
