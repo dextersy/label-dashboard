@@ -133,7 +133,7 @@
                     <td>{{ payment.date_paid | date:'MMM dd, yyyy' }}</td>
                     <td>{{ payment.description || 'Payment received' }}</td>
                     <td>₱{{ payment.amount | number:'1.2-2' }}</td>
-                    <td>{{ payment.paid_thru_type || 'N/A' }}</td>
+                    <td>{{ formatPaymentMethod(payment) }}</td>
                     <td>{{ payment.reference_number || 'N/A' }}</td>
                   </tr>
                 </tbody>

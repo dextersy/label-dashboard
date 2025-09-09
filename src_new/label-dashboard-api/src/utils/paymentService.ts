@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
+import LabelPaymentMethod from '../models/LabelPaymentMethod';
 import { Ticket, Event, User, Domain } from '../models';
 import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail } from './emailService';
@@ -580,7 +581,8 @@ export class PaymentService {
     brandId: number,
     paymentMethodId: number,
     amount: number,
-    description: string = ''
+    description: string = '',
+    isLabelPayment: boolean = false
   ): Promise<string | null> {
     try {
       // Get brand details
@@ -590,8 +592,14 @@ export class PaymentService {
         return null;
       }
 
-      // Get payment method details
-      const paymentMethod = await PaymentMethod.findByPk(paymentMethodId);
+      // Get payment method details based on payment type
+      let paymentMethod;
+      if (isLabelPayment) {
+        paymentMethod = await LabelPaymentMethod.findByPk(paymentMethodId);
+      } else {
+        paymentMethod = await PaymentMethod.findByPk(paymentMethodId);
+      }
+      
       if (!paymentMethod || !paymentMethod.bank_code || !paymentMethod.account_name || !paymentMethod.account_number_or_email) {
         console.error('Payment method details incomplete');
         return null;

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { LabelPaymentMethod, LabelPayment, Brand } from '../models';
+import { PaymentService } from '../utils/paymentService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -196,7 +197,8 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
       paid_thru_account_number,
       payment_method_id,
       reference_number,
-      payment_processing_fee
+      payment_processing_fee,
+      manualPayment
     } = req.body;
 
     if (!amount || amount <= 0 || !date_paid) {
@@ -205,14 +207,53 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    let finalAmount = amount;
+    let finalProcessingFee = payment_processing_fee || 0;
+    let finalReferenceNumber = reference_number;
+
+    // Handle Paymongo payment processing for non-manual payments
+    if (payment_method_id && payment_method_id !== '-1' && manualPayment !== '1') {
+      try {
+        const paymentService = new PaymentService();
+        const parentBrand = await Brand.findByPk(req.user.brand_id);
+        
+        if (!parentBrand || !parentBrand.paymongo_wallet_id) {
+          return res.status(400).json({ error: 'Brand wallet not configured for payments' });
+        }
+
+        // Calculate processing fee
+        const processingFee = parentBrand.payment_processing_fee_for_payouts || 0;
+        const transferAmount = amount - processingFee;
+
+        // Send money through Paymongo
+        const referenceNumber = await paymentService.sendMoneyTransfer(
+          req.user.brand_id,
+          payment_method_id,
+          transferAmount,
+          description,
+          true // isLabelPayment = true
+        );
+
+        if (!referenceNumber) {
+          return res.status(400).json({ error: 'Payment processing failed' });
+        }
+
+        finalProcessingFee = processingFee;
+        finalReferenceNumber = referenceNumber;
+      } catch (error) {
+        console.error('Paymongo payment error:', error);
+        return res.status(500).json({ error: 'Payment processing failed' });
+      }
+    }
+
     // Create payment object - prioritize payment_method_id over legacy paid_thru_* fields
     const paymentData: any = {
       brand_id: targetBrandId, // Use the target sublabel's brand ID
-      amount: parseFloat(amount.toFixed(2)),
+      amount: parseFloat(finalAmount.toFixed(2)),
       description,
       date_paid: new Date(date_paid),
-      reference_number,
-      payment_processing_fee: payment_processing_fee || 0
+      reference_number: finalReferenceNumber,
+      payment_processing_fee: finalProcessingFee
     };
 
     // Set payment_method_id if provided, otherwise fall back to legacy fields

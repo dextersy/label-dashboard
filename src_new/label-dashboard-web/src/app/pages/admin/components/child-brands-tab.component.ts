@@ -41,6 +41,7 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   @ViewChild(AddSublabelModalComponent) addSublabelModal!: AddSublabelModalComponent;
+  @ViewChild('payoutModal') payoutModal!: SublabelPayoutModalComponent;
 
   // Table configuration
   tableColumns: TableColumn[] = [
@@ -475,6 +476,11 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
         console.error('Error creating label payment:', error);
         const errorMessage = error.error?.error || 'Failed to create payment';
         this.notificationService.showError(errorMessage);
+        
+        // Reset the submitting state in the modal
+        if (this.payoutModal) {
+          this.payoutModal.resetSubmittingState();
+        }
       }
     });
   }
