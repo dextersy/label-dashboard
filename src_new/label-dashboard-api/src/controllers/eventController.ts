@@ -2041,6 +2041,7 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
       attributes: [
         'status', 
         'number_of_entries', 
+        'number_of_claimed_entries',
         'price_per_ticket', 
         'payment_processing_fee'
       ]
@@ -2055,6 +2056,9 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
     const totalTicketsSold = allTickets
       .filter(ticket => ticket.status === 'Ticket sent.')
       .reduce((sum, ticket) => sum + ticket.number_of_entries, 0);
+
+    // Count total checked in guests from all confirmed tickets
+    const totalCheckedIn = confirmedTickets.reduce((sum, ticket) => sum + (ticket.number_of_claimed_entries || 0), 0);
 
     // Calculate total revenue from confirmed/sent tickets
     const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
@@ -2087,6 +2091,7 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
       event_id: eventIdNum,
       summary: {
         total_tickets_sold: totalTicketsSold,
+        total_checked_in: totalCheckedIn,
         total_revenue: totalRevenue,
         total_processing_fee: totalProcessingFee,
         net_revenue: netRevenue,

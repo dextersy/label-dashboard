@@ -27,6 +27,7 @@ export interface EventTicket {
 
 export interface TicketSummary {
   total_tickets_sold: number;
+  total_checked_in: number;
   total_revenue: number;
   total_processing_fee: number;
   net_revenue: number;

@@ -10,6 +10,7 @@ export interface EventSales {
   total_sales: number;
   tickets_sold: number;
   total_tickets: number;
+  total_checked_in: number;
 }
 
 Chart.register(...registerables);
@@ -163,7 +164,7 @@ export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestro
     if (!ctx) return;
 
     const labels = this.eventSales.map(event => event.name || 'Untitled Event');
-    const soldData = this.eventSales.map(event => event.total_tickets || 0);
+    const soldData = this.eventSales.map(event => event.tickets_sold || 0);
     const config: ChartConfiguration<'bar'> = {
       type: 'bar',
       data: {

@@ -217,11 +217,11 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
           where: { 
             event_id: event.id
           },
-          attributes: ['price_per_ticket', 'number_of_entries', 'status']
+          attributes: ['price_per_ticket', 'number_of_entries', 'number_of_claimed_entries', 'status']
         });
         
         // Calculate total sales from confirmed tickets
-        const confirmedTickets = tickets.filter(ticket => ticket.status === 'Payment Confirmed');
+        const confirmedTickets = tickets.filter(ticket => ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.');
         const totalSales = confirmedTickets.reduce((sum, ticket) => {
           const price = parseFloat(ticket.price_per_ticket?.toString() || '0');
           const entries = parseInt(ticket.number_of_entries?.toString() || '1');
@@ -239,6 +239,12 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
           const entries = parseInt(ticket.number_of_entries?.toString() || '1');
           return sum + (isNaN(entries) ? 0 : entries);
         }, 0);
+        
+        // Calculate total checked in from confirmed tickets
+        const totalCheckedIn = confirmedTickets.reduce((sum, ticket) => {
+          const checkedIn = parseInt(ticket.number_of_claimed_entries?.toString() || '0');
+          return sum + (isNaN(checkedIn) ? 0 : checkedIn);
+        }, 0);
 
         return {
           id: event.id,
@@ -247,7 +253,8 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
           date: event.date_and_time || event.createdAt,
           total_sales: isNaN(totalSales) ? 0 : totalSales,
           tickets_sold: isNaN(ticketsSold) ? 0 : ticketsSold,
-          total_tickets: isNaN(totalTickets) ? 0 : totalTickets
+          total_tickets: isNaN(totalTickets) ? 0 : totalTickets,
+          total_checked_in: isNaN(totalCheckedIn) ? 0 : totalCheckedIn
         };
       })
     );
@@ -486,7 +493,7 @@ async function getEventSalesData(req: AuthRequest) {
         where: { 
           event_id: event.id
         },
-        attributes: ['price_per_ticket', 'number_of_entries', 'status']
+        attributes: ['price_per_ticket', 'number_of_entries', 'number_of_claimed_entries', 'status']
       });
       
       // Calculate total sales from confirmed tickets
@@ -504,13 +511,27 @@ async function getEventSalesData(req: AuthRequest) {
         return sum + (isNaN(entries) ? 0 : entries);
       }, 0);
       
+      // Calculate total tickets (all tickets regardless of status)
+      const totalTickets = tickets.reduce((sum, ticket) => {
+        const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+        return sum + (isNaN(entries) ? 0 : entries);
+      }, 0);
+      
+      // Calculate total checked in from all confirmed tickets
+      const totalCheckedIn = confirmedTickets.reduce((sum, ticket) => {
+        const checkedIn = parseInt(ticket.number_of_claimed_entries?.toString() || '0');
+        return sum + (isNaN(checkedIn) ? 0 : checkedIn);
+      }, 0);
+      
       return {
         id: event.id,
         name: event.title || 'Untitled Event',
-        venue: event.venue,
+        location: event.venue || 'TBA',
         date: event.date_and_time,
         total_sales: isNaN(totalSales) ? 0 : totalSales,
-        total_tickets: isNaN(ticketsSold) ? 0: ticketsSold
+        tickets_sold: isNaN(ticketsSold) ? 0 : ticketsSold,
+        total_tickets: isNaN(totalTickets) ? 0 : totalTickets,
+        total_checked_in: isNaN(totalCheckedIn) ? 0 : totalCheckedIn
       };
     })
   );

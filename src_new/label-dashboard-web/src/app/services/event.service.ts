@@ -500,6 +500,7 @@ export class EventService {
    */
   getEventTicketSummary(eventId: number): Observable<{
     total_tickets_sold: number;
+    total_checked_in: number;
     total_revenue: number;
     total_processing_fee: number;
     net_revenue: number;

@@ -76,9 +76,9 @@
       <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
         <strong class="text-primary fs-5">Totals</strong>
         
-        <span class="summary-stat" title="Number of paid tickets">
-          <i class="fas fa-dot-circle text-success me-2"></i> 
-          {{ summary.total_tickets_sold }}
+        <span class="summary-stat" title="Checked in guests vs total tickets">
+          <i class="fas fa-user text-success me-2"></i> 
+          {{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}
         </span>
         
         <span class="summary-stat" title="Total revenue">
