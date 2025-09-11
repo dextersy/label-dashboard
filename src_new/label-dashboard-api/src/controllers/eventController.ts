@@ -5,7 +5,16 @@ import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
-import { sendEmail, sendEmailWithInlineImages } from '../utils/emailService';
+import { sendEmail, sendEmailWithInlineImages, loadEmailTemplate, processTemplate } from '../utils/emailService';
+
+// Helper function to add responsive image styling to content
+const addResponsiveImageStyling = (content: string): string => {
+  // Add responsive styling to images
+  return content.replace(
+    /<img([^>]*)>/gi, 
+    '<img$1 style="max-width: 100%; height: auto; display: block;">'
+  );
+};
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
@@ -1832,6 +1841,170 @@ export const verifyAllPayments = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Helper function to prepare branded email HTML
+const prepareBrandedEmailHtml = (
+  messageContent: string, 
+  event: any, 
+  includeBanner: boolean, 
+  isTestEmail: boolean = false
+): string => {
+  const brandName = event.brand?.brand_name || 'Label Dashboard';
+  
+  if (!includeBanner || !event.brand) {
+    // For non-branded emails, create a simple wrapper with footer
+    const testHeader = isTestEmail ? `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <small style="color: #666; font-size: 11px; font-style: italic;">Test email</small>
+      </div>
+    ` : '';
+    
+    const footer = `
+      <div style="border-top: 1px solid #D9D9D9; margin-top: 30px; padding-top: 20px; text-align: center;">
+        <div style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.5; color: #666;">
+          This message was sent by ${brandName}. Not sure why you are receiving this? <a href="mailto:support@melt-records.com" style="color: #1595e7; text-decoration: none;">Contact us for help</a>.
+        </div>
+      </div>
+    `;
+    
+    // Apply responsive image styling to content
+    const styledContent = `
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5;">
+        <style>
+          img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+          }
+          @media (max-width: 620px) {
+            .email-content {
+              font-size: 16px !important;
+            }
+          }
+          @media (max-width: 520px) {
+            .email-content {
+              font-size: 16px !important;
+            }
+          }
+        </style>
+        <div class="email-content">
+          ${testHeader}
+          ${messageContent}
+          ${footer}
+        </div>
+      </div>
+    `;
+    
+    return styledContent;
+  }
+
+  const brandColor = event.brand.brand_color || '#1595e7';
+  const brandLogo = event.brand.logo_url || '';
+  
+  // Use mobile-friendly div-based structure instead of complex table template
+  // This matches the structure used for non-branded emails for consistent mobile behavior
+  const brandedBanner = `
+    <div style="background-color: ${brandColor}; padding: 20px; text-align: center; margin-bottom: 20px;">
+      ${brandLogo ? `<img src="${brandLogo}" alt="${event.brand.brand_name}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
+      <h2 style="color: white; margin: 0; font-family: Arial, sans-serif;">${event.title}</h2>
+    </div>
+  `;
+  
+  const footer = `
+    <div style="border-top: 1px solid #D9D9D9; margin-top: 30px; padding-top: 20px; text-align: center;">
+      <div style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.5; color: #666;">
+        This message was sent by ${brandName}. Not sure why you are receiving this? <a href="mailto:support@melt-records.com" style="color: #1595e7; text-decoration: none;">Contact us for help</a>.
+      </div>
+    </div>
+  `;
+  
+  const testHeader = isTestEmail ? `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <small style="color: #666; font-size: 11px; font-style: italic;">Test email</small>
+    </div>
+  ` : '';
+  
+  // Use the same mobile-friendly structure as non-branded emails
+  const styledContent = `
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5;">
+      <style>
+        img {
+          max-width: 100% !important;
+          height: auto !important;
+          display: block;
+        }
+        @media (max-width: 620px) {
+          .email-content {
+            font-size: 16px !important;
+          }
+        }
+        @media (max-width: 520px) {
+          .email-content {
+            font-size: 16px !important;
+          }
+        }
+      </style>
+      <div class="email-content">
+        ${testHeader}
+        ${brandedBanner}
+        ${messageContent}
+        ${footer}
+      </div>
+    </div>
+  `;
+  
+  return styledContent;
+};
+
+// Shared function for sending event emails (both regular and test)
+const sendEventEmailShared = async (
+  recipients: string[],
+  subject: string,
+  message: string,
+  event: any,
+  includeBanner: boolean,
+  isTestEmail: boolean,
+  brandId: number
+): Promise<{ successCount: number; failedCount: number }> => {
+  // Add responsive image styling to message content
+  const styledMessage = addResponsiveImageStyling(message);
+  
+  // Prepare branded email HTML using shared helper
+  const htmlMessage = prepareBrandedEmailHtml(styledMessage, event, includeBanner, isTestEmail);
+
+  let successCount = 0;
+  let failedCount = 0;
+
+  // Send email to each recipient
+  for (const email of recipients) {
+    try {
+      const emailSubject = isTestEmail ? `[TEST] ${subject}` : subject;
+      const eventContext = {
+        eventTitle: event.title,
+        messageContent: message, // Use original message for text version
+        isTestEmail: isTestEmail
+      };
+      const success = await sendEmailWithInlineImages(
+        [email], 
+        emailSubject, 
+        htmlMessage, 
+        brandId, 
+        undefined, // textBody
+        eventContext
+      );
+      if (success) {
+        successCount++;
+      } else {
+        failedCount++;
+      }
+    } catch (error) {
+      console.error(`Failed to send ${isTestEmail ? 'test ' : ''}email to ${email}:`, error);
+      failedCount++;
+    }
+  }
+
+  return { successCount, failedCount };
+};
+
 export const sendEventEmail = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user.is_admin) {
@@ -1898,60 +2071,23 @@ export const sendEventEmail = async (req: AuthRequest, res: Response) => {
     // Get unique email addresses from ticket holders
     const uniqueEmails = [...new Set(tickets.map(ticket => ticket.email_address))];
     
-    // Process any base64 images in the message and upload to S3
-    let processedMessage = message;
-    let imageStats = { processed: 0, skipped: 0, reasons: [] };
-    try {
-      const imageResult = await processImagesInHtml(message, eventIdNum);
-      processedMessage = imageResult.html;
-      imageStats = imageResult.stats;
-    } catch (error) {
-      console.error('Failed to process images in email:', error);
-      // Continue with original message if image processing fails
-    }
-    
-    let htmlMessage = processedMessage;
-    
-    // Add email banner if requested
-    if (include_banner && event.brand) {
-      const brandColor = event.brand.brand_color || '#1595e7';
-      const brandLogo = event.brand.logo_url || '';
-      
-      const bannerHtml = `
-        <div style="background-color: ${brandColor}; padding: 20px; text-align: center; margin-bottom: 20px;">
-          ${brandLogo ? `<img src="${brandLogo}" alt="${event.brand.brand_name}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
-          <h2 style="color: white; margin: 0; font-family: Arial, sans-serif;">${event.title}</h2>
-        </div>
-      `;
-      
-      htmlMessage = bannerHtml + processedMessage;
-    }
-
-    let successCount = 0;
-    let failedCount = 0;
-
-    // Send email to each unique recipient
-    for (const email of uniqueEmails) {
-      try {
-        const success = await sendEmail([email], subject, htmlMessage, req.user.brand_id);
-        if (success) {
-          successCount++;
-        } else {
-          failedCount++;
-        }
-      } catch (error) {
-        console.error(`Failed to send email to ${email}:`, error);
-        failedCount++;
-      }
-    }
+    // Use shared email sending function
+    const { successCount, failedCount } = await sendEventEmailShared(
+      uniqueEmails,
+      subject,
+      message,
+      event,
+      include_banner,
+      false, // isTestEmail = false
+      req.user.brand_id
+    );
 
     res.json({
       message: `Email sending completed. ${successCount} sent successfully, ${failedCount} failed.`,
       recipients_count: uniqueEmails.length,
       success_count: successCount,
       failed_count: failedCount,
-      event_title: event.title,
-      image_stats: imageStats
+      event_title: event.title
     });
   } catch (error) {
     console.error('Send event email error:', error);
@@ -2026,53 +2162,16 @@ export const sendTestEventEmail = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // For test emails, we'll use the original message and let sendEmailWithInlineImages handle image processing
-    let processedMessage = message;
-    
-    let htmlMessage = processedMessage;
-    
-    // Add email banner if requested
-    if (include_banner && event.brand) {
-      const brandColor = event.brand.brand_color || '#1595e7';
-      const brandLogo = event.brand.logo_url || '';
-      
-      const bannerHtml = `
-        <div style="background-color: ${brandColor}; padding: 20px; text-align: center; margin-bottom: 20px;">
-          ${brandLogo ? `<img src="${brandLogo}" alt="${event.brand.brand_name}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
-          <h2 style="color: white; margin: 0; font-family: Arial, sans-serif;">${event.title}</h2>
-        </div>
-      `;
-      
-      htmlMessage = bannerHtml + processedMessage;
-    }
-
-    // Add test email header
-    const testHeaderHtml = `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <small style="color: #666; font-size: 11px; font-style: italic;">Test email</small>
-      </div>
-    `;
-    
-    htmlMessage = testHeaderHtml + htmlMessage;
-
-    let successCount = 0;
-    let failedCount = 0;
-
-    // Send email to each test recipient
-    for (const email of emails) {
-      try {
-        const testSubject = `[TEST] ${subject}`;
-        const success = await sendEmailWithInlineImages([email], testSubject, htmlMessage, req.user.brand_id);
-        if (success) {
-          successCount++;
-        } else {
-          failedCount++;
-        }
-      } catch (error) {
-        console.error(`Failed to send test email to ${email}:`, error);
-        failedCount++;
-      }
-    }
+    // Use shared email sending function
+    const { successCount, failedCount } = await sendEventEmailShared(
+      emails,
+      subject,
+      message,
+      event,
+      include_banner,
+      true, // isTestEmail = true
+      req.user.brand_id
+    );
 
     res.json({
       message: `Test email sending completed. ${successCount} sent successfully, ${failedCount} failed.`,

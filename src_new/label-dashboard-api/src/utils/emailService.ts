@@ -62,7 +62,7 @@ export const sendEmail = async (
       to: recipients.join(', '),
       subject,
       html: htmlBody,
-      text: textBody || htmlBody.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+      text: textBody || htmlToText(htmlBody), // Convert HTML to clean text for preview
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -169,7 +169,7 @@ export const sendNotificationEmail = async (
 };
 
 // Load email template from file
-const loadEmailTemplate = (templateName: string): string => {
+export const loadEmailTemplate = (templateName: string): string => {
   try {
     const templatePath = path.join(__dirname, '../assets/templates', `${templateName}.html`);
     return fs.readFileSync(templatePath, 'utf8');
@@ -180,7 +180,7 @@ const loadEmailTemplate = (templateName: string): string => {
 };
 
 // Replace template variables with actual values
-const processTemplate = (template: string, data: Record<string, any>): string => {
+export const processTemplate = (template: string, data: Record<string, any>): string => {
   let processedTemplate = template;
   
   // Replace all %VARIABLE% placeholders with actual values
@@ -677,10 +677,10 @@ const processInlineImages = (htmlContent: string): { html: string, attachments: 
       // Convert base64 to buffer
       const imageBuffer = Buffer.from(base64Data, 'base64');
       
-      // Check image size limit (1MB for email attachments)
-      const MAX_IMAGE_SIZE = 1 * 1024 * 1024;
+      // Check image size limit (5MB for email attachments)
+      const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
       if (imageBuffer.length > MAX_IMAGE_SIZE) {
-        console.warn(`Image too large for email: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB, skipping image`);
+        console.warn(`Image too large for email: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB (max: ${MAX_IMAGE_SIZE / 1024 / 1024}MB), skipping image`);
         continue;
       }
       
@@ -710,13 +710,52 @@ const processInlineImages = (htmlContent: string): { html: string, attachments: 
   return { html: processedHtml, attachments };
 };
 
+// Convert HTML to clean text for email previews
+const htmlToText = (html: string): string => {
+  let text = html;
+  
+  // Remove script and style elements completely
+  text = text.replace(/<(script|style)[^>]*>[\s\S]*?<\/(script|style)>/gi, '');
+  
+  // Replace common block elements with line breaks
+  text = text.replace(/<(div|p|br|h[1-6]|li|tr)[^>]*>/gi, '\n');
+  text = text.replace(/<\/(div|p|h[1-6]|li|tr)>/gi, '\n');
+  
+  // Replace list items with bullet points
+  text = text.replace(/<li[^>]*>/gi, '\n• ');
+  
+  // Replace table cells with spaces
+  text = text.replace(/<(td|th)[^>]*>/gi, ' ');
+  
+  // Remove all remaining HTML tags
+  text = text.replace(/<[^>]*>/g, '');
+  
+  // Decode HTML entities
+  text = text.replace(/&amp;/g, '&');
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  text = text.replace(/&nbsp;/g, ' ');
+  
+  // Clean up whitespace
+  text = text.replace(/\n\s*\n/g, '\n\n'); // Replace multiple newlines with double newline
+  text = text.replace(/[ \t]+/g, ' '); // Replace multiple spaces/tabs with single space
+  text = text.replace(/^\s+|\s+$/gm, ''); // Trim lines
+  text = text.trim(); // Trim overall
+  
+  return text;
+};
+
+
 // Send email with inline image support for test emails
 export const sendEmailWithInlineImages = async (
   recipients: string[],
   subject: string,
   htmlBody: string,
   brandId: number,
-  textBody?: string
+  textBody?: string,
+  eventContext?: { eventTitle: string; messageContent: string; isTestEmail: boolean }
 ): Promise<boolean> => {
   let success = false;
   
@@ -732,12 +771,20 @@ export const sendEmailWithInlineImages = async (
     // Quote the display name if it contains special characters like parentheses
     const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
     
+    // Generate appropriate text version
+    let finalTextBody = textBody;
+    if (!finalTextBody) {
+      // For event emails, use the original message content; for others, use the processed HTML
+      const htmlToConvert = eventContext ? eventContext.messageContent : processedHtml;
+      finalTextBody = htmlToText(htmlToConvert);
+    }
+    
     const mailOptions = {
       from: `${quotedFromName} <${fromEmail}>`,
       to: recipients.join(', '),
       subject,
       html: processedHtml,
-      text: textBody || processedHtml.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+      text: finalTextBody,
       attachments: attachments // Include inline attachments
     };
 
