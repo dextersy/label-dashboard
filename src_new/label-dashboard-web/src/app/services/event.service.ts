@@ -593,6 +593,28 @@ export class EventService {
   }
 
   /**
+   * Send test email to specified email addresses
+   */
+  sendTestEventEmail(eventId: number, emailData: { subject: string; message: string; emails: string[]; include_banner?: boolean }): Observable<any> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+
+    if (!emailData.emails || !Array.isArray(emailData.emails) || emailData.emails.length === 0) {
+      return throwError(() => new Error('Email addresses are required'));
+    }
+
+    return this.http.post(`${environment.apiUrl}/events/send-test-email`, {
+      event_id: eventId,
+      ...emailData
+    }, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Trigger data refresh for all tab components
    */
   triggerDataRefresh(): void {

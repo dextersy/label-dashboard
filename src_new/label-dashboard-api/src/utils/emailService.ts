@@ -654,3 +654,103 @@ export const sendPaymentNotification = async (
     return false;
   }
 };
+
+// Process base64 images and convert them to inline attachments for email
+const processInlineImages = (htmlContent: string): { html: string, attachments: any[] } => {
+  const base64ImageRegex = /<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/gi;
+  let processedHtml = htmlContent;
+  const attachments: any[] = [];
+  let match;
+  let imageIndex = 0;
+
+  while ((match = base64ImageRegex.exec(htmlContent)) !== null) {
+    try {
+      const [fullMatch, imageType, base64Data] = match;
+      
+      // Validate image type
+      const allowedTypes = ['jpeg', 'jpg', 'png', 'gif'];
+      if (!allowedTypes.includes(imageType.toLowerCase())) {
+        console.warn(`Unsupported image type for email: ${imageType}, skipping image`);
+        continue;
+      }
+      
+      // Convert base64 to buffer
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+      
+      // Check image size limit (1MB for email attachments)
+      const MAX_IMAGE_SIZE = 1 * 1024 * 1024;
+      if (imageBuffer.length > MAX_IMAGE_SIZE) {
+        console.warn(`Image too large for email: ${(imageBuffer.length / 1024 / 1024).toFixed(2)}MB, skipping image`);
+        continue;
+      }
+      
+      // Generate unique content ID for inline attachment
+      const cid = `image${imageIndex++}@email`;
+      
+      // Add attachment
+      attachments.push({
+        filename: `image${imageIndex}.${imageType}`,
+        content: imageBuffer,
+        contentType: `image/${imageType}`,
+        cid: cid,
+        disposition: 'inline'
+      });
+      
+      // Replace base64 src with cid reference
+      const newImgTag = fullMatch.replace(/src="data:image\/[^;]+;base64,[^"]+"/, `src="cid:${cid}"`);
+      processedHtml = processedHtml.replace(fullMatch, newImgTag);
+      
+      console.log(`Processed inline image for email: ${imageType} (${(imageBuffer.length / 1024).toFixed(2)}KB)`);
+      
+    } catch (error) {
+      console.error('Failed to process inline image:', error);
+    }
+  }
+  
+  return { html: processedHtml, attachments };
+};
+
+// Send email with inline image support for test emails
+export const sendEmailWithInlineImages = async (
+  recipients: string[],
+  subject: string,
+  htmlBody: string,
+  brandId: number,
+  textBody?: string
+): Promise<boolean> => {
+  let success = false;
+  
+  try {
+    // Process inline images
+    const { html: processedHtml, attachments } = processInlineImages(htmlBody);
+    
+    // Fetch brand information to use brand name as "From" name
+    const brand = await Brand.findByPk(brandId);
+    const fromName = brand?.brand_name || 'Dashboard';
+    const fromEmail = process.env.FROM_EMAIL;
+    
+    // Quote the display name if it contains special characters like parentheses
+    const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
+    
+    const mailOptions = {
+      from: `${quotedFromName} <${fromEmail}>`,
+      to: recipients.join(', '),
+      subject,
+      html: processedHtml,
+      text: textBody || processedHtml.replace(/<[^>]*>/g, ''), // Strip HTML for text version
+      attachments: attachments // Include inline attachments
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Email with inline images sent successfully:', result.messageId);
+    success = true;
+  } catch (error) {
+    console.error('Email sending with inline images failed:', error);
+    success = false;
+  }
+
+  // Log the email attempt
+  await logEmailAttempt(recipients, subject, htmlBody, success, brandId);
+  
+  return success;
+};

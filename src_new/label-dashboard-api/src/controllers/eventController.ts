@@ -5,7 +5,7 @@ import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
-import { sendEmail } from '../utils/emailService';
+import { sendEmail, sendEmailWithInlineImages } from '../utils/emailService';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
@@ -187,6 +187,7 @@ const processImagesInHtml = async (htmlContent: string, eventId: number): Promis
     }
   };
 };
+
 
 export const getEvents = async (req: AuthRequest, res: Response) => {
   try {
@@ -1954,6 +1955,134 @@ export const sendEventEmail = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Send event email error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const sendTestEventEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { event_id, subject, message, emails, include_banner = true } = req.body;
+
+    if (!event_id || !subject || !message || !emails) {
+      return res.status(400).json({ 
+        error: 'Event ID, subject, message, and emails are required' 
+      });
+    }
+
+    if (!Array.isArray(emails) || emails.length === 0) {
+      return res.status(400).json({ 
+        error: 'Emails must be a non-empty array' 
+      });
+    }
+
+    // Validate email addresses
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalidEmails = emails.filter(email => !emailRegex.test(email));
+    if (invalidEmails.length > 0) {
+      return res.status(400).json({ 
+        error: `Invalid email addresses: ${invalidEmails.join(', ')}` 
+      });
+    }
+
+    // Additional validation to prevent abuse
+    if (subject.length > 500) {
+      return res.status(400).json({ 
+        error: 'Subject line too long (maximum 500 characters)' 
+      });
+    }
+
+    if (message.length > 10 * 1024 * 1024) { // 10MB limit for message content
+      return res.status(400).json({ 
+        error: 'Message content too large (maximum 10MB)' 
+      });
+    }
+
+    if (emails.length > 10) { // Limit test emails to 10 recipients
+      return res.status(400).json({ 
+        error: 'Too many test recipients (maximum 10 allowed)' 
+      });
+    }
+
+    const eventIdNum = parseInt(event_id, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Verify user has access to this event
+    const event = await Event.findOne({
+      where: { 
+        id: eventIdNum,
+        brand_id: req.user.brand_id 
+      },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // For test emails, we'll use the original message and let sendEmailWithInlineImages handle image processing
+    let processedMessage = message;
+    
+    let htmlMessage = processedMessage;
+    
+    // Add email banner if requested
+    if (include_banner && event.brand) {
+      const brandColor = event.brand.brand_color || '#1595e7';
+      const brandLogo = event.brand.logo_url || '';
+      
+      const bannerHtml = `
+        <div style="background-color: ${brandColor}; padding: 20px; text-align: center; margin-bottom: 20px;">
+          ${brandLogo ? `<img src="${brandLogo}" alt="${event.brand.brand_name}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
+          <h2 style="color: white; margin: 0; font-family: Arial, sans-serif;">${event.title}</h2>
+        </div>
+      `;
+      
+      htmlMessage = bannerHtml + processedMessage;
+    }
+
+    // Add test email header
+    const testHeaderHtml = `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <small style="color: #666; font-size: 11px; font-style: italic;">Test email</small>
+      </div>
+    `;
+    
+    htmlMessage = testHeaderHtml + htmlMessage;
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    // Send email to each test recipient
+    for (const email of emails) {
+      try {
+        const testSubject = `[TEST] ${subject}`;
+        const success = await sendEmailWithInlineImages([email], testSubject, htmlMessage, req.user.brand_id);
+        if (success) {
+          successCount++;
+        } else {
+          failedCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to send test email to ${email}:`, error);
+        failedCount++;
+      }
+    }
+
+    res.json({
+      message: `Test email sending completed. ${successCount} sent successfully, ${failedCount} failed.`,
+      recipients_count: emails.length,
+      success_count: successCount,
+      failed_count: failedCount,
+      event_title: event.title
+    });
+  } catch (error) {
+    console.error('Send test event email error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

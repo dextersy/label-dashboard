@@ -127,19 +127,36 @@
                 Emails will be sent one by one to preserve deliverability
               </small>
             </div>
-            <button
-              type="button"
-              class="btn btn-primary btn-lg"
-              [disabled]="!isFormValid() || recipientsCount === 0 || sending || loadingCount"
-              (click)="sendEmail()">
-              <span *ngIf="sending" class="spinner-border spinner-border-sm me-2" role="status"></span>
-              <i *ngIf="!sending" class="fas fa-paper-plane me-2"></i>
-              <span *ngIf="sending">Sending Email...</span>
-              <span *ngIf="!sending">Send Email to {{ recipientsCount }} Recipients</span>
-            </button>
+            <div class="d-flex gap-2">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [disabled]="!isFormValid() || sending"
+                (click)="showTestEmailModal()"
+                title="Send a test email to specific addresses first">
+                <i class="fas fa-flask me-2"></i>
+                Send Test Email
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-lg"
+                [disabled]="!isFormValid() || recipientsCount === 0 || sending || loadingCount"
+                (click)="sendEmail()">
+                <span *ngIf="sending" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <i *ngIf="!sending" class="fas fa-paper-plane me-2"></i>
+                <span *ngIf="sending">Sending Email...</span>
+                <span *ngIf="!sending">Send Email to {{ recipientsCount }} Recipients</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Test Email Modal -->
+<app-test-email-modal 
+  #testEmailModal
+  (testEmailConfirmed)="onTestEmailConfirmed($event)">
+</app-test-email-modal>

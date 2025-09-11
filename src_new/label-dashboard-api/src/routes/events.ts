@@ -18,6 +18,7 @@ import {
   deleteEventReferrer,
   verifyAllPayments,
   sendEventEmail,
+  sendTestEventEmail,
   getEventTicketHoldersCount,
   getEventTicketSummary,
   exportEventTicketsCsv,
@@ -61,6 +62,7 @@ router.get('/ticket-summary', getEventTicketSummary);
 router.get('/tickets/csv', exportEventTicketsCsv);
 router.get('/tickets/pending/csv', exportEventPendingTicketsCsv);
 router.post('/send-email', requireAdmin, sendEventEmail);
+router.post('/send-test-email', requireAdmin, sendTestEventEmail);
 
 // Event CRUD operations with :id (these must come last)
 router.get('/:id', getEvent);

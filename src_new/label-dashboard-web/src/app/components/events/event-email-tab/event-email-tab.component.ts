@@ -1,15 +1,16 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
 import { QuillModule } from 'ngx-quill';
+import { TestEmailModalComponent, TestEmailData } from '../test-email-modal/test-email-modal.component';
 import 'quill/dist/quill.snow.css';
 
 @Component({
   selector: 'app-event-email-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule],
+  imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent],
   templateUrl: './event-email-tab.component.html',
   styleUrl: './event-email-tab.component.scss'
 })
@@ -17,6 +18,8 @@ export class EventEmailTabComponent implements OnInit, OnDestroy, OnChanges {
   @Input() selectedEvent: Event | null = null;
   @Input() isAdmin: boolean = false;
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
+  
+  @ViewChild('testEmailModal') testEmailModal!: TestEmailModalComponent;
 
   subject: string = '';
   message: string = '';
@@ -228,6 +231,72 @@ export class EventEmailTabComponent implements OnInit, OnDestroy, OnChanges {
       this.message && 
       this.message.trim().length > 0 && 
       !this.isContentTooLarge()
+    );
+  }
+
+  showTestEmailModal(): void {
+    if (!this.selectedEvent || !this.isFormValid()) {
+      this.alertMessage.emit({ type: 'error', text: 'Please complete the email form before sending a test' });
+      return;
+    }
+
+    this.testEmailModal.showModal(this.subject, this.message);
+  }
+
+  onTestEmailConfirmed(testData: TestEmailData): void {
+    if (!this.selectedEvent) {
+      this.alertMessage.emit({ type: 'error', text: 'No event selected' });
+      this.testEmailModal.setLoading(false);
+      return;
+    }
+
+    this.subscription.add(
+      this.eventService.sendTestEventEmail(this.selectedEvent.id, {
+        subject: testData.subject,
+        message: testData.message,
+        emails: testData.emails,
+        include_banner: this.includeBanner
+      }).subscribe({
+        next: (response) => {
+          const successMessage = `Test email sent successfully! ${response.success_count} recipients received the test email.`;
+          this.alertMessage.emit({ type: 'success', text: successMessage });
+          
+          if (response.failed_count > 0) {
+            this.alertMessage.emit({ 
+              type: 'warning', 
+              text: `Note: ${response.failed_count} test emails failed to send.` 
+            });
+          }
+
+          // Handle image processing results
+          if (response.image_stats) {
+            const { processed, skipped, reasons } = response.image_stats;
+            
+            if (processed > 0) {
+              this.alertMessage.emit({ 
+                type: 'success', 
+                text: `${processed} image${processed !== 1 ? 's' : ''} processed and included in test email.` 
+              });
+            }
+            
+            if (skipped > 0) {
+              const uniqueReasons = [...new Set(reasons)];
+              this.alertMessage.emit({ 
+                type: 'warning', 
+                text: `${skipped} image${skipped !== 1 ? 's' : ''} skipped in test email: ${uniqueReasons.join(', ')}` 
+              });
+            }
+          }
+          
+          this.testEmailModal.setLoading(false);
+          this.testEmailModal.hide();
+        },
+        error: (error) => {
+          console.error('Error sending test email:', error);
+          this.alertMessage.emit({ type: 'error', text: error.message || 'Failed to send test email' });
+          this.testEmailModal.setLoading(false);
+        }
+      })
     );
   }
 }
