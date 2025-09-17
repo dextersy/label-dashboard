@@ -127,6 +127,9 @@
               <div class="entries-label">ENTRIES AVAILABLE</div>
               <div class="entries-number">{{ currentTicket?.remaining_entries }}</div>
               <div class="entries-subtitle">{{ currentTicket?.name }}</div>
+              <div class="entries-ticket-type" *ngIf="currentTicket?.ticketType">
+                <strong>{{ currentTicket.ticketType.name }}</strong>
+              </div>
             </div>
                           
             <!-- Claim All Button -->

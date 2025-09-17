@@ -23,6 +23,7 @@ export interface EventTicket {
   date_paid?: string;
   number_of_claimed_entries: number;
   status: 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled';
+  ticket_type_name?: string;
 }
 
 export interface TicketSummary {
@@ -72,6 +73,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
     { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true },
+    { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
     { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-' },
     { key: 'processing_fee', label: 'Processing Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getProcessingFee(item) > 0 ? this.formatCurrency(this.getProcessingFee(item)) : '-' },
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
@@ -211,7 +213,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       order_timestamp: ticket.order_timestamp,
       date_paid: ticket.date_paid,
       number_of_claimed_entries: Number(ticket.number_of_claimed_entries) || 0,
-      status: this.normalizeTicketStatus(ticket.status)
+      status: this.normalizeTicketStatus(ticket.status),
+      ticket_type_name: ticket.ticketType?.name
     };
   }
 

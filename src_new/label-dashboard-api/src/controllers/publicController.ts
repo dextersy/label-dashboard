@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode } from '../utils/ticketEmailService';
@@ -88,6 +88,11 @@ export const getEventForPublic = async (req: Request, res: Response) => {
             as: 'domains',
             attributes: ['domain_name']
           }]
+        },
+        {
+          model: TicketType,
+          as: 'ticketTypes',
+          attributes: ['id', 'name', 'price']
         }
       ]
     });
@@ -155,7 +160,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
           name: event.brand.brand_name,
           color: event.brand.brand_color,
           logo_url: event.brand.logo_url
-        } : null
+        } : null,
+        ticketTypes: (event as any).ticketTypes || []
       }
     });
   } catch (error) {
@@ -203,6 +209,11 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
               attributes: ['domain_name']
             }]
           }]
+        },
+        { 
+          model: TicketType, 
+          as: 'ticketType',
+          attributes: ['id', 'name', 'price']
         },
         { model: EventReferrer, as: 'referrer' }
       ]
@@ -257,6 +268,11 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
         referrer: ticket.referrer ? {
           name: ticket.referrer.name,
           code: ticket.referrer.referral_code
+        } : null,
+        ticketType: (ticket as any).ticketType ? {
+          id: (ticket as any).ticketType.id,
+          name: (ticket as any).ticketType.name,
+          price: (ticket as any).ticketType.price
         } : null
       }
     });
@@ -274,6 +290,7 @@ export const buyTicket = async (req: Request, res: Response) => {
       email_address,
       contact_number,
       number_of_entries = 1,
+      ticket_type_id,
       referral_code
     } = req.body;
 
@@ -300,15 +317,22 @@ export const buyTicket = async (req: Request, res: Response) => {
     // Get event details
     const event = await Event.findOne({
       where: { id: eventIdNum },
-      include: [{ 
-        model: Brand, 
-        as: 'brand',
-        include: [{
-          model: Domain,
-          as: 'domains',
-          attributes: ['domain_name']
-        }]
-      }]
+      include: [
+        { 
+          model: Brand, 
+          as: 'brand',
+          include: [{
+            model: Domain,
+            as: 'domains',
+            attributes: ['domain_name']
+          }]
+        },
+        {
+          model: TicketType,
+          as: 'ticketTypes',
+          attributes: ['id', 'name', 'price']
+        }
+      ]
     });
 
     if (!event) {
@@ -353,11 +377,22 @@ export const buyTicket = async (req: Request, res: Response) => {
       });
     }
 
+    // Determine ticket price based on selected ticket type
+    let ticketPrice = event.ticket_price; // Default to legacy price
+    let selectedTicketType = null;
+    
+    if (ticket_type_id && (event as any).ticketTypes) {
+      selectedTicketType = (event as any).ticketTypes.find((tt: any) => tt.id === parseInt(ticket_type_id));
+      if (selectedTicketType) {
+        ticketPrice = selectedTicketType.price;
+      }
+    }
+
     // Generate unique ticket code
     const ticketCode = await generateUniqueTicketCode(eventIdNum);
 
     // Calculate total amount
-    const totalAmount = event.ticket_price * number_of_entries;
+    const totalAmount = ticketPrice * number_of_entries;
     const description = `${event.title} - Ticket #${ticketCode}`;
 
     // Prepare payment methods based on event settings
@@ -377,7 +412,7 @@ export const buyTicket = async (req: Request, res: Response) => {
     const checkoutSession = await paymentService.createCheckoutSession({
       line_items: [{
         name: 'Tickets',
-        amount: event.ticket_price * 100, // Convert to cents
+        amount: ticketPrice * 100, // Convert to cents
         currency: 'PHP',
         quantity: number_of_entries
       }],
@@ -404,7 +439,8 @@ export const buyTicket = async (req: Request, res: Response) => {
       number_of_entries,
       ticket_code: ticketCode,
       status: 'New',
-      price_per_ticket: event.ticket_price,
+      price_per_ticket: ticketPrice,
+      ticket_type_id: selectedTicketType?.id || null,
       referrer_id: referrer?.id || null,
       order_timestamp: new Date()
     });

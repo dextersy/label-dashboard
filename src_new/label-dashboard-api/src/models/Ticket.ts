@@ -6,6 +6,7 @@ type TicketStatus = 'New' | 'Payment Confirmed' | 'Ticket sent.' | 'Canceled';
 interface TicketAttributes {
   id: number;
   event_id: number;
+  ticket_type_id?: number;
   name: string;
   email_address: string;
   contact_number?: string;
@@ -29,6 +30,7 @@ interface TicketCreationAttributes extends Optional<TicketAttributes, 'id' | 'nu
 class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implements TicketAttributes {
   public id!: number;
   public event_id!: number;
+  public ticket_type_id?: number;
   public name!: string;
   public email_address!: string;
   public contact_number?: string;
@@ -49,6 +51,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   // Association properties
   public event?: any;
   public referrer?: any;
+  public ticketType?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -62,6 +65,10 @@ Ticket.init(
       primaryKey: true,
     },
     event_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    ticket_type_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

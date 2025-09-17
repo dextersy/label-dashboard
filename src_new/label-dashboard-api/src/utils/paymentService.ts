@@ -5,7 +5,7 @@ import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
-import { Ticket, Event, User, Domain } from '../models';
+import { Ticket, Event, User, Domain, TicketType } from '../models';
 import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail } from './emailService';
 import { calculatePlatformFeeForEventTickets } from './platformFeeCalculator';
@@ -308,6 +308,11 @@ export class PaymentService {
           model: Event,
           as: 'event',
           include: [{ model: Brand, as: 'brand' }]
+        },
+        { 
+          model: TicketType, 
+          as: 'ticketType',
+          attributes: ['id', 'name']
         }
       ]
     });
@@ -421,6 +426,11 @@ export class PaymentService {
             model: Event, 
             as: 'event',
             include: [{ model: Brand, as: 'brand' }]
+          },
+          { 
+            model: TicketType, 
+            as: 'ticketType',
+            attributes: ['id', 'name']
           }
         ]
       });
@@ -435,7 +445,11 @@ export class PaymentService {
           email_address: ticket.email_address,
           name: ticket.name,
           ticket_code: ticket.ticket_code,
-          number_of_entries: ticket.number_of_entries
+          number_of_entries: ticket.number_of_entries,
+          ticket_type: (ticket as any).ticketType ? {
+            id: (ticket as any).ticketType.id,
+            name: (ticket as any).ticketType.name
+          } : undefined
         },
         {
           id: ticket.event.id,
@@ -505,6 +519,7 @@ export class PaymentService {
       const processingFee = parseFloat(ticket.payment_processing_fee) || 0;
       
       // Create HTML body matching the PHP implementation exactly
+      const ticketTypeName = (ticket as any).ticketType ? (ticket as any).ticketType.name : 'Regular';
       const body = `
         Confirmed payment for the following ticket.<br><br>
         Ticket ID : ${ticket.id}<br>
@@ -512,6 +527,7 @@ export class PaymentService {
         Email : ${ticket.email_address}<br>
         Code : ${ticket.ticket_code}<br>
         Number of entries : ${ticket.number_of_entries}<br>
+        Ticket Type : ${ticketTypeName}<br>
         Payment : ${totalPayment.toFixed(2)}<br>
         Processing fee : -${processingFee.toFixed(2)}<br>
         <br>

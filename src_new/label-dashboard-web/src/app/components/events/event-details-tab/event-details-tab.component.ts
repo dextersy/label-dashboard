@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
 import { QuillModule } from 'ngx-quill';
 import { VenueAutocompleteComponent, VenueSelection } from '../../shared/venue-autocomplete/venue-autocomplete.component';
+import { TicketTypesComponent, TicketType } from '../ticket-types/ticket-types.component';
 
 export interface EventDetails {
   id?: number;
@@ -45,7 +46,7 @@ export interface EventDetails {
 @Component({
   selector: 'app-event-details-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, VenueAutocompleteComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, VenueAutocompleteComponent, TicketTypesComponent],
   templateUrl: './event-details-tab.component.html',
   styleUrl: './event-details-tab.component.scss'
 })
@@ -55,6 +56,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   @Output() eventUpdated = new EventEmitter<Event>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
   @ViewChild('eventForm') eventForm!: NgForm;
+  @ViewChild(TicketTypesComponent) ticketTypesComponent!: TicketTypesComponent;
 
   event: EventDetails | null = null;
   currentVenueSelection: VenueSelection | null = null;
@@ -63,6 +65,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   uploading = false;
+  ticketTypesModified = false;
 
   quillConfig = {
     toolbar: [
@@ -92,7 +95,6 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   private loadEventDetails(): void {
     if (!this.selectedEvent) {
-      this.initializeNewEvent();
       return;
     }
 
@@ -223,42 +225,6 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private initializeNewEvent(): void {
-    const now = new Date();
-    const closeTime = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
-    
-    this.event = {
-      title: '',
-      date_and_time: now.toISOString().slice(0, 16),
-      venue: '',
-      description: '',
-      rsvp_link: '',
-      ticket_price: 0,
-      max_tickets: 0,
-      close_time: closeTime.toISOString().slice(0, 16),
-      verification_pin: this.generateVerificationPIN(),
-      verification_link: '',
-      buy_shortlink: '',
-      ticket_naming: 'Regular',
-      slug: '',
-      countdown_display: '1_week',
-      supports_gcash: true,
-      supports_qrph: true,
-      supports_card: true,
-      supports_ubp: true,
-      supports_dob: true,
-      supports_maya: true,
-      supports_grabpay: true,
-      status: 'draft'
-    };
-    
-    this.updateCurrentVenueSelection();
-    
-    // Auto-generate slug if title is provided for new events
-    if (this.event.title) {
-      this.generateSlug();
-    }
-  }
 
   generateVerificationPIN(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -278,8 +244,8 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onTitleChange(): void {
-    // Auto-generate slug for new events or draft events if slug is empty
-    if (this.event && (!this.event.id || this.event.status === 'draft') && !this.event.slug) {
+    // Auto-generate slug for draft events if slug is empty
+    if (this.event && this.event.status === 'draft' && !this.event.slug) {
       this.generateSlug();
     }
   }
@@ -399,15 +365,20 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
+    this.uploading = true;
+
+    // Get current ticket types
+    const ticketTypes = this.getTicketTypesForSave();
+
+    // This component only handles existing events (updates only)
     if (!this.event.id) {
       this.alertMessage.emit({
         type: 'error',
         text: 'Cannot update event without ID.'
       });
+      this.uploading = false;
       return;
     }
-
-    this.uploading = true;
 
     // If there's a selected poster file, use FormData for file upload
     if (this.selectedPosterFile) {
@@ -444,19 +415,22 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       formData.append('supports_maya', this.event.supports_maya.toString());
       formData.append('supports_grabpay', this.event.supports_grabpay.toString());
       formData.append('status', this.event.status || 'draft');
+      
+
+      const serviceCall = this.eventService.updateEventWithFile(this.event.id as number, formData);
 
       this.subscriptions.add(
-        this.eventService.updateEventWithFile(this.event.id, formData).subscribe({
-          next: (updatedEvent) => {
+        serviceCall.subscribe({
+          next: (savedEvent) => {
             this.alertMessage.emit({
               type: 'success',
               text: 'Event updated successfully!'
             });
-            this.event = this.convertEventToDetails(updatedEvent);
+            this.event = this.convertEventToDetails(savedEvent);
             this.formatDatesForDisplay();
             this.onEventSaved();
             this.resetFormState();
-            this.eventUpdated.emit(updatedEvent);
+            this.eventUpdated.emit(savedEvent);
             this.uploading = false;
           },
           error: (error) => {
@@ -471,7 +445,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       );
     } else {
       // Create a copy with properly formatted dates for the API
-      const updateData = {
+      const eventData = {
         title: this.event.title,
         date_and_time: this.formatDateForAPI(this.event.date_and_time),
         venue: this.event.venue,
@@ -502,19 +476,21 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         supports_grabpay: this.event.supports_grabpay,
         max_tickets: this.event.max_tickets,
         status: this.event.status
-      };
+      } as any;
+
+      const serviceCall = this.eventService.updateEvent(this.event.id as number, eventData);
 
       this.subscriptions.add(
-        this.eventService.updateEvent(this.event.id, updateData).subscribe({
-          next: (updatedEvent) => {
+        serviceCall.subscribe({
+          next: (savedEvent) => {
             this.alertMessage.emit({
               type: 'success',
               text: 'Event updated successfully!'
             });
-            this.event = this.convertEventToDetails(updatedEvent);
+            this.event = this.convertEventToDetails(savedEvent);
             this.formatDatesForDisplay();
             this.resetFormState();
-            this.eventUpdated.emit(updatedEvent);
+            this.eventUpdated.emit(savedEvent);
             this.uploading = false;
           },
           error: (error) => {
@@ -586,6 +562,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   resetFormState(): void {
     // Reset the form's dirty state after successful save
+    this.ticketTypesModified = false;
     setTimeout(() => {
       if (this.eventForm) {
         // Mark all form controls as pristine
@@ -612,7 +589,12 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     }
     
     // Also check if there's a poster file selected for upload
-    return this.selectedPosterFile !== null;
+    if (this.selectedPosterFile !== null) {
+      return true;
+    }
+    
+    // Check if ticket types have been modified
+    return this.ticketTypesModified;
   }
 
   onPublishEvent(): void {
@@ -730,5 +712,25 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         closeTimeControl.markAsTouched();
       }
     }
+  }
+
+  onTicketTypesChanged(modified: boolean): void {
+    this.ticketTypesModified = modified;
+  }
+
+  private getTicketTypesForSave(): any[] {
+    // Get ticket types from the ticket types component
+    if (this.ticketTypesComponent) {
+      const ticketTypes = this.ticketTypesComponent.getTicketTypes();
+      return ticketTypes.map(tt => ({
+        name: tt.name,
+        price: tt.price
+      }));
+    }
+    // Fallback to a single ticket type based on legacy fields
+    return [{
+      name: this.event?.ticket_naming || 'Regular',
+      price: this.event?.ticket_price || 0
+    }];
   }
 }

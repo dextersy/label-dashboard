@@ -4,12 +4,18 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Event } from '../../../services/event.service';
 import { VenueAutocompleteComponent, VenueSelection } from '../../shared/venue-autocomplete/venue-autocomplete.component';
 
+export interface TicketTypeForm {
+  name: string;
+  price: number;
+}
+
 export interface CreateEventForm {
   title: string;
   date_and_time: string;
   venue: string;
   description: string;
-  ticket_price: number;
+  ticket_price: number; // Keep for backward compatibility with legacy code
+  ticketTypes: TicketTypeForm[];
   close_time: string;
   poster_url?: string;
   poster_file?: File;
@@ -54,6 +60,7 @@ export class CreateEventModalComponent implements OnChanges {
   posterPreview: string | null = null;
   selectedVenue: VenueSelection | null = null;
   actionType: 'draft' | 'published' | null = null;
+  ticketTypes: TicketTypeForm[] = [{ name: 'Regular', price: 0 }];
 
   constructor(private fb: FormBuilder) {
     this.eventForm = this.fb.group({
@@ -77,11 +84,27 @@ export class CreateEventModalComponent implements OnChanges {
   }
 
   onSubmit(status: 'draft' | 'published'): void {
+    // Validate ticket types
+    if (this.ticketTypes.length === 0) {
+      return; // Don't submit if no ticket types
+    }
+
+    // Validate each ticket type
+    for (const ticketType of this.ticketTypes) {
+      if (!ticketType.name.trim() || ticketType.price < 0) {
+        return; // Don't submit if any ticket type is invalid
+      }
+    }
+
     if (this.eventForm.valid) {
       this.actionType = status;
       
       const formData = this.eventForm.value as CreateEventForm;
       formData.status = status;
+      formData.ticketTypes = this.ticketTypes;
+      
+      // Set backward compatible ticket_price to first ticket type price
+      formData.ticket_price = this.ticketTypes[0]?.price || 0;
       
       if (this.selectedPosterFile) {
         formData.poster_file = this.selectedPosterFile;
@@ -175,6 +198,9 @@ export class CreateEventModalComponent implements OnChanges {
     // Reset action type
     this.actionType = null;
     
+    // Reset ticket types to default
+    this.ticketTypes = [{ name: 'Regular', price: 0 }];
+    
     // Set default values
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -240,5 +266,24 @@ export class CreateEventModalComponent implements OnChanges {
     
     const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
     this.eventForm.get('close_time')?.setValue(formattedDate);
+  }
+
+  // Ticket Type Management Methods
+  addTicketType(): void {
+    this.ticketTypes.push({ name: '', price: 0 });
+  }
+
+  removeTicketType(index: number): void {
+    if (this.ticketTypes.length > 1) {
+      this.ticketTypes.splice(index, 1);
+    }
+  }
+
+  isTicketTypeValid(ticketType: TicketTypeForm): boolean {
+    return ticketType.name.trim().length > 0 && ticketType.price >= 0;
+  }
+
+  areAllTicketTypesValid(): boolean {
+    return this.ticketTypes.length > 0 && this.ticketTypes.every(t => this.isTicketTypeValid(t));
   }
 }

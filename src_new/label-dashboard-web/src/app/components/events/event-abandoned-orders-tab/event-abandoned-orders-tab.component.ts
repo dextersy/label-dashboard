@@ -17,6 +17,7 @@ export interface AbandonedOrder {
   referrer_name?: string;
   order_timestamp: string;
   status: 'New' | 'Payment Confirmed' | 'Canceled';
+  ticket_type_name?: string;
 }
 
 
@@ -47,6 +48,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     { key: 'email_address', label: 'Email Address', searchable: true, sortable: true },
     { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number' },
+    { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
     { key: 'payment_link', label: 'Payment Link', sortable: false },
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
@@ -127,7 +129,8 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       number_of_entries: ticket.number_of_entries,
       payment_link: ticket.payment_link || '',
       order_timestamp: ticket.order_timestamp,
-      status: this.normalizeAbandonedOrderStatus(ticket.status)
+      status: this.normalizeAbandonedOrderStatus(ticket.status),
+      ticket_type_name: ticket.ticketType?.name
     };
   }
 

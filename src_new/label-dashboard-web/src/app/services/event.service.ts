@@ -55,6 +55,10 @@ export interface EventTicket {
   referrer_id?: number;
   order_timestamp: string;
   date_paid?: string;
+  ticketType?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface EventReferrer {
@@ -181,7 +185,7 @@ export class EventService {
     // Also notify the backend about the selection
     if (event) {
       this.notifyBackendEventSelection(event.id).subscribe({
-        next: () => console.log('Backend notified of event selection'),
+        next: () => {},
         error: (error) => console.error('Failed to notify backend:', error)
       });
     }
@@ -281,6 +285,11 @@ export class EventService {
       if (formEventData.venue_phone) formData.append('venue_phone', formEventData.venue_phone);
       if (formEventData.venue_website) formData.append('venue_website', formEventData.venue_website);
       if (formEventData.venue_maps_url) formData.append('venue_maps_url', formEventData.venue_maps_url);
+      
+      // Add ticket types if available
+      if (formEventData.ticketTypes && Array.isArray(formEventData.ticketTypes)) {
+        formData.append('ticketTypes', JSON.stringify(formEventData.ticketTypes));
+      }
       
       // Add the poster file
       formData.append('poster', formEventData.poster_file);
@@ -721,6 +730,63 @@ export class EventService {
         }
         return this.handleError(error);
       })
+    );
+  }
+
+  /**
+   * Get ticket types for an event
+   */
+  getTicketTypes(eventId: number): Observable<{ ticketTypes: any[] }> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    
+    return this.http.get<{ ticketTypes: any[] }>(`${environment.apiUrl}/events/ticket-types`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Create a new ticket type for an event
+   */
+  createTicketType(ticketTypeData: { event_id: number; name: string; price: number }): Observable<{ ticketType: any }> {
+    return this.http.post<{ ticketType: any }>(`${environment.apiUrl}/events/ticket-types`, ticketTypeData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Update a ticket type
+   */
+  updateTicketType(ticketTypeId: number, updateData: { name: string; price: number }): Observable<{ ticketType: any }> {
+    if (!ticketTypeId || isNaN(ticketTypeId) || ticketTypeId <= 0) {
+      return throwError(() => new Error('Invalid ticket type ID provided'));
+    }
+
+    return this.http.put<{ ticketType: any }>(`${environment.apiUrl}/events/ticket-types/${ticketTypeId}`, updateData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Delete a ticket type
+   */
+  deleteTicketType(ticketTypeId: number): Observable<{ message: string }> {
+    if (!ticketTypeId || isNaN(ticketTypeId) || ticketTypeId <= 0) {
+      return throwError(() => new Error('Invalid ticket type ID provided'));
+    }
+
+    return this.http.delete<{ message: string }>(`${environment.apiUrl}/events/ticket-types/${ticketTypeId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
     );
   }
   

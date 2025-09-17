@@ -27,6 +27,12 @@ import {
   publishEvent,
   unpublishEvent
 } from '../controllers/eventController';
+import {
+  getTicketTypes,
+  createTicketType,
+  updateTicketType,
+  deleteTicketType
+} from '../controllers/ticketTypeController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -55,6 +61,12 @@ router.get('/referrers', getEventReferrers);
 router.post('/referrers', requireAdmin, createEventReferrer);
 router.put('/referrers/:id', requireAdmin, updateEventReferrer);
 router.delete('/referrers/:id', requireAdmin, deleteEventReferrer);
+
+// Ticket type operations (specific routes before /:id)
+router.get('/ticket-types', getTicketTypes);
+router.post('/ticket-types', requireAdmin, createTicketType);
+router.put('/ticket-types/:id', requireAdmin, updateTicketType);
+router.delete('/ticket-types/:id', requireAdmin, deleteTicketType);
 
 // Email operations (specific routes before /:id)
 router.get('/ticket-holders-count', getEventTicketHoldersCount);

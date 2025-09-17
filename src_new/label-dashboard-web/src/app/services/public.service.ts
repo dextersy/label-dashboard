@@ -38,6 +38,11 @@ export interface PublicEvent {
     color?: string;
     logo_url?: string;
   };
+  ticketTypes?: Array<{
+    id: number;
+    name: string;
+    price: number;
+  }>;
 }
 
 export interface TicketPurchaseRequest {
@@ -46,6 +51,7 @@ export interface TicketPurchaseRequest {
   email_address: string;
   contact_number: string;
   number_of_entries: number;
+  ticket_type_id?: number;
   referral_code?: string;
 }
 
@@ -245,6 +251,10 @@ export class PublicService {
         name: string;
         code: string;
       };
+      ticketType?: {
+        id: number;
+        name: string;
+      };
     };
   }> {
     return this.http.post<{
@@ -266,6 +276,10 @@ export class PublicService {
         referrer?: {
           name: string;
           code: string;
+        };
+        ticketType?: {
+          id: number;
+          name: string;
         };
       };
     }>(`${this.apiUrl}/public/tickets/get-from-code`, {

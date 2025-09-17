@@ -42,6 +42,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   brandColor = '#6f42c1';
   referralCode: string | null = null;
   currentBrand: BrandSettings | null = null;
+  selectedTicketType: any = null;
 
   constructor(
     private fb: FormBuilder,
@@ -56,6 +57,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
       email_address: ['', [Validators.required, Validators.email]],
       contact_number: ['', Validators.required],
       number_of_entries: [1, [Validators.required, Validators.min(1)]],
+      ticket_type_id: [''],
       referral_code: [''],
       privacy_consent: [false, Validators.requiredTrue]
     });
@@ -118,6 +120,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
             // Update SEO metadata for social sharing
             this.updatePageMetadata();
             
+            // Set default ticket type
+            this.initializeTicketType();
+            
             this.isLoading = false;
           } else {
             this.showError();
@@ -139,9 +144,39 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     window.history.back();
   }
 
+  initializeTicketType() {
+    if (!this.event) return;
+    
+    // If event has ticket types, use the first one as default
+    if (this.event.ticketTypes && this.event.ticketTypes.length > 0) {
+      this.selectedTicketType = this.event.ticketTypes[0];
+      this.ticketForm.patchValue({ ticket_type_id: this.selectedTicketType.id });
+    } else {
+      // Fall back to legacy fields
+      this.selectedTicketType = {
+        id: null,
+        name: this.event.ticket_naming || 'Regular',
+        price: this.event.ticket_price || 0
+      };
+    }
+    
+    this.calculateTotal();
+  }
+
+  onTicketTypeChange() {
+    const ticketTypeId = this.ticketForm.get('ticket_type_id')?.value;
+    
+    if (this.event?.ticketTypes) {
+      this.selectedTicketType = this.event.ticketTypes.find(tt => tt.id == ticketTypeId) || this.selectedTicketType;
+    }
+    
+    this.calculateTotal();
+  }
+
   calculateTotal() {
     const numberOfTickets = this.ticketForm.get('number_of_entries')?.value || 0;
-    this.totalAmount = (this.event?.ticket_price || 0) * numberOfTickets;
+    const ticketPrice = this.selectedTicketType?.price || this.event?.ticket_price || 0;
+    this.totalAmount = ticketPrice * numberOfTickets;
   }
 
   get isEventLoaded(): boolean {
@@ -228,6 +263,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         email_address: this.ticketForm.value.email_address,
         contact_number: this.ticketForm.value.contact_number,
         number_of_entries: this.ticketForm.value.number_of_entries,
+        ticket_type_id: this.ticketForm.value.ticket_type_id || undefined,
         referral_code: this.ticketForm.value.referral_code
       };
 

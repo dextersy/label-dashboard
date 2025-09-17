@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Event, Ticket, EventReferrer, Brand, Domain } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain, TicketType } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -205,7 +205,8 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
       include: [
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
-        { model: EventReferrer, as: 'referrers' }
+        { model: EventReferrer, as: 'referrers' },
+        { model: TicketType, as: 'ticketTypes' }
       ],
       order: [['date_and_time', 'DESC']]
     });
@@ -234,7 +235,8 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
       include: [
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
-        { model: EventReferrer, as: 'referrers' }
+        { model: EventReferrer, as: 'referrers' },
+        { model: TicketType, as: 'ticketTypes' }
       ]
     });
 
@@ -287,13 +289,53 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       venue_phone,
       venue_website,
       venue_maps_url,
-      status
+      status,
+      ticketTypes
     } = req.body;
 
-    if (!title || !date_and_time || !venue || !ticket_price) {
+    // Parse ticketTypes if it's a string (from FormData)
+    let parsedTicketTypes = ticketTypes;
+    if (typeof ticketTypes === 'string') {
+      try {
+        parsedTicketTypes = JSON.parse(ticketTypes);
+      } catch (error) {
+        console.error('Failed to parse ticketTypes JSON:', error);
+        return res.status(400).json({ 
+          error: 'Invalid ticketTypes format' 
+        });
+      }
+    }
+
+    // Validate basic fields
+    if (!title || !date_and_time || !venue) {
       return res.status(400).json({ 
-        error: 'Title, date/time, venue, and ticket price are required' 
+        error: 'Title, date/time, and venue are required' 
       });
+    }
+
+    // Validate ticket types - ensure at least one is provided
+    if (!parsedTicketTypes || !Array.isArray(parsedTicketTypes) || parsedTicketTypes.length === 0) {
+      // Fallback to legacy ticket_price approach if ticketTypes not provided
+      if (!ticket_price && ticket_price !== 0) {
+        return res.status(400).json({ 
+          error: 'At least one ticket type is required' 
+        });
+      }
+    } else {
+      // Validate ticket types structure
+      for (let i = 0; i < parsedTicketTypes.length; i++) {
+        const ticketType = parsedTicketTypes[i];
+        if (!ticketType.name || ticketType.price === undefined) {
+          return res.status(400).json({ 
+            error: `Ticket type ${i + 1}: Name and price are required` 
+          });
+        }
+        if (isNaN(parseFloat(ticketType.price)) || parseFloat(ticketType.price) < 0) {
+          return res.status(400).json({ 
+            error: `Ticket type ${i + 1}: Invalid price` 
+          });
+        }
+      }
     }
 
     // Handle poster upload if provided
@@ -388,6 +430,25 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
         // Event was created but URL generation failed - still return success but log error
         console.warn('Event created but shortlink generation failed:', error.message);
       }
+    }
+
+    // Create ticket types
+    if (parsedTicketTypes && Array.isArray(parsedTicketTypes) && parsedTicketTypes.length > 0) {
+      // Create provided ticket types
+      for (const ticketType of parsedTicketTypes) {
+        await TicketType.create({
+          event_id: event.id,
+          name: ticketType.name.trim(),
+          price: parseFloat(ticketType.price)
+        });
+      }
+    } else {
+      // Create default ticket type using legacy ticket_price and ticket_naming
+      await TicketType.create({
+        event_id: event.id,
+        name: ticket_naming || 'Regular',
+        price: parseFloat(ticket_price)
+      });
     }
 
     res.status(201).json({
@@ -623,16 +684,17 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       const ticket = ticketsData[i];
       const {
         event_id,
+        ticket_type_id,
         name,
         email_address,
         contact_number,
         number_of_entries = 1
       } = ticket;
 
-      if (!event_id || !name || !email_address) {
+      if (!event_id || !ticket_type_id || !name || !email_address) {
         const errorMsg = ticketsData.length > 1 
-          ? `Ticket ${i + 1}: Event ID, name, and email are required` 
-          : 'Event ID, name, and email are required';
+          ? `Ticket ${i + 1}: Event ID, ticket type ID, name, and email are required` 
+          : 'Event ID, ticket type ID, name, and email are required';
         return res.status(400).json({ error: errorMsg });
       }
 
@@ -650,6 +712,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
     for (const ticketData of ticketsData) {
       const {
         event_id,
+        ticket_type_id,
         name,
         email_address,
         contact_number,
@@ -663,6 +726,14 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       } = ticketData;
 
       const eventIdNum = parseInt(event_id, 10);
+      const ticketTypeIdNum = parseInt(ticket_type_id, 10);
+
+      if (!ticket_type_id || isNaN(ticketTypeIdNum)) {
+        const errorMsg = ticketsData.length > 1 
+          ? `Ticket ${name}: Ticket type ID is required` 
+          : 'Ticket type ID is required';
+        return res.status(400).json({ error: errorMsg });
+      }
 
       // Get event details (validate each ticket against its event)
       const event = await Event.findOne({
@@ -677,6 +748,21 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         const errorMsg = ticketsData.length > 1 
           ? `Event not found for ticket: ${name}` 
           : 'Event not found';
+        return res.status(404).json({ error: errorMsg });
+      }
+
+      // Get and validate ticket type
+      const ticketType = await TicketType.findOne({
+        where: {
+          id: ticketTypeIdNum,
+          event_id: eventIdNum
+        }
+      });
+
+      if (!ticketType) {
+        const errorMsg = ticketsData.length > 1 
+          ? `Invalid ticket type for ticket: ${name}` 
+          : 'Invalid ticket type';
         return res.status(404).json({ error: errorMsg });
       }
 
@@ -702,8 +788,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       // Generate unique ticket code for this event
       const ticketCode = await generateUniqueTicketCode(eventIdNum);
 
-      // Use custom price if provided, otherwise use event's default price
-      const ticketPrice = price_per_ticket !== undefined ? price_per_ticket : event.ticket_price;
+      // Use custom price if provided, otherwise use ticket type's price
+      const ticketPrice = price_per_ticket !== undefined ? price_per_ticket : ticketType.price;
       
       // Calculate total amount and processing fee
       const totalAmount = ticketPrice * number_of_entries;
@@ -724,6 +810,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         // For paid tickets, create without payment link
         ticket = await Ticket.create({
           event_id: eventIdNum,
+          ticket_type_id: ticketTypeIdNum,
           name,
           email_address,
           contact_number,
@@ -754,6 +841,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
 
         ticket = await Ticket.create({
           event_id: eventIdNum,
+          ticket_type_id: ticketTypeIdNum,
           name,
           email_address,
           contact_number,
@@ -926,7 +1014,8 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
           as: 'event',
           where: { brand_id: req.user.brand_id }
         },
-        { model: EventReferrer, as: 'referrer' }
+        { model: EventReferrer, as: 'referrer' },
+        { model: TicketType, as: 'ticketType' }
       ],
       order,
       limit: perPageNum,
@@ -1582,6 +1671,11 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
           as: 'event',
           where: { brand_id: req.user.brand_id },
           include: [{ model: Brand, as: 'brand' }]
+        },
+        { 
+          model: TicketType, 
+          as: 'ticketType',
+          attributes: ['id', 'name', 'price']
         }
       ]
     });
@@ -1603,7 +1697,11 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
             email_address: ticket.email_address,
             name: ticket.name,
             ticket_code: ticket.ticket_code,
-            number_of_entries: ticket.number_of_entries
+            number_of_entries: ticket.number_of_entries,
+            ticket_type: (ticket as any).ticketType ? {
+              id: (ticket as any).ticketType.id,
+              name: (ticket as any).ticketType.name
+            } : undefined
           },
           {
             id: ticket.event.id,

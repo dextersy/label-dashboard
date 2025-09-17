@@ -53,6 +53,10 @@ export const sendTicketEmail = async (
     name: string;
     ticket_code: string;
     number_of_entries: number;
+    ticket_type?: {
+      id: number;
+      name: string;
+    };
   },
   event: {
     id: number;
@@ -113,7 +117,8 @@ export const sendTicketEmail = async (
       ticket_code: ticket.ticket_code,
       no_of_entries: ticket.number_of_entries,
       rsvp_link: event.rsvp_link || '',
-      brand_name: brand.brand_name || 'Melt Records'
+      brand_name: brand.brand_name || 'Melt Records',
+      ticket_type_name: ticket.ticket_type?.name || 'Regular'
     };
 
     // Add conditional sections

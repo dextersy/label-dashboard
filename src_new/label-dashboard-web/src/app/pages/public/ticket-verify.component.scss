@@ -141,6 +141,16 @@ input.error {
   text-transform: uppercase;
 }
 
+.entries-ticket-type {
+  font-size: 16px;
+  color: #007bff;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
 /* Improve contrast for blue background text */
 .bg-primary {
   background-color: #007bff !important;

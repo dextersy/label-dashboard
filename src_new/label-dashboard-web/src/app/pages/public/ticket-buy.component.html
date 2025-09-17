@@ -160,6 +160,25 @@
                 </div>
               </div>
 
+              <!-- Ticket Type Selection -->
+              <div class="ticket-type-container fadeIn fourth" *ngIf="event.ticketTypes && event.ticketTypes.length > 1">
+                <h6><strong>Select ticket type</strong></h6>
+                <div class="input-group">
+                  <div class="form-floating flex-fill">
+                    <select 
+                      class="form-control" 
+                      id="ticket_type_id"
+                      formControlName="ticket_type_id"
+                      (change)="onTicketTypeChange()">
+                      <option *ngFor="let ticketType of event.ticketTypes" [value]="ticketType.id">
+                        {{ ticketType.name }} - ₱{{ formatPrice(ticketType.price) }}
+                      </option>
+                    </select>
+                    <label for="ticket_type_id">Ticket type</label>
+                  </div>
+                </div>
+              </div>
+
               <!-- Number of Tickets -->
               <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
               <small class="fadeIn fourth" *ngIf="event.remaining_tickets">
@@ -168,7 +187,7 @@
               <div class="ticket-quantity-container fadeIn fourth">
                 <div class="input-group">
                   <span class="input-group-text">
-                    {{ event.ticket_naming || 'Regular' }} - <strong>₱{{ formatPrice(event.ticket_price) }}</strong>
+                    {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} - <strong>₱{{ formatPrice(selectedTicketType?.price || event.ticket_price) }}</strong>
                   </span>
                   <div class="form-floating flex-fill">
                     <input 

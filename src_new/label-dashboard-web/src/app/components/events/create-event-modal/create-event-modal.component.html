@@ -84,22 +84,63 @@
               </textarea>
             </div>
             
-            <!-- Ticket Price -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label required">Ticket Price (PHP)</label>
-              <div class="input-group">
-                <span class="input-group-text">₱</span>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  formControlName="ticket_price"
-                  min="0"
-                  step="1"
-                  placeholder="0"
-                  [class.is-invalid]="eventForm.get('ticket_price')?.invalid && eventForm.get('ticket_price')?.touched">
-              </div>
-              <div class="invalid-feedback" *ngIf="eventForm.get('ticket_price')?.invalid && eventForm.get('ticket_price')?.touched">
-                Ticket price is required and must be a positive number
+            <!-- Ticket Types -->
+            <div class="col-12 mb-3">
+              <label class="form-label required">Ticket Types</label>
+              <div class="card">
+                <div class="card-body">
+                  <div *ngFor="let ticketType of ticketTypes; let i = index" class="row align-items-center mb-2">
+                    <div class="col-md-5">
+                      <input 
+                        type="text" 
+                        class="form-control form-control-sm" 
+                        [(ngModel)]="ticketType.name"
+                        [ngModelOptions]="{standalone: true}"
+                        placeholder="Ticket name (e.g. Regular, VIP)"
+                        [class.is-invalid]="!isTicketTypeValid(ticketType)">
+                    </div>
+                    <div class="col-md-4">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">₱</span>
+                        <input 
+                          type="number" 
+                          class="form-control" 
+                          [(ngModel)]="ticketType.price"
+                          [ngModelOptions]="{standalone: true}"
+                          min="0"
+                          step="1"
+                          placeholder="0"
+                          [class.is-invalid]="!isTicketTypeValid(ticketType)">
+                      </div>
+                    </div>
+                    <div class="col-md-3 d-flex gap-1">
+                      <button 
+                        type="button" 
+                        class="btn btn-success btn-sm"
+                        (click)="addTicketType()"
+                        *ngIf="i === ticketTypes.length - 1">
+                        <i class="fas fa-plus"></i>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn btn-danger btn-sm"
+                        (click)="removeTicketType(i)"
+                        *ngIf="ticketTypes.length > 1">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="alert alert-warning" *ngIf="!areAllTicketTypesValid()">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Validation:</strong> All ticket types must have a name and a valid price (≥ 0).
+                  </div>
+                  
+                  <div class="alert alert-info" *ngIf="ticketTypes.length <= 1">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> Events must have at least one ticket type. Click the <i class="fas fa-plus"></i> button to add more ticket types.
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -191,7 +232,7 @@
             <button 
               type="button" 
               class="btn btn-secondary" 
-              [disabled]="eventForm.invalid || loading"
+              [disabled]="eventForm.invalid || !areAllTicketTypesValid() || loading"
               (click)="onSubmit('draft')">
               <i class="fa fa-spinner fa-spin me-1" *ngIf="loading && actionType === 'draft'"></i>
               <i class="fa fa-file-alt me-1" *ngIf="!loading || actionType !== 'draft'"></i>
@@ -200,7 +241,7 @@
             <button 
               type="button" 
               class="btn btn-success btn-lg" 
-              [disabled]="eventForm.invalid || loading"
+              [disabled]="eventForm.invalid || !areAllTicketTypesValid() || loading"
               (click)="onSubmit('published')">
               <i class="fa fa-spinner fa-spin me-1" *ngIf="loading && actionType === 'published'"></i>
               <i class="fa fa-rocket me-1" *ngIf="!loading || actionType !== 'published'"></i>

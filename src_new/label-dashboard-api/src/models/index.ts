@@ -9,6 +9,7 @@ import ReleaseArtist from './ReleaseArtist';
 import Event from './Event';
 import EventReferrer from './EventReferrer';
 import Ticket from './Ticket';
+import TicketType from './TicketType';
 import Payment from './Payment';
 import PaymentMethod from './PaymentMethod';
 import Earning from './Earning';
@@ -93,6 +94,7 @@ ReleaseArtist.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
 Event.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 Event.hasMany(Ticket, { foreignKey: 'event_id', as: 'tickets' });
 Event.hasMany(EventReferrer, { foreignKey: 'event_id', as: 'referrers' });
+Event.hasMany(TicketType, { foreignKey: 'event_id', as: 'ticketTypes' });
 
 // EventReferrer relationships
 EventReferrer.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
@@ -101,6 +103,11 @@ EventReferrer.hasMany(Ticket, { foreignKey: 'referrer_id', as: 'tickets' });
 // Ticket relationships
 Ticket.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 Ticket.belongsTo(EventReferrer, { foreignKey: 'referrer_id', as: 'referrer' });
+Ticket.belongsTo(TicketType, { foreignKey: 'ticket_type_id', as: 'ticketType' });
+
+// TicketType relationships
+TicketType.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+TicketType.hasMany(Ticket, { foreignKey: 'ticket_type_id', as: 'tickets' });
 
 // Payment relationships
 Payment.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
@@ -162,6 +169,7 @@ export {
   Event,
   EventReferrer,
   Ticket,
+  TicketType,
   Payment,
   PaymentMethod,
   Earning,
