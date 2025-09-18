@@ -122,9 +122,9 @@
                 <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label required">Number of Entries</label>
-                    <input 
-                      type="number" 
-                      class="form-control" 
+                    <input
+                      type="number"
+                      class="form-control"
                       [(ngModel)]="customTicketForm.number_of_entries"
                       name="number_of_entries"
                       placeholder="1"
@@ -132,6 +132,22 @@
                       required>
                   </div>
                 </div>
+              </div>
+
+              <!-- Ticket Type Selection -->
+              <div class="mb-3" *ngIf="ticketTypes.length > 0">
+                <label class="form-label required">Ticket Type</label>
+                <select
+                  class="form-select"
+                  [(ngModel)]="customTicketForm.ticket_type_id"
+                  name="ticket_type_id"
+                  (ngModelChange)="onTicketTypeChange()"
+                  required>
+                  <option [value]="null" disabled>Select ticket type</option>
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id">
+                    {{ ticketType.name }} - ₱{{ ticketType.price | number:'1.2-2' }}
+                  </option>
+                </select>
               </div>
 
               <div class="mb-3">
@@ -147,16 +163,29 @@
                     step="0.01"
                     min="0"
                     [disabled]="!priceOverrideEnabled">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     class="btn btn-outline-secondary"
                     (click)="enablePriceOverride()"
-                    *ngIf="!priceOverrideEnabled">
+                    *ngIf="!priceOverrideEnabled"
+                    title="Override price">
                     <i class="fas fa-pen"></i>
                   </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="disablePriceOverride()"
+                    *ngIf="priceOverrideEnabled"
+                    title="Use ticket type price">
+                    <i class="fas fa-undo"></i>
+                  </button>
                 </div>
-                <div class="form-text" *ngIf="!priceOverrideEnabled">
-                  Default price: ₱{{ selectedEvent?.ticket_price || 0 | number:'1.2-2' }}
+                <div class="form-text" *ngIf="!priceOverrideEnabled && customTicketForm.ticket_type_id">
+                  <ng-container *ngFor="let ticketType of ticketTypes">
+                    <span *ngIf="ticketType.id === customTicketForm.ticket_type_id">
+                      {{ ticketType.name }} price: ₱{{ ticketType.price | number:'1.2-2' }}
+                    </span>
+                  </ng-container>
                 </div>
               </div>
 
@@ -332,6 +361,7 @@
               <th>Email</th>
               <th>Contact</th>
               <th>Entries</th>
+              <th>Ticket Type</th>
               <th>Price</th>
               <th>Send Payment Link</th>
               <th>Mark Paid</th>
@@ -347,13 +377,25 @@
               <td></td>
               <td></td>
               <td>
-                <input type="number" 
-                       class="form-control form-control-md" 
-                       #applyAllEntriesInput 
+                <input type="number"
+                       class="form-control form-control-md"
+                       #applyAllEntriesInput
                        placeholder="1"
                        min="1"
                        (change)="applyAllEntries(applyAllEntriesInput.value); applyAllEntriesInput.value = ''">
               </td>
+              <td *ngIf="ticketTypes.length > 0">
+                <select class="form-select form-select-md"
+                        [(ngModel)]="selectedApplyAllTicketType"
+                        (ngModelChange)="onApplyAllTicketTypeChange()"
+                        name="applyAllTicketType">
+                  <option [value]="null">Select type</option>
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id">
+                    {{ ticketType.name }}
+                  </option>
+                </select>
+              </td>
+              <td *ngIf="ticketTypes.length === 0"></td>
               <td>
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>
@@ -432,13 +474,25 @@
                        required>
               </td>
               <td>
-                <input type="number" 
-                       class="form-control form-control-md" 
+                <input type="number"
+                       class="form-control form-control-md"
                        [(ngModel)]="ticket.number_of_entries"
                        placeholder="1"
                        min="1"
                        required>
               </td>
+              <td *ngIf="ticketTypes.length > 0">
+                <select class="form-select form-select-md"
+                        [(ngModel)]="ticket.ticket_type_id"
+                        (ngModelChange)="onBulkTicketTypeChange(i)"
+                        required>
+                  <option [value]="null" disabled>Select type</option>
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id">
+                    {{ ticketType.name }}
+                  </option>
+                </select>
+              </td>
+              <td *ngIf="ticketTypes.length === 0"></td>
               <td>
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>

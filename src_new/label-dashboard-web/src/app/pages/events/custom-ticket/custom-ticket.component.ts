@@ -14,6 +14,7 @@ export interface CustomTicketForm {
   email_address: string;
   contact_number: string;
   number_of_entries: number;
+  ticket_type_id: number;
   price_per_ticket: number;
   referral_code?: string;
   ticket_paid: boolean;
@@ -26,6 +27,7 @@ export interface BulkTicketRow {
   email_address: string;
   contact_number: string;
   number_of_entries: number;
+  ticket_type_id: number;
   price_per_ticket: number;
   referral_code?: string;
   ticket_paid: boolean;
@@ -43,6 +45,7 @@ export interface BulkTicketRow {
 })
 export class CustomTicketComponent implements OnInit, OnDestroy {
   selectedEvent: Event | null = null;
+  ticketTypes: any[] = [];
   isAdmin = false;
   loading = false;
   submitting = false;
@@ -54,6 +57,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     email_address: '',
     contact_number: '',
     number_of_entries: 1,
+    ticket_type_id: 0,
     price_per_ticket: 0,
     referral_code: '',
     ticket_paid: false,
@@ -65,6 +69,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
   priceOverrideEnabled = false;
   applyAllPaidState = false;
   applyAllSendEmailState = true;
+  selectedApplyAllTicketType: number | null = null;
   private subscriptions = new Subscription();
 
   constructor(
@@ -128,6 +133,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
           this.selectedEvent = event;
           // Don't call setSelectedEvent here to avoid infinite loop
           // Just update our local state
+          this.loadTicketTypes(eventId);
           this.initializeCustomTicketForm();
           // Update breadcrumbs after return route is determined
           setTimeout(() => this.updateBreadcrumbs(), 0);
@@ -143,13 +149,50 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     );
   }
 
+  private loadTicketTypes(eventId: number): void {
+    this.subscriptions.add(
+      this.eventService.getTicketTypes(eventId).subscribe({
+        next: (response) => {
+          this.ticketTypes = response.ticketTypes || [];
+          // Initialize with first ticket type if available
+          if (this.ticketTypes.length > 0) {
+            this.customTicketForm.ticket_type_id = this.ticketTypes[0].id;
+            this.updatePriceFromTicketType(this.ticketTypes[0].id);
+          }
+        },
+        error: (error) => {
+          console.error('Failed to load ticket types:', error);
+          this.ticketTypes = [];
+        }
+      })
+    );
+  }
+
   private initializeCustomTicketForm(): void {
     this.customTicketForm.price_per_ticket = this.selectedEvent?.ticket_price || 0;
+  }
+
+  updatePriceFromTicketType(ticketTypeId: number): void {
+    const selectedType = this.ticketTypes.find(type => type.id === ticketTypeId);
+    if (selectedType && !this.priceOverrideEnabled) {
+      this.customTicketForm.price_per_ticket = selectedType.price;
+    }
+  }
+
+  onTicketTypeChange(): void {
+    // Always update price when ticket type changes (unless override is enabled)
+    this.updatePriceFromTicketType(this.customTicketForm.ticket_type_id);
   }
 
 
   enablePriceOverride(): void {
     this.priceOverrideEnabled = true;
+  }
+
+  disablePriceOverride(): void {
+    this.priceOverrideEnabled = false;
+    // Update price to match selected ticket type
+    this.updatePriceFromTicketType(this.customTicketForm.ticket_type_id);
   }
 
   onToggleMarkAsPaid(): void {
@@ -178,6 +221,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
     const ticketData = {
       event_id: this.selectedEvent.id,
+      ticket_type_id: this.customTicketForm.ticket_type_id,
       name: this.customTicketForm.name,
       email_address: this.customTicketForm.email_address,
       contact_number: this.customTicketForm.contact_number,
@@ -234,6 +278,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
       email_address: '',
       contact_number: '',
       number_of_entries: 1,
+      ticket_type_id: this.ticketTypes.length > 0 ? this.ticketTypes[0].id : 0,
       price_per_ticket: this.selectedEvent?.ticket_price || 0,
       referral_code: '',
       ticket_paid: false,
@@ -241,6 +286,9 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
       send_email: true
     };
     this.priceOverrideEnabled = false;
+    if (this.ticketTypes.length > 0) {
+      this.updatePriceFromTicketType(this.ticketTypes[0].id);
+    }
   }
 
   onCancel(): void {
@@ -319,12 +367,18 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
         email_address: '',
         contact_number: '',
         number_of_entries: 1,
+        ticket_type_id: this.ticketTypes.length > 0 ? this.ticketTypes[0].id : 0,
         price_per_ticket: this.selectedEvent?.ticket_price || 0,
         referral_code: '',
         ticket_paid: false,
         payment_processing_fee: 0,
         send_email: true
       });
+
+      // Set price based on first ticket type if available
+      if (this.ticketTypes.length > 0) {
+        this.bulkTickets[this.bulkTickets.length - 1].price_per_ticket = this.ticketTypes[0].price;
+      }
     }
   }
 
@@ -392,6 +446,32 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     });
   }
 
+  onApplyAllTicketTypeChange(): void {
+    if (this.selectedApplyAllTicketType) {
+      this.applyAllTicketType(this.selectedApplyAllTicketType);
+      // Reset the dropdown to placeholder after applying
+      this.selectedApplyAllTicketType = null;
+    }
+  }
+
+  applyAllTicketType(ticketTypeId: number): void {
+    const selectedType = this.ticketTypes.find(type => type.id === ticketTypeId);
+    if (selectedType) {
+      this.bulkTickets.forEach(ticket => {
+        ticket.ticket_type_id = ticketTypeId;
+        ticket.price_per_ticket = selectedType.price;
+      });
+    }
+  }
+
+  onBulkTicketTypeChange(index: number): void {
+    const ticket = this.bulkTickets[index];
+    const selectedType = this.ticketTypes.find(type => type.id === ticket.ticket_type_id);
+    if (selectedType) {
+      ticket.price_per_ticket = selectedType.price;
+    }
+  }
+
   getBulkTotal(): number {
     return this.bulkTickets.reduce((total, ticket) => {
       return total + (ticket.price_per_ticket * ticket.number_of_entries);
@@ -421,6 +501,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
     const ticketsData = this.bulkTickets.map(ticket => ({
       event_id: this.selectedEvent!.id,
+      ticket_type_id: ticket.ticket_type_id,
       name: ticket.name,
       email_address: ticket.email_address,
       contact_number: ticket.contact_number,
