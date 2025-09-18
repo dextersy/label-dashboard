@@ -393,7 +393,8 @@ export const buyTicket = async (req: Request, res: Response) => {
 
     // Calculate total amount
     const totalAmount = ticketPrice * number_of_entries;
-    const description = `${event.title} - Ticket #${ticketCode}`;
+    const ticketTypeName = selectedTicketType?.name || event.ticket_naming || 'Regular';
+    const description = `${event.title} - ${number_of_entries} ${ticketTypeName} ${number_of_entries === 1 ? 'ticket' : 'tickets'}`;
 
     // Prepare payment methods based on event settings
     const paymentMethods: string[] = [];

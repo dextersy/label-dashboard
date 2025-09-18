@@ -828,7 +828,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         // Create PayMongo payment link for unpaid tickets
         paymentLink = await paymentService.createPaymentLink({
           amount: totalAmount * 100, // Convert to cents
-          description: `${event.title} - ${number_of_entries} ticket(s)`,
+          description: `${event.title} - ${number_of_entries} ${ticketType.name} ${number_of_entries === 1 ? 'ticket' : 'tickets'}`,
           remarks: `Ticket code: ${ticketCode}`
         });
 
