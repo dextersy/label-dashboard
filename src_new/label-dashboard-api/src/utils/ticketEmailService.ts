@@ -196,6 +196,10 @@ export const sendPaymentLinkEmail = async (
     number_of_entries: number;
     price_per_ticket: number;
     payment_processing_fee: number;
+    ticket_type?: {
+      id: number;
+      name: string;
+    };
   },
   event: {
     title: string;
@@ -210,6 +214,7 @@ export const sendPaymentLinkEmail = async (
 ): Promise<boolean> => {
   try {
     const totalAmount = ticket.price_per_ticket * ticket.number_of_entries;
+    const ticketTypeName = ticket.ticket_type?.name || 'Regular';
 
     await sendBrandedEmail(
       ticket.email_address,
@@ -218,6 +223,7 @@ export const sendPaymentLinkEmail = async (
         name: ticket.name,
         event_name: event.title,
         no_of_entries: ticket.number_of_entries,
+        ticket_type_name: ticketTypeName,
         payment_amount: (totalAmount + ticket.payment_processing_fee).toFixed(2),
         payment_link: paymentUrl,
         brand_name: brand.brand_name || 'Melt Records'

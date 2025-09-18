@@ -866,7 +866,11 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
               ticket_code: ticketCode,
               number_of_entries,
               price_per_ticket: ticketPrice,
-              payment_processing_fee: processingFee
+              payment_processing_fee: processingFee,
+              ticket_type: {
+                id: ticketType.id,
+                name: ticketType.name
+              }
             },
             {
               title: event.title,
