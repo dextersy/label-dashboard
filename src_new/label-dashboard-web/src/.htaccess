@@ -5,15 +5,15 @@ RewriteEngine On
 # Replace "your-api-server" with your actual API server URL
 
 # Detect social media crawlers for ticket purchase pages
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot) [NC]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
 RewriteRule ^public/tickets/buy/([0-9]+)$ https://api.melt-records.com:3001/api/public/seo/event-$1.html [R=302,L]
 
 # Detect social media crawlers for public events listing page
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot) [NC]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
 RewriteRule ^public/events$ https://api.melt-records.com:3001/api/public/seo/events-%{HTTP_HOST}.html [R=302,L]
 
 # Detect social media crawlers for artist EPK pages
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot) [NC]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
 RewriteRule ^public/epk/([0-9]+)$ https://api.melt-records.com:3001/api/public/seo/epk-$1.html [R=302,L]
 
 # Backward compatibility for old ticket URLs
