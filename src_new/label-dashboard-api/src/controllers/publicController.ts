@@ -854,7 +854,7 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
 
     // Check if this is a social media crawler
     const userAgent = req.get('User-Agent') || '';
-    const isSocialCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot/i.test(userAgent);
+    const isSocialCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree/i.test(userAgent);
 
     // For social media crawlers, serve SEO page with meta tags
     // For regular users and browsers, redirect immediately with HTTP 302
@@ -1324,7 +1324,7 @@ ${JSON.stringify(structuredData, null, 4)}
   <script>
     (function() {
       const userAgent = navigator.userAgent.toLowerCase();
-      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot/i.test(userAgent);
+      const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree/i.test(userAgent);
       
       if (!isCrawler) {
         window.location.replace('${frontendUrl}');
