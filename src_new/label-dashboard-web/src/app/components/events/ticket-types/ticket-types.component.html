@@ -1,8 +1,8 @@
 <div class="card">
   <div class="card-header">
-    <h5 class="mb-0">
+    <h6 class="mb-0">
       <i class="fas fa-ticket-alt me-2"></i>Ticket Types
-    </h5>
+    </h6>
   </div>
   <div class="card-body">
     <div *ngIf="loading" class="text-center">
@@ -13,25 +13,25 @@
     
     <div *ngIf="!loading">
       <!-- Existing Ticket Types -->
-      <div *ngFor="let ticketType of ticketTypes; let i = index" class="ticket-type-item mb-3">
+      <div *ngFor="let ticketType of ticketTypes; let i = index" class="ticket-type-item mb-2">
         <div class="row align-items-center">
           <div class="col-md-5">
-            <div class="mb-2">
+            <div class="mb-2 mb-md-0">
               <label class="form-label small">Name</label>
-              <input 
-                type="text" 
-                class="form-control" 
+              <input
+                type="text"
+                class="form-control form-control-sm"
                 [(ngModel)]="ticketType.name"
                 [disabled]="!isAdmin"
                 placeholder="Enter ticket type name">
             </div>
           </div>
           <div class="col-md-4">
-            <div class="mb-2">
+            <div class="mb-2 mb-md-0">
               <label class="form-label small">Price (₱)</label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                class="form-control form-control-sm"
                 [(ngModel)]="ticketType.price"
                 [disabled]="!isAdmin"
                 min="0"
@@ -40,26 +40,28 @@
             </div>
           </div>
           <div class="col-md-3">
-            <div class="d-flex">
-              <button 
-                *ngIf="isAdmin && ticketType.id" 
-                type="button" 
-                class="btn btn-link p-1 text-primary"
+            <div class="d-flex gap-2">
+              <button
+                *ngIf="isAdmin && ticketType.id"
+                type="button"
+                class="btn btn-link p-1 text-primary d-md-inline d-flex align-items-center"
                 [disabled]="updating"
                 (click)="updateTicketType(ticketType)"
                 title="Save changes"
                 style="text-decoration: none; font-size: 14px;">
                 <i class="fas fa-save"></i>
+                <span class="d-md-none ms-1">Save</span>
               </button>
-              <button 
+              <button
                 *ngIf="isAdmin && ticketTypes.length > 1"
-                type="button" 
-                class="btn btn-link p-1 text-danger"
+                type="button"
+                class="btn btn-link p-1 text-danger d-md-inline d-flex align-items-center"
                 [disabled]="deleting"
                 (click)="deleteTicketType(ticketType, i)"
                 title="Delete ticket type"
                 style="text-decoration: none; font-size: 14px;">
                 <i class="fas fa-trash"></i>
+                <span class="d-md-none ms-1">Delete</span>
               </button>
             </div>
           </div>
@@ -71,21 +73,21 @@
         <h6>Add New Ticket Type</h6>
         <div class="row align-items-end">
           <div class="col-md-5">
-            <div class="mb-2">
+            <div class="mb-2 mb-md-0">
               <label class="form-label small">Name</label>
-              <input 
-                type="text" 
-                class="form-control" 
+              <input
+                type="text"
+                class="form-control form-control-sm"
                 [(ngModel)]="newTicketType.name"
                 placeholder="Enter ticket type name">
             </div>
           </div>
           <div class="col-md-4">
-            <div class="mb-2">
+            <div class="mb-2 mb-md-0">
               <label class="form-label small">Price (₱)</label>
-              <input 
-                type="number" 
-                class="form-control" 
+              <input
+                type="number"
+                class="form-control form-control-sm"
                 [(ngModel)]="newTicketType.price"
                 min="0"
                 step="0.01"
