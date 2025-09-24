@@ -221,6 +221,32 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return true;
   }
 
+  getRemainingTicketsDisplay(): number | null {
+    if (!this.event) return null;
+
+    const eventRemaining = this.event.remaining_tickets;
+    const ticketTypeRemaining = this.selectedTicketType?.remaining_tickets;
+
+    // If neither has a limit, don't display anything
+    if ((eventRemaining === null || eventRemaining === undefined) &&
+        (ticketTypeRemaining === null || ticketTypeRemaining === undefined)) {
+      return null;
+    }
+
+    // If only event has a limit
+    if (ticketTypeRemaining === null || ticketTypeRemaining === undefined) {
+      return eventRemaining || null;
+    }
+
+    // If only ticket type has a limit
+    if (eventRemaining === null || eventRemaining === undefined) {
+      return ticketTypeRemaining;
+    }
+
+    // Both have limits - return the smaller (more restrictive) value
+    return Math.min(eventRemaining, ticketTypeRemaining);
+  }
+
   isFieldInvalid(fieldName: string): boolean {
     const field = this.ticketForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
@@ -299,6 +325,14 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
       if (selectedTicketType && selectedTicketType.is_sold_out) {
         alert('The selected ticket type is sold out. Please choose a different ticket type.');
+        return;
+      }
+
+      // Check if requested tickets exceed available limit
+      const requestedTickets = this.ticketForm.value.number_of_entries;
+      const availableTickets = this.getRemainingTicketsDisplay();
+      if (availableTickets !== null && requestedTickets > availableTickets) {
+        alert(`Only ${availableTickets} tickets are available. Please reduce the number of tickets.`);
         return;
       }
 

@@ -186,8 +186,8 @@
 
               <!-- Number of Tickets -->
               <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
-              <small class="fadeIn fourth" *ngIf="event.remaining_tickets">
-                <strong>{{ event.remaining_tickets }}</strong> tickets available.
+              <small class="fadeIn fourth" *ngIf="getRemainingTicketsDisplay()">
+                <strong>{{ getRemainingTicketsDisplay() }}</strong> tickets available.
               </small>
               <div class="ticket-quantity-container fadeIn fourth">
                 <div class="input-group">
@@ -198,7 +198,7 @@
                     <input 
                       type="number" 
                       min="1" 
-                      [max]="event.remaining_tickets || 99" 
+                      [max]="getRemainingTicketsDisplay() || 99" 
                       step="1" 
                       class="form-control" 
                       id="number_of_entries"
