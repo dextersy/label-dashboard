@@ -93,15 +93,21 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     // Load both brand and event information simultaneously
     forkJoin({
       brand: this.brandService.loadBrandByDomain(),
-      event: this.publicService.getEvent(parseInt(eventId, 10))
+      event: this.publicService.getEvent(parseInt(eventId, 10)),
+      availableTicketTypes: this.publicService.getAvailableTicketTypes(parseInt(eventId, 10))
     }).pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ brand, event }) => {
+        next: ({ brand, event, availableTicketTypes }) => {
           this.currentBrand = brand;
           
           if (event.event) {
             this.event = event.event;
-            
+
+            // Replace event ticket types with filtered available ones
+            if (availableTicketTypes && availableTicketTypes.ticketTypes) {
+              this.event.ticketTypes = availableTicketTypes.ticketTypes;
+            }
+
             // Additional frontend validation: check if event belongs to current brand
             if (this.event.brand?.id && this.currentBrand?.id && 
                 this.event.brand.id !== this.currentBrand.id) {
@@ -147,10 +153,19 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   initializeTicketType() {
     if (!this.event) return;
     
-    // If event has ticket types, use the first one as default
+    // If event has ticket types, find the first available (not sold out) one
     if (this.event.ticketTypes && this.event.ticketTypes.length > 0) {
-      this.selectedTicketType = this.event.ticketTypes[0];
-      this.ticketForm.patchValue({ ticket_type_id: this.selectedTicketType.id });
+      // Find first available ticket type (not sold out)
+      const availableTicketType = this.event.ticketTypes.find(tt => !tt.is_sold_out);
+
+      if (availableTicketType) {
+        this.selectedTicketType = availableTicketType;
+        this.ticketForm.patchValue({ ticket_type_id: this.selectedTicketType.id });
+      } else {
+        // All ticket types are sold out, use first one but don't auto-select it
+        this.selectedTicketType = this.event.ticketTypes[0];
+        // Don't set the form value so no ticket type is pre-selected
+      }
     } else {
       // Fall back to legacy fields
       this.selectedTicketType = {
@@ -181,6 +196,29 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   get isEventLoaded(): boolean {
     return this.event !== null;
+  }
+
+  canBuyTickets(): boolean {
+    if (!this.event) return false;
+
+    // Event is explicitly closed
+    if (this.event.is_closed) return false;
+
+    // Check remaining tickets (when max_tickets is set)
+    const remainingTickets = this.event.remaining_tickets;
+    if (remainingTickets !== null && remainingTickets !== undefined && remainingTickets <= 0) {
+      return false;
+    }
+
+    // Check if all ticket types are sold out or unavailable
+    if (this.event.ticketTypes && this.event.ticketTypes.length > 0) {
+      const hasAvailableTicketType = this.event.ticketTypes.some(tt =>
+        tt.is_available && !tt.is_sold_out
+      );
+      if (!hasAvailableTicketType) return false;
+    }
+
+    return true;
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -255,6 +293,15 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   onSubmit() {
     if (this.ticketForm.valid && this.event) {
+      // Check if selected ticket type is sold out
+      const selectedTicketTypeId = this.ticketForm.value.ticket_type_id;
+      const selectedTicketType = this.event.ticketTypes?.find(tt => tt.id == selectedTicketTypeId);
+
+      if (selectedTicketType && selectedTicketType.is_sold_out) {
+        alert('The selected ticket type is sold out. Please choose a different ticket type.');
+        return;
+      }
+
       this.isSubmitting = true;
       
       const purchaseRequest: TicketPurchaseRequest = {

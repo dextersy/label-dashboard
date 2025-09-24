@@ -8,6 +8,10 @@ export interface TicketType {
   event_id: number;
   name: string;
   price: number;
+  max_tickets: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  showDateRange?: boolean; // UI state
 }
 
 @Component({
@@ -24,7 +28,14 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   @Output() ticketTypesChanged = new EventEmitter<boolean>();
 
   ticketTypes: TicketType[] = [];
-  newTicketType: { name: string; price: number } = { name: '', price: 0 };
+  newTicketType: { name: string; price: number; max_tickets: number; start_date?: string | null; end_date?: string | null; showDateRange?: boolean } = {
+    name: '',
+    price: 0,
+    max_tickets: 0,
+    start_date: null,
+    end_date: null,
+    showDateRange: false
+  };
   loading = false;
   creating = false;
   updating = false;
@@ -51,7 +62,10 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     this.loading = true;
     this.eventService.getTicketTypes(this.selectedEvent.id).subscribe({
       next: (response) => {
-        this.ticketTypes = response.ticketTypes || [];
+        this.ticketTypes = (response.ticketTypes || []).map(tt => ({
+          ...tt,
+          showDateRange: false // Always start collapsed
+        }));
         this.loading = false;
       },
       error: (error) => {
@@ -73,16 +87,32 @@ export class TicketTypesComponent implements OnInit, OnChanges {
 
     this.creating = true;
     
-    const ticketTypeData = {
+    const ticketTypeData: any = {
       event_id: this.selectedEvent.id,
       name: this.newTicketType.name.trim(),
-      price: Number(this.newTicketType.price)
+      price: Number(this.newTicketType.price),
+      max_tickets: Number(this.newTicketType.max_tickets)
     };
+
+    // Only include dates if they're set
+    if (this.newTicketType.start_date) {
+      ticketTypeData.start_date = this.newTicketType.start_date;
+    }
+    if (this.newTicketType.end_date) {
+      ticketTypeData.end_date = this.newTicketType.end_date;
+    }
 
     this.eventService.createTicketType(ticketTypeData).subscribe({
       next: (response) => {
         this.ticketTypes.push(response.ticketType);
-        this.newTicketType = { name: '', price: 0 };
+        this.newTicketType = {
+          name: '',
+          price: 0,
+          max_tickets: 0,
+          start_date: null,
+          end_date: null,
+          showDateRange: false
+        };
         this.alertMessage.emit({
           type: 'success',
           text: 'Ticket type created successfully!'
@@ -108,10 +138,15 @@ export class TicketTypesComponent implements OnInit, OnChanges {
 
     this.updating = true;
 
-    const updateData = {
+    const updateData: any = {
       name: ticketType.name.trim(),
-      price: Number(ticketType.price)
+      price: Number(ticketType.price),
+      max_tickets: Number(ticketType.max_tickets)
     };
+
+    // Include dates in update
+    updateData.start_date = ticketType.start_date || null;
+    updateData.end_date = ticketType.end_date || null;
 
     this.eventService.updateTicketType(ticketType.id, updateData).subscribe({
       next: (response) => {
@@ -176,5 +211,106 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   // Public method to get current ticket types (for parent components if needed)
   getTicketTypes(): TicketType[] {
     return [...this.ticketTypes];
+  }
+
+  // Toggle date range visibility for a ticket type
+  toggleDateRange(ticketType: TicketType): void {
+    ticketType.showDateRange = !ticketType.showDateRange;
+
+    // Format dates for datetime-local input when expanding
+    if (ticketType.showDateRange) {
+      // Convert ISO dates to datetime-local format (YYYY-MM-DDTHH:mm)
+      if (ticketType.start_date) {
+        ticketType.start_date = this.formatDateForInput(ticketType.start_date);
+      }
+      if (ticketType.end_date) {
+        ticketType.end_date = this.formatDateForInput(ticketType.end_date);
+      }
+    }
+  }
+
+  // Toggle date range visibility for new ticket type
+  toggleNewTicketDateRange(): void {
+    this.newTicketType.showDateRange = !this.newTicketType.showDateRange;
+
+    // Clear dates when hiding
+    if (!this.newTicketType.showDateRange) {
+      this.newTicketType.start_date = null;
+      this.newTicketType.end_date = null;
+    }
+  }
+
+  // Get the display text for schedule availability link
+  getScheduleAvailabilityText(ticketType: TicketType): string {
+    return 'Schedule';
+  }
+
+  // Get the display text for new ticket schedule availability link
+  getNewTicketScheduleText(): string {
+    return 'Schedule';
+  }
+
+  // Format date range caption
+  getDateRangeCaption(ticketType: TicketType): string {
+    if (!ticketType.start_date && !ticketType.end_date) {
+      return '';
+    }
+
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString();
+    };
+
+    if (ticketType.start_date && ticketType.end_date) {
+      return `Available ${formatDate(ticketType.start_date)} - ${formatDate(ticketType.end_date)}`;
+    } else if (ticketType.start_date) {
+      return `Available from ${formatDate(ticketType.start_date)}`;
+    } else if (ticketType.end_date) {
+      return `Available until ${formatDate(ticketType.end_date)}`;
+    }
+
+    return '';
+  }
+
+  // Clear start date for a ticket type
+  clearStartDate(ticketType: TicketType): void {
+    ticketType.start_date = null;
+  }
+
+  // Clear end date for a ticket type
+  clearEndDate(ticketType: TicketType): void {
+    ticketType.end_date = null;
+  }
+
+  // Clear start date for new ticket type
+  clearNewTicketStartDate(): void {
+    this.newTicketType.start_date = null;
+  }
+
+  // Clear end date for new ticket type
+  clearNewTicketEndDate(): void {
+    this.newTicketType.end_date = null;
+  }
+
+  // Format date for datetime-local input (expects YYYY-MM-DDTHH:mm format)
+  private formatDateForInput(dateValue: string | null): string | null {
+    if (!dateValue) return null;
+
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return null;
+
+      // Format to YYYY-MM-DDTHH:mm (required for datetime-local)
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.warn('Error formatting date for input:', dateValue, error);
+      return null;
+    }
   }
 }

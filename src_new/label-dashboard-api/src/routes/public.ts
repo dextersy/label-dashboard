@@ -13,7 +13,8 @@ import {
   getAllEventsForDomain,
   generateEventsListSEOPage,
   getArtistEPK,
-  generateArtistEPKSEOPage
+  generateArtistEPKSEOPage,
+  getAvailableTicketTypesPublic
 } from '../controllers/publicController';
 
 const router = Router();
@@ -23,6 +24,7 @@ router.get('/brand/domain/:domain', getBrandByDomain);
 router.get('/events/domain/:domain', getAllEventsForDomain);
 router.get('/events/:id', getEventForPublic);
 router.get('/events/:id/info', getPublicEventInfo);
+router.get('/events/ticket-types/available', getAvailableTicketTypesPublic);
 router.get('/epk/:artist_id', getArtistEPK);
 
 // On-demand SEO page generation for social media crawlers

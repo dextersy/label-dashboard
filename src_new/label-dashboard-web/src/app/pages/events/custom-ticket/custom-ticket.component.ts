@@ -151,13 +151,16 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
   private loadTicketTypes(eventId: number): void {
     this.subscriptions.add(
-      this.eventService.getTicketTypes(eventId).subscribe({
+      this.eventService.getAvailableTicketTypes(eventId, true).subscribe({
         next: (response) => {
           this.ticketTypes = response.ticketTypes || [];
-          // Initialize with first ticket type if available
+          // Initialize with first available (not sold out) ticket type
           if (this.ticketTypes.length > 0) {
-            this.customTicketForm.ticket_type_id = this.ticketTypes[0].id;
-            this.updatePriceFromTicketType(this.ticketTypes[0].id);
+            const availableTicketType = this.ticketTypes.find(tt => !tt.is_sold_out);
+            const selectedTicketType = availableTicketType || this.ticketTypes[0];
+
+            this.customTicketForm.ticket_type_id = selectedTicketType.id;
+            this.updatePriceFromTicketType(selectedTicketType.id);
           }
         },
         error: (error) => {
@@ -217,6 +220,13 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Check if selected ticket type is sold out
+    const selectedTicketType = this.ticketTypes.find(tt => tt.id === this.customTicketForm.ticket_type_id);
+    if (selectedTicketType && selectedTicketType.is_sold_out) {
+      this.notificationService.showError('Cannot create custom tickets for sold out ticket types.');
+      return;
+    }
+
     this.submitting = true;
 
     const ticketData = {
@@ -273,12 +283,16 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
   }
 
   resetCustomTicketForm(): void {
+    // Find first available (not sold out) ticket type
+    const availableTicketType = this.ticketTypes.find(tt => !tt.is_sold_out);
+    const defaultTicketType = availableTicketType || (this.ticketTypes.length > 0 ? this.ticketTypes[0] : null);
+
     this.customTicketForm = {
       name: '',
       email_address: '',
       contact_number: '',
       number_of_entries: 1,
-      ticket_type_id: this.ticketTypes.length > 0 ? this.ticketTypes[0].id : 0,
+      ticket_type_id: defaultTicketType ? defaultTicketType.id : 0,
       price_per_ticket: this.selectedEvent?.ticket_price || 0,
       referral_code: '',
       ticket_paid: false,
@@ -286,8 +300,8 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
       send_email: true
     };
     this.priceOverrideEnabled = false;
-    if (this.ticketTypes.length > 0) {
-      this.updatePriceFromTicketType(this.ticketTypes[0].id);
+    if (defaultTicketType) {
+      this.updatePriceFromTicketType(defaultTicketType.id);
     }
   }
 
@@ -361,13 +375,17 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
   // Bulk ticket methods
   addBulkRows(count: number): void {
+    // Find first available (not sold out) ticket type
+    const availableTicketType = this.ticketTypes.find(tt => !tt.is_sold_out);
+    const defaultTicketType = availableTicketType || (this.ticketTypes.length > 0 ? this.ticketTypes[0] : null);
+
     for (let i = 0; i < count; i++) {
       this.bulkTickets.push({
         name: '',
         email_address: '',
         contact_number: '',
         number_of_entries: 1,
-        ticket_type_id: this.ticketTypes.length > 0 ? this.ticketTypes[0].id : 0,
+        ticket_type_id: defaultTicketType ? defaultTicketType.id : 0,
         price_per_ticket: this.selectedEvent?.ticket_price || 0,
         referral_code: '',
         ticket_paid: false,
@@ -375,9 +393,9 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
         send_email: true
       });
 
-      // Set price based on first ticket type if available
-      if (this.ticketTypes.length > 0) {
-        this.bulkTickets[this.bulkTickets.length - 1].price_per_ticket = this.ticketTypes[0].price;
+      // Set price based on selected ticket type if available
+      if (defaultTicketType) {
+        this.bulkTickets[this.bulkTickets.length - 1].price_per_ticket = defaultTicketType.price;
       }
     }
   }
@@ -486,14 +504,25 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
   onSubmitBulkTickets(): void {
     if (!this.selectedEvent) return;
-    
+
     // Validate all tickets
-    const invalidTickets = this.bulkTickets.filter(ticket => 
+    const invalidTickets = this.bulkTickets.filter(ticket =>
       !ticket.name || !ticket.email_address || !ticket.contact_number || ticket.number_of_entries <= 0
     );
-    
+
     if (invalidTickets.length > 0) {
       this.notificationService.showError(`Please fill in all required fields for all tickets.`);
+      return;
+    }
+
+    // Check for sold out ticket types
+    const soldOutTickets = this.bulkTickets.filter(ticket => {
+      const ticketType = this.ticketTypes.find(tt => tt.id === ticket.ticket_type_id);
+      return ticketType && ticketType.is_sold_out;
+    });
+
+    if (soldOutTickets.length > 0) {
+      this.notificationService.showError(`Cannot create tickets for sold out ticket types. Please update the ticket types for affected rows.`);
       return;
     }
 

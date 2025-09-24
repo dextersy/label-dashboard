@@ -170,6 +170,64 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   }
 };
 
+// Get available ticket types for public purchase (respects availability rules)
+export const getAvailableTicketTypesPublic = async (req: Request, res: Response) => {
+  try {
+    const { event_id } = req.query;
+
+    if (!event_id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const eventIdNum = parseInt(event_id as string, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Get all ticket types for the event
+    const ticketTypes = await TicketType.findAll({
+      where: { event_id: eventIdNum },
+      include: [{
+        model: Ticket,
+        as: 'tickets',
+        required: false,
+        attributes: ['id']
+      }],
+      order: [['id', 'ASC']]
+    });
+
+    const availableTicketTypes = [];
+
+    for (const ticketType of ticketTypes) {
+      const isAvailable = ticketType.isAvailable();
+      const isSoldOut = await ticketType.isSoldOut();
+      const remainingTickets = await ticketType.getRemainingTickets();
+
+      // For public buy page, include all tickets but mark availability status
+      // Hide only those outside date range, but show sold out ones as grayed out
+      if (!isAvailable) {
+        continue; // Only hide if outside date range
+      }
+
+      // Get the actual sold count using the same logic as isSoldOut()
+      const soldCount = await ticketType.getSoldCount();
+
+      availableTicketTypes.push({
+        ...ticketType.toJSON(),
+        is_available: isAvailable,
+        is_sold_out: isSoldOut,
+        remaining_tickets: remainingTickets,
+        sold_count: soldCount
+      });
+    }
+    res.json({ ticketTypes: availableTicketTypes });
+  } catch (error) {
+    console.error('Get available ticket types error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getTicketFromCode = async (req: Request, res: Response) => {
   try {
     const { event_id, verification_pin, ticket_code } = req.body;

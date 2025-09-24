@@ -144,8 +144,12 @@
                   (ngModelChange)="onTicketTypeChange()"
                   required>
                   <option [value]="null" disabled>Select ticket type</option>
-                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id">
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id"
+                          [disabled]="ticketType.is_sold_out"
+                          [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                          [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
                     {{ ticketType.name }} - ₱{{ ticketType.price | number:'1.2-2' }}
+                    <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
                   </option>
                 </select>
               </div>
@@ -390,8 +394,11 @@
                         (ngModelChange)="onApplyAllTicketTypeChange()"
                         name="applyAllTicketType">
                   <option [value]="null">Select type</option>
-                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id">
-                    {{ ticketType.name }}
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id"
+                          [disabled]="ticketType.is_sold_out"
+                          [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                          [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                    {{ ticketType.name }}<span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
                   </option>
                 </select>
               </td>
@@ -487,8 +494,11 @@
                         (ngModelChange)="onBulkTicketTypeChange(i)"
                         required>
                   <option [value]="null" disabled>Select type</option>
-                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id">
-                    {{ ticketType.name }}
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id"
+                          [disabled]="ticketType.is_sold_out"
+                          [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                          [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                    {{ ticketType.name }}<span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
                   </option>
                 </select>
               </td>

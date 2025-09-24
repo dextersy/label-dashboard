@@ -750,6 +750,29 @@ export class EventService {
   }
 
   /**
+   * Get available ticket types for an event (respects availability rules)
+   * @param eventId Event ID
+   * @param includeCustom If true, includes ticket types for custom ticket creation (bypasses date restrictions but respects sold out status)
+   */
+  getAvailableTicketTypes(eventId: number, includeCustom: boolean = false): Observable<{ ticketTypes: any[] }> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+
+    const params: any = { event_id: eventId.toString() };
+    if (includeCustom) {
+      params.include_custom = 'true';
+    }
+
+    return this.http.get<{ ticketTypes: any[] }>(`${environment.apiUrl}/events/ticket-types/available`, {
+      headers: this.getAuthHeaders(),
+      params: params
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Create a new ticket type for an event
    */
   createTicketType(ticketTypeData: { event_id: number; name: string; price: number }): Observable<{ ticketType: any }> {

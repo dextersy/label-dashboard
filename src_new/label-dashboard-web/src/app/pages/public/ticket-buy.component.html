@@ -39,7 +39,7 @@
             <img [src]="event.poster_url" class="event-poster" alt="Event poster">
           </div>
           <div [class]="event.poster_url ? 'col-md-8' : 'col-md-12 text-center'" style="padding:20px;">
-            <div *ngIf="!event.is_closed && (!event.remaining_tickets || (event.remaining_tickets != null && event.remaining_tickets > 0))">
+            <div *ngIf="canBuyTickets()">
               <h5 class="mb-0">Get tickets to</h5>
               <h1 style="margin-top: 0 !important;"><strong>{{ event.title }}</strong></h1>
               
@@ -60,7 +60,7 @@
               
               <small [innerHTML]="event.description" style="font-size: 0.8rem;" class="description-text"></small>
             </div>
-            <div *ngIf="event.is_closed || (event.remaining_tickets != null && event.remaining_tickets <= 0)">
+            <div *ngIf="!canBuyTickets()">
               <h1 style="font-size:2.5rem;font-weight:bold;">Sorry, we're closed...</h1>
               <h1 style="font-size:1.5rem;font-style:italic;">— but the door's still open!</h1>
               <h3>&nbsp;</h3>
@@ -76,7 +76,7 @@
     </div>
 
     <!-- Body Section -->
-    <div class="body-section" *ngIf="!event.is_closed && (!event.remaining_tickets || (event.remaining_tickets != null && event.remaining_tickets > 0))">
+    <div class="body-section" *ngIf="canBuyTickets()">
       <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
         <div class="container">
           <div class="row h-50">
@@ -170,8 +170,13 @@
                       id="ticket_type_id"
                       formControlName="ticket_type_id"
                       (change)="onTicketTypeChange()">
-                      <option *ngFor="let ticketType of event.ticketTypes" [value]="ticketType.id">
+                      <option *ngFor="let ticketType of event.ticketTypes"
+                              [value]="ticketType.id"
+                              [disabled]="ticketType.is_sold_out"
+                              [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                              [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
                         {{ ticketType.name }} - ₱{{ formatPrice(ticketType.price) }}
+                        <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
                       </option>
                     </select>
                     <label for="ticket_type_id">Ticket type</label>

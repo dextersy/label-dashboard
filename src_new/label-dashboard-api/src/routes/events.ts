@@ -31,7 +31,8 @@ import {
   getTicketTypes,
   createTicketType,
   updateTicketType,
-  deleteTicketType
+  deleteTicketType,
+  getAvailableTicketTypes
 } from '../controllers/ticketTypeController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -64,6 +65,7 @@ router.delete('/referrers/:id', requireAdmin, deleteEventReferrer);
 
 // Ticket type operations (specific routes before /:id)
 router.get('/ticket-types', getTicketTypes);
+router.get('/ticket-types/available', getAvailableTicketTypes);
 router.post('/ticket-types', requireAdmin, createTicketType);
 router.put('/ticket-types/:id', requireAdmin, updateTicketType);
 router.delete('/ticket-types/:id', requireAdmin, deleteTicketType);

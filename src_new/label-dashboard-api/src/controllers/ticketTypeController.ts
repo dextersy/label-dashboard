@@ -49,7 +49,7 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { event_id, name, price } = req.body;
+    const { event_id, name, price, max_tickets = 0, start_date, end_date } = req.body;
 
     if (!event_id || !name || price === undefined) {
       return res.status(400).json({ 
@@ -66,6 +66,33 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum < 0) {
       return res.status(400).json({ error: 'Invalid price' });
+    }
+
+    const maxTicketsNum = parseInt(max_tickets, 10);
+    if (isNaN(maxTicketsNum) || maxTicketsNum < 0) {
+      return res.status(400).json({ error: 'Invalid max tickets value' });
+    }
+
+    // Validate dates if provided
+    let startDate = null;
+    let endDate = null;
+
+    if (start_date) {
+      startDate = new Date(start_date);
+      if (isNaN(startDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid start date' });
+      }
+    }
+
+    if (end_date) {
+      endDate = new Date(end_date);
+      if (isNaN(endDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid end date' });
+      }
+    }
+
+    if (startDate && endDate && endDate <= startDate) {
+      return res.status(400).json({ error: 'End date must be after start date' });
     }
 
     // Verify user has access to this event
@@ -97,7 +124,10 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
     const ticketType = await TicketType.create({
       event_id: eventIdNum,
       name: name.trim(),
-      price: priceNum
+      price: priceNum,
+      max_tickets: maxTicketsNum,
+      start_date: startDate,
+      end_date: endDate
     });
 
     res.status(201).json({
@@ -117,7 +147,7 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const { name, price } = req.body;
+    const { name, price, max_tickets, start_date, end_date } = req.body;
 
     const ticketTypeId = parseInt(id, 10);
 
@@ -126,14 +156,57 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     }
 
     if (!name || price === undefined) {
-      return res.status(400).json({ 
-        error: 'Name and price are required' 
+      return res.status(400).json({
+        error: 'Name and price are required'
       });
     }
 
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum < 0) {
       return res.status(400).json({ error: 'Invalid price' });
+    }
+
+    // Handle optional availability fields
+    let maxTicketsNum = undefined;
+    if (max_tickets !== undefined) {
+      maxTicketsNum = parseInt(max_tickets, 10);
+      if (isNaN(maxTicketsNum) || maxTicketsNum < 0) {
+        return res.status(400).json({ error: 'Invalid max tickets value' });
+      }
+    }
+
+    // Validate dates if provided
+    let startDate = undefined;
+    let endDate = undefined;
+
+    if (start_date !== undefined) {
+      if (start_date === null) {
+        startDate = null;
+      } else {
+        startDate = new Date(start_date);
+        if (isNaN(startDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid start date' });
+        }
+      }
+    }
+
+    if (end_date !== undefined) {
+      if (end_date === null) {
+        endDate = null;
+      } else {
+        endDate = new Date(end_date);
+        if (isNaN(endDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid end date' });
+        }
+      }
+    }
+
+    // Check date relationship if both are being set
+    const finalStartDate = startDate !== undefined ? startDate : null;
+    const finalEndDate = endDate !== undefined ? endDate : null;
+
+    if (finalStartDate && finalEndDate && finalEndDate <= finalStartDate) {
+      return res.status(400).json({ error: 'End date must be after start date' });
     }
 
     // Find ticket type and verify access through event
@@ -165,10 +238,25 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    await ticketType.update({
+    // Build update object with only provided fields
+    const updateData: any = {
       name: name.trim(),
       price: priceNum
-    });
+    };
+
+    if (maxTicketsNum !== undefined) {
+      updateData.max_tickets = maxTicketsNum;
+    }
+
+    if (startDate !== undefined) {
+      updateData.start_date = startDate;
+    }
+
+    if (endDate !== undefined) {
+      updateData.end_date = endDate;
+    }
+
+    await ticketType.update(updateData);
 
     res.json({
       message: 'Ticket type updated successfully',
@@ -176,6 +264,76 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Update ticket type error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) => {
+  try {
+    const { event_id, include_custom = false } = req.query;
+
+    if (!event_id) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const eventIdNum = parseInt(event_id as string, 10);
+
+    if (isNaN(eventIdNum) || eventIdNum <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    // Get all ticket types for the event
+    const ticketTypes = await TicketType.findAll({
+      where: { event_id: eventIdNum },
+      include: [{
+        model: require('../models').Ticket,
+        as: 'tickets',
+        required: false,
+        attributes: ['id']
+      }],
+      order: [['id', 'ASC']]
+    });
+
+    const includeCustom = include_custom === 'true';
+    const availableTicketTypes = [];
+
+    for (const ticketType of ticketTypes) {
+      const isAvailable = ticketType.isAvailable();
+      const isSoldOut = await ticketType.isSoldOut();
+      const remainingTickets = await ticketType.getRemainingTickets();
+
+      // Get the actual sold count using the same logic as isSoldOut()
+      const soldCount = await ticketType.getSoldCount();
+
+      if (includeCustom) {
+        // For custom tickets: include all ticket types regardless of date restrictions
+        // but still provide availability info for display
+        availableTicketTypes.push({
+          ...ticketType.toJSON(),
+          is_available: isAvailable,
+          is_sold_out: isSoldOut,
+          remaining_tickets: remainingTickets,
+          sold_count: soldCount
+        });
+      } else {
+        // For public buy page, only include available and not sold out tickets
+        if (!isAvailable || isSoldOut) {
+          continue;
+        }
+
+        availableTicketTypes.push({
+          ...ticketType.toJSON(),
+          is_available: isAvailable,
+          is_sold_out: isSoldOut,
+          remaining_tickets: remainingTickets,
+          sold_count: soldCount
+        });
+      }
+    }
+
+    res.json({ ticketTypes: availableTicketTypes });
+  } catch (error) {
+    console.error('Get available ticket types error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

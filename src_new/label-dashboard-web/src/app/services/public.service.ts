@@ -42,6 +42,13 @@ export interface PublicEvent {
     id: number;
     name: string;
     price: number;
+    max_tickets?: number;
+    start_date?: string | null;
+    end_date?: string | null;
+    is_available?: boolean;
+    is_sold_out?: boolean;
+    remaining_tickets?: number | null;
+    sold_count?: number;
   }>;
 }
 
@@ -343,5 +350,34 @@ export class PublicService {
    */
   getArtistEPK(artistId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/public/epk/${artistId}`);
+  }
+
+  /**
+   * Get available ticket types for public purchase (excludes sold out and unavailable based on date range)
+   */
+  getAvailableTicketTypes(eventId: number): Observable<{ ticketTypes: Array<{
+    id: number;
+    name: string;
+    price: number;
+    max_tickets: number;
+    start_date?: string | null;
+    end_date?: string | null;
+    is_available: boolean;
+    is_sold_out: boolean;
+    remaining_tickets?: number | null;
+    sold_count: number;
+  }> }> {
+    return this.http.get<{ ticketTypes: Array<{
+      id: number;
+      name: string;
+      price: number;
+      max_tickets: number;
+      start_date?: string | null;
+      end_date?: string | null;
+      is_available: boolean;
+      is_sold_out: boolean;
+      remaining_tickets?: number | null;
+      sold_count: number;
+    }> }>(`${this.apiUrl}/public/events/ticket-types/available?event_id=${eventId}`);
   }
 }
