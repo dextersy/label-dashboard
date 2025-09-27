@@ -615,9 +615,20 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       status: status !== undefined ? status : event.status
     });
 
+    // Reload the event with tickets to return complete data
+    const updatedEventWithTickets = await Event.findByPk(event.id, {
+      include: [
+        {
+          model: require('../models').Ticket,
+          as: 'tickets',
+          attributes: ['id', 'name', 'status', 'number_of_entries']
+        }
+      ]
+    });
+
     res.json({
       message: 'Event updated successfully',
-      event
+      event: updatedEventWithTickets
     });
   } catch (error) {
     console.error('Update event error:', error);
@@ -2621,9 +2632,20 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
     await event.update(updatedFields);
     await event.reload(); // Reload to get the updated data
 
+    // Reload the event with tickets to return complete data
+    const eventWithTickets = await Event.findByPk(event.id, {
+      include: [
+        {
+          model: require('../models').Ticket,
+          as: 'tickets',
+          attributes: ['id', 'name', 'status', 'number_of_entries']
+        }
+      ]
+    });
+
     res.json({
       message: 'Event published successfully',
-      event: event
+      event: eventWithTickets
     });
   } catch (error) {
     console.error('Publish event error:', error);
@@ -2674,11 +2696,21 @@ export const unpublishEvent = async (req: AuthRequest, res: Response) => {
     }
 
     await event.update({ status: 'draft' });
-    await event.reload(); // Reload to get the updated data
+
+    // Reload the event with tickets to return complete data
+    const eventWithTickets = await Event.findByPk(event.id, {
+      include: [
+        {
+          model: require('../models').Ticket,
+          as: 'tickets',
+          attributes: ['id', 'name', 'status', 'number_of_entries']
+        }
+      ]
+    });
 
     res.json({
       message: 'Event unpublished successfully',
-      event: event
+      event: eventWithTickets
     });
   } catch (error) {
     console.error('Unpublish event error:', error);
