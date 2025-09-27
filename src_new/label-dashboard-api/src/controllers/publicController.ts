@@ -115,9 +115,28 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Check if event is closed
-    const isEventClosed = event.close_time && new Date() > event.close_time;
-    
+    // Check if event is closed due to time
+    const isClosedByTime = event.close_time && new Date() > event.close_time;
+
+    // Check if event is closed due to no available ticket types
+    const ticketTypes = await TicketType.findAll({
+      where: { event_id: eventId }
+    });
+
+    let hasAvailableTicketTypes = false;
+    for (const ticketType of ticketTypes) {
+      const isAvailable = ticketType.isAvailable();
+      const isSoldOut = await ticketType.isSoldOut();
+
+      if (isAvailable && !isSoldOut) {
+        hasAvailableTicketTypes = true;
+        break;
+      }
+    }
+
+    // Event is closed if time has passed OR no ticket types are available
+    const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
+
     // Calculate remaining tickets if max_tickets is set
     let remainingTickets = null;
     if (event.max_tickets && event.max_tickets > 0) {
