@@ -94,12 +94,12 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       max_tickets: Number(this.newTicketType.max_tickets)
     };
 
-    // Only include dates if they're set
+    // Only include dates if they're set, format them for API
     if (this.newTicketType.start_date) {
-      ticketTypeData.start_date = this.newTicketType.start_date;
+      ticketTypeData.start_date = this.formatDateForAPI(this.newTicketType.start_date);
     }
     if (this.newTicketType.end_date) {
-      ticketTypeData.end_date = this.newTicketType.end_date;
+      ticketTypeData.end_date = this.formatDateForAPI(this.newTicketType.end_date);
     }
 
     this.eventService.createTicketType(ticketTypeData).subscribe({
@@ -144,9 +144,9 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       max_tickets: Number(ticketType.max_tickets)
     };
 
-    // Include dates in update
-    updateData.start_date = ticketType.start_date || null;
-    updateData.end_date = ticketType.end_date || null;
+    // Include dates in update, format them for API
+    updateData.start_date = ticketType.start_date ? this.formatDateForAPI(ticketType.start_date) : null;
+    updateData.end_date = ticketType.end_date ? this.formatDateForAPI(ticketType.end_date) : null;
 
     this.eventService.updateTicketType(ticketType.id, updateData).subscribe({
       next: (response) => {
@@ -297,10 +297,28 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     if (!dateValue) return null;
 
     try {
-      const date = new Date(dateValue);
-      if (isNaN(date.getTime())) return null;
+      // If it's already in the correct format for datetime-local, return as-is
+      if (dateValue.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+        return dateValue;
+      }
 
-      // Format to YYYY-MM-DDTHH:mm (required for datetime-local)
+      // Parse the date - handle both ISO strings and MySQL datetime format
+      let date: Date;
+      if (dateValue.includes('T')) {
+        // ISO format: 2024-12-31T19:00:00.000Z
+        date = new Date(dateValue);
+      } else {
+        // MySQL datetime format: 2024-12-31 19:00:00
+        date = new Date(dateValue.replace(' ', 'T'));
+      }
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date format:', dateValue);
+        return null;
+      }
+
+      // Convert to local timezone and format for datetime-local input
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -311,6 +329,23 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     } catch (error) {
       console.warn('Error formatting date for input:', dateValue, error);
       return null;
+    }
+  }
+
+  // Format date for API (convert datetime-local format back to ISO string)
+  private formatDateForAPI(dateString: string): string {
+    if (!dateString) return '';
+
+    try {
+      // Convert datetime-local format back to ISO string for API
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.error('Error formatting date for API:', dateString, error);
+      return '';
     }
   }
 }
