@@ -54,42 +54,70 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
     return originalUrl;
   }
 
-  try {
-    // Set a timeout for the fetch request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+  const maxAttempts = 10; // Prevent infinite loops
+  let finalPath = path;
+  let counter = 1;
 
-    const response = await fetch('https://api.short.io/links', {
-      method: 'POST',
-      headers: {
-        'Authorization': shortIoKey,
-        'accept': 'application/json',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        domain: shortIoDomain,
-        originalURL: originalUrl,
-        path: path
-      }),
-      signal: controller.signal
-    });
+  // Try to create the shortlink, handling 409 conflicts by appending numbers
+  while (counter <= maxAttempts) {
+    try {
+      console.log(`Attempting to create shortlink with path: "${finalPath}"`);
 
-    clearTimeout(timeoutId);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (!response.ok) {
+      const response = await fetch('https://api.short.io/links', {
+        method: 'POST',
+        headers: {
+          'Authorization': shortIoKey,
+          'accept': 'application/json',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: shortIoDomain,
+          originalURL: originalUrl,
+          path: finalPath
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json() as { secureShortURL: string };
+        console.log('Short.io success:', data.secureShortURL);
+        return data.secureShortURL;
+      }
+
+      // Check if it's a 409 conflict error (path already exists)
+      if (response.status === 409) {
+        console.log(`Path "${finalPath}" already exists (409 conflict), trying with number suffix`);
+        finalPath = `${path}${counter}`;
+        counter++;
+        continue;
+      }
+
+      // For other errors, throw to fall back to original URL
       const errorText = await response.text();
       console.error('Short.io API error:', response.status, errorText);
-      throw new Error(`Short.io API error: ${response.status}`);
-    }
+      throw new Error(`Short.io API error: ${response.status} - ${errorText}`);
 
-    const data = await response.json() as { secureShortURL: string };
-    console.log('Short.io success:', data.secureShortURL);
-    return data.secureShortURL;
-  } catch (error) {
-    console.error('Failed to create short link, using fallback:', error);
-    // Return the original URL as fallback instead of throwing
-    return originalUrl;
+    } catch (error: any) {
+      // If it's not a 409 conflict or we've reached max attempts, give up
+      if (counter >= maxAttempts || !error.message?.includes('409')) {
+        console.error('Failed to create short link, using fallback:', error);
+        return originalUrl;
+      }
+
+      // For 409 conflicts in catch block, try the next iteration
+      console.log(`Conflict detected, trying with number suffix`);
+      finalPath = `${path}${counter}`;
+      counter++;
+    }
   }
+
+  console.warn(`Could not create shortlink after ${maxAttempts} attempts, using fallback URL`);
+  return originalUrl;
 };
 
 
