@@ -710,6 +710,52 @@ const processInlineImages = (htmlContent: string): { html: string, attachments: 
   return { html: processedHtml, attachments };
 };
 
+// Send email with attachments
+export const sendEmailWithAttachment = async (
+  recipients: string[],
+  subject: string,
+  htmlBody: string,
+  brandId: number,
+  attachments: Array<{
+    filename: string;
+    content: string | Buffer;
+    contentType?: string;
+  }>
+): Promise<boolean> => {
+  let success = false;
+
+  try {
+    // Fetch brand information to use brand name as "From" name
+    const brand = await Brand.findByPk(brandId);
+    const fromName = brand?.brand_name || 'Dashboard';
+    const fromEmail = process.env.FROM_EMAIL;
+
+    // Quote the display name if it contains special characters like parentheses
+    const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
+
+    const mailOptions = {
+      from: `${quotedFromName} <${fromEmail}>`,
+      to: recipients.join(', '),
+      subject,
+      html: htmlBody,
+      text: htmlToText(htmlBody),
+      attachments
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Email with attachments sent successfully:', result.messageId);
+    success = true;
+  } catch (error) {
+    console.error('Email sending with attachments failed:', error);
+    success = false;
+  }
+
+  // Log the email attempt
+  await logEmailAttempt(recipients, subject, htmlBody, success, brandId);
+
+  return success;
+};
+
 // Convert HTML to clean text for email previews
 const htmlToText = (html: string): string => {
   let text = html;

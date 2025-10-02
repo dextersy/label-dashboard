@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import { initializeDatabase } from './models';
 import * as https from 'https';
 import * as http from 'http';
+import { globalRateLimit } from './middleware/rateLimiting';
 
 dotenv.config();
 
@@ -19,6 +20,9 @@ const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
+
+// Apply global rate limiting to all requests
+app.use(globalRateLimit);
 
 // Increase payload limits for email with images
 // 50MB limit to handle multiple large base64 images in email content

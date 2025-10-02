@@ -16,6 +16,7 @@ import {
   generateArtistEPKSEOPage,
   getAvailableTicketTypesPublic
 } from '../controllers/publicController';
+import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
 
@@ -32,13 +33,16 @@ router.get('/seo/event-:id.html', generateEventSEOPage);
 router.get('/seo/events-:domain.html', generateEventsListSEOPage);
 router.get('/seo/epk-:id.html', generateArtistEPKSEOPage);
 
-router.post('/tickets/get-from-code', getTicketFromCode);
-router.post('/tickets/buy', buyTicket);
-router.post('/tickets/verify', verifyTicket);
-router.post('/tickets/check-pin', checkPin);
-router.post('/tickets/check-in', checkInTicket);
+// Payment rate limiter for ticket purchasing
+const ticketPurchaseRateLimit = createPaymentRateLimit(10, 300000); // 10 purchases per 5 minutes
 
-// Webhook endpoint (PayMongo)
+router.post('/tickets/get-from-code', publicRateLimit, getTicketFromCode);
+router.post('/tickets/buy', ticketPurchaseRateLimit, buyTicket);
+router.post('/tickets/verify', publicRateLimit, verifyTicket);
+router.post('/tickets/check-pin', publicRateLimit, checkPin);
+router.post('/tickets/check-in', publicRateLimit, checkInTicket);
+
+// Webhook endpoint (PayMongo) - no rate limiting for webhooks as they come from trusted sources
 router.post('/webhook/payment', ticketPaymentWebhook);
 
 export default router;

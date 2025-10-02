@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
+import { authRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
 
-router.post('/login', login);
+router.post('/login', authRateLimit, login);
 router.post('/logout', logout);
 router.get('/me', authenticateToken, checkAuth);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/forgot-password', authRateLimit, forgotPassword);
+router.post('/reset-password', authRateLimit, resetPassword);
 router.get('/validate-reset-hash/:hash', validateResetHash);
 
 export default router;
