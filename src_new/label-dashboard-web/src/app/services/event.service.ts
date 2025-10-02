@@ -51,6 +51,7 @@ export interface EventTicket {
   status: string;
   price_per_ticket: number;
   payment_processing_fee: number;
+  payment_id?: string;
   payment_link?: string;
   referrer_id?: number;
   order_timestamp: string;
@@ -379,6 +380,20 @@ export class EventService {
     const ticketIds = Array.isArray(ticketId) ? ticketId : [ticketId];
     return this.http.post(`${environment.apiUrl}/events/tickets/resend`, 
       { ticket_ids: ticketIds },
+      { headers: this.getAuthHeaders() }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Refund ticket(s) - accepts single ID or array of IDs
+   */
+  refundTicket(ticketId: number | number[]): Observable<any> {
+    const ticketIds = Array.isArray(ticketId) ? ticketId : [ticketId];
+    const body = { ticket_ids: ticketIds };
+    return this.http.post(`${environment.apiUrl}/events/tickets/refund`,
+      body,
       { headers: this.getAuthHeaders() }
     ).pipe(
       catchError(this.handleError)

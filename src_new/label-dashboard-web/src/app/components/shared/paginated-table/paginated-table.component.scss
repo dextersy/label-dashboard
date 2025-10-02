@@ -279,3 +279,10 @@
     border-color: #007bff;
   }
 }
+
+// Ensure text-muted on tr applies to all td elements
+tr.text-muted {
+  td {
+    color: #adb5bd !important;
+  }
+}

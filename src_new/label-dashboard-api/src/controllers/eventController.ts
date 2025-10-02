@@ -1012,8 +1012,8 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
     // Apply status filter for specific tabs
     if (status_filter) {
       if (status_filter === 'sent') {
-        // For tickets tab - only show "Ticket sent." tickets
-        where.status = 'Ticket sent.';
+        // For tickets tab - show "Ticket sent." and "Refunded" tickets
+        where.status = ['Ticket sent.', 'Refunded'];
       } else if (status_filter === 'pending') {
         // For abandoned orders tab - show "New" and "Payment Confirmed"
         where.status = ['New', 'Payment Confirmed'];
@@ -1669,6 +1669,110 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Cancel ticket error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const refundTicket = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { ticket_id, ticket_ids, reason } = req.body;
+
+    // Handle both single ticket_id and array of ticket_ids
+    let ticketIds: number[];
+    if (ticket_ids) {
+      // Array format (bulk operations)
+      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
+        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
+      }
+      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
+      if (ticketIds.length !== ticket_ids.length) {
+        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
+      }
+    } else if (ticket_id) {
+      // Single ticket format (backward compatibility)
+      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
+        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
+      }
+      ticketIds = [ticket_id];
+    } else {
+      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
+    }
+
+    // Find tickets that belong to user's brand and are eligible for refund
+    const tickets = await Ticket.findAll({
+      where: {
+        id: ticketIds,
+        status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] },
+        number_of_claimed_entries: 0 // Only unclaimed tickets can be refunded
+      },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          where: { brand_id: req.user.brand_id },
+          include: [{ model: Brand, as: 'brand' }]
+        }
+      ]
+    });
+
+    if (tickets.length === 0) {
+      return res.status(404).json({
+        error: 'No eligible tickets found for refund (tickets must be paid, not sent, and not claimed)'
+      });
+    }
+
+    // Process refunds through Paymongo
+    const refundResults = [];
+    const refundErrors = [];
+
+    for (const ticket of tickets) {
+      try {
+        await paymentService.refundTicket(ticket.id, reason);
+        refundResults.push({
+          id: ticket.id,
+          status: 'Refunded',
+          success: true
+        });
+      } catch (error: any) {
+        refundErrors.push({
+          id: ticket.id,
+          error: error.message || 'Refund failed'
+        });
+      }
+    }
+
+    const successCount = refundResults.length;
+    const errorCount = refundErrors.length;
+
+    if (successCount === 0) {
+      return res.status(500).json({
+        error: 'All refunds failed',
+        details: refundErrors
+      });
+    }
+
+    const message = successCount === 1
+      ? 'Ticket refunded successfully'
+      : `${successCount} ticket${successCount > 1 ? 's' : ''} refunded successfully`;
+
+    let warningMessage = '';
+    if (errorCount > 0) {
+      warningMessage = ` (${errorCount} refund${errorCount > 1 ? 's' : ''} failed)`;
+    }
+
+    res.json({
+      message: `${message}${warningMessage}`,
+      refunded_count: successCount,
+      failed_count: errorCount,
+      refunded_tickets: refundResults,
+      failed_refunds: refundErrors.length > 0 ? refundErrors : undefined
+    });
+  } catch (error) {
+    console.error('Refund ticket error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -2408,46 +2512,52 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
         event_id: eventIdNum
       },
       attributes: [
-        'status', 
-        'number_of_entries', 
+        'status',
+        'number_of_entries',
         'number_of_claimed_entries',
-        'price_per_ticket', 
-        'payment_processing_fee'
+        'price_per_ticket',
+        'payment_processing_fee',
+        'platform_fee'
       ]
     });
 
-    // Filter confirmed tickets (both Payment Confirmed and Ticket sent)
-    const confirmedTickets = allTickets.filter(ticket => 
+    // Filter confirmed tickets (both Payment Confirmed and Ticket sent) - EXCLUDING Refunded
+    const confirmedTickets = allTickets.filter(ticket =>
       ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed'
     );
 
-    // Count only "Ticket sent." tickets for tickets sold (matching PHP logic)
+    // Get refunded tickets (for fee calculations)
+    const refundedTickets = allTickets.filter(ticket => ticket.status === 'Refunded');
+
+    // Count only "Ticket sent." tickets for tickets sold (matching PHP logic) - EXCLUDING Refunded
     const totalTicketsSold = allTickets
       .filter(ticket => ticket.status === 'Ticket sent.')
       .reduce((sum, ticket) => sum + ticket.number_of_entries, 0);
 
-    // Count total checked in guests from all confirmed tickets
+    // Count total checked in guests from all confirmed tickets (refunded cannot be checked in)
     const totalCheckedIn = confirmedTickets.reduce((sum, ticket) => sum + (ticket.number_of_claimed_entries || 0), 0);
 
-    // Calculate total revenue from confirmed/sent tickets
+    // Calculate total revenue from confirmed/sent tickets ONLY (refunded tickets excluded)
     const totalRevenue = confirmedTickets.reduce((sum, ticket) => {
       const price = Number(ticket.price_per_ticket) || 0;
       const entries = Number(ticket.number_of_entries) || 0;
       return sum + (price * entries);
     }, 0);
 
-    // Calculate total processing fees from confirmed/sent tickets
-    const totalProcessingFee = confirmedTickets.reduce((sum, ticket) => {
+    // Calculate total processing fees from confirmed/sent tickets AND refunded tickets
+    const totalProcessingFee = [...confirmedTickets, ...refundedTickets].reduce((sum, ticket) => {
       return sum + (Number(ticket.payment_processing_fee) || 0);
     }, 0);
 
-    // Platform fee is 5% of total revenue
-    const platformFee = Number((totalRevenue * 0.05).toFixed(2)) || 0;
-    
-    // Grand total after platform fee
-    const grandTotal = Number((totalRevenue * 0.95).toFixed(2)) || 0;
-    
-    // Net revenue after processing fees
+    // Calculate total platform fees from confirmed/sent tickets AND refunded tickets
+    const platformFee = [...confirmedTickets, ...refundedTickets].reduce((sum, ticket) => {
+      return sum + (Number(ticket.platform_fee) || 0);
+    }, 0);
+
+    // Grand total after platform fee (only from non-refunded tickets)
+    const grandTotal = Number((totalRevenue - platformFee).toFixed(2)) || 0;
+
+    // Net revenue after processing fees (only from non-refunded tickets)
     const netRevenue = Number((totalRevenue - totalProcessingFee).toFixed(2)) || 0;
     
     // Tax calculation (0.5% of net revenue)

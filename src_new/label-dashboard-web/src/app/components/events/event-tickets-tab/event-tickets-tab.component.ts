@@ -18,11 +18,12 @@ export interface EventTicket {
   ticket_code: string;
   price_per_ticket: number;
   payment_processing_fee: number;
+  payment_id?: string;
   referrer_name?: string;
   order_timestamp: string;
   date_paid?: string;
   number_of_claimed_entries: number;
-  status: 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled';
+  status: 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled' | 'Refunded';
   ticket_type_name?: string;
 }
 
@@ -74,7 +75,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
     { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true },
     { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
-    { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-' },
+    { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
     { key: 'processing_fee', label: 'Processing Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getProcessingFee(item) > 0 ? this.formatCurrency(this.getProcessingFee(item)) : '-' },
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
@@ -209,6 +210,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       ticket_code: ticket.ticket_code,
       price_per_ticket: Number(ticket.price_per_ticket) || 0,
       payment_processing_fee: Number(ticket.payment_processing_fee) || 0,
+      payment_id: ticket.payment_id,
       referrer_name: referrerName,
       order_timestamp: ticket.order_timestamp,
       date_paid: ticket.date_paid,
@@ -218,7 +220,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     };
   }
 
-  private normalizeTicketStatus(status: string): 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled' {
+  private normalizeTicketStatus(status: string): 'Ticket sent.' | 'Payment Confirmed' | 'New' | 'Canceled' | 'Refunded' {
     switch (status.toLowerCase()) {
       case 'ticket sent.':
       case 'ticket sent':
@@ -231,6 +233,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       case 'canceled':
       case 'cancelled':
         return 'Canceled';
+      case 'refunded':
+        return 'Refunded';
       default:
         return 'New';
     }
@@ -309,6 +313,52 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  onRefundTicket(ticketId: number): void {
+    this.selectedTicketId = ticketId;
+
+    // Find the ticket to get its status
+    const ticket = this.tickets.find(t => t.id === ticketId);
+    if (!ticket) {
+      this.alertMessage.emit({
+        type: 'error',
+        text: 'Ticket not found'
+      });
+      return;
+    }
+
+    const confirmMessage = 'WARNING: This will process a refund through Paymongo and return the ticket price to the customer.\n\nIMPORTANT: Platform fees and processing fees will be RETAINED and NOT refunded.\n\nThis action cannot be undone. Are you sure you want to refund this ticket?';
+    const confirmed = confirm(confirmMessage);
+
+    if (confirmed) {
+      this.bulkOperationsLoading = true;
+      this.subscriptions.add(
+        this.eventService.refundTicket(ticketId).subscribe({
+          next: () => {
+            this.bulkOperationsLoading = false;
+            this.alertMessage.emit({
+              type: 'success',
+              text: 'Ticket refunded successfully!'
+            });
+            // Update ticket status in list and reload summary
+            const ticketIndex = this.tickets.findIndex(t => t.id === ticketId);
+            if (ticketIndex !== -1) {
+              this.tickets[ticketIndex].status = 'Refunded';
+            }
+            this.loadTicketSummary();
+          },
+          error: (error) => {
+            this.bulkOperationsLoading = false;
+            console.error('Failed to refund ticket:', error);
+            this.alertMessage.emit({
+              type: 'error',
+              text: error.error?.error || 'Failed to refund ticket'
+            });
+          }
+        })
+      );
+    }
+  }
+
   onDownloadCSV(): void {
     if (!this.selectedEvent) {
       this.alertMessage.emit({
@@ -367,6 +417,9 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getRowClass(ticket: EventTicket): string {
+    if (ticket.status === 'Refunded') {
+      return 'text-muted';
+    }
     return Number(ticket.number_of_claimed_entries) === Number(ticket.number_of_entries) ? 'text-muted' : '';
   }
 
@@ -377,17 +430,28 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getProcessingFee(ticket: EventTicket): number {
-    return ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed' 
-      ? ticket.payment_processing_fee 
+    return ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed' || ticket.status === 'Refunded'
+      ? ticket.payment_processing_fee
       : 0;
   }
 
   isTicketCancellable(ticket: EventTicket): boolean {
-    return Number(ticket.number_of_claimed_entries) === 0 && !!this.isAdmin;
+    return ticket.status !== 'Refunded'
+      && Number(ticket.number_of_claimed_entries) === 0
+      && !!this.isAdmin;
+  }
+
+  isTicketRefundable(ticket: EventTicket): boolean {
+    return (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.')
+      && Number(ticket.number_of_claimed_entries) === 0
+      && !!ticket.payment_id
+      && !!this.isAdmin;
   }
 
   isTicketResendable(ticket: EventTicket): boolean {
-    return Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries) && !!this.isAdmin;
+    return ticket.status !== 'Refunded'
+      && Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries)
+      && !!this.isAdmin;
   }
 
   isTicketTransferable(ticket: EventTicket): boolean {

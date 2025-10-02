@@ -211,9 +211,12 @@ export class PaymentService {
       
       // Calculate processing fee
       const processingFee = this.calculateProcessingFeeFromPayments(eventType, eventData);
-      
+
+      // Extract payment ID
+      const paymentId = this.extractPaymentIdFromPayments(eventType, eventData);
+
       // Process payment confirmation
-      return await this.processPaymentConfirmation(ticket, processingFee, payload);
+      return await this.processPaymentConfirmation(ticket, processingFee, paymentId, payload);
       
     } catch (error) {
       this.webhookLog('ERROR: Exception in processWebhook: ' + (error as Error).message);
@@ -276,10 +279,31 @@ export class PaymentService {
       return total;
     }, 0);
   }
-  
-  private async processPaymentConfirmation(ticket: any, processingFee: number, payload?: any): Promise<boolean> {
+
+  private extractPaymentIdFromPayments(eventType: string, eventData: any): string | null {
+    const payments = eventData.attributes?.payments;
+
+    if (!payments || payments.length === 0) {
+      return null;
+    }
+
+    // Get the first payment's ID
+    const payment = payments[0];
+
+    if (eventType === 'checkout_session') {
+      return payment.id || payment.attributes?.id || null;
+    }
+
+    if (eventType === 'link') {
+      return payment.data?.id || payment.id || null;
+    }
+
+    return null;
+  }
+
+  private async processPaymentConfirmation(ticket: any, processingFee: number, paymentId: string | null, payload?: any): Promise<boolean> {
     // Update ticket payment status
-    const paymentUpdated = await this.updateTicketPaymentStatus(ticket.id, processingFee);
+    const paymentUpdated = await this.updateTicketPaymentStatus(ticket.id, processingFee, paymentId);
     
     if (!paymentUpdated) {
       this.webhookLog('ERROR: Failed to update ticket payment verification. id = ' + ticket.id + ', processing_fee = ' + processingFee);
@@ -372,7 +396,7 @@ export class PaymentService {
     }
   }
   
-  async updateTicketPaymentStatus(ticketId: number, processingFee: number): Promise<boolean> {
+  async updateTicketPaymentStatus(ticketId: number, processingFee: number, paymentId: string | null = null): Promise<boolean> {
     try {
       const ticket = await Ticket.findByPk(ticketId, {
         include: [
@@ -402,14 +426,22 @@ export class PaymentService {
         ticket.number_of_entries,
         processingFee
       );
-      
-      await ticket.update({
+
+      const updateData: any = {
         status: 'Payment Confirmed',
         payment_processing_fee: processingFee,
         platform_fee: platformFeeCalc.totalPlatformFee,
         date_paid: new Date()
-      });
-      
+      };
+
+      // Add payment_id if available
+      if (paymentId) {
+        updateData.payment_id = paymentId;
+        this.webhookLog('Saving payment_id: ' + paymentId);
+      }
+
+      await ticket.update(updateData);
+
       return true;
     } catch (error) {
       console.error('Failed to update ticket payment status:', error);
@@ -673,6 +705,152 @@ export class PaymentService {
     } catch (error) {
       console.error('PayMongo get supported banks error:', error);
       return null;
+    }
+  }
+
+  async createRefund(paymentId: string, amount: number, reason?: string, notes?: string): Promise<any> {
+    try {
+      const requestBody: any = {
+        data: {
+          attributes: {
+            payment_id: paymentId,
+            amount: Math.round(amount * 100), // Convert to cents
+          }
+        }
+      };
+
+      // Add optional fields
+      if (reason) {
+        requestBody.data.attributes.reason = reason;
+      }
+      if (notes) {
+        requestBody.data.attributes.notes = notes;
+      }
+
+      const response = await axios.post(
+        `${this.baseUrl}/refunds`,
+        requestBody,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': this.getAuthHeader()
+          }
+        }
+      );
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error('PayMongo create refund error:', error.response?.data || error);
+      throw error;
+    }
+  }
+
+  async getPaymentIdFromTicket(ticket: any): Promise<string | null> {
+    try {
+      // Get payment link or checkout session details
+      if (ticket.payment_link_id) {
+        const linkData = await this.getPaymentLink(ticket.payment_link_id);
+
+        if (linkData?.attributes?.payments && linkData.attributes.payments.length > 0) {
+          // Get the payment ID from the first payment
+          const payment = linkData.attributes.payments[0];
+          return payment.data?.id || payment.id || null;
+        }
+      }
+
+      if (ticket.checkout_key) {
+        // For checkout sessions, we need to retrieve the session first
+        const response = await axios.get(
+          `${this.baseUrl}/checkout_sessions`,
+          {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': this.getAuthHeader()
+            }
+          }
+        );
+
+        // Find the checkout session with matching client_key
+        const sessions = response.data.data;
+        const matchingSession = sessions.find((session: any) =>
+          session.attributes.client_key === ticket.checkout_key
+        );
+
+        if (matchingSession?.attributes?.payments && matchingSession.attributes.payments.length > 0) {
+          const payment = matchingSession.attributes.payments[0];
+          return payment.data?.id || payment.id || null;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to get payment ID from ticket:', error);
+      return null;
+    }
+  }
+
+  async refundTicket(ticketId: number, reason?: string): Promise<boolean> {
+    try {
+      const ticket = await Ticket.findByPk(ticketId, {
+        include: [
+          {
+            model: Event,
+            as: 'event',
+            include: [{ model: Brand, as: 'brand' }]
+          }
+        ]
+      });
+
+      if (!ticket) {
+        throw new Error('Ticket not found');
+      }
+
+      // Only allow refunds for Payment Confirmed or Ticket sent. statuses
+      if (ticket.status !== 'Payment Confirmed' && ticket.status !== 'Ticket sent.') {
+        throw new Error('Ticket cannot be refunded in current status');
+      }
+
+      // Check if ticket has been claimed
+      if (ticket.number_of_claimed_entries > 0) {
+        throw new Error('Ticket has been claimed and cannot be refunded');
+      }
+
+      // Get payment ID from ticket record (saved during webhook)
+      let paymentId = ticket.payment_id;
+
+      // Fallback: try to retrieve payment ID if not saved (for older tickets)
+      if (!paymentId) {
+        this.webhookLog(`Payment ID not found in ticket ${ticketId}, attempting to retrieve from Paymongo`);
+        paymentId = await this.getPaymentIdFromTicket(ticket);
+      }
+
+      if (!paymentId) {
+        throw new Error('Payment ID not found for ticket. Cannot process refund.');
+      }
+
+      // Calculate refund amount (full ticket price)
+      const refundAmount = (ticket.price_per_ticket || 0) * ticket.number_of_entries;
+
+      // Create refund via Paymongo
+      const refund = await this.createRefund(
+        paymentId,
+        refundAmount,
+        'others',
+        `Ticket ID: ${ticketId}, Event: ${ticket.event?.title || 'Unknown'}` + (reason ? `, Reason: ${reason}` : '')
+      );
+
+      // Update ticket status to Refunded
+      await ticket.update({
+        status: 'Refunded'
+      });
+
+      this.webhookLog(`Successfully refunded ticket ${ticketId}. Refund ID: ${refund.id}, Payment ID: ${paymentId}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to refund ticket:', error);
+      this.webhookLog(`Failed to refund ticket ${ticketId}: ${(error as Error).message}`);
+      throw error;
     }
   }
 }

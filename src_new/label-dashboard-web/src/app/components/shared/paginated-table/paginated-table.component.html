@@ -150,7 +150,7 @@
                     </div>
                   </td>
                 </tr>
-                <tr *ngFor="let item of data">
+                <tr *ngFor="let item of data" [class]="rowClassGetter ? rowClassGetter(item) : ''">
                   <!-- Bulk select checkbox -->
                   <td *ngIf="enableBulkOperations" class="checkbox-column">
                     <input 

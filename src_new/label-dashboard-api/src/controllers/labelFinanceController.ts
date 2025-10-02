@@ -26,9 +26,8 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
     if (start_date && end_date) {
       startDateFilter = new Date(start_date);
       endDateFilter = new Date(end_date);
-      if (start_date === end_date) {
-        endDateFilter.setHours(23, 59, 59, 999);
-      }
+      // Always extend end date to end of day
+      endDateFilter.setHours(23, 59, 59, 999);
     }
 
     // Calculate music earnings for this brand
@@ -93,11 +92,10 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
     let eventPlatformFees = 0;
     let eventProcessingFees = 0;
 
-    const eventQuery = await Ticket.findAll({
+    // Sales: only count confirmed/sent tickets (exclude refunded)
+    const eventSalesQuery = await Ticket.findAll({
       attributes: [
-        [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales'],
-        [literal('SUM(platform_fee)'), 'total_platform_fee'],
-        [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+        [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']
       ],
       include: [{
         model: Event,
@@ -117,13 +115,42 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
       raw: true
     });
 
-    if (eventQuery.length > 0 && eventQuery[0]) {
-      const salesData = eventQuery[0] as any;
+    // Fees: count confirmed/sent AND refunded tickets
+    const eventFeesQuery = await Ticket.findAll({
+      attributes: [
+        [literal('SUM(platform_fee)'), 'total_platform_fee'],
+        [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+      ],
+      include: [{
+        model: Event,
+        as: 'event',
+        where: { brand_id: req.user.brand_id },
+        attributes: []
+      }],
+      where: {
+        status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.', 'Refunded'] },
+        platform_fee: { [Op.not]: null },
+        ...(startDateFilter && endDateFilter ? {
+          date_paid: {
+            [Op.between]: [startDateFilter, endDateFilter]
+          }
+        } : {})
+      },
+      raw: true
+    });
+
+    if (eventSalesQuery.length > 0 && eventSalesQuery[0]) {
+      const salesData = eventSalesQuery[0] as any;
       eventSales = parseFloat(salesData.total_sales) || 0;
-      eventPlatformFees = parseFloat(salesData.total_platform_fee) || 0;
-      eventProcessingFees = parseFloat(salesData.total_processing_fee) || 0;
-      eventEarnings = eventSales - eventPlatformFees;
     }
+
+    if (eventFeesQuery.length > 0 && eventFeesQuery[0]) {
+      const feesData = eventFeesQuery[0] as any;
+      eventPlatformFees = parseFloat(feesData.total_platform_fee) || 0;
+      eventProcessingFees = parseFloat(feesData.total_processing_fee) || 0;
+    }
+
+    eventEarnings = eventSales - eventPlatformFees;
 
     // Calculate total payments made to artists under this label
     const artistIds = await Artist.findAll({
@@ -219,9 +246,8 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
     if (start_date && end_date) {
       startDateFilter = new Date(start_date);
       endDateFilter = new Date(end_date);
-      if (start_date === end_date) {
-        endDateFilter.setHours(23, 59, 59, 999);
-      }
+      // Always extend end date to end of day
+      endDateFilter.setHours(23, 59, 59, 999);
     }
 
     if (type === 'music') {
@@ -293,11 +319,10 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       const breakdown = [];
 
       for (const event of events) {
-        const eventQuery = await Ticket.findAll({
+        // Sales: only count confirmed/sent tickets (exclude refunded)
+        const eventSalesQuery = await Ticket.findAll({
           attributes: [
-            [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales'],
-            [literal('SUM(platform_fee)'), 'total_platform_fee'],
-            [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+            [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']
           ],
           where: {
             event_id: event.id,
@@ -312,22 +337,50 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
           raw: true
         });
 
-        if (eventQuery.length > 0 && eventQuery[0]) {
-          const salesData = eventQuery[0] as any;
-          const sales = parseFloat(salesData.total_sales) || 0;
-          const platformFees = parseFloat(salesData.total_platform_fee) || 0;
-          const processingFees = parseFloat(salesData.total_processing_fee) || 0;
-          const netEarnings = sales - platformFees;
+        // Fees: count confirmed/sent AND refunded tickets
+        const eventFeesQuery = await Ticket.findAll({
+          attributes: [
+            [literal('SUM(platform_fee)'), 'total_platform_fee'],
+            [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+          ],
+          where: {
+            event_id: event.id,
+            status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.', 'Refunded'] },
+            platform_fee: { [Op.not]: null },
+            ...(startDateFilter && endDateFilter ? {
+              date_paid: {
+                [Op.between]: [startDateFilter, endDateFilter]
+              }
+            } : {})
+          },
+          raw: true
+        });
 
-          if (sales > 0 || platformFees > 0 || processingFees > 0) {
-            breakdown.push({
-              event_name: event.title,
-              sales: sales,
-              platform_fees: platformFees,
-              processing_fees: processingFees,
-              net_earnings: netEarnings
-            });
-          }
+        let sales = 0;
+        let platformFees = 0;
+        let processingFees = 0;
+
+        if (eventSalesQuery.length > 0 && eventSalesQuery[0]) {
+          const salesData = eventSalesQuery[0] as any;
+          sales = parseFloat(salesData.total_sales) || 0;
+        }
+
+        if (eventFeesQuery.length > 0 && eventFeesQuery[0]) {
+          const feesData = eventFeesQuery[0] as any;
+          platformFees = parseFloat(feesData.total_platform_fee) || 0;
+          processingFees = parseFloat(feesData.total_processing_fee) || 0;
+        }
+
+        const netEarnings = sales - platformFees;
+
+        if (sales > 0 || platformFees > 0 || processingFees > 0) {
+          breakdown.push({
+            event_name: event.title,
+            sales: sales,
+            platform_fees: platformFees,
+            processing_fees: processingFees,
+            net_earnings: netEarnings
+          });
         }
       }
 

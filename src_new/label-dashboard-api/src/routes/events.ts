@@ -9,6 +9,7 @@ import {
   getTickets,
   markTicketPaid,
   cancelTicket,
+  refundTicket,
   resendTicket,
   cancelAllUnpaidTickets,
   refreshVerificationPIN,
@@ -53,6 +54,7 @@ router.get('/tickets', getTickets);
 router.post('/tickets', requireAdmin, addTicket);
 router.post('/tickets/mark-paid', requireAdmin, markTicketPaid);
 router.post('/tickets/cancel', requireAdmin, cancelTicket);
+router.post('/tickets/refund', requireAdmin, refundTicket);
 router.post('/tickets/resend', requireAdmin, resendTicket);
 router.post('/tickets/cancel-all-unpaid', requireAdmin, cancelAllUnpaidTickets);
 router.post('/tickets/verify-payments', requireAdmin, verifyAllPayments);

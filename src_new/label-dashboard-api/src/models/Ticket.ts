@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-type TicketStatus = 'New' | 'Payment Confirmed' | 'Ticket sent.' | 'Canceled';
+type TicketStatus = 'New' | 'Payment Confirmed' | 'Ticket sent.' | 'Canceled' | 'Refunded';
 
 interface TicketAttributes {
   id: number;
@@ -17,6 +17,7 @@ interface TicketAttributes {
   payment_link?: string;
   payment_link_id?: string;
   checkout_key?: string;
+  payment_id?: string;
   price_per_ticket?: number;
   payment_processing_fee?: number;
   platform_fee?: number;
@@ -41,6 +42,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public payment_link?: string;
   public payment_link_id?: string;
   public checkout_key?: string;
+  public payment_id?: string;
   public price_per_ticket?: number;
   public payment_processing_fee?: number;
   public platform_fee?: number;
@@ -103,7 +105,7 @@ Ticket.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM('New', 'Payment Confirmed', 'Ticket sent.', 'Canceled'),
+      type: DataTypes.ENUM('New', 'Payment Confirmed', 'Ticket sent.', 'Canceled', 'Refunded'),
       allowNull: false,
       defaultValue: 'New',
     },
@@ -116,6 +118,10 @@ Ticket.init(
       allowNull: true,
     },
     checkout_key: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    payment_id: {
       type: DataTypes.STRING(100),
       allowNull: true,
     },

@@ -54,6 +54,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
   @Input() responsiveMode: 'card' | 'financial' = 'card'; // Choose responsive behavior
   @Input() enableBulkOperations: boolean = false; // Enable bulk operations functionality
   @Input() bulkOperationsLoading: boolean = false; // Loading state for all operations (single and bulk)
+  @Input() rowClassGetter?: (item: any) => string; // Function to get CSS classes for each row
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();

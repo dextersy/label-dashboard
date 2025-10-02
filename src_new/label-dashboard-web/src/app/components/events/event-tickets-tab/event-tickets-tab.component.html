@@ -11,6 +11,7 @@
     [sortInfo]="currentSort"
     [showActionsColumn]="isAdmin"
     [bulkOperationsLoading]="bulkOperationsLoading"
+    [rowClassGetter]="getRowClass.bind(this)"
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
     (sortChange)="onSortChange($event)">
@@ -42,7 +43,7 @@
     <!-- Actions template -->
     <ng-template #actionsContent let-ticket let-disabled="disabled">
       <div class="btn-group" role="group">
-        <button 
+        <button
           class="btn btn-sm btn-outline-primary"
           (click)="onResendTicket(ticket.id)"
           [disabled]="disabled"
@@ -50,7 +51,7 @@
           title="Resend ticket">
           Resend
         </button>
-        <button 
+        <button
           class="btn btn-sm btn-outline-info"
           (click)="onTransferTicket(ticket)"
           [disabled]="disabled"
@@ -58,7 +59,15 @@
           title="Transfer ticket to another person">
           Transfer
         </button>
-        <button 
+        <button
+          class="btn btn-sm btn-outline-warning"
+          (click)="onRefundTicket(ticket.id)"
+          [disabled]="disabled"
+          *ngIf="isTicketRefundable(ticket)"
+          title="Refund ticket and return payment to customer">
+          Refund
+        </button>
+        <button
           class="btn btn-sm btn-outline-danger"
           (click)="onCancelTicket(ticket.id)"
           [disabled]="disabled"
