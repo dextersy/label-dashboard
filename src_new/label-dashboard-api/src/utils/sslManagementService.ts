@@ -36,7 +36,8 @@ export const addDomainToSSL = async (domainName: string): Promise<SSLResult> => 
     const frontendIP = process.env.FRONTEND_IP;
     const sshKeyPath = process.env.SSH_KEY_PATH;
     const sshUser = process.env.SSH_USER;
-    
+    const sslScriptPath = process.env.SSL_SCRIPT_PATH || '~/add-ssl-domain.sh';
+
     // Validate required environment variables
     if (!frontendIP) {
       resolve({
@@ -68,18 +69,19 @@ export const addDomainToSSL = async (domainName: string): Promise<SSLResult> => 
     console.log(`[SSL] Attempting to add domain ${domainName} to SSL certificate on ${frontendIP}`);
 
     // Expand tilde in SSH key path
-    const expandedKeyPath = sshKeyPath.startsWith('~/') 
+    const expandedKeyPath = sshKeyPath.startsWith('~/')
       ? path.join(process.env.HOME || '', sshKeyPath.slice(2))
       : sshKeyPath;
 
     // SSH command to execute the add-ssl-domain.sh script
+    // The script path uses tilde (~) which SSH will expand to the remote user's home directory
     const sshCommand = [
       '-i', expandedKeyPath,
       '-o', 'StrictHostKeyChecking=no',
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'ConnectTimeout=30',
       `${sshUser}@${frontendIP}`,
-      `./add-ssl-domain.sh ${domainName}`
+      `${sslScriptPath} ${domainName}`
     ];
 
     console.log(`[SSL] Executing SSH command: ssh ${sshCommand.join(' ')}`);
