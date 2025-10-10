@@ -42,6 +42,7 @@ export interface Event {
 export interface EventTicket {
   id: number;
   event_id: number;
+  ticket_type_id?: number;
   name: string;
   email_address: string;
   contact_number?: string;
@@ -51,6 +52,7 @@ export interface EventTicket {
   status: string;
   price_per_ticket: number;
   payment_processing_fee: number;
+  platform_fee?: number;
   payment_id?: string;
   payment_link?: string;
   referrer_id?: number;
@@ -695,12 +697,14 @@ export class EventService {
     // Create new ticket with same details but new info
     const newTicketData = {
       event_id: originalTicket.event_id || originalTicket.id, // Handle both formats
+      ticket_type_id: originalTicket.ticket_type_id,
       name: transferData.name,
       email_address: transferData.email_address,
       contact_number: transferData.contact_number,
       number_of_entries: originalTicket.number_of_entries,
       price_per_ticket: originalTicket.price_per_ticket,
       payment_processing_fee: originalTicket.payment_processing_fee,
+      platform_fee: originalTicket.platform_fee ?? 0, // Ensure it's always a number
       ticket_paid: true, // Mark as paid since we're transferring from a paid ticket
       send_email: false, // Don't send payment link email
       order_timestamp: originalTicket.order_timestamp // Preserve the original order timestamp

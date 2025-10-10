@@ -18,7 +18,9 @@ export interface EventTicket {
   ticket_code: string;
   price_per_ticket: number;
   payment_processing_fee: number;
+  platform_fee?: number;
   payment_id?: string;
+  ticket_type_id?: number;
   referrer_name?: string;
   order_timestamp: string;
   date_paid?: string;
@@ -76,7 +78,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true },
     { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
     { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
-    { key: 'processing_fee', label: 'Processing Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getProcessingFee(item) > 0 ? this.formatCurrency(this.getProcessingFee(item)) : '-' },
+    { key: 'platform_fee', label: 'Platform Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getPlatformFee(item) > 0 ? this.formatCurrency(this.getPlatformFee(item)) : '-' },
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
     { key: 'date_paid', label: 'Date Paid', sortable: true, type: 'date', formatter: (item) => item.date_paid ? new Date(item.date_paid).toLocaleString() : '-' },
@@ -210,7 +212,9 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       ticket_code: ticket.ticket_code,
       price_per_ticket: Number(ticket.price_per_ticket) || 0,
       payment_processing_fee: Number(ticket.payment_processing_fee) || 0,
+      platform_fee: ticket.platform_fee ? Number(ticket.platform_fee) : undefined,
       payment_id: ticket.payment_id,
+      ticket_type_id: ticket.ticket_type_id,
       referrer_name: referrerName,
       order_timestamp: ticket.order_timestamp,
       date_paid: ticket.date_paid,
@@ -432,6 +436,12 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   getProcessingFee(ticket: EventTicket): number {
     return ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed' || ticket.status === 'Refunded'
       ? ticket.payment_processing_fee
+      : 0;
+  }
+
+  getPlatformFee(ticket: EventTicket): number {
+    return ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed' || ticket.status === 'Refunded'
+      ? (ticket.platform_fee || 0)
       : 0;
   }
 

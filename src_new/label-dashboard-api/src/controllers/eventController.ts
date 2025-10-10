@@ -760,6 +760,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         send_email = true,
         price_per_ticket,
         payment_processing_fee,
+        platform_fee,
         ticket_paid = false,
         order_timestamp
       } = ticketData;
@@ -829,18 +830,27 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
 
       // Use custom price if provided, otherwise use ticket type's price
       const ticketPrice = price_per_ticket !== undefined ? price_per_ticket : ticketType.price;
-      
+
       // Calculate total amount and processing fee
       const totalAmount = ticketPrice * number_of_entries;
       const processingFee = payment_processing_fee !== undefined ? Number(payment_processing_fee) : 0;
-      
-      // Calculate platform fee based on brand settings
-      const platformFeeCalc = await calculatePlatformFeeForEventTickets(
-        event.brand_id,
-        ticketPrice,
-        number_of_entries,
-        processingFee
-      );
+
+      // Use provided platform fee if available (for transfers), otherwise calculate it
+      let platformFeeValue;
+      if (platform_fee !== undefined && platform_fee !== null) {
+        // Use the provided platform fee (including 0)
+        platformFeeValue = Number(platform_fee);
+      } else {
+        // Calculate platform fee based on brand settings
+        const platformFeeCalc = await calculatePlatformFeeForEventTickets(
+          event.brand_id,
+          ticketPrice,
+          number_of_entries,
+          processingFee
+        );
+        // Ensure it's always a number, default to 0 if calculation returns null/undefined
+        platformFeeValue = platformFeeCalc.totalPlatformFee ?? 0;
+      }
 
       let paymentLink = null;
       let ticket;
@@ -858,7 +868,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           status: 'Payment Confirmed',
           price_per_ticket: ticketPrice,
           payment_processing_fee: processingFee,
-          platform_fee: platformFeeCalc.totalPlatformFee,
+          platform_fee: platformFeeValue,
           referrer_id: referrer?.id || null,
           order_timestamp: order_timestamp ? new Date(order_timestamp) : new Date(),
           date_paid: new Date()
@@ -872,8 +882,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         });
 
         if (!paymentLink) {
-          const errorMsg = ticketsData.length > 1 
-            ? `Failed to create payment link for ticket: ${name}` 
+          const errorMsg = ticketsData.length > 1
+            ? `Failed to create payment link for ticket: ${name}`
             : 'Failed to create payment link';
           return res.status(500).json({ error: errorMsg });
         }
@@ -891,7 +901,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           payment_link_id: paymentLink.id,
           price_per_ticket: ticketPrice,
           payment_processing_fee: processingFee,
-          platform_fee: platformFeeCalc.totalPlatformFee,
+          platform_fee: platformFeeValue,
           referrer_id: referrer?.id || null,
           order_timestamp: order_timestamp ? new Date(order_timestamp) : new Date()
         });
