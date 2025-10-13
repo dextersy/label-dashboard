@@ -79,10 +79,11 @@ export async function calculatePlatformFeeForEventTickets(
 
   // Calculate gross revenue (price of tickets times number of entries)
   const grossRevenue = pricePerTicket * numberOfEntries;
-  
-  // Calculate net revenue (gross minus processing fees, then subtract 0.5%)
+
+  // Calculate net revenue (gross minus processing fees, then subtract 0.5% tax)
   const afterProcessingFees = grossRevenue - paymentProcessingFee;
-  const netRevenue = afterProcessingFees - (afterProcessingFees * 0.005); // Subtract 0.5%
+  const tax = afterProcessingFees * 0.005; // 0.5% tax
+  const netRevenue = afterProcessingFees - tax;
 
   // 1. Fixed fee per transaction
   if (brand.event_transaction_fixed_fee && brand.event_transaction_fixed_fee > 0) {
@@ -97,6 +98,15 @@ export async function calculatePlatformFeeForEventTickets(
     } else if (brand.event_fee_revenue_type === 'net') {
       // Apply percentage to net revenue
       percentageFee = (netRevenue * brand.event_revenue_percentage_fee) / 100;
+    }
+  } else if (brand.event_revenue_percentage_fee === 0 || !brand.event_revenue_percentage_fee) {
+    // Special case: When fee is 0%, platform fee depends on revenue type
+    if (brand.event_fee_revenue_type === 'net') {
+      // For net revenue with 0% fee: platform fee = processing fee + tax
+      percentageFee = paymentProcessingFee + tax;
+    } else if (brand.event_fee_revenue_type === 'gross') {
+      // For gross revenue with 0% fee: platform fee = 0
+      percentageFee = 0;
     }
   }
 
