@@ -84,6 +84,16 @@ export class EventsComponent implements OnInit, OnDestroy {
     private router: Router
   ) {}
 
+  /**
+   * Check if event is in the past (has already occurred)
+   */
+  isEventPast(event: EventSelection | null): boolean {
+    if (!event) return false;
+    const eventDate = new Date(event.date_and_time);
+    const now = new Date();
+    return eventDate < now;
+  }
+
   ngOnInit(): void {
     // Subscribe to auth state
     this.subscriptions.add(

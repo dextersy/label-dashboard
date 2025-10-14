@@ -446,26 +446,32 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isTicketCancellable(ticket: EventTicket): boolean {
-    return ticket.status !== 'Refunded'
+    return !this.isEventPast()
+      && ticket.status !== 'Refunded'
       && Number(ticket.number_of_claimed_entries) === 0
       && !!this.isAdmin;
   }
 
   isTicketRefundable(ticket: EventTicket): boolean {
-    return (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.')
+    return !this.isEventPast()
+      && (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.')
       && Number(ticket.number_of_claimed_entries) === 0
       && !!ticket.payment_id
       && !!this.isAdmin;
   }
 
   isTicketResendable(ticket: EventTicket): boolean {
-    return ticket.status !== 'Refunded'
+    return !this.isEventPast()
+      && ticket.status !== 'Refunded'
       && Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries)
       && !!this.isAdmin;
   }
 
   isTicketTransferable(ticket: EventTicket): boolean {
-    return (ticket.status === 'Ticket sent.') && Number(ticket.number_of_claimed_entries) === 0 && !!this.isAdmin;
+    return !this.isEventPast()
+      && (ticket.status === 'Ticket sent.')
+      && Number(ticket.number_of_claimed_entries) === 0
+      && !!this.isAdmin;
   }
 
   isSuperadmin(): boolean {

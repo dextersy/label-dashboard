@@ -188,4 +188,15 @@ export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy 
   getTotalNetSales(): number {
     return this.referrers.reduce((total, referrer) => total + referrer.net_amount_sold, 0);
   }
+
+  isEventPast(): boolean {
+    if (!this.selectedEvent || !this.selectedEvent.date_and_time) {
+      return false;
+    }
+
+    const eventDate = new Date(this.selectedEvent.date_and_time);
+    const now = new Date();
+
+    return now > eventDate;
+  }
 }

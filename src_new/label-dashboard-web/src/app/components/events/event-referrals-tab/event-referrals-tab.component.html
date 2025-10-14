@@ -67,49 +67,56 @@
           <h5><i class="fa fa-plus me-2"></i>Add Referrer</h5>
         </div>
         <div class="card-body">
+          <div class="alert alert-warning mb-3" *ngIf="isEventPast()">
+            <i class="fas fa-lock me-2"></i>
+            Cannot add referrers to past events
+          </div>
           <form (ngSubmit)="onSubmitReferrer()" #referrerFormRef="ngForm">
             <div class="mb-3">
               <label class="form-label required">Referrer Name</label>
-              <input 
-                type="text" 
-                class="form-control" 
+              <input
+                type="text"
+                class="form-control"
                 [(ngModel)]="referrerForm.name"
                 name="name"
                 placeholder="Enter referrer name"
                 (input)="generateReferralCode()"
+                [disabled]="isEventPast()"
                 required>
               <small class="form-text text-muted">Name of the person or organization promoting the event.</small>
             </div>
 
             <div class="mb-3">
               <label class="form-label required">Referral Code</label>
-              <input 
-                type="text" 
-                class="form-control" 
+              <input
+                type="text"
+                class="form-control"
                 [(ngModel)]="referrerForm.referral_code"
                 name="referral_code"
                 placeholder="Referral code will be generated"
                 (input)="generateSlug()"
+                [disabled]="isEventPast()"
                 required>
               <small class="form-text text-muted">Unique code to identify this referrer's sales.</small>
             </div>
 
             <div class="mb-3">
               <label class="form-label required">URL Slug</label>
-              <input 
-                type="text" 
-                class="form-control" 
+              <input
+                type="text"
+                class="form-control"
                 [(ngModel)]="referrerForm.slug"
                 name="slug"
                 placeholder="URL slug will be generated"
+                [disabled]="isEventPast()"
                 required>
               <small class="form-text text-muted">Used to create the referral link URL.</small>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               class="btn btn-primary"
-              [disabled]="!referrerFormRef.form.valid || loading">
+              [disabled]="!referrerFormRef.form.valid || loading || isEventPast()">
               <i class="fa fa-plus me-1"></i>
               <span *ngIf="loading">Adding...</span>
               <span *ngIf="!loading">Add Referrer</span>
