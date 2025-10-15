@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 
@@ -187,6 +187,110 @@ export const getWalletBalances = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching wallet balances:', error);
     auditLogger.logSystemAccess(req, 'ERROR_WALLET_BALANCES', { error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get all S3 URLs/paths used in the database (cross-brand)
+ *
+ * Returns all file URLs and paths stored in the database across ALL brands.
+ * Used by S3 cleanup jobs to identify which files are still in use.
+ */
+export const getUsedS3Urls = async (req: Request, res: Response) => {
+  try {
+    console.log('Fetching all used S3 URLs from database...');
+
+    const allUrls: Set<string> = new Set();
+
+    // 1. Brand URLs (logo_url, favicon_url, release_submission_url)
+    const brands = await Brand.findAll({
+      attributes: ['id', 'brand_name', 'logo_url', 'favicon_url', 'release_submission_url']
+    });
+
+    brands.forEach(brand => {
+      if (brand.logo_url) allUrls.add(brand.logo_url);
+      if (brand.favicon_url) allUrls.add(brand.favicon_url);
+      if (brand.release_submission_url) allUrls.add(brand.release_submission_url);
+    });
+
+    // 2. Event URLs (poster_url, venue_maps_url)
+    const events = await Event.findAll({
+      attributes: ['id', 'title', 'poster_url', 'venue_maps_url', 'brand_id']
+    });
+
+    events.forEach(event => {
+      if (event.poster_url) allUrls.add(event.poster_url);
+      if (event.venue_maps_url) allUrls.add(event.venue_maps_url);
+    });
+
+    // 3. Artist URLs (website_page_url)
+    const artists = await Artist.findAll({
+      attributes: ['id', 'name', 'website_page_url', 'brand_id']
+    });
+
+    artists.forEach(artist => {
+      if (artist.website_page_url) allUrls.add(artist.website_page_url);
+    });
+
+    // 4. Artist Images (path)
+    const artistImages = await ArtistImage.findAll({
+      attributes: ['id', 'path', 'artist_id']
+    });
+
+    artistImages.forEach(image => {
+      if (image.path) allUrls.add(image.path);
+    });
+
+    // 5. Artist Documents (path)
+    const artistDocuments = await ArtistDocument.findAll({
+      attributes: ['id', 'path', 'artist_id']
+    });
+
+    artistDocuments.forEach(doc => {
+      if (doc.path) allUrls.add(doc.path);
+    });
+
+    // 6. Release URLs (cover_art)
+    const releases = await Release.findAll({
+      attributes: ['id', 'catalog_no', 'cover_art', 'brand_id']
+    });
+
+    releases.forEach(release => {
+      if (release.cover_art) allUrls.add(release.cover_art);
+    });
+
+    // Convert Set to Array and filter out empty/null values
+    const urlsArray = Array.from(allUrls).filter(url => url && url.trim().length > 0);
+
+    console.log(`Found ${urlsArray.length} unique URLs/paths in use across all brands`);
+
+    // Log data access
+    auditLogger.logDataAccess(req, 's3-used-urls', 'READ', urlsArray.length, {
+      brandCount: brands.length,
+      eventCount: events.length,
+      artistCount: artists.length,
+      imageCount: artistImages.length,
+      documentCount: artistDocuments.length,
+      releaseCount: releases.length
+    });
+
+    res.json({
+      total_urls: urlsArray.length,
+      urls: urlsArray,
+      breakdown: {
+        brands: brands.length,
+        events: events.length,
+        artists: artists.length,
+        artist_images: artistImages.length,
+        artist_documents: artistDocuments.length,
+        releases: releases.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching used S3 URLs:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_S3_USED_URLS', { error: error.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 };

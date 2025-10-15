@@ -7,7 +7,8 @@ import {
 } from '../controllers/systemAuthController';
 import {
   getArtistsDuePayment,
-  getWalletBalances
+  getWalletBalances,
+  getUsedS3Urls
 } from '../controllers/systemController';
 import {
   authenticateSystemUser,
@@ -42,5 +43,6 @@ router.use(systemApiRateLimit(100, 60000)); // 100 requests per minute
 // Data access endpoints
 router.get('/artists-due-payment', getArtistsDuePayment);
 router.get('/wallet-balances', getWalletBalances);
+router.get('/s3-used-urls', getUsedS3Urls);
 
 export default router;
