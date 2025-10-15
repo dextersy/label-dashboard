@@ -19,5 +19,6 @@ src_new/label-dashboard-api/dist
 # Deployment configuration (contains sensitive server details)
 deploy.config
 src_new/label-dashboard-api/webhook.log
+src_new/label-dashboard-api/logs
 SECURITY_ASSESSMENT_REPORT.md
 .claude/settings.local.json

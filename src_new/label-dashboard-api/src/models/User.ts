@@ -11,12 +11,13 @@ interface UserAttributes {
   last_name?: string;
   profile_photo?: string;
   is_admin: boolean;
-  brand_id: number;
+  is_system_user: boolean;
+  brand_id: number | null;
   reset_hash?: string;
   last_logged_in?: Date;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'is_admin' | 'brand_id'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'is_admin' | 'is_system_user' | 'brand_id'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
@@ -27,7 +28,8 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public last_name?: string;
   public profile_photo?: string;
   public is_admin!: boolean;
-  public brand_id!: number;
+  public is_system_user!: boolean;
+  public brand_id!: number | null;
   public reset_hash?: string;
   public last_logged_in?: Date;
 
@@ -35,6 +37,18 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  /**
+   * Validates system user constraints
+   * System users MUST have NULL brand_id
+   * Regular users MUST have non-NULL brand_id
+   */
+  public isValidSystemUser(): boolean {
+    if (this.is_system_user) {
+      return this.brand_id === null;
+    }
+    return this.brand_id !== null;
+  }
 }
 
 User.init(
@@ -73,9 +87,14 @@ User.init(
       allowNull: false,
       defaultValue: 0,
     },
+    is_system_user: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
     brand_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 1,
     },
     reset_hash: {
@@ -91,6 +110,17 @@ User.init(
     sequelize,
     tableName: 'user',
     timestamps: false,
+    validate: {
+      systemUserConstraint() {
+        // Enforce: system users MUST have NULL brand_id, regular users MUST have non-NULL brand_id
+        if (this.is_system_user && this.brand_id !== null) {
+          throw new Error('System users must have NULL brand_id');
+        }
+        if (!this.is_system_user && this.brand_id === null) {
+          throw new Error('Regular users must have a brand_id');
+        }
+      }
+    }
   }
 );
 

@@ -46,6 +46,7 @@ import dashboardRoutes from './routes/dashboard';
 import profileRoutes from './routes/profile';
 import inviteRoutes from './routes/invite';
 import emailRoutes from './routes/email';
+import systemRoutes from './routes/system';
 
 // API Routes (protected)
 app.use('/api/auth', authRoutes);
@@ -62,6 +63,9 @@ app.use('/api/email', emailRoutes);
 
 // Public API Routes (no authentication required)
 app.use('/api/public', publicRoutes);
+
+// System API Routes (system user authentication required)
+app.use('/api/system', systemRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Label Dashboard API is running' });
@@ -144,6 +148,10 @@ const startServer = async () => {
       console.log(`   Buy Ticket: POST http://localhost:${port}/api/public/tickets/buy`);
       console.log(`   Verify Ticket: POST http://localhost:${port}/api/public/tickets/verify`);
       console.log(`   Payment Webhook: POST http://localhost:${port}/api/public/webhook/payment`);
+      console.log(`\n🔧 System API (System Users Only - Cross-Brand Access):`);
+      console.log(`   System Login: POST http://localhost:${port}/api/system/auth/login`);
+      console.log(`   System Auth Check: GET http://localhost:${port}/api/system/auth/me`);
+      console.log(`   Artists Due Payment (All Brands): GET http://localhost:${port}/api/system/artists-due-payment`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
