@@ -497,9 +497,9 @@ class ArtistBalanceCheckService {
     const textBody = this.generateEmailText(summary);
 
     const mailOptions = {
-      from: `Artist Dashboard <${this.fromEmail}>`,
+      from: `Melt Records Dashboard - System Notifications <${this.fromEmail}>`,
       to: this.superadminEmail,
-      subject,
+      subject: `[artist-balance-check] ${subject}`,
       html: htmlBody,
       text: textBody,
     };

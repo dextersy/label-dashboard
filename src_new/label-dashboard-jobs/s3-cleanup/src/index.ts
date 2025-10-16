@@ -818,9 +818,9 @@ class S3CleanupService {
     const logsFilename = `s3-cleanup-logs-${timestamp}.txt`;
 
     const mailOptions = {
-      from: `S3 Cleanup <${this.fromEmail}>`,
+      from: `Melt Records Dashboard - System Notifications <${this.fromEmail}>`,
       to: this.superadminEmail,
-      subject,
+      subject: `[s3-cleanup] ${subject}`,
       html: htmlBody,
       text: textBody,
       attachments: [
