@@ -1,0 +1,33 @@
+{
+  "name": "label-balance-check-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda function to check sublabel balances due for payment and send email summary to superadmin",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test:local": "npm run build && node dist/local-test.js",
+    "package": "npm run build && bestzip label-balance-check.zip dist node_modules package.json",
+    "deploy": "aws lambda update-function-code --function-name label-balance-check --zip-file fileb://label-balance-check.zip"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "sublabel",
+    "payment",
+    "balance"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "nodemailer": "^6.9.13"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140",
+    "@types/node": "^20.14.10",
+    "@types/nodemailer": "^6.4.15",
+    "bestzip": "^2.2.1",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.5.3"
+  }
+}

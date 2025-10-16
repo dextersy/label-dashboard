@@ -44,6 +44,10 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public event_revenue_percentage_fee?: number;
   public event_fee_revenue_type?: 'net' | 'gross';
 
+  // Association properties
+  public parentBrand?: Brand;
+  public childBrands?: Brand[];
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
