@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { BrandService } from '../../../services/brand.service';
 import { ApiService } from '../../../services/api.service';
@@ -24,6 +25,8 @@ export class ArtistManageEpkTabComponent implements OnInit {
   epkUrl: string = '';
   selectedTemplate: number = 1;
   saving: boolean = false;
+  previewOpen: boolean = false;
+  previewTemplate: number | null = null;
 
   templateOptions = [
     { value: 1, name: 'Modern Gradient', description: 'Bold design with gradient overlays and dynamic effects' },
@@ -32,7 +35,8 @@ export class ArtistManageEpkTabComponent implements OnInit {
 
   constructor(
     private brandService: BrandService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -48,6 +52,15 @@ export class ArtistManageEpkTabComponent implements OnInit {
 
       this.epkUrl = `${protocol}//${currentDomain}${port}/public/epk/${this.artist.id}`;
     }
+  }
+
+  getPreviewUrl(templateNumber: number): any {
+    const currentDomain = window.location.hostname;
+    const protocol = window.location.protocol;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const url = `${protocol}//${currentDomain}${port}/artist/epk/preview/${this.artist.id}/${templateNumber}`;
+
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
   updateEPKSettings(): void {
@@ -115,7 +128,7 @@ export class ArtistManageEpkTabComponent implements OnInit {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     try {
       const successful = document.execCommand('copy');
       if (successful) {
@@ -124,7 +137,32 @@ export class ArtistManageEpkTabComponent implements OnInit {
     } catch (err) {
       console.error('Fallback: Could not copy text: ', err);
     }
-    
+
     document.body.removeChild(textArea);
+  }
+
+  openPreview(templateNumber: number): void {
+    this.previewTemplate = templateNumber;
+    this.previewOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closePreview(): void {
+    this.previewOpen = false;
+    this.previewTemplate = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  getPreviewTemplateName(): string {
+    const template = this.templateOptions.find(t => t.value === this.previewTemplate);
+    return template ? template.name : '';
+  }
+
+  useThisTemplate(): void {
+    if (this.previewTemplate) {
+      this.selectedTemplate = this.previewTemplate;
+      this.closePreview();
+      this.updateEPKSettings();
+    }
   }
 }

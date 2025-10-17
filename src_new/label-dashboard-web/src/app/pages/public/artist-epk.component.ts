@@ -66,7 +66,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   epkData: ArtistEPK | null = null;
   isLoading = true;
   isError = false;
-  
+  isPreview = false;
+  previewTemplate: number | null = null;
+
   // Lightbox properties
   lightboxOpen = false;
   currentImageIndex = 0;
@@ -79,10 +81,25 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // Check if this is preview mode from route data
+    this.route.data.pipe(takeUntil(this.destroy$)).subscribe(data => {
+      this.isPreview = data['preview'] || false;
+    });
+
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const artistId = params['artist_id'];
+
+      // In preview mode, also get the template number
+      if (this.isPreview && params['template']) {
+        this.previewTemplate = parseInt(params['template'], 10);
+      }
+
+      // Load EPK data or show error if no artist ID
       if (artistId) {
         this.loadArtistEPK(artistId);
+      } else {
+        this.isError = true;
+        this.isLoading = false;
       }
     });
   }
@@ -323,6 +340,10 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   getEpkTemplate(): number {
+    // In preview mode, use the preview template override
+    if (this.isPreview && this.previewTemplate) {
+      return this.previewTemplate;
+    }
     return this.epkData?.artist.epk_template || 1;
   }
 }

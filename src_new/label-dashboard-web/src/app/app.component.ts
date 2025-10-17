@@ -151,18 +151,18 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isStandalonePage(): boolean {
     const standaloneRoutes = ['/login', '/domain-not-found', '/forgot-password', '/reset-password', '/set-profile'];
-    const standaloneRoutePrefixes = ['/invite', '/public'];
-    
+    const standaloneRoutePrefixes = ['/invite', '/public', '/artist/epk/preview'];
+
     // Check exact matches
     if (standaloneRoutes.includes(this.router.url) || this.router.url === '/') {
       return true;
     }
-    
+
     // Check route prefixes (for routes like /invite/accept and /public)
     if (standaloneRoutePrefixes.some(prefix => this.router.url.startsWith(prefix))) {
       return true;
     }
-    
+
     // Check auth status
     return !this.authService.isLoggedIn();
   }

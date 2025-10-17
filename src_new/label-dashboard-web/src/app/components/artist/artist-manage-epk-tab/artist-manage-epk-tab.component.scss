@@ -103,3 +103,76 @@
     }
   }
 }
+
+// Preview modal styling
+.modal {
+  &.show {
+    opacity: 1;
+  }
+
+  .modal-dialog.modal-fullscreen {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .btn-success {
+      font-weight: 500;
+    }
+
+    .btn-outline-light {
+      color: #ffffff;
+      border-color: #ffffff;
+
+      &:hover {
+        color: #212529;
+        background-color: #ffffff;
+        border-color: #ffffff;
+      }
+    }
+
+    i {
+      color: inherit;
+    }
+
+    .current-template-badge {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      i {
+        color: #28a745;
+      }
+    }
+  }
+
+  .modal-body {
+    height: calc(100vh - 70px);
+    overflow: hidden;
+
+    .preview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  }
+}
+
+.modal-backdrop {
+  &.show {
+    opacity: 0.5;
+  }
+}

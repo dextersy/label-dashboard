@@ -39,6 +39,9 @@ export const routes: Routes = [
   { path: 'public/tickets/buy/:id', component: TicketBuyComponent },
   { path: 'public/tickets/success/:id', component: TicketSuccessComponent },
   { path: 'public/tickets/verify/:id', component: TicketVerifyComponent },
+
+  // EPK Preview (protected)
+  { path: 'artist/epk/preview/:artist_id/:template', component: ArtistEPKComponent, canActivate: [authGuard], data: { preview: true } },
   
   // Protected Routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
