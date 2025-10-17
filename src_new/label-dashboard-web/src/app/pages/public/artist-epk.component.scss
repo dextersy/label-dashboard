@@ -708,28 +708,367 @@
         right: 10px;
         font-size: 1.5rem;
       }
-      
+
       .lightbox-nav {
         &.lightbox-prev {
           left: 10px;
         }
-        
+
         &.lightbox-next {
           right: 10px;
         }
       }
-      
+
       .lightbox-caption {
         bottom: 10px;
         left: 10px;
         right: 10px;
         font-size: 1rem;
       }
-      
+
       .lightbox-counter {
         top: 10px;
         left: 10px;
         font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+// ================================================
+// TEMPLATE 2: MINIMAL CLEAN DESIGN
+// ================================================
+
+.artist-epk-page .template-2 {
+  background: #ffffff;
+  font-family: 'Georgia', 'Times New Roman', serif;
+
+  // Minimal Header
+  .minimal-header {
+    background: #f8f9fa;
+    padding: 4rem 0 3rem 0;
+    border-bottom: 2px solid #e9ecef;
+
+    .minimal-profile {
+      .minimal-profile-photo {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 1.5rem;
+        border: 3px solid #dee2e6;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      .minimal-artist-name {
+        font-size: 3rem;
+        font-weight: 400;
+        color: #212529;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+      }
+
+      .minimal-brand-label {
+        font-size: 0.95rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-weight: 600;
+      }
+    }
+  }
+
+  // Social Media Section
+  .minimal-social-section {
+    padding: 2rem 0;
+    border-bottom: 1px solid #e9ecef;
+
+    .minimal-social-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+
+      .minimal-social-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #495057;
+        text-decoration: none;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 0.95rem;
+        transition: color 0.3s ease;
+
+        i {
+          font-size: 1.2rem;
+        }
+
+        .social-name {
+          font-weight: 500;
+        }
+
+        &:hover {
+          color: #212529;
+        }
+      }
+    }
+  }
+
+  // Content Sections
+  .minimal-section {
+    padding: 4rem 0;
+
+    .minimal-section-title {
+      font-size: 2rem;
+      font-weight: 400;
+      color: #212529;
+      margin-bottom: 2rem;
+      letter-spacing: -0.01em;
+      position: relative;
+      display: inline-block;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 2px;
+        background: #212529;
+      }
+    }
+  }
+
+  // Bio Section
+  .minimal-bio-section {
+    .minimal-bio-content {
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: #495057;
+
+      p {
+        margin-bottom: 1.5rem;
+
+        &:first-child {
+          font-size: 1.25rem;
+          line-height: 1.7;
+          color: #212529;
+        }
+      }
+    }
+  }
+
+  // Music Section
+  .minimal-music-section {
+    background: #f8f9fa;
+
+    .minimal-section-title::after {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .minimal-releases-list {
+      max-width: 900px;
+      margin: 0 auto;
+
+      .minimal-release-card {
+        background: white;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #dee2e6;
+        transition: box-shadow 0.3s ease;
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .minimal-release-cover {
+          width: 100%;
+          aspect-ratio: 1;
+          object-fit: cover;
+          border: 1px solid #dee2e6;
+        }
+
+        .minimal-release-title {
+          font-size: 1.5rem;
+          font-weight: 400;
+          color: #212529;
+          margin-bottom: 0.5rem;
+        }
+
+        .minimal-release-date {
+          font-size: 0.9rem;
+          color: #6c757d;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          margin-bottom: 0;
+        }
+
+        .minimal-streaming-links {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          flex-wrap: wrap;
+
+          .minimal-stream-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 50%;
+            color: #495057;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: #212529;
+              color: white;
+              border-color: #212529;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Gallery Section
+  .minimal-gallery-section {
+    .minimal-section-title::after {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .minimal-gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      max-width: 1000px;
+      margin: 0 auto;
+
+      .minimal-gallery-item {
+        cursor: pointer;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+        transition: transform 0.3s ease;
+
+        &:hover {
+          transform: scale(1.02);
+
+          .minimal-gallery-img {
+            opacity: 0.9;
+          }
+        }
+
+        .minimal-gallery-img {
+          width: 100%;
+          height: 250px;
+          object-fit: cover;
+          transition: opacity 0.3s ease;
+        }
+      }
+    }
+  }
+
+  // Footer
+  .minimal-footer {
+    background: #212529;
+    padding: 2rem 0;
+    text-align: center;
+
+    .minimal-footer-text {
+      color: #adb5bd;
+      font-size: 0.85rem;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+  }
+}
+
+// Template 2 Responsive Design
+@media (max-width: 768px) {
+  .artist-epk-page .template-2 {
+    .minimal-header {
+      padding: 3rem 0 2rem 0;
+
+      .minimal-profile {
+        .minimal-profile-photo {
+          width: 120px;
+          height: 120px;
+        }
+
+        .minimal-artist-name {
+          font-size: 2.2rem;
+        }
+      }
+    }
+
+    .minimal-social-section .minimal-social-links {
+      gap: 1.5rem;
+
+      .minimal-social-link {
+        font-size: 0.9rem;
+      }
+    }
+
+    .minimal-section {
+      padding: 3rem 0;
+
+      .minimal-section-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .minimal-music-section {
+      .minimal-releases-list {
+        .minimal-release-card {
+          padding: 1.5rem;
+
+          .minimal-release-title {
+            font-size: 1.3rem;
+          }
+
+          .minimal-streaming-links {
+            justify-content: flex-start;
+            margin-top: 1rem;
+          }
+        }
+      }
+    }
+
+    .minimal-gallery-section {
+      .minimal-gallery-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+
+        .minimal-gallery-img {
+          height: 180px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .artist-epk-page .template-2 {
+    .minimal-header {
+      .minimal-profile {
+        .minimal-artist-name {
+          font-size: 1.8rem;
+        }
+      }
+    }
+
+    .minimal-section {
+      .minimal-section-title {
+        font-size: 1.5rem;
+      }
+    }
+
+    .minimal-gallery-section {
+      .minimal-gallery-grid {
+        grid-template-columns: 1fr;
       }
     }
   }

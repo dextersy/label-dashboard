@@ -1572,11 +1572,12 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'bio',
         'profile_photo',
         'instagram_handle',
-        'facebook_handle', 
+        'facebook_handle',
         'twitter_handle',
         'tiktok_handle',
         'youtube_channel',
-        'website_page_url'
+        'website_page_url',
+        'epk_template'
       ]
     });
 
@@ -1633,6 +1634,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         name: artist.name,
         bio: artist.bio,
         profile_photo: artist.profile_photo,
+        epk_template: artist.epk_template || 1,
         social_media: {
           instagram: artist.instagram_handle,
           facebook: artist.facebook_handle,

@@ -1,8 +1,13 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { BrandService } from '../../../services/brand.service';
+import { ApiService } from '../../../services/api.service';
+
+export interface ArtistWithEPK extends Artist {
+  epk_template?: number;
+}
 
 @Component({
   selector: 'app-artist-manage-epk-tab',
@@ -12,14 +17,27 @@ import { BrandService } from '../../../services/brand.service';
   styleUrl: './artist-manage-epk-tab.component.scss'
 })
 export class ArtistManageEpkTabComponent implements OnInit {
-  @Input() artist!: Artist;
-  
-  epkUrl: string = '';
+  @Input() artist!: ArtistWithEPK;
+  @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
+  @Output() artistUpdated = new EventEmitter<ArtistWithEPK>();
 
-  constructor(private brandService: BrandService) {}
+  epkUrl: string = '';
+  selectedTemplate: number = 1;
+  saving: boolean = false;
+
+  templateOptions = [
+    { value: 1, name: 'Modern Gradient', description: 'Bold design with gradient overlays and dynamic effects' },
+    { value: 2, name: 'Minimal Clean', description: 'Simple, elegant design with clean typography' }
+  ];
+
+  constructor(
+    private brandService: BrandService,
+    private apiService: ApiService
+  ) {}
 
   ngOnInit(): void {
     this.generateEPKUrl();
+    this.selectedTemplate = this.artist?.epk_template || 1;
   }
 
   private generateEPKUrl(): void {
@@ -27,9 +45,45 @@ export class ArtistManageEpkTabComponent implements OnInit {
       const currentDomain = window.location.hostname;
       const protocol = window.location.protocol;
       const port = window.location.port ? `:${window.location.port}` : '';
-      
+
       this.epkUrl = `${protocol}//${currentDomain}${port}/public/epk/${this.artist.id}`;
     }
+  }
+
+  updateEPKSettings(): void {
+    if (!this.artist || this.saving) return;
+
+    this.saving = true;
+
+    this.apiService.updateArtistEPKSettings(this.artist.id, { epk_template: this.selectedTemplate })
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.alertMessage.emit({
+              type: 'success',
+              message: response.message || 'EPK settings updated successfully!'
+            });
+
+            // Update the artist object with the returned settings
+            const updatedArtist = { ...this.artist, ...response.settings };
+            this.artistUpdated.emit(updatedArtist);
+          } else {
+            this.alertMessage.emit({
+              type: 'error',
+              message: response.message || 'Failed to update EPK settings.'
+            });
+          }
+          this.saving = false;
+        },
+        error: (error) => {
+          console.error('Error updating EPK settings:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            message: error.error?.error || 'An error occurred while updating the EPK settings.'
+          });
+          this.saving = false;
+        }
+      });
   }
 
   copyToClipboard(): void {

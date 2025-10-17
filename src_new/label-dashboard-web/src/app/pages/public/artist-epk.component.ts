@@ -11,6 +11,7 @@ export interface ArtistEPK {
     name: string;
     bio?: string;
     profile_photo?: string;
+    epk_template?: number;
     social_media: {
       instagram?: string;
       facebook?: string;
@@ -319,5 +320,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     if (target) {
       target.classList.add('loaded');
     }
+  }
+
+  getEpkTemplate(): number {
+    return this.epkData?.artist.epk_template || 1;
   }
 }

@@ -6,27 +6,28 @@
         Manage EPK
       </h5>
     </div>
-    
+
     <div class="card-body">
       <div class="row">
         <div class="col-12">
           <p class="text-muted mb-3">
             Share your Electronic Press Kit (EPK) with industry professionals, media, and fans using the link below.
           </p>
-          
-          <div class="form-group">
+
+          <!-- EPK Link -->
+          <div class="form-group mb-4">
             <label for="epkUrl" class="form-label">EPK Link</label>
             <div class="input-group">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 id="epkUrl"
-                class="form-control" 
-                [value]="epkUrl" 
+                class="form-control"
+                [value]="epkUrl"
                 readonly
                 placeholder="Generating EPK URL...">
-              <button 
-                class="btn btn-outline-secondary" 
-                type="button" 
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
                 (click)="copyToClipboard()"
                 [disabled]="!epkUrl">
                 <i class="fas fa-copy me-1"></i>
@@ -36,6 +37,55 @@
             <div class="form-text">
               This link provides public access to your artist profile, gallery, and releases.
             </div>
+          </div>
+
+          <!-- EPK Template Selector -->
+          <div class="form-group mb-3">
+            <label class="form-label">EPK Template</label>
+            <p class="text-muted small mb-2">Choose the design template for your EPK page.</p>
+
+            <div class="row g-3">
+              <div class="col-md-6" *ngFor="let template of templateOptions">
+                <div
+                  class="card template-option"
+                  [class.selected]="selectedTemplate === template.value"
+                  (click)="selectedTemplate = template.value">
+                  <div class="card-body">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        [id]="'template-' + template.value"
+                        name="epk_template"
+                        [value]="template.value"
+                        [(ngModel)]="selectedTemplate">
+                      <label class="form-check-label w-100" [for]="'template-' + template.value">
+                        <strong>{{ template.name }}</strong>
+                        <p class="text-muted small mb-0 mt-1">{{ template.description }}</p>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="d-flex justify-content-end mt-3">
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="updateEPKSettings()"
+              [disabled]="saving || selectedTemplate === artist?.epk_template">
+              <span *ngIf="!saving">
+                <i class="fas fa-save me-1"></i>
+                Save EPK Settings
+              </span>
+              <span *ngIf="saving">
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                Saving...
+              </span>
+            </button>
           </div>
         </div>
       </div>

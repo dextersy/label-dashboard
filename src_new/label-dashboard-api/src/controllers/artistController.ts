@@ -1917,3 +1917,67 @@ export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Update EPK settings
+export const updateEPKSettings = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const artistId = parseInt(id, 10);
+    const { epk_template } = req.body;
+
+    // Check if user has access to this artist
+    const artistAccess = await checkArtistAccess(artistId, req.user.id, req.user.brand_id, req.user.is_admin);
+    if (!artistAccess) {
+      return res.status(404).json({ error: 'Artist not found or access denied' });
+    }
+
+    const artist = await Artist.findOne({
+      where: {
+        id: artistId,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Build update object based on provided fields
+    const updateData: any = {};
+
+    // Handle epk_template if provided
+    if (epk_template !== undefined && epk_template !== null) {
+      const templateValue = parseInt(epk_template, 10);
+
+      // Validate template value (1 or 2)
+      if (![1, 2].includes(templateValue)) {
+        return res.status(400).json({ error: 'EPK template must be 1 or 2' });
+      }
+
+      updateData.epk_template = templateValue;
+    }
+
+    // Add additional EPK settings here in the future
+    // Example:
+    // if (epk_show_releases !== undefined) {
+    //   updateData.epk_show_releases = epk_show_releases;
+    // }
+
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No EPK settings provided to update' });
+    }
+
+    // Update the EPK settings
+    await artist.update(updateData);
+
+    res.json({
+      success: true,
+      message: 'EPK settings updated successfully',
+      settings: updateData
+    });
+  } catch (error) {
+    console.error('Update EPK settings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

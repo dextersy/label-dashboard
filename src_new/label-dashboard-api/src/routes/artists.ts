@@ -27,6 +27,7 @@ import {
   getArtistDocuments,
   uploadArtistDocument,
   deleteArtistDocument,
+  updateEPKSettings,
   upload,
   documentUpload
 } from '../controllers/artistController';
@@ -77,5 +78,8 @@ router.delete('/:id/team/:memberId', removeTeamMember);
 router.get('/:id/documents', getArtistDocuments);
 router.post('/:id/documents', documentUpload.single('document'), uploadArtistDocument);
 router.delete('/:id/documents/:documentId', deleteArtistDocument);
+
+// EPK operations
+router.put('/:id/epk-settings', updateEPKSettings);
 
 export default router;

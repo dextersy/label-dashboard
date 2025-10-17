@@ -24,6 +24,10 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/artists`, { headers: this.getAuthHeaders() });
   }
 
+  updateArtistEPKSettings(artistId: number, settings: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/artists/${artistId}/epk-settings`, settings, { headers: this.getAuthHeaders() });
+  }
+
   // Brand Settings
   getBrandByDomain(domain: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/public/brand/domain/${domain}`);

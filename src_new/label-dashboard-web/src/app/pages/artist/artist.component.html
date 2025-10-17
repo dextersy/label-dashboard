@@ -64,8 +64,10 @@
         
         <!-- Manage EPK Tab -->
         <div *ngIf="activeTab === 'manage-epk'">
-          <app-artist-manage-epk-tab 
-            [artist]="selectedArtist">
+          <app-artist-manage-epk-tab
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)"
+            (artistUpdated)="onArtistUpdated($event)">
           </app-artist-manage-epk-tab>
         </div>
         
