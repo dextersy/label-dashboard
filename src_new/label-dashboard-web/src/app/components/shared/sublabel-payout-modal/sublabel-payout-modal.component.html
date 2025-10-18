@@ -1,4 +1,4 @@
-<div class="modal" [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" role="dialog">
+<div class="modal" appModalToBody [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -229,4 +229,4 @@
 </div>
 
 <!-- Modal backdrop -->
-<div class="modal-backdrop" [class.show]="show" *ngIf="show"></div>
+<div class="modal-backdrop" appModalToBody [class.show]="show" *ngIf="show"></div>

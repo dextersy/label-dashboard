@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 export interface SubLabelPayoutData {
   amount: number;
@@ -39,7 +40,7 @@ export interface ChildBrand {
 @Component({
   selector: 'app-sublabel-payout-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalToBodyDirective],
   templateUrl: './sublabel-payout-modal.component.html',
   styleUrls: ['./sublabel-payout-modal.component.scss']
 })

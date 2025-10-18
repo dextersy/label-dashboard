@@ -1,5 +1,6 @@
-<div class="lightbox-overlay" 
-     *ngIf="isVisible" 
+<div class="lightbox-overlay"
+     appModalToBody
+     *ngIf="isVisible"
      (click)="onBackdropClick($event)">
   
   <!-- Close button -->

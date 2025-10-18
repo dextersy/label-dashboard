@@ -5,6 +5,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { BrandService } from '../../../services/brand.service';
 import { ApiService } from '../../../services/api.service';
+import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 export interface ArtistWithEPK extends Artist {
   epk_template?: number;
@@ -13,7 +14,7 @@ export interface ArtistWithEPK extends Artist {
 @Component({
   selector: 'app-artist-manage-epk-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalToBodyDirective],
   templateUrl: './artist-manage-epk-tab.component.html',
   styleUrl: './artist-manage-epk-tab.component.scss'
 })

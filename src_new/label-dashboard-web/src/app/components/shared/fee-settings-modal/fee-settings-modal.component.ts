@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AdminService, FeeSettings, FeeSettingsSection } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 @Component({
   selector: 'app-fee-settings-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ModalToBodyDirective],
   templateUrl: './fee-settings-modal.component.html',
   styleUrls: ['./fee-settings-modal.component.scss']
 })

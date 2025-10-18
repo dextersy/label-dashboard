@@ -103,7 +103,7 @@
 </div>
 
 <!-- Preview Modal -->
-<div class="modal fade" [class.show]="previewOpen" [style.display]="previewOpen ? 'block' : 'none'" tabindex="-1" (click)="closePreview()">
+<div class="modal fade" appModalToBody [class.show]="previewOpen" [style.display]="previewOpen ? 'block' : 'none'" tabindex="-1" (click)="closePreview()">
   <div class="modal-dialog modal-fullscreen" (click)="$event.stopPropagation()">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
@@ -150,4 +150,4 @@
     </div>
   </div>
 </div>
-<div class="modal-backdrop fade" [class.show]="previewOpen" *ngIf="previewOpen" (click)="closePreview()"></div>
+<div class="modal-backdrop fade" appModalToBody [class.show]="previewOpen" *ngIf="previewOpen" (click)="closePreview()"></div>

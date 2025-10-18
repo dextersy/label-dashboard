@@ -7,11 +7,12 @@ import { LabelFinanceService, LabelFinanceDashboard, LabelFinanceBreakdown, Labe
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 @Component({
   selector: 'app-label-finance-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, DateRangeFilterComponent],
+  imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective],
   templateUrl: './label-finance-tab.component.html',
   styleUrl: './label-finance-tab.component.scss'
 })

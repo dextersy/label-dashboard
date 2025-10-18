@@ -44,6 +44,38 @@
 /* MODAL FIXES - PREVENT SCROLLING  */
 /* ================================= */
 
+/* Fix for .wrapper and .main-panel positioning context breaking modals
+   Both .wrapper and .main-panel have position:relative which creates
+   positioning contexts, causing position:fixed children (modals) to
+   position relative to these containers instead of the viewport.
+
+   IMPORTANT: This CSS fix alone won't work. Modals must be moved to
+   document.body using JavaScript to escape the positioning context.
+   The lightbox component now does this automatically. For Bootstrap modals,
+   they should already append to body by default, but if not, ensure they
+   have data-bs-container="body" attribute. */
+
+/* Ensure all modals use fixed positioning to stay centered in viewport */
+.modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1040;
+}
+
 /* Prevent scrolling when modals are open */
 body.modal-open {
   overflow: hidden !important;
