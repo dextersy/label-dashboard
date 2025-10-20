@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Artist } from '../artist-selection/artist-selection.component';
-import { ReleaseFormComponent, ReleaseFormSubmitData } from '../../shared/release-form/release-form.component';
+import { ReleaseFormComponent, ReleaseFormSubmitData } from '../release-form/release-form.component';
 import { ReleaseService } from '../../../services/release.service';
 
 @Component({

@@ -8,9 +8,9 @@ import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
-import { AddSublabelModalComponent } from '../../../components/shared/add-sublabel-modal/add-sublabel-modal.component';
-import { FeeSettingsModalComponent } from '../../../components/shared/fee-settings-modal/fee-settings-modal.component';
-import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/shared/sublabel-payout-modal/sublabel-payout-modal.component';
+import { AddSublabelModalComponent } from '../../../components/admin/add-sublabel-modal/add-sublabel-modal.component';
+import { FeeSettingsModalComponent } from '../../../components/admin/fee-settings-modal/fee-settings-modal.component';
+import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/admin/sublabel-payout-modal/sublabel-payout-modal.component';
 import { EarningsBreakdownModalComponent } from '../child-brands/earnings-breakdown-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 

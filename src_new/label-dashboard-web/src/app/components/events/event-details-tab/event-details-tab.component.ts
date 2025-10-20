@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
 import { QuillModule } from 'ngx-quill';
-import { VenueAutocompleteComponent, VenueSelection } from '../../shared/venue-autocomplete/venue-autocomplete.component';
+import { VenueAutocompleteComponent, VenueSelection } from '../venue-autocomplete/venue-autocomplete.component';
 import { TicketTypesComponent, TicketType } from '../ticket-types/ticket-types.component';
 
 export interface EventDetails {

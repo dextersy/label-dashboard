@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter, Input, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Event } from '../../../services/event.service';
-import { VenueAutocompleteComponent, VenueSelection } from '../../shared/venue-autocomplete/venue-autocomplete.component';
+import { VenueAutocompleteComponent, VenueSelection } from '../venue-autocomplete/venue-autocomplete.component';
 
 export interface TicketTypeForm {
   name: string;
