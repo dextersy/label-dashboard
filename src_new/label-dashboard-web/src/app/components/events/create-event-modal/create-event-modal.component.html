@@ -1,4 +1,4 @@
-<div class="modal fade show" style="display: block;" tabindex="-1" *ngIf="isOpen">
+<div class="modal fade show" appModalToBody style="display: block;" tabindex="-1" *ngIf="isOpen">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -8,7 +8,7 @@
         </h5>
         <button type="button" class="btn-close" (click)="close()"></button>
       </div>
-      
+
       <form [formGroup]="eventForm">
         <div class="modal-body">
           <div class="row">
@@ -229,18 +229,18 @@
             Cancel
           </button>
           <div class="ms-auto d-flex gap-2">
-            <button 
-              type="button" 
-              class="btn btn-secondary" 
+            <button
+              type="button"
+              class="btn btn-secondary"
               [disabled]="eventForm.invalid || !areAllTicketTypesValid() || loading"
               (click)="onSubmit('draft')">
               <i class="fa fa-spinner fa-spin me-1" *ngIf="loading && actionType === 'draft'"></i>
               <i class="fa fa-file-alt me-1" *ngIf="!loading || actionType !== 'draft'"></i>
               {{ (loading && actionType === 'draft') ? 'Saving Draft...' : 'Save as Draft' }}
             </button>
-            <button 
-              type="button" 
-              class="btn btn-success btn-lg" 
+            <button
+              type="button"
+              class="btn btn-success btn-lg"
               [disabled]="eventForm.invalid || !areAllTicketTypesValid() || loading"
               (click)="onSubmit('published')">
               <i class="fa fa-spinner fa-spin me-1" *ngIf="loading && actionType === 'published'"></i>
@@ -250,10 +250,10 @@
           </div>
         </div>
       </form>
-      
+
     </div>
   </div>
 </div>
 
 <!-- Modal backdrop -->
-<div class="modal-backdrop fade show" *ngIf="isOpen" (click)="close()"></div>
+<div class="modal-backdrop fade show" appModalToBody *ngIf="isOpen" (click)="close()"></div>

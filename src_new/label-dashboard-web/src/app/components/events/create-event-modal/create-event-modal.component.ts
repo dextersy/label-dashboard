@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Event } from '../../../services/event.service';
 import { VenueAutocompleteComponent, VenueSelection } from '../venue-autocomplete/venue-autocomplete.component';
+import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 export interface TicketTypeForm {
   name: string;
@@ -34,20 +35,9 @@ export interface CreateEventForm {
 @Component({
   selector: 'app-create-event-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VenueAutocompleteComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VenueAutocompleteComponent, ModalToBodyDirective],
   templateUrl: './create-event-modal.component.html',
-  styles: [`
-    .modal {
-      z-index: 1050;
-    }
-    .modal-backdrop {
-      z-index: 1040;
-    }
-    .required::after {
-      content: ' *';
-      color: red;
-    }
-  `]
+  styleUrls: ['./create-event-modal.component.scss']
 })
 export class CreateEventModalComponent implements OnChanges {
   @Input() isOpen = false;
