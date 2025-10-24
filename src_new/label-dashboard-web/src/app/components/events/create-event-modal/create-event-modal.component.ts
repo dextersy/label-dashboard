@@ -98,18 +98,24 @@ export class CreateEventModalComponent implements OnChanges {
 
     if (this.eventForm.valid) {
       this.actionType = status;
-      
+
       const formData = this.eventForm.value as CreateEventForm;
       formData.status = status;
       formData.ticketTypes = this.ticketTypes;
-      
+
       // Set backward compatible ticket_price to first ticket type price
       formData.ticket_price = this.ticketTypes[0]?.price || 0;
-      
+
+      // Format dates to ISO strings for API (with timezone information)
+      formData.date_and_time = this.formatDateForAPI(formData.date_and_time);
+      if (formData.close_time) {
+        formData.close_time = this.formatDateForAPI(formData.close_time);
+      }
+
       if (this.selectedPosterFile) {
         formData.poster_file = this.selectedPosterFile;
       }
-      
+
       // Include venue data from Google Places
       if (this.selectedVenue) {
         formData.venue = this.selectedVenue.venue;
@@ -121,7 +127,7 @@ export class CreateEventModalComponent implements OnChanges {
         formData.venue_website = this.selectedVenue.venue_website;
         formData.venue_maps_url = this.selectedVenue.venue_maps_url;
       }
-      
+
       this.eventCreate.emit(formData);
     } else {
       // Mark all fields as touched to show validation errors
@@ -188,25 +194,33 @@ export class CreateEventModalComponent implements OnChanges {
   private resetForm(): void {
     // Reset the form to clear all previous values
     this.eventForm.reset();
-    
+
     // Clear poster selection
     this.removePoster();
-    
+
     // Clear venue selection
     this.selectedVenue = null;
-    
+
     // Reset action type
     this.actionType = null;
-    
+
     // Reset ticket types to default
     this.ticketTypes = [{ name: 'Regular', price: 0 }];
-    
+
     // Set default values
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(19, 0, 0, 0); // 7 PM
-    
-    const formattedDate = tomorrow.toISOString().slice(0, 16); // Format for datetime-local input
+
+    // Format for datetime-local input without timezone conversion
+    // This ensures the time displayed matches the intended local time
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    const hours = String(tomorrow.getHours()).padStart(2, '0');
+    const minutes = String(tomorrow.getMinutes()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+
     this.eventForm.patchValue({
       title: '',
       date_and_time: formattedDate,
@@ -285,5 +299,23 @@ export class CreateEventModalComponent implements OnChanges {
 
   areAllTicketTypesValid(): boolean {
     return this.ticketTypes.length > 0 && this.ticketTypes.every(t => this.isTicketTypeValid(t));
+  }
+
+  private formatDateForAPI(dateString: string): string {
+    if (!dateString) return '';
+
+    try {
+      // Convert datetime-local format to ISO string for API
+      // The datetime-local input provides a value like "2024-01-01T19:00"
+      // which represents local time, not UTC
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.error('Error formatting date for API:', dateString, error);
+      return '';
+    }
   }
 }
