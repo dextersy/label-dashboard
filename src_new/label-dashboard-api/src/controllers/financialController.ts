@@ -1592,20 +1592,26 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
       
       // Get royalty amount for this artist if it exists
       const royalty = await Royalty.findOne({
-        where: { 
+        where: {
           earning_id: earning.id,
           artist_id: releaseArtist.artist.id
         }
       });
       const royaltyAmount = royalty ? royalty.amount : null;
 
+      // Check if artist has a payment method set
+      const hasPaymentMethod = await PaymentMethod.findOne({
+        where: { artist_id: releaseArtist.artist.id }
+      });
+
       // Get brand settings
       const brandName = release.brand?.brand_name || 'Label Dashboard';
       const brandColor = release.brand?.brand_color || '#667eea';
       const brandLogo = release.brand?.logo_url || '';
-      
+
       // Generate dashboard URL using brand-specific domain
-      const dashboardUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial#earnings`;
+      const dashboardUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial/earnings`;
+      const paymentScreenUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial/payments`;
 
       // Send earnings notification email
       await sendEarningsNotification(
@@ -1621,7 +1627,9 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
         brandColor,
         brandLogo,
         dashboardUrl,
-        release.brand_id
+        release.brand_id,
+        !hasPaymentMethod,
+        paymentScreenUrl
       );
     }
 

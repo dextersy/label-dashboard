@@ -487,7 +487,9 @@ export const sendEarningsNotification = async (
   brandColor: string,
   brandLogo: string,
   dashboardUrl: string,
-  brandId: number
+  brandId: number,
+  needsPaymentMethod: boolean = false,
+  paymentScreenUrl: string = ''
 ): Promise<boolean> => {
   try {
     const templatePath = path.join(__dirname, '../assets/templates/earning_notification.html');
@@ -498,6 +500,14 @@ export const sendEarningsNotification = async (
     const formattedRecuperatedExpense = formatCurrency(recuperatedExpense);
     const formattedRecuperableBalance = formatCurrency(recuperableBalance);
     const formattedRoyalty = royaltyAmount ? formatCurrency(royaltyAmount) : '(Not applied)';
+
+    // Create payment method note if needed
+    const paymentMethodNote = needsPaymentMethod && paymentScreenUrl
+      ? `<div class="pc-font-alt" style="line-height: 21px; letter-spacing: -0.2px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: normal; font-variant-ligatures: normal; color: #31708f; text-align: left; text-align-last: left; background-color: #d9edf7; padding: 15px; margin: 10px 0; border-left: 4px solid #5bc0de;">
+          <div><span style="font-weight: 700;">ℹ️ Payment Method Required</span></div>
+          <div style="margin-top: 5px;"><span>You haven't set up a payment method yet. To receive payments, please <a href="${paymentScreenUrl}" style="color: #31708f; text-decoration: underline;">add your payment details here</a>.</span></div>
+        </div>`
+      : '';
 
     // Replace template variables (matching PHP logic)
     template = template.replace(/%LOGO%/g, brandLogo);
@@ -511,6 +521,7 @@ export const sendEarningsNotification = async (
     template = template.replace(/%BRAND_NAME%/g, brandName);
     template = template.replace(/%BRAND_COLOR%/g, brandColor);
     template = template.replace(/%URL%/g, dashboardUrl);
+    template = template.replace(/%PAYMENT_METHOD_NOTE%/g, paymentMethodNote);
 
     const subject = `New earnings posted for ${artistName} - ${releaseTitle}`;
     return await sendEmail(recipients, subject, template, brandId);
