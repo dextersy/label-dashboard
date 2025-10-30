@@ -43,6 +43,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   referralCode: string | null = null;
   currentBrand: BrandSettings | null = null;
   selectedTicketType: any = null;
+  showLightbox = false;
 
   constructor(
     private fb: FormBuilder,
@@ -374,6 +375,16 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
     const brandName = this.currentBrand?.name || this.event.brand?.name;
     this.metaService.updateEventTicketMetadata(this.event, brandName);
+  }
+
+  openLightbox() {
+    this.showLightbox = true;
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+
+  closeLightbox() {
+    this.showLightbox = false;
+    document.body.style.overflow = ''; // Restore scrolling
   }
 
 }

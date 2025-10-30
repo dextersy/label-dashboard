@@ -36,7 +36,15 @@
       <div class="container">
         <div class="row align-items-center h-100">
           <div class="col-md-4 event-poster-container" *ngIf="event.poster_url">
-            <img [src]="event.poster_url" class="event-poster" alt="Event poster">
+            <div class="poster-wrapper">
+              <img [src]="event.poster_url" class="event-poster" alt="Event poster">
+              <button
+                class="view-full-image-btn"
+                (click)="openLightbox()"
+                title="View full image">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
           </div>
           <div [class]="event.poster_url ? 'col-md-8' : 'col-md-12 text-center'" style="padding:20px;">
             <div *ngIf="canBuyTickets()">
@@ -292,11 +300,24 @@
       <p>
         <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
         <span style="font-size:12px; font-style:italic;">
-          Having trouble? Contact us via email 
-          <a [href]="'mailto:support@melt-records.com?subject=Issue with ticketing for ' + event.title">here</a> 
+          Having trouble? Contact us via email
+          <a [href]="'mailto:support@melt-records.com?subject=Issue with ticketing for ' + event.title">here</a>
           or use the chat widget on the lower right.
         </span>
       </p>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox-overlay" *ngIf="showLightbox" (click)="closeLightbox()">
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <button class="lightbox-close" (click)="closeLightbox()">
+        <i class="fas fa-times"></i>
+      </button>
+      <img [src]="event?.poster_url" class="lightbox-image" alt="Event poster">
+      <div class="lightbox-caption" *ngIf="event?.description">
+        <div [innerHTML]="event?.description || ''"></div>
+      </div>
     </div>
   </div>
 </div>
