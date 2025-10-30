@@ -347,7 +347,7 @@ export const deleteSong = async (req: AuthRequest, res: Response) => {
     if (song.audio_file) {
       try {
         await s3.deleteObject({
-          Bucket: process.env.S3_BUCKET || '',
+          Bucket: process.env.S3_BUCKET_MASTERS!,
           Key: song.audio_file
         }).promise();
       } catch (s3Error) {
@@ -440,12 +440,16 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Find song and verify brand ownership
+    // Find song and verify brand ownership, include release and artists
     const song = await Song.findByPk(id, {
       include: [{
         model: Release,
         as: 'release',
-        where: { brand_id: req.user.brand_id }
+        where: { brand_id: req.user.brand_id },
+        include: [{
+          model: Artist,
+          as: 'artists'
+        }]
       }]
     });
 
@@ -453,11 +457,29 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Song not found' });
     }
 
+    const release = (song as any).release;
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Get artist name (use first artist if multiple)
+    const artists = release.artists || [];
+    const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
+    const releaseTitle = release.title || 'Untitled';
+    const catalogNo = release.catalog_no;
+
+    // Create folder name: "catalog_no artist name - release title"
+    // Sanitize for filesystem/S3 compatibility
+    const folderName = `${catalogNo} ${artistName} - ${releaseTitle}`
+      .replace(/[^a-zA-Z0-9\s\-_]/g, '') // Remove special characters
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
+
     // Delete old audio file if exists
     if (song.audio_file) {
       try {
         await s3.deleteObject({
-          Bucket: process.env.S3_BUCKET || '',
+          Bucket: process.env.S3_BUCKET_MASTERS!,
           Key: song.audio_file
         }).promise();
       } catch (s3Error) {
@@ -465,10 +487,11 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Upload new file to S3
-    const fileName = `songs/${Date.now()}-${req.file.originalname}`;
+    // Upload new file to S3 masters bucket in release-specific folder
+    // S3 doesn't require explicit folder creation - it's created automatically
+    const fileName = `${folderName}/${Date.now()}-${req.file.originalname}`;
     await s3.upload({
-      Bucket: process.env.S3_BUCKET || '',
+      Bucket: process.env.S3_BUCKET_MASTERS!,
       Key: fileName,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,

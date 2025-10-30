@@ -166,10 +166,18 @@ export class EditReleaseDialogComponent implements OnChanges {
     this.selectedSongForAudio = song;
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'audio/*';
+    input.accept = '.wav,audio/wav,audio/x-wav';
     input.onchange = (e: any) => {
       const file = e.target.files[0];
       if (file && song.id) {
+        // Validate file type
+        if (!file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
+          this.alertMessage.emit({
+            type: 'error',
+            message: 'Only WAV files are allowed for audio masters'
+          });
+          return;
+        }
         this.uploadAudioFile(song.id, file);
       }
     };

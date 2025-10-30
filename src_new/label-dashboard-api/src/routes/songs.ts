@@ -11,31 +11,26 @@ import {
 } from '../controllers/songController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
-// Configure multer for audio file uploads
+// Configure multer for audio file uploads (masters)
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit for audio files
+    fileSize: 100 * 1024 * 1024, // 100MB limit for audio master files
   },
   fileFilter: (req, file, cb) => {
-    // Allow audio files
+    // Only allow WAV files for audio masters
     const allowedMimeTypes = [
-      'audio/mpeg',
-      'audio/mp3',
       'audio/wav',
       'audio/x-wav',
-      'audio/flac',
-      'audio/x-flac',
-      'audio/aac',
-      'audio/m4a',
-      'audio/x-m4a'
+      'audio/wave',
+      'audio/vnd.wave'
     ];
 
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only audio files are allowed.'));
+      cb(new Error('Invalid file type. Only WAV files are allowed for audio masters.'));
     }
   }
 });
