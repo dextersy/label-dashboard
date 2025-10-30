@@ -194,7 +194,7 @@
 
               <!-- Number of Tickets -->
               <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
-              <small class="fadeIn fourth" *ngIf="getRemainingTicketsDisplay()">
+              <small class="fadeIn fourth" *ngIf="event.show_tickets_remaining && getRemainingTicketsDisplay()">
                 <strong>{{ getRemainingTicketsDisplay() }}</strong> tickets available.
               </small>
               <div class="ticket-quantity-container fadeIn fourth">

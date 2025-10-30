@@ -185,14 +185,33 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Maximum Number of Tickets</label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    [(ngModel)]="event.max_tickets" 
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="event.max_tickets"
                     name="max_tickets"
                     placeholder="0"
                     min="0">
                   <small class="form-text text-muted">Set "0" for unlimited tickets or to use ticket type limits only.</small>
+                </div>
+              </div>
+              <div class="col-md-6" *ngIf="event.max_tickets && event.max_tickets > 0">
+                <div class="mb-3">
+                  <label class="form-label">&nbsp;</label>
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [(ngModel)]="event.show_tickets_remaining"
+                      name="show_tickets_remaining"
+                      id="switchShowTicketsRemaining">
+                    <label class="form-check-label" for="switchShowTicketsRemaining">
+                      Show tickets remaining on ticket page
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">
+                    <i class="fa fa-info-circle"></i> When enabled, displays the number of tickets remaining on the public ticket purchase page.
+                  </small>
                 </div>
               </div>
             </div>
@@ -246,9 +265,9 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label">Show Countdown on Ticket Page</label>
-                  <select 
-                    class="form-control" 
-                    [(ngModel)]="event.countdown_display" 
+                  <select
+                    class="form-control"
+                    [(ngModel)]="event.countdown_display"
                     name="countdown_display">
                     <option value="always">Always show</option>
                     <option value="1_week">1 week before</option>

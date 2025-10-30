@@ -25,6 +25,7 @@ interface EventAttributes {
   max_tickets?: number;
   ticket_naming: string;
   countdown_display: 'always' | '1_week' | '3_days' | '1_day' | 'never';
+  show_tickets_remaining: boolean;
   google_place_id?: string;
   venue_address?: string;
   venue_latitude?: number;
@@ -61,6 +62,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public max_tickets?: number;
   public ticket_naming!: string;
   public countdown_display!: 'always' | '1_week' | '3_days' | '1_day' | 'never';
+  public show_tickets_remaining!: boolean;
   public google_place_id?: string;
   public venue_address?: string;
   public venue_latitude?: number;
@@ -190,6 +192,11 @@ Event.init(
       type: DataTypes.ENUM('always', '1_week', '3_days', '1_day', 'never'),
       allowNull: false,
       defaultValue: '1_week',
+    },
+    show_tickets_remaining: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
     },
     google_place_id: {
       type: DataTypes.STRING(255),
