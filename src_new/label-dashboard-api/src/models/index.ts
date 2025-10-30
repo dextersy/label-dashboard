@@ -23,6 +23,10 @@ import LoginAttempt from './LoginAttempt';
 import EmailAttempt from './EmailAttempt';
 import LabelPaymentMethod from './LabelPaymentMethod';
 import LabelPayment from './LabelPayment';
+import Song from './Song';
+import SongCollaborator from './SongCollaborator';
+import SongAuthor from './SongAuthor';
+import SongComposer from './SongComposer';
 
 // Define relationships
 // Brand relationships
@@ -79,12 +83,13 @@ Release.hasMany(Earning, { foreignKey: 'release_id', as: 'earnings' });
 Release.hasMany(Royalty, { foreignKey: 'release_id', as: 'royalties' });
 Release.hasMany(RecuperableExpense, { foreignKey: 'release_id', as: 'expenses' });
 Release.hasMany(ReleaseArtist, { foreignKey: 'release_id', as: 'releaseArtists' });
-Release.belongsToMany(Artist, { 
-  through: ReleaseArtist, 
-  foreignKey: 'release_id', 
+Release.belongsToMany(Artist, {
+  through: ReleaseArtist,
+  foreignKey: 'release_id',
   otherKey: 'artist_id',
-  as: 'artists' 
+  as: 'artists'
 });
+Release.hasMany(Song, { foreignKey: 'release_id', as: 'songs' });
 
 // ReleaseArtist relationships
 ReleaseArtist.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
@@ -158,6 +163,28 @@ LabelPaymentMethod.hasMany(LabelPayment, { foreignKey: 'payment_method_id', as: 
 LabelPayment.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 LabelPayment.belongsTo(LabelPaymentMethod, { foreignKey: 'payment_method_id', as: 'paymentMethod' });
 
+// Song relationships
+Song.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+Song.hasMany(SongCollaborator, { foreignKey: 'song_id', as: 'collaborators' });
+Song.hasMany(SongAuthor, { foreignKey: 'song_id', as: 'authors' });
+Song.hasMany(SongComposer, { foreignKey: 'song_id', as: 'composers' });
+Song.belongsToMany(Artist, {
+  through: SongCollaborator,
+  foreignKey: 'song_id',
+  otherKey: 'artist_id',
+  as: 'artistCollaborators'
+});
+
+// SongCollaborator relationships
+SongCollaborator.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
+SongCollaborator.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+
+// SongAuthor relationships
+SongAuthor.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
+
+// SongComposer relationships
+SongComposer.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
+
 // Export all models
 export {
   sequelize,
@@ -183,6 +210,10 @@ export {
   EmailAttempt,
   LabelPaymentMethod,
   LabelPayment,
+  Song,
+  SongCollaborator,
+  SongAuthor,
+  SongComposer,
 };
 
 // Initialize database connection

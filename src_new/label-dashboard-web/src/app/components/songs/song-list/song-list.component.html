@@ -1,0 +1,70 @@
+<div class="table-responsive" *ngIf="songs.length > 0">
+  <div *ngIf="isAdmin" class="alert alert-info mb-3">
+    <i class="fa fa-arrows-alt mr-2"></i>
+    Drag and drop rows to reorder tracks
+  </div>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th *ngIf="isAdmin" style="width: 30px;"></th>
+        <th>#</th>
+        <th>Title</th>
+        <th>Duration</th>
+        <th>Collaborators</th>
+        <th>ISRC</th>
+        <th>Links</th>
+        <th *ngIf="isAdmin">Actions</th>
+      </tr>
+    </thead>
+    <tbody cdkDropList (cdkDropListDropped)="onDrop($event)" [cdkDropListDisabled]="!isAdmin">
+      <tr *ngFor="let song of songs; let i = index" cdkDrag [cdkDragDisabled]="!isAdmin" class="song-row">
+        <td *ngIf="isAdmin" class="drag-handle" cdkDragHandle>
+          <i class="fa fa-grip-vertical text-muted"></i>
+        </td>
+        <td>{{ i + 1 }}</td>
+        <td>
+          <strong>{{ song.title }}</strong>
+          <div *ngIf="song.audio_file" class="text-muted small">
+            <i class="fa fa-file-audio"></i> Audio available
+          </div>
+        </td>
+        <td>{{ formatDuration(song.duration) }}</td>
+        <td>{{ getCollaboratorNames(song) }}</td>
+        <td><small>{{ song.isrc || '-' }}</small></td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-success" title="Spotify">
+              <i class="fab fa-spotify"></i>
+            </a>
+            <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn btn-dark" title="Apple Music">
+              <i class="fab fa-apple"></i>
+            </a>
+            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn btn-danger" title="YouTube">
+              <i class="fab fa-youtube"></i>
+            </a>
+          </div>
+          <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted">-</span>
+        </td>
+        <td *ngIf="isAdmin">
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-primary" (click)="onEdit(song)" title="Edit">
+              <i class="fa fa-edit"></i>
+            </button>
+            <button class="btn btn-info" (click)="onUploadAudio(song)" title="Upload Audio">
+              <i class="fa fa-upload"></i>
+            </button>
+            <button class="btn btn-danger" (click)="onDelete(song)" title="Delete">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="songs.length === 0" class="alert alert-info">
+  <i class="fa fa-info-circle mr-2"></i>
+  No songs added yet.
+</div>
