@@ -17,6 +17,7 @@ export interface PublicEvent {
   remaining_tickets?: number;
   is_closed: boolean;
   show_countdown: boolean;
+  show_tickets_remaining: boolean;
   supports_card: boolean;
   supports_gcash: boolean;
   supports_qrph: boolean;

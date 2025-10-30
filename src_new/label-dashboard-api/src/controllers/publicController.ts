@@ -159,6 +159,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         remaining_tickets: remainingTickets,
         is_closed: isEventClosed,
         show_countdown: shouldShowCountdown(event),
+        show_tickets_remaining: (event as any).show_tickets_remaining !== undefined ? (event as any).show_tickets_remaining : true,
         supports_card: event.supports_card,
         supports_gcash: event.supports_gcash,
         supports_qrph: event.supports_qrph,

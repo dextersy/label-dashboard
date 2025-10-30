@@ -31,6 +31,7 @@ export interface EventDetails {
   ticket_naming: string;
   slug?: string;
   countdown_display: 'always' | '1_week' | '3_days' | '1_day' | 'never';
+  show_tickets_remaining: boolean;
   supports_gcash: boolean;
   supports_qrph: boolean;
   supports_card: boolean;
@@ -150,6 +151,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       ticket_naming: event.ticket_naming,
       slug: '', // Slug is input-only, not stored in API
       countdown_display: (event as any).countdown_display || '1_week',
+      show_tickets_remaining: (event as any).show_tickets_remaining !== undefined ? (event as any).show_tickets_remaining : true,
       supports_gcash: event.supports_gcash,
       supports_qrph: event.supports_qrph,
       supports_card: event.supports_card,
@@ -396,7 +398,8 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
       formData.append('ticket_naming', this.event.ticket_naming || 'Regular');
       formData.append('max_tickets', (this.event.max_tickets || 0).toString());
       formData.append('countdown_display', this.event.countdown_display);
-      
+      formData.append('show_tickets_remaining', this.event.show_tickets_remaining.toString());
+
       // Add venue location data (always include to allow clearing)
       formData.append('google_place_id', this.event.google_place_id || '');
       formData.append('venue_address', this.event.venue_address || '');
@@ -467,6 +470,7 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
         ticket_naming: this.event.ticket_naming,
         slug: this.event.slug,
         countdown_display: this.event.countdown_display,
+        show_tickets_remaining: this.event.show_tickets_remaining,
         supports_gcash: this.event.supports_gcash,
         supports_qrph: this.event.supports_qrph,
         supports_card: this.event.supports_card,
