@@ -71,14 +71,22 @@
                   </span>
                 </td>
                 <td *ngIf="isAdmin" class="actions-cell">
-                  <button class="btn btn-sm btn-primary" 
-                          (click)="onEditRelease(release)"
-                          [disabled]="loadingReleaseDetails"
-                          title="Edit Release">
-                    <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
-                    <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
-                    {{ loadingReleaseDetails ? 'Loading...' : 'Edit' }}
-                  </button>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-primary"
+                            (click)="onEditRelease(release)"
+                            [disabled]="loadingReleaseDetails"
+                            title="Edit Release Information">
+                      <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
+                      <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
+                      Edit
+                    </button>
+                    <button class="btn btn-info"
+                            (click)="onManageTrackList(release)"
+                            title="Manage Track List">
+                      <i class="fa fa-music"></i>
+                      Tracks
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -98,4 +106,13 @@
     (releaseUpdated)="onReleaseUpdated($event)"
     (alertMessage)="alertMessage.emit($event)">
   </app-edit-release-dialog>
+
+  <!-- Track List Dialog -->
+  <app-track-list-dialog
+    [isVisible]="showTrackListDialog"
+    [releaseId]="selectedRelease?.id || null"
+    [releaseTitle]="selectedRelease?.title || ''"
+    (close)="onTrackListDialogClose()"
+    (alertMessage)="alertMessage.emit($event)">
+  </app-track-list-dialog>
 </div>

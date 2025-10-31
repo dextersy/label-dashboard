@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { EditReleaseDialogComponent } from '../edit-release-dialog/edit-release-dialog.component';
+import { TrackListDialogComponent } from '../track-list-dialog/track-list-dialog.component';
 import { environment } from 'environments/environment';
 
 export interface ArtistRelease {
@@ -31,7 +32,7 @@ export interface ArtistRelease {
 @Component({
   selector: 'app-artist-releases-tab',
   standalone: true,
-  imports: [CommonModule, EditReleaseDialogComponent],
+  imports: [CommonModule, EditReleaseDialogComponent, TrackListDialogComponent],
   templateUrl: './artist-releases-tab.component.html',
   styleUrl: './artist-releases-tab.component.scss'
 })
@@ -42,6 +43,7 @@ export class ArtistReleasesTabComponent {
   loading = false;
   isAdmin = false;
   showEditDialog = false;
+  showTrackListDialog = false;
   selectedRelease: ArtistRelease | null = null;
   loadingReleaseDetails = false;
 
@@ -128,6 +130,16 @@ export class ArtistReleasesTabComponent {
   onReleaseUpdated(updatedRelease: any): void {
     this.loadReleases();
     this.onEditDialogClose();
+  }
+
+  onManageTrackList(release: ArtistRelease): void {
+    this.selectedRelease = release;
+    this.showTrackListDialog = true;
+  }
+
+  onTrackListDialogClose(): void {
+    this.showTrackListDialog = false;
+    this.selectedRelease = null;
   }
 
   getCoverArtUrl(coverArt: string): string {
