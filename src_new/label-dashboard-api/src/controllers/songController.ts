@@ -510,3 +510,75 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Stream audio file
+export const streamAudio = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Find song and verify brand ownership
+    const song = await Song.findByPk(id, {
+      include: [{
+        model: Release,
+        as: 'release',
+        where: { brand_id: req.user.brand_id }
+      }]
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    if (!song.audio_file) {
+      return res.status(404).json({ error: 'No audio file available for this song' });
+    }
+
+    // Get audio file from S3
+    const params = {
+      Bucket: process.env.S3_BUCKET_MASTERS!,
+      Key: song.audio_file
+    };
+
+    // Get file metadata
+    const headData = await s3.headObject(params).promise();
+    const fileSize = headData.ContentLength || 0;
+
+    // Set response headers
+    res.setHeader('Content-Type', headData.ContentType || 'audio/wav');
+    res.setHeader('Content-Length', fileSize);
+    res.setHeader('Accept-Ranges', 'bytes');
+
+    // Handle range requests for seeking
+    const range = req.headers.range;
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = (end - start) + 1;
+
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Content-Length', chunkSize);
+
+      const stream = s3.getObject({
+        ...params,
+        Range: `bytes=${start}-${end}`
+      }).createReadStream();
+
+      stream.pipe(res);
+    } else {
+      // Stream entire file
+      const stream = s3.getObject(params).createReadStream();
+      stream.pipe(res);
+    }
+
+    // Handle stream errors
+    res.on('error', (error) => {
+      console.error('Stream error:', error);
+    });
+
+  } catch (error) {
+    console.error('Stream audio error:', error);
+    res.status(500).json({ error: 'Failed to stream audio file' });
+  }
+};

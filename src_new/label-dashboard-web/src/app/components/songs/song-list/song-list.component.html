@@ -25,8 +25,8 @@
         <td>{{ i + 1 }}</td>
         <td>
           <strong>{{ song.title }}</strong>
-          <div *ngIf="song.audio_file" class="text-muted small">
-            <i class="fa fa-file-audio"></i> Audio available
+          <div *ngIf="!song.audio_file" class="text-muted small fst-italic">
+            No audio file
           </div>
         </td>
         <td>{{ formatDuration(song.duration) }}</td>
@@ -48,6 +48,15 @@
         </td>
         <td *ngIf="isAdmin">
           <div class="btn-group btn-group-sm">
+            <button
+              *ngIf="song.audio_file"
+              class="btn"
+              [class.btn-warning]="playingSongId === song.id"
+              [class.btn-success]="playingSongId !== song.id"
+              (click)="onPlayAudio(song)"
+              [title]="playingSongId === song.id ? 'Pause' : 'Play'">
+              <i class="fa" [class.fa-play]="playingSongId !== song.id" [class.fa-pause]="playingSongId === song.id"></i>
+            </button>
             <button class="btn btn-primary" (click)="onEdit(song)" title="Edit">
               <i class="fa fa-edit"></i>
             </button>

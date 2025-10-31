@@ -7,7 +7,8 @@ import {
   updateSong,
   deleteSong,
   uploadAudio,
-  reorderSongs
+  reorderSongs,
+  streamAudio
 } from '../controllers/songController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -52,5 +53,8 @@ router.put('/release/:releaseId/reorder', requireAdmin, reorderSongs);
 
 // Audio file upload
 router.post('/:id/audio', requireAdmin, upload.single('audio'), uploadAudio);
+
+// Stream audio file
+router.get('/:id/audio', streamAudio);
 
 export default router;
