@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -112,7 +112,7 @@ export class SongService {
     );
   }
 
-  uploadAudio(songId: number, audioFile: File): Observable<{ message: string; audio_file: string }> {
+  uploadAudio(songId: number, audioFile: File): Observable<HttpEvent<{ message: string; audio_file: string }>> {
     const formData = new FormData();
     formData.append('audio', audioFile);
 
@@ -124,7 +124,11 @@ export class SongService {
     return this.http.post<{ message: string; audio_file: string }>(
       `${this.baseUrl}/songs/${songId}/audio`,
       formData,
-      { headers }
+      {
+        headers,
+        reportProgress: true,
+        observe: 'events'
+      }
     );
   }
 

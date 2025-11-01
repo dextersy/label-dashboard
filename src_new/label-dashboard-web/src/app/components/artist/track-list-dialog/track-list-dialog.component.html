@@ -38,6 +38,7 @@
           *ngIf="!loadingSongs"
           [songs]="songs"
           [isAdmin]="isAdmin"
+          [uploadProgress]="uploadProgress"
           (editSong)="onEditSong($event)"
           (deleteSong)="onDeleteSong($event)"
           (uploadAudio)="onUploadAudio($event)"

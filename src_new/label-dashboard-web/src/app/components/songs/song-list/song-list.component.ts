@@ -14,6 +14,7 @@ import { environment } from 'environments/environment';
 export class SongListComponent implements OnDestroy {
   @Input() songs: Song[] = [];
   @Input() isAdmin: boolean = false;
+  @Input() uploadProgress: { [songId: number]: number } = {};
   @Output() editSong = new EventEmitter<Song>();
   @Output() deleteSong = new EventEmitter<Song>();
   @Output() uploadAudio = new EventEmitter<Song>();
@@ -57,6 +58,14 @@ export class SongListComponent implements OnDestroy {
     return song.collaborators
       .map(c => c.artist?.name || 'Unknown')
       .join(', ');
+  }
+
+  isUploading(songId?: number): boolean {
+    return songId !== undefined && this.uploadProgress[songId] !== undefined;
+  }
+
+  getUploadProgress(songId?: number): number {
+    return songId !== undefined ? (this.uploadProgress[songId] || 0) : 0;
   }
 
   onPlayAudio(song: Song): void {

@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpEventType } from '@angular/common/http';
 import { SongService, Song } from '../../../services/song.service';
 import { SongListComponent } from '../../songs/song-list/song-list.component';
 import { SongFormComponent } from '../../songs/song-form/song-form.component';
@@ -25,6 +26,7 @@ export class TrackListDialogComponent implements OnChanges {
   editingSong: Song | null = null;
   submittingSong = false;
   isAdmin = false;
+  uploadProgress: { [songId: number]: number } = {};
 
   constructor(
     private songService: SongService,
@@ -121,15 +123,27 @@ export class TrackListDialogComponent implements OnChanges {
   }
 
   private uploadAudioFile(songId: number, file: File): void {
+    this.uploadProgress[songId] = 0;
+
     this.songService.uploadAudio(songId, file).subscribe({
-      next: () => {
-        this.alertMessage.emit({
-          type: 'success',
-          message: 'Audio file uploaded successfully'
-        });
-        this.loadSongs();
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          // Calculate and update progress percentage
+          if (event.total) {
+            this.uploadProgress[songId] = Math.round((100 * event.loaded) / event.total);
+          }
+        } else if (event.type === HttpEventType.Response) {
+          // Upload complete
+          delete this.uploadProgress[songId];
+          this.alertMessage.emit({
+            type: 'success',
+            message: 'Audio file uploaded successfully'
+          });
+          this.loadSongs();
+        }
       },
       error: (error) => {
+        delete this.uploadProgress[songId];
         console.error('Error uploading audio:', error);
         this.alertMessage.emit({
           type: 'error',
