@@ -66,22 +66,18 @@
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-primary"
-                            (click)="onEditRelease(release)"
-                            [disabled]="loadingReleaseDetails"
-                            title="Edit Release Information">
-                      <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
-                      <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
-                      Edit
-                    </button>
-                    <button class="btn btn-info"
-                            (click)="onManageTrackList(release)"
-                            title="Manage Track List">
-                      <i class="fa fa-music"></i>
-                      Tracks
-                    </button>
-                  </div>
+                  <button class="btn btn-link btn-sm p-0 me-2"
+                          (click)="onEditRelease(release)"
+                          [disabled]="loadingReleaseDetails"
+                          title="Edit Release Information">
+                    <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
+                    <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
+                  </button>
+                  <button class="btn btn-link btn-sm p-0"
+                          (click)="onManageTrackList(release)"
+                          title="Manage Track List">
+                    <i class="fa fa-music"></i>
+                  </button>
                 </td>
               </tr>
             </tbody>

@@ -47,26 +47,24 @@
           <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted">-</span>
         </td>
         <td>
-          <div class="btn-group btn-group-sm">
-            <button
-              *ngIf="song.audio_file"
-              class="btn"
-              [class.btn-warning]="playingSongId === song.id"
-              [class.btn-success]="playingSongId !== song.id"
-              (click)="onPlayAudio(song)"
-              [title]="playingSongId === song.id ? 'Pause' : 'Play'">
-              <i class="fa" [class.fa-play]="playingSongId !== song.id" [class.fa-pause]="playingSongId === song.id"></i>
-            </button>
-            <button class="btn btn-primary" (click)="onEdit(song)" title="Edit">
-              <i class="fa fa-edit"></i>
-            </button>
-            <button class="btn btn-info" (click)="onUploadAudio(song)" title="Upload Audio">
-              <i class="fa fa-upload"></i>
-            </button>
-            <button *ngIf="isAdmin" class="btn btn-danger" (click)="onDelete(song)" title="Delete">
-              <i class="fa fa-trash"></i>
-            </button>
-          </div>
+          <button
+            *ngIf="song.audio_file"
+            class="btn btn-link btn-sm p-0 me-2"
+            [class.text-warning]="playingSongId === song.id"
+            [class.text-success]="playingSongId !== song.id"
+            (click)="onPlayAudio(song)"
+            [title]="playingSongId === song.id ? 'Pause' : 'Play'">
+            <i class="fa" [class.fa-play]="playingSongId !== song.id" [class.fa-pause]="playingSongId === song.id"></i>
+          </button>
+          <button class="btn btn-link btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit">
+            <i class="fa fa-edit"></i>
+          </button>
+          <button class="btn btn-link btn-sm p-0 me-2" (click)="onUploadAudio(song)" title="Upload Audio">
+            <i class="fa fa-upload"></i>
+          </button>
+          <button *ngIf="isAdmin" class="btn btn-link btn-sm p-0 text-danger" (click)="onDelete(song)" title="Delete">
+            <i class="fa fa-trash"></i>
+          </button>
         </td>
       </tr>
     </tbody>
