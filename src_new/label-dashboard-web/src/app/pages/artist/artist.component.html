@@ -45,8 +45,8 @@
         </div>
         
         <!-- New Release Tab -->
-        <div *ngIf="activeTab === 'new-release' && isAdmin">
-          <app-artist-new-release-tab 
+        <div *ngIf="activeTab === 'new-release'">
+          <app-artist-new-release-tab
             [artist]="selectedArtist"
             (alertMessage)="onAlertMessage($event)"
             (releaseCreated)="onReleaseCreated($event)"

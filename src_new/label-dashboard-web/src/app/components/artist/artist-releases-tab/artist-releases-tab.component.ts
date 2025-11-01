@@ -13,7 +13,7 @@ export interface ArtistRelease {
   title: string;
   cover_art: string;
   release_date: string;
-  status: 'Pending' | 'Live' | 'Taken Down';
+  status: 'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down';
   description?: string;
   liner_notes?: string;
   UPC?: string;
@@ -168,8 +168,12 @@ export class ArtistReleasesTabComponent {
     switch (status) {
       case 'Live':
         return 'badge-success';
+      case 'For Submission':
+        return 'badge-info';
       case 'Pending':
         return 'badge-warning';
+      case 'Draft':
+        return 'badge-secondary';
       case 'Taken Down':
         return 'badge-danger';
       default:
@@ -181,8 +185,12 @@ export class ArtistReleasesTabComponent {
     switch (status) {
       case 'Live':
         return 'fa-check-circle';
+      case 'For Submission':
+        return 'fa-paper-plane';
       case 'Pending':
         return 'fa-clock';
+      case 'Draft':
+        return 'fa-file';
       case 'Taken Down':
         return 'fa-ban';
       default:
@@ -192,10 +200,6 @@ export class ArtistReleasesTabComponent {
 
   navigateToCreateRelease(): void {
     this.router.navigate(['/artist/releases/new']);
-  }
-
-  navigateToSubmitRelease(): void {
-    this.router.navigate(['/artist/releases/submit']);
   }
 
   stripHtmlTags(html: string): string {

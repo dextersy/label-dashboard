@@ -44,15 +44,15 @@ router.use(authenticateToken);
 // Song CRUD operations
 router.get('/release/:releaseId', getSongsByRelease);
 router.get('/:id', getSong);
-router.post('/', requireAdmin, createSong);
-router.put('/:id', requireAdmin, updateSong);
+router.post('/', createSong);
+router.put('/:id', updateSong);
 router.delete('/:id', requireAdmin, deleteSong);
 
 // Reorder songs
-router.put('/release/:releaseId/reorder', requireAdmin, reorderSongs);
+router.put('/release/:releaseId/reorder', reorderSongs);
 
 // Audio file upload
-router.post('/:id/audio', requireAdmin, upload.single('audio'), uploadAudio);
+router.post('/:id/audio', upload.single('audio'), uploadAudio);
 
 // Stream audio file
 router.get('/:id/audio', streamAudio);

@@ -53,8 +53,7 @@ export const routes: Routes = [
       { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
       { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
       { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
-      { path: 'releases/new', component: ArtistComponent, canActivate: [adminGuard], data: { tab: 'new-release' } },
-      { path: 'releases/submit', component: ArtistComponent, data: { tab: 'submit-release' } },
+      { path: 'releases/new', component: ArtistComponent, data: { tab: 'new-release' } },
       { path: 'team', component: ArtistComponent, data: { tab: 'team' } },
       { path: 'epk', component: ArtistComponent, data: { tab: 'manage-epk' } },
       { path: 'new', component: AddNewArtistComponent, canActivate: [adminGuard] }

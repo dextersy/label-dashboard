@@ -14,7 +14,7 @@
         <th>Collaborators</th>
         <th>ISRC</th>
         <th>Links</th>
-        <th *ngIf="isAdmin">Actions</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody cdkDropList (cdkDropListDropped)="onDrop($event)" [cdkDropListDisabled]="!isAdmin">
@@ -46,7 +46,7 @@
           </div>
           <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted">-</span>
         </td>
-        <td *ngIf="isAdmin">
+        <td>
           <div class="btn-group btn-group-sm">
             <button
               *ngIf="song.audio_file"
@@ -63,7 +63,7 @@
             <button class="btn btn-info" (click)="onUploadAudio(song)" title="Upload Audio">
               <i class="fa fa-upload"></i>
             </button>
-            <button class="btn btn-danger" (click)="onDelete(song)" title="Delete">
+            <button *ngIf="isAdmin" class="btn btn-danger" (click)="onDelete(song)" title="Delete">
               <i class="fa fa-trash"></i>
             </button>
           </div>

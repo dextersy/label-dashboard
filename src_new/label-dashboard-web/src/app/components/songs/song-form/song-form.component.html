@@ -33,7 +33,7 @@
             <small class="form-text text-muted">Track will be added as the last track in the release</small>
           </div>
 
-          <div class="row">
+          <div class="row" *ngIf="isAdmin">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="duration">Duration (seconds)</label>
@@ -75,39 +75,41 @@
           </div>
 
           <!-- Streaming Links -->
-          <h5 class="mb-3 mt-4">Streaming Links</h5>
+          <div *ngIf="isAdmin">
+            <h5 class="mb-3 mt-4">Streaming Links</h5>
 
-          <div class="form-group">
-            <label for="spotifyLink">Spotify Link</label>
-            <input
-              type="url"
-              class="form-control"
-              id="spotifyLink"
-              [(ngModel)]="songForm.spotify_link"
-              name="spotify_link"
-              placeholder="https://open.spotify.com/track/...">
-          </div>
+            <div class="form-group">
+              <label for="spotifyLink">Spotify Link</label>
+              <input
+                type="url"
+                class="form-control"
+                id="spotifyLink"
+                [(ngModel)]="songForm.spotify_link"
+                name="spotify_link"
+                placeholder="https://open.spotify.com/track/...">
+            </div>
 
-          <div class="form-group">
-            <label for="appleMusicLink">Apple Music Link</label>
-            <input
-              type="url"
-              class="form-control"
-              id="appleMusicLink"
-              [(ngModel)]="songForm.apple_music_link"
-              name="apple_music_link"
-              placeholder="https://music.apple.com/...">
-          </div>
+            <div class="form-group">
+              <label for="appleMusicLink">Apple Music Link</label>
+              <input
+                type="url"
+                class="form-control"
+                id="appleMusicLink"
+                [(ngModel)]="songForm.apple_music_link"
+                name="apple_music_link"
+                placeholder="https://music.apple.com/...">
+            </div>
 
-          <div class="form-group">
-            <label for="youtubeLink">YouTube Link</label>
-            <input
-              type="url"
-              class="form-control"
-              id="youtubeLink"
-              [(ngModel)]="songForm.youtube_link"
-              name="youtube_link"
-              placeholder="https://www.youtube.com/watch?v=...">
+            <div class="form-group">
+              <label for="youtubeLink">YouTube Link</label>
+              <input
+                type="url"
+                class="form-control"
+                id="youtubeLink"
+                [(ngModel)]="songForm.youtube_link"
+                name="youtube_link"
+                placeholder="https://www.youtube.com/watch?v=...">
+            </div>
           </div>
 
           <!-- Collaborators -->
@@ -157,7 +159,7 @@
           <div class="card mb-3">
             <div class="card-body">
               <div class="row">
-                <div class="col-md-4">
+                <div [class]="isAdmin ? 'col-md-4' : 'col-md-11'">
                   <input
                     type="text"
                     class="form-control"
@@ -165,7 +167,7 @@
                     name="new_author_name"
                     placeholder="Author name">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3" *ngIf="isAdmin">
                   <input
                     type="text"
                     class="form-control"
@@ -173,7 +175,7 @@
                     name="new_author_pro"
                     placeholder="PRO (e.g., ASCAP)">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" *ngIf="isAdmin">
                   <input
                     type="text"
                     class="form-control"
@@ -181,7 +183,7 @@
                     name="new_author_ipi"
                     placeholder="IPI#">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" *ngIf="isAdmin">
                   <input
                     type="number"
                     class="form-control"
@@ -203,8 +205,8 @@
                 <div *ngFor="let author of songForm.authors; let i = index" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
                   <div>
                     <strong>{{ author.name }}</strong>
-                    <span *ngIf="author.pro_affiliation" class="text-muted ml-2">({{ author.pro_affiliation }})</span>
-                    <span *ngIf="author.share_percentage" class="badge badge-info ml-2">{{ author.share_percentage }}%</span>
+                    <span *ngIf="isAdmin && author.pro_affiliation" class="text-muted ml-2">({{ author.pro_affiliation }})</span>
+                    <span *ngIf="isAdmin && author.share_percentage" class="badge badge-info ml-2">{{ author.share_percentage }}%</span>
                   </div>
                   <button type="button" class="btn btn-sm btn-danger" (click)="removeAuthor(i)">
                     <i class="fa fa-trash"></i>
@@ -220,7 +222,7 @@
           <div class="card mb-3">
             <div class="card-body">
               <div class="row">
-                <div class="col-md-4">
+                <div [class]="isAdmin ? 'col-md-4' : 'col-md-11'">
                   <input
                     type="text"
                     class="form-control"
@@ -228,7 +230,7 @@
                     name="new_composer_name"
                     placeholder="Composer name">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3" *ngIf="isAdmin">
                   <input
                     type="text"
                     class="form-control"
@@ -236,7 +238,7 @@
                     name="new_composer_pro"
                     placeholder="PRO (e.g., ASCAP)">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" *ngIf="isAdmin">
                   <input
                     type="text"
                     class="form-control"
@@ -244,7 +246,7 @@
                     name="new_composer_ipi"
                     placeholder="IPI#">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" *ngIf="isAdmin">
                   <input
                     type="number"
                     class="form-control"
@@ -266,8 +268,8 @@
                 <div *ngFor="let composer of songForm.composers; let i = index" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
                   <div>
                     <strong>{{ composer.name }}</strong>
-                    <span *ngIf="composer.pro_affiliation" class="text-muted ml-2">({{ composer.pro_affiliation }})</span>
-                    <span *ngIf="composer.share_percentage" class="badge badge-info ml-2">{{ composer.share_percentage }}%</span>
+                    <span *ngIf="isAdmin && composer.pro_affiliation" class="text-muted ml-2">({{ composer.pro_affiliation }})</span>
+                    <span *ngIf="isAdmin && composer.share_percentage" class="badge badge-info ml-2">{{ composer.share_percentage }}%</span>
                   </div>
                   <button type="button" class="btn btn-sm btn-danger" (click)="removeComposer(i)">
                     <i class="fa fa-trash"></i>

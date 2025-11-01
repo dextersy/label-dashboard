@@ -90,10 +90,6 @@ export const getSong = async (req: AuthRequest, res: Response) => {
 // Create a new song
 export const createSong = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const {
       release_id,
       title,
@@ -129,18 +125,24 @@ export const createSong = async (req: AuthRequest, res: Response) => {
 
     const nextTrackNumber = maxTrackSong?.track_number ? maxTrackSong.track_number + 1 : 1;
 
-    // Create song
-    const song = await Song.create({
+    // Create song (filter admin-only fields for non-admins)
+    const songData: any = {
       release_id,
       title,
       track_number: nextTrackNumber,
-      duration,
-      lyrics,
-      isrc,
-      spotify_link,
-      apple_music_link,
-      youtube_link
-    });
+      lyrics
+    };
+
+    // Only admins can set these fields
+    if (req.user.is_admin) {
+      songData.duration = duration;
+      songData.isrc = isrc;
+      songData.spotify_link = spotify_link;
+      songData.apple_music_link = apple_music_link;
+      songData.youtube_link = youtube_link;
+    }
+
+    const song = await Song.create(songData);
 
     // Add collaborators if provided
     if (collaborators && Array.isArray(collaborators)) {
@@ -156,26 +158,38 @@ export const createSong = async (req: AuthRequest, res: Response) => {
     // Add authors if provided
     if (authors && Array.isArray(authors)) {
       for (const author of authors) {
-        await SongAuthor.create({
+        const authorData: any = {
           song_id: song.id,
-          name: author.name,
-          pro_affiliation: author.pro_affiliation,
-          ipi_number: author.ipi_number,
-          share_percentage: author.share_percentage
-        });
+          name: author.name
+        };
+
+        // Only admins can set these fields
+        if (req.user.is_admin) {
+          authorData.pro_affiliation = author.pro_affiliation;
+          authorData.ipi_number = author.ipi_number;
+          authorData.share_percentage = author.share_percentage;
+        }
+
+        await SongAuthor.create(authorData);
       }
     }
 
     // Add composers if provided
     if (composers && Array.isArray(composers)) {
       for (const composer of composers) {
-        await SongComposer.create({
+        const composerData: any = {
           song_id: song.id,
-          name: composer.name,
-          pro_affiliation: composer.pro_affiliation,
-          ipi_number: composer.ipi_number,
-          share_percentage: composer.share_percentage
-        });
+          name: composer.name
+        };
+
+        // Only admins can set these fields
+        if (req.user.is_admin) {
+          composerData.pro_affiliation = composer.pro_affiliation;
+          composerData.ipi_number = composer.ipi_number;
+          composerData.share_percentage = composer.share_percentage;
+        }
+
+        await SongComposer.create(composerData);
       }
     }
 
@@ -202,10 +216,6 @@ export const createSong = async (req: AuthRequest, res: Response) => {
 // Update a song
 export const updateSong = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { id } = req.params;
     const {
       title,
@@ -234,17 +244,24 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Song not found' });
     }
 
-    // Update song fields
-    await song.update({
+    // Prepare update data (filter admin-only fields for non-admins)
+    const updateData: any = {
       title,
-      track_number,
-      duration,
-      lyrics,
-      isrc,
-      spotify_link,
-      apple_music_link,
-      youtube_link
-    });
+      lyrics
+    };
+
+    // Only admins can update these fields
+    if (req.user.is_admin) {
+      updateData.track_number = track_number;
+      updateData.duration = duration;
+      updateData.isrc = isrc;
+      updateData.spotify_link = spotify_link;
+      updateData.apple_music_link = apple_music_link;
+      updateData.youtube_link = youtube_link;
+    }
+
+    // Update song fields
+    await song.update(updateData);
 
     // Update collaborators if provided
     if (collaborators !== undefined) {
@@ -271,13 +288,19 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
       // Add new authors
       if (Array.isArray(authors)) {
         for (const author of authors) {
-          await SongAuthor.create({
+          const authorData: any = {
             song_id: id,
-            name: author.name,
-            pro_affiliation: author.pro_affiliation,
-            ipi_number: author.ipi_number,
-            share_percentage: author.share_percentage
-          });
+            name: author.name
+          };
+
+          // Only admins can set these fields
+          if (req.user.is_admin) {
+            authorData.pro_affiliation = author.pro_affiliation;
+            authorData.ipi_number = author.ipi_number;
+            authorData.share_percentage = author.share_percentage;
+          }
+
+          await SongAuthor.create(authorData);
         }
       }
     }
@@ -290,13 +313,19 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
       // Add new composers
       if (Array.isArray(composers)) {
         for (const composer of composers) {
-          await SongComposer.create({
+          const composerData: any = {
             song_id: id,
-            name: composer.name,
-            pro_affiliation: composer.pro_affiliation,
-            ipi_number: composer.ipi_number,
-            share_percentage: composer.share_percentage
-          });
+            name: composer.name
+          };
+
+          // Only admins can set these fields
+          if (req.user.is_admin) {
+            composerData.pro_affiliation = composer.pro_affiliation;
+            composerData.ipi_number = composer.ipi_number;
+            composerData.share_percentage = composer.share_percentage;
+          }
+
+          await SongComposer.create(composerData);
         }
       }
     }
@@ -430,10 +459,6 @@ export const reorderSongs = async (req: AuthRequest, res: Response) => {
 // Upload audio file for a song
 export const uploadAudio = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { id } = req.params;
 
     if (!req.file) {

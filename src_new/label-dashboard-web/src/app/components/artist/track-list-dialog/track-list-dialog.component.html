@@ -21,7 +21,6 @@
             Manage the tracklist for this release. You can add tracks now or skip and add them later.
           </p>
           <button
-            *ngIf="isAdmin"
             type="button"
             class="btn btn-sm btn-success"
             (click)="onAddSong()">
@@ -62,6 +61,7 @@
   [releaseId]="releaseId || 0"
   [song]="editingSong"
   [isSubmitting]="submittingSong"
+  [isAdmin]="isAdmin"
   (close)="onSongFormClose()"
   (submit)="onSongFormSubmit($event)">
 </app-song-form>

@@ -32,7 +32,6 @@ export class BreadcrumbService {
     '/artist/team': { label: 'Manage Team', parent: '/artist' },
     '/artist/epk': { label: 'Manage EPK', parent: '/artist' },
     '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
-    '/artist/releases/submit': { label: 'Submit Release', parent: '/artist/releases' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
     '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },
     '/financial/summary': { label: 'Summary', parent: '/financial' },

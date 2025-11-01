@@ -88,7 +88,7 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
       release_date: ['', Validators.required],
       description: [''],
       liner_notes: [''],
-      status: ['Pending'],
+      status: ['Draft'],
       royaltyArtists: this.fb.array([])
     });
   }
@@ -114,7 +114,8 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
         this.allArtists = response.artists || response || [];
         this.loadingArtists = false;
         
-        if (this.isAdmin && this.royaltyArtists.length === 0 && !this.editingRelease) {
+        // Initialize with current artist for new releases (both admin and non-admin)
+        if (this.royaltyArtists.length === 0 && !this.editingRelease) {
           this.initializeRoyaltyArtists();
         }
       },
@@ -325,7 +326,9 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
       cover_art: this.selectedCoverArt || undefined
     };
 
-    if (this.isAdmin && this.royaltyArtists.length > 0) {
+    // Add artist associations for both admin and non-admin
+    // Backend will handle royalty percentages based on user role
+    if (this.royaltyArtists.length > 0) {
       formData.artists = this.royaltyArtists.value.map((artistData: any) => ({
         artist_id: artistData.artist_id,
         streaming_royalty_percentage: artistData.streaming_royalty_percentage / 100,
@@ -362,10 +365,11 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
     }
     
     this.releaseForm.patchValue({
-      status: 'Pending'
+      status: 'Draft'
     });
-    
-    if (this.isAdmin && !this.editingRelease) {
+
+    // Initialize with current artist for new releases (both admin and non-admin)
+    if (!this.editingRelease) {
       this.initializeRoyaltyArtists();
     }
   }

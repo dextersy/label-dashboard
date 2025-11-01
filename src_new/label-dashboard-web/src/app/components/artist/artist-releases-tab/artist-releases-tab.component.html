@@ -2,17 +2,12 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Artist Releases</h5>
-      <div class="btn-group" *ngIf="artist">
-        <button *ngIf="isAdmin" 
-                class="btn btn-primary btn-sm" 
-                (click)="navigateToCreateRelease()"
-                title="Create new release">
-          <i class="fas fa-plus"></i> Create Release
-        </button>
-        <button class="btn btn-outline-primary btn-sm" 
-                (click)="navigateToSubmitRelease()"
-                title="Submit release for review">
-          <i class="fas fa-upload"></i> Submit Release
+      <div *ngIf="artist">
+        <button class="btn btn-primary btn-sm"
+                [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
+                (click)="navigateToCreateRelease()">
+          <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
+          {{ isAdmin ? 'Create Release' : 'Submit Release' }}
         </button>
       </div>
     </div>
@@ -42,7 +37,7 @@
                 <th>Title</th>
                 <th>Release Date</th>
                 <th>Status</th>
-                <th *ngIf="isAdmin">Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -70,7 +65,7 @@
                     {{ release.status }}
                   </span>
                 </td>
-                <td *ngIf="isAdmin" class="actions-cell">
+                <td class="actions-cell">
                   <div class="btn-group btn-group-sm">
                     <button class="btn btn-primary"
                             (click)="onEditRelease(release)"

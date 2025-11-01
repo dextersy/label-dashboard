@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-type ReleaseStatus = 'Pending' | 'Live' | 'Taken Down';
+type ReleaseStatus = 'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down';
 
 interface ReleaseAttributes {
   id: number;
@@ -97,9 +97,9 @@ Release.init(
       }
     },
     status: {
-      type: DataTypes.ENUM('Pending', 'Live', 'Taken Down'),
+      type: DataTypes.ENUM('Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'),
       allowNull: false,
-      defaultValue: 'Pending',
+      defaultValue: 'Draft',
     },
     cover_art: {
       type: DataTypes.STRING(255),

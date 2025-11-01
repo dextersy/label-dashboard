@@ -16,6 +16,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   @Input() releaseId: number = 0;
   @Input() song: Song | null = null;
   @Input() isSubmitting: boolean = false;
+  @Input() isAdmin: boolean = false;
   @Output() close = new EventEmitter<void>();
   @Output() submit = new EventEmitter<any>();
 
