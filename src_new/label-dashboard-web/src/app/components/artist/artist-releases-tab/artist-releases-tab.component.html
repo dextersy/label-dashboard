@@ -64,8 +64,27 @@
                     <i class="fa" [ngClass]="getStatusIcon(release.status)"></i>
                     {{ release.status }}
                   </span>
+                  <ng-container *ngIf="release.status === 'Draft' && hasValidationIssues(release)">
+                    <i *ngIf="hasValidationErrors(release)"
+                       class="fa fa-exclamation-circle text-danger ms-2"
+                       [title]="getValidationTooltip(release)"
+                       style="cursor: help;"></i>
+                    <i *ngIf="!hasValidationErrors(release)"
+                       class="fa fa-exclamation-triangle text-warning ms-2"
+                       [title]="getValidationTooltip(release)"
+                       style="cursor: help;"></i>
+                  </ng-container>
                 </td>
                 <td class="actions-cell">
+                  <button *ngIf="canSubmitForReview(release)"
+                          class="btn btn-success btn-sm me-2"
+                          (click)="onSubmitForReview(release)"
+                          [disabled]="submittingReleaseId === release.id"
+                          title="Submit for review">
+                    <i class="fa fa-spinner fa-spin me-1" *ngIf="submittingReleaseId === release.id"></i>
+                    <i class="fa fa-paper-plane me-1" *ngIf="submittingReleaseId !== release.id"></i>
+                    {{ submittingReleaseId === release.id ? 'Submitting...' : 'Submit' }}
+                  </button>
                   <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onEditRelease(release)"
                           [disabled]="loadingReleaseDetails"
@@ -103,6 +122,7 @@
     [isVisible]="showTrackListDialog"
     [releaseId]="selectedRelease?.id || null"
     [releaseTitle]="selectedRelease?.title || ''"
+    [releaseStatus]="selectedRelease?.status || ''"
     (close)="onTrackListDialogClose()"
     (alertMessage)="alertMessage.emit($event)">
   </app-track-list-dialog>

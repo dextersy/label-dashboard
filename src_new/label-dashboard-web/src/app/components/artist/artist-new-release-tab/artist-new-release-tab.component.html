@@ -32,6 +32,7 @@
     [isVisible]="showTrackListDialog"
     [releaseId]="createdRelease?.id || null"
     [releaseTitle]="createdRelease?.title || ''"
+    [releaseStatus]="createdRelease?.status || ''"
     (close)="onTrackListDialogClose()"
     (alertMessage)="onFormAlert($event)">
   </app-track-list-dialog>

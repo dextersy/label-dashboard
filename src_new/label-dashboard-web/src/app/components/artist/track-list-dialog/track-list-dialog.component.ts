@@ -5,6 +5,8 @@ import { SongService, Song } from '../../../services/song.service';
 import { SongListComponent } from '../../songs/song-list/song-list.component';
 import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
+import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
+import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
 
 @Component({
   selector: 'app-track-list-dialog',
@@ -17,6 +19,7 @@ export class TrackListDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;
   @Input() releaseId: number | null = null;
   @Input() releaseTitle: string = '';
+  @Input() releaseStatus: string = '';
   @Output() close = new EventEmitter<void>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
@@ -30,7 +33,8 @@ export class TrackListDialogComponent implements OnChanges {
 
   constructor(
     private songService: SongService,
-    private authService: AuthService
+    private authService: AuthService,
+    private validationService: ReleaseValidationService
   ) {
     this.isAdmin = this.authService.isAdmin();
   }
@@ -227,6 +231,29 @@ export class TrackListDialogComponent implements OnChanges {
         this.loadSongs(); // Reload to revert changes
       }
     });
+  }
+
+  get validation(): ValidationResult {
+    // Create a minimal release object for validation
+    const release: ArtistRelease = {
+      id: this.releaseId || 0,
+      title: this.releaseTitle,
+      status: this.releaseStatus as any,
+      catalog_no: '',
+      release_date: '',
+      cover_art: ''
+    };
+
+    // Only validate songs, not release-level info (cover art, description, liner notes)
+    return this.validationService.validateRelease(release, this.songs, false);
+  }
+
+  get validationErrors() {
+    return this.validation.errors;
+  }
+
+  get validationWarnings() {
+    return this.validation.warnings;
   }
 
   onClose(): void {

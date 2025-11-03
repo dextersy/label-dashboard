@@ -25,8 +25,9 @@
         <td>{{ i + 1 }}</td>
         <td>
           <strong>{{ song.title }}</strong>
-          <div *ngIf="!song.audio_file && !isUploading(song.id)" class="text-muted small fst-italic">
-            No audio file
+          <div *ngIf="!song.audio_file && !isUploading(song.id)" class="text-danger small">
+            <i class="fa fa-exclamation-circle me-1"></i>
+            <strong>No audio master</strong>
           </div>
           <div *ngIf="isUploading(song.id)" class="mt-2">
             <div class="progress" style="height: 6px;">

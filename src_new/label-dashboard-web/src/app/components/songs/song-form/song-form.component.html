@@ -119,7 +119,7 @@
             <div class="card-body">
               <div class="row">
                 <div class="col-md-7">
-                  <select class="form-control" [(ngModel)]="newCollaborator.artist_id" name="new_collaborator_artist">
+                  <select class="form-control" [(ngModel)]="newCollaborator.artist_id" name="new_collaborator_artist" (blur)="onCollaboratorBlur()">
                     <option [value]="0">Select an artist...</option>
                     <option *ngFor="let artist of artists" [value]="artist.id">{{ artist.name }}</option>
                   </select>
@@ -165,7 +165,8 @@
                     class="form-control"
                     [(ngModel)]="newAuthor.name"
                     name="new_author_name"
-                    placeholder="Author name">
+                    placeholder="Author name"
+                    (blur)="onAuthorNameBlur()">
                 </div>
                 <div class="col-md-3" *ngIf="isAdmin">
                   <input
@@ -228,7 +229,8 @@
                     class="form-control"
                     [(ngModel)]="newComposer.name"
                     name="new_composer_name"
-                    placeholder="Composer name">
+                    placeholder="Composer name"
+                    (blur)="onComposerNameBlur()">
                 </div>
                 <div class="col-md-3" *ngIf="isAdmin">
                   <input

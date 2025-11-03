@@ -130,6 +130,13 @@ export class SongFormComponent implements OnChanges, OnInit {
     this.songForm.collaborators.splice(index, 1);
   }
 
+  onCollaboratorBlur(): void {
+    // Automatically add collaborator when artist is selected
+    if (this.newCollaborator.artist_id > 0) {
+      this.addCollaborator();
+    }
+  }
+
   addAuthor(): void {
     if (this.newAuthor.name.trim()) {
       this.songForm.authors.push({ ...this.newAuthor });
@@ -141,6 +148,13 @@ export class SongFormComponent implements OnChanges, OnInit {
     this.songForm.authors.splice(index, 1);
   }
 
+  onAuthorNameBlur(): void {
+    // Automatically add author when name field loses focus
+    if (this.newAuthor.name.trim()) {
+      this.addAuthor();
+    }
+  }
+
   addComposer(): void {
     if (this.newComposer.name.trim()) {
       this.songForm.composers.push({ ...this.newComposer });
@@ -150,6 +164,13 @@ export class SongFormComponent implements OnChanges, OnInit {
 
   removeComposer(index: number): void {
     this.songForm.composers.splice(index, 1);
+  }
+
+  onComposerNameBlur(): void {
+    // Automatically add composer when name field loses focus
+    if (this.newComposer.name.trim()) {
+      this.addComposer();
+    }
   }
 
   getArtistName(artistId: number): string {

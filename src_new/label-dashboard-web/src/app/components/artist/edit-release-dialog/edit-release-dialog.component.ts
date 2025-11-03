@@ -8,6 +8,7 @@ import { SongService, Song } from '../../../services/song.service';
 import { SongListComponent } from '../../songs/song-list/song-list.component';
 import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
+import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
 
 @Component({
   selector: 'app-edit-release-dialog',
@@ -38,7 +39,8 @@ export class EditReleaseDialogComponent implements OnChanges {
   constructor(
     private releaseService: ReleaseService,
     private songService: SongService,
-    private authService: AuthService
+    private authService: AuthService,
+    private validationService: ReleaseValidationService
   ) {
     this.isAdmin = this.authService.isAdmin();
   }
@@ -276,6 +278,18 @@ export class EditReleaseDialogComponent implements OnChanges {
 
   get isFormValid(): boolean {
     return this.releaseFormComponent?.isFormValid ?? false;
+  }
+
+  get validation(): ValidationResult {
+    return this.validationService.validateRelease(this.editingRelease);
+  }
+
+  get validationErrors() {
+    return this.validation.errors;
+  }
+
+  get validationWarnings() {
+    return this.validation.warnings;
   }
 
   onClose(): void {
