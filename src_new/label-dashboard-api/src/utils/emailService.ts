@@ -658,10 +658,72 @@ export const sendPaymentNotification = async (
 
     // Subject matches PHP logic exactly
     const subject = `Payment made to ${artistName}!`;
-    
+
     return await sendEmail(recipients, subject, template, brand.id);
   } catch (error) {
     console.error('Error sending payment notification:', error);
+    return false;
+  }
+};
+
+// Send release submission notification to admins
+export const sendReleaseSubmissionNotification = async (
+  releaseData: {
+    title: string;
+    catalog_no: string;
+    release_date: string;
+    track_count: number;
+  },
+  artistName: string,
+  brandId: number
+): Promise<boolean> => {
+  try {
+    // Get brand administrators
+    const adminEmails = await getBrandAdministrators(brandId);
+
+    if (adminEmails.length === 0) {
+      console.log('No administrators found for brand, skipping release submission notification');
+      return false;
+    }
+
+    // Fetch brand information
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) {
+      console.error('Brand not found for release submission notification');
+      return false;
+    }
+
+    // Get brand frontend URL for dashboard link
+    const dashboardUrl = await getBrandFrontendUrl(brandId);
+
+    // Load email template
+    const templatePath = path.join(__dirname, '../assets/templates/release_submission_notification.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Format release date
+    const formattedDate = new Date(releaseData.release_date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Replace placeholders
+    template = template
+      .replace(/%BRAND_NAME%/g, brand.brand_name || 'Dashboard')
+      .replace(/%BRAND_COLOR%/g, brand.brand_color || '#1595e7')
+      .replace(/%LOGO%/g, brand.logo_url || '')
+      .replace(/%ARTIST_NAME%/g, artistName)
+      .replace(/%RELEASE_TITLE%/g, releaseData.title)
+      .replace(/%CATALOG_NO%/g, releaseData.catalog_no)
+      .replace(/%RELEASE_DATE%/g, formattedDate)
+      .replace(/%TRACK_COUNT%/g, releaseData.track_count.toString())
+      .replace(/%DASHBOARD_URL%/g, dashboardUrl);
+
+    const subject = `New Release Submitted: ${releaseData.title}`;
+
+    return await sendEmail(adminEmails, subject, template, brand.id);
+  } catch (error) {
+    console.error('Error sending release submission notification:', error);
     return false;
   }
 };

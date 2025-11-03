@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, sequelize } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, sequelize } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
+import { sendReleaseSubmissionNotification } from '../utils/emailService';
 
 // Configure AWS S3
 AWS.config.update({
@@ -317,6 +318,9 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // Save original status before update for email notification check
+    const originalStatus = release.status;
+
     // Delete old cover art from S3 if new one is uploaded
     if (coverArtUrl && release.cover_art && release.cover_art.startsWith('https://')) {
       try {
@@ -348,6 +352,11 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       updateData.apple_music_link = apple_music_link !== undefined ? apple_music_link : release.apple_music_link;
       updateData.youtube_link = youtube_link !== undefined ? youtube_link : release.youtube_link;
       updateData.status = status || release.status;
+    } else {
+      // Allow non-admins to submit drafts for review
+      if (status === 'For Submission' && release.status === 'Draft') {
+        updateData.status = 'For Submission';
+      }
     }
 
     await release.update(updateData);
@@ -398,24 +407,52 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     // Fetch updated release with all associations
     const updatedRelease = await Release.findByPk(id, {
       include: [
-        { 
-          model: Artist, 
+        {
+          model: Artist,
           as: 'artists',
-          through: { 
+          through: {
             attributes: [
-              'streaming_royalty_percentage', 
+              'streaming_royalty_percentage',
               'streaming_royalty_type',
-              'sync_royalty_percentage', 
+              'sync_royalty_percentage',
               'sync_royalty_type',
-              'download_royalty_percentage', 
+              'download_royalty_percentage',
               'download_royalty_type',
-              'physical_royalty_percentage', 
+              'physical_royalty_percentage',
               'physical_royalty_type'
-            ] 
+            ]
           }
         }
       ]
     });
+
+    // Send email notification if release was submitted for review
+    if (originalStatus === 'Draft' && updateData.status === 'For Submission') {
+      try {
+        // Get track count for the notification
+        const trackCount = await Song.count({
+          where: { release_id: release.id }
+        });
+
+        // Get artist names from the updated release
+        const artistNames = updatedRelease?.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
+
+        // Send notification to admins
+        await sendReleaseSubmissionNotification(
+          {
+            title: updatedRelease!.title,
+            catalog_no: updatedRelease!.catalog_no,
+            release_date: updatedRelease!.release_date.toString(),
+            track_count: trackCount
+          },
+          artistNames,
+          req.user.brand_id
+        );
+      } catch (emailError) {
+        console.error('Error sending release submission notification:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     res.json({
       message: 'Release updated successfully',
