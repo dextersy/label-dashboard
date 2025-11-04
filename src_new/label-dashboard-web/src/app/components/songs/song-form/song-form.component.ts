@@ -17,6 +17,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   @Input() song: Song | null = null;
   @Input() isSubmitting: boolean = false;
   @Input() isAdmin: boolean = false;
+  @Input() releaseStatus: string = 'Draft';
   @Output() close = new EventEmitter<void>();
   @Output() submit = new EventEmitter<any>();
 
@@ -202,5 +203,12 @@ export class SongFormComponent implements OnChanges, OnInit {
 
   get isEditMode(): boolean {
     return !!this.song;
+  }
+
+  // For non-admin users on non-draft releases, only these fields remain editable:
+  // - Song form: lyrics
+  // All other fields should have [readonly]="isRestrictedMode()" or [disabled]="isRestrictedMode()" applied
+  isRestrictedMode(): boolean {
+    return !this.isAdmin && this.releaseStatus !== 'Draft';
   }
 }

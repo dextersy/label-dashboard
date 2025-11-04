@@ -15,6 +15,12 @@
         </button>
       </div>
       <div class="modal-body">
+        <!-- Info Message for Non-Draft Releases -->
+        <div *ngIf="isRestrictedMode()" class="alert alert-info mb-3">
+          <i class="fa fa-info-circle me-2"></i>
+          <strong>This release is {{ editingRelease?.status }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
+        </div>
+
         <!-- Validation Messages for Draft Releases -->
         <div *ngIf="validation.hasErrors || validation.hasWarnings" class="mb-3">
           <!-- Errors -->

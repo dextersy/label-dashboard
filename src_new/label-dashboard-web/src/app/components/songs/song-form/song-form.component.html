@@ -15,6 +15,12 @@
         </button>
       </div>
       <div class="modal-body">
+        <!-- Info Message for Non-Draft Releases -->
+        <div *ngIf="isEditMode && isRestrictedMode()" class="alert alert-info mb-3">
+          <i class="fa fa-info-circle me-2"></i>
+          <strong>This release is {{ releaseStatus }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
+        </div>
+
         <form (ngSubmit)="onSubmit()" #songFormRef="ngForm">
           <!-- Basic Information -->
           <h5 class="mb-3">Basic Information</h5>
@@ -29,7 +35,8 @@
               name="title"
               placeholder="Enter song title"
               required
-              maxlength="255">
+              maxlength="255"
+              [readonly]="isRestrictedMode()">
             <small class="form-text text-muted">Track will be added as the last track in the release</small>
           </div>
 
@@ -44,7 +51,8 @@
                   [(ngModel)]="songForm.duration"
                   name="duration"
                   placeholder="180"
-                  min="0">
+                  min="0"
+                  [readonly]="isRestrictedMode()">
                 <small class="form-text text-muted">Duration in seconds (e.g., 180 = 3:00)</small>
               </div>
             </div>
@@ -58,7 +66,8 @@
                   [(ngModel)]="songForm.isrc"
                   name="isrc"
                   placeholder="US-XXX-XX-XXXXX"
-                  maxlength="20">
+                  maxlength="20"
+                  [readonly]="isRestrictedMode()">
               </div>
             </div>
           </div>
@@ -86,7 +95,8 @@
                 id="spotifyLink"
                 [(ngModel)]="songForm.spotify_link"
                 name="spotify_link"
-                placeholder="https://open.spotify.com/track/...">
+                placeholder="https://open.spotify.com/track/..."
+                [readonly]="isRestrictedMode()">
             </div>
 
             <div class="form-group">
@@ -97,7 +107,8 @@
                 id="appleMusicLink"
                 [(ngModel)]="songForm.apple_music_link"
                 name="apple_music_link"
-                placeholder="https://music.apple.com/...">
+                placeholder="https://music.apple.com/..."
+                [readonly]="isRestrictedMode()">
             </div>
 
             <div class="form-group">
@@ -108,7 +119,8 @@
                 id="youtubeLink"
                 [(ngModel)]="songForm.youtube_link"
                 name="youtube_link"
-                placeholder="https://www.youtube.com/watch?v=...">
+                placeholder="https://www.youtube.com/watch?v=..."
+                [readonly]="isRestrictedMode()">
             </div>
           </div>
 
@@ -119,7 +131,7 @@
             <div class="card-body">
               <div class="row">
                 <div class="col-md-7">
-                  <select class="form-control" [(ngModel)]="newCollaborator.artist_id" name="new_collaborator_artist" (blur)="onCollaboratorBlur()">
+                  <select class="form-control" [(ngModel)]="newCollaborator.artist_id" name="new_collaborator_artist" (blur)="onCollaboratorBlur()" [disabled]="isRestrictedMode()">
                     <option [value]="0">Select an artist...</option>
                     <option *ngFor="let artist of artists" [value]="artist.id">{{ artist.name }}</option>
                   </select>
@@ -130,10 +142,11 @@
                     class="form-control"
                     [(ngModel)]="newCollaborator.role"
                     name="new_collaborator_role"
-                    placeholder="Role (optional)">
+                    placeholder="Role (optional)"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-2">
-                  <button type="button" class="btn btn-success btn-block" (click)="addCollaborator()">
+                  <button type="button" class="btn btn-success btn-block" (click)="addCollaborator()" [disabled]="isRestrictedMode()">
                     <i class="fa fa-plus"></i>
                   </button>
                 </div>
@@ -145,7 +158,7 @@
                     <strong>{{ getArtistName(collab.artist_id) }}</strong>
                     <span *ngIf="collab.role" class="text-muted ml-2">({{ collab.role }})</span>
                   </div>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removeCollaborator(i)">
+                  <button type="button" class="btn btn-sm btn-danger" (click)="removeCollaborator(i)" [disabled]="isRestrictedMode()">
                     <i class="fa fa-trash"></i>
                   </button>
                 </div>
@@ -166,7 +179,8 @@
                     [(ngModel)]="newAuthor.name"
                     name="new_author_name"
                     placeholder="Author name"
-                    (blur)="onAuthorNameBlur()">
+                    (blur)="onAuthorNameBlur()"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-3" *ngIf="isAdmin">
                   <input
@@ -174,7 +188,8 @@
                     class="form-control"
                     [(ngModel)]="newAuthor.pro_affiliation"
                     name="new_author_pro"
-                    placeholder="PRO (e.g., ASCAP)">
+                    placeholder="PRO (e.g., ASCAP)"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-2" *ngIf="isAdmin">
                   <input
@@ -182,7 +197,8 @@
                     class="form-control"
                     [(ngModel)]="newAuthor.ipi_number"
                     name="new_author_ipi"
-                    placeholder="IPI#">
+                    placeholder="IPI#"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-2" *ngIf="isAdmin">
                   <input
@@ -193,10 +209,11 @@
                     placeholder="Share %"
                     min="0"
                     max="100"
-                    step="0.01">
+                    step="0.01"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-1">
-                  <button type="button" class="btn btn-success btn-block" (click)="addAuthor()">
+                  <button type="button" class="btn btn-success btn-block" (click)="addAuthor()" [disabled]="isRestrictedMode()">
                     <i class="fa fa-plus"></i>
                   </button>
                 </div>
@@ -209,7 +226,7 @@
                     <span *ngIf="isAdmin && author.pro_affiliation" class="text-muted ml-2">({{ author.pro_affiliation }})</span>
                     <span *ngIf="isAdmin && author.share_percentage" class="badge badge-info ml-2">{{ author.share_percentage }}%</span>
                   </div>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removeAuthor(i)">
+                  <button type="button" class="btn btn-sm btn-danger" (click)="removeAuthor(i)" [disabled]="isRestrictedMode()">
                     <i class="fa fa-trash"></i>
                   </button>
                 </div>
@@ -230,7 +247,8 @@
                     [(ngModel)]="newComposer.name"
                     name="new_composer_name"
                     placeholder="Composer name"
-                    (blur)="onComposerNameBlur()">
+                    (blur)="onComposerNameBlur()"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-3" *ngIf="isAdmin">
                   <input
@@ -238,7 +256,8 @@
                     class="form-control"
                     [(ngModel)]="newComposer.pro_affiliation"
                     name="new_composer_pro"
-                    placeholder="PRO (e.g., ASCAP)">
+                    placeholder="PRO (e.g., ASCAP)"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-2" *ngIf="isAdmin">
                   <input
@@ -246,7 +265,8 @@
                     class="form-control"
                     [(ngModel)]="newComposer.ipi_number"
                     name="new_composer_ipi"
-                    placeholder="IPI#">
+                    placeholder="IPI#"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-2" *ngIf="isAdmin">
                   <input
@@ -257,10 +277,11 @@
                     placeholder="Share %"
                     min="0"
                     max="100"
-                    step="0.01">
+                    step="0.01"
+                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-1">
-                  <button type="button" class="btn btn-success btn-block" (click)="addComposer()">
+                  <button type="button" class="btn btn-success btn-block" (click)="addComposer()" [disabled]="isRestrictedMode()">
                     <i class="fa fa-plus"></i>
                   </button>
                 </div>
@@ -273,7 +294,7 @@
                     <span *ngIf="isAdmin && composer.pro_affiliation" class="text-muted ml-2">({{ composer.pro_affiliation }})</span>
                     <span *ngIf="isAdmin && composer.share_percentage" class="badge badge-info ml-2">{{ composer.share_percentage }}%</span>
                   </div>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removeComposer(i)">
+                  <button type="button" class="btn btn-sm btn-danger" (click)="removeComposer(i)" [disabled]="isRestrictedMode()">
                     <i class="fa fa-trash"></i>
                   </button>
                 </div>

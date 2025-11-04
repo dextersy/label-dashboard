@@ -60,6 +60,13 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
     this.releaseForm = this.createForm();
   }
 
+  // For non-admin users on non-draft releases, only these fields remain editable:
+  // - Release form: description, liner_notes
+  // All other fields should have [readonly]="isRestrictedMode()" or [disabled]="isRestrictedMode()" applied
+  isRestrictedMode(): boolean {
+    return !this.isAdmin && this.editingRelease?.status !== 'Draft';
+  }
+
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
     this.loadAllArtists();

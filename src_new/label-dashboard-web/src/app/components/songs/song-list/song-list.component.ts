@@ -14,6 +14,7 @@ import { environment } from 'environments/environment';
 export class SongListComponent implements OnDestroy {
   @Input() songs: Song[] = [];
   @Input() isAdmin: boolean = false;
+  @Input() releaseStatus: string = 'Draft';
   @Input() uploadProgress: { [songId: number]: number } = {};
   @Output() editSong = new EventEmitter<Song>();
   @Output() deleteSong = new EventEmitter<Song>();
@@ -22,6 +23,12 @@ export class SongListComponent implements OnDestroy {
 
   playingSongId: number | null = null;
   private audioElement: HTMLAudioElement | null = null;
+
+  // For non-admin users on non-draft releases, song list modifications are restricted
+  // This includes: delete songs, reorder songs, upload audio
+  isRestrictedMode(): boolean {
+    return !this.isAdmin && this.releaseStatus !== 'Draft';
+  }
 
   onEdit(song: Song): void {
     this.editSong.emit(song);

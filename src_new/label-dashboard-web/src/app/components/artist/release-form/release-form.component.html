@@ -4,11 +4,12 @@
     <div class="col-md-6">
       <div class="form-group">
         <label for="title">Title <span class="text-danger">*</span></label>
-        <input type="text" 
-               class="form-control" 
-               id="title" 
+        <input type="text"
+               class="form-control"
+               id="title"
                formControlName="title"
                [class.is-invalid]="isFieldInvalid('title')"
+               [readonly]="isRestrictedMode()"
                placeholder="Enter release title">
         <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">
           {{ getFieldError('title') }}
@@ -48,11 +49,12 @@
     <div class="col-md-6">
       <div class="form-group">
         <label for="releaseDate">Release Date <span class="text-danger">*</span></label>
-        <input type="date" 
-               class="form-control" 
-               id="releaseDate" 
+        <input type="date"
+               class="form-control"
+               id="releaseDate"
                formControlName="release_date"
-               [class.is-invalid]="isFieldInvalid('release_date')">
+               [class.is-invalid]="isFieldInvalid('release_date')"
+               [readonly]="isRestrictedMode()">
         <div *ngIf="isFieldInvalid('release_date')" class="invalid-feedback">
           {{ getFieldError('release_date') }}
         </div>
@@ -86,7 +88,8 @@
                accept="image/*"
                (change)="onCoverArtSelected($event)"
                (click)="$event.stopPropagation()"
-               (cancel)="$event.stopPropagation()">
+               (cancel)="$event.stopPropagation()"
+               [disabled]="isRestrictedMode()">
         <small class="form-text text-muted">
           JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
         </small>

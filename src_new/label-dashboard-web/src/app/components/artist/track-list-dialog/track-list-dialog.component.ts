@@ -39,6 +39,12 @@ export class TrackListDialogComponent implements OnChanges {
     this.isAdmin = this.authService.isAdmin();
   }
 
+  // For non-admin users on non-draft releases, tracklist modifications are restricted
+  // This includes: add songs, delete songs, reorder songs, upload audio
+  isRestrictedMode(): boolean {
+    return !this.isAdmin && this.releaseStatus !== 'Draft';
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isVisible']) {
       if (this.isVisible) {

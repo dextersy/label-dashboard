@@ -234,6 +234,17 @@ export class ArtistReleasesTabComponent {
       return;
     }
 
+    // Show confirmation dialog
+    const confirmed = confirm(
+      'Once you submit for review, certain fields will be locked and no longer editable. ' +
+      'You can still contact your label admin for changes. ' +
+      'Do you want to proceed with submission?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     this.submittingReleaseId = release.id;
     this.releaseService.updateRelease(release.id, { status: 'For Submission' }).subscribe({
       next: () => {
