@@ -46,7 +46,7 @@ router.get('/release/:releaseId', getSongsByRelease);
 router.get('/:id', getSong);
 router.post('/', createSong);
 router.put('/:id', updateSong);
-router.delete('/:id', requireAdmin, deleteSong);
+router.delete('/:id', deleteSong);
 
 // Reorder songs
 router.put('/release/:releaseId/reorder', reorderSongs);

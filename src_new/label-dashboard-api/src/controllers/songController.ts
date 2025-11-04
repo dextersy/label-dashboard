@@ -116,6 +116,11 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // Check permissions: admins can add songs anytime, non-admins can only add songs to Draft releases
+    if (!req.user.is_admin && release.status !== 'Draft') {
+      return res.status(403).json({ error: 'Cannot add songs to non-draft releases. Contact your label administrator.' });
+    }
+
     // Get the highest track number for this release and increment
     const maxTrackSong = await Song.findOne({
       where: { release_id },
@@ -244,24 +249,52 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Song not found' });
     }
 
-    // Prepare update data (filter admin-only fields for non-admins)
-    const updateData: any = {
-      title,
-      lyrics
-    };
+    const release = (song as any).release;
+    const isRestrictedMode = !req.user.is_admin && release?.status !== 'Draft';
 
-    // Only admins can update these fields
-    if (req.user.is_admin) {
-      updateData.track_number = track_number;
-      updateData.duration = duration;
-      updateData.isrc = isrc;
-      updateData.spotify_link = spotify_link;
-      updateData.apple_music_link = apple_music_link;
-      updateData.youtube_link = youtube_link;
+    // Prepare update data based on permissions
+    const updateData: any = {};
+
+    // Non-admins on non-draft releases can only update lyrics
+    if (isRestrictedMode) {
+      updateData.lyrics = lyrics;
+    } else {
+      // Non-admins on draft releases can update title and lyrics
+      updateData.title = title;
+      updateData.lyrics = lyrics;
+
+      // Only admins can update these fields
+      if (req.user.is_admin) {
+        updateData.track_number = track_number;
+        updateData.duration = duration;
+        updateData.isrc = isrc;
+        updateData.spotify_link = spotify_link;
+        updateData.apple_music_link = apple_music_link;
+        updateData.youtube_link = youtube_link;
+      }
     }
 
     // Update song fields
     await song.update(updateData);
+
+    // Non-admins on non-draft releases cannot update collaborators, authors, or composers
+    if (isRestrictedMode) {
+      // Skip updating collaborators, authors, and composers in restricted mode
+      // Fetch updated song with associations and return
+      const updatedSong = await Song.findByPk(id, {
+        include: [
+          {
+            model: SongCollaborator,
+            as: 'collaborators',
+            include: [{ model: Artist, as: 'artist' }]
+          },
+          { model: SongAuthor, as: 'authors' },
+          { model: SongComposer, as: 'composers' }
+        ]
+      });
+
+      return res.json({ song: updatedSong });
+    }
 
     // Update collaborators if provided
     if (collaborators !== undefined) {
@@ -353,10 +386,6 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
 // Delete a song
 export const deleteSong = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { id } = req.params;
 
     // Find song and verify brand ownership
@@ -370,6 +399,12 @@ export const deleteSong = async (req: AuthRequest, res: Response) => {
 
     if (!song) {
       return res.status(404).json({ error: 'Song not found' });
+    }
+
+    // Check permissions: admins can delete any song, non-admins can only delete songs on Draft releases
+    const release = (song as any).release;
+    if (!req.user.is_admin && release?.status !== 'Draft') {
+      return res.status(403).json({ error: 'Cannot delete songs on non-draft releases. Contact your label administrator.' });
     }
 
     // Delete audio file from S3 if exists
@@ -397,10 +432,6 @@ export const deleteSong = async (req: AuthRequest, res: Response) => {
 // Reorder songs (update track numbers)
 export const reorderSongs = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { releaseId } = req.params;
     const { songOrder } = req.body; // Array of song IDs in desired order
 
@@ -418,6 +449,11 @@ export const reorderSongs = async (req: AuthRequest, res: Response) => {
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Check permissions: admins can reorder any release, non-admins can only reorder Draft releases
+    if (!req.user.is_admin && release.status !== 'Draft') {
+      return res.status(403).json({ error: 'Cannot reorder songs on non-draft releases. Contact your label administrator.' });
     }
 
     // Update track numbers for each song
@@ -485,6 +521,11 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     const release = (song as any).release;
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Check permissions: admins can upload audio anytime, non-admins can only upload on Draft releases
+    if (!req.user.is_admin && release.status !== 'Draft') {
+      return res.status(403).json({ error: 'Cannot upload audio on non-draft releases. Contact your label administrator.' });
     }
 
     // Get artist name (use first artist if multiple)
