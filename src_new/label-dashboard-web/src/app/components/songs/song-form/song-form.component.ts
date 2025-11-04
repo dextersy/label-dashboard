@@ -209,6 +209,10 @@ export class SongFormComponent implements OnChanges, OnInit {
   // - Song form: lyrics
   // All other fields should have [readonly]="isRestrictedMode()" or [disabled]="isRestrictedMode()" applied
   isRestrictedMode(): boolean {
-    return !this.isAdmin && this.releaseStatus !== 'Draft';
+    // If no status or status is Draft, not restricted
+    if (!this.releaseStatus || this.releaseStatus === 'Draft') {
+      return false;
+    }
+    return !this.isAdmin;
   }
 }

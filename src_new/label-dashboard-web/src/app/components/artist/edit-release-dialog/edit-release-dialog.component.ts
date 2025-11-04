@@ -47,7 +47,11 @@ export class EditReleaseDialogComponent implements OnChanges {
 
   // For non-admin users on non-draft releases, editing is restricted
   isRestrictedMode(): boolean {
-    return !this.isAdmin && this.editingRelease?.status !== 'Draft';
+    // Can't be restricted if there's no release being edited
+    if (!this.editingRelease) {
+      return false;
+    }
+    return !this.isAdmin && this.editingRelease.status !== 'Draft';
   }
 
   ngOnChanges(changes: SimpleChanges): void {

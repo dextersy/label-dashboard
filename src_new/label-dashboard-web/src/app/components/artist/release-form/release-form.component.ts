@@ -64,7 +64,11 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
   // - Release form: description, liner_notes
   // All other fields should have [readonly]="isRestrictedMode()" or [disabled]="isRestrictedMode()" applied
   isRestrictedMode(): boolean {
-    return !this.isAdmin && this.editingRelease?.status !== 'Draft';
+    // Can't be restricted if there's no release being edited (creating new release)
+    if (!this.editingRelease) {
+      return false;
+    }
+    return !this.isAdmin && this.editingRelease.status !== 'Draft';
   }
 
   ngOnInit(): void {

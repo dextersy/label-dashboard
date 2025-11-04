@@ -27,7 +27,11 @@ export class SongListComponent implements OnDestroy {
   // For non-admin users on non-draft releases, song list modifications are restricted
   // This includes: delete songs, reorder songs, upload audio
   isRestrictedMode(): boolean {
-    return !this.isAdmin && this.releaseStatus !== 'Draft';
+    // If no status or status is Draft, not restricted
+    if (!this.releaseStatus || this.releaseStatus === 'Draft') {
+      return false;
+    }
+    return !this.isAdmin;
   }
 
   onEdit(song: Song): void {
