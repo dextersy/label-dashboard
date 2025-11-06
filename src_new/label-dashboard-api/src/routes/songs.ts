@@ -10,7 +10,7 @@ import {
   reorderSongs,
   streamAudio
 } from '../controllers/songController';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 // Configure multer for audio file uploads (masters)
 const storage = multer.memoryStorage();

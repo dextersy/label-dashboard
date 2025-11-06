@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, sequelize } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
 import { sendReleaseSubmissionNotification } from '../utils/emailService';

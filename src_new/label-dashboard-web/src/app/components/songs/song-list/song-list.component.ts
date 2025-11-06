@@ -23,6 +23,7 @@ export class SongListComponent implements OnDestroy {
 
   playingSongId: number | null = null;
   private audioElement: HTMLAudioElement | null = null;
+  private currentBlobUrl: string | null = null;
 
   // For non-admin users on non-draft releases, song list modifications are restricted
   // This includes: delete songs, reorder songs, upload audio
@@ -95,12 +96,17 @@ export class SongListComponent implements OnDestroy {
       this.audioElement = null;
     }
 
+    // Revoke previous blob URL to prevent memory leak
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
+    }
+
     // Create new audio element and play
     const token = localStorage.getItem('auth_token');
     const audioUrl = `${environment.apiUrl}/songs/${song.id}/audio`;
 
     this.audioElement = new Audio();
-    this.audioElement.src = audioUrl;
 
     // Set authorization header by fetching with credentials
     fetch(audioUrl, {
@@ -111,7 +117,8 @@ export class SongListComponent implements OnDestroy {
       .then(response => response.blob())
       .then(blob => {
         if (this.audioElement) {
-          this.audioElement.src = URL.createObjectURL(blob);
+          this.currentBlobUrl = URL.createObjectURL(blob);
+          this.audioElement.src = this.currentBlobUrl;
           this.playingSongId = song.id || null;
           this.audioElement.play();
 
@@ -138,6 +145,12 @@ export class SongListComponent implements OnDestroy {
     if (this.audioElement) {
       this.audioElement.pause();
       this.audioElement = null;
+    }
+
+    // Revoke blob URL to prevent memory leak
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
     }
   }
 }
