@@ -53,14 +53,6 @@
             (cancelled)="onReleaseFormCancelled()">
           </app-artist-new-release-tab>
         </div>
-          
-        <!-- Submit Release Tab -->
-        <div *ngIf="activeTab === 'submit-release'">
-          <app-artist-submit-release-tab 
-            [artist]="selectedArtist"
-            (alertMessage)="onAlertMessage($event)">
-          </app-artist-submit-release-tab>
-        </div>
         
         <!-- Manage EPK Tab -->
         <div *ngIf="activeTab === 'manage-epk'">
