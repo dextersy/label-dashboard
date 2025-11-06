@@ -129,21 +129,25 @@
 
           <div class="card mb-3">
             <div class="card-body">
+              <!-- Release Artists (non-editable) -->
+              <div *ngIf="releaseArtists.length > 0" class="mb-3">
+                <label class="d-block mb-2"><small class="text-muted">Release artists (automatically included):</small></label>
+                <div *ngFor="let artist of releaseArtists" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-light">
+                  <div>
+                    <strong>{{ artist.name }}</strong>
+                    <span class="badge badge-secondary ml-2">Release Artist</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional Collaborators (editable) -->
+              <label class="d-block mb-2"><small class="text-muted">Additional collaborators:</small></label>
               <div class="row">
-                <div class="col-md-7">
+                <div class="col-md-10">
                   <select class="form-control" [(ngModel)]="newCollaborator.artist_id" name="new_collaborator_artist" (blur)="onCollaboratorBlur()" [disabled]="isRestrictedMode()">
                     <option [value]="0">Select an artist...</option>
-                    <option *ngFor="let artist of artists" [value]="artist.id">{{ artist.name }}</option>
+                    <option *ngFor="let artist of artists" [value]="artist.id" [disabled]="releaseArtistIds.includes(artist.id)">{{ artist.name }}</option>
                   </select>
-                </div>
-                <div class="col-md-3">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newCollaborator.role"
-                    name="new_collaborator_role"
-                    placeholder="Role (optional)"
-                    [readonly]="isRestrictedMode()">
                 </div>
                 <div class="col-md-2">
                   <button type="button" class="btn btn-success btn-block" (click)="addCollaborator()" [disabled]="isRestrictedMode()">
@@ -156,7 +160,6 @@
                 <div *ngFor="let collab of songForm.collaborators; let i = index" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
                   <div>
                     <strong>{{ getArtistName(collab.artist_id) }}</strong>
-                    <span *ngIf="collab.role" class="text-muted ml-2">({{ collab.role }})</span>
                   </div>
                   <button type="button" class="btn btn-sm btn-danger" (click)="removeCollaborator(i)" [disabled]="isRestrictedMode()">
                     <i class="fa fa-trash"></i>

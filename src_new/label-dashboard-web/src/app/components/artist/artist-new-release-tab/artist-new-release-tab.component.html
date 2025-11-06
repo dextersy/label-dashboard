@@ -33,6 +33,7 @@
     [releaseId]="createdRelease?.id || null"
     [releaseTitle]="createdRelease?.title || ''"
     [releaseStatus]="createdRelease?.status || ''"
+    [releaseArtists]="createdRelease?.artists || []"
     (close)="onTrackListDialogClose()"
     (alertMessage)="onFormAlert($event)">
   </app-track-list-dialog>

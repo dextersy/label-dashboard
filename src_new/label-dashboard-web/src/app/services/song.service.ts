@@ -6,7 +6,6 @@ import { environment } from '../../environments/environment';
 export interface SongCollaborator {
   id?: number;
   artist_id: number;
-  role?: string;
   artist?: any;
 }
 

@@ -123,6 +123,7 @@
     [releaseId]="selectedRelease?.id || null"
     [releaseTitle]="selectedRelease?.title || ''"
     [releaseStatus]="selectedRelease?.status || ''"
+    [releaseArtists]="selectedRelease?.artists || []"
     (close)="onTrackListDialogClose()"
     (alertMessage)="alertMessage.emit($event)">
   </app-track-list-dialog>

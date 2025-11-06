@@ -18,10 +18,12 @@ export class SongFormComponent implements OnChanges, OnInit {
   @Input() isSubmitting: boolean = false;
   @Input() isAdmin: boolean = false;
   @Input() releaseStatus: string = 'Draft';
+  @Input() releaseArtists: any[] = []; // Artists associated with the release (non-editable collaborators)
   @Output() close = new EventEmitter<void>();
   @Output() submit = new EventEmitter<any>();
 
   artists: any[] = [];
+  releaseArtistIds: number[] = []; // IDs of release artists to filter them out from editable collaborators
 
   songForm = {
     title: '',
@@ -37,8 +39,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   };
 
   newCollaborator = {
-    artist_id: 0,
-    role: ''
+    artist_id: 0
   };
 
   newAuthor = {
@@ -62,6 +63,11 @@ export class SongFormComponent implements OnChanges, OnInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['releaseArtists'] && this.isVisible && this.song) {
+      // Reload song data if we're currently editing a song to re-filter collaborators
+      this.loadSongData();
+    }
+
     if (changes['isVisible']) {
       if (this.isVisible) {
         document.body.classList.add('modal-open');
@@ -88,6 +94,15 @@ export class SongFormComponent implements OnChanges, OnInit {
 
   loadSongData(): void {
     if (this.song) {
+      // Ensure releaseArtistIds is up to date
+      // Note: releaseArtists have 'artist_id' property, not 'id'
+      this.releaseArtistIds = this.releaseArtists.map(a => Number(a.artist_id));
+
+      // Filter out release artists from editable collaborators
+      const editableCollaborators = this.song.collaborators
+        ? this.song.collaborators.filter(c => !this.releaseArtistIds.includes(Number(c.artist_id)))
+        : [];
+
       this.songForm = {
         title: this.song.title,
         duration: this.song.duration,
@@ -96,7 +111,7 @@ export class SongFormComponent implements OnChanges, OnInit {
         spotify_link: this.song.spotify_link || '',
         apple_music_link: this.song.apple_music_link || '',
         youtube_link: this.song.youtube_link || '',
-        collaborators: this.song.collaborators ? [...this.song.collaborators] : [],
+        collaborators: editableCollaborators,
         authors: this.song.authors ? [...this.song.authors] : [],
         composers: this.song.composers ? [...this.song.composers] : []
       };
@@ -123,7 +138,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   addCollaborator(): void {
     if (this.newCollaborator.artist_id > 0) {
       this.songForm.collaborators.push({ ...this.newCollaborator });
-      this.newCollaborator = { artist_id: 0, role: '' };
+      this.newCollaborator = { artist_id: 0 };
     }
   }
 
@@ -175,7 +190,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   }
 
   getArtistName(artistId: number): string {
-    const artist = this.artists.find(a => a.id === artistId);
+    const artist = this.artists.find(a => Number(a.id) === Number(artistId));
     return artist ? artist.name : 'Unknown Artist';
   }
 
@@ -192,7 +207,7 @@ export class SongFormComponent implements OnChanges, OnInit {
       authors: [],
       composers: []
     };
-    this.newCollaborator = { artist_id: 0, role: '' };
+    this.newCollaborator = { artist_id: 0 };
     this.newAuthor = { name: '', pro_affiliation: '', ipi_number: '', share_percentage: undefined };
     this.newComposer = { name: '', pro_affiliation: '', ipi_number: '', share_percentage: undefined };
   }

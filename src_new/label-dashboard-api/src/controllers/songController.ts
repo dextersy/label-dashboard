@@ -104,12 +104,16 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       composers
     } = req.body;
 
-    // Verify release belongs to user's brand
+    // Verify release belongs to user's brand and get artists
     const release = await Release.findOne({
       where: {
         id: release_id,
         brand_id: req.user.brand_id
-      }
+      },
+      include: [{
+        model: Artist,
+        as: 'artists'
+      }]
     });
 
     if (!release) {
@@ -149,14 +153,27 @@ export const createSong = async (req: AuthRequest, res: Response) => {
 
     const song = await Song.create(songData);
 
-    // Add collaborators if provided
+    // Auto-add release artists as collaborators (non-editable)
+    const releaseArtists = (release as any).artists || [];
+    for (const artist of releaseArtists) {
+      await SongCollaborator.create({
+        song_id: song.id!,
+        artist_id: Number(artist.id)
+      });
+    }
+
+    // Add additional collaborators if provided (excluding duplicates)
     if (collaborators && Array.isArray(collaborators)) {
+      const releaseArtistIds = releaseArtists.map((a: any) => Number(a.id));
       for (const collab of collaborators) {
-        await SongCollaborator.create({
-          song_id: song.id,
-          artist_id: collab.artist_id,
-          role: collab.role
-        });
+        const collabArtistId = Number(collab.artist_id);
+        // Skip if this artist is already added as a release artist
+        if (!releaseArtistIds.includes(collabArtistId)) {
+          await SongCollaborator.create({
+            song_id: song.id!,
+            artist_id: collabArtistId
+          });
+        }
       }
     }
 
@@ -164,7 +181,7 @@ export const createSong = async (req: AuthRequest, res: Response) => {
     if (authors && Array.isArray(authors)) {
       for (const author of authors) {
         const authorData: any = {
-          song_id: song.id,
+          song_id: song.id!,
           name: author.name
         };
 
@@ -183,7 +200,7 @@ export const createSong = async (req: AuthRequest, res: Response) => {
     if (composers && Array.isArray(composers)) {
       for (const composer of composers) {
         const composerData: any = {
-          song_id: song.id,
+          song_id: song.id!,
           name: composer.name
         };
 
@@ -298,17 +315,38 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
 
     // Update collaborators if provided
     if (collaborators !== undefined) {
+      // Get release artists (these should always be present as collaborators)
+      const releaseWithArtists = await Release.findByPk(release.id, {
+        include: [{
+          model: Artist,
+          as: 'artists'
+        }]
+      });
+      const releaseArtists = (releaseWithArtists as any)?.artists || [];
+      const releaseArtistIds = releaseArtists.map((a: any) => Number(a.id));
+
       // Delete existing collaborators
       await SongCollaborator.destroy({ where: { song_id: id } });
 
-      // Add new collaborators
+      // Re-add release artists (always present)
+      for (const artist of releaseArtists) {
+        await SongCollaborator.create({
+          song_id: Number(id),
+          artist_id: Number(artist.id)
+        });
+      }
+
+      // Add additional collaborators (excluding duplicates)
       if (Array.isArray(collaborators)) {
         for (const collab of collaborators) {
-          await SongCollaborator.create({
-            song_id: id,
-            artist_id: collab.artist_id,
-            role: collab.role
-          });
+          const collabArtistId = Number(collab.artist_id);
+          // Skip if this artist is already added as a release artist
+          if (!releaseArtistIds.includes(collabArtistId)) {
+            await SongCollaborator.create({
+              song_id: Number(id),
+              artist_id: collabArtistId
+            });
+          }
         }
       }
     }
@@ -322,7 +360,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
       if (Array.isArray(authors)) {
         for (const author of authors) {
           const authorData: any = {
-            song_id: id,
+            song_id: Number(id),
             name: author.name
           };
 
@@ -347,7 +385,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
       if (Array.isArray(composers)) {
         for (const composer of composers) {
           const composerData: any = {
-            song_id: id,
+            song_id: Number(id),
             name: composer.name
           };
 

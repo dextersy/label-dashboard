@@ -20,6 +20,7 @@ export class TrackListDialogComponent implements OnChanges {
   @Input() releaseId: number | null = null;
   @Input() releaseTitle: string = '';
   @Input() releaseStatus: string = '';
+  @Input() releaseArtists: any[] = []; // Artists associated with the release
   @Output() close = new EventEmitter<void>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
@@ -42,7 +43,11 @@ export class TrackListDialogComponent implements OnChanges {
   // For non-admin users on non-draft releases, tracklist modifications are restricted
   // This includes: add songs, delete songs, reorder songs, upload audio
   isRestrictedMode(): boolean {
-    return !this.isAdmin && this.releaseStatus !== 'Draft';
+    // If no status or status is Draft, not restricted
+    if (!this.releaseStatus || this.releaseStatus === 'Draft') {
+      return false;
+    }
+    return !this.isAdmin;
   }
 
   ngOnChanges(changes: SimpleChanges): void {

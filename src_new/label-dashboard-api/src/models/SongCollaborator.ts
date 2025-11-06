@@ -5,7 +5,6 @@ interface SongCollaboratorAttributes {
   id: number;
   song_id: number;
   artist_id: number;
-  role?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -16,7 +15,6 @@ class SongCollaborator extends Model<SongCollaboratorAttributes, SongCollaborato
   public id!: number;
   public song_id!: number;
   public artist_id!: number;
-  public role?: string;
 
   // Association properties
   public song?: any;
@@ -48,10 +46,6 @@ SongCollaborator.init(
         model: 'artist',
         key: 'id'
       },
-    },
-    role: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,
