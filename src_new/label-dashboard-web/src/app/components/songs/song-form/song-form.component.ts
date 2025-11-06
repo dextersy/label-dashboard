@@ -38,6 +38,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   collaboratorInputFocused: boolean = false;
   authorInputFocused: boolean = false;
   composerInputFocused: boolean = false;
+  nextTempSongwriterId: number = -1; // Negative IDs for temporary songwriters
 
   songForm = {
     title: '',
@@ -129,48 +130,60 @@ export class SongFormComponent implements OnChanges, OnInit {
 
   onAuthorNameChange(): void {
     const search = this.newAuthor.name.toLowerCase();
-
-    // Get IDs of already added authors
-    const addedAuthorIds = this.songForm.authors
-      .filter(a => a.songwriter_id > 0)
-      .map(a => a.songwriter_id);
-
-    this.filteredAuthorSongwriters = this.songwriters.filter(s =>
-      // Exclude already added authors
-      !addedAuthorIds.includes(s.id) &&
-      // Match search criteria
-      (s.name.toLowerCase().includes(search) ||
-      (s.pro_affiliation && s.pro_affiliation.toLowerCase().includes(search)) ||
-      (s.ipi_number && s.ipi_number.toLowerCase().includes(search)))
-    );
-
-    // Always show dropdown when typing
+    const addedIds = this.songForm.authors.map(a => a.songwriter_id);
+    this.filteredAuthorSongwriters = this.getFilteredSongwriters(search, addedIds);
     this.showAuthorDropdown = true;
-
-    // Reset songwriter_id when user types (they might be creating a new one)
     this.newAuthor.songwriter_id = 0;
   }
 
   onComposerNameChange(): void {
     const search = this.newComposer.name.toLowerCase();
+    const addedIds = this.songForm.composers.map(c => c.songwriter_id);
+    this.filteredComposerSongwriters = this.getFilteredSongwriters(search, addedIds);
+    this.showComposerDropdown = true;
+    this.newComposer.songwriter_id = 0;
+  }
 
-    // Get IDs of already added composers
-    const addedComposerIds = this.songForm.composers
-      .filter(c => c.songwriter_id > 0)
-      .map(c => c.songwriter_id);
-
-    this.filteredComposerSongwriters = this.songwriters.filter(s =>
-      // Exclude already added composers
-      !addedComposerIds.includes(s.id) &&
+  private getFilteredSongwriters(search: string, excludeIds: number[]): Songwriter[] {
+    return this.songwriters.filter(s =>
+      // Exclude already added songwriters
+      !excludeIds.includes(s.id) &&
       // Match search criteria
       (s.name.toLowerCase().includes(search) ||
       (s.pro_affiliation && s.pro_affiliation.toLowerCase().includes(search)) ||
       (s.ipi_number && s.ipi_number.toLowerCase().includes(search)))
     );
-    // Always show dropdown when typing
-    this.showComposerDropdown = true;
-    // Reset songwriter_id when user types (they might be creating a new one)
-    this.newComposer.songwriter_id = 0;
+  }
+
+  private getOrCreateTempSongwriter(name: string, proAffiliation?: string, ipiNumber?: string): number {
+    // Check if a temporary songwriter with the same data already exists
+    const normalizedName = name.trim().toLowerCase();
+    const existingTemp = this.songwriters.find(s =>
+      s.id < 0 &&
+      s.name.toLowerCase() === normalizedName &&
+      s.pro_affiliation === proAffiliation &&
+      s.ipi_number === ipiNumber
+    );
+
+    if (existingTemp) {
+      // Use the existing temporary songwriter
+      return existingTemp.id;
+    }
+
+    // Create a new temporary songwriter with negative ID
+    const tempSongwriter: Songwriter = {
+      id: this.nextTempSongwriterId,
+      name: name.trim(),
+      pro_affiliation: proAffiliation || undefined,
+      ipi_number: ipiNumber || undefined
+    };
+
+    // Add to songwriters array so it's available for selection
+    this.songwriters.push(tempSongwriter);
+    const tempId = this.nextTempSongwriterId;
+    this.nextTempSongwriterId--; // Decrement for next temp songwriter
+
+    return tempId;
   }
 
   selectAuthorSongwriter(songwriter: Songwriter): void {
@@ -198,53 +211,29 @@ export class SongFormComponent implements OnChanges, OnInit {
   }
 
   onAuthorInputFocus(): void {
-    // Filter out already added authors
-    const addedAuthorIds = this.songForm.authors
-      .filter(a => a.songwriter_id > 0)
-      .map(a => a.songwriter_id);
-
     const search = this.newAuthor.name.toLowerCase();
-    this.filteredAuthorSongwriters = this.songwriters.filter(s =>
-      !addedAuthorIds.includes(s.id) &&
-      (s.name.toLowerCase().includes(search) ||
-      (s.pro_affiliation && s.pro_affiliation.toLowerCase().includes(search)) ||
-      (s.ipi_number && s.ipi_number.toLowerCase().includes(search)))
-    );
-
-    // Always show dropdown on focus
+    const addedIds = this.songForm.authors.map(a => a.songwriter_id);
+    this.filteredAuthorSongwriters = this.getFilteredSongwriters(search, addedIds);
     this.showAuthorDropdown = true;
   }
 
   createNewAuthor(): void {
-    // Enter "create new" mode - show fields for PRO and IPI
     this.showAuthorDropdown = false;
     this.isCreatingNewAuthor = true;
-    this.newAuthor.songwriter_id = 0; // Ensure it's marked as new
+    this.newAuthor.songwriter_id = 0;
   }
 
   onComposerInputFocus(): void {
-    // Filter out already added composers
-    const addedComposerIds = this.songForm.composers
-      .filter(c => c.songwriter_id > 0)
-      .map(c => c.songwriter_id);
-
     const search = this.newComposer.name.toLowerCase();
-    this.filteredComposerSongwriters = this.songwriters.filter(s =>
-      !addedComposerIds.includes(s.id) &&
-      (s.name.toLowerCase().includes(search) ||
-      (s.pro_affiliation && s.pro_affiliation.toLowerCase().includes(search)) ||
-      (s.ipi_number && s.ipi_number.toLowerCase().includes(search)))
-    );
-
-    // Always show dropdown on focus
+    const addedIds = this.songForm.composers.map(c => c.songwriter_id);
+    this.filteredComposerSongwriters = this.getFilteredSongwriters(search, addedIds);
     this.showComposerDropdown = true;
   }
 
   createNewComposer(): void {
-    // Enter "create new" mode - show fields for PRO and IPI
     this.showComposerDropdown = false;
     this.isCreatingNewComposer = true;
-    this.newComposer.songwriter_id = 0; // Ensure it's marked as new
+    this.newComposer.songwriter_id = 0;
   }
 
   hideAuthorDropdown(): void {
@@ -296,11 +285,15 @@ export class SongFormComponent implements OnChanges, OnInit {
       return;
     }
 
-    // Process authors - create new songwriters if needed
-    const processedAuthors = await this.processAuthors();
+    // Map to track temporary songwriter IDs to their real backend IDs
+    // This ensures the same songwriter is only created once even if used in both authors and composers
+    const tempSongwriterMap = new Map<number, number>();
 
-    // Process composers - create new songwriters if needed
-    const processedComposers = await this.processComposers();
+    // Process authors - create new songwriters if needed
+    const processedAuthors = await this.processAuthors(tempSongwriterMap);
+
+    // Process composers - create new songwriters if needed (reusing already created songwriters)
+    const processedComposers = await this.processComposers(tempSongwriterMap);
 
     const songData = {
       release_id: this.releaseId,
@@ -312,34 +305,48 @@ export class SongFormComponent implements OnChanges, OnInit {
     this.submit.emit(songData);
   }
 
-  private async processAuthors(): Promise<any[]> {
+  private async processAuthors(tempSongwriterMap: Map<number, number>): Promise<any[]> {
     const processed = [];
 
     for (const author of this.songForm.authors) {
       if (author.songwriter_id > 0) {
-        // Existing songwriter
+        // Existing songwriter from backend
         processed.push({
           songwriter_id: author.songwriter_id,
           share_percentage: author.share_percentage
         });
-      } else {
-        // New songwriter - create it first
-        try {
-          const response = await firstValueFrom(this.songwriterService.createSongwriter({
-            name: (author as any).name,
-            pro_affiliation: (author as any).pro_affiliation || undefined,
-            ipi_number: (author as any).ipi_number || undefined
-          }));
+      } else if (author.songwriter_id < 0) {
+        // Temporary songwriter - check if we already created it
+        if (tempSongwriterMap.has(author.songwriter_id)) {
+          // Already created - use the mapped ID
+          processed.push({
+            songwriter_id: tempSongwriterMap.get(author.songwriter_id)!,
+            share_percentage: author.share_percentage
+          });
+        } else {
+          // Create new songwriter
+          try {
+            const tempSongwriter = this.songwriters.find(s => s.id === author.songwriter_id);
+            if (!tempSongwriter) continue;
 
-          if (response && response.songwriter) {
-            processed.push({
-              songwriter_id: response.songwriter.id,
-              share_percentage: author.share_percentage
-            });
+            const response = await firstValueFrom(this.songwriterService.createSongwriter({
+              name: tempSongwriter.name,
+              pro_affiliation: tempSongwriter.pro_affiliation || undefined,
+              ipi_number: tempSongwriter.ipi_number || undefined
+            }));
+
+            if (response && response.songwriter) {
+              // Map temporary ID to real ID
+              tempSongwriterMap.set(author.songwriter_id, response.songwriter.id);
+              processed.push({
+                songwriter_id: response.songwriter.id,
+                share_percentage: author.share_percentage
+              });
+            }
+          } catch (error) {
+            console.error('Error creating songwriter:', error);
+            // Skip this author if creation failed
           }
-        } catch (error) {
-          console.error('Error creating songwriter:', error);
-          // Skip this author if creation failed
         }
       }
     }
@@ -347,34 +354,48 @@ export class SongFormComponent implements OnChanges, OnInit {
     return processed;
   }
 
-  private async processComposers(): Promise<any[]> {
+  private async processComposers(tempSongwriterMap: Map<number, number>): Promise<any[]> {
     const processed = [];
 
     for (const composer of this.songForm.composers) {
       if (composer.songwriter_id > 0) {
-        // Existing songwriter
+        // Existing songwriter from backend
         processed.push({
           songwriter_id: composer.songwriter_id,
           share_percentage: composer.share_percentage
         });
-      } else {
-        // New songwriter - create it first
-        try {
-          const response = await firstValueFrom(this.songwriterService.createSongwriter({
-            name: (composer as any).name,
-            pro_affiliation: (composer as any).pro_affiliation || undefined,
-            ipi_number: (composer as any).ipi_number || undefined
-          }));
+      } else if (composer.songwriter_id < 0) {
+        // Temporary songwriter - check if we already created it
+        if (tempSongwriterMap.has(composer.songwriter_id)) {
+          // Already created - use the mapped ID
+          processed.push({
+            songwriter_id: tempSongwriterMap.get(composer.songwriter_id)!,
+            share_percentage: composer.share_percentage
+          });
+        } else {
+          // Create new songwriter
+          try {
+            const tempSongwriter = this.songwriters.find(s => s.id === composer.songwriter_id);
+            if (!tempSongwriter) continue;
 
-          if (response && response.songwriter) {
-            processed.push({
-              songwriter_id: response.songwriter.id,
-              share_percentage: composer.share_percentage
-            });
+            const response = await firstValueFrom(this.songwriterService.createSongwriter({
+              name: tempSongwriter.name,
+              pro_affiliation: tempSongwriter.pro_affiliation || undefined,
+              ipi_number: tempSongwriter.ipi_number || undefined
+            }));
+
+            if (response && response.songwriter) {
+              // Map temporary ID to real ID
+              tempSongwriterMap.set(composer.songwriter_id, response.songwriter.id);
+              processed.push({
+                songwriter_id: response.songwriter.id,
+                share_percentage: composer.share_percentage
+              });
+            }
+          } catch (error) {
+            console.error('Error creating songwriter:', error);
+            // Skip this composer if creation failed
           }
-        } catch (error) {
-          console.error('Error creating songwriter:', error);
-          // Skip this composer if creation failed
         }
       }
     }
@@ -443,7 +464,16 @@ export class SongFormComponent implements OnChanges, OnInit {
 
   addAuthor(): void {
     if (this.newAuthor.name.trim()) {
-      // Store the author info (either with songwriter_id if selected, or as new songwriter data)
+      // Get or create temporary songwriter if needed
+      if (this.newAuthor.songwriter_id === 0) {
+        this.newAuthor.songwriter_id = this.getOrCreateTempSongwriter(
+          this.newAuthor.name,
+          this.newAuthor.pro_affiliation,
+          this.newAuthor.ipi_number
+        );
+      }
+
+      // Store the author info
       this.songForm.authors.push({ ...this.newAuthor });
       this.newAuthor = {
         songwriter_id: 0,
@@ -485,7 +515,16 @@ export class SongFormComponent implements OnChanges, OnInit {
 
   addComposer(): void {
     if (this.newComposer.name.trim()) {
-      // Store the composer info (either with songwriter_id if selected, or as new songwriter data)
+      // Get or create temporary songwriter if needed
+      if (this.newComposer.songwriter_id === 0) {
+        this.newComposer.songwriter_id = this.getOrCreateTempSongwriter(
+          this.newComposer.name,
+          this.newComposer.pro_affiliation,
+          this.newComposer.ipi_number
+        );
+      }
+
+      // Store the composer info
       this.songForm.composers.push({ ...this.newComposer });
       this.newComposer = {
         songwriter_id: 0,
@@ -580,6 +619,12 @@ export class SongFormComponent implements OnChanges, OnInit {
     this.showComposerDropdown = false;
     this.isCreatingNewAuthor = false;
     this.isCreatingNewComposer = false;
+
+    // Remove temporary songwriters (negative IDs) from songwriters array
+    this.songwriters = this.songwriters.filter(s => s.id > 0);
+
+    // Reset temporary songwriter counter
+    this.nextTempSongwriterId = -1;
   }
 
   get isFormValid(): boolean {
