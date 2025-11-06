@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release } from '../models';
+import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
 import AWS from 'aws-sdk';
 
 // Configure AWS S3
@@ -571,16 +571,22 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Find song and verify brand ownership, include release and artists
+    // Find song and verify brand ownership, include release, artists, and brand
     const song = await Song.findByPk(id, {
       include: [{
         model: Release,
         as: 'release',
         where: { brand_id: req.user.brand_id },
-        include: [{
-          model: Artist,
-          as: 'artists'
-        }]
+        include: [
+          {
+            model: Artist,
+            as: 'artists'
+          },
+          {
+            model: Brand,
+            as: 'brand'
+          }
+        ]
       }]
     });
 
@@ -598,15 +604,25 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Cannot upload audio on non-draft releases. Contact your label administrator.' });
     }
 
+    // Get brand name
+    const brand = (release as any).brand;
+    const brandName = brand?.brand_name || 'Unknown Brand';
+
     // Get artist name (use first artist if multiple)
     const artists = release.artists || [];
     const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
     const releaseTitle = release.title || 'Untitled';
     const catalogNo = release.catalog_no;
 
+    // Sanitize brand name for filesystem/S3 compatibility
+    const sanitizedBrandName = brandName
+      .replace(/[^a-zA-Z0-9\s\-_]/g, '') // Remove special characters
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
+
     // Create folder name: "catalog_no artist name - release title"
     // Sanitize for filesystem/S3 compatibility
-    const folderName = `${catalogNo} ${artistName} - ${releaseTitle}`
+    const releaseFolderName = `${catalogNo} ${artistName} - ${releaseTitle}`
       .replace(/[^a-zA-Z0-9\s\-_]/g, '') // Remove special characters
       .replace(/\s+/g, ' ') // Collapse multiple spaces
       .trim();
@@ -623,9 +639,10 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Upload new file to S3 masters bucket in release-specific folder
+    // Upload new file to S3 masters bucket with brand as top-level folder
     // S3 doesn't require explicit folder creation - it's created automatically
-    const fileName = `${folderName}/${Date.now()}-${req.file.originalname}`;
+    // Structure: <Brand Name>/<catalog number> <Artist Name> - <Release title>/<filename>
+    const fileName = `${sanitizedBrandName}/${releaseFolderName}/${Date.now()}-${req.file.originalname}`;
     await s3.upload({
       Bucket: process.env.S3_BUCKET_MASTERS!,
       Key: fileName,
