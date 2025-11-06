@@ -639,10 +639,17 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Sanitize original filename to prevent path traversal and security issues
+    const sanitizedOriginalName = req.file.originalname
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '') // Remove special characters, keep only alphanumeric, spaces, hyphens, underscores, dots
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .replace(/\.+/g, '.') // Collapse multiple dots
+      .trim();
+
     // Upload new file to S3 masters bucket with brand as top-level folder
     // S3 doesn't require explicit folder creation - it's created automatically
     // Structure: <Brand Name>/<catalog number> <Artist Name> - <Release title>/<filename>
-    const fileName = `${sanitizedBrandName}/${releaseFolderName}/${Date.now()}-${req.file.originalname}`;
+    const fileName = `${sanitizedBrandName}/${releaseFolderName}/${Date.now()}-${sanitizedOriginalName}`;
     await s3.upload({
       Bucket: process.env.S3_BUCKET_MASTERS!,
       Key: fileName,
