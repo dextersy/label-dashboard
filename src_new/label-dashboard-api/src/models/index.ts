@@ -27,6 +27,7 @@ import Song from './Song';
 import SongCollaborator from './SongCollaborator';
 import SongAuthor from './SongAuthor';
 import SongComposer from './SongComposer';
+import Songwriter from './Songwriter';
 
 // Define relationships
 // Brand relationships
@@ -181,9 +182,15 @@ SongCollaborator.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 
 // SongAuthor relationships
 SongAuthor.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
+SongAuthor.belongsTo(Songwriter, { foreignKey: 'songwriter_id', as: 'songwriter' });
 
 // SongComposer relationships
 SongComposer.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
+SongComposer.belongsTo(Songwriter, { foreignKey: 'songwriter_id', as: 'songwriter' });
+
+// Songwriter relationships
+Songwriter.hasMany(SongAuthor, { foreignKey: 'songwriter_id', as: 'songAuthors' });
+Songwriter.hasMany(SongComposer, { foreignKey: 'songwriter_id', as: 'songComposers' });
 
 // Export all models
 export {
@@ -214,6 +221,7 @@ export {
   SongCollaborator,
   SongAuthor,
   SongComposer,
+  Songwriter,
 };
 
 // Initialize database connection

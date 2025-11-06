@@ -2,7 +2,7 @@
 <div *ngIf="isVisible" class="modal-backdrop fade show" (click)="onClose()"></div>
 
 <!-- Modal -->
-<div *ngIf="isVisible" class="modal fade show" style="display: block" tabindex="-1" role="dialog">
+<div *ngIf="isVisible" class="modal fade show modal-display" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document" (click)="$event.stopPropagation()">
     <div class="modal-content">
       <div class="modal-header">
@@ -37,7 +37,6 @@
               required
               maxlength="255"
               [readonly]="isRestrictedMode()">
-            <small class="form-text text-muted">Track will be added as the last track in the release</small>
           </div>
 
           <div class="row" *ngIf="isAdmin">
@@ -126,43 +125,55 @@
 
           <!-- Collaborators -->
           <h5 class="mb-3 mt-4">Collaborators (Artists)</h5>
+          <p class="text-muted small mb-3">
+            Indicate performing artists that are involved in this track. If the artist you collaborated with does not appear, inform your label administrator.
+          </p>
 
-          <div class="card mb-3">
-            <div class="card-body">
-              <!-- Release Artists (non-editable) -->
-              <div *ngIf="releaseArtists.length > 0" class="mb-3">
-                <label class="d-block mb-2"><small class="text-muted">Release artists (automatically included):</small></label>
-                <div *ngFor="let artist of releaseArtists" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded bg-light">
-                  <div>
-                    <strong>{{ artist.name }}</strong>
-                    <span class="badge badge-secondary ml-2">Release Artist</span>
-                  </div>
-                </div>
-              </div>
+          <div class="card mb-3" [class.z-index-high]="showCollaboratorDropdown" [class.z-index-collaborators]="!showCollaboratorDropdown">
+            <div class="card-body overflow-visible">
+              <div class="chip-input-wrapper">
+                <div class="chip-input-field"
+                     [class.focused]="collaboratorInputFocused"
+                     [class.readonly]="isRestrictedMode()"
+                     (click)="!isRestrictedMode() && onCollaboratorInputFocus()">
 
-              <!-- Additional Collaborators (editable) -->
-              <label class="d-block mb-2"><small class="text-muted">Additional collaborators:</small></label>
-              <div class="row">
-                <div class="col-md-10">
-                  <select class="form-control" [(ngModel)]="newCollaborator.artist_id" name="new_collaborator_artist" (blur)="onCollaboratorBlur()" [disabled]="isRestrictedMode()">
-                    <option [value]="0">Select an artist...</option>
-                    <option *ngFor="let artist of artists" [value]="artist.id" [disabled]="releaseArtistIds.includes(artist.id)">{{ artist.name }}</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <button type="button" class="btn btn-success btn-block" (click)="addCollaborator()" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-plus"></i>
-                  </button>
-                </div>
-              </div>
+                  <!-- Release Artists (non-removable) -->
+                  <span *ngFor="let artist of releaseArtists" class="chip-input-badge chip-input-badge-release">
+                    {{ artist.name }}
+                  </span>
 
-              <div *ngIf="songForm.collaborators.length > 0" class="mt-3">
-                <div *ngFor="let collab of songForm.collaborators; let i = index" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                  <div>
-                    <strong>{{ getArtistName(collab.artist_id) }}</strong>
-                  </div>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removeCollaborator(i)" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-trash"></i>
+                  <!-- Additional Collaborators (removable) -->
+                  <span *ngFor="let collab of songForm.collaborators; let i = index" class="chip-input-badge">
+                    {{ getArtistName(collab.artist_id) }}
+                    <button type="button"
+                            class="chip-input-remove"
+                            (click)="removeCollaborator(i); $event.stopPropagation()"
+                            [disabled]="isRestrictedMode()"
+                            title="Remove">
+                      ×
+                    </button>
+                  </span>
+
+                  <!-- Placeholder input (no typing allowed) -->
+                  <input type="text"
+                         class="chip-input-text no-input"
+                         placeholder="Click to select artists..."
+                         readonly
+                         (focus)="onCollaboratorInputFocus()"
+                         (blur)="onCollaboratorInputBlur()"
+                         [disabled]="isRestrictedMode()">
+                </div>
+
+                <!-- Dropdown -->
+                <div *ngIf="showCollaboratorDropdown && !isRestrictedMode()" class="chip-input-dropdown">
+                  <button *ngFor="let artist of artists"
+                          type="button"
+                          class="chip-dropdown-item"
+                          [disabled]="releaseArtistIds.includes(artist.id) || isArtistAlreadyAdded(artist.id)"
+                          (click)="selectCollaboratorFromDropdown(artist.id)">
+                    {{ artist.name }}
+                    <span *ngIf="releaseArtistIds.includes(artist.id)" class="text-muted small"> (Release artist)</span>
+                    <span *ngIf="isArtistAlreadyAdded(artist.id)" class="text-muted small"> (Already added)</span>
                   </button>
                 </div>
               </div>
@@ -171,66 +182,128 @@
 
           <!-- Authors -->
           <h5 class="mb-3 mt-4">Authors (Lyricists)</h5>
+          <p class="text-muted small mb-3">
+            Indicate people who contributed to the lyrics of this song. Select from the list of songwriters in our database or add a new songwriter.
+          </p>
 
-          <div class="card mb-3">
-            <div class="card-body">
-              <div class="row">
-                <div [class]="isAdmin ? 'col-md-4' : 'col-md-11'">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newAuthor.name"
-                    name="new_author_name"
-                    placeholder="Author name"
-                    (blur)="onAuthorNameBlur()"
-                    [readonly]="isRestrictedMode()">
+          <div class="card mb-3" [class.z-index-high]="showAuthorDropdown || isCreatingNewAuthor" [class.z-index-authors]="!showAuthorDropdown && !isCreatingNewAuthor">
+            <div class="card-body overflow-visible">
+              <!-- Chip input with search -->
+              <div class="chip-input-wrapper">
+                <div class="chip-input-field"
+                     [class.focused]="authorInputFocused && !isCreatingNewAuthor"
+                     [class.readonly]="isRestrictedMode() || isCreatingNewAuthor"
+                     (click)="!isRestrictedMode() && !isCreatingNewAuthor && chipInputField.focus()">
+
+                  <!-- Added Authors as chips -->
+                  <span *ngFor="let author of songForm.authors; let i = index" class="chip-input-badge">
+                    {{ getSongwriterDisplay(author) }}
+                    <span *ngIf="author.songwriter_id === 0" class="chip-new-indicator" title="New songwriter">⭐</span>
+                    <span *ngIf="isAdmin && author.share_percentage" class="ml-1">({{ author.share_percentage }}%)</span>
+                    <button type="button"
+                            class="chip-input-remove"
+                            (click)="removeAuthor(i); $event.stopPropagation()"
+                            [disabled]="isRestrictedMode() || isCreatingNewAuthor"
+                            title="Remove">
+                      ×
+                    </button>
+                  </span>
+
+                  <!-- Text input for search -->
+                  <input #chipInputField
+                         type="text"
+                         class="chip-input-text"
+                         [(ngModel)]="newAuthor.name"
+                         name="new_author_name"
+                         placeholder="Type to search or add songwriter..."
+                         (input)="onAuthorNameChange()"
+                         (focus)="onAuthorInputFocusChip()"
+                         (blur)="onAuthorInputBlur(); hideAuthorDropdown()"
+                         (keydown.enter)="onAuthorEnterKey($event)"
+                         [readonly]="isRestrictedMode() || isCreatingNewAuthor"
+                         autocomplete="off">
                 </div>
-                <div class="col-md-3" *ngIf="isAdmin">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newAuthor.pro_affiliation"
-                    name="new_author_pro"
-                    placeholder="PRO (e.g., ASCAP)"
-                    [readonly]="isRestrictedMode()">
-                </div>
-                <div class="col-md-2" *ngIf="isAdmin">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newAuthor.ipi_number"
-                    name="new_author_ipi"
-                    placeholder="IPI#"
-                    [readonly]="isRestrictedMode()">
-                </div>
-                <div class="col-md-2" *ngIf="isAdmin">
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="newAuthor.share_percentage"
-                    name="new_author_share"
-                    placeholder="Share %"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    [readonly]="isRestrictedMode()">
-                </div>
-                <div class="col-md-1">
-                  <button type="button" class="btn btn-success btn-block" (click)="addAuthor()" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-plus"></i>
+
+                <!-- Autocomplete dropdown -->
+                <div *ngIf="showAuthorDropdown && !isCreatingNewAuthor" class="chip-input-dropdown">
+                  <!-- Create new option at TOP -->
+                  <button type="button"
+                          class="chip-dropdown-item create-new-item"
+                          (click)="createNewAuthor()">
+                    <i class="fa fa-plus-circle"></i>
+                    <span *ngIf="newAuthor.name.trim()"> Create new songwriter "{{ newAuthor.name }}"</span>
+                    <span *ngIf="!newAuthor.name.trim()"> Create new songwriter...</span>
+                  </button>
+                  <!-- Existing songwriters below -->
+                  <button type="button"
+                          *ngFor="let songwriter of filteredAuthorSongwriters"
+                          class="chip-dropdown-item"
+                          (click)="selectAuthorSongwriter(songwriter)">
+                    <strong>{{ songwriter.name }}</strong>
+                    <span *ngIf="songwriter.pro_affiliation" class="text-muted"> ({{ songwriter.pro_affiliation }})</span>
+                    <span *ngIf="songwriter.ipi_number" class="text-muted small"> - IPI: {{ songwriter.ipi_number }}</span>
                   </button>
                 </div>
               </div>
 
-              <div *ngIf="songForm.authors.length > 0" class="mt-3">
-                <div *ngFor="let author of songForm.authors; let i = index" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                  <div>
-                    <strong>{{ author.name }}</strong>
-                    <span *ngIf="isAdmin && author.pro_affiliation" class="text-muted ml-2">({{ author.pro_affiliation }})</span>
-                    <span *ngIf="isAdmin && author.share_percentage" class="badge badge-info ml-2">{{ author.share_percentage }}%</span>
+              <!-- Create new songwriter form (shown when in create mode) -->
+              <div *ngIf="isCreatingNewAuthor" class="create-songwriter-form">
+                <h6 class="mb-3">Create New Songwriter</h6>
+                <div class="row">
+                  <div class="col-md-12 mb-2">
+                    <label for="newAuthorName" class="form-label mb-1"><small>Name <span class="text-danger">*</span></small></label>
+                    <input
+                      type="text"
+                      id="newAuthorName"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newAuthor.name"
+                      name="new_author_name_create"
+                      placeholder="Songwriter name"
+                      [readonly]="isRestrictedMode()">
                   </div>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removeAuthor(i)" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-trash"></i>
+                  <div class="col-md-6 mb-2">
+                    <label for="newAuthorPro" class="form-label mb-1"><small>PRO Affiliation (optional)</small></label>
+                    <input
+                      type="text"
+                      id="newAuthorPro"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newAuthor.pro_affiliation"
+                      name="new_author_pro_create"
+                      placeholder="e.g., ASCAP, BMI"
+                      [readonly]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label for="newAuthorIpi" class="form-label mb-1"><small>IPI Number (optional)</small></label>
+                    <input
+                      type="text"
+                      id="newAuthorIpi"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newAuthor.ipi_number"
+                      name="new_author_ipi_create"
+                      placeholder="IPI Number"
+                      [readonly]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-6 mb-2" *ngIf="isAdmin">
+                    <label for="newAuthorShare" class="form-label mb-1"><small>Share % (optional)</small></label>
+                    <input
+                      type="number"
+                      id="newAuthorShare"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newAuthor.share_percentage"
+                      name="new_author_share_create"
+                      placeholder="Share %"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      [readonly]="isRestrictedMode()">
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <button type="button" class="btn btn-success btn-sm mr-2" (click)="addAuthor()" [disabled]="isRestrictedMode() || !newAuthor.name.trim()">
+                    <i class="fa fa-check"></i> Add
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="cancelNewAuthor()" [disabled]="isRestrictedMode()">
+                    <i class="fa fa-times"></i> Cancel
                   </button>
                 </div>
               </div>
@@ -239,66 +312,128 @@
 
           <!-- Composers -->
           <h5 class="mb-3 mt-4">Composers</h5>
+          <p class="text-muted small mb-3">
+            Indicate who contributed to the music for each track. Generally, "composer" refers to who made the main melody of the song (the tune that is sung), but you can take liberty to decide who should be credited for the music. Select from the list of songwriters in our database or add a new songwriter.
+          </p>
 
-          <div class="card mb-3">
-            <div class="card-body">
-              <div class="row">
-                <div [class]="isAdmin ? 'col-md-4' : 'col-md-11'">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newComposer.name"
-                    name="new_composer_name"
-                    placeholder="Composer name"
-                    (blur)="onComposerNameBlur()"
-                    [readonly]="isRestrictedMode()">
+          <div class="card mb-3" [class.z-index-high]="showComposerDropdown || isCreatingNewComposer" [class.z-index-composers]="!showComposerDropdown && !isCreatingNewComposer">
+            <div class="card-body overflow-visible">
+              <!-- Chip input with search -->
+              <div class="chip-input-wrapper">
+                <div class="chip-input-field"
+                     [class.focused]="composerInputFocused && !isCreatingNewComposer"
+                     [class.readonly]="isRestrictedMode() || isCreatingNewComposer"
+                     (click)="!isRestrictedMode() && !isCreatingNewComposer && composerChipInputField.focus()">
+
+                  <!-- Added Composers as chips -->
+                  <span *ngFor="let composer of songForm.composers; let i = index" class="chip-input-badge">
+                    {{ getSongwriterDisplay(composer) }}
+                    <span *ngIf="composer.songwriter_id === 0" class="chip-new-indicator" title="New songwriter">⭐</span>
+                    <span *ngIf="isAdmin && composer.share_percentage" class="ml-1">({{ composer.share_percentage }}%)</span>
+                    <button type="button"
+                            class="chip-input-remove"
+                            (click)="removeComposer(i); $event.stopPropagation()"
+                            [disabled]="isRestrictedMode() || isCreatingNewComposer"
+                            title="Remove">
+                      ×
+                    </button>
+                  </span>
+
+                  <!-- Text input for search -->
+                  <input #composerChipInputField
+                         type="text"
+                         class="chip-input-text"
+                         [(ngModel)]="newComposer.name"
+                         name="new_composer_name"
+                         placeholder="Type to search or add songwriter..."
+                         (input)="onComposerNameChange()"
+                         (focus)="onComposerInputFocusChip()"
+                         (blur)="onComposerInputBlur(); hideComposerDropdown()"
+                         (keydown.enter)="onComposerEnterKey($event)"
+                         [readonly]="isRestrictedMode() || isCreatingNewComposer"
+                         autocomplete="off">
                 </div>
-                <div class="col-md-3" *ngIf="isAdmin">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newComposer.pro_affiliation"
-                    name="new_composer_pro"
-                    placeholder="PRO (e.g., ASCAP)"
-                    [readonly]="isRestrictedMode()">
-                </div>
-                <div class="col-md-2" *ngIf="isAdmin">
-                  <input
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="newComposer.ipi_number"
-                    name="new_composer_ipi"
-                    placeholder="IPI#"
-                    [readonly]="isRestrictedMode()">
-                </div>
-                <div class="col-md-2" *ngIf="isAdmin">
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="newComposer.share_percentage"
-                    name="new_composer_share"
-                    placeholder="Share %"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    [readonly]="isRestrictedMode()">
-                </div>
-                <div class="col-md-1">
-                  <button type="button" class="btn btn-success btn-block" (click)="addComposer()" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-plus"></i>
+
+                <!-- Autocomplete dropdown -->
+                <div *ngIf="showComposerDropdown && !isCreatingNewComposer" class="chip-input-dropdown">
+                  <!-- Create new option at TOP -->
+                  <button type="button"
+                          class="chip-dropdown-item create-new-item"
+                          (click)="createNewComposer()">
+                    <i class="fa fa-plus-circle"></i>
+                    <span *ngIf="newComposer.name.trim()"> Create new songwriter "{{ newComposer.name }}"</span>
+                    <span *ngIf="!newComposer.name.trim()"> Create new songwriter...</span>
+                  </button>
+                  <!-- Existing songwriters below -->
+                  <button type="button"
+                          *ngFor="let songwriter of filteredComposerSongwriters"
+                          class="chip-dropdown-item"
+                          (click)="selectComposerSongwriter(songwriter)">
+                    <strong>{{ songwriter.name }}</strong>
+                    <span *ngIf="songwriter.pro_affiliation" class="text-muted"> ({{ songwriter.pro_affiliation }})</span>
+                    <span *ngIf="songwriter.ipi_number" class="text-muted small"> - IPI: {{ songwriter.ipi_number }}</span>
                   </button>
                 </div>
               </div>
 
-              <div *ngIf="songForm.composers.length > 0" class="mt-3">
-                <div *ngFor="let composer of songForm.composers; let i = index" class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                  <div>
-                    <strong>{{ composer.name }}</strong>
-                    <span *ngIf="isAdmin && composer.pro_affiliation" class="text-muted ml-2">({{ composer.pro_affiliation }})</span>
-                    <span *ngIf="isAdmin && composer.share_percentage" class="badge badge-info ml-2">{{ composer.share_percentage }}%</span>
+              <!-- Create new songwriter form (shown when in create mode) -->
+              <div *ngIf="isCreatingNewComposer" class="create-songwriter-form">
+                <h6 class="mb-3">Create New Songwriter</h6>
+                <div class="row">
+                  <div class="col-md-12 mb-2">
+                    <label for="newComposerName" class="form-label mb-1"><small>Name <span class="text-danger">*</span></small></label>
+                    <input
+                      type="text"
+                      id="newComposerName"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newComposer.name"
+                      name="new_composer_name_create"
+                      placeholder="Songwriter name"
+                      [readonly]="isRestrictedMode()">
                   </div>
-                  <button type="button" class="btn btn-sm btn-danger" (click)="removeComposer(i)" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-trash"></i>
+                  <div class="col-md-6 mb-2">
+                    <label for="newComposerPro" class="form-label mb-1"><small>PRO Affiliation (optional)</small></label>
+                    <input
+                      type="text"
+                      id="newComposerPro"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newComposer.pro_affiliation"
+                      name="new_composer_pro_create"
+                      placeholder="e.g., ASCAP, BMI"
+                      [readonly]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label for="newComposerIpi" class="form-label mb-1"><small>IPI Number (optional)</small></label>
+                    <input
+                      type="text"
+                      id="newComposerIpi"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newComposer.ipi_number"
+                      name="new_composer_ipi_create"
+                      placeholder="IPI Number"
+                      [readonly]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-6 mb-2" *ngIf="isAdmin">
+                    <label for="newComposerShare" class="form-label mb-1"><small>Share % (optional)</small></label>
+                    <input
+                      type="number"
+                      id="newComposerShare"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="newComposer.share_percentage"
+                      name="new_composer_share_create"
+                      placeholder="Share %"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      [readonly]="isRestrictedMode()">
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <button type="button" class="btn btn-success btn-sm mr-2" (click)="addComposer()" [disabled]="isRestrictedMode() || !newComposer.name.trim()">
+                    <i class="fa fa-check"></i> Add
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="cancelNewComposer()" [disabled]="isRestrictedMode()">
+                    <i class="fa fa-times"></i> Cancel
                   </button>
                 </div>
               </div>

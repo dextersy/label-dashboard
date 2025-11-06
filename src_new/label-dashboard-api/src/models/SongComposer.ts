@@ -4,9 +4,7 @@ import { sequelize } from '../config/database';
 interface SongComposerAttributes {
   id: number;
   song_id: number;
-  name: string;
-  pro_affiliation?: string;
-  ipi_number?: string;
+  songwriter_id: number;
   share_percentage?: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -17,13 +15,12 @@ interface SongComposerCreationAttributes extends Optional<SongComposerAttributes
 class SongComposer extends Model<SongComposerAttributes, SongComposerCreationAttributes> implements SongComposerAttributes {
   public id!: number;
   public song_id!: number;
-  public name!: string;
-  public pro_affiliation?: string;
-  public ipi_number?: string;
+  public songwriter_id!: number;
   public share_percentage?: number;
 
   // Association properties
   public song?: any;
+  public songwriter?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -44,17 +41,13 @@ SongComposer.init(
         key: 'id'
       },
     },
-    name: {
-      type: DataTypes.STRING(255),
+    songwriter_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    pro_affiliation: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-    },
-    ipi_number: {
-      type: DataTypes.STRING(20),
-      allowNull: true,
+      references: {
+        model: 'songwriter',
+        key: 'id'
+      },
     },
     share_percentage: {
       type: DataTypes.DECIMAL(5, 2),

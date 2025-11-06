@@ -9,19 +9,24 @@ export interface SongCollaborator {
   artist?: any;
 }
 
-export interface SongAuthor {
-  id?: number;
+export interface Songwriter {
+  id: number;
   name: string;
   pro_affiliation?: string;
   ipi_number?: string;
+}
+
+export interface SongAuthor {
+  id?: number;
+  songwriter_id: number;
+  songwriter?: Songwriter;
   share_percentage?: number;
 }
 
 export interface SongComposer {
   id?: number;
-  name: string;
-  pro_affiliation?: string;
-  ipi_number?: string;
+  songwriter_id: number;
+  songwriter?: Songwriter;
   share_percentage?: number;
 }
 

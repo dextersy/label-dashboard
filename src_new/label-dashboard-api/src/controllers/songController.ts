@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Song, SongCollaborator, SongAuthor, SongComposer, Artist, Release } from '../models';
+import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release } from '../models';
 import AWS from 'aws-sdk';
 
 // Configure AWS S3
@@ -41,8 +41,16 @@ export const getSongsByRelease = async (req: AuthRequest, res: Response) => {
           as: 'collaborators',
           include: [{ model: Artist, as: 'artist' }]
         },
-        { model: SongAuthor, as: 'authors' },
-        { model: SongComposer, as: 'composers' }
+        {
+          model: SongAuthor,
+          as: 'authors',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        },
+        {
+          model: SongComposer,
+          as: 'composers',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        }
       ],
       order: [['track_number', 'ASC']]
     });
@@ -71,8 +79,16 @@ export const getSong = async (req: AuthRequest, res: Response) => {
           as: 'collaborators',
           include: [{ model: Artist, as: 'artist' }]
         },
-        { model: SongAuthor, as: 'authors' },
-        { model: SongComposer, as: 'composers' }
+        {
+          model: SongAuthor,
+          as: 'authors',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        },
+        {
+          model: SongComposer,
+          as: 'composers',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        }
       ]
     });
 
@@ -182,13 +198,11 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       for (const author of authors) {
         const authorData: any = {
           song_id: song.id!,
-          name: author.name
+          songwriter_id: author.songwriter_id
         };
 
-        // Only admins can set these fields
+        // Only admins can set share percentage
         if (req.user.is_admin) {
-          authorData.pro_affiliation = author.pro_affiliation;
-          authorData.ipi_number = author.ipi_number;
           authorData.share_percentage = author.share_percentage;
         }
 
@@ -201,13 +215,11 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       for (const composer of composers) {
         const composerData: any = {
           song_id: song.id!,
-          name: composer.name
+          songwriter_id: composer.songwriter_id
         };
 
-        // Only admins can set these fields
+        // Only admins can set share percentage
         if (req.user.is_admin) {
-          composerData.pro_affiliation = composer.pro_affiliation;
-          composerData.ipi_number = composer.ipi_number;
           composerData.share_percentage = composer.share_percentage;
         }
 
@@ -223,8 +235,16 @@ export const createSong = async (req: AuthRequest, res: Response) => {
           as: 'collaborators',
           include: [{ model: Artist, as: 'artist' }]
         },
-        { model: SongAuthor, as: 'authors' },
-        { model: SongComposer, as: 'composers' }
+        {
+          model: SongAuthor,
+          as: 'authors',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        },
+        {
+          model: SongComposer,
+          as: 'composers',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        }
       ]
     });
 
@@ -361,13 +381,11 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
         for (const author of authors) {
           const authorData: any = {
             song_id: Number(id),
-            name: author.name
+            songwriter_id: author.songwriter_id
           };
 
-          // Only admins can set these fields
+          // Only admins can set share percentage
           if (req.user.is_admin) {
-            authorData.pro_affiliation = author.pro_affiliation;
-            authorData.ipi_number = author.ipi_number;
             authorData.share_percentage = author.share_percentage;
           }
 
@@ -386,13 +404,11 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
         for (const composer of composers) {
           const composerData: any = {
             song_id: Number(id),
-            name: composer.name
+            songwriter_id: composer.songwriter_id
           };
 
-          // Only admins can set these fields
+          // Only admins can set share percentage
           if (req.user.is_admin) {
-            composerData.pro_affiliation = composer.pro_affiliation;
-            composerData.ipi_number = composer.ipi_number;
             composerData.share_percentage = composer.share_percentage;
           }
 
@@ -409,8 +425,16 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
           as: 'collaborators',
           include: [{ model: Artist, as: 'artist' }]
         },
-        { model: SongAuthor, as: 'authors' },
-        { model: SongComposer, as: 'composers' }
+        {
+          model: SongAuthor,
+          as: 'authors',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        },
+        {
+          model: SongComposer,
+          as: 'composers',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        }
       ]
     });
 
@@ -517,8 +541,16 @@ export const reorderSongs = async (req: AuthRequest, res: Response) => {
           as: 'collaborators',
           include: [{ model: Artist, as: 'artist' }]
         },
-        { model: SongAuthor, as: 'authors' },
-        { model: SongComposer, as: 'composers' }
+        {
+          model: SongAuthor,
+          as: 'authors',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        },
+        {
+          model: SongComposer,
+          as: 'composers',
+          include: [{ model: Songwriter, as: 'songwriter' }]
+        }
       ],
       order: [['track_number', 'ASC']]
     });
