@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter } from '../../../services/song.service';
 import { ApiService } from '../../../services/api.service';
 import { SongwriterService } from '../../../services/songwriter.service';
@@ -324,11 +325,11 @@ export class SongFormComponent implements OnChanges, OnInit {
       } else {
         // New songwriter - create it first
         try {
-          const response = await this.songwriterService.createSongwriter({
+          const response = await firstValueFrom(this.songwriterService.createSongwriter({
             name: (author as any).name,
             pro_affiliation: (author as any).pro_affiliation || undefined,
             ipi_number: (author as any).ipi_number || undefined
-          }).toPromise();
+          }));
 
           if (response && response.songwriter) {
             processed.push({
@@ -359,11 +360,11 @@ export class SongFormComponent implements OnChanges, OnInit {
       } else {
         // New songwriter - create it first
         try {
-          const response = await this.songwriterService.createSongwriter({
+          const response = await firstValueFrom(this.songwriterService.createSongwriter({
             name: (composer as any).name,
             pro_affiliation: (composer as any).pro_affiliation || undefined,
             ipi_number: (composer as any).ipi_number || undefined
-          }).toPromise();
+          }));
 
           if (response && response.songwriter) {
             processed.push({
