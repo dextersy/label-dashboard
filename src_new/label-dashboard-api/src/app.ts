@@ -19,20 +19,20 @@ const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 
 // SECURITY: Configure CORS with dynamic allowed origins from database
 // This prevents unauthorized origins from making authenticated requests (CSRF protection)
-const configureCors = async () => {
-  const allowedOrigins = await getAllowedOrigins();
-  const originsArray = Array.from(allowedOrigins);
-
-  console.log('🔒 CORS: Configured allowed origins:', originsArray);
-
+// Origins are checked dynamically on each request using the same cache as CSRF middleware
+const configureCors = () => {
   return cors({
-    origin: (origin, callback) => {
+    origin: async (origin, callback) => {
       // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
       if (!origin) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.has(origin)) {
+      // Dynamically fetch allowed origins on each request (uses 5-minute cache)
+      const allowedOrigins = await getAllowedOrigins();
+
+      // Normalize to lowercase for case-insensitive comparison (DNS is case-insensitive)
+      if (allowedOrigins.has(origin.toLowerCase())) {
         callback(null, true);
       } else {
         console.warn(`⚠️  CORS: Blocked request from unauthorized origin: ${origin}`);
@@ -73,9 +73,11 @@ const startServer = async () => {
       process.exit(1);
     }
 
-    // SECURITY: Configure CORS with allowed origins from database
-    const corsMiddleware = await configureCors();
+    // SECURITY: Configure CORS with dynamic allowed origins from database
+    // Origins are fetched dynamically on each request and cached for 5 minutes
+    const corsMiddleware = configureCors();
     app.use(corsMiddleware);
+    console.log('🔒 CORS: Configured with dynamic origin checking (5-minute cache)');
 
     // SECURITY: Apply CSRF protection to all state-changing operations
     app.use(csrfProtection);
@@ -84,21 +86,76 @@ const startServer = async () => {
     app.use(requireJsonContentType);
 
     // Import and register routes (must be done after CORS and CSRF middleware)
-    const authRoutes = (await import('./routes/auth')).default;
-    const userRoutes = (await import('./routes/users')).default;
-    const artistRoutes = (await import('./routes/artists')).default;
-    const releaseRoutes = (await import('./routes/releases')).default;
-    const eventRoutes = (await import('./routes/events')).default;
-    const financialRoutes = (await import('./routes/financial')).default;
-    const publicRoutes = (await import('./routes/public')).default;
-    const brandRoutes = (await import('./routes/brand')).default;
-    const dashboardRoutes = (await import('./routes/dashboard')).default;
-    const profileRoutes = (await import('./routes/profile')).default;
-    const inviteRoutes = (await import('./routes/invite')).default;
-    const emailRoutes = (await import('./routes/email')).default;
-    const systemRoutes = (await import('./routes/system')).default;
-    const songRoutes = (await import('./routes/songs')).default;
-    const songwriterRoutes = (await import('./routes/songwriters')).default;
+    console.log('📦 Loading route modules...');
+
+    const routeModules = [
+      { name: 'auth', path: './routes/auth' },
+      { name: 'users', path: './routes/users' },
+      { name: 'artists', path: './routes/artists' },
+      { name: 'releases', path: './routes/releases' },
+      { name: 'events', path: './routes/events' },
+      { name: 'financial', path: './routes/financial' },
+      { name: 'public', path: './routes/public' },
+      { name: 'brand', path: './routes/brand' },
+      { name: 'dashboard', path: './routes/dashboard' },
+      { name: 'profile', path: './routes/profile' },
+      { name: 'invite', path: './routes/invite' },
+      { name: 'email', path: './routes/email' },
+      { name: 'system', path: './routes/system' },
+      { name: 'songs', path: './routes/songs' },
+      { name: 'songwriters', path: './routes/songwriters' }
+    ];
+
+    // Load all route modules in parallel with detailed error reporting
+    const routeResults = await Promise.allSettled(
+      routeModules.map(async (module) => {
+        try {
+          const imported = await import(module.path);
+          return { name: module.name, router: imported.default };
+        } catch (error) {
+          console.error(`❌ Failed to load route module '${module.name}' from '${module.path}':`, error);
+          throw new Error(`Route module '${module.name}' failed to load: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      })
+    );
+
+    // Check for any failed imports
+    const failedImports = routeResults.filter(result => result.status === 'rejected');
+    if (failedImports.length > 0) {
+      console.error(`❌ Failed to load ${failedImports.length} route module(s):`);
+      failedImports.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`   - ${routeModules[routeResults.indexOf(result)].name}: ${result.reason}`);
+        }
+      });
+      throw new Error(`Failed to load ${failedImports.length} route module(s). Check logs above for details.`);
+    }
+
+    // Extract successfully loaded routes
+    const routes = routeResults
+      .filter((result): result is PromiseFulfilledResult<{ name: string; router: any }> => result.status === 'fulfilled')
+      .reduce((acc, result) => {
+        acc[result.value.name] = result.value.router;
+        return acc;
+      }, {} as Record<string, any>);
+
+    const authRoutes = routes.auth;
+    const userRoutes = routes.users;
+    const artistRoutes = routes.artists;
+    const releaseRoutes = routes.releases;
+    const eventRoutes = routes.events;
+    const financialRoutes = routes.financial;
+    const publicRoutes = routes.public;
+    const brandRoutes = routes.brand;
+    const dashboardRoutes = routes.dashboard;
+    const profileRoutes = routes.profile;
+    const inviteRoutes = routes.invite;
+    const emailRoutes = routes.email;
+    const systemRoutes = routes.system;
+    const songRoutes = routes.songs;
+    const songwriterRoutes = routes.songwriters;
+
+    console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
     // API Routes (protected)
     app.use('/api/auth', authRoutes);

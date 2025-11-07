@@ -14,6 +14,15 @@ router.get('/by-domain', getBrandByDomain);
 // Public utility routes
 router.get('/supported-banks', getSupportedBanks);
 
+// CSRF/CORS cache refresh route (must be before /:brandId routes to avoid pattern matching)
+router.post('/refresh-allowed-origins', authenticateToken, requireAdmin, (req, res) => {
+  clearOriginsCache();
+  res.json({
+    message: 'CSRF/CORS allowed origins cache cleared. Will be refreshed on next request.',
+    success: true
+  });
+});
+
 // Protected routes
 router.get('/:brandId', authenticateToken, getBrandSettings);
 router.put('/:brandId', authenticateToken, requireAdmin, updateBrandSettings);
@@ -25,15 +34,6 @@ router.get('/:brandId/domains', authenticateToken, requireAdmin, getDomains);
 router.post('/:brandId/domains', authenticateToken, requireAdmin, addDomain);
 router.delete('/:brandId/domains/:domainName', authenticateToken, requireAdmin, deleteDomain);
 router.put('/:brandId/domains/:domainName/verify', authenticateToken, requireAdmin, verifyDomain);
-
-// CSRF/CORS cache refresh route (call after adding/updating domains)
-router.post('/refresh-allowed-origins', authenticateToken, requireAdmin, (req, res) => {
-  clearOriginsCache();
-  res.json({
-    message: 'CSRF/CORS allowed origins cache cleared. Will be refreshed on next request.',
-    success: true
-  });
-});
 
 // Child brands (sublabel) routes
 router.get('/:brandId/sublabels', authenticateToken, requireAdmin, getChildBrands);
