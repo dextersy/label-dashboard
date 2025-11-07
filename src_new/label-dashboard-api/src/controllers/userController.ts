@@ -345,7 +345,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const filterReplacements: any[] = [];
 
       // Whitelist of allowed columns to prevent column name injection
-      const allowedColumns = ['email', 'first_name', 'last_name', 'is_admin'];
+      const allowedColumns = ['email_address', 'first_name', 'last_name', 'is_admin'];
 
       Object.keys(whereCondition)
         .filter(key => key !== 'brand_id' && key !== 'username')
