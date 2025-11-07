@@ -6,7 +6,11 @@ import User from '../models/User';
 import Artist from '../models/Artist';
 import Brand from '../models/Brand';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+// Fail fast if JWT_SECRET is not configured - critical security requirement
+if (!process.env.JWT_SECRET) {
+  throw new Error('CRITICAL: JWT_SECRET environment variable is required. Application cannot start without it.');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Process invite - check user status and determine next action
 export const processInvite = async (req: Request, res: Response) => {
