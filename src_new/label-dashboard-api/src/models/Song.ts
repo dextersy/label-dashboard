@@ -3,6 +3,7 @@ import { sequelize } from '../config/database';
 
 interface SongAttributes {
   id: number;
+  brand_id: number;
   release_id: number;
   title: string;
   track_number?: number;
@@ -21,6 +22,7 @@ interface SongCreationAttributes extends Optional<SongAttributes, 'id' | 'create
 
 class Song extends Model<SongAttributes, SongCreationAttributes> implements SongAttributes {
   public id!: number;
+  public brand_id!: number;
   public release_id!: number;
   public title!: string;
   public track_number?: number;
@@ -48,6 +50,14 @@ Song.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    brand_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'brand',
+        key: 'id'
+      },
     },
     release_id: {
       type: DataTypes.INTEGER,

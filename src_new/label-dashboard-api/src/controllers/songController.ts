@@ -152,6 +152,7 @@ export const createSong = async (req: AuthRequest, res: Response) => {
 
     // Create song (filter admin-only fields for non-admins)
     const songData: any = {
+      brand_id: release.brand_id,
       release_id,
       title,
       track_number: nextTrackNumber,
