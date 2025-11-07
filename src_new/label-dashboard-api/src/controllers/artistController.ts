@@ -135,7 +135,7 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
         where: {
           artist_id: artistId,
           user_id: req.user.id,
-          // status: 'Accepted' // Temporarily removing for debug
+          status: 'Accepted' // SECURITY: Only accepted users can access artist data
         }
       });
 
@@ -422,7 +422,10 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       if (changes.length > 0) {
         // Get all users with access to this artist
         const artistAccess = await ArtistAccess.findAll({
-          where: { artist_id: artistId },
+          where: {
+            artist_id: artistId,
+            status: 'Accepted' // SECURITY: Only send notifications to accepted users
+          },
           include: [{ model: User, as: 'user' }]
         });
 
@@ -612,7 +615,10 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
     if (payout_point !== undefined && payout_point !== oldPayoutPoint) {
       try {
         const artistAccess = await ArtistAccess.findAll({
-          where: { artist_id: artistId },
+          where: {
+            artist_id: artistId,
+            status: 'Accepted' // SECURITY: Only send notifications to accepted users
+          },
           include: [{ model: User, as: 'user' }]
         });
 
@@ -1590,10 +1596,13 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
     try {
       // Get brand info
       const brand = await Brand.findByPk(req.user.brand_id);
-      
+
       // Get all team members for this artist
       const artistAccess = await ArtistAccess.findAll({
-        where: { artist_id: artistId },
+        where: {
+          artist_id: artistId,
+          status: 'Accepted' // SECURITY: Only send notifications to accepted users
+        },
         include: [{ model: User, as: 'user' }]
       });
 
