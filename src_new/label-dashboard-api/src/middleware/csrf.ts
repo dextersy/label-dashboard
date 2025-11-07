@@ -15,6 +15,10 @@ let allowedOriginsCache: Set<string> | null = null;
 let cacheExpiry: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes (normal operation)
 const FALLBACK_CACHE_TTL = 30 * 1000; // 30 seconds (during database errors)
+const REFRESH_BEFORE_EXPIRY = 30 * 1000; // Refresh 30 seconds before expiry (background refresh)
+
+// Background refresh timer
+let refreshTimer: NodeJS.Timeout | null = null;
 
 /**
  * Get all allowed origins from the database (with caching)
@@ -100,11 +104,71 @@ export const getAllowedOrigins = async (): Promise<Set<string>> => {
 
 /**
  * Clear the origins cache (useful for testing or when domains are updated)
+ * PERFORMANCE: Triggers immediate background refresh to update cache
  */
-export const clearOriginsCache = (): void => {
+export const clearOriginsCache = async (): Promise<void> => {
   allowedOriginsCache = null;
   cacheExpiry = 0;
-  console.log('🔒 CSRF: Origins cache cleared');
+  console.log('🔒 CSRF: Origins cache cleared, refreshing...');
+
+  // Immediately refresh the cache to prevent cache misses
+  try {
+    await getAllowedOrigins();
+  } catch (error) {
+    console.error('❌ CSRF: Failed to refresh cache after clearing:', error);
+  }
+};
+
+/**
+ * PERFORMANCE: Pre-warm the origins cache on startup
+ * This prevents the first preflight request from blocking on a database query
+ */
+export const preWarmCache = async (): Promise<void> => {
+  console.log('🔒 CSRF: Pre-warming origins cache...');
+  await getAllowedOrigins();
+  console.log('✅ CSRF: Origins cache pre-warmed and ready');
+};
+
+/**
+ * PERFORMANCE: Start background refresh to keep cache warm
+ * Refreshes the cache before it expires to prevent any request from ever blocking on DB queries
+ */
+export const startBackgroundRefresh = (): void => {
+  // Clear any existing timer
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+  }
+
+  // Schedule refresh before cache expires
+  const refreshInterval = CACHE_TTL - REFRESH_BEFORE_EXPIRY;
+
+  refreshTimer = setInterval(async () => {
+    try {
+      const now = Date.now();
+      const timeUntilExpiry = cacheExpiry - now;
+
+      // Only refresh if cache is about to expire
+      if (timeUntilExpiry <= REFRESH_BEFORE_EXPIRY) {
+        console.log('🔄 CSRF: Background refresh triggered (cache expiring soon)');
+        await getAllowedOrigins();
+      }
+    } catch (error) {
+      console.error('❌ CSRF: Background refresh failed:', error);
+      // Don't crash the server, just log the error
+      // The cache will be refreshed on the next request when it expires
+    }
+  }, refreshInterval);
+
+  console.log(`🔄 CSRF: Background refresh scheduled (every ${refreshInterval / 1000}s)`);
+};
+
+/**
+ * PERFORMANCE: Get allowed origins synchronously from cache
+ * This function assumes the cache has been pre-warmed and is kept fresh by background refresh
+ * Returns null if cache is not available (should never happen in production)
+ */
+export const getAllowedOriginsSync = (): Set<string> | null => {
+  return allowedOriginsCache;
 };
 
 /**

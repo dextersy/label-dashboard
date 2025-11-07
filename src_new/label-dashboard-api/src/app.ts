@@ -9,7 +9,14 @@ import { initializeDatabase } from './models';
 import * as https from 'https';
 import * as http from 'http';
 import { globalRateLimit } from './middleware/rateLimiting';
-import { getAllowedOrigins, csrfProtection, requireJsonContentType } from './middleware/csrf';
+import {
+  getAllowedOrigins,
+  getAllowedOriginsSync,
+  preWarmCache,
+  startBackgroundRefresh,
+  csrfProtection,
+  requireJsonContentType
+} from './middleware/csrf';
 
 dotenv.config();
 
@@ -19,7 +26,7 @@ const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 
 // SECURITY: Configure CORS with dynamic allowed origins from database
 // This prevents unauthorized origins from making authenticated requests (CSRF protection)
-// Origins are checked dynamically on each request using the same cache as CSRF middleware
+// PERFORMANCE: Uses synchronous cache access (pre-warmed on startup, refreshed in background)
 const configureCors = () => {
   return cors({
     origin: async (origin, callback) => {
@@ -28,8 +35,14 @@ const configureCors = () => {
         return callback(null, true);
       }
 
-      // Dynamically fetch allowed origins on each request (uses 5-minute cache)
-      const allowedOrigins = await getAllowedOrigins();
+      // PERFORMANCE: Try synchronous cache access first (avoids async overhead on preflight requests)
+      let allowedOrigins = getAllowedOriginsSync();
+
+      // Fallback to async fetch if cache is not available (should never happen after pre-warming)
+      if (!allowedOrigins) {
+        console.warn('⚠️  CORS: Cache not available, falling back to async fetch');
+        allowedOrigins = await getAllowedOrigins();
+      }
 
       // Normalize to lowercase for case-insensitive comparison (DNS is case-insensitive)
       if (allowedOrigins.has(origin.toLowerCase())) {
@@ -73,11 +86,17 @@ const startServer = async () => {
       process.exit(1);
     }
 
+    // PERFORMANCE: Pre-warm origins cache on startup to prevent blocking preflight requests
+    await preWarmCache();
+
+    // PERFORMANCE: Start background refresh to keep cache warm (prevents cache misses)
+    startBackgroundRefresh();
+
     // SECURITY: Configure CORS with dynamic allowed origins from database
-    // Origins are fetched dynamically on each request and cached for 5 minutes
+    // Origins are checked synchronously using pre-warmed cache (no DB queries on preflight)
     const corsMiddleware = configureCors();
     app.use(corsMiddleware);
-    console.log('🔒 CORS: Configured with dynamic origin checking (5-minute cache)');
+    console.log('🔒 CORS: Configured with pre-warmed cache and background refresh');
 
     // SECURITY: Apply CSRF protection to all state-changing operations
     app.use(csrfProtection);

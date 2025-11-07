@@ -533,7 +533,7 @@ export const addDomain = async (req: Request, res: Response) => {
     });
 
     // SECURITY: Clear CSRF/CORS origins cache since domains changed
-    clearOriginsCache();
+    await clearOriginsCache();
 
     res.status(201).json({
       message: 'Domain added successfully',
@@ -576,7 +576,7 @@ export const deleteDomain = async (req: Request, res: Response) => {
     await domain.destroy();
 
     // SECURITY: Clear CSRF/CORS origins cache since domains changed
-    clearOriginsCache();
+    await clearOriginsCache();
 
     res.json({
       message: 'Domain deleted successfully'
@@ -690,7 +690,7 @@ const verifyDomainAsync = async (
     // SECURITY: Clear CSRF/CORS origins cache since domain status changed
     // Only clear if domain was successfully verified (status changed to 'Connected')
     if (finalStatus === 'Connected') {
-      clearOriginsCache();
+      await clearOriginsCache();
       console.log(`[Async][Security] CSRF/CORS cache cleared after domain verification`);
     }
 

@@ -335,21 +335,25 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     if (sortBy === 'last_logged_in') {
       // SECURITY: Strict allowlist for sort direction - never interpolate user input
       const isDescending = sortDirection.toUpperCase() === 'DESC';
-      const direction = isDescending ? 'DESC' : 'ASC';
 
       // MySQL doesn't support NULLS FIRST/LAST, so we use a CASE statement workaround
       // For DESC: non-null values first (DESC), then NULL values
       // For ASC: NULL values first, then non-null values (ASC)
 
-      // Pre-build ORDER BY clause with validated direction to avoid template interpolation
-      const nullSortPriority = isDescending ? '1' : '0';
-      const nonNullSortPriority = isDescending ? '0' : '1';
-      const orderByClause = `ORDER BY CASE
+      // SECURITY: Use complete pre-built strings to make SQL injection protection obvious to reviewers
+      const orderByClause = isDescending
+        ? `ORDER BY CASE
           WHEN la_max.last_logged_in IS NULL
-          THEN ${nullSortPriority}
-          ELSE ${nonNullSortPriority}
+          THEN 1
+          ELSE 0
         END,
-        la_max.last_logged_in ${direction}`;
+        la_max.last_logged_in DESC`
+        : `ORDER BY CASE
+          WHEN la_max.last_logged_in IS NULL
+          THEN 0
+          ELSE 1
+        END,
+        la_max.last_logged_in ASC`;
 
       // Build additional filter conditions for the raw query using parameterized queries
       // SECURITY: Use parameterized queries to prevent SQL injection
