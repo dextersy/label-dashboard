@@ -339,21 +339,34 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       // For DESC: non-null values first (DESC), then NULL values
       // For ASC: NULL values first, then non-null values (ASC)
       
-      // Build additional filter conditions for the raw query
-      const additionalFilters = Object.keys(whereCondition)
+      // Build additional filter conditions for the raw query using parameterized queries
+      // SECURITY: Use parameterized queries to prevent SQL injection
+      const filterConditions: string[] = [];
+      const filterReplacements: any[] = [];
+
+      // Whitelist of allowed columns to prevent column name injection
+      const allowedColumns = ['email', 'first_name', 'last_name', 'is_admin'];
+
+      Object.keys(whereCondition)
         .filter(key => key !== 'brand_id' && key !== 'username')
-        .map(key => {
+        .forEach(key => {
+          // Validate column name against whitelist
+          if (!allowedColumns.includes(key)) {
+            return; // Skip invalid columns
+          }
+
           const value = whereCondition[key];
           if (key === 'is_admin') {
-            return `AND u.${key} = ${value ? 1 : 0}`;
+            filterConditions.push(`AND u.${key} = ?`);
+            filterReplacements.push(value ? 1 : 0);
           } else if (typeof value === 'object' && value[Op.like]) {
             const likeValue = value[Op.like].replace(/%/g, '');
-            return `AND u.${key} LIKE '%${likeValue}%'`;
+            filterConditions.push(`AND u.${key} LIKE ?`);
+            filterReplacements.push(`%${likeValue}%`);
           }
-          return '';
-        })
-        .filter(condition => condition !== '')
-        .join(' ');
+        });
+
+      const additionalFilters = filterConditions.join(' ');
 
       // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
@@ -361,18 +374,18 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         FROM user u
         LEFT JOIN (
           SELECT user_id, MAX(date_and_time) as last_logged_in
-          FROM login_attempt 
+          FROM login_attempt
           WHERE status = 'Successful' AND brand_id = ?
           GROUP BY user_id
         ) la_max ON u.id = la_max.user_id
-        WHERE u.brand_id = ? 
-          AND u.username != '' 
+        WHERE u.brand_id = ?
+          AND u.username != ''
           AND u.username IS NOT NULL
           ${additionalFilters}
-        ORDER BY CASE 
-          WHEN la_max.last_logged_in IS NULL 
-          THEN ${direction === 'DESC' ? '1' : '0'} 
-          ELSE ${direction === 'DESC' ? '0' : '1'} 
+        ORDER BY CASE
+          WHEN la_max.last_logged_in IS NULL
+          THEN ${direction === 'DESC' ? '1' : '0'}
+          ELSE ${direction === 'DESC' ? '0' : '1'}
         END,
         la_max.last_logged_in ${direction}
         LIMIT ? OFFSET ?
@@ -381,19 +394,19 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const countQuery = `
         SELECT COUNT(*) as total
         FROM user u
-        WHERE u.brand_id = ? 
-          AND u.username != '' 
+        WHERE u.brand_id = ?
+          AND u.username != ''
           AND u.username IS NOT NULL
           ${additionalFilters}
       `;
 
       const [users, countResult] = await Promise.all([
         sequelize.query(usersQuery, {
-          replacements: [req.user.brand_id, req.user.brand_id, limit, offset],
+          replacements: [req.user.brand_id, req.user.brand_id, ...filterReplacements, limit, offset],
           type: QueryTypes.SELECT
         }),
         sequelize.query(countQuery, {
-          replacements: [req.user.brand_id],
+          replacements: [req.user.brand_id, ...filterReplacements],
           type: QueryTypes.SELECT
         })
       ]);
