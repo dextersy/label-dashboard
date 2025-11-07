@@ -1,0 +1,261 @@
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <h5 class="mb-0">{{ title }}</h5>
+          <div class="table-actions d-flex flex-wrap align-items-center gap-2">
+            <!-- Custom buttons slot -->
+            <ng-container *ngIf="customButtons">
+              <ng-container *ngTemplateOutlet="customButtons"></ng-container>
+            </ng-container>
+            <button 
+              *ngIf="showSearch && columns.length > 0"
+              class="btn btn-sm btn-outline-primary flex-shrink-0"
+              (click)="toggleSearchFilters()"
+              [title]="showSearchFilters ? 'Hide search filters' : 'Show search filters'">
+              <i class="fa fa-search"></i> 
+              {{ showSearchFilters ? 'Hide' : 'Search' }}
+            </button>
+            <button 
+              *ngIf="showSearch && columns.length > 0 && hasActiveFilters()"
+              class="btn btn-sm btn-outline-secondary flex-shrink-0"
+              (click)="clearFilters()"
+              title="Clear all filters">
+              <i class="fa fa-times"></i> 
+              <span class="d-none d-sm-inline">Clear</span>
+            </button>
+          </div>
+        </div>
+        <!-- Pagination info moved to its own line on mobile -->
+        <div class="pagination-info mt-2" *ngIf="pagination">
+          <small class="text-muted">
+            Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
+            {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }} 
+            of {{ pagination.total_count }} entries
+          </small>
+        </div>
+      </div>
+      
+      <!-- Search filters row (collapsible) -->
+      <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="card-body border-bottom bg-light py-3">
+        <div class="d-flex flex-wrap gap-3 align-items-end search-filters-container">
+          <div class="search-field" *ngFor="let column of columns" [hidden]="column.searchable === false">
+            <div class="form-group mb-0">
+              <label class="form-label small text-muted mb-1">{{ column.label }}</label>
+              
+              <!-- Text input -->
+              <input 
+                *ngIf="!column.type || column.type === 'text'"
+                type="text"
+                class="form-control form-control-sm"
+                [placeholder]="'Search...'"
+                [value]="searchFilters[column.key] || ''"
+                (input)="onFilterChange(column.key, $any($event.target).value)">
+              
+              <!-- Number input -->
+              <input 
+                *ngIf="column.type === 'number'"
+                type="number"
+                class="form-control form-control-sm"
+                [placeholder]="'Amount...'"
+                [value]="searchFilters[column.key] || ''"
+                (input)="onFilterChange(column.key, $any($event.target).value)">
+              
+              <!-- Date input -->
+              <input 
+                *ngIf="column.type === 'date'"
+                type="date"
+                class="form-control form-control-sm"
+                [value]="searchFilters[column.key] || ''"
+                (input)="onFilterChange(column.key, $any($event.target).value)">
+              
+              <!-- Select input -->
+              <select 
+                *ngIf="column.type === 'select'"
+                class="form-control form-control-sm"
+                [value]="searchFilters[column.key] || ''"
+                (change)="onFilterChange(column.key, $any($event.target).value)">
+                <option value="">All {{ column.label }}</option>
+                <option *ngFor="let option of column.options" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div *ngIf="loading" class="text-center p-4">
+          <div class="loading-dots">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+        <div *ngIf="!loading">
+          <!-- Sortable headers (optional) -->
+          <div *ngIf="showSortableHeaders && columns.length > 0" class="table-responsive">
+            <table [class]="getTableClasses()">
+              <thead>
+                <tr>
+                  <!-- Bulk select checkbox column -->
+                  <th *ngIf="enableBulkOperations" class="checkbox-column" style="width: 50px;">
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input"
+                      [checked]="selectAllChecked"
+                      [indeterminate]="selectAllIndeterminate"
+                      [disabled]="isOperationsDisabled()"
+                      (change)="onSelectAll($any($event.target).checked)">
+                  </th>
+                  <th *ngFor="let column of columns" 
+                      [class]="getColumnClasses(column)"
+                      [class.sortable]="column.sortable"
+                      [style.text-align]="column.align || 'left'"
+                      (click)="onSort(column)"
+                      [style.cursor]="column.sortable ? 'pointer' : 'default'">
+                    {{ column.label }}
+                    <i *ngIf="column.sortable" 
+                       class="fa ms-1" 
+                       [class]="getSortIcon(column)"></i>
+                  </th>
+                  <th *ngIf="showActionsColumn" class="actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Bulk operations row (appears when items are selected) -->
+                <tr *ngIf="enableBulkOperations && getSelectedCount() > 0" class="bulk-operations-row bg-light">
+                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="fw-bold text-primary">
+                        <i class="fa fa-check-circle me-2" *ngIf="!bulkOperationsLoading"></i>
+                        <i class="fa fa-spinner fa-spin me-2" *ngIf="bulkOperationsLoading"></i>
+                        {{ getSelectedCount() }} item(s) selected
+                        <span *ngIf="bulkOperationsLoading" class="ms-2 text-muted">- Processing...</span>
+                      </span>
+                      <div class="bulk-actions">
+                        <ng-container *ngIf="bulkOperationsContent">
+                          <ng-container *ngTemplateOutlet="bulkOperationsContent; context: { $implicit: getSelectedItemsArray(), disabled: isOperationsDisabled() }"></ng-container>
+                        </ng-container>
+                        <button 
+                          type="button" 
+                          class="btn btn-sm btn-outline-secondary ms-2"
+                          [disabled]="isOperationsDisabled()"
+                          (click)="clearSelection()"
+                          title="Clear selection">
+                          <i class="fa fa-times"></i> Clear
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngFor="let item of data" [class]="rowClassGetter ? rowClassGetter(item) : ''">
+                  <!-- Bulk select checkbox -->
+                  <td *ngIf="enableBulkOperations" class="checkbox-column">
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input"
+                      [checked]="isItemSelected(item)"
+                      [disabled]="isOperationsDisabled()"
+                      (change)="onSelectItem(item, $any($event.target).checked)">
+                  </td>
+                  <td *ngFor="let column of columns" 
+                      [class]="getColumnClasses(column)"
+                      [style.text-align]="column.align || 'left'"
+                      [attr.data-label]="column.label">
+                    <!-- Payment link special handling -->
+                    <span *ngIf="column.key === 'payment_link'">
+                      <a 
+                        [href]="item[column.key]" 
+                        target="_blank" 
+                        *ngIf="item[column.key]"
+                        class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                      </a>
+                      <span *ngIf="!item[column.key]" class="text-muted">-</span>
+                    </span>
+                    
+                    <!-- Result badge special handling -->
+                    <span *ngIf="column.key === 'result' && (item[column.key] === 'Success' || item[column.key] === 'Failed' || item[column.key] === 'Successful')" 
+                          class="badge" 
+                          [class.bg-success]="item[column.key] === 'Success' || item[column.key] === 'Successful'"
+                          [class.bg-danger]="item[column.key] === 'Failed'">
+                      {{ item[column.key] }}
+                    </span>
+                    
+                    <!-- Status badge special handling -->
+                    <span *ngIf="column.key === 'status'" [innerHTML]="getColumnValue(item, column)"></span>
+                    
+                    <!-- Earnings columns with breakdown buttons -->
+                    <div *ngIf="column.showBreakdownButton" class="d-flex align-items-center justify-content-end">
+                      <span class="me-2">{{ getColumnValue(item, column) }}</span>
+                      <button class="btn btn-sm btn-link text-muted p-1" 
+                              (click)="onBreakdownButtonClick(item, column.key)"
+                              title="View breakdown"
+                              style="border: none; box-shadow: none;">
+                        <i class="fas fa-chart-pie"></i>
+                      </button>
+                    </div>
+                    
+                    <!-- Balance column with color coding -->
+                    <span *ngIf="column.key === 'balance'">
+                      <strong [class]="item.balance > 0 ? 'text-success' : (item.balance < 0 ? 'text-danger' : 'text-muted')">
+                        {{ getColumnValue(item, column) }}
+                      </strong>
+                    </span>
+                    
+                    <!-- Default handling -->
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status' && !column.showBreakdownButton">
+                      {{ getColumnValue(item, column) }}
+                    </span>
+                  </td>
+                  <td *ngIf="showActionsColumn" class="actions-column">
+                    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
+                  </td>
+                </tr>
+                <tr *ngIf="data.length === 0">
+                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="text-center">No data available.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table content will be projected here (when not using sortable headers) -->
+          <ng-container *ngIf="!showSortableHeaders">
+            <ng-container *ngTemplateOutlet="tableContent; context: { $implicit: data }"></ng-container>
+          </ng-container>
+          
+          <!-- Pagination Controls -->
+          <nav *ngIf="pagination && pagination.total_pages > 1" class="mt-3">
+            <ul class="pagination justify-content-center">
+              <li class="page-item" [class.disabled]="!pagination.has_prev">
+                <button class="page-link" 
+                        (click)="loadPage(pagination.current_page - 1)"
+                        [disabled]="!pagination.has_prev">
+                  Previous
+                </button>
+              </li>
+              
+              <li class="page-item" 
+                  *ngFor="let page of getPageNumbers()"
+                  [class.active]="page === pagination.current_page">
+                <button class="page-link" (click)="loadPage(page)">
+                  {{ page }}
+                </button>
+              </li>
+              
+              <li class="page-item" [class.disabled]="!pagination.has_next">
+                <button class="page-link" 
+                        (click)="loadPage(pagination.current_page + 1)"
+                        [disabled]="!pagination.has_next">
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

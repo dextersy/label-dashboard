@@ -1,0 +1,130 @@
+<div class="artist-releases-tab">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5>Artist Releases</h5>
+      <div *ngIf="artist">
+        <button class="btn btn-primary btn-sm"
+                [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
+                (click)="navigateToCreateRelease()">
+          <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
+          {{ isAdmin ? 'Create Release' : 'Submit Release' }}
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      
+      <div *ngIf="loading" class="text-center loading">
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+      
+      <div *ngIf="!loading && releases.length === 0" class="text-center text-muted empty-releases">
+        <i class="fa fa-music fa-3x"></i>
+        <p>No releases found</p>
+        <small>This artist hasn't released any music yet.</small>
+      </div>
+      
+      <div *ngIf="!loading && releases.length > 0" class="releases-table-container">
+        <div class="table-responsive">
+          <table class="table releases-table">
+            <thead>
+              <tr>
+                <th>Cover</th>
+                <th>Catalog #</th>
+                <th>Title</th>
+                <th>Release Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let release of releases">
+                <td class="cover-cell">
+                  <img [src]="getCoverArtUrl(release.cover_art)" 
+                       [alt]="release.title + ' cover'"
+                       class="cover-thumbnail">
+                </td>
+                <td class="catalog-cell">
+                  <span class="catalog-number">{{ release.catalog_no }}</span>
+                </td>
+                <td class="title-cell">
+                  <div class="release-title">{{ release.title }}</div>
+                  <div *ngIf="release.description" class="release-description">
+                    {{ stripHtmlTags(release.description || '') }}
+                  </div>
+                </td>
+                <td class="date-cell">
+                  {{ formatDate(release.release_date) }}
+                </td>
+                <td class="status-cell">
+                  <span class="badge" [class]="getStatusClass(release.status)">
+                    <i class="fa" [ngClass]="getStatusIcon(release.status)"></i>
+                    {{ release.status }}
+                  </span>
+                  <ng-container *ngIf="release.status === 'Draft' && hasValidationIssues(release)">
+                    <i *ngIf="hasValidationErrors(release)"
+                       class="fa fa-exclamation-circle text-danger ms-2"
+                       [title]="getValidationTooltip(release)"
+                       style="cursor: help;"></i>
+                    <i *ngIf="!hasValidationErrors(release)"
+                       class="fa fa-exclamation-triangle text-warning ms-2"
+                       [title]="getValidationTooltip(release)"
+                       style="cursor: help;"></i>
+                  </ng-container>
+                </td>
+                <td class="actions-cell">
+                  <button *ngIf="canSubmitForReview(release)"
+                          class="btn btn-success btn-sm me-2"
+                          (click)="onSubmitForReview(release)"
+                          [disabled]="submittingReleaseId === release.id"
+                          title="Submit for review">
+                    <i class="fa fa-spinner fa-spin me-1" *ngIf="submittingReleaseId === release.id"></i>
+                    <i class="fa fa-paper-plane me-1" *ngIf="submittingReleaseId !== release.id"></i>
+                    {{ submittingReleaseId === release.id ? 'Submitting...' : 'Submit' }}
+                  </button>
+                  <button class="btn btn-link btn-sm p-0 me-2"
+                          (click)="onEditRelease(release)"
+                          [disabled]="loadingReleaseDetails"
+                          title="Edit Release Information">
+                    <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
+                    <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
+                  </button>
+                  <button class="btn btn-link btn-sm p-0"
+                          (click)="onManageTrackList(release)"
+                          title="Manage Track List">
+                    <i class="fa fa-music"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- Edit Release Dialog -->
+  <app-edit-release-dialog
+    [isVisible]="showEditDialog"
+    [artist]="artist"
+    [editingRelease]="selectedRelease"
+    (close)="onEditDialogClose()"
+    (releaseUpdated)="onReleaseUpdated($event)"
+    (alertMessage)="alertMessage.emit($event)">
+  </app-edit-release-dialog>
+
+  <!-- Track List Dialog -->
+  <app-track-list-dialog
+    [isVisible]="showTrackListDialog"
+    [releaseId]="selectedRelease?.id || null"
+    [releaseTitle]="selectedRelease?.title || ''"
+    [releaseStatus]="selectedRelease?.status || ''"
+    [releaseArtists]="selectedRelease?.artists || []"
+    (close)="onTrackListDialogClose()"
+    (alertMessage)="alertMessage.emit($event)">
+  </app-track-list-dialog>
+</div>

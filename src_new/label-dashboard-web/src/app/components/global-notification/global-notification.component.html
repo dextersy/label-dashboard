@@ -1,0 +1,12 @@
+<div *ngIf="currentNotification" 
+     class="global-notification" 
+     [class]="getNotificationClass()"
+     [class.clickable]="currentNotification.clickable"
+     (click)="onNotificationClick()">
+  <button type="button" class="close" (click)="closeNotification($event)">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <i class="fa" [class]="getNotificationIcon()"></i>
+  <strong *ngIf="getNotificationCaption()">{{ getNotificationCaption() }}</strong>
+  {{ currentNotification.message }}
+</div>

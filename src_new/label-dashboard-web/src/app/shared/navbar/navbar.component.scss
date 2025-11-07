@@ -1,0 +1,346 @@
+/* Navbar styles */
+.navbar {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: #333;
+  padding-top: 20px;
+  padding-bottom: 0px;
+}
+
+.navbar-brand {
+  font-size: 18px;
+  margin: 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Hamburger menu button - visible on all screen sizes, smaller design */
+.navbar-toggle {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  margin-top: 8px;
+  margin-right: 15px;
+  margin-bottom: 8px;
+  margin-left: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  
+  .icon-bar {
+    display: block;
+    width: 18px; // Smaller width (was 22px)
+    height: 2px;
+    border-radius: 1px;
+    background-color: #333;
+    margin: 2px 0; // Smaller spacing (was 4px)
+    transition: all 0.3s ease;
+  }
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    
+    .icon-bar {
+      background-color: #000;
+    }
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Container layout */
+.container-fluid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Artist selection in navbar */
+.navbar-artist-selection {
+  margin-left: 15px;
+  
+  // Override the artist selection styles to fit in navbar
+  ::ng-deep .artist-selection-container {
+    margin-bottom: 0;
+  }
+  
+  ::ng-deep .dropdown {
+    @media (min-width: 768px) {
+      width: 280px;
+      max-width: 280px;
+    }
+  }
+  
+  ::ng-deep .dropdown-menu {
+    @media (min-width: 768px) {
+      width: 280px;
+      min-width: 280px;
+    }
+  }
+  
+  // Make artist selection more compact on mobile
+  @media (max-width: 991px) {
+    max-width: 200px; // Set max width for the entire component
+    
+    ::ng-deep .artist-dropdown-btn {
+      min-height: 40px;
+      padding: 6px 8px;
+      overflow: hidden; // Ensure button content doesn't overflow
+    }
+    
+    ::ng-deep .artist-info {
+      overflow: hidden; // Enable truncation at the container level
+      max-width: 100%; // Ensure it respects parent width
+    }
+    
+    ::ng-deep .artist-photo {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0; // Prevent photo from shrinking
+    }
+    
+    ::ng-deep .artist-details {
+      overflow: hidden; // Enable text truncation
+      min-width: 0; // Allow flex item to shrink below content width
+      flex: 1; // Take up remaining space
+    }
+    
+    ::ng-deep .artist-name {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%; // Ensure it takes full width of its container
+    }
+    
+    ::ng-deep .artist-members {
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%; // Ensure it takes full width of its container
+    }
+    
+    ::ng-deep .no-artist {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    ::ng-deep .caret {
+      flex-shrink: 0; // Prevent caret from being compressed
+      margin-left: 6px;
+    }
+  }
+}
+
+/* Spacer to push content to the right */
+.navbar-spacer {
+  flex: 1;
+}
+
+/* Welcome message styling */
+.navbar-welcome {
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 20px;
+}
+
+/* Mobile icons styling */
+.navbar-mobile-icons {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  margin-left: 8px;
+  
+  .mobile-icon-link {
+    color: #333;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    text-align: center;
+    
+    &:hover {
+      color: #007bff;
+      background-color: rgba(0, 123, 255, 0.1);
+      text-decoration: none;
+    }
+    
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
+/* Adjust hamburger menu margins on mobile */
+@media (max-width: 991px) {
+  .navbar-toggle {
+    margin-right: 8px;
+    margin-left: 8px;
+  }
+  
+  .navbar-artist-selection {
+    margin-left: 6px;
+    margin-right: 6px;
+    flex: 1;
+    min-width: 0; // Allow flex item to shrink below content size
+  }
+  
+  .navbar-welcome {
+    display: none; // Hide welcome message on mobile to save space
+  }
+  
+  .navbar-mobile-icons {
+    display: flex; // Show mobile icons on mobile
+    flex-shrink: 0; // Prevent icons from shrinking
+  }
+  
+  .navbar-collapse {
+    display: none !important; // Hide regular menu items on mobile
+  }
+  
+  .navbar-spacer {
+    display: none; // Hide spacer on mobile to save space
+  }
+}
+
+/* Desktop navbar layout */
+@media (min-width: 992px) {
+  
+  .navbar-mobile-icons {
+    display: none; // Hide mobile icons on desktop
+  }
+  
+  .navbar-collapse {
+    display: flex !important;
+    flex: none;
+  }
+  
+  .navbar-nav {
+    display: flex;
+    margin-left: auto; // Push to the right
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+    
+    .nav-item {
+      margin-left: 15px;
+      
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+}
+
+/* Hamburger to X animation - smaller design */
+:global(html.nav-open) {
+  .navbar-toggle {
+    background-color: rgba(0, 0, 0, 0.1);
+    
+    .icon-bar:nth-child(1) {
+      transform: rotate(45deg) translate(3px, 3px); // Adjusted for smaller size
+    }
+    
+    .icon-bar:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .icon-bar:nth-child(3) {
+      transform: rotate(-45deg) translate(4px, -4px); // Adjusted for smaller size
+    }
+  }
+}
+
+/* Admin chip styling */
+.admin-chip {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  i {
+    font-size: 10px;
+  }
+  
+  &:hover {
+    background: linear-gradient(135deg, #0056b3, #004085);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 123, 255, 0.4);
+  }
+  
+  transition: all 0.2s ease-in-out;
+}
+
+/* Superadmin chip styling */
+.superadmin-chip {
+  background: linear-gradient(135deg, #dc3545, #b02a37);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  i {
+    font-size: 10px;
+  }
+  
+  &:hover {
+    background: linear-gradient(135deg, #b02a37, #8b1f2b);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(220, 53, 69, 0.4);
+  }
+  
+  transition: all 0.2s ease-in-out;
+}
+
+/* Standard navbar items */
+.navbar-nav {
+  .nav-item {
+    .nav-link {
+      color: #333;
+      opacity: 0.8;
+      
+      &:hover {
+        opacity: 1;
+        color: #000;
+      }
+      
+      i {
+        margin-right: 5px;
+      }
+    }
+  }
+}
+

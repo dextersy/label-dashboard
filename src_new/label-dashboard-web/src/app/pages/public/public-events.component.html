@@ -1,0 +1,113 @@
+<div class="public-events-page">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading events...</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="isError && !isLoading" class="alert alert-danger text-center">
+    <h4>Unable to Load Events</h4>
+    <p class="mb-0">Please try again later or contact support.</p>
+  </div>
+
+  <!-- Events Content -->
+  <div *ngIf="!isLoading && !isError && eventsList" class="events-content">
+    <!-- Page Header -->
+    <div class="page-header mb-5">
+      <div class="container text-center">
+        <h1 class="display-4 mb-0">
+          Live Music Directory
+        </h1>
+        <h3 class="mb-4">By {{ currentBrand?.name }}</h3>
+        <p class="lead text-muted mb-0">Your next show is here! ✨ Check out these cool happenings and grab your tickets today!</p>
+      </div>
+    </div>
+
+    <!-- All Events -->
+    <div class="container">
+      <div class="row g-4">
+        <div *ngFor="let event of getAllEventsSorted()" class="col-12 col-md-6 col-lg-4">
+          <div class="event-tile card h-100 shadow-sm" [class.event-closed]="event.is_closed">
+            <!-- Event Poster -->
+            <div class="poster-container">
+              <img 
+                [src]="getPosterUrl(event.poster_url)" 
+                [alt]="event.title + ' Poster'"
+                class="card-img-top event-poster"
+                loading="lazy">
+              <div *ngIf="event.is_closed" class="closed-overlay">
+                <span class="closed-badge">SOLD OUT</span>
+              </div>
+            </div>
+
+            <!-- Event Details -->
+            <div class="card-body">
+              <h5 class="card-title event-title">{{ event.title }}</h5>
+              <p class="event-brand mb-3">By {{ event.brandName }}</p>
+              
+              <div class="event-details mb-3">
+                <!-- Date & Time -->
+                <div class="detail-item mb-2">
+                  <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                  <span class="event-date">{{ formatEventDate(event.date_and_time) }}</span>
+                </div>
+
+                <!-- Venue -->
+                <div class="detail-item mb-2">
+                  <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                  <span class="event-venue">{{ event.venue }}</span>
+                </div>
+
+                <!-- Price -->
+                <div class="detail-item mb-3">
+                  <i class="fas fa-ticket-alt me-2 text-muted"></i>
+                  <span class="event-price">{{ formatPrice(event.ticket_price) }}</span>
+                  <span *ngIf="event.ticket_naming" class="ticket-naming ms-1">({{ event.ticket_naming }})</span>
+                </div>
+              </div>
+
+              <!-- Buy Button -->
+              <div class="d-grid">
+                <a 
+                  [href]="getBuyUrl(event)" 
+                  class="btn btn-primary buy-button"
+                  [class.btn-secondary]="event.is_closed"
+                  [class.disabled]="event.is_closed"
+                  [style.background-color]="!event.is_closed ? event.brandColor : ''"
+                  [style.border-color]="!event.is_closed ? event.brandColor : ''"
+                  target="_blank">
+                  <i class="fas fa-shopping-cart me-2"></i>
+                  {{ event.is_closed ? 'Sold Out' : 'Get Tickets' }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Events Message -->
+      <div *ngIf="getAllEventsSorted().length === 0" class="no-events text-center py-5">
+        <div class="mb-4">
+          <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+          <h3 class="text-muted">No Upcoming Events</h3>
+          <p class="text-muted">Check back later for new events and shows!</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center mt-5">
+        <p>&nbsp;</p>
+        <p>
+          <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+          <span style="font-size:12px; font-style:italic;">
+            Having trouble? Contact us via email 
+            <a href="mailto:support@melt-records.com?subject=Issue with events directory">here</a> 
+            or use the chat widget on the lower right.
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+<!-- Invite processing page -->
+<div class="invite-container">
+  <div class="invite-content">
+    
+    <!-- Loading state -->
+    <div class="loading-section" *ngIf="loading">
+      <div class="loading-spinner"></div>
+      <h2>Processing your invite...</h2>
+      <p>Please wait while we verify your invitation and set up your access.</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-section" *ngIf="!loading && message && messageType === 'error'">
+      <div class="error-icon">
+        <i class="fa fa-exclamation-circle"></i>
+      </div>
+      <h2>Invitation Error</h2>
+      <p>{{ message }}</p>
+      <a href="/login" class="btn btn-primary">Go to Login</a>
+    </div>
+
+  </div>
+</div>

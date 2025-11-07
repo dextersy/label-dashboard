@@ -1,0 +1,82 @@
+<div class="sidebar" [class.open]="isOpen" [style.background]="brandColor">
+  <div class="sidebar-wrapper">
+    <div class="logo">
+      <a [href]="brandWebsite" class="simple-text" [style.color]="textColor">
+        <img [src]="brandLogo" width="100" alt="Brand Logo">
+      </a>
+    </div>
+
+    <ul class="nav">
+      <li *ngFor="let item of menuItems" 
+          [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">
+        
+        <!-- Menu item without children -->
+        <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)" 
+           [routerLink]="item.route" 
+           (click)="onMenuItemClick(item)" 
+           [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
+           [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'">
+          <i [class]="item.icon" 
+             [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
+          <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
+            {{ item.title }}
+            <i *ngIf="item.adminOnly" class="fas fa-shield-alt admin-icon" 
+               [style.color]="iconColor" 
+               title="Admin Only"></i>
+          </p>
+        </a>
+        
+        <!-- Menu item with children (collapsible) -->
+        <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)">
+          <a (click)="toggleSubmenu(item.route)" 
+             style="cursor: pointer;"
+             [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor"
+             [style.opacity]="isActiveParentRoute(item.route) ? '1' : '0.7'"
+             class="parent-menu-item">
+            <i [class]="item.icon" 
+               [style.color]="isActiveParentRoute(item.route) ? activeColor : iconColor"></i>
+            <p [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor">{{ item.title }}</p>
+            <i class="fas fa-chevron-down submenu-arrow" 
+               [class.rotated]="isSubmenuExpanded(item.route)"
+               [style.color]="iconColor"></i>
+          </a>
+          
+          <!-- Submenu items -->
+          <ul class="submenu" [class.expanded]="isSubmenuExpanded(item.route)">
+            <li *ngFor="let child of item.children">
+              <a *ngIf="shouldShowMenuItem(child)" 
+                 [routerLink]="child.route" 
+                 (click)="onMenuItemClick(child)" 
+                 [style.color]="isActiveRoute(child.route) ? activeColor : textColor"
+                 [style.opacity]="isActiveRoute(child.route) ? '1' : '0.7'"
+                 [style.font-weight]="isActiveRoute(child.route) ? '400' : '300'"
+                 class="submenu-item">
+                <span [style.color]="isActiveRoute(child.route) ? activeColor : textColor">
+                  {{ child.title }}
+                  <i *ngIf="child.adminOnly" class="fas fa-shield-alt admin-icon" 
+                     [style.color]="iconColor" 
+                     title="Admin Only"></i>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+      
+      <!-- Mobile-only profile/logout links -->
+      <li class="separator mobile-only"></li>
+      <li class="mobile-only">
+        <a routerLink="/profile" (click)="onMenuItemClick()" [style.color]="textColor">
+          <i class="fa fa-edit" [style.color]="iconColor"></i>
+          <p [style.color]="textColor">Edit Profile</p>
+        </a>
+      </li>
+      <li class="mobile-only">
+        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;" [style.color]="textColor">
+          <i class="fas fa-sign-out-alt" [style.color]="iconColor"></i>
+          <p [style.color]="textColor">Log Out</p>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

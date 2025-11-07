@@ -1,0 +1,40 @@
+<div class="new-release-tab">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fas fa-plus-circle"></i>
+              New Release
+            </h4>
+          </div>
+          <div class="card-body">
+            <app-release-form
+              [artist]="artist"
+              [generateCatalogNumber]="true"
+              [showStatus]="true"
+              [submitButtonText]="'Save Release'"
+              [cancelButtonText]="'Cancel'"
+              [loading]="loading"
+              (submit)="onFormSubmit($event)"
+              (cancel)="onFormCancel()"
+              (alertMessage)="onFormAlert($event)">
+            </app-release-form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Track List Dialog (Optional after creating release) -->
+  <app-track-list-dialog
+    [isVisible]="showTrackListDialog"
+    [releaseId]="createdRelease?.id || null"
+    [releaseTitle]="createdRelease?.title || ''"
+    [releaseStatus]="createdRelease?.status || ''"
+    [releaseArtists]="createdRelease?.artists || []"
+    (close)="onTrackListDialogClose()"
+    (alertMessage)="onFormAlert($event)">
+  </app-track-list-dialog>
+</div>

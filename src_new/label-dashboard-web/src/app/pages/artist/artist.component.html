@@ -1,0 +1,114 @@
+<div class="artist-page">
+  <div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-3">
+      <app-breadcrumb></app-breadcrumb>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="row" *ngIf="selectedArtist">
+      <div class="col-12">
+        
+        <!-- Tab Content (no navigation needed, handled by sidebar) -->
+        <!-- Profile Tab (no card wrapper for minimalist design) -->
+        <div *ngIf="activeTab === 'profile'">
+          <app-artist-profile-tab 
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)"
+            (artistUpdated)="onArtistUpdated($event)">
+          </app-artist-profile-tab>
+        </div>
+        
+        <!-- Gallery Tab -->
+        <div *ngIf="activeTab === 'gallery'">
+          <app-artist-gallery-tab 
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)"
+            (profilePhotoUpdated)="onArtistUpdated($event)">
+          </app-artist-gallery-tab>
+        </div>
+        
+        <!-- Releases Tab -->
+        <div *ngIf="activeTab === 'releases'">
+          <app-artist-releases-tab 
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)">
+          </app-artist-releases-tab>
+        </div>
+        
+        <!-- Team Tab -->
+        <div *ngIf="activeTab === 'team'">
+          <app-artist-team-tab 
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)">
+          </app-artist-team-tab>
+        </div>
+        
+        <!-- New Release Tab -->
+        <div *ngIf="activeTab === 'new-release'">
+          <app-artist-new-release-tab
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)"
+            (releaseCreated)="onReleaseCreated($event)"
+            (cancelled)="onReleaseFormCancelled()">
+          </app-artist-new-release-tab>
+        </div>
+        
+        <!-- Manage EPK Tab -->
+        <div *ngIf="activeTab === 'manage-epk'">
+          <app-artist-manage-epk-tab
+            [artist]="selectedArtist"
+            (alertMessage)="onAlertMessage($event)"
+            (artistUpdated)="onArtistUpdated($event)">
+          </app-artist-manage-epk-tab>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Loading Artists -->
+    <div class="row" *ngIf="loading">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <div class="loading-dots">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Artists Available -->
+    <div class="row" *ngIf="!loading && !selectedArtist && availableArtists.length === 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <i class="fas fa-user-plus fa-4x text-muted mb-3"></i>
+            <h4>No Artists Available</h4>
+            <p class="text-muted">No artists found for your label. Create a new artist to get started.</p>
+            <button class="btn btn-primary" *ngIf="isAdmin" (click)="openCreateArtistModal()">
+              <i class="fa fa-plus me-1"></i>Create New Artist
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Artist Selected (but artists are available) -->
+    <div class="row" *ngIf="!loading && !selectedArtist && availableArtists.length > 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <i class="far fa-user-circle fa-4x text-muted mb-3"></i>
+            <h4>No Artist Selected</h4>
+            <p class="text-muted">Please select an artist from the dropdown above to manage their profile.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>

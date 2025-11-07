@@ -1,0 +1,23 @@
+<div class="table-responsive">
+  <table class="table table-financial">
+    <thead *ngIf="showHeader">
+      <tr>
+        <th class="mobile-narrow">Date</th>
+        <th class="mobile-text">Release</th>
+        <th class="tablet-hide">Description</th>
+        <th class="mobile-narrow mobile-number" style="text-align:right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let earning of earnings">
+        <td class="mobile-narrow" data-label="Date">{{ formatDate(earning.date_recorded) }}</td>
+        <td class="mobile-text" data-label="Release">{{ earning.release_title || '(None)' }}</td>
+        <td class="tablet-hide" data-label="Description">{{ earning.description }}</td>
+        <td class="mobile-narrow mobile-number" style="text-align:right" data-label="Amount">{{ formatCurrency(earning.amount) }}</td>
+      </tr>
+      <tr *ngIf="earnings.length === 0">
+        <td [attr.colspan]="showHeader ? 4 : 1" class="text-center">No recorded earnings yet.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,288 @@
+// Search filters styles - very light background for better input visibility
+.bg-light {
+  background-color: #fafbfc !important;
+}
+
+// Enhanced search bar styling for better form control visibility
+.search-filters-container {
+  background-color: #fafbfc;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  
+  .form-control {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    
+    &:focus {
+      background-color: #ffffff;
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+  
+  .form-label {
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  // Flex-based search filters layout
+  .search-field {
+    flex: 1 1 200px; // Grow and shrink, base width of 200px
+    min-width: 150px; // Minimum width to prevent too narrow fields
+    
+    .form-group {
+      width: 100%;
+      
+      .form-control {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Sortable table headers - enhance global table styles
+.table th.sortable {
+  user-select: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .fa {
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+  
+  &:hover .fa {
+    opacity: 1;
+  }
+}
+
+.form-label.small {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.form-control-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+// Clear filters button
+.btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+  
+  &:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+  }
+}
+
+// Paginated table styles
+.pagination {
+  .page-link {
+    color: #007bff;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    
+    &:hover {
+      color: #0056b3;
+      background-color: #e9ecef;
+      border-color: #dee2e6;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+  }
+  
+  .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+  }
+  
+  .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+  }
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Responsive adjustments for search filters
+@media (max-width: 768px) {
+  .search-filters-container {
+    .search-field {
+      flex: 1 1 100%;
+      min-width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+@media (min-width: 769px) and (max-width: 992px) {
+  .search-filters-container {
+    .search-field {
+      flex: 1 1 calc(50% - 0.75rem); // Account for gap
+      min-width: calc(50% - 0.75rem);
+    }
+  }
+}
+
+// Actions column styling
+.actions-column {
+  min-width: 120px;
+  white-space: nowrap;
+  text-align: center;
+  
+  .btn {
+    margin: 0 2px;
+  }
+}
+
+// Ensure table is properly scrollable
+.table-responsive {
+  overflow-x: auto;
+  
+  table {
+    min-width: 100%;
+  }
+}
+
+// Responsive table header actions
+.table-actions {
+  min-width: 0; // Allow flexbox to shrink below content size
+  
+  .btn {
+    white-space: nowrap; // Prevent button text from wrapping
+  }
+}
+
+// Card header responsive improvements
+.card-header {
+  .d-flex.flex-wrap {
+    gap: 0.75rem !important; // Ensure consistent gap
+  }
+}
+
+.pagination-info {
+  width: 100%;
+  
+  @media (min-width: 576px) {
+    width: auto;
+  }
+}
+
+// Mobile-specific adjustments for table actions
+@media (max-width: 575px) {
+  .table-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 0.5rem;
+    gap: 0.5rem !important;
+    
+    // All buttons should be full width on mobile - more specific selectors
+    button.btn,
+    .btn,
+    span button.btn,
+    span .btn,
+    > span button.btn,
+    > span .btn {
+      width: 100% !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    
+    // Ensure span wrappers don't interfere
+    span,
+    > span {
+      width: 100% !important;
+      display: block !important;
+    }
+    
+    // Only hide text for the Clear button on mobile (it has title attribute for accessibility)
+    button[title="Clear all filters"] .d-none.d-sm-inline {
+      display: none !important;
+    }
+  }
+  
+  .card-header .d-flex.flex-wrap {
+    flex-direction: column;
+    align-items: stretch !important;
+    
+    h5 {
+      align-self: flex-start;
+    }
+  }
+  
+  .pagination-info {
+    order: 3; // Move to bottom on mobile
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+}
+
+// Tablet adjustments - no special rules needed since we're not hiding text anymore
+
+// Bulk operations styling
+.checkbox-column {
+  width: 50px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.bulk-operations-row {
+  border-top: 2px solid #007bff;
+  border-bottom: 2px solid #007bff;
+  
+  .bulk-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    
+    .btn {
+      white-space: nowrap;
+    }
+  }
+}
+
+.form-check-input {
+  margin: 0;
+  
+  &:indeterminate {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+}
+
+// Ensure text-muted on tr applies to all td elements
+tr.text-muted {
+  td {
+    color: #adb5bd !important;
+  }
+}

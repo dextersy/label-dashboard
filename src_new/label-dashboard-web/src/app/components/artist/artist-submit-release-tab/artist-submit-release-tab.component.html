@@ -1,0 +1,131 @@
+<div class="submit-release-tab">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fas fa-upload"></i>
+              Submit Your Release
+            </h4>
+          </div>
+          <div class="card-body">
+            
+            <!-- Loading State -->
+            <div *ngIf="loading" class="text-center p-4">
+              <div class="loading-dots">
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div *ngIf="!loading" class="submission-content">
+              
+              <!-- Instructions -->
+              <div class="instructions mb-4">
+                <h5>
+                  <i class="fas fa-info-circle text-info"></i>
+                  How to Submit Your Release
+                </h5>
+                <p class="mb-3">
+                  Submit your track information and files to us via our online form. 
+                  The form will open in a new tab for your convenience.
+                </p>
+                <p class="mb-0">
+                  After receiving your submission, our team will review it and create the release for you in the system.
+                </p>
+              </div>
+
+              <!-- Submission Form Link -->
+              <div class="submission-form-section" *ngIf="hasSubmissionUrl()">
+                <div class="form-action-card">
+                  <div class="card-icon">
+                    <i class="fas fa-external-link-alt"></i>
+                  </div>
+                  <div class="card-content">
+                    <h6>Release Submission Form</h6>
+                    <p class="text-muted mb-3">
+                      Click the button below to access the release submission form<span *ngIf="artist"> for <strong>{{ artist.name }}</strong></span>. 
+                      Please have your track files, cover art, and release information ready.
+                    </p>
+                    <button class="btn btn-primary btn-lg" (click)="openSubmissionForm()">
+                      <i class="fas fa-arrow-right"></i>
+                      Go to Submission Form
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Submission URL -->
+              <div class="no-submission-url" *ngIf="!hasSubmissionUrl()">
+                <div class="alert alert-warning">
+                  <div class="alert-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="alert-text">
+                      <h6>Submission Form Not Available</h6>
+                      <p class="mb-0">
+                        No release submission URL has been configured for {{ getBrandName() }}. 
+                        Please contact your label representative for assistance with submitting your release.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional Information -->
+              <div class="additional-info mt-4">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="info-card">
+                      <div class="info-icon">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <div class="info-content">
+                        <h6>Processing Time</h6>
+                        <p class="text-muted">
+                          Release submissions are typically processed within 3-5 business days.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="info-card">
+                      <div class="info-icon">
+                        <i class="fas fa-file-audio"></i>
+                      </div>
+                      <div class="info-content">
+                        <h6>Required Files</h6>
+                        <p class="text-muted">
+                          High-quality audio files, cover art (minimum 3000x3000px), and complete track information.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Information -->
+              <div class="contact-info mt-4">
+                <div class="alert alert-info">
+                  <div class="alert-content">
+                    <i class="fas fa-envelope"></i>
+                    <div class="alert-text">
+                      <h6>Need Help?</h6>
+                      <p class="mb-0">
+                        If you have questions about the submission process or need assistance, 
+                        please contact your label representative.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

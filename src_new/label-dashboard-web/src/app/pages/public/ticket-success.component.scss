@@ -1,0 +1,183 @@
+// Import PHP styles - match exactly
+body {
+  background-color: #fafafa;
+  font-family: Arial, sans-serif !important;
+  height: 100vh;
+}
+
+// Ensure FontAwesome icons keep their proper font-family (v7)
+.fa, .fas, .far, .fab, .fal {
+  font-family: "Font Awesome 7 Free", "Font Awesome 7 Brands" !important;
+}
+
+// Override all dashboard styles for public pages
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: #fafafa !important;
+  font-family: Arial, sans-serif !important;
+  
+  // Reset any dashboard margins/padding  
+  margin: 0 !important;
+  padding: 0 !important;
+  
+  // Override any existing background gradients
+  background-image: none !important;
+}
+
+.wrapper {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column; 
+  justify-content: center;
+  width: 100%;
+  padding: 0px;
+}
+
+.card {
+  -webkit-border-radius: 10px 10px 10px 10px;
+  border-radius: 10px 10px 10px 10px;
+  background: #fff;
+  width: 100%;
+  max-width: 768px;
+  -webkit-box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
+  box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
+  text-align: center;
+  border: none;
+}
+
+.card-header {
+  padding: 25px;
+  
+  h1 {
+    font-size: 3.5rem !important;
+    font-family: Arial, sans-serif !important;
+    margin: 0;
+    font-weight: bold !important;
+  }
+}
+
+.card-body {
+  padding: 25px;
+  
+  p {
+    font-family: Arial, sans-serif !important;
+    margin-bottom: 1rem;
+  }
+  
+  .fa-check-circle {
+    margin: 20px 0;
+  }
+}
+
+.card-footer {
+  background-color: #f6f6f6;
+  border-top: 1px solid #dce8f1;
+  padding: 25px;
+  text-align: center;
+  -webkit-border-radius: 0 0 10px 10px;
+  border-radius: 0 0 10px 10px;
+  
+  p {
+    font-family: Arial, sans-serif !important;
+  }
+}
+
+.field-description {
+  font-size: 14px;
+  padding-bottom: 15px;
+  
+  ul {
+    text-align: left;
+    margin: 10px 0;
+    
+    li {
+      margin-bottom: 8px;
+      font-family: Arial, sans-serif !important;
+    }
+  }
+}
+
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+}
+
+// Mobile responsive
+@media only screen and (max-device-width: 400px) {
+  .wrapper {
+    height: auto !important;
+    padding: 0px;
+  }
+  
+  .card {
+    margin: 0;
+    max-width: 100%;
+    border-radius: 0;
+  }
+  
+  .card-header, .card-body, .card-footer {
+    padding: 15px;
+  }
+}
+
+// Override ALL global styles to use Arial
+* {
+  font-family: Arial, sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Arial, sans-serif !important;
+}
+
+p, div, span, a, li, ul {
+  font-family: Arial, sans-serif !important;
+}
+
+// Share buttons styling
+.btn {
+  cursor: pointer;
+  text-decoration: none !important;
+  font-family: Arial, sans-serif !important;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+// Ensure proper text alignment for share section
+.row {
+  margin: 0;
+  
+  .col-6 {
+    padding: 5px;
+  }
+}
+
+// Text utilities
+.text-white {
+  color: white !important;
+}
+
+.text-dark {
+  color: black !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+

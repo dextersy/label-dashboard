@@ -1,0 +1,60 @@
+/* Login component specific styles to fix button alignment and center the form */
+
+/* Center the login wrapper vertically on the screen */
+.login-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Ensure the login form button aligns with input fields */
+#formContent {
+  .btn-block {
+    width: 100% !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  /* Ensure input groups maintain proper Bootstrap layout */
+  .input-group {
+    width: 100%;
+    margin-bottom: 10px;
+    margin-top: 10px; // Match the external CSS margin
+    display: flex !important;
+    align-items: stretch !important;
+    
+    .input-group-prepend {
+      display: flex !important;
+      
+      .input-group-text {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 5px 0 0 5px !important;
+        border: 2px solid #f6f6f6 !important;
+        border-right: none !important;
+        width: 50px !important;
+        height: auto !important;
+        margin-top: 0 !important; // Override inline margin
+      }
+    }
+    
+    .form-control {
+      flex: 1 !important;
+      border-radius: 0 5px 5px 0 !important;
+      border-left: none !important;
+      margin-top: 0 !important; // Override external CSS margin since container handles it
+    }
+  }
+  
+  /* Fix for potential Angular Material button interference */
+  button.btn {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
+}

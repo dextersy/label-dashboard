@@ -1,0 +1,32 @@
+/* Event sales chart component styles */
+
+.chart-container {
+  margin-bottom: 20px;
+  
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.progress {
+  background-color: #e9ecef;
+  border-radius: 4px;
+}
+
+.progress-bar {
+  background-color: #28a745;
+  transition: width 0.3s ease;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.font-weight-bold {
+  font-weight: 600;
+}

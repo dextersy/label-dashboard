@@ -1,0 +1,324 @@
+<div class="public-page" [style.background-color]="brandColor">
+  <!-- Countdown Notification Bar -->
+  <app-countdown-notification 
+    *ngIf="event && event.show_countdown && !isLoading && !isError"
+    [eventDate]="event.date_and_time"
+    [closeTime]="event.close_time"
+    [eventTitle]="event.title"
+    [brandColor]="brandColor">
+  </app-countdown-notification>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="loading"></div>
+  </div>
+
+  <!-- Error State (404) -->
+  <div *ngIf="isError" class="wrapper h-100 d-flex justify-content-center align-items-center">
+    <div class="card text-center" style="max-width: 500px;">
+      <div class="card-body py-5">
+        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+        <h1 class="text-danger">404 - Event Not Found</h1>
+        <p class="text-muted">The event you're looking for could not be found.</p>
+        <button class="btn btn-primary" (click)="goBack()">
+          <i class="fas fa-arrow-left me-1"></i>Go Back
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content shown only when event is loaded -->
+  <div *ngIf="!isLoading && !isError && event" 
+       class="wrapper fadeInDown h-100"
+       [class.with-countdown]="event.show_countdown">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="container">
+        <div class="row align-items-center h-100">
+          <div class="col-md-4 event-poster-container" *ngIf="event.poster_url">
+            <div class="poster-wrapper" (click)="openLightbox()">
+              <img [src]="event.poster_url" class="event-poster" alt="Event poster">
+              <button
+                class="view-full-image-btn"
+                (click)="openLightbox(); $event.stopPropagation()"
+                title="View full image">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+          </div>
+          <div [class]="event.poster_url ? 'col-md-8' : 'col-md-12 text-center'" style="padding:20px;">
+            <div *ngIf="canBuyTickets()">
+              <h5 class="mb-0">Get tickets to</h5>
+              <h1 style="margin-top: 0 !important;"><strong>{{ event.title }}</strong></h1>
+              
+              <!-- Event Details Section -->
+              <div class="event-details mt-3 mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="mb-2">
+                  <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
+                </div>
+                <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
+                  <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
+                    🗺️ View on Google Maps
+                  </a>
+                </div>
+              </div>
+              
+              <small [innerHTML]="event.description" style="font-size: 0.8rem;" class="description-text"></small>
+            </div>
+            <div *ngIf="!canBuyTickets()">
+              <h1 style="font-size:2.5rem;font-weight:bold;">Sorry, we're closed...</h1>
+              <h1 style="font-size:1.5rem;font-style:italic;">— but the door's still open!</h1>
+              <h3>&nbsp;</h3>
+              <h5>Online ticket sales for <b>{{ event.title }}</b> has already ended. 🥲</h5>
+              <h5>But don't worry — tickets or walk-in may still be available at the show!</h5>
+              <p>
+                Please check <strong>{{ event.brand?.name || 'the event organizer' }}</strong> social media or the event page for more information.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body Section -->
+    <div class="body-section" *ngIf="canBuyTickets()">
+      <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+        <div class="container">
+          <div class="row h-50">
+            <div class="col-md-7">
+              <h6><strong>Step 1.</strong> Please provide your details.</h6>
+
+              <!-- Name Field -->
+              <div class="name-container fadeIn first">
+                <div class="input-group">
+                  <div class="form-floating flex-fill">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="name"
+                      formControlName="name"
+                      placeholder="Full name"
+                      [class.is-invalid]="isFieldInvalid('name')"
+                      required>
+                    <label for="name">Full name</label>
+                  </div>
+                </div>
+                <div class="invalid-feedback d-block" 
+                     *ngIf="isFieldInvalid('name')">
+                  Full name is required.
+                </div>
+                <div class="valid-feedback d-block" 
+                     *ngIf="!isFieldInvalid('name') && ticketForm.get('name')?.value">
+                  <i class="fas fa-check-circle text-success"></i>
+                  Please make sure your full name is as it appears on your identification.
+                </div>
+              </div>
+
+              <!-- Email Field -->
+              <div class="email-container fadeIn second">
+                <div class="input-group">
+                  <div class="form-floating flex-fill">
+                    <input 
+                      type="email" 
+                      class="form-control" 
+                      id="email_address"
+                      formControlName="email_address"
+                      placeholder="Email address"
+                      [class.is-invalid]="isFieldInvalid('email_address')"
+                      required>
+                    <label for="email_address">Email address</label>
+                  </div>
+                </div>
+                <div class="invalid-feedback d-block" 
+                     *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">
+                  Email address is required.
+                </div>
+                <div class="invalid-feedback d-block" 
+                     *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">
+                  Email address is not valid.
+                </div>
+                <div class="valid-feedback d-block" 
+                     *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value">
+                  <i class="fas fa-check-circle text-success"></i>
+                  Please make sure your email address is correct.
+                </div>
+              </div>
+
+              <!-- Contact Number Field -->
+              <div class="contact-number-container fadeIn third">
+                <div class="input-group">
+                  <span class="input-group-text">🇵🇭 +63</span>
+                  <div class="form-floating flex-fill">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="contact_number"
+                      formControlName="contact_number"
+                      placeholder="Contact number"
+                      [class.is-invalid]="isFieldInvalid('contact_number')">
+                    <label for="contact_number">Contact number</label>
+                  </div>
+                </div>
+                <div class="invalid-feedback d-block" 
+                     *ngIf="isFieldInvalid('contact_number')">
+                  Contact number is required.
+                </div>
+              </div>
+
+              <!-- Ticket Type Selection -->
+              <div class="ticket-type-container fadeIn fourth" *ngIf="event.ticketTypes && event.ticketTypes.length > 1">
+                <h6><strong>Select ticket type</strong></h6>
+                <div class="input-group">
+                  <div class="form-floating flex-fill">
+                    <select 
+                      class="form-control" 
+                      id="ticket_type_id"
+                      formControlName="ticket_type_id"
+                      (change)="onTicketTypeChange()">
+                      <option *ngFor="let ticketType of event.ticketTypes"
+                              [value]="ticketType.id"
+                              [disabled]="ticketType.is_sold_out"
+                              [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                              [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                        {{ ticketType.name }} - ₱{{ formatPrice(ticketType.price) }}
+                        <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
+                      </option>
+                    </select>
+                    <label for="ticket_type_id">Ticket type</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Number of Tickets -->
+              <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
+              <small class="fadeIn fourth" *ngIf="event.show_tickets_remaining && getRemainingTicketsDisplay()">
+                <strong>{{ getRemainingTicketsDisplay() }}</strong> tickets available.
+              </small>
+              <div class="ticket-quantity-container fadeIn fourth">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} - <strong>₱{{ formatPrice(selectedTicketType?.price || event.ticket_price) }}</strong>
+                  </span>
+                  <div class="form-floating flex-fill">
+                    <input 
+                      type="number" 
+                      min="1" 
+                      [max]="getRemainingTicketsDisplay() || 99" 
+                      step="1" 
+                      class="form-control" 
+                      id="number_of_entries"
+                      formControlName="number_of_entries"
+                      placeholder="Number of tickets"
+                      (input)="calculateTotal()"
+                      [class.is-invalid]="isFieldInvalid('number_of_entries')">
+                    <label for="number_of_entries">Number of tickets</label>
+                  </div>
+                </div>
+                <div class="invalid-feedback d-block" 
+                     *ngIf="isFieldInvalid('number_of_entries')">
+                  Number of tickets is required.
+                </div>
+              </div>
+
+              <!-- Referral Code -->
+              <div class="referral-code-container fadeIn fifth" *ngIf="!referralCode">
+                <div class="input-group">
+                  <div class="form-floating flex-fill">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="referral_code"
+                      formControlName="referral_code"
+                      placeholder="Referral code (optional)">
+                    <label for="referral_code">Referral code (optional)</label>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="referralCode" class="referral-code-display fadeIn fifth">
+                <strong>Referral code: </strong><span class="badge bg-info text-white">{{ referralCode }}</span>
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              &nbsp;
+              
+              <h6><i class="fas fa-info-circle"></i> <strong>Important reminders before submitting</strong></h6>
+              <div class="alert alert-info field-description text-dark">
+                <ul>
+                  <li>Please use a name that is shown in any valid ID, as you may be requested to present identification at the gate.</li>
+                  <li>Please make sure your email address is correct to make sure that you receive your ticket without any problem.</li>
+                  <li>Tickets are non-refundable once paid.</li>
+                </ul>
+              </div>
+              
+              <!-- Payment Calculation -->
+              <div id="div_paymentCalculation" [style.display]="totalAmount > 0 ? 'block' : 'none'">
+                <hr>
+                <h5>Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h5>
+                <hr>
+              </div>
+
+              <!-- Privacy Consent -->
+              <div class="privacy-consent-container">
+                <mat-checkbox 
+                  formControlName="privacy_consent"
+                  class="field-description"
+                  [class.mat-checkbox-invalid]="isFieldInvalid('privacy_consent')">
+                  I agree to share my data to {{ event.brand?.name || 'the event organizer' }} and its affiliates for the sole purpose of processing my purchase of tickets.
+                </mat-checkbox>
+                <div class="error-message" 
+                     *ngIf="isFieldInvalid('privacy_consent')">
+                  You need to accept the privacy consent to proceed.
+                </div>
+              </div>
+
+              <button 
+                mat-raised-button 
+                color="primary"
+                type="submit" 
+                class="submit-button w-100"
+                [disabled]="ticketForm.invalid || isSubmitting">
+                <i class="fas fa-credit-card me-1"></i>
+                {{ isSubmitting ? 'Processing...' : 'Proceed to Payment' }}
+              </button>
+              <div class="fadeIn sixth" style="font-size:12px;">
+                Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. 
+                Payee information will be <strong>Melt Records</strong>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center">
+      <p>&nbsp;</p>
+      <p>
+        <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+        <span style="font-size:12px; font-style:italic;">
+          Having trouble? Contact us via email
+          <a [href]="'mailto:support@melt-records.com?subject=Issue with ticketing for ' + event.title">here</a>
+          or use the chat widget on the lower right.
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox-overlay" *ngIf="showLightbox" (click)="closeLightbox()">
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <button class="lightbox-close" (click)="closeLightbox()">
+        <i class="fas fa-times"></i>
+      </button>
+      <img [src]="event?.poster_url" class="lightbox-image" alt="Event poster">
+      <div class="lightbox-caption" *ngIf="event?.description">
+        <div [innerHTML]="event?.description || ''"></div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,116 @@
+<div class="row">
+  <div class="col-md-8">
+    <app-payments-table 
+      [payments]="payments"
+      [pagination]="paymentsPagination"
+      [loading]="paymentsLoading"
+      [sortInfo]="paymentsSort"
+      (pageChange)="paymentsPageChange.emit($event)"
+      (filtersChange)="paymentsFiltersChange.emit($event)"
+      (sortChange)="paymentsSortChange.emit($event)">
+    </app-payments-table>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5>Payment Methods</h5>
+      </div>
+      <div class="card-body">
+        <div *ngFor="let method of paymentMethods" class="payment-method-item">
+          <div class="payment-method-type">{{ method.type }}</div>
+          <div class="payment-method-details">
+            {{ method.account_name }}<br>
+            <small>{{ method.account_number_or_email }}</small>
+          </div>
+          <div class="payment-method-actions">
+            <div *ngIf="method.is_default_for_artist" class="badge badge-primary">Default</div>
+            <div class="btn-group btn-group-sm mt-1" role="group">
+              <button 
+                type="button" 
+                class="btn btn-outline-primary btn-sm btn-icon-only"
+                [disabled]="method.is_default_for_artist"
+                (click)="setDefaultPaymentMethod(method.id)"
+                title="Set as default">
+                <i class="fa-solid fa-star" [class.text-warning]="method.is_default_for_artist" [class.text-muted]="!method.is_default_for_artist"></i>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-danger btn-sm btn-icon-only"
+                [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
+                (click)="deletePaymentMethod(method.id)"
+                [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="paymentMethods.length === 0" class="text-center text-muted">
+          No payment methods added yet.
+        </div>
+        
+        <hr>
+        
+        <div class="collapsible-section">
+          <div class="collapsible-header" (click)="toggleAddPaymentMethodCollapse()">
+            <h6 class="mb-0">Add Payment Method</h6>
+            <i class="fa" [class.fa-chevron-down]="isAddPaymentMethodCollapsed" [class.fa-chevron-up]="!isAddPaymentMethodCollapsed"></i>
+          </div>
+          
+          <div class="collapsible-content" [class.collapsed]="isAddPaymentMethodCollapsed">
+            <form (ngSubmit)="onSubmitPaymentMethod()">
+              <div class="form-group">
+                <label>Bank Selection</label>
+                <select class="form-control" [(ngModel)]="addPaymentMethodForm.bank_selection" name="bank_selection" required>
+                  <option value="">Select Bank</option>
+                  <option *ngFor="let bank of supportedBanks" [value]="bank.bank_code + ',' + bank.bank_name">
+                    {{ bank.bank_name }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Account Name</label>
+                <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_name" name="account_name" required>
+              </div>
+              
+              <div class="form-group">
+                <label>Account Number/Email</label>
+                <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_number_or_email" name="account_number_or_email" required>
+              </div>
+              
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="addingPaymentMethod">
+                <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                {{ addingPaymentMethod ? 'Adding...' : 'Add Payment Method' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card mt-3" *ngIf="payoutSettings">
+      <div class="card-header">
+        <h5>Payout Settings</h5>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="onUpdatePayoutSettings()">
+          <div class="form-group">
+            <label>Payout Point (PHP)</label>
+            <input type="number" class="form-control" [(ngModel)]="payoutSettings.payout_point" name="payout_point" min="0" step="0.01">
+          </div>
+          
+          <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="payoutSettings.hold_payouts" name="hold_payouts" id="hold_payouts">
+            <label class="form-check-label" for="hold_payouts">
+              Hold Payouts
+            </label>
+          </div>
+          
+          <button type="submit" class="btn btn-success btn-sm mt-2">Update Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

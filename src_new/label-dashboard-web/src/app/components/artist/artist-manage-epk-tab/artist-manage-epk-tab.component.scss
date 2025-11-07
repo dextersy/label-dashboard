@@ -1,0 +1,178 @@
+.manage-epk-tab {
+  .card {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+
+    h5 {
+      color: #495057;
+      font-weight: 600;
+    }
+
+    i {
+      color: #6c757d;
+    }
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+
+  .input-group {
+    .form-control {
+      background-color: #f8f9fa;
+      border: 1px solid #ced4da;
+
+      &:focus {
+        background-color: #fff;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+    }
+
+    .btn-outline-secondary {
+      border-color: #ced4da;
+
+      &:hover:not(:disabled) {
+        background-color: #6c757d;
+        border-color: #6c757d;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .text-muted {
+    color: #6c757d !important;
+  }
+
+  // Template selector styling
+  .template-option {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid #dee2e6;
+
+    &:hover {
+      border-color: #adb5bd;
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+
+    &.selected {
+      border-color: #0d6efd;
+      background-color: #f8f9ff;
+      box-shadow: 0 0.25rem 0.5rem rgba(13, 110, 253, 0.2);
+
+      .form-check-input {
+        border-color: #0d6efd;
+      }
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .form-check {
+      margin-bottom: 0;
+
+      .form-check-label {
+        cursor: pointer;
+        padding-left: 0.5rem;
+      }
+    }
+  }
+
+  // Save button styling
+  .btn-primary {
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Preview modal styling
+.modal {
+  &.show {
+    opacity: 1;
+  }
+
+  .modal-dialog.modal-fullscreen {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .btn-success {
+      font-weight: 500;
+    }
+
+    .btn-outline-light {
+      color: #ffffff;
+      border-color: #ffffff;
+
+      &:hover {
+        color: #212529;
+        background-color: #ffffff;
+        border-color: #ffffff;
+      }
+    }
+
+    i {
+      color: inherit;
+    }
+
+    .current-template-badge {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      i {
+        color: #28a745;
+      }
+    }
+  }
+
+  .modal-body {
+    height: calc(100vh - 70px);
+    overflow: hidden;
+
+    .preview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  }
+}
+
+.modal-backdrop {
+  &.show {
+    opacity: 0.5;
+  }
+}

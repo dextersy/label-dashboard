@@ -1,0 +1,232 @@
+<div class="modal" appModalToBody [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-money-bill-wave me-2"></i>
+          Pay Out to {{ sublabel?.brand_name }}
+        </h5>
+        <button type="button" class="btn-close" (click)="onClose()" [disabled]="submitting"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Sublabel Information -->
+        <div class="alert alert-info" *ngIf="sublabel">
+          <h6><strong>{{ sublabel.brand_name }}</strong></h6>
+          <div class="row">
+            <div class="col-md-6">
+              <small class="text-muted">Payable Balance:</small>
+              <strong class="text-success">₱{{ sublabel.balance | number:'1.2-2' }}</strong>
+            </div>
+            <div class="col-md-6">
+              <small class="text-muted">Wallet Balance:</small>
+              <span *ngIf="!loadingWalletBalance">
+                <strong [class.text-success]="hasEnoughWalletBalance()" [class.text-danger]="!hasEnoughWalletBalance()">
+                  ₱{{ walletBalance | number:'1.2-2' }}
+                </strong>
+                <i class="fas fa-check-circle text-success ms-1" *ngIf="hasEnoughWalletBalance()"></i>
+                <i class="fas fa-times-circle text-danger ms-1" *ngIf="!hasEnoughWalletBalance()"></i>
+              </span>
+              <span *ngIf="loadingWalletBalance" class="text-muted">
+                <i class="fas fa-spinner fa-spin me-1"></i>Loading...
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" #payoutForm="ngForm">
+          <!-- Amount -->
+          <div class="mb-3">
+            <label for="amount" class="form-label">Payout Amount *</label>
+            <div class="input-group">
+              <span class="input-group-text">₱</span>
+              <input
+                type="number"
+                id="amount"
+                name="amount"
+                class="form-control"
+                [(ngModel)]="payoutData.amount"
+                [max]="sublabel?.balance || 0"
+                min="0.01"
+                step="0.01"
+                required
+                [disabled]="submitting"
+                placeholder="0.00"
+                (input)="onAmountChange()">
+            </div>
+            <div class="form-text">Maximum: ₱{{ sublabel?.balance | number:'1.2-2' }}</div>
+          </div>
+
+          <!-- Description -->
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <input
+              type="text"
+              id="description"
+              name="description"
+              class="form-control"
+              [(ngModel)]="payoutData.description"
+              [disabled]="submitting"
+              placeholder="Payment description">
+          </div>
+
+          <!-- Date Paid -->
+          <div class="mb-3">
+            <label for="date_paid" class="form-label">Date Paid *</label>
+            <input
+              type="date"
+              id="date_paid"
+              name="date_paid"
+              class="form-control"
+              [(ngModel)]="payoutData.date_paid"
+              required
+              [disabled]="submitting">
+          </div>
+
+          <!-- Payment Method Selection -->
+          <div class="mb-3">
+            <label for="payment_method_id" class="form-label">Payment Method</label>
+            <select
+              id="payment_method_id"
+              name="payment_method_id"
+              class="form-control"
+              [(ngModel)]="selectedPaymentMethodId"
+              (change)="onPaymentMethodChange()"
+              [disabled]="submitting || loadingPaymentMethods">
+              <option value="">-- Select Payment Method --</option>
+              <option value="-1">Manual Payment (Enter details below)</option>
+              <option 
+                *ngFor="let method of paymentMethods" 
+                [value]="method.id">
+                {{ method.type }} - {{ method.account_name }} ({{ method.account_number_or_email }})
+              </option>
+            </select>
+            <div class="form-text" *ngIf="loadingPaymentMethods">
+              <i class="fas fa-spinner fa-spin me-1"></i> Loading payment methods...
+            </div>
+          </div>
+
+          <!-- Offline Payment Checkbox - Hidden when manual payment is selected -->
+          <div class="mb-3" *ngIf="shouldShowOfflineCheckbox()">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="offlinePayment" 
+                [(ngModel)]="isOfflinePayment" 
+                name="offlinePayment" 
+                (change)="toggleOfflinePayment()"
+                [disabled]="shouldDisableOfflineToggle()"
+                [title]="shouldDisableOfflineToggle() ? getInsufficientBalanceTooltip() : ''">
+              <label class="form-check-label" for="offlinePayment">
+                This is an offline payment
+                <i class="fas fa-info-circle text-warning ms-1" 
+                   *ngIf="shouldDisableOfflineToggle()" 
+                   [title]="getInsufficientBalanceTooltip()"></i>
+              </label>
+            </div>
+          </div>
+
+          <!-- Manual Payment Selection Message -->
+          <div class="alert alert-primary text-dark" *ngIf="isManualSelected()">
+            <i class="fas fa-info-circle"></i> Manual payments are automatically processed as offline payments.
+          </div>
+
+          <!-- Manual Payment Details (shown when manual payment is selected) -->
+          <div *ngIf="isManualSelected()" class="card">
+            <div class="card-header">
+              <h6 class="card-title mb-0">Manual Payment Details</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="paid_thru_type" class="form-label">Payment Type *</label>
+                  <input
+                    type="text"
+                    id="paid_thru_type"
+                    name="paid_thru_type"
+                    class="form-control"
+                    [(ngModel)]="payoutData.paid_thru_type"
+                    [disabled]="submitting"
+                    placeholder="e.g. Bank Transfer, PayPal">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="paid_thru_account_name" class="form-label">Account Name *</label>
+                  <input
+                    type="text"
+                    id="paid_thru_account_name"
+                    name="paid_thru_account_name"
+                    class="form-control"
+                    [(ngModel)]="payoutData.paid_thru_account_name"
+                    [disabled]="submitting"
+                    placeholder="Account holder name">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="paid_thru_account_number" class="form-label">Account Number/Email *</label>
+                <input
+                  type="text"
+                  id="paid_thru_account_number"
+                  name="paid_thru_account_number"
+                  class="form-control"
+                  [(ngModel)]="payoutData.paid_thru_account_number"
+                  [disabled]="submitting"
+                  placeholder="Account number or email address">
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Details (shown only when offline payment is ON) -->
+          <div class="row" *ngIf="shouldShowReferenceAndFee()">
+            <div class="col-md-6 mb-3">
+              <label for="reference_number" class="form-label">Reference Number</label>
+              <input
+                type="text"
+                id="reference_number"
+                name="reference_number"
+                class="form-control"
+                [(ngModel)]="payoutData.reference_number"
+                [disabled]="submitting"
+                placeholder="Transaction reference">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="payment_processing_fee" class="form-label">Processing Fee</label>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input
+                  type="number"
+                  id="payment_processing_fee"
+                  name="payment_processing_fee"
+                  class="form-control"
+                  [(ngModel)]="payoutData.payment_processing_fee"
+                  min="0"
+                  step="0.01"
+                  [disabled]="submitting"
+                  placeholder="0.00">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="submitting">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="submitting">
+          <span *ngIf="!submitting">
+            <i class="fas fa-money-bill-wave me-1"></i>
+            Pay Out ₱{{ payoutData.amount | number:'1.2-2' }}
+          </span>
+          <span *ngIf="submitting">
+            <i class="fas fa-spinner fa-spin me-1"></i>
+            Processing Payment...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal backdrop -->
+<div class="modal-backdrop" appModalToBody [class.show]="show" *ngIf="show"></div>

@@ -1,0 +1,141 @@
+<div class="event-tickets-tab">
+  <!-- Paginated Table -->
+  <app-paginated-table
+    title=""
+    [data]="tickets"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="tableColumns"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [sortInfo]="currentSort"
+    [showActionsColumn]="isAdmin"
+    [bulkOperationsLoading]="bulkOperationsLoading"
+    [rowClassGetter]="getRowClass.bind(this)"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)"
+    (sortChange)="onSortChange($event)">
+    
+    <!-- Custom buttons template -->
+    <ng-template #customButtons>
+      <span 
+        class="d-inline-block flex-shrink-0" 
+        [title]="getCustomTicketButtonTooltip()"
+        *ngIf="isAdmin">
+        <button 
+          class="btn btn-sm btn-outline-primary" 
+          (click)="onCreateCustomTicket()"
+          [disabled]="loading || !canCreateCustomTickets()">
+          <i class="fa fa-plus me-1"></i>
+          Custom Ticket
+        </button>
+      </span>
+      <button 
+        class="btn btn-sm btn-outline-primary flex-shrink-0" 
+        (click)="onDownloadCSV()"
+        *ngIf="isAdmin"
+        [disabled]="loading">
+        <i class="fa fa-download me-1"></i>
+        Download CSV
+      </button>
+    </ng-template>
+    
+    <!-- Actions template -->
+    <ng-template #actionsContent let-ticket let-disabled="disabled">
+      <div class="btn-group" role="group">
+        <button
+          class="btn btn-sm btn-outline-primary"
+          (click)="onResendTicket(ticket.id)"
+          [disabled]="disabled"
+          *ngIf="isTicketResendable(ticket)"
+          title="Resend ticket">
+          Resend
+        </button>
+        <button
+          class="btn btn-sm btn-outline-info"
+          (click)="onTransferTicket(ticket)"
+          [disabled]="disabled"
+          *ngIf="isTicketTransferable(ticket)"
+          title="Transfer ticket to another person">
+          Transfer
+        </button>
+        <button
+          class="btn btn-sm btn-outline-warning"
+          (click)="onRefundTicket(ticket.id)"
+          [disabled]="disabled"
+          *ngIf="isTicketRefundable(ticket)"
+          title="Refund ticket and return payment to customer">
+          Refund
+        </button>
+        <button
+          class="btn btn-sm btn-outline-danger"
+          (click)="onCancelTicket(ticket.id)"
+          [disabled]="disabled"
+          *ngIf="isTicketCancellable(ticket)"
+          title="Cancel ticket">
+          Cancel
+        </button>
+      </div>
+    </ng-template>
+  </app-paginated-table>
+
+  <!-- Summary Footer - Matching PHP layout -->
+  <div class="sticky-bottom mt-3" *ngIf="summary">
+    <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
+      <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+        <strong class="text-primary fs-5">Totals</strong>
+        
+        <span class="summary-stat" title="Checked in guests vs total tickets">
+          <i class="fas fa-user text-success me-2"></i> 
+          {{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}
+        </span>
+        
+        <span class="summary-stat" title="Total revenue">
+          <i class="fas fa-money-bill text-info me-2"></i> 
+          ₱{{ (summary.total_revenue | number:'1.2-2') }}
+        </span>
+        
+        <!-- Superadmin-specific stats (matching PHP condition for admin_email env variable) -->
+        <ng-container *ngIf="isSuperadmin()">
+          <span class="summary-stat text-muted" title="Total processing fee">
+            <i class="fas fa-credit-card me-2"></i> 
+            -₱{{ (summary.total_processing_fee || 0) | number:'1.2-2' }}
+          </span>
+          
+          <span class="summary-stat text-muted" title="Net amount">
+            <i class="fas fa-plus me-2"></i> 
+            ₱{{ (summary.net_revenue || 0) | number:'1.2-2' }}
+          </span>
+          
+          <span class="summary-stat text-muted" title="Tax">
+            <i class="fas fa-percentage me-2"></i> 
+            -₱{{ (summary.tax || 0) | number:'1.2-2' }}
+          </span>
+          
+          <span class="summary-stat text-muted" title="Admin grand total">
+            <i class="fas fa-plus-square me-2"></i> 
+            <strong>₱{{ (summary.admin_grand_total || 0) | number:'1.2-2' }}</strong>
+          </span>
+        </ng-container>
+        
+        <span class="summary-stat" title="Platform fee">
+          <i class="fas fa-money-bill text-warning me-2"></i> 
+          -₱{{ (summary.platform_fee | number:'1.2-2') }}
+        </span>
+        
+        <span class="summary-stat-highlight" title="Grand total">
+          <i class="fas fa-plus-square me-2"></i> 
+          <strong>₱{{ (summary.grand_total | number:'1.2-2') }}</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transfer Ticket Modal -->
+  <app-transfer-ticket-modal
+    [ticket]="selectedTicketForTransfer"
+    [show]="showTransferModal"
+    (transferConfirmed)="onTransferConfirmed($event)"
+    #transferModal>
+  </app-transfer-ticket-modal>
+</div>

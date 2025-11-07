@@ -1,0 +1,293 @@
+<div class="modal" appModalToBody [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Fee Settings - {{ sublabelName }}</h5>
+        <button type="button" class="btn-close" (click)="onClose()" [disabled]="loading"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="feeForm" (ngSubmit)="onSubmit()">
+          
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Configure the fees that will be charged to this sublabel. The monthly fee applies to both music and event earnings, while transaction and percentage fees can be set separately. All values can be set to 0 if no fees apply.
+          </div>
+
+          <!-- General Monthly Fee -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="fas fa-calendar me-2 text-success"></i>
+                General Monthly Fee
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label for="monthlyFee" class="form-label">
+                  Monthly Fee (₱)
+                  <i class="fas fa-info-circle text-muted ms-1" 
+                     title="Not yet supported" 
+                     data-bs-toggle="tooltip" 
+                     data-bs-placement="top"></i>
+                </label>
+                <input
+                  type="number"
+                  id="monthlyFee"
+                  class="form-control"
+                  formControlName="monthly_fee"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  title="Not yet supported"
+                  [class.is-invalid]="feeForm.get('monthly_fee')?.invalid && feeForm.get('monthly_fee')?.touched">
+                <div class="form-text text-muted">Fixed monthly fee charged to brand (coming soon)</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('monthly_fee')?.invalid && feeForm.get('monthly_fee')?.touched">
+                  Monthly fee must be a non-negative number
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Music Fee Settings -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="fas fa-music me-2 text-primary"></i>
+                Music Earnings Fee Settings
+              </h6>
+            </div>
+            <div class="card-body" formGroupName="music">
+              
+              <!-- Music Transaction Fixed Fee -->
+              <div class="mb-3">
+                <label for="musicTransactionFee" class="form-label">Fixed Fee per Transaction (₱)</label>
+                <input
+                  type="number"
+                  id="musicTransactionFee"
+                  class="form-control"
+                  formControlName="transaction_fixed_fee"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.is-invalid]="feeForm.get('music.transaction_fixed_fee')?.invalid && feeForm.get('music.transaction_fixed_fee')?.touched">
+                <div class="form-text">Fixed fee per music transaction</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('music.transaction_fixed_fee')?.invalid && feeForm.get('music.transaction_fixed_fee')?.touched">
+                  Transaction fee must be a non-negative number
+                </div>
+              </div>
+
+              <!-- Music Revenue Percentage Fee -->
+              <div class="mb-3">
+                <label for="musicRevenueFee" class="form-label">Revenue Percentage Fee (%)</label>
+                <input
+                  type="number"
+                  id="musicRevenueFee"
+                  class="form-control"
+                  formControlName="revenue_percentage_fee"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.is-invalid]="feeForm.get('music.revenue_percentage_fee')?.invalid && feeForm.get('music.revenue_percentage_fee')?.touched">
+                <div class="form-text">Percentage of music revenue (0-100%)</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('music.revenue_percentage_fee')?.invalid && feeForm.get('music.revenue_percentage_fee')?.touched">
+                  Revenue percentage must be between 0 and 100
+                </div>
+              </div>
+
+              <!-- Music Fee Revenue Type -->
+              <div class="mb-3">
+                <label class="form-label">Revenue Type for Music Percentage Fee</label>
+                <div class="d-flex gap-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="music_fee_revenue_type"
+                      id="musicNetRevenue"
+                      value="net"
+                      formControlName="fee_revenue_type">
+                    <label class="form-check-label" for="musicNetRevenue">
+                      Net Revenue
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="music_fee_revenue_type"
+                      id="musicGrossRevenue"
+                      value="gross"
+                      formControlName="fee_revenue_type">
+                    <label class="form-check-label" for="musicGrossRevenue">
+                      Gross Revenue
+                    </label>
+                  </div>
+                </div>
+                <div class="form-text">Whether the percentage applies to net (after expenses) or gross (before expenses) music revenue</div>
+              </div>
+              
+            </div>
+          </div>
+
+          <!-- Event Fee Settings -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="fas fa-calendar-alt me-2 text-warning"></i>
+                Event Earnings Fee Settings
+              </h6>
+            </div>
+            <div class="card-body" formGroupName="event">
+              
+              <!-- Event Transaction Fixed Fee -->
+              <div class="mb-3">
+                <label for="eventTransactionFee" class="form-label">Fixed Fee per Transaction (₱)</label>
+                <input
+                  type="number"
+                  id="eventTransactionFee"
+                  class="form-control"
+                  formControlName="transaction_fixed_fee"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.is-invalid]="feeForm.get('event.transaction_fixed_fee')?.invalid && feeForm.get('event.transaction_fixed_fee')?.touched">
+                <div class="form-text">Fixed fee per event transaction</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('event.transaction_fixed_fee')?.invalid && feeForm.get('event.transaction_fixed_fee')?.touched">
+                  Transaction fee must be a non-negative number
+                </div>
+              </div>
+
+              <!-- Event Revenue Percentage Fee -->
+              <div class="mb-3">
+                <label for="eventRevenueFee" class="form-label">Revenue Percentage Fee (%)</label>
+                <input
+                  type="number"
+                  id="eventRevenueFee"
+                  class="form-control"
+                  formControlName="revenue_percentage_fee"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.is-invalid]="feeForm.get('event.revenue_percentage_fee')?.invalid && feeForm.get('event.revenue_percentage_fee')?.touched">
+                <div class="form-text">Percentage of event revenue (0-100%)</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('event.revenue_percentage_fee')?.invalid && feeForm.get('event.revenue_percentage_fee')?.touched">
+                  Revenue percentage must be between 0 and 100
+                </div>
+              </div>
+
+              <!-- Event Fee Revenue Type -->
+              <div class="mb-3">
+                <label class="form-label">Revenue Type for Event Percentage Fee</label>
+                <div class="d-flex gap-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="event_fee_revenue_type"
+                      id="eventNetRevenue"
+                      value="net"
+                      formControlName="fee_revenue_type">
+                    <label class="form-check-label" for="eventNetRevenue">
+                      Net Revenue
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="event_fee_revenue_type"
+                      id="eventGrossRevenue"
+                      value="gross"
+                      formControlName="fee_revenue_type">
+                    <label class="form-check-label" for="eventGrossRevenue">
+                      Gross Revenue
+                    </label>
+                  </div>
+                </div>
+                <div class="form-text">Whether the percentage applies to net (after expenses) or gross (before expenses) event revenue</div>
+              </div>
+              
+            </div>
+          </div>
+
+          <!-- Fee Summary -->
+          <div class="card bg-light mt-4" *ngIf="showPreview()">
+            <div class="card-body">
+              <h6 class="card-title">Fee Summary</h6>
+              
+              <!-- General Monthly Fee Summary -->
+              <div *ngIf="showMonthlyPreview()" class="mb-3">
+                <strong class="text-success">
+                  <i class="fas fa-calendar me-2"></i>General Monthly Fee:
+                </strong>
+                <ul class="list-unstyled mb-0 ms-3">
+                  <li>
+                    <i class="fas fa-calendar me-2 text-success"></i>
+                    Monthly: ₱{{ feeForm.get('monthly_fee')?.value | number:'1.2-2' }} (applies to both music and events)
+                  </li>
+                </ul>
+              </div>
+              
+              <!-- Music Fees Summary -->
+              <div *ngIf="showMusicPreview()" class="mb-3">
+                <strong class="text-primary">
+                  <i class="fas fa-music me-2"></i>Music Earnings Fees:
+                </strong>
+                <ul class="list-unstyled mb-0 ms-3">
+                  <li *ngIf="feeForm.get('music.transaction_fixed_fee')?.value > 0">
+                    <i class="fas fa-exchange-alt me-2 text-info"></i>
+                    Per Transaction: ₱{{ feeForm.get('music.transaction_fixed_fee')?.value | number:'1.2-2' }}
+                  </li>
+                  <li *ngIf="feeForm.get('music.revenue_percentage_fee')?.value > 0">
+                    <i class="fas fa-percentage me-2 text-warning"></i>
+                    {{ feeForm.get('music.revenue_percentage_fee')?.value }}% of {{ feeForm.get('music.fee_revenue_type')?.value }} revenue
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Event Fees Summary -->
+              <div *ngIf="showEventPreview()">
+                <strong class="text-warning">
+                  <i class="fas fa-calendar-alt me-2"></i>Event Earnings Fees:
+                </strong>
+                <ul class="list-unstyled mb-0 ms-3">
+                  <li *ngIf="feeForm.get('event.transaction_fixed_fee')?.value > 0">
+                    <i class="fas fa-exchange-alt me-2 text-info"></i>
+                    Per Transaction: ₱{{ feeForm.get('event.transaction_fixed_fee')?.value | number:'1.2-2' }}
+                  </li>
+                  <li *ngIf="feeForm.get('event.revenue_percentage_fee')?.value > 0">
+                    <i class="fas fa-percentage me-2 text-warning"></i>
+                    {{ feeForm.get('event.revenue_percentage_fee')?.value }}% of {{ feeForm.get('event.fee_revenue_type')?.value }} revenue
+                  </li>
+                </ul>
+              </div>
+
+              <!-- No Fees Message -->
+              <div *ngIf="!showPreview()">
+                <i class="fas fa-check me-2 text-success"></i>
+                No fees configured
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="loading">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading || feeForm.invalid">
+          <span *ngIf="loading">
+            <i class="fas fa-spinner fa-spin me-2"></i>Saving...
+          </span>
+          <span *ngIf="!loading">
+            <i class="fas fa-save me-2"></i>Save Fee Settings
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" appModalToBody [class.show]="show" *ngIf="show" (click)="onClose()"></div>

@@ -1,0 +1,174 @@
+<!-- Enhanced Filtering Controls -->
+<app-date-range-filter 
+  [initialPreset]="'last30days'"
+  [showComparison]="true"
+  [showExport]="false"
+  [loading]="loading"
+  (dateRangeChange)="onDateRangeChange($event)"
+  (refresh)="onRefresh()"
+  (export)="onExport($event)"
+  (comparisonToggle)="onComparisonToggle($event)">
+</app-date-range-filter>
+
+<div *ngIf="loading" class="text-center">
+  <div class="loading-dots">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
+
+<div *ngIf="!loading">
+  <h3>Earnings Summary</h3>
+  <div class="row" *ngIf="earningsSummary">
+    <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-shopping-bag"></i> Physical Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.physical_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-download"></i> Download Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.download_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-headphones"></i> Streaming Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.streaming_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="title"><i class="fa fa-television"></i> Sync Earnings</h4>
+      </div>
+      <div class="card-body text-center">
+        <h5>{{ formatCurrency(earningsSummary.sync_earnings) }}</h5>
+      </div>
+    </div>
+  </div>
+  
+  <div *ngIf="!earningsSummary">
+    <p class="text-muted">No releases yet.</p>
+  </div>
+
+  <h3 class="mt-4 mb-3">
+    <i class="fa fa-users text-primary me-2"></i>
+    Payments and Royalties Summary
+  </h3>
+  
+  <div class="row payments-royalties-row" *ngIf="paymentsRoyaltiesSummary">
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100 artist-breakdown-card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fa fa-table text-secondary me-2"></i>
+            Artist Breakdown
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-financial table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="border-0 mobile-text">Artist</th>
+                  <th class="border-0 mobile-narrow mobile-number text-end">Payments</th>
+                  <th class="border-0 mobile-narrow mobile-number text-end">Royalties</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let artist of paymentsRoyaltiesSummary.artist_summaries">
+                  <td class="fw-medium mobile-text" data-label="Artist">{{ artist.artist_name }}</td>
+                  <td class="mobile-narrow mobile-number text-end text-success" data-label="Payments">{{ formatCurrency(artist.total_payments) }}</td>
+                  <td class="mobile-narrow mobile-number text-end text-primary" data-label="Royalties">{{ formatCurrency(artist.total_royalties) }}</td>
+                </tr>
+                <tr *ngIf="paymentsRoyaltiesSummary.artist_summaries.length === 0">
+                  <td colspan="3" class="text-muted text-center py-4">
+                    <i class="fa fa-info-circle me-2"></i>
+                    No artists with payments or royalties in this period.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+    <div class="row g-3">
+      <!-- First Row of Cards -->
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fas fa-money-bill text-success"></i>
+              Total Payments
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_payments) }}</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-chart-line text-primary"></i>
+              Total Royalties
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_royalties) }}</h5>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Second Row of Cards -->
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-plus-circle text-warning"></i>
+              New Expenses
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.total_new_recuperable_expense) }}</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-6">
+        <div class="card h-100 summary-card">
+          <div class="card-header">
+            <h4 class="title">
+              <i class="fa fa-minus-circle text-info"></i>
+              Recuperated Expenses
+            </h4>
+          </div>
+          <div class="card-body text-center d-flex align-items-center justify-content-center">
+            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.total_recuperated_expense) }}</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

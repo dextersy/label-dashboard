@@ -1,0 +1,101 @@
+.card {
+  margin-bottom: 20px;
+}
+
+.payment-method-item {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.payment-method-type {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.payment-method-details {
+  font-size: 0.9em;
+  color: #6c757d;
+  flex-grow: 1;
+}
+
+.payment-method-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.badge {
+  font-size: 0.7em;
+}
+
+.badge-primary {
+  background-color: #007bff;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  margin-bottom: 5px;
+}
+
+// Collapsible Section Styling
+.collapsible-section {
+  .collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 4px;
+    user-select: none;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.02);
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    h6 {
+      color: #374151;
+      font-weight: 500;
+      font-size: 16px;
+      margin: 0;
+    }
+
+    i {
+      color: #6b7280;
+      font-size: 14px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &.fa-chevron-up {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .collapsible-content {
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 1000px;
+    opacity: 1;
+    transform: translateY(0);
+    padding-top: 8px;
+
+    &.collapsed {
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-10px);
+      padding-top: 0;
+      margin-top: 0;
+    }
+  }
+}

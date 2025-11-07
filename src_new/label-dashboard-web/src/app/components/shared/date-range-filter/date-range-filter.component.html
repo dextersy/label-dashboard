@@ -1,0 +1,167 @@
+<!-- Date Range Filter Component -->
+<div class="card date-range-filter" [class.compact]="compact">
+  <div class="card-body" [class.py-2]="compact">
+    <!-- Collapsed Header - Always visible -->
+    <div class="row align-items-center date-range-header">
+      <div class="col-lg-8 col-md-8" [class.col-8]="compact">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-link btn-sm text-decoration-none p-0 me-3" 
+                  (click)="toggleExpanded()"
+                  [title]="isExpanded ? 'Collapse date range options' : 'Expand date range options'">
+            <i class="fa fa-calendar me-1"></i>
+            <strong>{{ getPresetDisplayName() }}</strong>
+            <i class="fa ms-1" [class.fa-chevron-down]="!isExpanded" [class.fa-chevron-up]="isExpanded"></i>
+          </button>
+          <span class="text-muted small me-3" [class.d-none]="compact" [class.d-sm-inline]="compact">
+            {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
+            <span class="text-success ms-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
+            <span class="text-success ms-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Header Actions -->
+      <div class="col-lg-4 col-md-4" [class.col-4]="compact">
+        <div class="d-flex justify-content-end align-items-center">
+          <div class="form-check form-switch me-3" *ngIf="showComparison && !compact">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="compareSwitch"
+                   [(ngModel)]="showComparisonToggle"
+                   (change)="onComparisonToggle()">
+            <label class="form-check-label" for="compareSwitch">
+              <small>Compare</small>
+            </label>
+          </div>
+          <button class="btn btn-outline-primary btn-sm me-2" 
+                  (click)="onRefresh()" 
+                  [disabled]="loading"
+                  [title]="loading ? 'Refreshing data...' : 'Refresh data'">
+            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
+            <span class="ms-1 d-none d-md-inline">Refresh</span>
+          </button>
+          <div class="dropdown" *ngIf="showExport && !compact">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                    type="button" 
+                    data-bs-toggle="dropdown">
+              <i class="fa fa-download"></i>
+              <span class="ms-1 d-none d-lg-inline">Export</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" (click)="onExport('csv')">Export as CSV</a></li>
+              <li><a class="dropdown-item" href="#" (click)="onExport('pdf')">Export as PDF</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expanded Content - Show/hide based on isExpanded -->
+    <div class="row align-items-center mt-3 expanded-content" *ngIf="isExpanded">
+      <!-- Date Range Presets -->
+      <div class="col-12">
+        <div class="d-flex flex-wrap align-items-center mb-3">
+          <span class="text-muted me-3 mb-2" [class.small]="compact">Quick Select:</span>
+          <div class="btn-group me-3 mb-2" role="group">
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'today'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'today'"
+                    (click)="applyDatePreset('today')">
+              Today
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'yesterday'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'yesterday'"
+                    (click)="applyDatePreset('yesterday')">
+              Yesterday
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'last7days'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'last7days'"
+                    (click)="applyDatePreset('last7days')">
+              Last 7 days
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'last30days'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'last30days'"
+                    (click)="applyDatePreset('last30days')">
+              Last 30 days
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'thismonth'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'thismonth'"
+                    (click)="applyDatePreset('thismonth')">
+              This month
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'lastmonth'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'lastmonth'"
+                    (click)="applyDatePreset('lastmonth')">
+              Last month
+            </button>
+            <button type="button" 
+                    class="btn" 
+                    [class.btn-sm]="compact"
+                    [class.btn-primary]="selectedPreset === 'alltime'"
+                    [class.btn-outline-secondary]="selectedPreset !== 'alltime'"
+                    (click)="applyDatePreset('alltime')">
+              All Time
+            </button>
+          </div>
+        </div>
+        
+        <!-- Custom Date Range -->
+        <div class="d-flex flex-wrap align-items-center">
+          <span class="text-muted me-3 mb-2 small">Custom Range:</span>
+          <div class="input-group me-3 mb-2 custom-date-inputs">
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="startDate"
+                   (change)="onCustomDateChange()"
+                   [max]="maxDate">
+            <span class="input-group-text">to</span>
+            <input type="date" 
+                   class="form-control form-control-sm" 
+                   [(ngModel)]="endDate"
+                   (change)="onCustomDateChange()"
+                   [min]="startDate"
+                   [max]="maxDate">
+          </div>
+          
+          <!-- Additional options for expanded view -->
+          <div class="form-check form-switch me-3 mb-2" *ngIf="showComparison && compact">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="compareSwitchExpanded"
+                   [(ngModel)]="showComparisonToggle"
+                   (change)="onComparisonToggle()">
+            <label class="form-check-label" for="compareSwitchExpanded">
+              <small>Compare to previous period</small>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last Updated Display - Only show when not loading and not expanded -->
+    <div class="row mt-2" *ngIf="!loading && !isExpanded && !compact">
+      <div class="col-12">
+        <small class="text-muted d-flex justify-content-end">
+          Last updated: {{ lastUpdated | date:'medium' }}
+        </small>
+      </div>
+    </div>
+  </div>
+</div>

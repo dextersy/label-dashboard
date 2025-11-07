@@ -1,0 +1,665 @@
+<div class="custom-ticket-page">
+  <!-- Breadcrumb -->
+  <app-breadcrumb></app-breadcrumb>
+
+  <div class="container-fluid" *ngIf="!loading">
+
+    <!-- Event Status Information -->
+    <div class="alert alert-danger mb-4" *ngIf="isEventPast()">
+      <i class="far fa-clock me-2"></i>
+      <strong>Event Past:</strong> {{ getEventStatusMessage() }} Custom ticket creation is disabled for past events.
+    </div>
+
+    <div class="alert alert-warning mb-4" *ngIf="isEventClosed() && !isEventPast()">
+      <i class="fas fa-lock me-2"></i>
+      <strong>Sales Closed:</strong> {{ getEventStatusMessage() }} You can still create custom tickets for special invites.
+    </div>
+
+    <!-- Access Denied for Past Events -->
+    <div class="alert alert-danger" *ngIf="selectedEvent && !canCreateCustomTickets()">
+      <i class="fa fa-lock me-2"></i>
+      <strong>Access Denied:</strong> Custom ticket creation is disabled for past events.
+    </div>
+
+    <!-- View Toggle -->
+    <div class="row mb-4" *ngIf="canCreateCustomTickets()">
+      <div class="col-12">
+        <div class="d-flex justify-content-center align-items-center flex-column">
+          <div class="btn-group view-toggle" role="group" aria-label="Ticket creation mode toggle">
+            <button type="button" 
+                    class="btn"
+                    [class.active]="currentView === 'single'"
+                    (click)="switchToSingleView()"
+                    [attr.aria-pressed]="currentView === 'single'">
+              <i class="fa fa-user me-2"></i>Single Ticket
+            </button>
+            <button type="button" 
+                    class="btn"
+                    [class.active]="currentView === 'bulk'"
+                    (click)="switchToBulkView()"
+                    [attr.aria-pressed]="currentView === 'bulk'">
+              <i class="fa fa-users me-2"></i>Bulk Create
+            </button>
+          </div>
+          <small class="text-muted mt-2">
+            <i class="fa fa-info-circle me-1"></i>
+            <span *ngIf="currentView === 'single'">Create individual custom tickets with detailed options</span>
+            <span *ngIf="currentView === 'bulk'">Create multiple tickets at once with bulk editing features</span>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Single Ticket Form -->
+    <div class="row" *ngIf="canCreateCustomTickets() && currentView === 'single'">
+      <div class="col-lg-8 col-xl-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fa fa-ticket-alt me-2"></i>Ticket Details
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">
+              <small>Use this for special invites. Create a custom ticket and optionally send a payment link. You can override the ticket price for this payment.</small>
+            </div>
+
+            <form (ngSubmit)="onSubmitCustomTicket()" #customTicketFormRef="ngForm">
+              <!-- Event Name -->
+              <div class="mb-4" *ngIf="selectedEvent">
+                <h6 class="text-muted mb-2">
+                  <i class="fa fa-calendar me-2"></i>Event
+                </h6>
+                <h5 class="mb-0">{{ selectedEvent.title }}</h5>
+                <small class="text-muted" *ngIf="selectedEvent.date_and_time">
+                  {{ selectedEvent.date_and_time | date:'medium' }}
+                  <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
+                </small>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Name</label>
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.name"
+                      name="name"
+                      placeholder="Full Name"
+                      required>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Email Address</label>
+                    <input 
+                      type="email" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.email_address"
+                      name="email_address"
+                      placeholder="email@example.com"
+                      required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Contact Number</label>
+                    <input 
+                      type="tel" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.contact_number"
+                      name="contact_number"
+                      placeholder="+639xxxxxxxxx"
+                      required>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label required">Number of Entries</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      [(ngModel)]="customTicketForm.number_of_entries"
+                      name="number_of_entries"
+                      placeholder="1"
+                      min="1"
+                      required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ticket Type Selection -->
+              <div class="mb-3" *ngIf="ticketTypes.length > 0">
+                <label class="form-label required">Ticket Type</label>
+                <select
+                  class="form-select"
+                  [(ngModel)]="customTicketForm.ticket_type_id"
+                  name="ticket_type_id"
+                  (ngModelChange)="onTicketTypeChange()"
+                  required>
+                  <option [value]="null" disabled>Select ticket type</option>
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id"
+                          [disabled]="ticketType.is_sold_out"
+                          [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                          [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                    {{ ticketType.name }} - ₱{{ ticketType.price | number:'1.2-2' }}
+                    <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
+                  </option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Price per Ticket</label>
+                <div class="input-group">
+                  <span class="input-group-text">₱</span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="customTicketForm.price_per_ticket"
+                    name="price_per_ticket"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    [disabled]="!priceOverrideEnabled">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="enablePriceOverride()"
+                    *ngIf="!priceOverrideEnabled"
+                    title="Override price">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="disablePriceOverride()"
+                    *ngIf="priceOverrideEnabled"
+                    title="Use ticket type price">
+                    <i class="fas fa-undo"></i>
+                  </button>
+                </div>
+                <div class="form-text" *ngIf="!priceOverrideEnabled && customTicketForm.ticket_type_id">
+                  <ng-container *ngFor="let ticketType of ticketTypes">
+                    <span *ngIf="ticketType.id === customTicketForm.ticket_type_id">
+                      {{ ticketType.name }} price: ₱{{ ticketType.price | number:'1.2-2' }}
+                    </span>
+                  </ng-container>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Referral Code (Optional)</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="customTicketForm.referral_code"
+                  name="referral_code"
+                  placeholder="Enter referral code">
+              </div>
+
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [(ngModel)]="customTicketForm.ticket_paid"
+                    name="ticket_paid"
+                    id="ticket_paid"
+                    (change)="onToggleMarkAsPaid()">
+                  <label class="form-check-label" for="ticket_paid">
+                    Mark as paid
+                  </label>
+                </div>
+
+                <div class="mt-2" *ngIf="customTicketForm.ticket_paid">
+                  <label class="form-label">Payment Processing Fee</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="customTicketForm.payment_processing_fee"
+                      name="payment_processing_fee"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0">
+                  </div>
+                </div>
+
+                <div class="form-check form-switch mt-2" *ngIf="!customTicketForm.ticket_paid">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    [(ngModel)]="customTicketForm.send_email"
+                    name="send_email"
+                    id="send_email">
+                  <label class="form-check-label" for="send_email">
+                    Send payment email
+                  </label>
+                </div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button 
+                  type="submit" 
+                  class="btn btn-primary"
+                  [disabled]="!customTicketFormRef.form.valid || submitting">
+                  <i class="fa fa-plus me-1" *ngIf="!submitting"></i>
+                  <i class="fa fa-spinner fa-spin me-1" *ngIf="submitting"></i>
+                  <span *ngIf="submitting">Creating...</span>
+                  <span *ngIf="!submitting">Create Ticket</span>
+                </button>
+                
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary"
+                  (click)="onCancel()"
+                  [disabled]="submitting">
+                  Cancel
+                </button>
+
+                <button 
+                  type="button" 
+                  class="btn btn-outline-info"
+                  (click)="resetCustomTicketForm()"
+                  [disabled]="submitting">
+                  <i class="fa fa-undo me-1"></i>
+                  Reset Form
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Card -->
+      <div class="col-lg-4 col-xl-6">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="fa fa-info-circle me-2"></i>Ticket Summary
+            </h6>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless table-sm">
+              <tr *ngIf="selectedEvent">
+                <td><strong>Event:</strong></td>
+                <td>{{ selectedEvent.title }}</td>
+              </tr>
+              <tr *ngIf="selectedEvent?.date_and_time">
+                <td><strong>Date:</strong></td>
+                <td>{{ selectedEvent?.date_and_time | date:'medium' }}</td>
+              </tr>
+              <tr *ngIf="selectedEvent?.venue">
+                <td><strong>Venue:</strong></td>
+                <td>{{ selectedEvent?.venue }}</td>
+              </tr>
+              <tr>
+                <td><strong>Entries:</strong></td>
+                <td>{{ customTicketForm.number_of_entries || 0 }}</td>
+              </tr>
+              <tr>
+                <td><strong>Price per ticket:</strong></td>
+                <td>₱{{ customTicketForm.price_per_ticket || 0 | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <td><strong>Total:</strong></td>
+                <td><strong>₱{{ (customTicketForm.price_per_ticket * customTicketForm.number_of_entries) || 0 | number:'1.2-2' }}</strong></td>
+              </tr>
+              <tr *ngIf="customTicketForm.ticket_paid && customTicketForm.payment_processing_fee > 0">
+                <td><strong>Processing Fee:</strong></td>
+                <td>₱{{ customTicketForm.payment_processing_fee | number:'1.2-2' }}</td>
+              </tr>
+            </table>
+
+            <div class="alert alert-info mt-3" *ngIf="customTicketForm.ticket_paid">
+              <small><i class="fa fa-check-circle me-1"></i>This ticket will be marked as paid immediately after creation.</small>
+            </div>
+
+            <div class="alert alert-warning mt-3" *ngIf="!customTicketForm.ticket_paid && customTicketForm.send_email">
+              <small><i class="fa fa-envelope me-1"></i>A payment email will be sent to the customer.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Ticket Creation View -->
+    <div *ngIf="canCreateCustomTickets() && currentView === 'bulk'">
+      <!-- Event Information for Bulk View -->
+      <div class="row mb-3" *ngIf="selectedEvent">
+        <div class="col-12">
+          <div class="card border-primary">
+            <div class="card-body py-2">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <h6 class="mb-1 text-primary">
+                    <i class="fa fa-calendar me-2"></i>{{ selectedEvent.title }}
+                  </h6>
+                  <small class="text-muted">
+                    {{ selectedEvent.date_and_time | date:'medium' }}
+                    <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
+                  </small>
+                </div>
+                <div class="text-end">
+                  <small class="text-muted d-block">Default Price</small>
+                  <strong>₱{{ selectedEvent.ticket_price | number:'1.2-2' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Contact</th>
+              <th>Entries</th>
+              <th>Ticket Type</th>
+              <th>Price</th>
+              <th>Send Payment Link</th>
+              <th>Mark Paid</th>
+              <th>Processing Fee</th>
+              <th>Referral Code</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Apply to all row -->
+            <tr class="table-light">
+              <td><em>Apply to all</em></td>
+              <td></td>
+              <td></td>
+              <td>
+                <input type="number"
+                       class="form-control form-control-md"
+                       #applyAllEntriesInput
+                       placeholder="1"
+                       min="1"
+                       (change)="applyAllEntries(applyAllEntriesInput.value); applyAllEntriesInput.value = ''">
+              </td>
+              <td *ngIf="ticketTypes.length > 0">
+                <select class="form-select form-select-md"
+                        [(ngModel)]="selectedApplyAllTicketType"
+                        (ngModelChange)="onApplyAllTicketTypeChange()"
+                        name="applyAllTicketType">
+                  <option [value]="null">Select type</option>
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id"
+                          [disabled]="ticketType.is_sold_out"
+                          [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                          [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                    {{ ticketType.name }}<span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
+                  </option>
+                </select>
+              </td>
+              <td *ngIf="ticketTypes.length === 0"></td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         #applyAllPriceInput 
+                         placeholder="{{ selectedEvent?.ticket_price || 0 }}"
+                         step="0.01"
+                         min="0"
+                         (change)="applyAllPrice(applyAllPriceInput.value); applyAllPriceInput.value = ''">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         #applyAllEmailInput 
+                         [(ngModel)]="applyAllSendEmailState"
+                         [disabled]="applyAllPaidState"
+                         (change)="applyAllSendEmail(applyAllEmailInput.checked)">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         #applyAllPaidInput 
+                         [(ngModel)]="applyAllPaidState"
+                         (change)="applyAllPaid(applyAllPaidInput.checked)">
+                </div>
+              </td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         #applyAllProcessingFeeInput 
+                         placeholder="0.00"
+                         step="0.01"
+                         min="0"
+                         [disabled]="!applyAllPaidState"
+                         (change)="applyAllProcessingFee(applyAllProcessingFeeInput.value); applyAllProcessingFeeInput.value = ''">
+                </div>
+              </td>
+              <td>
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       #applyAllReferralInput 
+                       placeholder="Referral code"
+                       (change)="applyAllReferralCode(applyAllReferralInput.value); applyAllReferralInput.value = ''">
+              </td>
+              <td></td>
+            </tr>
+
+            <!-- Data rows -->
+            <tr *ngFor="let ticket of bulkTickets; let i = index">
+              <td>
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.name"
+                       placeholder="Full Name"
+                       required>
+              </td>
+              <td>
+                <input type="email" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.email_address"
+                       placeholder="email@example.com"
+                       required>
+              </td>
+              <td>
+                <input type="tel" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.contact_number"
+                       placeholder="+639xxxxxxxxx"
+                       required>
+              </td>
+              <td>
+                <input type="number"
+                       class="form-control form-control-md"
+                       [(ngModel)]="ticket.number_of_entries"
+                       placeholder="1"
+                       min="1"
+                       required>
+              </td>
+              <td *ngIf="ticketTypes.length > 0">
+                <select class="form-select form-select-md"
+                        [(ngModel)]="ticket.ticket_type_id"
+                        (ngModelChange)="onBulkTicketTypeChange(i)"
+                        required>
+                  <option [value]="null" disabled>Select type</option>
+                  <option *ngFor="let ticketType of ticketTypes" [ngValue]="ticketType.id"
+                          [disabled]="ticketType.is_sold_out"
+                          [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                          [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                    {{ ticketType.name }}<span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
+                  </option>
+                </select>
+              </td>
+              <td *ngIf="ticketTypes.length === 0"></td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         [(ngModel)]="ticket.price_per_ticket"
+                         placeholder="0.00"
+                         step="0.01"
+                         min="0">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         [(ngModel)]="ticket.send_email"
+                         [disabled]="ticket.ticket_paid">
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input type="checkbox" 
+                         class="form-check-input" 
+                         [(ngModel)]="ticket.ticket_paid"
+                         (change)="ticket.ticket_paid ? (ticket.send_email = false) : (ticket.payment_processing_fee = 0)">
+                </div>
+              </td>
+              <td>
+                <div class="input-group input-group-md">
+                  <span class="input-group-text">₱</span>
+                  <input type="number" 
+                         class="form-control" 
+                         [(ngModel)]="ticket.payment_processing_fee"
+                         placeholder="0.00"
+                         step="0.01"
+                         min="0"
+                         [disabled]="!ticket.ticket_paid">
+                </div>
+              </td>
+              <td>
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       [(ngModel)]="ticket.referral_code"
+                       placeholder="Optional">
+              </td>
+              <td>
+                <button type="button" 
+                        class="btn btn-outline-danger btn-sm" 
+                        (click)="removeBulkRow(i)"
+                        title="Remove row">
+                  <i class="fa fa-times"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bulk Action Panel -->
+      <div class="sticky-bottom bg-white border-top p-3 mt-3">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-12">
+              <!-- Mobile Layout -->
+              <div class="d-block d-lg-none">
+                <div class="row mb-3">
+                  <div class="col-12">
+                    <div class="btn-group w-100" role="group">
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(1)">
+                        Add Row
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(5)">
+                        Add 5
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(10)">
+                        Add 10
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                  <small class="text-muted">
+                    Total: ₱{{ getBulkTotal() | number:'1.2-2' }} • {{ bulkTickets.length }} tickets
+                  </small>
+                </div>
+                <button type="button" 
+                        class="btn btn-success btn-lg w-100" 
+                        (click)="onSubmitBulkTickets()" 
+                        [disabled]="submitting || bulkTickets.length === 0">
+                  <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
+                  <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
+                  <span *ngIf="submitting">Creating...</span>
+                  <span *ngIf="!submitting && bulkTickets.length > 0">Create {{ bulkTickets.length }} Tickets</span>
+                  <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+                </button>
+              </div>
+
+              <!-- Desktop Layout -->
+              <div class="d-none d-lg-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-4">
+                  <div>
+                    <strong>Total Amount:</strong> 
+                    <span class="text-success">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="text-muted">
+                    Tickets: {{ bulkTickets.length }}
+                  </div>
+                  <div>
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(1)">
+                        Add Row
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(5)">
+                        Add 5
+                      </button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(10)">
+                        Add 10
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button type="button" 
+                          class="btn btn-outline-secondary" 
+                          (click)="onCancel()"
+                          [disabled]="submitting">
+                    Cancel
+                  </button>
+                  <button type="button" 
+                          class="btn btn-success btn-lg" 
+                          (click)="onSubmitBulkTickets()" 
+                          [disabled]="submitting || bulkTickets.length === 0">
+                    <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
+                    <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
+                    <span *ngIf="submitting">Creating...</span>
+                    <span *ngIf="!submitting && bulkTickets.length > 0">Create All Tickets</span>
+                    <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Non-Admin Access Denied -->
+    <div class="alert alert-danger" *ngIf="!isAdmin && !loading">
+      <i class="fa fa-lock me-2"></i>
+      <strong>Access Denied:</strong> You don't have permission to create custom tickets. Only administrators can create custom tickets.
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="text-center py-5" *ngIf="loading">
+    <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+    <p class="text-muted mt-2">Loading...</p>
+  </div>
+</div>

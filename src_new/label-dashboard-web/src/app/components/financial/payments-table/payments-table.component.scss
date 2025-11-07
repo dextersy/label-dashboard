@@ -1,0 +1,25 @@
+// Payments table specific styles
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-top: none;
+  font-weight: 600;
+}
+
+.table td, .table th {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+.text-center {
+  color: #6c757d;
+  font-style: italic;
+  padding: 2rem;
+}

@@ -1,0 +1,121 @@
+.card-body {
+  padding: 40px;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.fa-3x {
+  font-size: 3em;
+}
+
+// Custom styling for the release information table
+.table {
+  th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    padding: 1rem 0.75rem;
+  }
+  
+  td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+  }
+}
+
+// Improved input group styling for royalty percentages
+.input-group {
+  .form-control {
+    &:focus {
+      border-color: #80bdff;
+      box-shadow: none;
+    }
+    
+    &:disabled {
+      background-color: #f8f9fa;
+      opacity: 1;
+    }
+  }
+  
+  .input-group-addon {
+    background-color: transparent;
+    border: none;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6c757d;
+    white-space: nowrap;
+    
+    // Remove Bootstrap's default background and styling
+    background-image: none;
+    
+    // Better visual integration with the input
+    display: flex;
+    align-items: center;
+  }
+  
+}
+
+// Special styling for disabled state
+.input-group:has(.form-control:disabled) {
+  .input-group-addon {
+    color: #868e96;
+  }
+}
+
+// Responsive improvements for mobile
+@media (max-width: 768px) {
+  .card-body {
+    padding: 20px 15px;
+  }
+  
+  .table-responsive {
+    border: none;
+    
+    .table {
+      margin-bottom: 0;
+      
+      th, td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.875rem;
+      }
+      
+      // Stack the input groups vertically on mobile
+      .input-group {
+        min-width: 100%;
+        
+        .input-group-addon {
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// Button improvements
+.btn-icon-only {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  i {
+    font-size: 0.875rem;
+  }
+}
+
+// Save panel styling
+.save-panel {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  
+  .btn-block {
+    font-weight: 500;
+  }
+}

@@ -1,0 +1,90 @@
+<div class="table-responsive" *ngIf="songs.length > 0">
+  <div *ngIf="!isRestrictedMode()" class="alert alert-info mb-3">
+    <i class="fa fa-arrows-alt mr-2"></i>
+    Drag and drop rows to reorder tracks
+  </div>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th *ngIf="!isRestrictedMode()" style="width: 30px;"></th>
+        <th>#</th>
+        <th>Title</th>
+        <th>Duration</th>
+        <th>Collaborators</th>
+        <th>ISRC</th>
+        <th>Links</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody cdkDropList (cdkDropListDropped)="onDrop($event)" [cdkDropListDisabled]="isRestrictedMode()">
+      <tr *ngFor="let song of songs; let i = index" cdkDrag [cdkDragDisabled]="isRestrictedMode()" class="song-row">
+        <td *ngIf="!isRestrictedMode()" class="drag-handle" cdkDragHandle>
+          <i class="fa fa-grip-vertical text-muted"></i>
+        </td>
+        <td>{{ i + 1 }}</td>
+        <td>
+          <strong>{{ song.title }}</strong>
+          <div *ngIf="!song.audio_file && !isUploading(song.id)" class="text-danger small">
+            <i class="fa fa-exclamation-circle me-1"></i>
+            <strong>No audio master</strong>
+          </div>
+          <div *ngIf="isUploading(song.id)" class="mt-2">
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                   role="progressbar"
+                   [style.width.%]="getUploadProgress(song.id)"
+                   [attr.aria-valuenow]="getUploadProgress(song.id)"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
+              </div>
+            </div>
+            <small class="text-muted">Uploading... {{ getUploadProgress(song.id) }}%</small>
+          </div>
+        </td>
+        <td>{{ formatDuration(song.duration) }}</td>
+        <td>{{ getCollaboratorNames(song) }}</td>
+        <td><small>{{ song.isrc || '-' }}</small></td>
+        <td>
+          <div class="btn-group btn-group-sm">
+            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-success" title="Spotify">
+              <i class="fab fa-spotify"></i>
+            </a>
+            <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn btn-dark" title="Apple Music">
+              <i class="fab fa-apple"></i>
+            </a>
+            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn btn-danger" title="YouTube">
+              <i class="fab fa-youtube"></i>
+            </a>
+          </div>
+          <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted">-</span>
+        </td>
+        <td>
+          <button
+            *ngIf="song.audio_file"
+            class="btn btn-link btn-sm p-0 me-2"
+            [class.text-warning]="playingSongId === song.id"
+            [class.text-success]="playingSongId !== song.id"
+            (click)="onPlayAudio(song)"
+            [title]="playingSongId === song.id ? 'Pause' : 'Play'">
+            <i class="fa" [class.fa-play]="playingSongId !== song.id" [class.fa-pause]="playingSongId === song.id"></i>
+          </button>
+          <button class="btn btn-link btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit" [disabled]="isUploading(song.id)">
+            <i class="fa fa-edit"></i>
+          </button>
+          <button class="btn btn-link btn-sm p-0 me-2" (click)="onUploadAudio(song)" title="Upload Audio" [disabled]="isUploading(song.id) || isRestrictedMode()">
+            <i class="fa" [class.fa-upload]="!isUploading(song.id)" [class.fa-spinner]="isUploading(song.id)" [class.fa-spin]="isUploading(song.id)"></i>
+          </button>
+          <button *ngIf="!isRestrictedMode()" class="btn btn-link btn-sm p-0 text-danger" (click)="onDelete(song)" title="Delete">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="songs.length === 0" class="alert alert-info">
+  <i class="fa fa-info-circle mr-2"></i>
+  No songs added yet.
+</div>

@@ -1,0 +1,198 @@
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" [style.display]="isLoading ? 'flex' : 'none'">
+  <div class="loading"></div>
+</div>
+
+<!-- Camera Container (QR Scanner) -->
+<div id="cameraContainer" [style.display]="isScanning ? 'block' : 'none'">
+  <div class="h-100 d-flex justify-content-center">
+    <div class="w-100" style="height:auto;">
+      <div id="qr-reader" height="600"></div>
+      <div>
+        <button type="button" id="btnCancelScan" class="btn btn-primary btn-block" (click)="stopScanner()">
+          <i class="fa fa-times"></i> Cancel Scanning
+        </button> 
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrapper h-100 d-flex justify-content-center">
+  <div class="card mb-3">
+    <div class="card-header text-center bg-primary text-light">
+      <h3>&nbsp;</h3>
+      <h6 class="text-light">Verify tickets for</h6>
+      <h3 class="text-light"><strong>{{ currentEvent?.title || 'Event' }}</strong></h3>
+      <h5>&nbsp;</h5>
+    </div>
+    
+    <div class="card-body text-center">
+      <!-- PIN Validation Form -->
+      <div *ngIf="!isPinValidated">
+        <!-- Error Alert -->
+        <div class="alert alert-danger" role="alert" id="alert-box" *ngIf="showAlert && alertType === 'error'">
+          {{ alertMessage }}
+        </div>
+        
+        <form [formGroup]="pinForm" (ngSubmit)="validatePin()">
+          <div class="form-group">
+            <label for="pin"><strong>Please input the event PIN to proceed.</strong></label>
+            <input type="password" 
+                   class="form-control form-control-lg text-center" 
+                   formControlName="pin" 
+                   id="pin" 
+                   placeholder="PIN code"
+                   maxlength="6"
+                   [disabled]="isLoading" />
+          </div>
+          <button type="submit" 
+                  class="btn-primary btn-block btn btn-lg"
+                  [disabled]="!pinForm.valid || isLoading">
+            <i class="fa fa-sign-in"></i> Sign In
+          </button>
+        </form>
+      </div>
+
+      <!-- Verification Interface -->
+      <div *ngIf="isPinValidated">
+        <!-- Alert Messages -->
+        <div class="alert alert-danger" role="alert" id="alert-box" 
+             *ngIf="showAlert && alertType === 'error'">
+          {{ alertMessage }}
+        </div>
+        
+        <div class="alert alert-success" role="alert" id="alert-box" 
+             *ngIf="showAlert && alertType === 'success'">
+          {{ alertMessage }}
+        </div>
+        
+        <div class="alert alert-info" role="alert" id="alert-box" 
+             *ngIf="showAlert && alertType === 'info'">
+          {{ alertMessage }}
+        </div>
+
+        <!-- Persistent Alert Messages -->
+        <div class="alert text-center" 
+             [ngClass]="{'alert-success': persistentAlertType === 'success', 'alert-danger': persistentAlertType === 'error'}"
+             *ngIf="showPersistentAlert">
+          <i class="fa" 
+             [ngClass]="{'fa-check-circle': persistentAlertType === 'success', 'fa-times-circle': persistentAlertType === 'error'}"
+             style="font-size:40px;"></i><br>
+          <h4><strong>{{ persistentAlertMessage }}</strong></h4>
+          <p *ngIf="persistentAlertType === 'success'">Ticket has been processed successfully.</p>
+        </div>
+
+        <!-- Ticket Input Form -->
+        <form [formGroup]="ticketForm" (ngSubmit)="lookupTicket()" *ngIf="showInputForm">
+          <div class="form-group">
+            <label for="ticketCode"><strong>Input ticket code</strong></label>
+            <div class="input-group">
+              <input type="text" 
+                     class="form-control form-control-lg text-center" 
+                     formControlName="ticketCode" 
+                     id="ticketCode" 
+                     placeholder="Ticket code"
+                     style="text-transform: uppercase"
+                     maxlength="5"
+                     [disabled]="isLoading" />
+              <div class="input-group-addon">
+                <button type="button" 
+                        id="btnScanQR" 
+                        class="btn btn-default btn-lg"
+                        (click)="toggleScanner()"
+                        [disabled]="isLoading">
+                  <i class="fa fa-qrcode"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" 
+                  class="btn-primary btn-block btn btn-lg"
+                  [disabled]="!ticketForm.valid || isLoading"
+                  *ngIf="!currentTicket">
+            <i class="fa fa-search"></i> Look Up Ticket
+          </button>
+
+        </form>
+
+        <!-- Check-in Form -->
+        <div *ngIf="showCheckInForm">
+          <div class="alert alert-success">
+            <i class="fa fa-check-circle" style="font-size:40px;"></i><br>
+            <h4><strong>Ticket Found!</strong></h4>
+            
+            <!-- Large, prominent display of available entries -->
+            <div class="entries-display">
+              <div class="entries-label">ENTRIES AVAILABLE</div>
+              <div class="entries-number">{{ currentTicket?.remaining_entries }}</div>
+              <div class="entries-subtitle">{{ currentTicket?.name }}</div>
+              <div class="entries-ticket-type" *ngIf="currentTicket?.ticketType">
+                <strong>{{ currentTicket.ticketType.name }}</strong>
+              </div>
+            </div>
+                          
+            <!-- Claim All Button -->
+            <p>
+              <button id="btnClaimAll" 
+                    type="button" 
+                    class="btn-primary btn-block btn btn-lg mt-3"
+                    (click)="claimAllEntries()"
+                    [disabled]="isLoading || (currentTicket?.remaining_entries || 0) <= 0">
+              <i class="fa fa-users"></i> Claim All
+            </button>
+            </p>
+            <p><strong>Or enter number of people checking in</strong></p>
+            
+            <form [formGroup]="checkInForm" (ngSubmit)="checkInTicket()">
+            <div class="form-group">
+              <input type="number" 
+                     class="form-control form-control-lg text-center" 
+                     min="1" 
+                     [max]="currentTicket?.remaining_entries || 1"
+                     formControlName="entriesToClaim" 
+                     id="numberOfAttendees" 
+                     placeholder="Number of attendees"
+                     [disabled]="isLoading" />
+              <div class="field-error-message" 
+                   [style.display]="checkInForm.get('entriesToClaim')?.invalid && checkInForm.get('entriesToClaim')?.touched ? 'block' : 'none'">
+                Number is more than remaining entries.
+              </div>
+            </div>
+            <button id="btnCheckIn" 
+                    type="submit" 
+                    class="btn-primary btn-block btn btn-lg"
+                    [disabled]="!checkInForm.valid || isLoading">
+              <i class="fa fa-check-circle"></i> Check In
+            </button>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Reset Button -->
+        <div *ngIf="showCheckInForm || showPersistentAlert" style="margin-top: 1rem;">
+          <button type="button" 
+                  class="btn btn-secondary btn-block"
+                  (click)="resetTicketLookup()"
+                  [disabled]="isLoading">
+            <i class="fa fa-refresh"></i> Look Up Another Ticket
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Poster Footer -->
+    <div class="card-footer" style="padding:0px" *ngIf="currentEvent?.poster_url">
+      <img [src]="currentEvent.poster_url" 
+           class="card-img-top" 
+           style="max-height:120px;object-fit:cover;filter:blur(2px) brightness(0.8);">
+    </div>
+  </div>
+
+  <div class="text-center">
+    <p>&nbsp;</p>
+    <p>
+      <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+    </p>
+  </div>
+</div>

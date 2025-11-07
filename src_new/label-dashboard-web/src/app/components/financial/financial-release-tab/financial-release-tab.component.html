@@ -1,0 +1,163 @@
+<div class="card">
+  <div class="card-header">
+    <h3>Release Information</h3>
+  </div>
+  <div class="card-body">
+    <p class="card-text">This tab shows financial details regarding your releases, including splits, recuperable expenses, earnings, and revenues.</p>
+    
+    <div class="table-responsive" *ngIf="releases.length > 0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>For Release</th>
+            <th class="text-right">Sync royalty %</th>
+            <th class="text-right">Streaming royalty %</th>
+            <th class="text-right">Downloads royalty %</th>
+            <th class="text-right">Physical royalty %</th>
+            <th class="text-right">Remaining Recuperable Expense</th>
+            <th class="text-right">Total earnings 
+              <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Data starts on April 2021."></i>
+            </th>
+            <th class="text-right">Total royalties earned</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let release of releases; let i = index">
+            <td><strong>{{ release.title }}</strong></td>
+            <td class="text-right" data-label="Sync royalty %">
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  style="text-align: right;"
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.sync_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)"> 
+                <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
+              </div>
+            </td>
+            <td class="text-right" data-label="Streaming royalty %">
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  style="text-align: right;"
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.streaming_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)"> 
+                <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
+              </div>
+            </td>
+            <td class="text-right" data-label="Downloads royalty %">
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  style="text-align: right;"
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.download_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
+                <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
+              </div>
+            </td>
+            <td class="text-right" data-label="Physical royalty %">
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  style="text-align: right;"
+                  min="0" 
+                  step="1" 
+                  max="100" 
+                  [value]="formatPercentage(release.physical_royalty_percentage)"
+                  [disabled]="!editingRoyalties"
+                  (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
+                <div class="input-group-addon">% of {{ release.physical_royalty_type }}</div>
+              </div>
+            </td>
+            <td class="text-right" data-label="Remaining Recuperable Expense">
+              <div class="d-flex align-items-center justify-content-end">
+                <span>{{ formatCurrency(release.recuperable_expense_balance) }}</span>
+                <button 
+                  type="button"
+                  class="btn btn-link btn-sm btn-icon-only ml-2"
+                  (click)="openExpensesDialog(release.id, release.title)"
+                  title="View expenses">
+                  <i class="fa fa-eye"></i>
+                </button>
+                <button 
+                  *ngIf="isAdmin" 
+                  type="button"
+                  class="btn btn-link btn-sm btn-icon-only ml-1"
+                  (click)="openAddExpenseDialog(release.id, release.title)"
+                  title="Add recuperable expense">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </div>
+            </td>
+            <td style="text-align: right;" data-label="Total earnings">{{ formatCurrency(release.total_earnings) }}</td>
+            <td style="text-align: right;" data-label="Total royalties earned">{{ formatCurrency(release.total_royalties) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="releases.length === 0" class="text-center py-5">
+      <i class="fa fa-music fa-3x text-muted mb-3"></i>
+      <p class="text-muted">No releases yet.</p>
+    </div>
+  </div>
+
+  <div *ngIf="isAdmin" class="card-footer text-right save-panel">
+    <div *ngIf="!editingRoyalties" class="edit-button">
+      <button type="button" class="btn btn-primary btn-block" (click)="toggleEditRoyalties()">
+        Edit Royalties
+      </button> 
+    </div>
+    <div *ngIf="editingRoyalties" class="save-changes-buttons">
+      <button 
+        type="button" 
+        class="btn btn-primary btn-block" 
+        (click)="updateRoyalties()"
+        [disabled]="updatingRoyalties">
+        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        {{ updatingRoyalties ? 'Saving...' : 'Save Changes' }}
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary btn-block mt-2" 
+        (click)="toggleEditRoyalties()"
+        [disabled]="updatingRoyalties">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Release Expenses Dialog -->
+<app-release-expenses-dialog
+  [releaseId]="selectedReleaseId"
+  [releaseTitle]="selectedReleaseTitle"
+  [isVisible]="expensesDialogVisible"
+  (close)="closeExpensesDialog()">
+</app-release-expenses-dialog>
+
+<!-- Add Expense Dialog -->
+<app-add-expense-dialog
+  [releaseId]="addExpenseReleaseId"
+  [releaseTitle]="addExpenseReleaseTitle"
+  [isVisible]="addExpenseDialogVisible"
+  [isSubmitting]="isSubmittingExpense"
+  (close)="closeAddExpenseDialog()"
+  (submit)="onSubmitExpense($event)">
+</app-add-expense-dialog>

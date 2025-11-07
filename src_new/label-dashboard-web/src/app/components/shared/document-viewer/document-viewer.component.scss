@@ -1,0 +1,210 @@
+.document-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.document-viewer-modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1200px;
+  height: 90%;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.document-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+}
+
+.document-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.document-info i {
+  font-size: 24px;
+}
+
+.document-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.document-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.document-filename {
+  font-size: 12px;
+  margin: 0;
+}
+
+.document-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.document-viewer-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.document-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pdf-viewer,
+.text-viewer {
+  width: 100%;
+  height: 100%;
+}
+
+.pdf-viewer iframe,
+.text-viewer iframe {
+  border: none;
+}
+
+.image-viewer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.document-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.office-viewer,
+.unsupported-viewer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.office-preview,
+.unsupported-preview {
+  text-align: center;
+  padding: 40px;
+}
+
+.office-preview h4,
+.unsupported-preview h4 {
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.office-preview p,
+.unsupported-preview p {
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .document-viewer-overlay {
+    padding: 10px;
+  }
+  
+  .document-viewer-modal {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+  }
+  
+  .document-viewer-header {
+    padding: 12px 15px;
+    border-radius: 0;
+  }
+  
+  .document-title {
+    font-size: 14px;
+  }
+  
+  .document-filename {
+    font-size: 11px;
+  }
+  
+  .document-actions .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .office-preview,
+  .unsupported-preview {
+    padding: 20px;
+  }
+  
+  .office-preview i,
+  .unsupported-preview i {
+    font-size: 3rem !important;
+  }
+}
+
+/* Animation */
+.document-viewer-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.document-viewer-modal {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

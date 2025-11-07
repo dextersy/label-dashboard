@@ -1,0 +1,102 @@
+<div class="modal fade" [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document" (click)="onBackdropClick($event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-paper-plane me-2"></i>
+          Send Test Email
+        </h5>
+        <button type="button" class="btn-close" (click)="hide()" [disabled]="loading"></button>
+      </div>
+      
+      <div class="modal-body">
+        <form>
+          <!-- Email Addresses -->
+          <div class="mb-3">
+            <label for="testEmails" class="form-label fw-bold">
+              Test Email Addresses <span class="text-danger">*</span>
+            </label>
+            <textarea
+              id="testEmails"
+              class="form-control"
+              rows="4"
+              [(ngModel)]="emailsText"
+              name="testEmails"
+              placeholder="Enter email addresses separated by commas, spaces, or new lines:&#10;john@example.com, mary@example.com&#10;or one per line:&#10;john@example.com&#10;mary@example.com"
+              [disabled]="loading"
+              required></textarea>
+            
+            <div class="form-text">
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">
+                  Separate multiple emails with commas, spaces, or new lines
+                </span>
+                <span class="badge bg-secondary" *ngIf="getEmailCount() > 0">
+                  {{ getEmailCount() }} valid email{{ getEmailCount() !== 1 ? 's' : '' }}
+                </span>
+              </div>
+              
+              <div *ngIf="getInvalidEmails().length > 0" class="text-danger mt-1">
+                <small>
+                  <i class="fas fa-exclamation-triangle me-1"></i>
+                  Invalid emails: {{ getInvalidEmails().join(', ') }}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subject Preview -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Subject</label>
+            <div class="form-control bg-light" style="min-height: 40px;">
+              {{ currentSubject || 'No subject specified' }}
+            </div>
+            <small class="form-text text-muted">
+              This will use the same subject from your email form
+            </small>
+          </div>
+
+          <!-- Message Preview -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Message Preview</label>
+            <div class="form-control bg-light message-preview" [innerHTML]="currentMessage || '<span class=&quot;text-muted&quot;>No message specified</span>'">
+            </div>
+            <small class="form-text text-muted">
+              This will use the same message content from your email form
+            </small>
+          </div>
+
+          <!-- Warning Note -->
+          <div class="alert alert-warning">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Note:</strong> Test emails will be sent with the same content as your main email, 
+            but only to the addresses specified above. The actual recipients won't receive these test emails.
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="hide()"
+          [disabled]="loading">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="onSendTest()"
+          [disabled]="!isFormValid() || loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          <i *ngIf="!loading" class="fas fa-paper-plane me-2"></i>
+          <span *ngIf="loading">Sending Test...</span>
+          <span *ngIf="!loading">Send Test to {{ getEmailCount() }} Recipients</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade" [class.show]="show" *ngIf="show"></div>

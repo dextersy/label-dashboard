@@ -1,0 +1,58 @@
+<div class="venue-autocomplete-container" [class.has-error]="hasError">
+  <!-- Input field - only show if no Google Place is selected -->
+  <div class="input-group" *ngIf="!selectedVenue || !selectedVenue.google_place_id">
+    <input
+      #searchInput
+      type="text"
+      class="form-control"
+      [placeholder]="placeholder"
+      [value]="displayValue"
+      (input)="onInputChange($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      [class.is-invalid]="hasError"
+      autocomplete="off"
+    />
+  </div>
+  
+  <!-- Loading indicator -->
+  <div class="text-muted small mt-1" *ngIf="isLoading">
+    <i class="fa fa-spinner fa-spin me-1"></i>Searching places...
+  </div>
+  
+  <!-- Manual entry option -->
+  <div class="form-text small mt-1" *ngIf="showDropdown && predictions.length === 0 && searchQuery.length > 2 && !isLoading">
+    No places found. You can enter the venue name manually.
+  </div>
+  
+  <!-- Selected venue info with clear button -->
+  <div class="selected-venue-info mt-2" *ngIf="selectedVenue && selectedVenue.google_place_id">
+    <div class="card card-body bg-light small">
+      <div class="d-flex align-items-start">
+        <i class="fa fa-map-marker-alt text-primary me-2 mt-1"></i>
+        <div class="flex-grow-1">
+          <div class="fw-semibold">{{ selectedVenue.venue }}</div>
+          <div class="text-muted" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</div>
+          <div class="mt-1" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
+            <span class="badge bg-secondary me-1" *ngIf="selectedVenue.venue_phone">
+              <i class="fa fa-phone me-1"></i>{{ selectedVenue.venue_phone }}
+            </span>
+            <a [href]="selectedVenue.venue_website" target="_blank" 
+               class="badge bg-primary text-decoration-none" 
+               *ngIf="selectedVenue.venue_website">
+              <i class="fa fa-globe me-1"></i>Website
+            </a>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-link text-muted ms-2 p-1"
+          (click)="clearSelection()"
+          title="Clear selection"
+          style="background: transparent; border: none;">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

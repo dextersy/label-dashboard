@@ -1,0 +1,58 @@
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  
+  .breadcrumb-item {
+    font-weight: 300;
+    
+    + .breadcrumb-item::before {
+      content: "›";
+      color: #6c757d;
+      font-weight: bold;
+      margin: 0 8px;
+    }
+    
+    &.active {
+      color: #495057;
+    }
+  }
+  
+  .breadcrumb-link {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+    
+    i {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+  }
+  
+  .breadcrumb-current {
+    color: #6c757d;
+    font-weight: 400;
+    
+    i {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .breadcrumb {
+    font-size: 11px;
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+      margin: 0 6px;
+    }
+  }
+}

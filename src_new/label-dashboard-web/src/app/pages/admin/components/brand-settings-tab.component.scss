@@ -1,0 +1,44 @@
+/* Brand Settings Tab Styles */
+
+.password-toggle-btn {
+  height: calc(1.5em + 0.75rem + 2px); /* Match Bootstrap form-control height */
+  min-width: 45px;
+  padding: 0.375rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 0;
+  
+  &:hover {
+    z-index: 2;
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    z-index: 3;
+  }
+  
+  i {
+    font-size: 14px;
+  }
+}
+
+/* Ensure input group has consistent height */
+.input-group {
+  .form-control {
+    height: calc(1.5em + 0.75rem + 2px);
+  }
+}
+
+/* Color picker input group styling */
+.color-picker {
+  cursor: pointer;
+}
+
+.color-preview {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}

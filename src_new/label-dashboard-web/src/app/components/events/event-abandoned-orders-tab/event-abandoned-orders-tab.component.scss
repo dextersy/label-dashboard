@@ -1,0 +1,110 @@
+.abandoned-orders-tab {
+  .form-label.required::after {
+    content: ' *';
+    color: #dc3545;
+  }
+
+  .card-header {
+    background-color: #f8f9fa;
+    
+    .btn-toolbar {
+      margin: 0;
+      
+      .btn-group {
+        .btn {
+          font-size: 0.875rem;
+        }
+      }
+    }
+  }
+
+  .table {
+    th {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      font-weight: 600;
+    }
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .text-warning {
+    color: #856404 !important;
+  }
+
+  .text-info {
+    color: #0c5460 !important;
+  }
+
+  .alert-info {
+    border-color: #b8daff;
+    background-color: #d1ecf1;
+    color: #0c5460;
+    
+    small {
+      margin: 0;
+    }
+  }
+
+  .sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    
+    .card-footer {
+      background-color: #f8f9fa !important;
+      border-top: 2px solid #dee2e6;
+      margin: 0;
+      padding: 1rem 2rem;
+      min-height: 60px;
+      
+      .summary-stat {
+        font-size: 1rem;
+        font-weight: 500;
+        
+        .fa, .fas, .far {
+          font-size: 0.9em;
+        }
+      }
+      
+      .fs-5 {
+        font-size: 1.2rem !important;
+      }
+      
+      .gap-4 {
+        gap: 1.5rem !important;
+        
+        @media (max-width: 767.98px) {
+          gap: 0.75rem !important;
+        }
+      }
+    }
+  }
+
+  .input-group-text {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+  }
+
+  // Custom button styling
+  .btn-outline-success {
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      border-color: #6c757d;
+      color: #6c757d;
+      background-color: transparent;
+      
+      &:hover {
+        border-color: #6c757d;
+        color: #6c757d;
+        background-color: transparent;
+      }
+    }
+  }
+}

@@ -1,0 +1,136 @@
+<div class="abandoned-orders-tab">
+  <!-- Paginated Table -->
+  <app-paginated-table
+    title=""
+    [data]="orders"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="tableColumns"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [sortInfo]="currentSort"
+    [showActionsColumn]="isAdmin"
+    [enableBulkOperations]="isAdmin"
+    [bulkOperationsLoading]="bulkOperationsLoading"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)"
+    (sortChange)="onSortChange($event)"
+    (selectedItemsChange)="onSelectedItemsChange($event)">
+    
+    <!-- Custom buttons template -->
+    <ng-template #customButtons>
+      <span 
+        class="d-inline-block flex-shrink-0" 
+        [title]="getCustomTicketButtonTooltip()"
+        *ngIf="isAdmin">
+        <button 
+          type="button" 
+          class="btn btn-sm btn-outline-primary" 
+          (click)="onCreateCustomTicket()"
+          [disabled]="loading || !canCreateCustomTickets()">
+          <i class="fa fa-plus me-1"></i>
+          Custom Ticket
+        </button>
+      </span>
+      <button 
+        type="button" 
+        class="btn btn-sm btn-outline-primary flex-shrink-0"
+        (click)="onDownloadCSV()"
+        [disabled]="loading">
+        <i class="fa fa-download me-1"></i>
+        Download CSV
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary flex-shrink-0"
+        (click)="onVerifyPayments()"
+        [disabled]="loading || isEventPast()">
+        <i class="fa fa-check me-1"></i>
+        Verify Payments
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary flex-shrink-0"
+        (click)="onSendPaymentReminders()"
+        [disabled]="loading || isEventPast()">
+        <i class="fa fa-bell me-1"></i>
+        Send Reminders
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-primary flex-shrink-0"
+        (click)="onCancelAllUnpaid()"
+        [disabled]="loading || isEventPast()">
+        <i class="fa fa-times me-1"></i>
+        Cancel All Unpaid
+      </button>
+    </ng-template>
+    
+    <!-- Bulk operations template -->
+    <ng-template #bulkOperationsContent let-selectedOrders let-disabled="disabled">
+      <div class="bulk-operations d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="onBulkSendTickets(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkSendTickets(selectedOrders)" title="Send tickets for selected orders (only Payment Confirmed)">
+          <i class="fa fa-paper-plane me-1"></i>
+          Send {{ getBulkSendCount(selectedOrders) }} Ticket(s)
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" (click)="onBulkMarkAsPaid(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkMarkAsPaid(selectedOrders)" title="Mark selected orders as paid (only New)">
+          <i class="fa fa-check me-1"></i>
+          Mark {{ getBulkMarkPaidCount(selectedOrders) }} as Paid
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" (click)="onBulkCancel(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkCancel(selectedOrders)" title="Cancel selected orders (only New)">
+          <i class="fa fa-times me-1"></i>
+          Cancel {{ getBulkCancelCount(selectedOrders) }}
+        </button>
+      </div>
+    </ng-template>
+    
+    <!-- Actions template -->
+    <ng-template #actionsContent let-order let-disabled="disabled">
+      <div class="btn-group" role="group">
+        <button
+          class="btn btn-sm btn-outline-primary"
+          (click)="onSendTicket(order.id)"
+          [disabled]="disabled || isEventPast()"
+          *ngIf="order.status === 'Payment Confirmed'"
+          title="Send ticket">
+          Send Ticket
+        </button>
+        <button
+          class="btn btn-sm btn-outline-success"
+          (click)="onMarkAsPaid(order.id)"
+          [disabled]="disabled || isEventPast()"
+          *ngIf="order.status === 'New'"
+          title="Mark as paid">
+          Mark Paid
+        </button>
+        <button
+          class="btn btn-sm btn-outline-danger"
+          (click)="onCancelOrder(order.id)"
+          [disabled]="disabled || isEventPast()"
+          *ngIf="order.status === 'New'"
+          title="Cancel order">
+          Cancel
+        </button>
+      </div>
+    </ng-template>
+  </app-paginated-table>
+
+  <div class="sticky-bottom" *ngIf="orders.length > 0">
+    <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
+      <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+        <strong class="text-primary fs-5">Totals</strong>
+        
+        <span class="summary-stat text-warning" title="Number of pending tickets">
+          <i class="far fa-dot-circle me-2"></i>
+          {{ getTotalPendingOrders() }} pending tickets
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Past Message -->
+  <div class="alert alert-warning mt-4" *ngIf="isAdmin && isEventPast()">
+    <i class="far fa-clock me-2"></i>
+    <strong>Event Past:</strong> This event has already occurred. Custom ticket creation is disabled.
+  </div>
+</div>

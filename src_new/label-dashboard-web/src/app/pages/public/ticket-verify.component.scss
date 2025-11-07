@@ -1,0 +1,320 @@
+/* Match PHP verification page styling exactly */
+
+/* BASIC - from style.css */
+body {
+  background-color: #fafafa;
+  font-family: "Poppins", sans-serif;
+  height: 100vh;
+}
+
+/* STRUCTURE - from style.css */
+.wrapper {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column; 
+  justify-content: center;
+  width: 100%;
+  padding: 0px;
+}
+
+/* Bootstrap card styling (keep original Bootstrap 4 classes) */
+.card {
+  box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
+}
+
+/* Loading overlay - exact match */
+.loading {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 10px solid #656565;
+  border-top-color: orange;
+  animation: loading 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-overlay {
+  opacity: 0.5; 
+  background: #FFF; 
+  width: 100%;
+  height: 100%; 
+  z-index: 10;
+  top: 0; 
+  left: 0; 
+  position: fixed; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* QR Code button styling - exact match from PHP */
+#btnScanQR {
+  font-size: 24px;
+  border-top: 1px solid #ced4da;
+  border-right: 1px solid #ced4da;
+  border-bottom: 1px solid #ced4da;
+  border-left: 0px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-color: #ced4da;
+  background-color: white;
+  padding: 13px 10px 12px 10px;
+}
+
+#ticketCode {
+  border-right: 0px;
+}
+
+/* Error input styling */
+input.error {
+  border: 1px solid red !important;
+}
+
+.field-error-message {
+  font-size: 14px;
+  color: #ff0000;
+}
+
+/* Camera container - full screen overlay */
+#cameraContainer {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: black;
+  z-index: 999;
+}
+
+/* Disabled button styling */
+.btn:disabled {
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+}
+
+/* Auto-hide alerts - matches PHP setTimeout */
+#alert-box {
+  animation: fadeOut 0.5s ease-out 2.5s forwards;
+}
+
+/* Prominent entries display for gate staff */
+.entries-display {
+  margin: 20px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  border: 3px solid #28a745;
+}
+
+.entries-label {
+  font-size: 16px;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.entries-number {
+  font-size: 120px;
+  font-weight: 900;
+  color: #28a745;
+  line-height: 1;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  margin: 10px 0;
+}
+
+.entries-subtitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+.entries-ticket-type {
+  font-size: 16px;
+  color: #007bff;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
+/* Improve contrast for blue background text */
+.bg-primary {
+  background-color: #007bff !important;
+}
+
+.text-light {
+  color: #f8f9fa !important;
+  font-weight: 300;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    display: none;
+  }
+}
+
+/* Mobile responsiveness - from PHP CSS */
+@media only screen and (max-device-width: 400px) {
+  .wrapper {
+    height: auto !important;
+    padding: 0px;
+  }
+  
+  .wrapper, .header-section, .container {
+    padding: 0px;
+  }
+  
+  /* Adjust entries display for mobile */
+  .entries-number {
+    font-size: 80px !important;
+  }
+  
+  .entries-display {
+    padding: 15px !important;
+  }
+}
+
+/* Additional mobile responsiveness */
+@media only screen and (max-width: 600px) {
+  .entries-number {
+    font-size: 100px;
+  }
+  
+  .entries-display {
+    margin: 15px 0;
+    padding: 15px;
+  }
+  
+  .entries-label {
+    font-size: 14px;
+  }
+  
+  .entries-subtitle {
+    font-size: 16px;
+  }
+}
+
+/* Remove Angular Material styling conflicts */
+::ng-deep {
+  /* Ensure Bootstrap classes take precedence */
+  .form-control {
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+  }
+  
+  .form-control-lg {
+    padding: 0.5rem 1rem !important;
+    font-size: 1.25rem !important;
+    line-height: 1.5 !important;
+    border-radius: 0.3rem !important;
+  }
+  
+  .btn {
+    border-radius: 0.25rem !important;
+  }
+  
+  .btn-lg {
+    padding: 0.5rem 1rem !important;
+    font-size: 1.25rem !important;
+    line-height: 1.5 !important;
+    border-radius: 0.3rem !important;
+  }
+  
+  .btn-primary {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+  }
+  
+  .btn-block {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  .alert {
+    padding: 0.75rem 1.25rem !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid transparent !important;
+    border-radius: 0.25rem !important;
+  }
+  
+  .alert-success {
+    color: #155724 !important;
+    background-color: #d4edda !important;
+    border-color: #c3e6cb !important;
+  }
+  
+  .alert-danger {
+    color: #721c24 !important;
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+  }
+  
+  .alert-info {
+    color: #0c5460 !important;
+    background-color: #d1ecf1 !important;
+    border-color: #bee5eb !important;
+  }
+  
+  .text-center {
+    text-align: center !important;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem !important;
+  }
+  
+  .input-group {
+    position: relative !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+  
+  .input-group > .form-control {
+    position: relative !important;
+    flex: 1 1 auto !important;
+    width: 1% !important;
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .input-group-addon {
+    padding: 0.375rem 0.75rem !important;
+    margin-bottom: 0 !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #495057 !important;
+    text-align: center !important;
+    background-color: #e9ecef !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+  
+  .input-group-addon:last-child {
+    border-bottom-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+  }
+}

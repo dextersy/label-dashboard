@@ -1,0 +1,20 @@
+RewriteEngine On
+
+# Route all requests to the maintenance page during deployment
+# Exclude the maintenance.html file itself to prevent redirect loops
+# Pass the original URL as a query parameter
+RewriteCond %{REQUEST_URI} !^/maintenance\.html$
+RewriteCond %{QUERY_STRING} !^originalUrl=
+RewriteRule ^(.*)$ /maintenance.html?originalUrl=$1&%{QUERY_STRING} [L,R=302]
+
+# Set proper MIME types for common files
+<IfModule mod_mime.c>
+    AddType text/html .html
+    AddType text/css .css
+    AddType application/javascript .js
+</IfModule>
+
+# Enable compression if available
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript
+</IfModule>

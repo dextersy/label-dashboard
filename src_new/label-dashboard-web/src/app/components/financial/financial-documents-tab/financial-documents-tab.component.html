@@ -1,0 +1,114 @@
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h5>Financial Documents</h5>
+      </div>
+      <div class="card-body">
+        <div *ngIf="documents.length === 0" class="text-center py-5">
+          <i class="far fa-file fa-3x text-muted mb-3"></i>
+          <p class="text-muted">No documents uploaded yet.</p>
+        </div>
+        
+        <div *ngIf="documents.length > 0" class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 50px;"></th>
+                <th>Document Title</th>
+                <th>Upload Date</th>
+                <th style="width: 120px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let document of documents" 
+                  (dblclick)="openDocument(document)" 
+                  style="cursor: pointer;"
+                  title="Double-click to view document">
+                <td class="text-center" data-label="">
+                  <i [class]="'fa ' + getFileIcon(document.filename)"></i>
+                </td>
+                <td data-label="Document Title">
+                  <strong>{{ document.title }}</strong><br>
+                  <small class="text-muted">{{ document.filename }}</small>
+                </td>
+                <td data-label="Upload Date">{{ formatDate(document.upload_date) }}</td>
+                <td data-label="Actions">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-primary btn-sm"
+                      (click)="openDocument(document)"
+                      title="View document">
+                      <i class="fa fa-eye"></i>
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-danger btn-sm"
+                      (click)="deleteDocument(document.id)"
+                      title="Delete document">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5>Upload Document</h5>
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="onUploadDocument()">
+          <div class="form-group mb-3">
+            <label for="documentTitle">Document Title</label>
+            <input 
+              type="text" 
+              id="documentTitle"
+              class="form-control" 
+              [(ngModel)]="documentUploadForm.title" 
+              name="documentTitle" 
+              placeholder="Enter document title"
+              required>
+          </div>
+          
+          <div class="form-group mb-3">
+            <label for="documentFile">Choose File</label>
+            <input 
+              type="file" 
+              id="documentFile"
+              class="form-control" 
+              (change)="onFileSelected($event)"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
+              required>
+            <small class="form-text text-muted">
+              Supported formats: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF (Max 25MB)
+            </small>
+          </div>
+          
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-sm w-100"
+            [disabled]="uploadingDocument || !documentUploadForm.title || !documentUploadForm.file">
+            <span *ngIf="uploadingDocument" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <i *ngIf="!uploadingDocument" class="fa fa-upload me-1"></i>
+            {{ uploadingDocument ? 'Uploading...' : 'Upload Document' }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Document Viewer Lightbox -->
+<app-document-viewer
+  [document]="selectedDocument"
+  [isVisible]="showDocumentViewer"
+  (close)="closeDocumentViewer()">
+</app-document-viewer>

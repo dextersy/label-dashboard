@@ -1,0 +1,61 @@
+.event-referrals-tab {
+  .form-label.required::after {
+    content: ' *';
+    color: #dc3545;
+  }
+
+  .alert-primary {
+    border-color: #b8daff;
+    background-color: #d1ecf1;
+    color: #0c5460;
+    
+    h6 {
+      color: #0c5460;
+      margin-bottom: 8px;
+    }
+  }
+
+  .table {
+    th {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      font-weight: 600;
+    }
+
+    code {
+      background-color: #f8f9fa;
+      color: #e83e8c;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875em;
+    }
+
+    tfoot th {
+      border-top: 2px solid #dee2e6;
+      font-weight: 700;
+    }
+  }
+
+  .alert-light {
+    background-color: #fefefe;
+    border-color: #fdfdfe;
+    
+    small {
+      margin: 0;
+    }
+  }
+
+  .alert-info {
+    border-color: #b8daff;
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .list-unstyled {
+    li {
+      .fa-check-circle {
+        width: 16px;
+      }
+    }
+  }
+}

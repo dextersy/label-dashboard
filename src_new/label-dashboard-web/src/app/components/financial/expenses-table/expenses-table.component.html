@@ -1,0 +1,23 @@
+<div *ngIf="expenses.length > 0" class="table-responsive">
+  <table class="table table-financial">
+    <thead *ngIf="showHeader">
+      <tr>
+        <th class="mobile-narrow">Date</th>
+        <th class="mobile-text">Description</th>
+        <th class="mobile-narrow mobile-number text-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let expense of expenses">
+        <td class="mobile-narrow" data-label="Date">{{ formatDate(expense.date_recorded) }}</td>
+        <td class="mobile-text" data-label="Description">{{ expense.expense_description }}</td>
+        <td class="mobile-narrow mobile-number text-right" data-label="Amount">{{ formatCurrency(expense.expense_amount) }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="expenses.length === 0" class="text-center py-5">
+  <i class="fa-solid fa-file-lines fa-3x text-muted mb-3"></i>
+  <p class="text-muted">No expenses recorded.</p>
+</div>

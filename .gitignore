@@ -10,3 +10,15 @@ src/webhook.log
 phpinfo.php
 src/tmp/qrcode/*
 scripts/inc/config.php
+src_new/label-dashboard-api/.env
+src_new/label-dashboard-api/dist
+**/node_modules
+**/.env.prod
+**/dist-prod
+
+# Deployment configuration (contains sensitive server details)
+deploy.config
+src_new/label-dashboard-api/webhook.log
+src_new/label-dashboard-api/logs
+SECURITY_ASSESSMENT_REPORT.md
+.claude/settings.local.json

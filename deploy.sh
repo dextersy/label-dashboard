@@ -1,1 +1,475 @@
-cp -rf src/* ~/htdocs
+#!/bin/bash
+
+# Label Dashboard Deployment Script
+# This script builds and deploys both the API and Web applications to production
+# Incorporates environment variable handling from deploy-example.sh
+
+set -e  # Exit on any error
+
+# Parse command line arguments
+SKIP_BUILD=false
+for arg in "$@"; do
+    case $arg in
+        --skip-build)
+            SKIP_BUILD=true
+            shift
+            ;;
+        *)
+            # Unknown option
+            echo "Usage: $0 [--skip-build]"
+            echo "  --skip-build    Skip the build step for both API and Web applications"
+            exit 1
+            ;;
+    esac
+done
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/deploy.config"
+
+# Check if config file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    print_error "Configuration file not found: $CONFIG_FILE"
+    print_error "Please copy deploy.config.template to deploy.config and update with your server details"
+    print_error "Example: cp deploy.config.template deploy.config"
+    exit 1
+fi
+
+# Load configuration
+print_status "Loading configuration from $CONFIG_FILE"
+source "$CONFIG_FILE"
+
+# Validate required configuration
+if [ -z "$SFTP_KEY_PATH" ] || [ -z "$PRODUCTION_HOST" ] || [ -z "$SFTP_USER" ] || [ -z "$BACKEND_DEPLOY_PATH" ] || [ -z "$FRONTEND_DEPLOY_PATH" ]; then
+    print_error "Missing required configuration. Please check deploy.config"
+    exit 1
+fi
+
+# Check if SSH key exists
+if [ ! -f "$SFTP_KEY_PATH" ]; then
+    print_error "SSH key file not found: $SFTP_KEY_PATH"
+    exit 1
+fi
+
+# Set default values
+API_BUILD_COMMAND=${API_BUILD_COMMAND:-"npm run build"}
+WEB_BUILD_COMMAND=${WEB_BUILD_COMMAND:-"npm run build"}
+PM2_APP_NAME=${PM2_APP_NAME:-"app"}
+
+print_status "Starting deployment process..."
+print_status "Target server: $SFTP_USER@$PRODUCTION_HOST"
+print_status "Backend path: $BACKEND_DEPLOY_PATH"
+print_status "Frontend path: $FRONTEND_DEPLOY_PATH"
+
+if [ "$SKIP_BUILD" = true ]; then
+    print_warning "🚀 Fast deployment mode: Build step will be skipped"
+    print_warning "Ensure applications are already built before proceeding"
+fi
+
+# Function to check if directory exists
+check_directory() {
+    local dir=$1
+    local name=$2
+    
+    if [ ! -d "$dir" ]; then
+        print_error "$name directory not found: $dir"
+        exit 1
+    fi
+}
+
+# Check project directories
+check_directory "$SCRIPT_DIR/src_new/label-dashboard-api" "API"
+check_directory "$SCRIPT_DIR/src_new/label-dashboard-web" "Web"
+
+# Build API
+if [ "$SKIP_BUILD" = true ]; then
+    print_warning "Skipping API build (--skip-build flag specified)"
+    cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+    if [ ! -d "dist" ]; then
+        print_error "API dist directory not found and build was skipped. Please build first or run without --skip-build"
+        exit 1
+    fi
+else
+    print_status "Building API..."
+    cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+
+    if [ ! -f "package.json" ]; then
+        print_error "package.json not found in API directory"
+        exit 1
+    fi
+
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing API dependencies..."
+        npm install
+    fi
+
+    # Build API
+    print_status "Running API build command: $API_BUILD_COMMAND"
+    eval "$API_BUILD_COMMAND"
+
+    if [ ! -d "dist" ]; then
+        print_error "API build failed - dist directory not found"
+        exit 1
+    fi
+
+    print_success "API build completed"
+fi
+
+# Build Web
+if [ "$SKIP_BUILD" = true ]; then
+    print_warning "Skipping Web build (--skip-build flag specified)"
+    cd "$SCRIPT_DIR/src_new/label-dashboard-web"
+    if [ ! -d "dist-prod" ]; then
+        print_error "Web dist-prod directory not found and build was skipped. Please build first or run without --skip-build"
+        exit 1
+    fi
+else
+    print_status "Building Web application..."
+    cd "$SCRIPT_DIR/src_new/label-dashboard-web"
+
+    if [ ! -f "package.json" ]; then
+        print_error "package.json not found in Web directory"
+        exit 1
+    fi
+
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing Web dependencies..."
+        npm install
+    fi
+
+    # Handle environment configuration for Web application
+    print_status "Configuring production environment..."
+
+    # Check if Google Maps API key is set in environment or config
+    GOOGLE_MAPS_API_KEY_SOURCE=""
+    if [ ! -z "$GOOGLE_MAPS_API_KEY" ]; then
+        GOOGLE_MAPS_API_KEY_SOURCE="environment variable"
+    elif [ ! -z "$GOOGLE_MAPS_API_KEY_CONFIG" ]; then
+        GOOGLE_MAPS_API_KEY="$GOOGLE_MAPS_API_KEY_CONFIG"
+        GOOGLE_MAPS_API_KEY_SOURCE="deploy.config"
+    fi
+
+    if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+        print_warning "Google Maps API key not found in environment variables or deploy.config"
+        print_warning "The application will build but Google Places autocomplete may not work"
+        print_warning "To fix this, set GOOGLE_MAPS_API_KEY environment variable or add GOOGLE_MAPS_API_KEY_CONFIG to deploy.config"
+    else
+        print_status "Using Google Maps API key from $GOOGLE_MAPS_API_KEY_SOURCE"
+        
+        # Create production environment file from template
+        if [ -f "src/environments/environment.prod.example.ts" ]; then
+            print_status "Creating production environment file from template..."
+            cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
+            
+            # Replace the placeholder with actual API key
+            sed -i "s/YOUR_PRODUCTION_GOOGLE_PLACES_API_KEY_HERE/$GOOGLE_MAPS_API_KEY/g" src/environments/environment.prod.ts
+            print_success "Environment file configured with API key"
+        else
+            print_warning "environment.prod.example.ts not found, skipping API key replacement"
+        fi
+    fi
+
+    # Build Web
+    print_status "Running Web build command: $WEB_BUILD_COMMAND"
+    eval "$WEB_BUILD_COMMAND"
+
+    # Clean up temporary environment file
+    if [ -f "src/environments/environment.prod.ts" ]; then
+        print_status "Cleaning up temporary environment file..."
+        rm -f src/environments/environment.prod.ts
+    fi
+
+    if [ ! -d "dist-prod" ]; then
+        print_error "Web build failed - dist directory not found"
+        exit 1
+    fi
+
+    print_success "Web build completed"
+fi
+
+# Function to clean directory on server
+clean_directory() {
+    local target_dir=$1
+    local description=$2
+    
+    print_status "Cleaning $description directory: $target_dir"
+    
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+        if [ -d "$target_dir" ]; then
+            echo "Removing all files from $target_dir..."
+            rm -rf $target_dir/*
+        else
+            echo "Creating directory $target_dir..."
+            mkdir -p $target_dir
+        fi
+EOF
+    
+    if [ $? -eq 0 ]; then
+        print_success "$description directory cleaned successfully"
+    else
+        print_error "Failed to clean $description directory"
+        exit 1
+    fi
+}
+
+# Function to upload files via SFTP
+upload_files() {
+    local source_dir=$1
+    local target_dir=$2
+    local description=$3
+    
+    print_status "Uploading $description to $target_dir..."
+    
+    # Create SFTP batch file
+    local sftp_batch=$(mktemp)
+    
+    # SFTP commands
+    cat > "$sftp_batch" << EOF
+-mkdir $target_dir
+put -r $source_dir/* $target_dir/
+quit
+EOF
+    
+    # Execute SFTP upload
+    if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+        print_success "$description uploaded successfully"
+    else
+        print_error "Failed to upload $description"
+        rm -f "$sftp_batch"
+        exit 1
+    fi
+    
+    # Clean up
+    rm -f "$sftp_batch"
+}
+
+# Clean server directories before upload
+clean_directory "$BACKEND_DEPLOY_PATH" "API server"
+clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
+
+# Deploy maintenance page and .htaccess after cleaning
+print_status "Deploying maintenance mode..."
+cd "$SCRIPT_DIR"
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put maintenance.html $FRONTEND_DEPLOY_PATH/maintenance.html
+put maintenance.htaccess $FRONTEND_DEPLOY_PATH/.htaccess
+quit
+EOF
+
+if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+    print_success "Maintenance mode activated"
+else
+    print_warning "Failed to activate maintenance mode (non-critical)"
+fi
+rm -f "$sftp_batch"
+
+# Phase 1: Upload migration setup with config.js for Sequelize CLI
+cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+print_status "Phase 1: Uploading migration setup..."
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put package.json $BACKEND_DEPLOY_PATH/
+put package-lock.json $BACKEND_DEPLOY_PATH/
+put .sequelizerc $BACKEND_DEPLOY_PATH/
+-mkdir $BACKEND_DEPLOY_PATH/config
+put -r config/* $BACKEND_DEPLOY_PATH/config/
+-mkdir $BACKEND_DEPLOY_PATH/migrations
+put -r migrations/* $BACKEND_DEPLOY_PATH/migrations/
+quit
+EOF
+
+sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
+rm -f "$sftp_batch"
+
+# Phase 2: Run database migrations on server using Sequelize CLI
+print_status "Phase 2: Running database migrations on server..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    echo "Navigating to API directory for migrations..."
+    cd $BACKEND_DEPLOY_PATH
+    
+    echo "Installing dependencies for migrations..."
+    npm install --production
+    
+    echo "Running database migrations..."
+    NODE_ENV=production npx sequelize-cli db:migrate
+EOF
+
+if [ $? -ne 0 ]; then
+    print_error "Database migrations failed"
+    exit 1
+fi
+
+print_success "Database migrations completed successfully"
+
+# Phase 3: Remove config.js to avoid conflicts with compiled API
+print_status "Phase 3: Removing config.js to avoid conflicts..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    echo "Removing config.js to prevent conflicts with compiled API..."
+    rm -f $BACKEND_DEPLOY_PATH/config/config.js
+    rm -f $BACKEND_DEPLOY_PATH/config/database.js
+EOF
+
+print_success "Conflicting config files removed"
+
+# Phase 4: Upload compiled API service files
+print_status "Phase 4: Uploading compiled API service files..."
+upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
+
+# Phase 5: Restart PM2 application with compiled API
+print_status "Phase 5: Restarting PM2 application: $PM2_APP_NAME"
+
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    echo "Navigating to API directory..."
+    cd $BACKEND_DEPLOY_PATH
+    
+    echo "Restarting PM2 application: $PM2_APP_NAME"
+    pm2 restart $PM2_APP_NAME || pm2 start app.js --name $PM2_APP_NAME
+    
+    echo "Checking PM2 status..."
+    pm2 status
+EOF
+
+if [ $? -ne 0 ]; then
+    print_error "Failed to restart PM2 application in Phase 5"
+    exit 1
+fi
+
+print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted successfully"
+
+# Phase 6: Upload Web files (keeping maintenance.html)
+print_status "Phase 6: Deploying frontend application..."
+cd "$SCRIPT_DIR/src_new/label-dashboard-web"
+
+# Upload all files except .htaccess first (preserve maintenance.html)
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put -r dist-prod/browser/* $FRONTEND_DEPLOY_PATH/
+quit
+EOF
+
+if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+    print_success "Production files uploaded"
+else
+    print_error "Failed to upload production files"
+    exit 1
+fi
+rm -f "$sftp_batch"
+
+# Replace .htaccess last to switch from maintenance mode to production
+print_status "Switching from maintenance mode to production..."
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put dist-prod/browser/.htaccess $FRONTEND_DEPLOY_PATH/
+quit
+EOF
+
+sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
+rm -f "$sftp_batch"
+print_success "✅ Phase 6: Frontend application deployed and live!"
+
+# Phase 7: Final deployment tasks
+print_status "Phase 7: Completing final deployment tasks..."
+
+# Upload tmp folder if it exists
+if [ -d "tmp" ]; then
+    print_status "Uploading tmp folder..."
+    sftp_batch=$(mktemp)
+    cat > "$sftp_batch" << EOF
+-mkdir $FRONTEND_DEPLOY_PATH/tmp
+put -r tmp/* $FRONTEND_DEPLOY_PATH/tmp/
+quit
+EOF
+    
+    if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+        print_success "tmp folder uploaded successfully"
+    else
+        print_warning "Failed to upload tmp folder (non-critical)"
+    fi
+    rm -f "$sftp_batch"
+else
+    print_status "No tmp folder found, skipping upload"
+fi
+
+# Clean up maintenance.html after successful deployment
+print_status "Cleaning up maintenance files..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+    rm -f $FRONTEND_DEPLOY_PATH/maintenance.html
+EOF
+print_success "Maintenance files cleaned up"
+
+# Upload SSL domain management script
+print_status "Uploading add-ssl-domain.sh script..."
+cd "$SCRIPT_DIR"
+sftp_batch=$(mktemp)
+cat > "$sftp_batch" << EOF
+put scripts/add-ssl-domain.sh /home/bitnami/
+quit
+EOF
+
+sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
+if [ $? -eq 0 ]; then
+    print_success "add-ssl-domain.sh script uploaded successfully"
+
+    # Make the script executable and fix line endings
+    print_status "Setting executable permissions and fixing line endings..."
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << 'EOSSH'
+        chmod +x /home/bitnami/add-ssl-domain.sh
+        # Fix line endings if dos2unix is available
+        if command -v dos2unix &> /dev/null; then
+            dos2unix /home/bitnami/add-ssl-domain.sh 2>/dev/null || true
+        elif command -v sed &> /dev/null; then
+            sed -i 's/\r$//' /home/bitnami/add-ssl-domain.sh
+        fi
+        echo "Script permissions set and line endings fixed"
+EOSSH
+
+    if [ $? -eq 0 ]; then
+        print_success "Script configured successfully"
+    else
+        print_warning "Failed to set script permissions (non-critical)"
+    fi
+else
+    print_warning "Failed to upload add-ssl-domain.sh script (non-critical)"
+fi
+rm -f "$sftp_batch"
+
+print_success "✅ Phase 7: Final deployment tasks completed"
+
+# Final deployment summary
+print_success "🎉 7-Phase Deployment completed successfully!"
+print_success "✅ Phase 1: Migration setup uploaded"
+print_success "✅ Phase 2: Database migrations executed"
+print_success "✅ Phase 3: Config conflicts resolved"
+print_success "✅ Phase 4: API service deployed to $BACKEND_DEPLOY_PATH"
+print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted"
+print_success "✅ Phase 6: Frontend application deployed to $FRONTEND_DEPLOY_PATH"
+print_success "✅ Phase 7: Final deployment tasks completed"
+
+print_status "Deployment finished!"

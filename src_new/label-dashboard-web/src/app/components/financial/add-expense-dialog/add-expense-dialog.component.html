@@ -1,0 +1,87 @@
+<!-- Modal backdrop -->
+<div *ngIf="isVisible" class="modal-backdrop fade show" (click)="onClose()"></div>
+
+<!-- Modal -->
+<div *ngIf="isVisible" class="modal fade show" style="display: block" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">
+          <i class="fa fa-plus-circle mr-2"></i>
+          Add Recuperable Expense
+        </h4>
+        <button type="button" class="close" (click)="onClose()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <strong>Release:</strong> {{ releaseTitle }}
+        </div>
+        
+        <form (ngSubmit)="onSubmit()" #expenseFormRef="ngForm">
+          <div class="form-group">
+            <label for="expenseDate">Recorded Date <span class="text-danger">*</span></label>
+            <input 
+              type="date" 
+              class="form-control" 
+              id="expenseDate" 
+              [(ngModel)]="expenseForm.date_recorded"
+              name="date_recorded"
+              required>
+          </div>
+          
+          <div class="form-group">
+            <label for="expenseDescription">Description <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="expenseDescription" 
+              [(ngModel)]="expenseForm.expense_description"
+              name="expense_description" 
+              placeholder="Enter expense description"
+              required
+              maxlength="255">
+            <small class="form-text text-muted">Describe what this expense is for</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="expenseAmount">Amount <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text">₱</span>
+              </div>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="expenseAmount" 
+                [(ngModel)]="expenseForm.expense_amount"
+                name="expense_amount" 
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="onClose()"
+          [disabled]="isSubmitting">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="onSubmit()"
+          [disabled]="!isFormValid || isSubmitting">
+          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm mr-1" role="status"></span>
+          {{ isSubmitting ? 'Adding...' : 'Add Expense' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

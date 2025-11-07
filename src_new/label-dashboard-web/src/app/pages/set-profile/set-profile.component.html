@@ -1,0 +1,157 @@
+<!-- Profile page matching reset-password design -->
+<div class="login-wrapper fadeInDown" *ngIf="!loading">
+  <!-- Form Header with Brand Logo -->
+  <div id="formHeader" [style.background-color]="brandColor">
+    <div class="fadeIn first">
+      <img [src]="brandLogo" id="icon" [alt]="brandName" />
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <div id="formContent" *ngIf="profile">
+    <!-- Header Text -->
+    <h3><strong>Complete Your Profile 🏁</strong></h3>
+    <small class="text-muted">Please update your profile information so we can set up your account correctly.</small>
+
+    <!-- Error Alert -->
+    <div class="alert alert-danger" role="alert" *ngIf="message && messageType === 'error'">
+      {{ message }}
+    </div>
+    
+    <!-- Success Alert -->
+    <div class="alert alert-success" role="alert" *ngIf="message && messageType === 'success'">
+      {{ message }}
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #profileForm="ngForm" novalidate>
+      <!-- Username field (only if can be changed) -->
+      <div *ngIf="canChangeUsername">
+        <input 
+          type="text" 
+          id="username" 
+          class="fadeIn second"
+          name="username" 
+          placeholder="Username"
+          [(ngModel)]="profile.username"
+          (input)="onUsernameChange($any($event.target).value)"
+          [disabled]="saving"
+          required
+        >
+        <!-- Username validation messages -->
+        <div class="field-error-message" *ngIf="errors.username">
+          {{ errors.username }}
+        </div>
+        <div class="field-error-message" *ngIf="usernameInvalid && !errors.username">
+          Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed.
+        </div>
+        <div class="field-error-message" *ngIf="usernameExists && !errors.username">
+          Sorry, this username is already in use. Please choose another.
+        </div>
+        <div class="field-success-message" *ngIf="usernameValid && !errors.username">
+          Username can no longer be changed once saved.
+        </div>
+      </div>
+
+      <!-- Username display (if cannot be changed) -->
+      <div *ngIf="!canChangeUsername">
+        <input 
+          type="text" 
+          id="username-readonly" 
+          class="fadeIn second"
+          [value]="profile.username"
+          readonly
+          placeholder="Username"
+        >
+        <div class="field-info-message">
+          Username cannot be changed once set.
+        </div>
+      </div>
+
+      <!-- First Name -->
+      <input 
+        type="text" 
+        id="firstName" 
+        class="fadeIn third"
+        name="firstName" 
+        placeholder="First Name"
+        [(ngModel)]="profile.first_name"
+        [disabled]="saving"
+        required
+      >
+      <div class="field-error-message" *ngIf="errors.first_name">
+        {{ errors.first_name }}
+      </div>
+
+      <!-- Last Name -->
+      <input 
+        type="text" 
+        id="lastName" 
+        class="fadeIn fourth"
+        name="lastName" 
+        placeholder="Last Name"
+        [(ngModel)]="profile.last_name"
+        [disabled]="saving"
+        required
+      >
+      <div class="field-error-message" *ngIf="errors.last_name">
+        {{ errors.last_name }}
+      </div>
+
+      <!-- Password -->
+      <input 
+        type="password" 
+        id="password" 
+        class="fadeIn fifth"
+        name="password" 
+        placeholder="Password"
+        [(ngModel)]="password"
+        [disabled]="saving"
+        required
+      >
+      <div class="field-error-message" *ngIf="errors.password">
+        {{ errors.password }}
+      </div>
+
+      <!-- Confirm Password -->
+      <input 
+        type="password" 
+        id="confirmPassword" 
+        class="fadeIn sixth"
+        name="confirmPassword" 
+        placeholder="Confirm Password"
+        [(ngModel)]="confirmPassword"
+        [disabled]="saving"
+        required
+      >
+      <div class="field-error-message" *ngIf="errors.confirmPassword">
+        {{ errors.confirmPassword }}
+      </div>
+      <div class="field-error-message" *ngIf="errors.passwordMismatch">
+        {{ errors.passwordMismatch }}
+      </div>
+
+      <!-- Submit button -->
+      <input 
+        type="submit" 
+        class="fadeIn seventh btn btn-primary btn-block" 
+        style="margin-top:20px;" 
+        [value]="saving ? 'Saving Changes...' : 'Save Changes'"
+        [disabled]="saving"
+      >
+    </form>
+  </div>
+
+  <!-- Form Footer -->
+  <div id="formFooter">
+    <a class="" (click)="goToLogin()">Back to login</a>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div class="loading-container" *ngIf="loading">
+  <div class="loading-dots">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>

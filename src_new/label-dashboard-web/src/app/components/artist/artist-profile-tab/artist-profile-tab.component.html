@@ -1,0 +1,191 @@
+<div class="artist-profile-tab">
+  <form id="profileForm" (ngSubmit)="saveProfile()" #profileForm="ngForm" *ngIf="artist">
+    
+    <!-- Top Row: Basic Information and Profile Photo side by side -->
+    <div class="row">
+      <!-- Basic Information Section -->
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5>Basic Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="artistName">Artist Name <span class="text-danger">*</span></label>
+              <input type="text" 
+                     class="form-control" 
+                     id="artistName"
+                     name="artistName"
+                     [(ngModel)]="editingProfile.name"
+                     required
+                     placeholder="Enter artist name">
+            </div>
+            
+            <div class="form-group">
+              <label for="bandMembers">Band Members</label>
+              <textarea class="form-control" 
+                        id="bandMembers"
+                        name="bandMembers"
+                        rows="3"
+                        [(ngModel)]="editingProfile.band_members"
+                        placeholder="Enter band members, one per line or separated by commas"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="bio">Biography</label>
+              <quill-editor 
+                id="bio"
+                name="bio"
+                [(ngModel)]="editingProfile.bio"
+                [modules]="quillConfig"
+                placeholder="Tell us about the artist..."
+                [style.height.px]="120">
+              </quill-editor>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Photo Section -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h5>Profile Photo</h5>
+          </div>
+          <div class="card-body">
+            <div class="current-photo">
+              <img [src]="getProfilePhotoUrl()" 
+                   class="img-thumbnail current-photo-img" 
+                   [alt]="editingProfile.name">
+            </div>
+            
+            <div class="form-group">
+              <label for="profilePhoto" class="file-upload-label">Upload New Photo</label>
+              <input type="file" 
+                     class="form-control-file" 
+                     id="profilePhoto"
+                     name="profilePhoto"
+                     (change)="onFileSelected($event)"
+                     accept="image/jpeg,image/jpg,image/png,image/gif">
+              <small class="form-text">
+                Accepted formats: JPEG, PNG, GIF. Maximum size: 5MB.
+              </small>
+            </div>
+            
+            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2">
+              <div class="progress-bar" 
+                   role="progressbar" 
+                   [style.width.%]="uploadProgress">
+                {{ uploadProgress }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Links Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5>Social Media & Links</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="website">Website</label>
+              <input type="url" 
+                     class="form-control" 
+                     id="website"
+                     name="website"
+                     [(ngModel)]="editingProfile.website_page_url"
+                     placeholder="https://www.example.com">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="facebook">Facebook</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="facebook"
+                     name="facebook"
+                     [(ngModel)]="editingProfile.facebook_handle"
+                     placeholder="Facebook username">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="instagram">Instagram</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="instagram"
+                     name="instagram"
+                     [(ngModel)]="editingProfile.instagram_handle"
+                     placeholder="Instagram username">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="twitter">Twitter</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="twitter"
+                     name="twitter"
+                     [(ngModel)]="editingProfile.twitter_handle"
+                     placeholder="Twitter username">
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="tiktok">TikTok</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="tiktok"
+                     name="tiktok"
+                     [(ngModel)]="editingProfile.tiktok_handle"
+                     placeholder="TikTok username">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="youtube">YouTube Channel</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="youtube"
+                     name="youtube"
+                     [(ngModel)]="editingProfile.youtube_channel"
+                     placeholder="YouTube channel URL or name">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<!-- Sticky Bottom Panel - Outside all containers -->
+<div class="sticky-bottom-panel" *ngIf="artist">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="panel-content">
+          <button type="button" 
+                  class="btn btn-primary btn-lg" 
+                  [disabled]="saving || !isFormValid()"
+                  (click)="saveProfile()">
+            <div class="loading-spinner" *ngIf="saving"></div>
+            <i class="fa fa-save" *ngIf="!saving"></i>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

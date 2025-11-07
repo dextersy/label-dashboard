@@ -1,0 +1,158 @@
+<div class="child-brands-tab">
+  <!-- Date Range Filter -->
+  <app-date-range-filter
+    [loading]="loading"
+    [compact]="false"
+    (dateRangeChange)="onDateRangeChange($event)"
+    (refresh)="onRefreshData()">
+  </app-date-range-filter>
+
+  <app-paginated-table
+    title="Sublabels"
+    [data]="sortedChildBrands"
+    [columns]="tableColumns"
+    [loading]="loading"
+    [pagination]="pagination"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [showActionsColumn]="true"
+    [sortInfo]="sortInfo"
+    (sortChange)="onSortChange($event)"
+    (breakdownButtonClick)="onBreakdownButtonClick($event)">
+    
+    <ng-template #customButtons>
+      <button *ngIf="isSuperAdmin()" 
+              class="btn btn-primary btn-sm"
+              (click)="openAddSublabelModal()"
+              [disabled]="loading || isAnyPollingInProgress()"
+              [title]="getAddSublabelButtonTooltip()">
+        <span *ngIf="!isAnyPollingInProgress()">
+          <i class="fas fa-plus"></i> Add
+        </span>
+        <span *ngIf="sublabelCreationState.inProgress">
+          <i class="fas fa-spinner fa-spin"></i> Creating {{ sublabelCreationState.pendingName }}...
+        </span>
+        <span *ngIf="domainVerificationState.inProgress && !sublabelCreationState.inProgress">
+          <i class="fas fa-spinner fa-spin"></i> Verifying {{ domainVerificationState.pendingDomain }}...
+        </span>
+      </button>
+    </ng-template>
+
+    <ng-template #actionsContent let-item>
+      <div class="d-flex gap-2 flex-wrap">
+        <button
+          class="btn btn-sm btn-outline-primary btn-icon-only d-none d-md-inline-block"
+          [disabled]="!hasDomains(item)"
+          (click)="openSublabelDashboard(item)"
+          [title]="hasDomains(item) ? 'Go to ' + item.brand_name + ' dashboard' : 'No domain configured'">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-primary btn-icon-only d-none d-md-inline-block"
+          (click)="openFeeSettingsModal(item)"
+          title="Configure fee settings for {{ item.brand_name }}">
+          <i class="fas fa-dollar-sign"></i>
+        </button>
+        
+        <span 
+          class="d-inline-block d-none d-md-inline-block"
+          [title]="item.balance > 0 ? 'Pay out balance to ' + item.brand_name : 'No balance to pay out'">
+          <button
+            class="btn btn-sm btn-outline-primary btn-icon-only"
+            (click)="openPayoutModal(item)"
+            [disabled]="item.balance <= 0">
+            <i class="fas fa-money-bill-wave"></i>
+          </button>
+        </span>
+        
+        <button
+          class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2"
+          [disabled]="!hasDomains(item)"
+          (click)="openSublabelDashboard(item)">
+          <i class="fas fa-external-link-alt me-2"></i>
+          Go to Dashboard
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2"
+          (click)="openFeeSettingsModal(item)">
+          <i class="fas fa-dollar-sign me-2"></i>
+          Fee Settings
+        </button>
+        
+        <button
+          class="btn btn-sm btn-outline-primary d-md-none d-block w-100"
+          (click)="openPayoutModal(item)"
+          [disabled]="item.balance <= 0">
+          <i class="fas fa-money-bill-wave me-2"></i>
+          Pay Out (₱{{ item.balance | number:'1.2-2' }})
+        </button>
+      </div>
+    </ng-template>
+  </app-paginated-table>
+
+  <!-- Summary Cards -->
+  <div class="row mt-4" *ngIf="!loading && childBrands.length > 0">
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-primary">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Balance</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-info">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Music Earnings</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-warning">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Event Earnings</p>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Add Sublabel Modal -->
+  <app-add-sublabel-modal
+    [show]="showAddSublabelModal"
+    (close)="closeAddSublabelModal()"
+    (submit)="onCreateSublabel($event)">
+  </app-add-sublabel-modal>
+
+  <!-- Fee Settings Modal -->
+  <app-fee-settings-modal
+    [show]="showFeeSettingsModal"
+    [brandId]="selectedSublabelForFees?.brand_id || null"
+    [sublabelName]="selectedSublabelForFees?.brand_name || ''"
+    (close)="closeFeeSettingsModal()"
+    (saved)="onFeeSettingsSaved($event)">
+  </app-fee-settings-modal>
+
+  <!-- Payout Modal -->
+  <app-sublabel-payout-modal
+    #payoutModal
+    [show]="showPayoutModal"
+    [sublabel]="selectedSublabelForPayout"
+    (close)="closePayoutModal()"
+    (submit)="onPayoutSubmit($event)">
+  </app-sublabel-payout-modal>
+
+  <!-- Earnings Breakdown Modal -->
+  <app-earnings-breakdown-modal
+    [show]="showEarningsBreakdownModal"
+    [childBrand]="selectedSublabelForBreakdown"
+    [breakdownType]="earningsBreakdownType"
+    (close)="closeEarningsBreakdownModal()">
+  </app-earnings-breakdown-modal>
+</div>

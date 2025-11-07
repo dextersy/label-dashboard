@@ -1,0 +1,265 @@
+<div class="card">
+  <div class="card-header">
+    <h6 class="mb-0">
+      <i class="fas fa-ticket-alt me-2"></i>Ticket Types
+    </h6>
+  </div>
+  <div class="card-body">
+    <div *ngIf="loading" class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    
+    <div *ngIf="!loading">
+      <!-- Existing Ticket Types -->
+      <div *ngFor="let ticketType of ticketTypes; let i = index" class="ticket-type-item mb-2">
+        <div class="row align-items-start">
+          <div class="col-md-3">
+            <div class="mb-2">
+              <label class="form-label small">Name</label>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [(ngModel)]="ticketType.name"
+                [disabled]="!isAdmin"
+                placeholder="Enter ticket type name">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <label class="form-label small">Price (₱)</label>
+              <input
+                type="number"
+                class="form-control form-control-sm"
+                [(ngModel)]="ticketType.price"
+                [disabled]="!isAdmin"
+                min="0"
+                step="0.01"
+                placeholder="0.00">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <label class="form-label small">Max Tickets</label>
+              <input
+                type="number"
+                class="form-control form-control-sm"
+                [(ngModel)]="ticketType.max_tickets"
+                [disabled]="!isAdmin"
+                min="0"
+                placeholder="0 = unlimited">
+              <small class="form-text text-muted">0 = unlimited</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <!-- Date Range Caption -->
+            <div *ngIf="isAdmin && getDateRangeCaption(ticketType) && !ticketType.showDateRange" class="mb-2">
+              <small class="text-muted">
+                {{ getDateRangeCaption(ticketType) }}
+              </small>
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+              <button
+                *ngIf="isAdmin && !ticketType.showDateRange"
+                type="button"
+                class="btn btn-link p-1 text-info d-md-inline d-flex align-items-center"
+                (click)="toggleDateRange(ticketType)"
+                title="Schedule"
+                style="text-decoration: none; font-size: 14px;">
+                <i class="fas fa-calendar-alt"></i>
+                <span class="d-md-none ms-1">{{ getScheduleAvailabilityText(ticketType) }}</span>
+              </button>
+              <button
+                *ngIf="isAdmin && ticketType.id"
+                type="button"
+                class="btn btn-link p-1 text-primary d-md-inline d-flex align-items-center"
+                [disabled]="updating"
+                (click)="updateTicketType(ticketType)"
+                title="Save changes"
+                style="text-decoration: none; font-size: 14px;">
+                <i class="fas fa-save"></i>
+                <span class="d-md-none ms-1">Save</span>
+              </button>
+              <button
+                *ngIf="isAdmin && ticketTypes.length > 1"
+                type="button"
+                class="btn btn-link p-1 text-danger d-md-inline d-flex align-items-center"
+                [disabled]="deleting"
+                (click)="deleteTicketType(ticketType, i)"
+                title="Delete ticket type"
+                style="text-decoration: none; font-size: 14px;">
+                <i class="fas fa-trash"></i>
+                <span class="d-md-none ms-1">Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Date Range Section -->
+        <div *ngIf="isAdmin && ticketType.showDateRange" class="mt-3 border-top pt-3">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-2">
+                <label class="form-label small">Start Date</label>
+                <div class="input-group">
+                  <input
+                    type="datetime-local"
+                    class="form-control form-control-sm"
+                    [(ngModel)]="ticketType.start_date"
+                    [disabled]="!isAdmin">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    [disabled]="!isAdmin || !ticketType.start_date"
+                    (click)="clearStartDate(ticketType)"
+                    title="Clear start date">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-2">
+                <label class="form-label small">End Date</label>
+                <div class="input-group">
+                  <input
+                    type="datetime-local"
+                    class="form-control form-control-sm"
+                    [(ngModel)]="ticketType.end_date"
+                    [disabled]="!isAdmin">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    [disabled]="!isAdmin || !ticketType.end_date"
+                    (click)="clearEndDate(ticketType)"
+                    title="Clear end date">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <small class="form-text text-muted">
+            <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
+          </small>
+        </div>
+      </div>
+
+      <!-- Add New Ticket Type -->
+      <div *ngIf="isAdmin" class="border-top pt-3 mt-3">
+        <h6>Add New Ticket Type</h6>
+        <div class="row align-items-start">
+          <div class="col-md-3">
+            <div class="mb-2">
+              <label class="form-label small">Name</label>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [(ngModel)]="newTicketType.name"
+                placeholder="Enter ticket type name">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <label class="form-label small">Price (₱)</label>
+              <input
+                type="number"
+                class="form-control form-control-sm"
+                [(ngModel)]="newTicketType.price"
+                min="0"
+                step="0.01"
+                placeholder="0.00">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <label class="form-label small">Max Tickets</label>
+              <input
+                type="number"
+                class="form-control form-control-sm"
+                [(ngModel)]="newTicketType.max_tickets"
+                min="0"
+                placeholder="0 = unlimited">
+              <small class="form-text text-muted">0 = unlimited</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="d-flex gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-link p-1 text-info d-md-inline d-flex align-items-center"
+                *ngIf="!newTicketType.showDateRange"
+                (click)="toggleNewTicketDateRange()"
+                title="Schedule"
+                style="text-decoration: none; font-size: 14px;">
+                <i class="fas fa-calendar-alt"></i>
+                <span class="d-md-none ms-1">{{ getNewTicketScheduleText() }}</span>
+              </button>
+              <button
+                type="button"
+                class="btn btn-success btn-sm"
+                [disabled]="creating || !newTicketType.name.trim() || newTicketType.price < 0"
+                (click)="createTicketType()">
+                <i class="fas fa-plus me-1"></i>Add Type
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible Date Range Section for New Ticket -->
+        <div *ngIf="newTicketType.showDateRange" class="mt-3 border-top pt-3">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-2">
+                <label class="form-label small">Start Date</label>
+                <div class="input-group">
+                  <input
+                    type="datetime-local"
+                    class="form-control form-control-sm"
+                    [(ngModel)]="newTicketType.start_date">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    [disabled]="!newTicketType.start_date"
+                    (click)="clearNewTicketStartDate()"
+                    title="Clear start date">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-2">
+                <label class="form-label small">End Date</label>
+                <div class="input-group">
+                  <input
+                    type="datetime-local"
+                    class="form-control form-control-sm"
+                    [(ngModel)]="newTicketType.end_date">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    [disabled]="!newTicketType.end_date"
+                    (click)="clearNewTicketEndDate()"
+                    title="Clear end date">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <small class="form-text text-muted">
+            <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
+          </small>
+        </div>
+      </div>
+
+      <!-- Warning about at least one ticket type -->
+      <div *ngIf="isAdmin && ticketTypes.length < 1" class="alert alert-warning mt-3">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Important:</strong> Events must have at least one ticket type.
+      </div>
+    </div>
+  </div>
+</div>

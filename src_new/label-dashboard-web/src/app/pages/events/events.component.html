@@ -1,0 +1,119 @@
+<div class="events-page">
+  <div class="container-fluid">
+    
+    <!-- Event Selection -->
+    <app-event-selection
+      [events]="availableEvents"
+      [selectedEvent]="selectedEvent"
+      [loading]="loading"
+      [isAdmin]="isAdmin"
+      (eventSelected)="onEventSelection($event)"
+      (createEventRequested)="openCreateEventModal()">
+    </app-event-selection>
+    
+    <!-- Page Header -->
+    <div class="page-header mb-3">
+      <app-breadcrumb></app-breadcrumb>
+    </div>
+
+    <!-- Past Event Warning -->
+    <div class="alert alert-warning mb-3" *ngIf="selectedEvent && isEventPast(selectedEvent)">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong>This event occurred in the past.</strong> You can no longer make changes to tickets and referrals.
+    </div>
+
+    <!-- Main Content -->
+    <div class="row" *ngIf="selectedEvent">
+      <div class="col-12">
+        
+        <!-- Tab Content (no navigation needed, handled by sidebar) -->
+        <!-- Event Details Tab -->
+        <div *ngIf="activeTab === 'details'">
+          <app-event-details-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (eventUpdated)="onEventUpdated($event)"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-details-tab>
+        </div>
+        
+        <!-- Event Tickets Tab -->
+        <div *ngIf="activeTab === 'tickets'">
+          <app-event-tickets-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-tickets-tab>
+        </div>
+        
+        <!-- Abandoned Orders Tab -->
+        <div *ngIf="activeTab === 'abandoned'">
+          <app-event-abandoned-orders-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-abandoned-orders-tab>
+        </div>
+        
+        <!-- Referrals Tab -->
+        <div *ngIf="activeTab === 'referrals'">
+          <app-event-referrals-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-referrals-tab>
+        </div>
+        
+        <!-- Email Tab -->
+        <div *ngIf="activeTab === 'email'">
+          <app-event-email-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-event-email-tab>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Loading Events -->
+    <div class="row" *ngIf="loading && availableEvents.length === 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <div class="loading-dots">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Events Available -->
+    <div class="row" *ngIf="!loading && availableEvents.length === 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <i class="fas fa-ticket-alt fa-4x text-muted mb-3"></i>
+            <h4>No Events Available</h4>
+            <p class="text-muted">No events found for your label. Create a new event to get started.</p>
+            <button class="btn btn-primary" *ngIf="isAdmin" (click)="openCreateEventModal()">
+              <i class="fa fa-plus me-1"></i>Create New Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Create Event Modal -->
+    <app-create-event-modal
+      [isOpen]="showCreateModal"
+      [loading]="creatingEvent"
+      (eventCreate)="onCreateEvent($event)"
+      (modalClose)="closeCreateEventModal()">
+    </app-create-event-modal>
+    
+  </div>
+</div>

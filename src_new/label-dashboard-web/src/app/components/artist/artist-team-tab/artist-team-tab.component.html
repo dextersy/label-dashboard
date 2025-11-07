@@ -1,0 +1,117 @@
+<div class="artist-team-tab">
+  
+  <!-- Team Members Section -->
+  <div class="card team-section">
+    <div class="card-header">
+      <h5>Team Members</h5>
+    </div>
+    <div class="card-body">
+      
+      <div *ngIf="loading" class="text-center loading">
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+      
+      <div *ngIf="!loading && teamMembers.length === 0" class="text-center text-muted empty-team">
+        <i class="fa fa-users fa-3x"></i>
+        <p>No team members found</p>
+        <small>Invite someone to join your team!</small>
+      </div>
+      
+      <div *ngIf="!loading && teamMembers.length > 0" class="team-table-container">
+        <div class="table-responsive">
+          <table class="table team-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Invited Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let member of teamMembers">
+                <td class="name-cell" data-label="Name">
+                  <div class="member-name">{{ member.name }}</div>
+                </td>
+                <td class="email-cell" data-label="Email">
+                  <div class="member-email">{{ member.email }}</div>
+                </td>
+                <td class="status-cell" data-label="Status">
+                  <span class="badge" [class]="getStatusClass(member.status)">
+                    <i class="fa" [class]="getStatusIcon(member.status)"></i>
+                    {{ member.status }}
+                  </span>
+                </td>
+                <td class="date-cell" data-label="Invited Date">
+                  {{ formatDate(member.invited_date) }}
+                </td>
+                <td class="actions-cell" data-label="Actions">
+                  <div class="btn-group">
+                    <button *ngIf="member.status === 'Pending'" 
+                            class="btn btn-sm btn-secondary" 
+                            (click)="resendInvite(member)"
+                            title="Resend Invitation">
+                      <i class="fa fa-paper-plane"></i>
+                      Resend
+                    </button>
+                    <button class="btn btn-sm btn-danger" 
+                            (click)="removeMember(member)"
+                            title="Remove Member">
+                      <i class="fa fa-trash"></i>
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- Invite New Member Section -->
+  <div class="card invite-section mt-4">
+    <div class="card-header">
+      <h5>Invite Team Member</h5>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
+        <div class="row align-items-end">
+          <div class="col-md-8">
+            <div class="form-group mb-0">
+              <label for="inviteEmail" class="form-label">Email Address</label>
+              <input type="email" 
+                     class="form-control" 
+                     id="inviteEmail"
+                     name="inviteEmail"
+                     [(ngModel)]="inviteEmail"
+                     required
+                     email
+                     placeholder="Enter team member's email address"
+                     [disabled]="sendingInvite">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group mb-0">
+              <button type="submit" 
+                      class="btn btn-primary w-100"
+                      [disabled]="!inviteForm.form.valid || sendingInvite">
+                <div class="loading-spinner" *ngIf="sendingInvite"></div>
+                <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>
+                {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+</div>

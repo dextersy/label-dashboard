@@ -1,0 +1,111 @@
+<!-- Modal Backdrop -->
+<div class="modal-backdrop" *ngIf="show" (click)="onBackdropClick($event)">
+  <!-- Modal Dialog -->
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-plus me-2"></i>
+          Add New Sublabel
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="onClose()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="form-container">
+        <form #addSublabelForm="ngForm" (ngSubmit)="false" novalidate>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            This will create a new sublabel under your current brand, along with a domain and admin user account.
+          </div>
+
+          <!-- Brand Name Field -->
+          <div class="mb-3">
+            <label for="brandName" class="form-label">
+              Sublabel Name <span class="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              id="brandName"
+              name="brandName"
+              [(ngModel)]="formData.brandName"
+              #brandName="ngModel"
+              required
+              maxlength="255"
+              placeholder="Enter the sublabel name">
+            
+            <div class="invalid-feedback" *ngIf="brandName.invalid && (brandName.dirty || brandName.touched)">
+              <div *ngIf="brandName.errors?.['required']">Sublabel name is required.</div>
+            </div>
+          </div>
+
+          <!-- Subdomain Name Field -->
+          <div class="mb-3">
+            <label for="subdomainName" class="form-label">
+              Subdomain <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                id="subdomainName"
+                name="subdomainName"
+                [(ngModel)]="formData.subdomainName"
+                #subdomainName="ngModel"
+                required
+                maxlength="63"
+                placeholder="sublabel"
+                pattern="^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$">
+              <span class="input-group-text">.melt-records.com</span>
+            </div>
+            
+            <div class="form-text text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              This will create a subdomain under melt-records.com. You can add custom domains later in brand settings.
+            </div>
+            
+            <div class="invalid-feedback" *ngIf="subdomainName.invalid && (subdomainName.dirty || subdomainName.touched)">
+              <div *ngIf="subdomainName.errors?.['required']">Subdomain is required.</div>
+              <div *ngIf="subdomainName.errors?.['pattern']">Please enter a valid subdomain (letters, numbers, and hyphens only).</div>
+            </div>
+          </div>
+
+          <!-- What will be created -->
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="fas fa-list me-2"></i>
+                What will be created:
+              </h6>
+              <ul class="mb-0 small">
+                <li>New brand record as a sublabel of your current brand</li>
+                <li>Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.melt-records.com" with automatic DNS configuration</li>
+                <li>Admin user account for the new sublabel (copy of your account)</li>
+                <li>Default settings: Gray brand color, 10% payment processing fee</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="submitting">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="onSubmit(addSublabelForm)"
+            [disabled]="!addSublabelForm.form.valid || submitting">
+            <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <i *ngIf="!submitting" class="fas fa-plus me-2"></i>
+            {{ submitting ? 'Creating...' : 'Create Sublabel' }}
+          </button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

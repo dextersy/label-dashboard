@@ -1,0 +1,13 @@
+.message-preview {
+  max-height: 200px;
+  overflow-y: auto;
+  min-height: 60px;
+}
+
+.modal {
+  z-index: 1055;
+}
+
+.modal-backdrop {
+  z-index: 1050;
+}

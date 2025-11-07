@@ -1,0 +1,82 @@
+<div class="wrapper h-100 d-flex justify-content-center">
+  <div class="card mb-3">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="card-body text-center py-5">
+      <div class="loading-dots">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <!-- Error State (404) -->
+    <div *ngIf="isError" class="card-body text-center py-5">
+      <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+      <h1 class="text-danger">404 - Event Not Found</h1>
+      <p class="text-muted">The event you're looking for could not be found.</p>
+      <button class="btn btn-primary" (click)="goToEventPage()">
+        <i class="fas fa-arrow-left me-1"></i>Go Back
+      </button>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="isSuccess && event">
+      <!-- Event Poster -->
+      <img *ngIf="event.poster_url" 
+           [src]="event.poster_url" 
+           class="card-img-top" 
+           style="max-height:250px;object-fit:cover;"
+           [alt]="event.title + ' poster'">
+
+      <!-- Success Header -->
+      <div class="card-header text-center text-white bg-success">
+        <h1><strong>Thank you! 🙌</strong></h1>
+      </div>
+
+      <!-- Success Message -->
+      <div class="card-body text-center">
+        
+        <p><i class="fas fa-check-circle" style="font-size:150px;color:green;"></i></p>
+        <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
+
+        <!-- Instructions -->
+      <div class="alert alert-info field-description text-dark text-left">
+        <i class="fas fa-info-circle"></i> <b>How to use your ticket</b><br>
+        <ul>
+          <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
+          <li>You may be required to provide identification to verify your ticket at the gate.</li>
+          <li>Please do not share your ticket with anyone else to avoid unauthorized use of the ticket at the event.</li>
+          <li>Didn't receive your ticket? Don't worry, we're ready to help. Send us an email at 
+            <a (click)="contactSupport()" style="cursor: pointer;">
+              support&#64;melt-records.com
+            </a> or use the chat widget on the lower right.
+          </li>
+        </ul>
+        </div>
+      </div>
+
+      <!-- Share Buttons Footer -->
+      <div class="card-footer bg-light text-center text-dark" *ngIf="event.buy_shortlink">
+        <p>
+          <strong>Tell your friends about this show!</strong>
+        </p>
+        <div class="row">
+          <div class="col-6 text-right">
+            <a (click)="shareOnFacebook()" 
+               class="btn btn-primary" 
+               style="background-color: #1877f2; border-color: #1877f2;">
+              <i class="fab fa-facebook"></i> Share
+            </a>
+          </div>
+          <div class="col-6 text-left">
+            <a (click)="shareOnTwitter()" 
+               class="btn btn-info" 
+               style="background-color: #1da1f2; border-color: #1da1f2;">
+              <i class="fab fa-twitter"></i> Tweet
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

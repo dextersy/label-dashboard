@@ -1,0 +1,34 @@
+<!-- Loading screen while brand settings load -->
+<div *ngIf="!brandLoaded" class="brand-loading">
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
+</div>
+
+<!-- Main app content - only shown after brand is loaded -->
+<div *ngIf="brandLoaded">
+  <div *ngIf="isStandalonePage(); else layoutTemplate">
+    <router-outlet />
+  </div>
+
+  <ng-template #layoutTemplate>
+    <div class="wrapper" [class.sidebar-open]="sidebarOpen">
+      <app-sidebar></app-sidebar>
+      
+      <div class="main-panel">
+        <app-navbar></app-navbar>
+        
+        <div class="content">
+          <router-outlet />
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Global notification - always visible at app level -->
+  <app-global-notification></app-global-notification>
+
+  <!-- Connection overlay - shown when connection is lost -->
+  <app-connection-overlay></app-connection-overlay>
+</div>

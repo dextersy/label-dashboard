@@ -1,0 +1,166 @@
+<!-- Balance Summary Table -->
+<div class="row">
+  <div class="col-md-12">
+    <app-paginated-table 
+      title="Balance Summary"
+      [data]="artistBalances"
+      [pagination]="balancePagination"
+      [loading]="balanceLoading"
+      [columns]="balanceColumns"
+      [showSortableHeaders]="false"
+      [sortInfo]="balanceSort"
+      (pageChange)="onBalancePageChange($event)"
+      (filtersChange)="onBalanceFiltersChange($event)">
+      
+      <ng-template #tableContent let-data>
+        <div class="table-responsive" *ngIf="!balanceLoading">
+          <table class="table table-financial">
+            <thead>
+              <tr>
+                <th class="mobile-text" style="cursor: pointer;" (click)="onBalanceSortToggle('name')">
+                  Artist 
+                  <i class="fas fa-sort ms-1" 
+                     [class.fa-sort-up]="balanceSort?.column === 'name' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'"></i>
+                </th>
+                <th class="mobile-hide tablet-hide text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
+                  Total royalties (₱)
+                  <i class="fas fa-sort ms-1"
+                     [class.fa-sort-up]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'desc'"></i>
+                </th>
+                <th class="mobile-hide tablet-hide text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
+                  Total payments (₱)
+                  <i class="fas fa-sort ms-1"
+                     [class.fa-sort-up]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'desc'"></i>
+                </th>
+                <th class="mobile-narrow mobile-number text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('total_balance')">
+                  Balance (₱)
+                  <i class="fas fa-sort ms-1"
+                     [class.fa-sort-up]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'desc'"></i>
+                </th>
+                <th class="mobile-hide text-end" style="cursor: pointer;" (click)="onBalanceSortToggle('payout_point')">
+                  Payout point (₱)
+                  <i class="fas fa-sort ms-1"
+                     [class.fa-sort-up]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'desc'"></i>
+                </th>
+                <th class="mobile-narrow text-center">Due</th>
+                <th class="mobile-hide text-center">Paused</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let artist of data" [class.table-success]="artist.ready_for_payment">
+                <td class="mobile-text" data-label="Artist">{{ artist.name }}</td>
+                <td class="mobile-hide tablet-hide text-end" data-label="Total royalties">{{ formatCurrency(artist.total_royalties) }}</td>
+                <td class="mobile-hide tablet-hide text-end" data-label="Total payments">{{ formatCurrency(artist.total_payments) }}</td>
+                <td class="mobile-narrow mobile-number text-end fw-bold" data-label="Balance">{{ formatCurrency(artist.total_balance) }}</td>
+                <td class="mobile-hide text-end" data-label="Payout point">{{ formatCurrency(artist.payout_point) }}</td>
+                <td class="mobile-narrow text-center" data-label="Due for payment">
+                  <i class="fas fa-check text-success" *ngIf="artist.due_for_payment"></i>
+                  <span *ngIf="!artist.due_for_payment" class="text-muted">-</span>
+                </td>
+                <td class="mobile-hide text-center" data-label="Payouts paused">
+                  <i class="fas fa-pause-circle text-warning" *ngIf="artist.hold_payouts"></i>
+                  <span *ngIf="!artist.hold_payouts" class="text-muted">-</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-template>
+    </app-paginated-table>
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mt-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Total Balance</h5>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(balanceSummary?.total_balance || 0) }}</strong></h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Total Due For Payment</h5>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}</strong></h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Ready to Pay 
+          <i class="fas fa-info-circle" title="Due for payment and has bank account"></i>
+        </h5>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}</strong></h3>
+        <button class="btn btn-primary w-100" 
+                [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
+                (click)="payAllBalances()">
+          <i class="fas fa-credit-card"></i> Pay Now
+        </button>
+        <small class="d-block mt-2"><strong>On hold:</strong> {{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</small>
+      </div>
+      <div class="card-footer text-center">
+        <div class="badge bg-info">
+          Available balance: {{ formatCurrency(walletBalance) }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recuperable Expenses Section -->
+<div class="row mt-5">
+  <div class="col-md-8">
+    <app-paginated-table 
+      title="Recuperable Expenses"
+      [data]="recuperableExpenses"
+      [pagination]="expensesPagination"
+      [loading]="expensesLoading"
+      [columns]="expensesColumns"
+      [showSortableHeaders]="true"
+      [sortInfo]="expensesSort"
+      [responsiveMode]="'financial'"
+      (pageChange)="onExpensesPageChange($event)"
+      (filtersChange)="onExpensesFiltersChange($event)"
+      (sortChange)="onExpensesSortChange($event)">
+    </app-paginated-table>
+  </div>
+
+  <div class="col-md-4">
+    <!-- Total Recuperable Expense Card -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Total Recuperable Expense</h5>
+      </div>
+      <div class="card-body text-center">
+        <h3><strong>{{ formatCurrency(expensesSummary?.total_recuperable_expense || 0) }}</strong></h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Confirmation Dialog -->
+<app-payment-confirmation-dialog 
+  *ngIf="showPaymentDialog"
+  [artists]="paymentArtists"
+  [availableBalance]="walletBalance"
+  [processing]="isProcessingPayment"
+  (confirm)="onConfirmPayment()"
+  (cancel)="onCancelPayment()">
+</app-payment-confirmation-dialog>

@@ -1,0 +1,80 @@
+<div class="artist-selection-container">
+  <div class="dropdown" [class.open]="isDropdownOpen && !isNewArtistMode">
+    <button class="btn btn-default artist-dropdown-btn" 
+            type="button" 
+            (click)="toggleDropdown()" 
+            [disabled]="loading || isNewArtistMode">
+      
+      <!-- New Artist Mode -->
+      <div class="artist-info" *ngIf="isNewArtistMode">
+        <img src="assets/img/placeholder.jpg" 
+             class="artist-photo" 
+             alt="New artist placeholder">
+        <div class="artist-details">
+          <div class="artist-name new-artist-name">New artist</div>
+        </div>
+      </div>
+      
+      <!-- Normal Mode -->
+      <div class="artist-info" *ngIf="selectedArtist && !isNewArtistMode">
+        <img [src]="getProfilePhotoUrl(selectedArtist)" 
+             class="artist-photo" 
+             [alt]="selectedArtist.name">
+        <div class="artist-details">
+          <div class="artist-name">{{ selectedArtist.name }}</div>
+        </div>
+      </div>
+      <div *ngIf="!selectedArtist && !loading && !isNewArtistMode" class="no-artist">
+        Select an Artist
+      </div>
+      <div *ngIf="loading && !isNewArtistMode" class="loading-inline">
+        <div class="loading-spinner"></div>Loading...
+      </div>
+      <span class="caret" *ngIf="!isNewArtistMode"></span>
+    </button>
+    
+    <ul class="dropdown-menu" *ngIf="isDropdownOpen && !isNewArtistMode">
+      <!-- Search input -->
+      <li class="search-container">
+        <div class="search-input-wrapper">
+          <i class="fa fa-search search-icon"></i>
+          <input type="text" 
+                 class="form-control artist-search-input" 
+                 [(ngModel)]="searchTerm"
+                 (input)="onSearchChange()"
+                 (keydown)="onSearchKeydown($event)"
+                 placeholder="Search artists..."
+                 (click)="$event.stopPropagation()">
+        </div>
+      </li>
+      
+      <!-- Add new artist option at the top -->
+      <li *ngIf="isAdmin" class="create-artist-item">
+        <a (click)="addNewArtist()" class="create-new-artist">
+          <i class="fa fa-plus me-2"></i>
+          Create New Artist
+        </a>
+      </li>
+      
+      <li class="divider" *ngIf="isAdmin && filteredArtists.length > 0"></li>
+      
+      <!-- Artist list -->
+      <li *ngFor="let artist of filteredArtists" 
+          [class.active]="selectedArtist?.id === artist.id">
+        <a (click)="selectArtist(artist, true)">
+          <img [src]="getProfilePhotoUrl(artist)" 
+               class="dropdown-artist-photo" 
+               [alt]="artist.name">
+          <div class="dropdown-artist-info">
+            <div class="dropdown-artist-name">{{ artist.name }}</div>
+          </div>
+        </a>
+      </li>
+      
+      <!-- No results message -->
+      <li class="no-results" *ngIf="searchTerm.trim() && filteredArtists.length === 0">
+        <span>No artists found matching "{{ searchTerm }}"</span>
+      </li>
+    </ul>
+  </div>
+</div>
