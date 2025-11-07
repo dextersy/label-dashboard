@@ -333,12 +333,24 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
     // Special handling for last_logged_in sorting - we need to use raw SQL for this
     if (sortBy === 'last_logged_in') {
-      const direction = sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-      
+      // SECURITY: Strict allowlist for sort direction - never interpolate user input
+      const isDescending = sortDirection.toUpperCase() === 'DESC';
+      const direction = isDescending ? 'DESC' : 'ASC';
+
       // MySQL doesn't support NULLS FIRST/LAST, so we use a CASE statement workaround
       // For DESC: non-null values first (DESC), then NULL values
       // For ASC: NULL values first, then non-null values (ASC)
-      
+
+      // Pre-build ORDER BY clause with validated direction to avoid template interpolation
+      const nullSortPriority = isDescending ? '1' : '0';
+      const nonNullSortPriority = isDescending ? '0' : '1';
+      const orderByClause = `ORDER BY CASE
+          WHEN la_max.last_logged_in IS NULL
+          THEN ${nullSortPriority}
+          ELSE ${nonNullSortPriority}
+        END,
+        la_max.last_logged_in ${direction}`;
+
       // Build additional filter conditions for the raw query using parameterized queries
       // SECURITY: Use parameterized queries to prevent SQL injection
       const filterConditions: string[] = [];
@@ -382,12 +394,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           AND u.username != ''
           AND u.username IS NOT NULL
           ${additionalFilters}
-        ORDER BY CASE
-          WHEN la_max.last_logged_in IS NULL
-          THEN ${direction === 'DESC' ? '1' : '0'}
-          ELSE ${direction === 'DESC' ? '0' : '1'}
-        END,
-        la_max.last_logged_in ${direction}
+        ${orderByClause}
         LIMIT ? OFFSET ?
       `;
 
