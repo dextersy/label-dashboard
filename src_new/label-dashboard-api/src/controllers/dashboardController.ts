@@ -497,7 +497,7 @@ async function getEventSalesData(req: AuthRequest) {
       });
       
       // Calculate total sales from confirmed tickets
-      const confirmedTickets = tickets.filter(ticket => (ticket.status === 'Payment Confirmed' || ticket.status==='Ticket sent.'));
+      const confirmedTickets = tickets.filter(ticket => (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.'));
       const totalSales = confirmedTickets.reduce((sum, ticket) => {
         const price = parseFloat(ticket.price_per_ticket?.toString() || '0');
         const entries = parseInt(ticket.number_of_entries?.toString() || '1');
