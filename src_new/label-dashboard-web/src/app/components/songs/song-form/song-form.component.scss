@@ -1,0 +1,266 @@
+// Song form styles
+.modal-lg {
+  max-width: 900px;
+}
+
+.card {
+  background-color: #f8f9fa;
+  position: relative;
+
+  &.z-index-high {
+    z-index: 1000 !important;
+    overflow: visible !important;
+
+    .card-body {
+      overflow: visible !important;
+    }
+  }
+
+  &.z-index-collaborators {
+    z-index: 15 !important;
+  }
+
+  &.z-index-authors {
+    z-index: 10 !important;
+  }
+
+  &.z-index-composers {
+    z-index: 5 !important;
+  }
+}
+
+// Modal display
+.modal-display {
+  display: block;
+}
+
+// Overflow visible for dropdown containers
+.overflow-visible,
+.overflow-visible .row,
+.overflow-visible .col-12 {
+  overflow: visible !important;
+}
+
+// Position relative utility
+.position-relative {
+  position: relative;
+}
+
+// Autocomplete wrapper and dropdown
+.autocomplete-wrapper {
+  position: relative;
+  overflow: visible !important;
+}
+
+// Card body with overflow visible
+.card-body.overflow-visible {
+  overflow: visible !important;
+}
+
+.songwriter-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  z-index: 99999 !important;
+  display: block !important;
+  width: 100% !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  margin-top: 2px !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 0.25rem !important;
+  background-color: white !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.autocomplete-item {
+  padding: 0.5rem 1rem !important;
+  cursor: pointer !important;
+  border: none !important;
+  background: none !important;
+  width: 100% !important;
+  text-align: left !important;
+  display: block !important;
+  color: #212529 !important;
+
+  &:hover {
+    background-color: #f8f9fa !important;
+  }
+
+  &:focus {
+    outline: none !important;
+    background-color: #e9ecef !important;
+  }
+
+  &.create-new {
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 500;
+    color: #007bff;
+  }
+}
+
+// Create new songwriter form
+.create-songwriter-form {
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+}
+
+// Chip badges
+.chip-badge {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  background-color: #6c757d;
+  color: white;
+
+  &.chip-badge-info {
+    background-color: #17a2b8;
+  }
+
+  .chip-remove-btn {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 0;
+    margin-left: 0.5rem;
+  }
+
+  .chip-new-indicator {
+    color: #ffc107;
+    margin-left: 0.25rem;
+  }
+}
+
+// Release artist badge styles
+.release-artist-label {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+// Material-style chip input
+.chip-input-wrapper {
+  position: relative;
+
+  .chip-input-field {
+    min-height: 48px;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: text;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+    &:hover {
+      border-color: #80bdff;
+    }
+
+    &.focused {
+      border-color: #80bdff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    &.readonly {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
+
+    .chip-input-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      font-size: 0.875rem;
+      border-radius: 12px;
+      background-color: #6c757d;
+      color: white;
+      white-space: nowrap;
+
+      &.chip-input-badge-release {
+        background-color: #17a2b8;
+      }
+
+      .chip-input-remove {
+        margin-left: 6px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        opacity: 0.8;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+
+    .chip-input-text {
+      flex: 1;
+      min-width: 120px;
+      border: none;
+      outline: none;
+      padding: 4px;
+      font-size: 1rem;
+      background: transparent;
+      text-align: left;
+
+      &::placeholder {
+        color: #6c757d;
+        text-align: left;
+      }
+
+      &.no-input {
+        cursor: pointer;
+        caret-color: transparent;
+      }
+    }
+  }
+
+  .chip-input-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 250px;
+    overflow-y: auto;
+
+    .chip-dropdown-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: background-color 0.15s ease-in-out;
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+
+      &:disabled {
+        color: #6c757d;
+        cursor: not-allowed;
+        background-color: #f8f9fa;
+      }
+
+      &.create-new-item {
+        border-top: 1px solid #dee2e6;
+        color: #007bff;
+        font-weight: 500;
+      }
+    }
+  }
+}

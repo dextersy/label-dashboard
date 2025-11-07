@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense } from '../models';
+import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import multer from 'multer';
@@ -1072,18 +1072,44 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
         {
           model: Artist,
           as: 'artists',
-          through: { 
+          through: {
             attributes: [
-              'streaming_royalty_percentage', 
+              'streaming_royalty_percentage',
               'streaming_royalty_type',
-              'sync_royalty_percentage', 
+              'sync_royalty_percentage',
               'sync_royalty_type',
-              'download_royalty_percentage', 
+              'download_royalty_percentage',
               'download_royalty_type',
-              'physical_royalty_percentage', 
+              'physical_royalty_percentage',
               'physical_royalty_type'
-            ] 
+            ]
           }
+        },
+        {
+          model: Song,
+          as: 'songs',
+          include: [
+            {
+              model: SongAuthor,
+              as: 'authors'
+            },
+            {
+              model: SongComposer,
+              as: 'composers'
+            },
+            {
+              model: SongCollaborator,
+              as: 'collaborators',
+              include: [
+                {
+                  model: Artist,
+                  as: 'artist',
+                  attributes: ['id', 'name']
+                }
+              ]
+            }
+          ],
+          order: [['track_number', 'ASC']]
         }
       ],
       where: { brand_id: req.user.brand_id },
@@ -1151,7 +1177,8 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
           download_royalty_type: artist.ReleaseArtist?.download_royalty_type || 'Revenue',
           physical_royalty_percentage: artist.ReleaseArtist?.physical_royalty_percentage || 0,
           physical_royalty_type: artist.ReleaseArtist?.physical_royalty_type || 'Revenue'
-        })) || []
+        })) || [],
+        songs: release.songs || []
       };
     }));
 

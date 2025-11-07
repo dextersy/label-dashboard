@@ -4,7 +4,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { EditReleaseDialogComponent } from '../edit-release-dialog/edit-release-dialog.component';
+import { TrackListDialogComponent } from '../track-list-dialog/track-list-dialog.component';
 import { environment } from 'environments/environment';
+import { ReleaseValidationService } from '../../../services/release-validation.service';
+import { Song } from '../../../services/song.service';
+import { ReleaseService } from '../../../services/release.service';
 
 export interface ArtistRelease {
   id: number;
@@ -12,10 +16,11 @@ export interface ArtistRelease {
   title: string;
   cover_art: string;
   release_date: string;
-  status: 'Pending' | 'Live' | 'Taken Down';
+  status: 'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down';
   description?: string;
   liner_notes?: string;
   UPC?: string;
+  songs?: Song[];
   artists?: Array<{
     id: number;
     name: string;
@@ -31,7 +36,7 @@ export interface ArtistRelease {
 @Component({
   selector: 'app-artist-releases-tab',
   standalone: true,
-  imports: [CommonModule, EditReleaseDialogComponent],
+  imports: [CommonModule, EditReleaseDialogComponent, TrackListDialogComponent],
   templateUrl: './artist-releases-tab.component.html',
   styleUrl: './artist-releases-tab.component.scss'
 })
@@ -42,10 +47,17 @@ export class ArtistReleasesTabComponent {
   loading = false;
   isAdmin = false;
   showEditDialog = false;
+  showTrackListDialog = false;
   selectedRelease: ArtistRelease | null = null;
   loadingReleaseDetails = false;
+  submittingReleaseId: number | null = null;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private validationService: ReleaseValidationService,
+    private releaseService: ReleaseService
+  ) {}
 
   ngOnInit(): void {
     if (this.artist) {
@@ -70,7 +82,7 @@ export class ArtistReleasesTabComponent {
     if (!this.artist) return;
 
     this.loading = true;
-    
+
     this.http.get<{releases: ArtistRelease[], isAdmin: boolean}>(`${environment.apiUrl}/artists/${this.artist.id}/releases`, {
       headers: this.getAuthHeaders()
     }).subscribe({
@@ -130,6 +142,18 @@ export class ArtistReleasesTabComponent {
     this.onEditDialogClose();
   }
 
+  onManageTrackList(release: ArtistRelease): void {
+    this.selectedRelease = release;
+    this.showTrackListDialog = true;
+  }
+
+  onTrackListDialogClose(): void {
+    this.showTrackListDialog = false;
+    this.selectedRelease = null;
+    // Reload releases to update validation state with any song changes
+    this.loadReleases();
+  }
+
   getCoverArtUrl(coverArt: string): string {
     if (!coverArt) {
       return 'assets/img/placeholder.jpg';
@@ -156,8 +180,12 @@ export class ArtistReleasesTabComponent {
     switch (status) {
       case 'Live':
         return 'badge-success';
+      case 'For Submission':
+        return 'badge-info';
       case 'Pending':
         return 'badge-warning';
+      case 'Draft':
+        return 'badge-secondary';
       case 'Taken Down':
         return 'badge-danger';
       default:
@@ -169,8 +197,12 @@ export class ArtistReleasesTabComponent {
     switch (status) {
       case 'Live':
         return 'fa-check-circle';
+      case 'For Submission':
+        return 'fa-paper-plane';
       case 'Pending':
         return 'fa-clock';
+      case 'Draft':
+        return 'fa-file';
       case 'Taken Down':
         return 'fa-ban';
       default:
@@ -178,21 +210,73 @@ export class ArtistReleasesTabComponent {
     }
   }
 
+  getValidationTooltip(release: ArtistRelease): string {
+    const validation = this.validationService.validateRelease(release, release.songs);
+    return this.validationService.getTooltipMessage(validation);
+  }
+
+  hasValidationIssues(release: ArtistRelease): boolean {
+    const validation = this.validationService.validateRelease(release, release.songs);
+    return validation.hasErrors || validation.hasWarnings;
+  }
+
+  hasValidationErrors(release: ArtistRelease): boolean {
+    const validation = this.validationService.validateRelease(release, release.songs);
+    return validation.hasErrors;
+  }
+
+  canSubmitForReview(release: ArtistRelease): boolean {
+    return release.status === 'Draft' && !this.hasValidationErrors(release);
+  }
+
+  onSubmitForReview(release: ArtistRelease): void {
+    if (!this.canSubmitForReview(release) || this.submittingReleaseId) {
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = confirm(
+      'Once you submit for review, certain fields will be locked and no longer editable. ' +
+      'You can still contact your label admin for changes. ' +
+      'Do you want to proceed with submission?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.submittingReleaseId = release.id;
+    this.releaseService.updateRelease(release.id, { status: 'For Submission' }).subscribe({
+      next: () => {
+        this.submittingReleaseId = null;
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Release submitted for review successfully!'
+        });
+        this.loadReleases();
+      },
+      error: (error) => {
+        console.error('Error submitting release:', error);
+        this.submittingReleaseId = null;
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'Failed to submit release for review. Please try again.'
+        });
+      }
+    });
+  }
+
   navigateToCreateRelease(): void {
     this.router.navigate(['/artist/releases/new']);
   }
 
-  navigateToSubmitRelease(): void {
-    this.router.navigate(['/artist/releases/submit']);
-  }
-
   stripHtmlTags(html: string): string {
     if (!html) return '';
-    
+
     // Create a temporary div element to parse HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-    
+
     // Get text content and clean up extra whitespace
     return tempDiv.textContent || tempDiv.innerText || '';
   }

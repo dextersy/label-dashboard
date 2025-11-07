@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, sequelize } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
+import { sendReleaseSubmissionNotification } from '../utils/emailService';
 
 // Configure AWS S3
 AWS.config.update({
@@ -96,16 +97,12 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
 
 export const createRelease = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     // Validate request body exists
     if (!req.body || typeof req.body !== 'object') {
       return res.status(400).json({ error: 'Request body is required' });
     }
 
-    const {
+    let {
       title,
       catalog_no,
       UPC,
@@ -119,33 +116,27 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       artists // Array of { artist_id, royalty_percentages }
     } = req.body;
 
-    // Handle cover art file upload to S3
-    let coverArtUrl = null;
-    if (req.file) {
-      try {
-        // Generate unique filename for S3
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const extension = path.extname(req.file.originalname);
-        const fileName = `cover-art/${catalog_no}-${uniqueSuffix}${extension}`;
-        
-        // Upload to S3
-        const uploadParams = {
-          Bucket: process.env.S3_BUCKET!,
-          Key: fileName,
-          Body: req.file.buffer,
-          ContentType: req.file.mimetype
-        };
-        
-        const result = await s3.upload(uploadParams).promise();
-        coverArtUrl = result.Location;
-      } catch (uploadError) {
-        console.error('S3 upload error:', uploadError);
-        return res.status(500).json({ error: 'Failed to upload cover art' });
-      }
-    }
-
+    // Auto-generate catalog number for non-admins if not provided
     if (!catalog_no) {
-      return res.status(400).json({ error: 'Catalog number is required' });
+      if (!req.user.is_admin) {
+        // Generate catalog number for non-admin submissions
+        const lastRelease = await Release.findOne({
+          where: { brand_id: req.user.brand_id },
+          order: [['id', 'DESC']]
+        });
+
+        let nextNumber = 1;
+        if (lastRelease && lastRelease.catalog_no) {
+          const match = lastRelease.catalog_no.match(/(\d+)$/);
+          if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+          }
+        }
+
+        catalog_no = `TBD${String(nextNumber).padStart(3, '0')}`;
+      } else {
+        return res.status(400).json({ error: 'Catalog number is required for admin' });
+      }
     }
 
     // Check if catalog number already exists
@@ -157,15 +148,45 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ error: 'Catalog number already exists' });
     }
 
+    // Handle cover art file upload to S3
+    let coverArtUrl = null;
+    if (req.file) {
+      try {
+        // Generate unique filename for S3
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(req.file.originalname);
+        const fileName = `cover-art/${catalog_no}-${uniqueSuffix}${extension}`;
+
+        // Upload to S3
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        };
+
+        const result = await s3.upload(uploadParams).promise();
+        coverArtUrl = result.Location;
+      } catch (uploadError) {
+        console.error('S3 upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload cover art' });
+      }
+    }
+
+    // Set default status based on user role
+    if (!status) {
+      status = req.user.is_admin ? 'Pending' : 'Draft';
+    }
+
     const release = await Release.create({
       title,
       catalog_no,
-      UPC,
-      spotify_link,
-      apple_music_link,
-      youtube_link,
+      UPC: req.user.is_admin ? UPC : null,
+      spotify_link: req.user.is_admin ? spotify_link : null,
+      apple_music_link: req.user.is_admin ? apple_music_link : null,
+      youtube_link: req.user.is_admin ? youtube_link : null,
       release_date,
-      status: status || 'Pending',
+      status,
       cover_art: coverArtUrl,
       description,
       liner_notes,
@@ -184,9 +205,8 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
 
     if (parsedArtists && Array.isArray(parsedArtists)) {
       for (const artistData of parsedArtists) {
-        await ReleaseArtist.create({
-          release_id: release.id,
-          artist_id: artistData.artist_id,
+        // For admins, use provided royalty percentages; for non-admins, ignore them and use 0
+        const royaltyData = req.user.is_admin ? {
           streaming_royalty_percentage: artistData.streaming_royalty_percentage || 0.5,
           streaming_royalty_type: artistData.streaming_royalty_type || 'Revenue',
           sync_royalty_percentage: artistData.sync_royalty_percentage || 0.5,
@@ -195,6 +215,21 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
           download_royalty_type: artistData.download_royalty_type || 'Revenue',
           physical_royalty_percentage: artistData.physical_royalty_percentage || 0.2,
           physical_royalty_type: artistData.physical_royalty_type || 'Revenue'
+        } : {
+          streaming_royalty_percentage: 0,
+          streaming_royalty_type: 'Revenue',
+          sync_royalty_percentage: 0,
+          sync_royalty_type: 'Revenue',
+          download_royalty_percentage: 0,
+          download_royalty_type: 'Revenue',
+          physical_royalty_percentage: 0,
+          physical_royalty_type: 'Revenue'
+        };
+
+        await ReleaseArtist.create({
+          release_id: release.id,
+          artist_id: artistData.artist_id,
+          ...royaltyData
         });
       }
     }
@@ -283,6 +318,9 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // Save original status before update for email notification check
+    const originalStatus = release.status;
+
     // Delete old cover art from S3 if new one is uploaded
     if (coverArtUrl && release.cover_art && release.cover_art.startsWith('https://')) {
       try {
@@ -298,20 +336,32 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    await release.update({
+    // Prepare update data based on user role
+    const updateData: any = {
       title: title || release.title,
-      UPC: UPC !== undefined ? UPC : release.UPC,
-      spotify_link: spotify_link !== undefined ? spotify_link : release.spotify_link,
-      apple_music_link: apple_music_link !== undefined ? apple_music_link : release.apple_music_link,
-      youtube_link: youtube_link !== undefined ? youtube_link : release.youtube_link,
       release_date: release_date !== undefined ? release_date : release.release_date,
-      status: status || release.status,
       cover_art: coverArtUrl || release.cover_art,
       description: description !== undefined ? description : release.description,
       liner_notes: liner_notes !== undefined ? liner_notes : release.liner_notes
-    });
+    };
 
-    // Update artist royalty splits if provided
+    // Only allow admins to update these fields
+    if (req.user.is_admin) {
+      updateData.UPC = UPC !== undefined ? UPC : release.UPC;
+      updateData.spotify_link = spotify_link !== undefined ? spotify_link : release.spotify_link;
+      updateData.apple_music_link = apple_music_link !== undefined ? apple_music_link : release.apple_music_link;
+      updateData.youtube_link = youtube_link !== undefined ? youtube_link : release.youtube_link;
+      updateData.status = status || release.status;
+    } else {
+      // Allow non-admins to submit drafts for review
+      if (status === 'For Submission' && release.status === 'Draft') {
+        updateData.status = 'For Submission';
+      }
+    }
+
+    await release.update(updateData);
+
+    // Update artist royalty splits if provided (admin only)
     let parsedArtists = artists;
     if (typeof artists === 'string') {
       try {
@@ -321,7 +371,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    if (parsedArtists && Array.isArray(parsedArtists)) {
+    if (req.user.is_admin && parsedArtists && Array.isArray(parsedArtists)) {
       // Validate that royalty percentages add up correctly
       const totalStreamingRoyalty = parsedArtists.reduce((sum, artist) => 
         sum + (artist.streaming_royalty_percentage || 0), 0);
@@ -357,24 +407,52 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     // Fetch updated release with all associations
     const updatedRelease = await Release.findByPk(id, {
       include: [
-        { 
-          model: Artist, 
+        {
+          model: Artist,
           as: 'artists',
-          through: { 
+          through: {
             attributes: [
-              'streaming_royalty_percentage', 
+              'streaming_royalty_percentage',
               'streaming_royalty_type',
-              'sync_royalty_percentage', 
+              'sync_royalty_percentage',
               'sync_royalty_type',
-              'download_royalty_percentage', 
+              'download_royalty_percentage',
               'download_royalty_type',
-              'physical_royalty_percentage', 
+              'physical_royalty_percentage',
               'physical_royalty_type'
-            ] 
+            ]
           }
         }
       ]
     });
+
+    // Send email notification if release was submitted for review
+    if (originalStatus === 'Draft' && updateData.status === 'For Submission') {
+      try {
+        // Get track count for the notification
+        const trackCount = await Song.count({
+          where: { release_id: release.id }
+        });
+
+        // Get artist names from the updated release
+        const artistNames = updatedRelease?.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
+
+        // Send notification to admins
+        await sendReleaseSubmissionNotification(
+          {
+            title: updatedRelease!.title,
+            catalog_no: updatedRelease!.catalog_no,
+            release_date: updatedRelease!.release_date.toString(),
+            track_count: trackCount
+          },
+          artistNames,
+          req.user.brand_id
+        );
+      } catch (emailError) {
+        console.error('Error sending release submission notification:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     res.json({
       message: 'Release updated successfully',

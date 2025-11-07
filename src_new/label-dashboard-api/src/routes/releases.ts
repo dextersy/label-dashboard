@@ -41,7 +41,7 @@ router.get('/generate-catalog-number', generateCatalogNumber);
 // Release CRUD operations
 router.get('/', getReleases);
 router.get('/:id', getRelease);
-router.post('/', requireAdmin, upload.single('cover_art'), createRelease);
+router.post('/', upload.single('cover_art'), createRelease);
 router.put('/:id', upload.single('cover_art'), updateRelease);
 router.delete('/:id', requireAdmin, deleteRelease);
 

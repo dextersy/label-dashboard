@@ -1,26 +1,27 @@
-<form [formGroup]="releaseForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="releaseForm" (ngSubmit)="onSubmit()" (keydown.escape)="$event.stopPropagation()">
   <!-- Basic Release Information -->
   <div class="row">
     <div class="col-md-6">
       <div class="form-group">
         <label for="title">Title <span class="text-danger">*</span></label>
-        <input type="text" 
-               class="form-control" 
-               id="title" 
+        <input type="text"
+               class="form-control"
+               id="title"
                formControlName="title"
                [class.is-invalid]="isFieldInvalid('title')"
+               [readonly]="isRestrictedMode()"
                placeholder="Enter release title">
         <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">
           {{ getFieldError('title') }}
         </div>
       </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6" *ngIf="isAdmin">
       <div class="form-group">
         <label for="catalogNo">Catalog Number <span class="text-danger">*</span></label>
-        <input type="text" 
-               class="form-control" 
-               id="catalogNo" 
+        <input type="text"
+               class="form-control"
+               id="catalogNo"
                formControlName="catalog_no"
                [class.is-invalid]="isFieldInvalid('catalog_no')"
                placeholder="e.g. MELT001">
@@ -35,12 +36,12 @@
   </div>
 
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-6" *ngIf="isAdmin">
       <div class="form-group">
         <label for="upc">UPC Code</label>
-        <input type="text" 
-               class="form-control" 
-               id="upc" 
+        <input type="text"
+               class="form-control"
+               id="upc"
                formControlName="UPC"
                placeholder="Universal Product Code">
       </div>
@@ -48,11 +49,12 @@
     <div class="col-md-6">
       <div class="form-group">
         <label for="releaseDate">Release Date <span class="text-danger">*</span></label>
-        <input type="date" 
-               class="form-control" 
-               id="releaseDate" 
+        <input type="date"
+               class="form-control"
+               id="releaseDate"
                formControlName="release_date"
-               [class.is-invalid]="isFieldInvalid('release_date')">
+               [class.is-invalid]="isFieldInvalid('release_date')"
+               [readonly]="isRestrictedMode()">
         <div *ngIf="isFieldInvalid('release_date')" class="invalid-feedback">
           {{ getFieldError('release_date') }}
         </div>
@@ -65,6 +67,8 @@
       <div class="form-group">
         <label for="status">Status</label>
         <select class="form-control" id="status" formControlName="status">
+          <option value="Draft">Draft</option>
+          <option value="For Submission">For Submission</option>
           <option value="Pending">Pending</option>
           <option value="Live">Live</option>
           <option value="Taken Down">Taken Down</option>
@@ -78,11 +82,14 @@
     <label for="coverArt">Cover Art</label>
     <div class="row">
       <div class="col-md-6">
-        <input type="file" 
-               class="form-control-file" 
-               id="coverArt" 
+        <input type="file"
+               class="form-control-file"
+               id="coverArt"
                accept="image/*"
-               (change)="onCoverArtSelected($event)">
+               (change)="onCoverArtSelected($event)"
+               (click)="$event.stopPropagation()"
+               (cancel)="$event.stopPropagation()"
+               [disabled]="isRestrictedMode()">
         <small class="form-text text-muted">
           JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
         </small>

@@ -60,6 +60,17 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
     this.releaseForm = this.createForm();
   }
 
+  // For non-admin users on non-draft releases, only these fields remain editable:
+  // - Release form: description, liner_notes
+  // All other fields should have [readonly]="isRestrictedMode()" or [disabled]="isRestrictedMode()" applied
+  isRestrictedMode(): boolean {
+    // Can't be restricted if there's no release being edited (creating new release)
+    if (!this.editingRelease) {
+      return false;
+    }
+    return !this.isAdmin && this.editingRelease.status !== 'Draft';
+  }
+
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
     this.loadAllArtists();
@@ -88,7 +99,7 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
       release_date: ['', Validators.required],
       description: [''],
       liner_notes: [''],
-      status: ['Pending'],
+      status: ['Draft'],
       royaltyArtists: this.fb.array([])
     });
   }
@@ -114,7 +125,8 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
         this.allArtists = response.artists || response || [];
         this.loadingArtists = false;
         
-        if (this.isAdmin && this.royaltyArtists.length === 0 && !this.editingRelease) {
+        // Initialize with current artist for new releases (both admin and non-admin)
+        if (this.royaltyArtists.length === 0 && !this.editingRelease) {
           this.initializeRoyaltyArtists();
         }
       },
@@ -325,7 +337,9 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
       cover_art: this.selectedCoverArt || undefined
     };
 
-    if (this.isAdmin && this.royaltyArtists.length > 0) {
+    // Add artist associations for both admin and non-admin
+    // Backend will handle royalty percentages based on user role
+    if (this.royaltyArtists.length > 0) {
       formData.artists = this.royaltyArtists.value.map((artistData: any) => ({
         artist_id: artistData.artist_id,
         streaming_royalty_percentage: artistData.streaming_royalty_percentage / 100,
@@ -362,10 +376,11 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
     }
     
     this.releaseForm.patchValue({
-      status: 'Pending'
+      status: 'Draft'
     });
-    
-    if (this.isAdmin && !this.editingRelease) {
+
+    // Initialize with current artist for new releases (both admin and non-admin)
+    if (!this.editingRelease) {
       this.initializeRoyaltyArtists();
     }
   }

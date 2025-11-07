@@ -26,4 +26,15 @@
       </div>
     </div>
   </div>
+
+  <!-- Track List Dialog (Optional after creating release) -->
+  <app-track-list-dialog
+    [isVisible]="showTrackListDialog"
+    [releaseId]="createdRelease?.id || null"
+    [releaseTitle]="createdRelease?.title || ''"
+    [releaseStatus]="createdRelease?.status || ''"
+    [releaseArtists]="createdRelease?.artists || []"
+    (close)="onTrackListDialogClose()"
+    (alertMessage)="onFormAlert($event)">
+  </app-track-list-dialog>
 </div>

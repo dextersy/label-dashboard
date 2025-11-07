@@ -2,17 +2,12 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Artist Releases</h5>
-      <div class="btn-group" *ngIf="artist">
-        <button *ngIf="isAdmin" 
-                class="btn btn-primary btn-sm" 
-                (click)="navigateToCreateRelease()"
-                title="Create new release">
-          <i class="fas fa-plus"></i> Create Release
-        </button>
-        <button class="btn btn-outline-primary btn-sm" 
-                (click)="navigateToSubmitRelease()"
-                title="Submit release for review">
-          <i class="fas fa-upload"></i> Submit Release
+      <div *ngIf="artist">
+        <button class="btn btn-primary btn-sm"
+                [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
+                (click)="navigateToCreateRelease()">
+          <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
+          {{ isAdmin ? 'Create Release' : 'Submit Release' }}
         </button>
       </div>
     </div>
@@ -42,7 +37,7 @@
                 <th>Title</th>
                 <th>Release Date</th>
                 <th>Status</th>
-                <th *ngIf="isAdmin">Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -69,15 +64,38 @@
                     <i class="fa" [ngClass]="getStatusIcon(release.status)"></i>
                     {{ release.status }}
                   </span>
+                  <ng-container *ngIf="release.status === 'Draft' && hasValidationIssues(release)">
+                    <i *ngIf="hasValidationErrors(release)"
+                       class="fa fa-exclamation-circle text-danger ms-2"
+                       [title]="getValidationTooltip(release)"
+                       style="cursor: help;"></i>
+                    <i *ngIf="!hasValidationErrors(release)"
+                       class="fa fa-exclamation-triangle text-warning ms-2"
+                       [title]="getValidationTooltip(release)"
+                       style="cursor: help;"></i>
+                  </ng-container>
                 </td>
-                <td *ngIf="isAdmin" class="actions-cell">
-                  <button class="btn btn-sm btn-primary" 
+                <td class="actions-cell">
+                  <button *ngIf="canSubmitForReview(release)"
+                          class="btn btn-success btn-sm me-2"
+                          (click)="onSubmitForReview(release)"
+                          [disabled]="submittingReleaseId === release.id"
+                          title="Submit for review">
+                    <i class="fa fa-spinner fa-spin me-1" *ngIf="submittingReleaseId === release.id"></i>
+                    <i class="fa fa-paper-plane me-1" *ngIf="submittingReleaseId !== release.id"></i>
+                    {{ submittingReleaseId === release.id ? 'Submitting...' : 'Submit' }}
+                  </button>
+                  <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onEditRelease(release)"
                           [disabled]="loadingReleaseDetails"
-                          title="Edit Release">
+                          title="Edit Release Information">
                     <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
                     <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
-                    {{ loadingReleaseDetails ? 'Loading...' : 'Edit' }}
+                  </button>
+                  <button class="btn btn-link btn-sm p-0"
+                          (click)="onManageTrackList(release)"
+                          title="Manage Track List">
+                    <i class="fa fa-music"></i>
                   </button>
                 </td>
               </tr>
@@ -98,4 +116,15 @@
     (releaseUpdated)="onReleaseUpdated($event)"
     (alertMessage)="alertMessage.emit($event)">
   </app-edit-release-dialog>
+
+  <!-- Track List Dialog -->
+  <app-track-list-dialog
+    [isVisible]="showTrackListDialog"
+    [releaseId]="selectedRelease?.id || null"
+    [releaseTitle]="selectedRelease?.title || ''"
+    [releaseStatus]="selectedRelease?.status || ''"
+    [releaseArtists]="selectedRelease?.artists || []"
+    (close)="onTrackListDialogClose()"
+    (alertMessage)="alertMessage.emit($event)">
+  </app-track-list-dialog>
 </div>

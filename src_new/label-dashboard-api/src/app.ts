@@ -47,6 +47,8 @@ import profileRoutes from './routes/profile';
 import inviteRoutes from './routes/invite';
 import emailRoutes from './routes/email';
 import systemRoutes from './routes/system';
+import songRoutes from './routes/songs';
+import songwriterRoutes from './routes/songwriters';
 
 // API Routes (protected)
 app.use('/api/auth', authRoutes);
@@ -60,6 +62,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/invite', inviteRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/songs', songRoutes);
+app.use('/api/songwriters', songwriterRoutes);
 
 // Public API Routes (no authentication required)
 app.use('/api/public', publicRoutes);

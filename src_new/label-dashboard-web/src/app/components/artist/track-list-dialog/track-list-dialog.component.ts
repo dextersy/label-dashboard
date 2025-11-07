@@ -1,43 +1,38 @@
-import { Component, Input, Output, EventEmitter, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Artist } from '../artist-selection/artist-selection.component';
-import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
-import { ReleaseFormComponent, ReleaseFormSubmitData } from '../release-form/release-form.component';
-import { ReleaseService } from '../../../services/release.service';
+import { HttpEventType } from '@angular/common/http';
 import { SongService, Song } from '../../../services/song.service';
 import { SongListComponent } from '../../songs/song-list/song-list.component';
 import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
 import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
+import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
 
 @Component({
-  selector: 'app-edit-release-dialog',
+  selector: 'app-track-list-dialog',
   standalone: true,
-  imports: [CommonModule, ReleaseFormComponent, SongListComponent, SongFormComponent],
-  templateUrl: './edit-release-dialog.component.html',
-  styleUrl: './edit-release-dialog.component.scss'
+  imports: [CommonModule, SongListComponent, SongFormComponent],
+  templateUrl: './track-list-dialog.component.html',
+  styleUrl: './track-list-dialog.component.scss'
 })
-export class EditReleaseDialogComponent implements OnChanges {
+export class TrackListDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;
-  @Input() artist: Artist | null = null;
-  @Input() editingRelease: ArtistRelease | null = null;
+  @Input() releaseId: number | null = null;
+  @Input() releaseTitle: string = '';
+  @Input() releaseStatus: string = '';
+  @Input() releaseArtists: any[] = []; // Artists associated with the release
   @Output() close = new EventEmitter<void>();
-  @Output() releaseUpdated = new EventEmitter<any>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
-  loading = false;
   songs: Song[] = [];
   loadingSongs = false;
   showSongForm = false;
   editingSong: Song | null = null;
   submittingSong = false;
-  selectedSongForAudio: Song | null = null;
   isAdmin = false;
-
-  @ViewChild(ReleaseFormComponent) releaseFormComponent!: ReleaseFormComponent;
+  uploadProgress: { [songId: number]: number } = {};
 
   constructor(
-    private releaseService: ReleaseService,
     private songService: SongService,
     private authService: AuthService,
     private validationService: ReleaseValidationService
@@ -45,13 +40,14 @@ export class EditReleaseDialogComponent implements OnChanges {
     this.isAdmin = this.authService.isAdmin();
   }
 
-  // For non-admin users on non-draft releases, editing is restricted
+  // For non-admin users on non-draft releases, tracklist modifications are restricted
+  // This includes: add songs, delete songs, reorder songs, upload audio
   isRestrictedMode(): boolean {
-    // Can't be restricted if there's no release being edited
-    if (!this.editingRelease) {
+    // If no status or status is Draft, not restricted
+    if (!this.releaseStatus || this.releaseStatus === 'Draft') {
       return false;
     }
-    return !this.isAdmin && this.editingRelease.status !== 'Draft';
+    return !this.isAdmin;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -59,7 +55,7 @@ export class EditReleaseDialogComponent implements OnChanges {
       if (this.isVisible) {
         // Modal opened - prevent scrolling
         document.body.classList.add('modal-open');
-        if (this.editingRelease) {
+        if (this.releaseId) {
           this.loadSongs();
         }
       } else {
@@ -70,10 +66,10 @@ export class EditReleaseDialogComponent implements OnChanges {
   }
 
   loadSongs(): void {
-    if (!this.editingRelease) return;
+    if (!this.releaseId) return;
 
     this.loadingSongs = true;
-    this.songService.getSongsByRelease(this.editingRelease.id).subscribe({
+    this.songService.getSongsByRelease(this.releaseId).subscribe({
       next: (response) => {
         this.songs = response.songs;
         this.loadingSongs = false;
@@ -115,6 +111,58 @@ export class EditReleaseDialogComponent implements OnChanges {
         this.alertMessage.emit({
           type: 'error',
           message: 'Failed to delete song'
+        });
+      }
+    });
+  }
+
+  onUploadAudio(song: Song): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.wav,audio/wav,audio/x-wav';
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (file && song.id) {
+        // Validate file type
+        if (!file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
+          this.alertMessage.emit({
+            type: 'error',
+            message: 'Only WAV files are allowed for audio masters'
+          });
+          return;
+        }
+        this.uploadAudioFile(song.id, file);
+      }
+    };
+    input.click();
+  }
+
+  private uploadAudioFile(songId: number, file: File): void {
+    this.uploadProgress[songId] = 0;
+
+    this.songService.uploadAudio(songId, file).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          // Calculate and update progress percentage
+          if (event.total) {
+            this.uploadProgress[songId] = Math.round((100 * event.loaded) / event.total);
+          }
+        } else if (event.type === HttpEventType.Response) {
+          // Upload complete
+          delete this.uploadProgress[songId];
+          this.alertMessage.emit({
+            type: 'success',
+            message: 'Audio file uploaded successfully'
+          });
+          this.loadSongs();
+        }
+      },
+      error: (error) => {
+        delete this.uploadProgress[songId];
+        console.error('Error uploading audio:', error);
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'Failed to upload audio file'
         });
       }
     });
@@ -173,124 +221,42 @@ export class EditReleaseDialogComponent implements OnChanges {
     this.editingSong = null;
   }
 
-  onUploadAudio(song: Song): void {
-    this.selectedSongForAudio = song;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.wav,audio/wav,audio/x-wav';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file && song.id) {
-        // Validate file type
-        if (!file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
-          this.alertMessage.emit({
-            type: 'error',
-            message: 'Only WAV files are allowed for audio masters'
-          });
-          return;
-        }
-        this.uploadAudioFile(song.id, file);
-      }
-    };
-    input.click();
-  }
+  onReorderSongs(reorderedSongs: Song[]): void {
+    if (!this.releaseId) return;
 
-  private uploadAudioFile(songId: number, file: File): void {
-    this.songService.uploadAudio(songId, file).subscribe({
+    const songIds = reorderedSongs.map(s => s.id).filter((id): id is number => id !== undefined);
+    this.songService.reorderSongs(this.releaseId, songIds).subscribe({
       next: () => {
         this.alertMessage.emit({
           type: 'success',
-          message: 'Audio file uploaded successfully'
+          message: 'Songs reordered successfully'
         });
         this.loadSongs();
-      },
-      error: (error) => {
-        console.error('Error uploading audio:', error);
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'Failed to upload audio file'
-        });
-      }
-    });
-  }
-
-  onReorderSongs(reorderedSongs: Song[]): void {
-    if (!this.editingRelease) return;
-
-    const songIds = reorderedSongs.map(song => song.id).filter((id): id is number => id !== undefined);
-
-    this.songService.reorderSongs(this.editingRelease.id, songIds).subscribe({
-      next: (response) => {
-        this.songs = response.songs;
-        this.alertMessage.emit({
-          type: 'success',
-          message: 'Track order updated successfully'
-        });
       },
       error: (error) => {
         console.error('Error reordering songs:', error);
         this.alertMessage.emit({
           type: 'error',
-          message: 'Failed to update track order'
+          message: 'Failed to reorder songs'
         });
-        // Reload songs to restore original order
-        this.loadSongs();
+        this.loadSongs(); // Reload to revert changes
       }
     });
-  }
-
-  onFormSubmit(submitData: ReleaseFormSubmitData): void {
-    if (!this.editingRelease) {
-      this.alertMessage.emit({
-        type: 'error',
-        message: 'No release data to update'
-      });
-      return;
-    }
-
-    this.loading = true;
-    
-    this.releaseService.updateRelease(this.editingRelease.id, submitData.formData).subscribe({
-      next: (response) => {
-        this.loading = false;
-        this.alertMessage.emit({
-          type: 'success',
-          message: 'Release updated successfully!'
-        });
-        this.releaseUpdated.emit(response.release);
-        this.onClose();
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('Release update error:', error);
-        this.alertMessage.emit({
-          type: 'error',
-          message: error.error?.error || 'Failed to update release. Please try again.'
-        });
-      }
-    });
-  }
-
-  onFormCancel(): void {
-    this.onClose();
-  }
-
-  onFormAlert(alert: {type: 'success' | 'error', message: string}): void {
-    this.alertMessage.emit(alert);
-  }
-
-  onSubmitFromButton(): void {
-    if (this.releaseFormComponent) {
-      this.releaseFormComponent.submitForm();
-    }
-  }
-
-  get isFormValid(): boolean {
-    return this.releaseFormComponent?.isFormValid ?? false;
   }
 
   get validation(): ValidationResult {
-    return this.validationService.validateRelease(this.editingRelease);
+    // Create a minimal release object for validation
+    const release: ArtistRelease = {
+      id: this.releaseId || 0,
+      title: this.releaseTitle,
+      status: this.releaseStatus as any,
+      catalog_no: '',
+      release_date: '',
+      cover_art: ''
+    };
+
+    // Only validate songs, not release-level info (cover art, description, liner notes)
+    return this.validationService.validateRelease(release, this.songs, false);
   }
 
   get validationErrors() {

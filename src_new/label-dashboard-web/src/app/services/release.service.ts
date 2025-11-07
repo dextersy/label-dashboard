@@ -15,7 +15,7 @@ export interface ReleaseFormData {
   description?: string;
   liner_notes?: string;
   cover_art?: File;
-  status?: 'Pending' | 'Live' | 'Taken Down';
+  status?: 'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down';
   artists?: Array<{
     artist_id: number;
     streaming_royalty_percentage: number;
@@ -35,7 +35,7 @@ export interface Release {
   youtube_link?: string;
   cover_art?: string;
   release_date: string;
-  status: 'Pending' | 'Live' | 'Taken Down';
+  status: 'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down';
   description?: string;
   liner_notes?: string;
   brand_id: number;

@@ -1,0 +1,112 @@
+<!-- Modal backdrop -->
+<div *ngIf="isVisible" class="modal-backdrop fade show" (click)="onClose()"></div>
+
+<!-- Modal -->
+<div *ngIf="isVisible" class="modal fade show" style="display: block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">
+          <i class="fa fa-music mr-2"></i>
+          Track List - {{ releaseTitle }}
+        </h4>
+        <button type="button" class="close" (click)="onClose()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Info Message for Non-Draft Releases -->
+        <div *ngIf="isRestrictedMode()" class="alert alert-info mb-3">
+          <i class="fa fa-info-circle me-2"></i>
+          <strong>This release is {{ releaseStatus }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <p class="text-muted mb-0">
+            <i class="fa fa-info-circle mr-1"></i>
+            Manage the tracklist for this release. You can add tracks now or skip and add them later.
+          </p>
+          <button
+            type="button"
+            class="btn btn-sm btn-success"
+            (click)="onAddSong()"
+            [disabled]="isRestrictedMode()">
+            <i class="fa fa-plus mr-1"></i> Add Song
+          </button>
+        </div>
+
+        <!-- Validation Messages for Draft Releases -->
+        <div *ngIf="(validation.hasErrors || validation.hasWarnings) && !loadingSongs" class="mb-3">
+          <!-- Errors -->
+          <div *ngIf="validation.hasErrors" class="alert alert-danger mb-2">
+            <div class="d-flex align-items-start">
+              <i class="fa fa-exclamation-circle mt-1 me-2"></i>
+              <div class="flex-grow-1">
+                <strong>Missing Required Information</strong>
+                <ul class="mb-0 mt-1">
+                  <li *ngFor="let error of validationErrors">
+                    <strong>{{ error.message }}</strong><span *ngIf="error.trackNumbers && error.trackNumbers.length > 0"> - Track{{ error.trackNumbers.length > 1 ? 's' : '' }} {{ error.trackNumbers.join(', ') }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Warnings -->
+          <div *ngIf="validation.hasWarnings" class="alert alert-warning mb-2">
+            <div class="d-flex align-items-start">
+              <i class="fa fa-exclamation-triangle mt-1 me-2"></i>
+              <div class="flex-grow-1">
+                <strong>Recommended Information</strong>
+                <ul class="mb-0 mt-1">
+                  <li *ngFor="let warning of validationWarnings">
+                    <strong>{{ warning.message }}</strong><span *ngIf="warning.trackNumbers && warning.trackNumbers.length > 0"> - Track{{ warning.trackNumbers.length > 1 ? 's' : '' }} {{ warning.trackNumbers.join(', ') }}</span>
+                    <div class="small text-muted">{{ warning.description }}</div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="loadingSongs" class="text-center py-3">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading songs...</span>
+          </div>
+        </div>
+
+        <app-song-list
+          *ngIf="!loadingSongs"
+          [songs]="songs"
+          [isAdmin]="isAdmin"
+          [releaseStatus]="releaseStatus"
+          [uploadProgress]="uploadProgress"
+          (editSong)="onEditSong($event)"
+          (deleteSong)="onDeleteSong($event)"
+          (uploadAudio)="onUploadAudio($event)"
+          (reorderSongs)="onReorderSongs($event)">
+        </app-song-list>
+      </div>
+      <div class="modal-footer">
+        <button type="button"
+                class="btn btn-secondary"
+                (click)="onClose()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Song Form Modal -->
+<app-song-form
+  [isVisible]="showSongForm"
+  [releaseId]="releaseId || 0"
+  [song]="editingSong"
+  [isSubmitting]="submittingSong"
+  [isAdmin]="isAdmin"
+  [releaseStatus]="releaseStatus"
+  [releaseArtists]="releaseArtists"
+  (close)="onSongFormClose()"
+  (submit)="onSongFormSubmit($event)">
+</app-song-form>
