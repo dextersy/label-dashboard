@@ -1450,7 +1450,6 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
     } catch (emailError) {
       console.error('Failed to send invitation email:', emailError);
       // Continue with the process even if email fails
-      console.error('Resend team invite error:', emailError);
       res.status(500).json({ error: 'Internal server error' });
     }
   } catch (error) {
