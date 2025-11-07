@@ -77,7 +77,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.inviteHash = params['hash'];
       if (!this.inviteHash) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
+        this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.loadInviteData();
@@ -135,11 +135,9 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loading = false;
         console.error('Error loading invite data:', error);
-        if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
-        } else {
-          this.showMessage('Error loading invite data', 'error');
-        }
+        // Use backend error message for all invite errors
+        const errorMessage = error.error?.error || 'Invalid or expired invitation';
+        this.showMessage(errorMessage, 'error');
       }
     });
   }

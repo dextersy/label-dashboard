@@ -9,23 +9,14 @@
 
   <!-- Form Content -->
   <div id="formContent">
-    <!-- Error Alerts (matching original PHP conditions) -->
-    <div *ngIf="errorType === 'no_user'" class="alert alert-danger" role="alert">
-      User not found. Please try again or ask admin to invite you.
-    </div>
-    <div *ngIf="errorType === 'pass'" class="alert alert-danger" role="alert">
-      Wrong password. Please try again.
-    </div>
-    <div *ngIf="errorType === 'invalid_hash'" class="alert alert-danger" role="alert">
-      Invalid code. Please request invite again.
-    </div>
+    <!-- Error and Success Alerts -->
     <div *ngIf="errorType === 'lock'" class="alert alert-danger" role="alert">
       Your account is temporarily locked due to too many failed logins. Please try again in {{lockTimeMinutes}} minutes.
     </div>
     <div *ngIf="showResetSuccess" class="alert alert-success" role="alert">
       Your password has been successfully reset. Please log in again.
     </div>
-    <div *ngIf="errorMessage && !errorType" class="alert alert-danger" role="alert">
+    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
       {{errorMessage}}
     </div>
 

@@ -38,13 +38,13 @@ export class ResetPasswordComponent implements OnInit {
       this.resetCode = params['code'];
       if (!this.resetCode) {
         this.error = true;
-        this.errorMessage = 'The link you used is invalid.';
+        this.errorMessage = 'Invalid or expired reset link';
         this.loadBrandSettings();
       } else {
         // Validate reset hash like original PHP
         this.validateResetHash();
       }
-      
+
       // Handle mismatch error from URL
       if (params['err'] === 'mismatch') {
         this.errorMessage = 'The passwords you input were mismatched. Please try again.';
@@ -60,9 +60,9 @@ export class ResetPasswordComponent implements OnInit {
         this.loadBrandSettings();
       },
       error: (error) => {
-        // Hash is invalid, show error
+        // Hash is invalid, show error with backend message
         this.error = true;
-        this.errorMessage = 'The link you used is invalid.';
+        this.errorMessage = error.error?.error || 'Invalid or expired reset link';
         this.loadBrandSettings();
       }
     });
@@ -112,17 +112,18 @@ export class ResetPasswordComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         // Redirect to login with success message
-        this.router.navigate(['/login'], { 
-          queryParams: { resetpass: '1' } 
+        this.router.navigate(['/login'], {
+          queryParams: { resetpass: '1' }
         });
       },
       error: (error) => {
         this.loading = false;
         if (error.status === 400) {
-          this.errorMessage = error.error?.message || 'Invalid reset token';
+          // Use backend error message
+          this.errorMessage = error.error?.error || 'Invalid or expired reset token';
           this.error = true;
         } else {
-          this.errorMessage = 'An error occurred. Please try again.';
+          this.errorMessage = error.error?.error || 'An error occurred. Please try again.';
         }
       }
     });

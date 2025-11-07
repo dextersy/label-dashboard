@@ -71,17 +71,20 @@ export class ForgotPasswordComponent implements OnInit {
     this.apiService.forgotPassword(this.email).subscribe({
       next: (response) => {
         this.loading = false;
-        this.showMessage('Password reset instructions have been sent to your email address', 'success');
+        // Use backend message or fallback to generic success message
+        this.showMessage(
+          response.message || 'If an account exists with this email address, password reset instructions have been sent.',
+          'success'
+        );
         this.email = '';
       },
       error: (error) => {
         this.loading = false;
-        if (error.status === 404) {
-          this.showMessage('No account found with this email address', 'error');
-        } else if (error.status === 429) {
+        if (error.status === 429) {
           this.showMessage('Too many requests. Please try again later', 'error');
         } else {
-          this.showMessage(error.error?.message || 'An error occurred. Please try again', 'error');
+          // Use backend error message or generic fallback
+          this.showMessage(error.error?.error || 'An error occurred. Please try again', 'error');
         }
       }
     });

@@ -36,14 +36,18 @@ export const processInvite = async (req: Request, res: Response) => {
       ]
     });
 
-    if (!artistAccess) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+    // Combined check - don't reveal whether hash is invalid or user missing
+    if (!artistAccess || !artistAccess.user) {
+      console.warn('Invalid invite attempt in processInvite', {
+        invite_hash,
+        reason: !artistAccess ? 'hash_not_found' : 'user_missing',
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const user = artistAccess.user;
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     // Check if user already has a password set
     if (user.password_md5 && user.password_md5.trim() !== '') {
@@ -109,14 +113,18 @@ export const getInviteData = async (req: Request, res: Response) => {
       ]
     });
 
-    if (!artistAccess) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+    // Combined check - don't reveal whether hash is invalid or user missing
+    if (!artistAccess || !artistAccess.user) {
+      console.warn('Invalid invite attempt in getInviteData', {
+        hash,
+        reason: !artistAccess ? 'hash_not_found' : 'user_missing',
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const user = artistAccess.user;
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     return res.json({
       user: {
@@ -168,14 +176,18 @@ export const setupUserProfile = async (req: Request, res: Response) => {
       ]
     });
 
-    if (!artistAccess) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+    // Combined check - don't reveal whether hash is invalid or user missing
+    if (!artistAccess || !artistAccess.user) {
+      console.warn('Invalid invite attempt in setupUserProfile', {
+        invite_hash,
+        reason: !artistAccess ? 'hash_not_found' : 'user_missing',
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const user = artistAccess.user;
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     // Check if username is provided and validate uniqueness
     if (username && username.trim() !== '') {
@@ -275,7 +287,12 @@ export const processAdminInvite = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+      console.warn('Invalid admin invite attempt in processAdminInvite', {
+        invite_hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     // Check if user already has a password set
@@ -340,7 +357,12 @@ export const getAdminInviteData = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+      console.warn('Invalid admin invite attempt in getAdminInviteData', {
+        hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     return res.json({
@@ -389,7 +411,12 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+      console.warn('Invalid admin invite attempt in setupAdminProfile', {
+        invite_hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     // Check if username is provided and validate uniqueness

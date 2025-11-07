@@ -81,7 +81,7 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.inviteToken = params['token'];
       if (!this.inviteToken) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
+        this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.loadInviteData();
@@ -139,11 +139,9 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loading = false;
         console.error('Error loading admin invite data:', error);
-        if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
-        } else {
-          this.showMessage('Error loading invite data', 'error');
-        }
+        // Use backend error message for all admin invite errors
+        const errorMessage = error.error?.error || 'Invalid or expired invitation';
+        this.showMessage(errorMessage, 'error');
       }
     });
   }

@@ -32,7 +32,7 @@ export class AdminInviteComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.inviteToken = params['token'];
       if (!this.inviteToken) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
+        this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.processAdminInvite();
@@ -63,12 +63,10 @@ export class AdminInviteComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         console.error('Error processing admin invite:', error);
-        
-        if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
-        } else {
-          this.showMessage(error.error?.error || 'Error processing invite', 'error');
-        }
+
+        // Use backend error message for all admin invite errors
+        const errorMessage = error.error?.error || 'Invalid or expired invitation';
+        this.showMessage(errorMessage, 'error');
       }
     });
   }
