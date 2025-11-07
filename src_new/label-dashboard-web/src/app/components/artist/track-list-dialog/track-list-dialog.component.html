@@ -26,13 +26,25 @@
             <i class="fa fa-info-circle mr-1"></i>
             Manage the tracklist for this release. You can add tracks now or skip and add them later.
           </p>
-          <button
-            type="button"
-            class="btn btn-sm btn-success"
-            (click)="onAddSong()"
-            [disabled]="isRestrictedMode()">
-            <i class="fa fa-plus mr-1"></i> Add Song
-          </button>
+          <div class="d-flex">
+            <button
+              type="button"
+              class="btn btn-sm btn-primary me-2"
+              (click)="onDownloadMasters()"
+              [disabled]="downloadingMasters"
+              title="Download masters (cover art + audio files)">
+              <i class="fa fa-spinner fa-spin me-1" *ngIf="downloadingMasters"></i>
+              <i class="fa fa-download me-1" *ngIf="!downloadingMasters"></i>
+              {{ downloadingMasters ? 'Downloading...' : 'Download' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-success"
+              (click)="onAddSong()"
+              [disabled]="isRestrictedMode()">
+              <i class="fa fa-plus me-1"></i> Add Song
+            </button>
+          </div>
         </div>
 
         <!-- Validation Messages for Draft Releases -->

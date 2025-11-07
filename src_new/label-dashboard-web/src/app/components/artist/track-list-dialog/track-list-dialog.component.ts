@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { SongService, Song } from '../../../services/song.service';
+import { ReleaseService } from '../../../services/release.service';
 import { SongListComponent } from '../../songs/song-list/song-list.component';
 import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
@@ -19,6 +20,7 @@ export class TrackListDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;
   @Input() releaseId: number | null = null;
   @Input() releaseTitle: string = '';
+  @Input() releaseCatalogNo: string = '';
   @Input() releaseStatus: string = '';
   @Input() releaseArtists: any[] = []; // Artists associated with the release
   @Output() close = new EventEmitter<void>();
@@ -31,9 +33,11 @@ export class TrackListDialogComponent implements OnChanges {
   submittingSong = false;
   isAdmin = false;
   uploadProgress: { [songId: number]: number } = {};
+  downloadingMasters = false;
 
   constructor(
     private songService: SongService,
+    private releaseService: ReleaseService,
     private authService: AuthService,
     private validationService: ReleaseValidationService
   ) {
@@ -269,5 +273,59 @@ export class TrackListDialogComponent implements OnChanges {
 
   onClose(): void {
     this.close.emit();
+  }
+
+  onDownloadMasters(): void {
+    if (!this.releaseId || this.downloadingMasters) {
+      return;
+    }
+
+    this.downloadingMasters = true;
+
+    this.releaseService.downloadMasters(this.releaseId).subscribe({
+      next: (blob) => {
+        this.downloadingMasters = false;
+
+        // Get artist name for filename
+        const artistName = this.releaseArtists && this.releaseArtists.length > 0
+          ? this.releaseArtists[0].name
+          : 'Unknown Artist';
+
+        // Create filename: "catalog_no - artist name - release title.zip"
+        const fileName = `${this.releaseCatalogNo} - ${artistName} - ${this.releaseTitle}.zip`
+          .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Create blob URL and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Masters downloaded successfully!'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading masters:', error);
+        this.downloadingMasters = false;
+
+        let errorMessage = 'Failed to download masters.';
+        if (error.status === 404) {
+          errorMessage = 'No masters available for this release.';
+        }
+
+        this.alertMessage.emit({
+          type: 'error',
+          message: errorMessage
+        });
+      }
+    });
   }
 }

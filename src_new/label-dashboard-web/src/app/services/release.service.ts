@@ -144,4 +144,12 @@ export class ReleaseService {
       headers: this.getAuthHeaders()
     });
   }
+
+  downloadMasters(releaseId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/releases/${releaseId}/download-masters`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob',
+      observe: 'body'
+    });
+  }
 }

@@ -51,6 +51,7 @@ export class ArtistReleasesTabComponent {
   selectedRelease: ArtistRelease | null = null;
   loadingReleaseDetails = false;
   submittingReleaseId: number | null = null;
+  downloadingMastersId: number | null = null;
 
   constructor(
     private http: HttpClient,
@@ -279,5 +280,73 @@ export class ArtistReleasesTabComponent {
 
     // Get text content and clean up extra whitespace
     return tempDiv.textContent || tempDiv.innerText || '';
+  }
+
+  hasMasters(release: ArtistRelease): boolean {
+    // Check if release has cover art
+    if (release.cover_art && release.cover_art.trim() !== '') {
+      return true;
+    }
+
+    // Check if release has any songs with audio files
+    if (release.songs && release.songs.length > 0) {
+      return release.songs.some(song => song.audio_file && song.audio_file.trim() !== '');
+    }
+
+    return false;
+  }
+
+  onDownloadMasters(release: ArtistRelease): void {
+    if (this.downloadingMastersId || !this.hasMasters(release)) {
+      return; // Prevent multiple downloads at once or downloading when no masters
+    }
+
+    this.downloadingMastersId = release.id;
+
+    this.releaseService.downloadMasters(release.id).subscribe({
+      next: (blob) => {
+        this.downloadingMastersId = null;
+
+        // Get artist name for filename
+        const artistName = release.artists && release.artists.length > 0
+          ? release.artists[0].name
+          : 'Unknown Artist';
+
+        // Create filename: "catalog_no - artist name - release title.zip"
+        const fileName = `${release.catalog_no} - ${artistName} - ${release.title}.zip`
+          .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Create blob URL and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Masters downloaded successfully!'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading masters:', error);
+        this.downloadingMastersId = null;
+
+        let errorMessage = 'Failed to download masters.';
+        if (error.status === 404) {
+          errorMessage = 'No masters available for this release.';
+        }
+
+        this.alertMessage.emit({
+          type: 'error',
+          message: errorMessage
+        });
+      }
+    });
   }
 }
