@@ -4,6 +4,7 @@ import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
+import { clearOriginsCache } from '../middleware/csrf';
 
 const router = express.Router();
 
@@ -24,6 +25,15 @@ router.get('/:brandId/domains', authenticateToken, requireAdmin, getDomains);
 router.post('/:brandId/domains', authenticateToken, requireAdmin, addDomain);
 router.delete('/:brandId/domains/:domainName', authenticateToken, requireAdmin, deleteDomain);
 router.put('/:brandId/domains/:domainName/verify', authenticateToken, requireAdmin, verifyDomain);
+
+// CSRF/CORS cache refresh route (call after adding/updating domains)
+router.post('/refresh-allowed-origins', authenticateToken, requireAdmin, (req, res) => {
+  clearOriginsCache();
+  res.json({
+    message: 'CSRF/CORS allowed origins cache cleared. Will be refreshed on next request.',
+    success: true
+  });
+});
 
 // Child brands (sublabel) routes
 router.get('/:brandId/sublabels', authenticateToken, requireAdmin, getChildBrands);

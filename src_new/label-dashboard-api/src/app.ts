@@ -9,6 +9,7 @@ import { initializeDatabase } from './models';
 import * as https from 'https';
 import * as http from 'http';
 import { globalRateLimit } from './middleware/rateLimiting';
+import { getAllowedOrigins, csrfProtection, requireJsonContentType } from './middleware/csrf';
 
 dotenv.config();
 
@@ -16,9 +17,38 @@ const app = express();
 const HTTP_PORT = process.env.HTTP_PORT || 3000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 
+// SECURITY: Configure CORS with dynamic allowed origins from database
+// This prevents unauthorized origins from making authenticated requests (CSRF protection)
+const configureCors = async () => {
+  const allowedOrigins = await getAllowedOrigins();
+  const originsArray = Array.from(allowedOrigins);
+
+  console.log('🔒 CORS: Configured allowed origins:', originsArray);
+
+  return cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.has(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️  CORS: Blocked request from unauthorized origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true, // Allow cookies if needed in the future
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Length', 'X-Request-Id'],
+    maxAge: 600 // Cache preflight requests for 10 minutes
+  });
+};
+
 // Middleware
 app.use(helmet());
-app.use(cors());
 app.use(morgan('combined'));
 
 // Apply global rate limiting to all requests
@@ -32,73 +62,82 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Static file serving for uploads (legacy local uploads)
 app.use('/api/uploads/artist-photos', express.static(path.join(__dirname, '../uploads/artist-photos')));
 
-
-// Import routes
-import authRoutes from './routes/auth';
-import userRoutes from './routes/users';
-import artistRoutes from './routes/artists';
-import releaseRoutes from './routes/releases';
-import eventRoutes from './routes/events';
-import financialRoutes from './routes/financial';
-import publicRoutes from './routes/public';
-import brandRoutes from './routes/brand';
-import dashboardRoutes from './routes/dashboard';
-import profileRoutes from './routes/profile';
-import inviteRoutes from './routes/invite';
-import emailRoutes from './routes/email';
-import systemRoutes from './routes/system';
-import songRoutes from './routes/songs';
-import songwriterRoutes from './routes/songwriters';
-
-// API Routes (protected)
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/artists', artistRoutes);
-app.use('/api/releases', releaseRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/financial', financialRoutes);
-app.use('/api/brands', brandRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/invite', inviteRoutes);
-app.use('/api/email', emailRoutes);
-app.use('/api/songs', songRoutes);
-app.use('/api/songwriters', songwriterRoutes);
-
-// Public API Routes (no authentication required)
-app.use('/api/public', publicRoutes);
-
-// System API Routes (system user authentication required)
-app.use('/api/system', systemRoutes);
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Label Dashboard API is running' });
-});
-
-// Database connection test
-app.get('/api/db-test', async (req, res) => {
-  try {
-    const isConnected = await initializeDatabase();
-    if (isConnected) {
-      res.json({ status: 'OK', message: 'Database connection and models synchronized successfully' });
-    } else {
-      res.status(500).json({ status: 'ERROR', message: 'Database connection failed' });
-    }
-  } catch (error) {
-    res.status(500).json({ status: 'ERROR', message: 'Database connection failed', error: error.message });
-  }
-});
-
 // Initialize database and start server
 const startServer = async () => {
   try {
     // Initialize database connection and sync models
     const isConnected = await initializeDatabase();
-    
+
     if (!isConnected) {
       console.error('❌ Failed to initialize database. Exiting...');
       process.exit(1);
     }
+
+    // SECURITY: Configure CORS with allowed origins from database
+    const corsMiddleware = await configureCors();
+    app.use(corsMiddleware);
+
+    // SECURITY: Apply CSRF protection to all state-changing operations
+    app.use(csrfProtection);
+
+    // SECURITY: Require JSON content-type for POST/PUT/PATCH requests
+    app.use(requireJsonContentType);
+
+    // Import and register routes (must be done after CORS and CSRF middleware)
+    const authRoutes = (await import('./routes/auth')).default;
+    const userRoutes = (await import('./routes/users')).default;
+    const artistRoutes = (await import('./routes/artists')).default;
+    const releaseRoutes = (await import('./routes/releases')).default;
+    const eventRoutes = (await import('./routes/events')).default;
+    const financialRoutes = (await import('./routes/financial')).default;
+    const publicRoutes = (await import('./routes/public')).default;
+    const brandRoutes = (await import('./routes/brand')).default;
+    const dashboardRoutes = (await import('./routes/dashboard')).default;
+    const profileRoutes = (await import('./routes/profile')).default;
+    const inviteRoutes = (await import('./routes/invite')).default;
+    const emailRoutes = (await import('./routes/email')).default;
+    const systemRoutes = (await import('./routes/system')).default;
+    const songRoutes = (await import('./routes/songs')).default;
+    const songwriterRoutes = (await import('./routes/songwriters')).default;
+
+    // API Routes (protected)
+    app.use('/api/auth', authRoutes);
+    app.use('/api/users', userRoutes);
+    app.use('/api/artists', artistRoutes);
+    app.use('/api/releases', releaseRoutes);
+    app.use('/api/events', eventRoutes);
+    app.use('/api/financial', financialRoutes);
+    app.use('/api/brands', brandRoutes);
+    app.use('/api/dashboard', dashboardRoutes);
+    app.use('/api/profile', profileRoutes);
+    app.use('/api/invite', inviteRoutes);
+    app.use('/api/email', emailRoutes);
+    app.use('/api/songs', songRoutes);
+    app.use('/api/songwriters', songwriterRoutes);
+
+    // Public API Routes (no authentication required)
+    app.use('/api/public', publicRoutes);
+
+    // System API Routes (system user authentication required)
+    app.use('/api/system', systemRoutes);
+
+    // Health check and test routes (registered after CORS)
+    app.get('/api/health', (req, res) => {
+      res.json({ status: 'OK', message: 'Label Dashboard API is running' });
+    });
+
+    app.get('/api/db-test', async (req, res) => {
+      try {
+        const isConnected = await initializeDatabase();
+        if (isConnected) {
+          res.json({ status: 'OK', message: 'Database connection and models synchronized successfully' });
+        } else {
+          res.status(500).json({ status: 'ERROR', message: 'Database connection failed' });
+        }
+      } catch (error: any) {
+        res.status(500).json({ status: 'ERROR', message: 'Database connection failed', error: error.message });
+      }
+    });
 
     // Create server
     var server, port;

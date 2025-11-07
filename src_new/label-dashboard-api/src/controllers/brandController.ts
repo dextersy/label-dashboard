@@ -12,6 +12,7 @@ import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
 import { addDomainToSSL, shouldAutoAddToSSL, validateDomainForSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
+import { clearOriginsCache } from '../middleware/csrf';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -531,6 +532,9 @@ export const addDomain = async (req: Request, res: Response) => {
       status: 'Unverified'
     });
 
+    // SECURITY: Clear CSRF/CORS origins cache since domains changed
+    clearOriginsCache();
+
     res.status(201).json({
       message: 'Domain added successfully',
       domain: {
@@ -570,6 +574,9 @@ export const deleteDomain = async (req: Request, res: Response) => {
 
     // Delete the domain
     await domain.destroy();
+
+    // SECURITY: Clear CSRF/CORS origins cache since domains changed
+    clearOriginsCache();
 
     res.json({
       message: 'Domain deleted successfully'
@@ -679,7 +686,14 @@ const verifyDomainAsync = async (
     
     // Update domain status
     await domain.update({ status: finalStatus });
-    
+
+    // SECURITY: Clear CSRF/CORS origins cache since domain status changed
+    // Only clear if domain was successfully verified (status changed to 'Connected')
+    if (finalStatus === 'Connected') {
+      clearOriginsCache();
+      console.log(`[Async][Security] CSRF/CORS cache cleared after domain verification`);
+    }
+
     console.log(`[Async] Domain verification completed for ${domainName} with status: ${finalStatus}`);
     
     return {
