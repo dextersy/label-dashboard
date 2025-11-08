@@ -15,17 +15,25 @@ export function extractFilenameFromContentDisposition(contentDisposition: string
     return 'download.zip';
   }
 
-  // Try to match filename="..." or filename*=UTF-8''...
-  const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-  const matches = filenameRegex.exec(contentDisposition);
+  // RFC 5987: Try filename*=UTF-8''... first (takes precedence for international characters)
+  const rfc5987Regex = /filename\*=UTF-8''([^;\n]+)/i;
+  const rfc5987Match = rfc5987Regex.exec(contentDisposition);
 
-  if (matches && matches[1]) {
-    let filename = matches[1].replace(/['"]/g, '');
-    // Handle RFC 5987 encoded filenames (filename*=UTF-8''...)
-    if (filename.includes("UTF-8''")) {
-      filename = decodeURIComponent(filename.split("UTF-8''")[1]);
+  if (rfc5987Match && rfc5987Match[1]) {
+    try {
+      return decodeURIComponent(rfc5987Match[1]);
+    } catch (e) {
+      console.error('Error decoding RFC 5987 filename:', e);
+      // Fall through to try regular filename
     }
-    return filename;
+  }
+
+  // Fallback: Try regular filename="..." or filename=...
+  const filenameRegex = /filename=["']?([^"';\n]+)["']?/i;
+  const filenameMatch = filenameRegex.exec(contentDisposition);
+
+  if (filenameMatch && filenameMatch[1]) {
+    return filenameMatch[1].trim();
   }
 
   return 'download.zip';

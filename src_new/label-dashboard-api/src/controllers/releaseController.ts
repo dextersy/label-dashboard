@@ -719,6 +719,12 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    // Validate required environment variables
+    if (!process.env.S3_BUCKET || !process.env.S3_BUCKET_MASTERS) {
+      console.error('Missing required S3 environment variables');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
     const { id } = req.params;
     const releaseId = parseInt(id, 10);
 
@@ -814,13 +820,13 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
 
         // Validate file exists in S3 before streaming
         await s3.headObject({
-          Bucket: process.env.S3_BUCKET!,
+          Bucket: process.env.S3_BUCKET,
           Key: coverArtKey
         }).promise();
 
         // File exists, now create stream and add to zip
         const coverArtStream = s3.getObject({
-          Bucket: process.env.S3_BUCKET!,
+          Bucket: process.env.S3_BUCKET,
           Key: coverArtKey
         }).createReadStream();
 
@@ -847,13 +853,13 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
 
           // Validate file exists in S3 before streaming
           await s3.headObject({
-            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Bucket: process.env.S3_BUCKET_MASTERS,
             Key: song.audio_file
           }).promise();
 
           // File exists, now create stream and add to zip
           const audioStream = s3.getObject({
-            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Bucket: process.env.S3_BUCKET_MASTERS,
             Key: song.audio_file
           }).createReadStream();
 
