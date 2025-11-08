@@ -737,14 +737,14 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
           model: Song,
           as: 'songs',
           where: { audio_file: { [require('sequelize').Op.ne]: null } },
-          required: false,
-          order: [['track_number', 'ASC']]
+          required: false
         },
         {
           model: Artist,
           as: 'artists'
         }
-      ]
+      ],
+      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
     });
 
     if (!release) {
@@ -788,7 +788,7 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
 
     // Create zip archive
     const archive = archiver('zip', {
-      zlib: { level: 9 } // Maximum compression
+      zlib: { level: 6 } // Default compression - audio files don't compress well
     });
 
     // Handle archiver errors
@@ -812,23 +812,22 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
         const coverArtExtension = path.extname(coverArtKey) || '.jpg';
         const coverArtFileName = `cover${coverArtExtension}`;
 
-        // Get cover art from S3
+        // Validate file exists in S3 before streaming
+        await s3.headObject({
+          Bucket: process.env.S3_BUCKET!,
+          Key: coverArtKey
+        }).promise();
+
+        // File exists, now create stream and add to zip
         const coverArtStream = s3.getObject({
           Bucket: process.env.S3_BUCKET!,
           Key: coverArtKey
         }).createReadStream();
 
-        // Handle stream errors (file doesn't exist, access denied, etc.)
-        coverArtStream.on('error', (err) => {
-          console.error('Error streaming cover art from S3:', err);
-          // Error is handled, archive continues without this file
-        });
-
-        // Add to zip
         archive.append(coverArtStream, { name: coverArtFileName });
       } catch (error) {
         console.error('Error adding cover art to zip:', error);
-        // Continue without cover art
+        // Continue without cover art - file doesn't exist or access denied
       }
     }
 
@@ -846,23 +845,22 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
             .replace(/\s+/g, ' ')
             .trim();
 
-          // Get audio file from S3
+          // Validate file exists in S3 before streaming
+          await s3.headObject({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Key: song.audio_file
+          }).promise();
+
+          // File exists, now create stream and add to zip
           const audioStream = s3.getObject({
             Bucket: process.env.S3_BUCKET_MASTERS!,
             Key: song.audio_file
           }).createReadStream();
 
-          // Handle stream errors (file doesn't exist, access denied, etc.)
-          audioStream.on('error', (err) => {
-            console.error(`Error streaming audio file for song ${song.id} (${song.title}) from S3:`, err);
-            // Error is handled, archive continues without this file
-          });
-
-          // Add to zip
           archive.append(audioStream, { name: audioFileName });
         } catch (error) {
           console.error(`Error adding song ${song.id} to zip:`, error);
-          // Continue with other songs
+          // Continue with other songs - file doesn't exist or access denied
         }
       }
     }
