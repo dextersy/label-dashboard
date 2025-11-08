@@ -55,16 +55,13 @@ const configureCors = () => {
     credentials: true, // Allow cookies if needed in the future
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Length', 'X-Request-Id'],
+    exposedHeaders: ['Content-Length', 'X-Request-Id', 'Content-Disposition'],
     maxAge: 600 // Cache preflight requests for 10 minutes
   });
 };
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  exposedHeaders: ['Content-Disposition']
-}));
 app.use(morgan('combined'));
 
 // Apply global rate limiting to all requests
