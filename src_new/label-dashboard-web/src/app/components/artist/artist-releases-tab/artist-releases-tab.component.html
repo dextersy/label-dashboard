@@ -101,8 +101,10 @@
                           (click)="onDownloadMasters(release)"
                           [disabled]="downloadingMastersId === release.id || !hasMasters(release)"
                           [title]="hasMasters(release) ? 'Download Masters' : 'No masters available'">
-                    <i class="fa fa-spinner fa-spin" *ngIf="downloadingMastersId === release.id"></i>
-                    <i class="fa fa-download" *ngIf="downloadingMastersId !== release.id"></i>
+                    <i class="fa"
+                       [class.fa-spinner]="downloadingMastersId === release.id"
+                       [class.fa-spin]="downloadingMastersId === release.id"
+                       [class.fa-download]="downloadingMastersId !== release.id"></i>
                   </button>
                 </td>
               </tr>

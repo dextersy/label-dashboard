@@ -45,7 +45,11 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+
+  // Delay URL revocation to ensure download is initiated in all browsers
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+  }, 100);
 }
 
 /**

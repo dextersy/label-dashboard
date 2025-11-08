@@ -714,6 +714,11 @@ export const generateCatalogNumber = async (req: AuthRequest, res: Response) => 
 // Download masters (cover art + audio files) as a zip
 export const downloadMasters = async (req: AuthRequest, res: Response) => {
   try {
+    // Ensure user is authenticated
+    if (!req.user || !req.user.brand_id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
     const { id } = req.params;
     const releaseId = parseInt(id, 10);
 
@@ -756,14 +761,30 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
 
     // Create zip filename: "catalog_no - artist name - release title"
     const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
-    const zipFileName = `${release.catalog_no} - ${artistName} - ${release.title}`
+    const rawFileName = `${release.catalog_no} - ${artistName} - ${release.title}`;
+
+    // Sanitize filename for ASCII compatibility (remove special chars, keep safe ones)
+    let sanitizedFileName = rawFileName
       .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
       .replace(/\s+/g, ' ')
-      .trim() + '.zip';
+      .trim();
 
-    // Set response headers for zip download
+    // Fallback if sanitization produces an empty filename
+    if (!sanitizedFileName || sanitizedFileName.length === 0) {
+      sanitizedFileName = `release-${releaseId}`;
+    }
+
+    sanitizedFileName += '.zip';
+
+    // Escape double quotes in filename to prevent header injection
+    const escapedFileName = sanitizedFileName.replace(/"/g, '\\"');
+
+    // Use RFC 5987 encoding for better international character support
+    const encodedFileName = encodeURIComponent(rawFileName + '.zip');
+
+    // Set response headers for zip download with both ASCII and UTF-8 encoded filenames
     res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${zipFileName}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
 
     // Create zip archive
     const archive = archiver('zip', {

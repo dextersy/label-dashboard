@@ -33,8 +33,10 @@
               (click)="onDownloadMasters()"
               [disabled]="downloadingMasters"
               title="Download masters (cover art + audio files)">
-              <i class="fa fa-spinner fa-spin me-1" *ngIf="downloadingMasters"></i>
-              <i class="fa fa-download me-1" *ngIf="!downloadingMasters"></i>
+              <i class="fa me-1"
+                 [class.fa-spinner]="downloadingMasters"
+                 [class.fa-spin]="downloadingMasters"
+                 [class.fa-download]="!downloadingMasters"></i>
               {{ downloadingMasters ? 'Downloading...' : 'Download' }}
             </button>
             <button
