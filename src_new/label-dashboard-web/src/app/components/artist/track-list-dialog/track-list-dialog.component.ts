@@ -8,6 +8,7 @@ import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
 import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
 import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
+import { downloadFromResponse } from '../../../utils/file-utils';
 
 @Component({
   selector: 'app-track-list-dialog',
@@ -283,29 +284,11 @@ export class TrackListDialogComponent implements OnChanges {
     this.downloadingMasters = true;
 
     this.releaseService.downloadMasters(this.releaseId).subscribe({
-      next: (blob) => {
+      next: (response) => {
         this.downloadingMasters = false;
 
-        // Get artist name for filename
-        const artistName = this.releaseArtists && this.releaseArtists.length > 0
-          ? this.releaseArtists[0].name
-          : 'Unknown Artist';
-
-        // Create filename: "catalog_no - artist name - release title.zip"
-        const fileName = `${this.releaseCatalogNo} - ${artistName} - ${this.releaseTitle}.zip`
-          .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        // Create blob URL and trigger download
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        // Download using filename from server's Content-Disposition header
+        downloadFromResponse(response);
 
         this.alertMessage.emit({
           type: 'success',

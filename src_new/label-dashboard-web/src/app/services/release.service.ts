@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable, forkJoin, map, catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { BrandService, BrandSettings } from './brand.service';
@@ -145,11 +145,11 @@ export class ReleaseService {
     });
   }
 
-  downloadMasters(releaseId: number): Observable<Blob> {
+  downloadMasters(releaseId: number): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.baseUrl}/releases/${releaseId}/download-masters`, {
       headers: this.getAuthHeaders(),
       responseType: 'blob',
-      observe: 'body'
+      observe: 'response'
     });
   }
 }

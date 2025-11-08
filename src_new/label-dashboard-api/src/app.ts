@@ -18,7 +18,9 @@ const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  exposedHeaders: ['Content-Disposition']
+}));
 app.use(morgan('combined'));
 
 // Apply global rate limiting to all requests

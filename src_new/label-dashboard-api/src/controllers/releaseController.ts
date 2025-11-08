@@ -757,7 +757,7 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
     // Create zip filename: "catalog_no - artist name - release title"
     const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
     const zipFileName = `${release.catalog_no} - ${artistName} - ${release.title}`
-      .replace(/[^a-zA-Z0-9\s\-_]/g, '')
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
       .replace(/\s+/g, ' ')
       .trim() + '.zip';
 

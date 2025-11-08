@@ -9,6 +9,7 @@ import { environment } from 'environments/environment';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { Song } from '../../../services/song.service';
 import { ReleaseService } from '../../../services/release.service';
+import { downloadFromResponse } from '../../../utils/file-utils';
 
 export interface ArtistRelease {
   id: number;
@@ -304,29 +305,11 @@ export class ArtistReleasesTabComponent {
     this.downloadingMastersId = release.id;
 
     this.releaseService.downloadMasters(release.id).subscribe({
-      next: (blob) => {
+      next: (response) => {
         this.downloadingMastersId = null;
 
-        // Get artist name for filename
-        const artistName = release.artists && release.artists.length > 0
-          ? release.artists[0].name
-          : 'Unknown Artist';
-
-        // Create filename: "catalog_no - artist name - release title.zip"
-        const fileName = `${release.catalog_no} - ${artistName} - ${release.title}.zip`
-          .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        // Create blob URL and trigger download
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        // Download using filename from server's Content-Disposition header
+        downloadFromResponse(response);
 
         this.alertMessage.emit({
           type: 'success',
