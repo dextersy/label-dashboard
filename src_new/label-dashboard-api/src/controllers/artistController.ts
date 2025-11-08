@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { generateSecureToken } from '../utils/tokenUtils';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -1340,8 +1341,8 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ error: 'User is already a team member' });
     }
 
-    // Generate random invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
 
     // Create artist access
     const access = await ArtistAccess.create({

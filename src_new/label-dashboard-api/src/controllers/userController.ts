@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { generateSecureToken } from '../utils/tokenUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
 
@@ -51,8 +52,8 @@ export const sendResetLink = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Generate reset hash
-    const resetHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong reset hash
+    const resetHash = generateSecureToken();
     await user.update({ reset_hash: resetHash });
 
     // Send reset email
@@ -179,8 +180,8 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Generate invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
 
     // Create artist access record
     const { ArtistAccess } = require('../models');
@@ -693,8 +694,8 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    // Generate invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
 
     // Create new admin user
     user = await User.create({
@@ -804,8 +805,8 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'User has already set up their account' });
     }
 
-    // Generate new invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
     await user.update({ reset_hash: inviteHash });
 
     // Get brand frontend URL - NEVER use fallback URL for multi-brand security
