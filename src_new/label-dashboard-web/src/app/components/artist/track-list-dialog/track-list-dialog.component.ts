@@ -2,11 +2,13 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { HttpEventType } from '@angular/common/http';
 import { SongService, Song } from '../../../services/song.service';
+import { ReleaseService } from '../../../services/release.service';
 import { SongListComponent } from '../../songs/song-list/song-list.component';
 import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
 import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
 import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
+import { downloadFromResponse } from '../../../utils/file-utils';
 
 @Component({
   selector: 'app-track-list-dialog',
@@ -19,6 +21,7 @@ export class TrackListDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;
   @Input() releaseId: number | null = null;
   @Input() releaseTitle: string = '';
+  @Input() releaseCatalogNo: string = '';
   @Input() releaseStatus: string = '';
   @Input() releaseArtists: any[] = []; // Artists associated with the release
   @Output() close = new EventEmitter<void>();
@@ -31,9 +34,11 @@ export class TrackListDialogComponent implements OnChanges {
   submittingSong = false;
   isAdmin = false;
   uploadProgress: { [songId: number]: number } = {};
+  downloadingMasters = false;
 
   constructor(
     private songService: SongService,
+    private releaseService: ReleaseService,
     private authService: AuthService,
     private validationService: ReleaseValidationService
   ) {
@@ -269,5 +274,41 @@ export class TrackListDialogComponent implements OnChanges {
 
   onClose(): void {
     this.close.emit();
+  }
+
+  onDownloadMasters(): void {
+    if (!this.releaseId || this.downloadingMasters) {
+      return;
+    }
+
+    this.downloadingMasters = true;
+
+    this.releaseService.downloadMasters(this.releaseId).subscribe({
+      next: (response) => {
+        this.downloadingMasters = false;
+
+        // Download using filename from server's Content-Disposition header
+        downloadFromResponse(response);
+
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Masters downloaded successfully!'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading masters:', error);
+        this.downloadingMasters = false;
+
+        let errorMessage = 'Failed to download masters.';
+        if (error.status === 404) {
+          errorMessage = 'No masters available for this release.';
+        }
+
+        this.alertMessage.emit({
+          type: 'error',
+          message: errorMessage
+        });
+      }
+    });
   }
 }

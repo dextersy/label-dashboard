@@ -9,6 +9,7 @@ import { environment } from 'environments/environment';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { Song } from '../../../services/song.service';
 import { ReleaseService } from '../../../services/release.service';
+import { downloadFromResponse } from '../../../utils/file-utils';
 
 export interface ArtistRelease {
   id: number;
@@ -51,6 +52,7 @@ export class ArtistReleasesTabComponent {
   selectedRelease: ArtistRelease | null = null;
   loadingReleaseDetails = false;
   submittingReleaseId: number | null = null;
+  downloadingMastersId: number | null = null;
 
   constructor(
     private http: HttpClient,
@@ -279,5 +281,55 @@ export class ArtistReleasesTabComponent {
 
     // Get text content and clean up extra whitespace
     return tempDiv.textContent || tempDiv.innerText || '';
+  }
+
+  hasMasters(release: ArtistRelease): boolean {
+    // Check if release has cover art
+    if (release.cover_art && release.cover_art.trim() !== '') {
+      return true;
+    }
+
+    // Check if release has any songs with audio files
+    if (release.songs && release.songs.length > 0) {
+      return release.songs.some(song => song.audio_file && song.audio_file.trim() !== '');
+    }
+
+    return false;
+  }
+
+  onDownloadMasters(release: ArtistRelease): void {
+    if (this.downloadingMastersId || !this.hasMasters(release)) {
+      return; // Prevent multiple downloads at once or downloading when no masters
+    }
+
+    this.downloadingMastersId = release.id;
+
+    this.releaseService.downloadMasters(release.id).subscribe({
+      next: (response) => {
+        this.downloadingMastersId = null;
+
+        // Download using filename from server's Content-Disposition header
+        downloadFromResponse(response);
+
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Masters downloaded successfully!'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading masters:', error);
+        this.downloadingMastersId = null;
+
+        let errorMessage = 'Failed to download masters.';
+        if (error.status === 404) {
+          errorMessage = 'No masters available for this release.';
+        }
+
+        this.alertMessage.emit({
+          type: 'error',
+          message: errorMessage
+        });
+      }
+    });
   }
 }

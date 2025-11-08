@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Observable, forkJoin, map, catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { BrandService, BrandSettings } from './brand.service';
@@ -142,6 +142,14 @@ export class ReleaseService {
   generateCatalogNumber(): Observable<{ catalog_number: string }> {
     return this.http.get<{ catalog_number: string }>(`${this.baseUrl}/releases/generate-catalog-number`, {
       headers: this.getAuthHeaders()
+    });
+  }
+
+  downloadMasters(releaseId: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/releases/${releaseId}/download-masters`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob',
+      observe: 'response'
     });
   }
 }

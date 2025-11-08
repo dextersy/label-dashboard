@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
+import archiver from 'archiver';
 import { sendReleaseSubmissionNotification } from '../utils/emailService';
 
 // Configure AWS S3
@@ -700,12 +701,183 @@ export const generateCatalogNumber = async (req: AuthRequest, res: Response) => 
     }
 
     const nextCatalogNumber = `${prefix}${String(highestNumber + 1).padStart(3, '0')}`;
-    
-    res.json({ 
+
+    res.json({
       catalog_number: nextCatalogNumber
     });
   } catch (error) {
     console.error('Generate catalog number error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Download masters (cover art + audio files) as a zip
+export const downloadMasters = async (req: AuthRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user || !req.user.brand_id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Validate required environment variables
+    if (!process.env.S3_BUCKET || !process.env.S3_BUCKET_MASTERS) {
+      console.error('Missing required S3 environment variables');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
+
+    // Get release with songs and artists
+    const release = await Release.findOne({
+      where: {
+        id: releaseId,
+        brand_id: req.user.brand_id
+      },
+      include: [
+        {
+          model: Song,
+          as: 'songs',
+          where: { audio_file: { [require('sequelize').Op.ne]: null } },
+          required: false
+        },
+        {
+          model: Artist,
+          as: 'artists'
+        }
+      ],
+      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const songs = (release as any).songs || [];
+    const artists = (release as any).artists || [];
+
+    // Check if there are any audio files to download
+    if (songs.length === 0 && !release.cover_art) {
+      return res.status(404).json({ error: 'No masters available for this release' });
+    }
+
+    // Create zip filename: "catalog_no - artist name - release title"
+    const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
+    const rawFileName = `${release.catalog_no} - ${artistName} - ${release.title}`;
+
+    // Sanitize filename for ASCII compatibility (remove special chars, keep safe ones)
+    let sanitizedFileName = rawFileName
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Fallback if sanitization produces an empty filename
+    if (!sanitizedFileName || sanitizedFileName.length === 0) {
+      sanitizedFileName = `release-${releaseId}`;
+    }
+
+    sanitizedFileName += '.zip';
+
+    // Escape double quotes in filename to prevent header injection
+    const escapedFileName = sanitizedFileName.replace(/"/g, '\\"');
+
+    // Use RFC 5987 encoding for better international character support
+    const encodedFileName = encodeURIComponent(rawFileName + '.zip');
+
+    // Set response headers for zip download with both ASCII and UTF-8 encoded filenames
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
+
+    // Create zip archive
+    const archive = archiver('zip', {
+      zlib: { level: 6 } // Default compression - audio files don't compress well
+    });
+
+    // Handle archiver errors
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to create zip file' });
+      }
+    });
+
+    // Pipe archive to response
+    archive.pipe(res);
+
+    // Add cover art if available
+    if (release.cover_art && release.cover_art.startsWith('https://')) {
+      try {
+        const coverArtUrl = new URL(release.cover_art);
+        const coverArtKey = coverArtUrl.pathname.substring(1);
+
+        // Get file extension from URL
+        const coverArtExtension = path.extname(coverArtKey) || '.jpg';
+        const coverArtFileName = `cover${coverArtExtension}`;
+
+        // Validate file exists in S3 before streaming
+        await s3.headObject({
+          Bucket: process.env.S3_BUCKET,
+          Key: coverArtKey
+        }).promise();
+
+        // File exists, now create stream and add to zip
+        const coverArtStream = s3.getObject({
+          Bucket: process.env.S3_BUCKET,
+          Key: coverArtKey
+        }).createReadStream();
+
+        archive.append(coverArtStream, { name: coverArtFileName });
+      } catch (error) {
+        console.error('Error adding cover art to zip:', error);
+        // Continue without cover art - file doesn't exist or access denied
+      }
+    }
+
+    // Add audio files
+    for (const song of songs) {
+      if (song.audio_file) {
+        try {
+          // Get file extension
+          const audioExtension = path.extname(song.audio_file) || '.wav';
+
+          // Create filename: "Artist - Album - 01 - Song Title.wav"
+          const trackNumberPadded = String(song.track_number).padStart(2, '0');
+          const audioFileName = `${artistName} - ${release.title} - ${trackNumberPadded} - ${song.title}${audioExtension}`
+            .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          // Validate file exists in S3 before streaming
+          await s3.headObject({
+            Bucket: process.env.S3_BUCKET_MASTERS,
+            Key: song.audio_file
+          }).promise();
+
+          // File exists, now create stream and add to zip
+          const audioStream = s3.getObject({
+            Bucket: process.env.S3_BUCKET_MASTERS,
+            Key: song.audio_file
+          }).createReadStream();
+
+          archive.append(audioStream, { name: audioFileName });
+        } catch (error) {
+          console.error(`Error adding song ${song.id} to zip:`, error);
+          // Continue with other songs - file doesn't exist or access denied
+        }
+      }
+    }
+
+    // Finalize the archive
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Download masters error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 };

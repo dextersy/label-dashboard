@@ -17,7 +17,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for audio master files
+    fileSize: 120 * 1024 * 1024, // 120MB limit for audio master files
   },
   fileFilter: (req, file, cb) => {
     // Only allow WAV files for audio masters

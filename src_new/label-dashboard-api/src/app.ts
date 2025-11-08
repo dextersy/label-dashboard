@@ -62,6 +62,9 @@ const configureCors = () => {
 
 // Middleware
 app.use(helmet());
+app.use(cors({
+  exposedHeaders: ['Content-Disposition']
+}));
 app.use(morgan('combined'));
 
 // Apply global rate limiting to all requests

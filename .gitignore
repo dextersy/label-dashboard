@@ -20,5 +20,8 @@ src_new/label-dashboard-api/dist
 deploy.config
 src_new/label-dashboard-api/webhook.log
 src_new/label-dashboard-api/logs
-SECURITY_ASSESSMENT_REPORT.md
+
+# Documentation folder (contains internal reviews and assessments)
+docs/
+
 .claude/settings.local.json
