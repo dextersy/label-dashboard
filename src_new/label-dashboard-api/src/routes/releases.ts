@@ -9,7 +9,8 @@ import {
   getReleaseEarnings,
   getReleaseExpenses,
   addReleaseExpense,
-  generateCatalogNumber
+  generateCatalogNumber,
+  downloadMasters
 } from '../controllers/releaseController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -49,5 +50,8 @@ router.delete('/:id', requireAdmin, deleteRelease);
 router.get('/:id/earnings', getReleaseEarnings);
 router.get('/:id/expenses', getReleaseExpenses);
 router.post('/:id/expenses', requireAdmin, addReleaseExpense);
+
+// Download masters (cover art + audio files)
+router.get('/:id/download-masters', downloadMasters);
 
 export default router;
