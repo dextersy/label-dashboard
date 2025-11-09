@@ -362,24 +362,31 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const filterConditions: string[] = [];
       const filterReplacements: any[] = [];
 
-      // Whitelist of allowed columns to prevent column name injection
-      const allowedColumns = ['email_address', 'first_name', 'last_name', 'is_admin'];
+      // SECURITY: Column name mapping - prevents SQL injection by never interpolating user input
+      // Maps filter keys to actual SQL column names
+      const columnMapping: Record<string, string> = {
+        'email_address': 'u.email_address',
+        'first_name': 'u.first_name',
+        'last_name': 'u.last_name',
+        'is_admin': 'u.is_admin'
+      };
 
       Object.keys(whereCondition)
         .filter(key => key !== 'brand_id' && key !== 'username')
         .forEach(key => {
-          // Validate column name against whitelist
-          if (!allowedColumns.includes(key)) {
+          // SECURITY: Only process keys that exist in our mapping
+          const columnName = columnMapping[key];
+          if (!columnName) {
             return; // Skip invalid columns
           }
 
           const value = whereCondition[key];
           if (key === 'is_admin') {
-            filterConditions.push(`AND u.${key} = ?`);
+            filterConditions.push(`AND ${columnName} = ?`);
             filterReplacements.push(value ? 1 : 0);
           } else if (typeof value === 'object' && value[Op.like]) {
             const likeValue = value[Op.like].replace(/%/g, '');
-            filterConditions.push(`AND u.${key} LIKE ?`);
+            filterConditions.push(`AND ${columnName} LIKE ?`);
             filterReplacements.push(`%${likeValue}%`);
           }
         });
