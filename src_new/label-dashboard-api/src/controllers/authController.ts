@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { getBrandIdFromDomain } from '../utils/brandUtils';
+import { verifyPassword, migrateUserPassword, hashPassword } from '../utils/passwordUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
@@ -45,8 +46,15 @@ export const login = async (req: Request, res: Response) => {
       }
     }
 
-    // Verify password (PHP uses MD5, but we should migrate to bcrypt)
-    const isValidPassword = user && user.password_md5 === crypto.createHash('md5').update(password).digest('hex');
+    // Verify password with automatic MD5 → bcrypt migration
+    let isValidPassword = false;
+    let needsMigration = false;
+
+    if (user) {
+      const verification = await verifyPassword(password, user);
+      isValidPassword = verification.isValid;
+      needsMigration = verification.needsMigration;
+    }
 
     // Generic error for both "user not found" and "invalid password"
     // This prevents user enumeration attacks
@@ -85,6 +93,11 @@ export const login = async (req: Request, res: Response) => {
       proxy_ip: proxyIp,
       remote_ip: remoteIp
     });
+
+    // Migrate from MD5 to bcrypt if needed (lazy migration)
+    if (needsMigration) {
+      await migrateUserPassword(user, password);
+    }
 
     // Update last login time
     await user.update({ last_logged_in: new Date() });
@@ -280,12 +293,14 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
 
-    // Update password using MD5 to match existing system
-    const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+    // Hash new password with bcrypt (migrate to strong encryption)
+    const hashedPassword = await hashPassword(password);
 
-    // Update user password and clear reset hash
+    // Update user password with bcrypt and clear reset hash
+    // Clear old MD5 hash if it exists
     await user.update({
-      password_md5: hashedPassword,
+      password_hash: hashedPassword,
+      password_md5: null,
       reset_hash: null
     });
 

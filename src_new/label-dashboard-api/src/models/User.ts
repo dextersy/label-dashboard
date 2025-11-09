@@ -6,6 +6,7 @@ interface UserAttributes {
   id: number;
   username?: string;
   password_md5?: string;
+  password_hash?: string;
   email_address: string;
   first_name?: string;
   last_name?: string;
@@ -23,6 +24,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public id!: number;
   public username?: string;
   public password_md5?: string;
+  public password_hash?: string;
   public email_address!: string;
   public first_name?: string;
   public last_name?: string;
@@ -64,6 +66,10 @@ User.init(
     },
     password_md5: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    password_hash: {
+      type: DataTypes.STRING(60),
       allowNull: true,
     },
     email_address: {

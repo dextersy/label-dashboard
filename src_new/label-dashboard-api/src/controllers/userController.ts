@@ -4,6 +4,7 @@ import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
+import { hashPassword } from '../utils/passwordUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
 
@@ -112,15 +113,15 @@ export const initUser = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Username already exists' });
     }
 
-    // Create password hash (MD5 for compatibility, should migrate to bcrypt)
-    const passwordHash = crypto.createHash('md5').update(password).digest('hex');
+    // Create password hash using bcrypt (secure encryption)
+    const passwordHash = await hashPassword(password);
 
     const user = await User.create({
       username,
       email_address,
       first_name,
       last_name,
-      password_md5: passwordHash,
+      password_hash: passwordHash,
       brand_id: brand_id || 1,
       is_admin: false
     });
