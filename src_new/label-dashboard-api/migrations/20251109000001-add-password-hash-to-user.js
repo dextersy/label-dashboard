@@ -32,15 +32,6 @@ module.exports = {
       });
 
       console.log('✅ Added password_hash column');
-
-      // Add index for performance (optional but recommended)
-      console.log('Adding index on password_hash...');
-      await queryInterface.addIndex('user', ['password_hash'], {
-        name: 'idx_user_password_hash',
-        concurrently: true // Minimize table locking
-      });
-
-      console.log('✅ Added index idx_user_password_hash');
       console.log('');
       console.log('🔐 Password migration strategy:');
       console.log('   - New users: bcrypt only');
@@ -66,14 +57,6 @@ module.exports = {
       console.log('   This will remove bcrypt hashes and force users back to MD5');
       console.log('   Users who migrated will need to reset their passwords!');
       console.log('');
-
-      // Remove index first
-      try {
-        await queryInterface.removeIndex('user', 'idx_user_password_hash');
-        console.log('✅ Removed index idx_user_password_hash');
-      } catch (error) {
-        console.log('⚠️  Index may not exist, continuing...');
-      }
 
       // Remove column
       await queryInterface.removeColumn('user', 'password_hash');
