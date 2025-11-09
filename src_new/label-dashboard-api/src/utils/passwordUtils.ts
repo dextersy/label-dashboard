@@ -82,3 +82,13 @@ export const migrateUserPassword = async (
   console.log(`✅ Password migrated from MD5 to bcrypt for user ${user.id} (${user.email_address})`);
 };
 
+/**
+ * Check if a user has a password set (either bcrypt or MD5)
+ *
+ * @param user The user to check
+ * @returns boolean True if user has any password set
+ */
+export const hasPassword = (user: User): boolean => {
+  return !!(user.password_hash || (user.password_md5 && user.password_md5.trim() !== ''));
+};
+

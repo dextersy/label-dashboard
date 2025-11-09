@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as crypto from 'crypto';
 import { Op } from 'sequelize';
 import { User } from '../models';
+import { verifyPassword, hashPassword } from '../utils/passwordUtils';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -96,18 +97,19 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Verify current password (using MD5 to match existing system)
-    const currentPasswordHash = crypto.createHash('md5').update(current_password).digest('hex');
-    if (user.password_md5 !== currentPasswordHash) {
+    // Verify current password (supports both bcrypt and MD5)
+    const { isValid } = await verifyPassword(current_password, user);
+    if (!isValid) {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
 
-    // Hash new password
-    const newPasswordHash = crypto.createHash('md5').update(new_password).digest('hex');
+    // Hash new password with bcrypt
+    const newPasswordHash = await hashPassword(new_password);
 
-    // Update password
+    // Update password with bcrypt and remove MD5
     await user.update({
-      password_md5: newPasswordHash
+      password_hash: newPasswordHash,
+      password_md5: null
     });
 
     res.json({ message: 'Password changed successfully' });

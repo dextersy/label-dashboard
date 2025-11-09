@@ -4,7 +4,7 @@ import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
-import { hashPassword } from '../utils/passwordUtils';
+import { hashPassword, hasPassword } from '../utils/passwordUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
 
@@ -801,8 +801,8 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Admin user not found' });
     }
 
-    // Check if user has already set up their account
-    if (user.password_md5) {
+    // Check if user has already set up their account (bcrypt or MD5)
+    if (hasPassword(user)) {
       return res.status(400).json({ error: 'User has already set up their account' });
     }
 
@@ -875,8 +875,8 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Admin user not found' });
     }
 
-    // Check if user has already set up their account
-    if (user.password_md5) {
+    // Check if user has already set up their account (bcrypt or MD5)
+    if (hasPassword(user)) {
       return res.status(400).json({ error: 'Cannot cancel - user has already set up their account' });
     }
 

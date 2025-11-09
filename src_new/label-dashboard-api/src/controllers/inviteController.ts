@@ -5,6 +5,7 @@ import ArtistAccess from '../models/ArtistAccess';
 import User from '../models/User';
 import Artist from '../models/Artist';
 import Brand from '../models/Brand';
+import { hasPassword, hashPassword } from '../utils/passwordUtils';
 
 // Fail fast if JWT_SECRET is not configured - critical security requirement
 if (!process.env.JWT_SECRET) {
@@ -49,8 +50,8 @@ export const processInvite = async (req: Request, res: Response) => {
 
     const user = artistAccess.user;
 
-    // Check if user already has a password set
-    if (user.password_md5 && user.password_md5.trim() !== '') {
+    // Check if user already has a password set (bcrypt or MD5)
+    if (hasPassword(user)) {
       // User exists with password - mark as accepted and return auth token
       artistAccess.status = 'Accepted';
       artistAccess.invite_hash = null; // Clear the invite hash
@@ -217,15 +218,15 @@ export const setupUserProfile = async (req: Request, res: Response) => {
       }
     }
 
-    // Hash the password using MD5 (matching original setprofile.php)
-    const md5Password = crypto.createHash('md5').update(password).digest('hex');
+    // Hash the password using bcrypt (secure encryption)
+    const hashedPassword = await hashPassword(password);
 
     // Update user
     await user.update({
       username: username?.trim() || user.username,
       first_name: first_name.trim(),
       last_name: last_name.trim(),
-      password_md5: md5Password
+      password_hash: hashedPassword
     });
 
     // Mark artist access as accepted and clear invite hash
@@ -295,8 +296,8 @@ export const processAdminInvite = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
-    // Check if user already has a password set
-    if (user.password_md5 && user.password_md5.trim() !== '') {
+    // Check if user already has a password set (bcrypt or MD5)
+    if (hasPassword(user)) {
       // User exists with password - clear hash and return auth token
       user.reset_hash = null;
       await user.save();
@@ -447,15 +448,15 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
       }
     }
 
-    // Hash the password using MD5 (matching existing system)
-    const md5Password = crypto.createHash('md5').update(password).digest('hex');
+    // Hash the password using bcrypt (secure encryption)
+    const hashedPassword = await hashPassword(password);
 
     // Update user
     await user.update({
       username: username?.trim() || user.username,
       first_name: first_name.trim(),
       last_name: last_name.trim(),
-      password_md5: md5Password,
+      password_hash: hashedPassword,
       reset_hash: null // Clear the invite hash
     });
 
