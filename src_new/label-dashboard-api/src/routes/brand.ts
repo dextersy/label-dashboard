@@ -15,8 +15,8 @@ router.get('/by-domain', getBrandByDomain);
 router.get('/supported-banks', getSupportedBanks);
 
 // CSRF/CORS cache refresh route (must be before /:brandId routes to avoid pattern matching)
-router.post('/refresh-allowed-origins', authenticateToken, requireAdmin, (req, res) => {
-  clearOriginsCache();
+router.post('/refresh-allowed-origins', authenticateToken, requireAdmin, async (req, res) => {
+  await clearOriginsCache();
   res.json({
     message: 'CSRF/CORS allowed origins cache cleared. Will be refreshed on next request.',
     success: true

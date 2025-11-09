@@ -532,8 +532,8 @@ export const addDomain = async (req: Request, res: Response) => {
       status: 'Unverified'
     });
 
-    // SECURITY: Clear CSRF/CORS origins cache since domains changed
-    await clearOriginsCache();
+    // NOTE: Cache clearing not needed here - unverified domains don't affect CORS/CSRF
+    // Cache will be cleared when domain is verified and status changes to 'Connected'
 
     res.status(201).json({
       message: 'Domain added successfully',
@@ -572,11 +572,18 @@ export const deleteDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Domain not found' });
     }
 
+    // Store status before deletion for cache clearing decision
+    const wasConnected = domain.status === 'Connected';
+
     // Delete the domain
     await domain.destroy();
 
-    // SECURITY: Clear CSRF/CORS origins cache since domains changed
-    await clearOriginsCache();
+    // SECURITY: Clear CSRF/CORS origins cache only if deleted domain was 'Connected'
+    // Unverified/Pending/No SSL domains don't affect the cache
+    if (wasConnected) {
+      await clearOriginsCache();
+      console.log(`[Security] CSRF/CORS cache cleared after deleting connected domain: ${domainName}`);
+    }
 
     res.json({
       message: 'Domain deleted successfully'

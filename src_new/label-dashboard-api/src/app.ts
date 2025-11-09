@@ -67,14 +67,6 @@ app.use(morgan('combined'));
 // Apply global rate limiting to all requests
 app.use(globalRateLimit);
 
-// Increase payload limits for email with images
-// 50MB limit to handle multiple large base64 images in email content
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Static file serving for uploads (legacy local uploads)
-app.use('/api/uploads/artist-photos', express.static(path.join(__dirname, '../uploads/artist-photos')));
-
 // Initialize database and start server
 const startServer = async () => {
   try {
@@ -103,6 +95,16 @@ const startServer = async () => {
 
     // SECURITY: Require JSON content-type for POST/PUT/PATCH requests
     app.use(requireJsonContentType);
+
+    // SECURITY: Static file serving after CORS - only accessible from whitelisted origins
+    // Legacy local uploads (being migrated to S3)
+    app.use('/api/uploads/artist-photos', express.static(path.join(__dirname, '../uploads/artist-photos')));
+
+    // SECURITY: Body parsers applied AFTER CORS/CSRF to prevent resource exhaustion attacks
+    // Malicious requests are rejected before parsing large payloads (up to 50mb)
+    app.use(express.json({ limit: '50mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+    console.log('🔒 Body parsers: Configured after security middleware');
 
     // Import and register routes (must be done after CORS and CSRF middleware)
     console.log('📦 Loading route modules...');
