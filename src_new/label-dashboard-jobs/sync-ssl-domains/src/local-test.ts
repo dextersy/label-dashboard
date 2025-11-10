@@ -48,7 +48,12 @@ async function runLocalTest() {
 
   try {
     // Execute the Lambda handler
-    const result = await handler(mockEvent, mockContext);
+    // Note: callback parameter is required by type signature even though handler uses async/await
+    const result = await handler(mockEvent, mockContext, (error, result) => {
+      if (error) {
+        console.error('Lambda callback error:', error);
+      }
+    });
 
     // Ensure result is defined
     if (!result) {
