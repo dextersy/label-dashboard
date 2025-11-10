@@ -11,7 +11,7 @@ import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
-import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, validateDomainForSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
+import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {

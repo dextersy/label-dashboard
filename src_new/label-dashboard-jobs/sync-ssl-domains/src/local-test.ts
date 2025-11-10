@@ -48,7 +48,7 @@ async function runLocalTest() {
 
   try {
     // Execute the Lambda handler
-    const result = await handler(mockEvent, mockContext, () => {});
+    const result = await handler(mockEvent, mockContext);
 
     // Ensure result is defined
     if (!result) {
