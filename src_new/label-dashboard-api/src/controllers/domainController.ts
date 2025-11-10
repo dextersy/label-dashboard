@@ -320,3 +320,60 @@ export const removeSSLDomain = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+/**
+ * Set domain status to Unverified
+ *
+ * Updates a domain's status to 'Unverified' when it's not found in SSL certificate
+ * This allows users to manually verify the domain again through the dashboard
+ */
+export const setDomainUnverified = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.body;
+
+    if (!domain || typeof domain !== 'string') {
+      return res.status(400).json({ error: 'Domain name is required' });
+    }
+
+    console.log(`[API] Setting domain to Unverified: ${domain}`);
+
+    // Update domain status to 'Unverified' across all brands
+    const [updatedCount] = await Domain.update(
+      { status: 'Unverified' },
+      {
+        where: {
+          domain_name: domain
+        }
+      }
+    );
+
+    if (updatedCount === 0) {
+      console.log(`[API] ⚠ Domain not found in database: ${domain}`);
+      return res.status(404).json({
+        success: false,
+        error: 'Domain not found in database',
+        domain: domain
+      });
+    }
+
+    console.log(`[API] ✓ Successfully set ${domain} to Unverified (${updatedCount} record(s) updated)`);
+
+    // Log data access
+    auditLogger.logDataAccess(req, 'domain-status-update', 'UPDATE', updatedCount, {
+      domain,
+      newStatus: 'Unverified'
+    });
+
+    res.json({
+      success: true,
+      message: `Domain ${domain} status set to Unverified`,
+      domain: domain,
+      updated_count: updatedCount
+    });
+
+  } catch (error: any) {
+    console.error('[API] Error setting domain to Unverified:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_DOMAIN_STATUS_UPDATE', { error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

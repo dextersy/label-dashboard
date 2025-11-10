@@ -14,7 +14,8 @@ import {
 import {
   getSSLDomains,
   getSSLCertDomains,
-  removeSSLDomain
+  removeSSLDomain,
+  setDomainUnverified
 } from '../controllers/domainController';
 import {
   authenticateSystemUser,
@@ -56,5 +57,6 @@ router.get('/s3-used-urls', getUsedS3Urls);
 router.get('/ssl-domains', getSSLDomains);
 router.get('/ssl-cert-domains', getSSLCertDomains);
 router.post('/ssl-domain/remove', removeSSLDomain);
+router.post('/domain/set-unverified', setDomainUnverified);
 
 export default router;

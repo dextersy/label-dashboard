@@ -28,6 +28,7 @@ interface APIDomainsResponse {
 interface SyncResult {
   domains_removed: string[];
   domains_added: string[];
+  domains_set_unverified: string[];
   errors: string[];
   ssl_domains_before: number;
   ssl_domains_after: number;
@@ -263,6 +264,54 @@ class SSLDomainSyncService {
   }
 
   /**
+   * Set domain status to Unverified via API
+   */
+  private async setDomainUnverified(domain: string): Promise<boolean> {
+    console.log(`[API] Setting domain to Unverified: ${domain}`);
+
+    if (!this.accessToken) {
+      await this.authenticateWithAPI();
+    }
+
+    try {
+      const response = await this.apiClient.post('/api/system/domain/set-unverified', {
+        domain: domain
+      }, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (response.data.success) {
+        console.log(`[API] ✓ Successfully set to Unverified: ${domain}`);
+        return true;
+      } else {
+        console.error(`[API] ✗ Failed to set ${domain} to Unverified:`, response.data.error);
+        return false;
+      }
+    } catch (error: any) {
+      // If authentication expired, retry once
+      if (error.response?.status === 401) {
+        console.log('[API] Token expired, re-authenticating...');
+        await this.authenticateWithAPI();
+
+        const response = await this.apiClient.post('/api/system/domain/set-unverified', {
+          domain: domain
+        }, {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        });
+
+        return response.data.success === true;
+      }
+
+      console.error(`[API] ✗ Failed to set ${domain} to Unverified:`, error.response?.data || error.message);
+      return false;
+    }
+  }
+
+  /**
    * Generate HTML email for notification
    */
   private generateEmailHTML(result: SyncResult, isError: boolean): string {
@@ -316,6 +365,10 @@ class SSLDomainSyncService {
                     <td style="padding: 8px 0; text-align: right; font-weight: 600; color: ${statusColor};">${result.domains_removed.length}</td>
                   </tr>
                   <tr>
+                    <td style="padding: 8px 0; color: #374151; font-size: 14px;">Domains set to Unverified:</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: ${statusColor};">${result.domains_set_unverified.length}</td>
+                  </tr>
+                  <tr>
                     <td style="padding: 8px 0; color: #374151; font-size: 14px;">SSL domains before:</td>
                     <td style="padding: 8px 0; text-align: right; font-weight: 600;">${result.ssl_domains_before}</td>
                   </tr>
@@ -346,6 +399,21 @@ class SSLDomainSyncService {
                 </ul>
                 <p style="margin: 12px 0 0 0; color: #6b7280; font-size: 14px; font-style: italic;">
                   These domains were removed from the SSL renewal script and will not be included in the next renewal.
+                </p>
+              </div>
+              ` : ''}
+
+              ${result.domains_set_unverified.length > 0 ? `
+              <div style="margin-bottom: 24px;">
+                <h3 style="margin: 0 0 12px 0; color: #f59e0b; font-size: 16px; font-weight: 600;">⚠️ Domains Set to Unverified</h3>
+                <ul style="margin: 0 0 12px 0; padding-left: 20px; color: #374151;">
+                  ${result.domains_set_unverified.map(d => `<li style="margin: 4px 0;">${d}</li>`).join('')}
+                </ul>
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">
+                  These domains were not found in the SSL certificate and have been marked as 'Unverified' in the database.
+                </p>
+                <p style="margin: 0; color: #6b7280; font-size: 14px; font-style: italic;">
+                  They can be re-verified manually through the dashboard.
                 </p>
               </div>
               ` : ''}
@@ -415,6 +483,7 @@ class SSLDomainSyncService {
     text += `===========================================\n\n`;
     text += `SUMMARY:\n`;
     text += `  Orphaned domains removed: ${result.domains_removed.length}\n`;
+    text += `  Domains set to Unverified: ${result.domains_set_unverified.length}\n`;
     text += `  SSL domains before: ${result.ssl_domains_before}\n`;
     text += `  SSL domains after: ${result.ssl_domains_after}\n`;
     text += `  API verified domains: ${result.api_domains_count}\n`;
@@ -429,8 +498,18 @@ class SSLDomainSyncService {
       text += `\nThese domains were removed from the SSL renewal script.\n\n`;
     }
 
+    if (result.domains_set_unverified.length > 0) {
+      text += `DOMAINS SET TO UNVERIFIED:\n`;
+      result.domains_set_unverified.forEach(d => {
+        text += `  - ${d}\n`;
+      });
+      text += `\nThese domains were not found in the SSL certificate and have been\n`;
+      text += `marked as 'Unverified' in the database. They can be re-verified\n`;
+      text += `manually through the dashboard.\n\n`;
+    }
+
     if (result.unverified_domains_count > 0) {
-      text += `UNVERIFIED DOMAINS:\n`;
+      text += `UNVERIFIED DOMAINS (DNS):\n`;
       text += `  ${result.unverified_domains_count} domain(s) were set to 'Unverified' status\n`;
       text += `  because their DNS does not point to the frontend server.\n`;
       text += `  These domains were also removed from the SSL renewal script.\n\n`;
@@ -461,8 +540,9 @@ class SSLDomainSyncService {
       return;
     }
 
+    const changesCount = result.domains_removed.length + result.domains_set_unverified.length;
     const subject = isError
-      ? `⚠️ SSL Domain Sync - ${result.domains_removed.length} Domains Removed${result.errors.length > 0 ? ' (Errors)' : ''}`
+      ? `⚠️ SSL Domain Sync - ${changesCount} Domain${changesCount !== 1 ? 's' : ''} Changed${result.errors.length > 0 ? ' (Errors)' : ''}`
       : `✓ SSL Domain Sync - Success (No Changes)`;
 
     const htmlBody = this.generateEmailHTML(result, isError);
@@ -496,6 +576,7 @@ class SSLDomainSyncService {
     const result: SyncResult = {
       domains_removed: [],
       domains_added: [],
+      domains_set_unverified: [],
       errors: [],
       ssl_domains_before: 0,
       ssl_domains_after: 0,
@@ -548,10 +629,25 @@ class SSLDomainSyncService {
 
       if (domainsToRemove.length === 0) {
         console.log('\n✓ No orphaned domains found - SSL renewal script is clean!');
+
+        // Set domains in API but not in SSL to Unverified even if no domains need removal
         if (domainsMissingFromSSL.length > 0) {
-          console.log(`⚠️  Note: ${domainsMissingFromSSL.length} domain(s) in API are missing from SSL`);
-          console.log('   These should be added manually via the admin interface');
+          console.log('\n' + '='.repeat(80));
+          console.log('UPDATING DOMAIN STATUS');
+          console.log('='.repeat(80));
+          console.log(`\nSetting ${domainsMissingFromSSL.length} domain(s) to 'Unverified' (not found in SSL certificate)...`);
+          console.log('NOTE: These domains can be re-verified manually through the dashboard\n');
+
+          for (const domain of domainsMissingFromSSL) {
+            const success = await this.setDomainUnverified(domain);
+            if (success) {
+              result.domains_set_unverified.push(domain);
+            } else {
+              result.errors.push(`Failed to set domain to Unverified: ${domain}`);
+            }
+          }
         }
+
         result.ssl_domains_after = sslDomainsBefore.length;
         return result;
       }
@@ -575,6 +671,24 @@ class SSLDomainSyncService {
         }
       }
 
+      // Step 5: Set domains in API but not in SSL to Unverified
+      if (domainsMissingFromSSL.length > 0) {
+        console.log('\n' + '='.repeat(80));
+        console.log('UPDATING DOMAIN STATUS');
+        console.log('='.repeat(80));
+        console.log(`\nSetting ${domainsMissingFromSSL.length} domain(s) to 'Unverified' (not found in SSL certificate)...`);
+        console.log('NOTE: These domains can be re-verified manually through the dashboard\n');
+
+        for (const domain of domainsMissingFromSSL) {
+          const success = await this.setDomainUnverified(domain);
+          if (success) {
+            result.domains_set_unverified.push(domain);
+          } else {
+            result.errors.push(`Failed to set domain to Unverified: ${domain}`);
+          }
+        }
+      }
+
       // Step 6: Verify final state
       console.log('\n' + '='.repeat(80));
       console.log('VERIFICATION');
@@ -587,6 +701,7 @@ class SSLDomainSyncService {
       console.log('SYNCHRONIZATION COMPLETE');
       console.log('='.repeat(80));
       console.log(`✓ Orphaned domains removed: ${result.domains_removed.length}`);
+      console.log(`✓ Domains set to Unverified: ${result.domains_set_unverified.length}`);
       console.log(`✗ Errors: ${result.errors.length}`);
       console.log(`\nSSL domains before: ${result.ssl_domains_before}`);
       console.log(`SSL domains after: ${result.ssl_domains_after}`);
@@ -597,9 +712,10 @@ class SSLDomainSyncService {
         console.log(`\n⚠️  ${result.unverified_domains_count} domain(s) were set to 'Unverified' (DNS doesn't point to frontend)`);
       }
 
-      if (domainsMissingFromSSL.length > 0) {
-        console.log(`\n⚠️  Domains in API but not in SSL: ${domainsMissingFromSSL.length}`);
-        console.log('   These must be added manually via the admin interface');
+      if (result.domains_set_unverified.length > 0) {
+        console.log(`\n⚠️  ${result.domains_set_unverified.length} domain(s) were set to 'Unverified' (not found in SSL certificate)`);
+        console.log('   These can be re-verified manually through the dashboard:');
+        result.domains_set_unverified.forEach(domain => console.log(`     - ${domain}`));
       }
 
       if (result.errors.length > 0) {
@@ -611,7 +727,7 @@ class SSLDomainSyncService {
       console.log('   The current SSL certificate remains valid until next renewal');
 
       // Send email notification if configured
-      const hasErrors = result.errors.length > 0 || result.domains_removed.length > 0;
+      const hasErrors = result.errors.length > 0 || result.domains_removed.length > 0 || result.domains_set_unverified.length > 0;
       if (hasErrors && this.sendErrorNotif) {
         console.log('\n[EMAIL] Sending error/removal notification...');
         await this.sendEmailNotification(result, true);
