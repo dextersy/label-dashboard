@@ -149,27 +149,14 @@ main() {
     # Extract the existing domains and add the new one
     print_info "Adding domain '$new_domain' to the SSL renewal command..."
 
-    # Define fixed certificate name
-    local cert_name="melt-records-dashboard"
-
-    # Check if --cert.name already exists in the command
-    local has_cert_name=false
-    if echo "$letsencrypt_line" | grep -q "\-\-cert\.name"; then
-        has_cert_name=true
-        print_info "Certificate name flag already present in command"
-    else
-        print_info "Adding fixed certificate name: $cert_name"
-    fi
+    # Define primary domain (must always be first for consistent cert naming)
+    local primary_domain="dashboard.melt-records.com"
 
     # Create new command line with additional domain
     local new_lego_line
     new_lego_line=$(echo "$letsencrypt_line" | sed "s/\(--domains=[^[:space:]]*\)/\1 --domains=$new_domain/")
 
-    # Add --cert.name flag if it doesn't exist
-    if [ "$has_cert_name" = false ]; then
-        # Insert --cert.name after the 'lego' command but before other flags
-        new_lego_line=$(echo "$new_lego_line" | sed "s/lego /lego --cert.name=$cert_name /")
-    fi
+    print_info "Certificate will use first domain as name: $primary_domain"
 
     # Test the lego command first before updating wrapper script
     print_info "Testing lego command with new domain..."

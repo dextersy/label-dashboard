@@ -519,18 +519,31 @@ class SSLDomainSyncService {
       // Step 3: Find orphaned domains (in SSL but not in DB)
       // NOTE: We only remove orphaned domains, we don't add missing domains
       // Missing domains should be added manually by users via the admin interface
-      const domainsToRemove = sslDomainsBefore.filter(d => !dbDomains.includes(d));
+
+      // IMPORTANT: Never remove dashboard.melt-records.com (primary domain for certificate naming)
+      const primaryDomain = 'dashboard.melt-records.com';
+      const domainsToRemove = sslDomainsBefore
+        .filter(d => !dbDomains.includes(d))
+        .filter(d => d !== primaryDomain);  // Never remove primary domain
+
       const domainsMissingFromSSL = dbDomains.filter(d => !sslDomainsBefore.includes(d));
 
       console.log('\n' + '='.repeat(80));
       console.log('SYNCHRONIZATION PLAN');
       console.log('='.repeat(80));
+      console.log(`Primary domain (always first, never removed): ${primaryDomain}`);
       console.log(`Domains in API: ${dbDomains.length}`);
       console.log(`Domains in SSL certificate: ${sslDomainsBefore.length}`);
       console.log(`Orphaned domains (to remove): ${domainsToRemove.length}`);
       if (domainsMissingFromSSL.length > 0) {
         console.log(`Domains missing from SSL (manual add required): ${domainsMissingFromSSL.length}`);
         domainsMissingFromSSL.forEach(domain => console.log(`  ⚠️  ${domain} - Not in SSL certificate`));
+      }
+
+      // Check if primary domain would have been removed (but is protected)
+      const wouldRemovePrimary = sslDomainsBefore.includes(primaryDomain) && !dbDomains.includes(primaryDomain);
+      if (wouldRemovePrimary) {
+        console.log(`\n✓ ${primaryDomain} is protected from removal (primary domain)`);
       }
 
       if (domainsToRemove.length === 0) {
