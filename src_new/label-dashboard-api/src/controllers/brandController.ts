@@ -11,7 +11,7 @@ import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
-import { addDomainToSSL, shouldAutoAddToSSL, validateDomainForSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
+import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -568,7 +568,31 @@ export const deleteDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Domain not found' });
     }
 
-    // Delete the domain
+    // Store status before deletion for SSL removal decision
+    const wasConnectedOrNoSSL = domain.status === 'Connected' || domain.status === 'No SSL';
+
+    // IMPORTANT: Remove domain from SSL certificate BEFORE deleting from database
+    // This prevents SSL renewal failures from domains that no longer exist
+    if (wasConnectedOrNoSSL) {
+      console.log(`[SSL] Removing domain ${domainName} from SSL certificate before database deletion`);
+      try {
+        const sslResult = await removeDomainFromSSL(domainName);
+        logSSLOperation(domainName, sslResult);
+
+        if (!sslResult.success) {
+          console.error(`[SSL] Warning: Failed to remove domain from SSL certificate, but continuing with database deletion`);
+          console.error(`[SSL] Manual cleanup may be required: ${sslResult.error}`);
+          // Continue with deletion anyway to avoid database/SSL inconsistency
+        }
+      } catch (sslError) {
+        console.error(`[SSL] Error during SSL removal:`, sslError);
+        // Continue with deletion anyway to avoid database/SSL inconsistency
+      }
+    } else {
+      console.log(`[SSL] Skipping SSL removal for domain ${domainName} - status is ${domain.status}`);
+    }
+
+    // Delete the domain from database
     await domain.destroy();
 
     res.json({
