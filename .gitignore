@@ -25,3 +25,4 @@ src_new/label-dashboard-api/logs
 docs/
 
 .claude/settings.local.json
+**/environment.prod.ts

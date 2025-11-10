@@ -424,39 +424,49 @@ ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST
 EOF
 print_success "Maintenance files cleaned up"
 
-# Upload SSL domain management script
-print_status "Uploading add-ssl-domain.sh script..."
+# Upload SSL domain management scripts
+print_status "Uploading SSL domain management scripts..."
 cd "$SCRIPT_DIR"
 sftp_batch=$(mktemp)
 cat > "$sftp_batch" << EOF
 put scripts/add-ssl-domain.sh /home/bitnami/
+put scripts/remove-ssl-domain.sh /home/bitnami/
 quit
 EOF
 
 sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
 if [ $? -eq 0 ]; then
-    print_success "add-ssl-domain.sh script uploaded successfully"
+    print_success "SSL domain management scripts uploaded successfully"
 
-    # Make the script executable and fix line endings
+    # Make the scripts executable and fix line endings
     print_status "Setting executable permissions and fixing line endings..."
     ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << 'EOSSH'
+        # Process add-ssl-domain.sh
         chmod +x /home/bitnami/add-ssl-domain.sh
-        # Fix line endings if dos2unix is available
         if command -v dos2unix &> /dev/null; then
             dos2unix /home/bitnami/add-ssl-domain.sh 2>/dev/null || true
         elif command -v sed &> /dev/null; then
             sed -i 's/\r$//' /home/bitnami/add-ssl-domain.sh
         fi
-        echo "Script permissions set and line endings fixed"
+
+        # Process remove-ssl-domain.sh
+        chmod +x /home/bitnami/remove-ssl-domain.sh
+        if command -v dos2unix &> /dev/null; then
+            dos2unix /home/bitnami/remove-ssl-domain.sh 2>/dev/null || true
+        elif command -v sed &> /dev/null; then
+            sed -i 's/\r$//' /home/bitnami/remove-ssl-domain.sh
+        fi
+
+        echo "Script permissions set and line endings fixed for both scripts"
 EOSSH
 
     if [ $? -eq 0 ]; then
-        print_success "Script configured successfully"
+        print_success "Scripts configured successfully"
     else
         print_warning "Failed to set script permissions (non-critical)"
     fi
 else
-    print_warning "Failed to upload add-ssl-domain.sh script (non-critical)"
+    print_warning "Failed to upload SSL domain management scripts (non-critical)"
 fi
 rm -f "$sftp_batch"
 

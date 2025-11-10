@@ -291,6 +291,157 @@ export const checkDomainInSSLCertificate = async (domainName: string): Promise<b
 };
 
 /**
+ * Remove a domain from the SSL certificate by executing the remove-ssl-domain.sh script on the frontend server
+ * @param domainName - The domain name to remove from the SSL certificate
+ * @param force - Force removal even if it's the last domain (dangerous!)
+ * @param noRenew - Skip immediate SSL renewal (just update renewal script)
+ * @returns Promise<SSLResult> - Result of the SSL operation
+ */
+export const removeDomainFromSSL = async (domainName: string, force: boolean = false, noRenew: boolean = true): Promise<SSLResult> => {
+  return new Promise((resolve) => {
+    const frontendIP = process.env.FRONTEND_IP;
+    const sshKeyPath = process.env.SSH_KEY_PATH;
+    const sshUser = process.env.SSH_USER;
+    const sslRemoveScriptPath = process.env.SSL_REMOVE_SCRIPT_PATH || '~/remove-ssl-domain.sh';
+
+    // Validate required environment variables
+    if (!frontendIP) {
+      resolve({
+        success: false,
+        message: 'FRONTEND_IP environment variable is not configured',
+        error: 'Missing environment configuration'
+      });
+      return;
+    }
+
+    if (!sshKeyPath) {
+      resolve({
+        success: false,
+        message: 'SSH_KEY_PATH environment variable is not configured',
+        error: 'Missing SSH key configuration'
+      });
+      return;
+    }
+
+    if (!sshUser) {
+      resolve({
+        success: false,
+        message: 'SSH_USER environment variable is not configured',
+        error: 'Missing SSH user configuration'
+      });
+      return;
+    }
+
+    console.log(`[SSL] Attempting to remove domain ${domainName} from SSL certificate on ${frontendIP}`);
+
+    // Expand tilde in SSH key path
+    const expandedKeyPath = sshKeyPath.startsWith('~/')
+      ? path.join(process.env.HOME || '', sshKeyPath.slice(2))
+      : sshKeyPath;
+
+    // Build SSH command with optional --force and --no-renew flags
+    const forceFlag = force ? ' --force' : '';
+    const noRenewFlag = noRenew ? ' --no-renew' : '';
+    const sshCommand = [
+      '-i', expandedKeyPath,
+      '-o', 'StrictHostKeyChecking=no',
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'ConnectTimeout=30',
+      `${sshUser}@${frontendIP}`,
+      `${sslRemoveScriptPath}${noRenewFlag}${forceFlag} ${domainName}`
+    ];
+
+    console.log(`[SSL] Executing SSH command: ssh ${sshCommand.join(' ')}`);
+
+    const sshProcess = spawn('ssh', sshCommand, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 300000 // 5 minute timeout
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    // Capture stdout
+    sshProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      stdout += output;
+      console.log(`[SSL] stdout: ${output.trim()}`);
+    });
+
+    // Capture stderr
+    sshProcess.stderr.on('data', (data) => {
+      const output = data.toString();
+      stderr += output;
+      console.log(`[SSL] stderr: ${output.trim()}`);
+    });
+
+    // Handle process completion
+    sshProcess.on('close', (code) => {
+      console.log(`[SSL] SSH process completed with exit code: ${code}`);
+
+      // Check for specific patterns that indicate domain wasn't found
+      const outputLower = stdout.toLowerCase();
+      const stderrLower = stderr.toLowerCase();
+
+      const domainNotFoundPatterns = [
+        'does not exist in the ssl',
+        'domain not found',
+        'not present in certificate'
+      ];
+
+      const isDomainNotFound = domainNotFoundPatterns.some(pattern =>
+        outputLower.includes(pattern) || stderrLower.includes(pattern)
+      );
+
+      if (code === 0) {
+        resolve({
+          success: true,
+          message: `SSL certificate updated successfully - domain ${domainName} removed`,
+          output: stdout
+        });
+      } else if (isDomainNotFound) {
+        // Treat "domain not found" as success since the desired outcome is achieved
+        console.log(`[SSL] Domain ${domainName} was not in SSL certificate - treating as success`);
+        resolve({
+          success: true,
+          message: `Domain ${domainName} was not in SSL certificate`,
+          output: stdout,
+          note: 'Domain was already absent from certificate'
+        });
+      } else {
+        resolve({
+          success: false,
+          message: `Failed to remove domain ${domainName} from SSL certificate`,
+          error: stderr || `Process exited with code ${code}`,
+          output: stdout
+        });
+      }
+    });
+
+    // Handle process errors
+    sshProcess.on('error', (error) => {
+      console.error(`[SSL] SSH process error:`, error);
+      resolve({
+        success: false,
+        message: `SSH connection failed while removing domain ${domainName}`,
+        error: error.message
+      });
+    });
+
+    // Handle timeout
+    sshProcess.on('timeout', () => {
+      console.error(`[SSL] SSH process timed out for domain ${domainName}`);
+      sshProcess.kill('SIGKILL');
+      resolve({
+        success: false,
+        message: `SSL certificate update timed out while removing domain ${domainName}`,
+        error: 'Operation timed out after 5 minutes'
+      });
+    });
+  });
+};
+
+/**
  * Log SSL operation result for debugging and monitoring
  * @param domainName - The domain name
  * @param result - The SSL operation result

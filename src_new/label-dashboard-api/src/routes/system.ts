@@ -12,6 +12,12 @@ import {
   getSublabelsDuePayment
 } from '../controllers/systemController';
 import {
+  getSSLDomains,
+  getSSLCertDomains,
+  removeSSLDomain,
+  setDomainUnverified
+} from '../controllers/domainController';
+import {
   authenticateSystemUser,
   requireSystemUser,
   requireSystemApiEnabled,
@@ -46,5 +52,11 @@ router.get('/artists-due-payment', getArtistsDuePayment);
 router.get('/sublabels-due-payment', getSublabelsDuePayment);
 router.get('/wallet-balances', getWalletBalances);
 router.get('/s3-used-urls', getUsedS3Urls);
+
+// SSL domain management endpoints
+router.get('/ssl-domains', getSSLDomains);
+router.get('/ssl-cert-domains', getSSLCertDomains);
+router.post('/ssl-domain/remove', removeSSLDomain);
+router.post('/domain/set-unverified', setDomainUnverified);
 
 export default router;

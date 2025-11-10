@@ -2,6 +2,8 @@
 
 # SSL Domain Management Script
 # This script adds a new domain to the existing letsencrypt cron job and runs the certificate renewal
+# Uses a fixed certificate name (melt-records-dashboard) to ensure consistent cert management
+# regardless of domain order
 
 set -e  # Exit on any error
 
@@ -65,6 +67,11 @@ show_usage() {
     echo
     echo "Note: This script will automatically test the SSL certificate generation"
     echo "      before adding the domain to the cron job to ensure it works properly."
+    echo
+    echo "Certificate Management:"
+    echo "  The script uses a fixed certificate name (melt-records-dashboard)"
+    echo "  to ensure consistent certificate management regardless of domain order."
+    echo "  All domains will be included as Subject Alternative Names (SANs)."
 }
 
 # Main function
@@ -141,25 +148,32 @@ main() {
     
     # Extract the existing domains and add the new one
     print_info "Adding domain '$new_domain' to the SSL renewal command..."
-    
-    # Create new command line with additional domain at the end
+
+    # Define primary domain (must always be first for consistent cert naming)
+    local primary_domain="dashboard.melt-records.com"
+
+    # Create new command line with additional domain
     local new_lego_line
     new_lego_line=$(echo "$letsencrypt_line" | sed "s/\(--domains=[^[:space:]]*\)/\1 --domains=$new_domain/")
-    
+
+    print_info "Certificate will use first domain as name: $primary_domain"
+
     # Test the lego command first before updating wrapper script
     print_info "Testing lego command with new domain..."
-    
+
     # Extract just the command part (the lego command without any cron schedule)
     local command_part
     command_part="$new_lego_line"
-    
+
     # Add --days 999 flag for testing to force certificate generation
+    # Also remove pm2 restart commands to avoid stopping service during test
     local test_command_part
     test_command_part=$(echo "$command_part" | sed 's/ renew / renew --days 999 /')
-    
-    print_info "Testing command (with --days 999): $test_command_part"
+    test_command_part=$(echo "$test_command_part" | sed 's/[[:space:]]*&&[[:space:]]*pm2[[:space:]].*$//')
+
+    print_info "Testing command (with --days 999, excluding pm2 restart): $test_command_part"
     echo
-    
+
     # Execute the lego command as a test
     if eval "$test_command_part"; then
         print_info "Lego command executed successfully!"
