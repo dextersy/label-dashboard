@@ -160,18 +160,20 @@ main() {
 
     # Test the lego command first before updating wrapper script
     print_info "Testing lego command with new domain..."
-    
+
     # Extract just the command part (the lego command without any cron schedule)
     local command_part
     command_part="$new_lego_line"
-    
+
     # Add --days 999 flag for testing to force certificate generation
+    # Also remove pm2 restart commands to avoid stopping service during test
     local test_command_part
     test_command_part=$(echo "$command_part" | sed 's/ renew / renew --days 999 /')
-    
-    print_info "Testing command (with --days 999): $test_command_part"
+    test_command_part=$(echo "$test_command_part" | sed 's/[[:space:]]*&&[[:space:]]*pm2[[:space:]].*$//')
+
+    print_info "Testing command (with --days 999, excluding pm2 restart): $test_command_part"
     echo
-    
+
     # Execute the lego command as a test
     if eval "$test_command_part"; then
         print_info "Lego command executed successfully!"
