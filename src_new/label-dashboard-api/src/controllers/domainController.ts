@@ -292,7 +292,7 @@ export const removeSSLDomain = async (req: Request, res: Response) => {
       console.log(`[API] ✓ Successfully removed ${domain} from SSL`);
 
       // Log data access
-      auditLogger.logDataAccess(req, 'ssl-domain-remove', 'WRITE', 1, { domain });
+      auditLogger.logDataAccess(req, 'ssl-domain-remove', 'DELETE', 1, { domain });
 
       res.json({
         success: true,
