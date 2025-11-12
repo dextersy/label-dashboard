@@ -5,7 +5,7 @@ import ArtistAccess from '../models/ArtistAccess';
 import User from '../models/User';
 import Artist from '../models/Artist';
 import Brand from '../models/Brand';
-import { hasPassword, hashPassword } from '../utils/passwordUtils';
+import { hasPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
 
 // Fail fast if JWT_SECRET is not configured - critical security requirement
 if (!process.env.JWT_SECRET) {
@@ -193,7 +193,7 @@ export const setupUserProfile = async (req: Request, res: Response) => {
     // Check if username is provided and validate uniqueness
     if (username && username.trim() !== '') {
       const existingUser = await User.findOne({
-        where: { 
+        where: {
           username: username.trim(),
           brand_id: user.brand_id
         }
@@ -216,6 +216,15 @@ export const setupUserProfile = async (req: Request, res: Response) => {
           }
         });
       }
+    }
+
+    // Validate password against security requirements
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
     }
 
     // Hash the password using bcrypt (secure encryption)
@@ -423,7 +432,7 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
     // Check if username is provided and validate uniqueness
     if (username && username.trim() !== '') {
       const existingUser = await User.findOne({
-        where: { 
+        where: {
           username: username.trim(),
           brand_id: user.brand_id
         }
@@ -446,6 +455,15 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
           }
         });
       }
+    }
+
+    // Validate password against security requirements
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
     }
 
     // Hash the password using bcrypt (secure encryption)

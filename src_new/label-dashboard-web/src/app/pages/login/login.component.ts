@@ -24,6 +24,9 @@ export class LoginComponent implements OnInit {
   redirectUrl: string = '';
   showResetSuccess: boolean = false;
   lockTimeMinutes: number = 0;
+
+  // Password visibility toggle
+  showPassword: boolean = false;
   
   // Brand settings (matching original PHP defaults)
   brandLogo: string = 'assets/img/Your Logo Here.png';
@@ -168,5 +171,9 @@ export class LoginComponent implements OnInit {
         }
       }
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

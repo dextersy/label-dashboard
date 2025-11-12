@@ -90,6 +90,15 @@ body, html {
   padding-left: 5px;
 }
 
+.field-hint-message {
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 5px;
+  display: block;
+}
+
 input[type="text"], input[type="password"] {
   background-color: #f6f6f6;
   border: none;
@@ -273,5 +282,51 @@ input[type="submit"] {
   }
   100% {
     opacity: 1;
+  }
+}
+
+/* Material-style password toggle */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input {
+  padding-right: 45px !important;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 12px;
+  color: rgba(0, 0, 0, 0.54);
+  transition: all 0.2s ease-in-out;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    color: rgba(0, 0, 0, 0.87);
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &:active:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+  }
+
+  i {
+    font-size: 18px;
+    pointer-events: none;
   }
 }

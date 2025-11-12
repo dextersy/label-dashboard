@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { getBrandIdFromDomain } from '../utils/brandUtils';
-import { verifyPassword, migrateUserPassword, hashPassword } from '../utils/passwordUtils';
+import { verifyPassword, migrateUserPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
@@ -270,8 +270,13 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Token and new password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    // Validate password against security requirements
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
     }
 
     // Find user with valid reset hash (no expiry check like original PHP)

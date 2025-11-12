@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
+import { validatePassword } from '../../utils/password-utils';
 
 @Component({
   selector: 'app-reset-password',
@@ -19,7 +20,11 @@ export class ResetPasswordComponent implements OnInit {
   loading: boolean = false;
   error: boolean = false;
   errorMessage: string = '';
-  
+
+  // Password visibility toggles
+  showPassword: boolean = false;
+  showValidation: boolean = false;
+
   // Brand settings
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
@@ -100,8 +105,10 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
-    if (this.password.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters long';
+    // Validate password against security requirements
+    const validation = validatePassword(this.password);
+    if (!validation.isValid) {
+      this.errorMessage = validation.errors.join('. ');
       return;
     }
 
@@ -119,14 +126,26 @@ export class ResetPasswordComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         if (error.status === 400) {
-          // Use backend error message
-          this.errorMessage = error.error?.error || 'Invalid or expired reset token';
+          // Handle detailed validation errors from backend
+          if (error.error?.details && Array.isArray(error.error.details)) {
+            this.errorMessage = error.error.details.join('. ');
+          } else {
+            this.errorMessage = error.error?.error || 'Invalid or expired reset token';
+          }
           this.error = true;
         } else {
           this.errorMessage = error.error?.error || 'An error occurred. Please try again.';
         }
       }
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleValidationVisibility(): void {
+    this.showValidation = !this.showValidation;
   }
 
   goToLogin(): void {

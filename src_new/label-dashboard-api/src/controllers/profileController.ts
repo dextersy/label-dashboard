@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as crypto from 'crypto';
 import { Op } from 'sequelize';
 import { User } from '../models';
-import { verifyPassword, hashPassword } from '../utils/passwordUtils';
+import { verifyPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -87,8 +87,13 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ error: 'Current password and new password are required' });
     }
 
-    if (new_password.length < 6) {
-      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    // Validate new password against security requirements
+    const validation = validatePassword(new_password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
     }
 
     // Find user and verify current password
