@@ -10,6 +10,7 @@ interface SongAttributes {
   duration?: number;
   lyrics?: string;
   audio_file?: string;
+  audio_file_size?: number;
   isrc?: string;
   spotify_link?: string;
   apple_music_link?: string;
@@ -29,6 +30,7 @@ class Song extends Model<SongAttributes, SongCreationAttributes> implements Song
   public duration?: number;
   public lyrics?: string;
   public audio_file?: string;
+  public audio_file_size?: number;
   public isrc?: string;
   public spotify_link?: string;
   public apple_music_link?: string;
@@ -85,6 +87,10 @@ Song.init(
     },
     audio_file: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    audio_file_size: {
+      type: DataTypes.BIGINT,
       allowNull: true,
     },
     isrc: {

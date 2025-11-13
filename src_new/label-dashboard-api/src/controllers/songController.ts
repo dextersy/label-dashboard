@@ -659,12 +659,19 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       ACL: 'private'
     }).promise();
 
-    // Update song with new audio file path
-    await song.update({ audio_file: fileName });
+    // Get file size from the uploaded file buffer
+    const fileSize = req.file.buffer.length;
+
+    // Update song with new audio file path and size
+    await song.update({
+      audio_file: fileName,
+      audio_file_size: fileSize
+    });
 
     res.json({
       message: 'Audio file uploaded successfully',
-      audio_file: fileName
+      audio_file: fileName,
+      audio_file_size: fileSize
     });
   } catch (error) {
     console.error('Upload audio error:', error);

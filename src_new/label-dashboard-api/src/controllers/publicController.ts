@@ -4,6 +4,7 @@ import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
+import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
 import crypto from 'crypto';
 
@@ -144,6 +145,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       remainingTickets = event.max_tickets - totalSold;
     }
 
+    // Get display price from ticket types
+    const priceDisplay = getEventDisplayPriceSync(event);
+
     res.json({
       event: {
         id: event.id,
@@ -153,7 +157,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         close_time: event.close_time,
         venue: event.venue,
         poster_url: event.poster_url,
-        ticket_price: event.ticket_price,
+        ticket_price: priceDisplay.amount,
+        ticket_price_display: priceDisplay.displayText,
         ticket_naming: event.ticket_naming || 'Regular',
         max_tickets: event.max_tickets,
         remaining_tickets: remainingTickets,
@@ -902,19 +907,24 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
 
     // Get event details with brand information (no domain validation for SEO pages)
     const event = await Event.findOne({
-      where: { 
+      where: {
         id: eventId,
         status: 'published'
       },
       include: [
-        { 
-          model: Brand, 
+        {
+          model: Brand,
           as: 'brand',
           include: [{
             model: Domain,
             as: 'domains',
             attributes: ['domain_name']
           }]
+        },
+        {
+          model: TicketType,
+          as: 'ticketTypes',
+          attributes: ['id', 'name', 'price']
         }
       ]
     });
@@ -946,6 +956,9 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     const image = event.poster_url || '';
     const siteName = event.brand?.brand_name || 'Melt Records';
 
+    // Get display price from ticket types
+    const priceDisplay = getEventDisplayPriceSync(event);
+
     // Generate structured data
     const structuredData = {
       "@context": "https://schema.org",
@@ -960,7 +973,7 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
       "image": event.poster_url,
       "offers": {
         "@type": "Offer",
-        "price": event.ticket_price,
+        "price": priceDisplay.amount,
         "priceCurrency": "PHP",
         "availability": "https://schema.org/InStock",
         "url": frontendUrl
@@ -1104,7 +1117,7 @@ ${JSON.stringify(structuredData, null, 4)}
           <div><strong>About:</strong><br>${event.description}</div>
         </div>` : ''}
       </div>
-      <div class="price">🎫 ₱${event.ticket_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+      <div class="price">🎫 ${priceDisplay.displayText}</div>
       <a href="${frontendUrl}" class="cta-button">🎟️ Get Your Tickets Now</a>
     </div>
   </div>
@@ -1202,7 +1215,7 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
 
     // Get all events for these brands
     const events = await Event.findAll({
-      where: { 
+      where: {
         brand_id: { [Op.in]: brandIds },
         date_and_time: { [Op.gte]: new Date() }, // Only future events
         status: 'published' // Only published events
@@ -1212,6 +1225,11 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
           model: Brand,
           as: 'brand',
           attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        },
+        {
+          model: TicketType,
+          as: 'ticketTypes',
+          attributes: ['id', 'name', 'price']
         }
       ],
       order: [['date_and_time', 'ASC']]
@@ -1221,17 +1239,21 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
     const brandEvents = allBrands.map(brand => {
       const brandEventsFiltered = events
         .filter(event => event.brand_id === brand.id)
-        .map(event => ({
-          id: event.id,
-          title: event.title,
-          date_and_time: event.date_and_time,
-          venue: event.venue,
-          poster_url: event.poster_url,
-          ticket_price: event.ticket_price,
-          ticket_naming: event.ticket_naming,
-          buy_shortlink: event.buy_shortlink,
-          is_closed: new Date() > new Date(event.close_time || event.date_and_time)
-        }));
+        .map(event => {
+          const priceDisplay = getEventDisplayPriceSync(event);
+          return {
+            id: event.id,
+            title: event.title,
+            date_and_time: event.date_and_time,
+            venue: event.venue,
+            poster_url: event.poster_url,
+            ticket_price: priceDisplay.amount,
+            ticket_price_display: priceDisplay.displayText,
+            ticket_naming: event.ticket_naming,
+            buy_shortlink: event.buy_shortlink,
+            is_closed: new Date() > new Date(event.close_time || event.date_and_time)
+          };
+        });
 
       return {
         id: brand.id,
@@ -1286,7 +1308,7 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
 
     // Get latest events for SEO
     const events = await Event.findAll({
-      where: { 
+      where: {
         brand_id: { [Op.in]: brandIds },
         date_and_time: { [Op.gte]: new Date() }, // Only future events
         status: 'published' // Only published events
@@ -1296,6 +1318,11 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
           model: Brand,
           as: 'brand',
           attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        },
+        {
+          model: TicketType,
+          as: 'ticketTypes',
+          attributes: ['id', 'name', 'price']
         }
       ],
       order: [['date_and_time', 'ASC']],
@@ -1335,28 +1362,31 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
       "name": title,
       "description": description,
       "numberOfItems": events.length,
-      "itemListElement": events.slice(0, 5).map((event, index) => ({
-        "@type": "Event",
-        "position": index + 1,
-        "name": event.title,
-        "startDate": event.date_and_time,
-        "location": {
-          "@type": "Place",
-          "name": event.venue
-        },
-        "image": event.poster_url,
-        "offers": {
-          "@type": "Offer",
-          "price": event.ticket_price,
-          "priceCurrency": "PHP",
-          "availability": "https://schema.org/InStock",
-          "url": `https://${domain}/public/tickets/buy/${event.id}`
-        },
-        "organizer": {
-          "@type": "Organization",
-          "name": event.brand?.brand_name || siteName
-        }
-      }))
+      "itemListElement": events.slice(0, 5).map((event, index) => {
+        const priceDisplay = getEventDisplayPriceSync(event);
+        return {
+          "@type": "Event",
+          "position": index + 1,
+          "name": event.title,
+          "startDate": event.date_and_time,
+          "location": {
+            "@type": "Place",
+            "name": event.venue
+          },
+          "image": event.poster_url,
+          "offers": {
+            "@type": "Offer",
+            "price": priceDisplay.amount,
+            "priceCurrency": "PHP",
+            "availability": "https://schema.org/InStock",
+            "url": `https://${domain}/public/tickets/buy/${event.id}`
+          },
+          "organizer": {
+            "@type": "Organization",
+            "name": event.brand?.brand_name || siteName
+          }
+        };
+      })
     };
 
     // Generate SEO-optimized HTML
@@ -1492,22 +1522,25 @@ ${JSON.stringify(structuredData, null, 4)}
     </div>
     
     <div class="events-grid">
-      ${events.slice(0, 6).map(event => `
+      ${events.slice(0, 6).map(event => {
+        const priceDisplay = getEventDisplayPriceSync(event);
+        return `
         <div class="event-card">
           ${event.poster_url ? `<img src="${event.poster_url}" alt="${event.title}" class="event-poster">` : ''}
           <div class="event-details">
             <div class="event-title">${event.title}</div>
-            <div class="event-info">${new Date(event.date_and_time).toLocaleDateString('en-US', { 
-              weekday: 'short', 
-              year: 'numeric', 
-              month: 'short', 
-              day: 'numeric' 
+            <div class="event-info">${new Date(event.date_and_time).toLocaleDateString('en-US', {
+              weekday: 'short',
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
             })}</div>
             <div class="event-info">${event.venue}</div>
-            <div class="event-price">₱${event.ticket_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div class="event-price">${priceDisplay.displayText}</div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
     
     <div class="cta">
