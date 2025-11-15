@@ -7,11 +7,10 @@ import { NotificationService } from '../../services/notification.service';
 import { validatePassword } from '../../utils/password-utils';
 
 @Component({
-  selector: 'app-profile',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './profile.component.html',
-  styleUrl: './profile.component.scss'
+    selector: 'app-profile',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './profile.component.html',
+    styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
   profile: UserProfile | null = null;

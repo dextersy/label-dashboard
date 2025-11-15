@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-add-expense-dialog',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './add-expense-dialog.component.html',
-  styleUrl: './add-expense-dialog.component.scss'
+    selector: 'app-add-expense-dialog',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './add-expense-dialog.component.html',
+    styleUrl: './add-expense-dialog.component.scss'
 })
 export class AddExpenseDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;

@@ -5,11 +5,10 @@ import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-admin-invite',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './admin-invite.component.html',
-  styleUrl: './admin-invite.component.scss'
+    selector: 'app-admin-invite',
+    imports: [CommonModule],
+    templateUrl: './admin-invite.component.html',
+    styleUrl: './admin-invite.component.scss'
 })
 export class AdminInviteComponent implements OnInit {
   loading: boolean = true;

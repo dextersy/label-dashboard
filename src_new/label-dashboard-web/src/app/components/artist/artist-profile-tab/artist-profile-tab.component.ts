@@ -25,11 +25,10 @@ export interface ArtistProfile extends Artist {
 }
 
 @Component({
-  selector: 'app-artist-profile-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule],
-  templateUrl: './artist-profile-tab.component.html',
-  styleUrl: './artist-profile-tab.component.scss'
+    selector: 'app-artist-profile-tab',
+    imports: [CommonModule, FormsModule, QuillModule],
+    templateUrl: './artist-profile-tab.component.html',
+    styleUrl: './artist-profile-tab.component.scss'
 })
 export class ArtistProfileTabComponent implements OnInit, OnChanges {
   @Input() artist: ArtistProfile | null = null;

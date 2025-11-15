@@ -7,11 +7,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { BrandService } from '../../../services/brand.service';
 
 @Component({
-  selector: 'app-brand-settings-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './brand-settings-tab.component.html',
-  styleUrls: ['./brand-settings-tab.component.scss']
+    selector: 'app-brand-settings-tab',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule],
+    templateUrl: './brand-settings-tab.component.html',
+    styleUrls: ['./brand-settings-tab.component.scss']
 })
 export class BrandSettingsTabComponent implements OnInit, OnDestroy {
   loading: boolean = false;

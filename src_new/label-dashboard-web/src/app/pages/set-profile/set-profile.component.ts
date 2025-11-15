@@ -21,11 +21,10 @@ export interface UserProfile {
 }
 
 @Component({
-  selector: 'app-set-profile',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './set-profile.component.html',
-  styleUrl: './set-profile.component.scss'
+    selector: 'app-set-profile',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './set-profile.component.html',
+    styleUrl: './set-profile.component.scss'
 })
 export class SetProfileComponent implements OnInit, OnDestroy {
   profile: UserProfile | null = null;

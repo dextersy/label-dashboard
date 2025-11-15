@@ -23,11 +23,10 @@ export interface Artist {
 }
 
 @Component({
-  selector: 'app-artist-selection',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './artist-selection.component.html',
-  styleUrl: './artist-selection.component.scss'
+    selector: 'app-artist-selection',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './artist-selection.component.html',
+    styleUrl: './artist-selection.component.scss'
 })
 export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentArtist: Artist | null = null;

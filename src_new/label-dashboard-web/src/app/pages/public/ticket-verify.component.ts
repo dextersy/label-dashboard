@@ -18,20 +18,19 @@ import { MatDividerModule } from '@angular/material/divider';
 import { Html5Qrcode, Html5QrcodeResult } from 'html5-qrcode';
 
 @Component({
-  selector: 'app-ticket-verify',
-  standalone: true,
-  imports: [
-    CommonModule, 
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatDividerModule
-  ],
-  templateUrl: './ticket-verify.component.html',
-  styleUrls: ['./ticket-verify.component.scss']
+    selector: 'app-ticket-verify',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatCardModule,
+        MatIconModule,
+        MatDividerModule
+    ],
+    templateUrl: './ticket-verify.component.html',
+    styleUrls: ['./ticket-verify.component.scss']
 })
 export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();

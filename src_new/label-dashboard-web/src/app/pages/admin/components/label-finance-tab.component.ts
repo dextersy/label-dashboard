@@ -10,11 +10,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 @Component({
-  selector: 'app-label-finance-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective],
-  templateUrl: './label-finance-tab.component.html',
-  styleUrl: './label-finance-tab.component.scss'
+    selector: 'app-label-finance-tab',
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective],
+    templateUrl: './label-finance-tab.component.html',
+    styleUrl: './label-finance-tab.component.scss'
 })
 export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   private subscriptions = new Subscription();

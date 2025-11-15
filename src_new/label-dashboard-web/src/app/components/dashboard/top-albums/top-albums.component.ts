@@ -12,11 +12,10 @@ export interface TopEarningRelease {
 }
 
 @Component({
-  selector: 'app-top-albums',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './top-albums.component.html',
-  styleUrl: './top-albums.component.scss'
+    selector: 'app-top-albums',
+    imports: [CommonModule],
+    templateUrl: './top-albums.component.html',
+    styleUrl: './top-albums.component.scss'
 })
 export class TopAlbumsComponent {
   @Input() releases: TopEarningRelease[] = [];

@@ -10,11 +10,10 @@ export interface ArtistBalance {
 }
 
 @Component({
-  selector: 'app-balance-table',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './balance-table.component.html',
-  styleUrl: './balance-table.component.scss'
+    selector: 'app-balance-table',
+    imports: [CommonModule],
+    templateUrl: './balance-table.component.html',
+    styleUrl: './balance-table.component.scss'
 })
 export class BalanceTableComponent {
   @Input() artists: ArtistBalance[] = [];

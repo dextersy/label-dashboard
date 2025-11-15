@@ -37,11 +37,10 @@ export interface BulkTicketRow {
 
 
 @Component({
-  selector: 'app-custom-ticket',
-  standalone: true,
-  imports: [CommonModule, FormsModule, BreadcrumbComponent],
-  templateUrl: './custom-ticket.component.html',
-  styleUrl: './custom-ticket.component.scss'
+    selector: 'app-custom-ticket',
+    imports: [CommonModule, FormsModule, BreadcrumbComponent],
+    templateUrl: './custom-ticket.component.html',
+    styleUrl: './custom-ticket.component.scss'
 })
 export class CustomTicketComponent implements OnInit, OnDestroy {
   selectedEvent: Event | null = null;

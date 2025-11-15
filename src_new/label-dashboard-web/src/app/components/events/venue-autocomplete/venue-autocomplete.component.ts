@@ -17,18 +17,17 @@ export interface VenueSelection {
 }
 
 @Component({
-  selector: 'app-venue-autocomplete',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => VenueAutocompleteComponent),
-      multi: true
-    }
-  ],
-  templateUrl: './venue-autocomplete.component.html',
-  styles: [`
+    selector: 'app-venue-autocomplete',
+    imports: [CommonModule, FormsModule],
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => VenueAutocompleteComponent),
+            multi: true
+        }
+    ],
+    templateUrl: './venue-autocomplete.component.html',
+    styles: [`
     .venue-autocomplete-container {
       position: relative;
       z-index: 1000;
