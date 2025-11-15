@@ -12,11 +12,10 @@ export interface ArtistWithEPK extends Artist {
 }
 
 @Component({
-  selector: 'app-artist-manage-epk-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ModalToBodyDirective],
-  templateUrl: './artist-manage-epk-tab.component.html',
-  styleUrl: './artist-manage-epk-tab.component.scss'
+    selector: 'app-artist-manage-epk-tab',
+    imports: [CommonModule, FormsModule, ModalToBodyDirective],
+    templateUrl: './artist-manage-epk-tab.component.html',
+    styleUrl: './artist-manage-epk-tab.component.scss'
 })
 export class ArtistManageEpkTabComponent implements OnInit {
   @Input() artist!: ArtistWithEPK;

@@ -5,8 +5,13 @@ import ArtistAccess from '../models/ArtistAccess';
 import User from '../models/User';
 import Artist from '../models/Artist';
 import Brand from '../models/Brand';
+import { hasPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+// Fail fast if JWT_SECRET is not configured - critical security requirement
+if (!process.env.JWT_SECRET) {
+  throw new Error('CRITICAL: JWT_SECRET environment variable is required. Application cannot start without it.');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Process invite - check user status and determine next action
 export const processInvite = async (req: Request, res: Response) => {
@@ -32,17 +37,21 @@ export const processInvite = async (req: Request, res: Response) => {
       ]
     });
 
-    if (!artistAccess) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+    // Combined check - don't reveal whether hash is invalid or user missing
+    if (!artistAccess || !artistAccess.user) {
+      console.warn('Invalid invite attempt in processInvite', {
+        invite_hash,
+        reason: !artistAccess ? 'hash_not_found' : 'user_missing',
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const user = artistAccess.user;
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
-    // Check if user already has a password set
-    if (user.password_md5 && user.password_md5.trim() !== '') {
+    // Check if user already has a password set (bcrypt or MD5)
+    if (hasPassword(user)) {
       // User exists with password - mark as accepted and return auth token
       artistAccess.status = 'Accepted';
       artistAccess.invite_hash = null; // Clear the invite hash
@@ -105,14 +114,18 @@ export const getInviteData = async (req: Request, res: Response) => {
       ]
     });
 
-    if (!artistAccess) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+    // Combined check - don't reveal whether hash is invalid or user missing
+    if (!artistAccess || !artistAccess.user) {
+      console.warn('Invalid invite attempt in getInviteData', {
+        hash,
+        reason: !artistAccess ? 'hash_not_found' : 'user_missing',
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const user = artistAccess.user;
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     return res.json({
       user: {
@@ -164,19 +177,23 @@ export const setupUserProfile = async (req: Request, res: Response) => {
       ]
     });
 
-    if (!artistAccess) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+    // Combined check - don't reveal whether hash is invalid or user missing
+    if (!artistAccess || !artistAccess.user) {
+      console.warn('Invalid invite attempt in setupUserProfile', {
+        invite_hash,
+        reason: !artistAccess ? 'hash_not_found' : 'user_missing',
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const user = artistAccess.user;
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     // Check if username is provided and validate uniqueness
     if (username && username.trim() !== '') {
       const existingUser = await User.findOne({
-        where: { 
+        where: {
           username: username.trim(),
           brand_id: user.brand_id
         }
@@ -201,15 +218,24 @@ export const setupUserProfile = async (req: Request, res: Response) => {
       }
     }
 
-    // Hash the password using MD5 (matching original setprofile.php)
-    const md5Password = crypto.createHash('md5').update(password).digest('hex');
+    // Validate password against security requirements
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
+    }
+
+    // Hash the password using bcrypt (secure encryption)
+    const hashedPassword = await hashPassword(password);
 
     // Update user
     await user.update({
       username: username?.trim() || user.username,
       first_name: first_name.trim(),
       last_name: last_name.trim(),
-      password_md5: md5Password
+      password_hash: hashedPassword
     });
 
     // Mark artist access as accepted and clear invite hash
@@ -271,11 +297,16 @@ export const processAdminInvite = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+      console.warn('Invalid admin invite attempt in processAdminInvite', {
+        invite_hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
-    // Check if user already has a password set
-    if (user.password_md5 && user.password_md5.trim() !== '') {
+    // Check if user already has a password set (bcrypt or MD5)
+    if (hasPassword(user)) {
       // User exists with password - clear hash and return auth token
       user.reset_hash = null;
       await user.save();
@@ -336,7 +367,12 @@ export const getAdminInviteData = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+      console.warn('Invalid admin invite attempt in getAdminInviteData', {
+        hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     return res.json({
@@ -385,13 +421,18 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid invite hash' });
+      console.warn('Invalid admin invite attempt in setupAdminProfile', {
+        invite_hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     // Check if username is provided and validate uniqueness
     if (username && username.trim() !== '') {
       const existingUser = await User.findOne({
-        where: { 
+        where: {
           username: username.trim(),
           brand_id: user.brand_id
         }
@@ -416,15 +457,24 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
       }
     }
 
-    // Hash the password using MD5 (matching existing system)
-    const md5Password = crypto.createHash('md5').update(password).digest('hex');
+    // Validate password against security requirements
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
+    }
+
+    // Hash the password using bcrypt (secure encryption)
+    const hashedPassword = await hashPassword(password);
 
     // Update user
     await user.update({
       username: username?.trim() || user.username,
       first_name: first_name.trim(),
       last_name: last_name.trim(),
-      password_md5: md5Password,
+      password_hash: hashedPassword,
       reset_hash: null // Clear the invite hash
     });
 

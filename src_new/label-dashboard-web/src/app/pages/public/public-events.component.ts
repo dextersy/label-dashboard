@@ -6,11 +6,10 @@ import { BrandService } from '../../services/brand.service';
 import { MetaService } from '../../services/meta.service';
 
 @Component({
-  selector: 'app-public-events',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './public-events.component.html',
-  styleUrls: ['./public-events.component.scss']
+    selector: 'app-public-events',
+    imports: [CommonModule],
+    templateUrl: './public-events.component.html',
+    styleUrls: ['./public-events.component.scss']
 })
 export class PublicEventsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

@@ -2,11 +2,10 @@ import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-countdown-notification',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './countdown-notification.component.html',
-  styleUrl: './countdown-notification.component.scss'
+    selector: 'app-countdown-notification',
+    imports: [CommonModule],
+    templateUrl: './countdown-notification.component.html',
+    styleUrl: './countdown-notification.component.scss'
 })
 export class CountdownNotificationComponent implements OnInit, OnDestroy {
   @Input() eventDate!: string;

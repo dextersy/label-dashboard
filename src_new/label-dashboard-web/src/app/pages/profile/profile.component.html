@@ -172,16 +172,26 @@
                   <!-- Current Password -->
                   <div class="mb-3">
                     <label for="current_password" class="form-label">Current Password <span class="text-danger">*</span></label>
-                    <input 
-                      type="password" 
-                      id="current_password"
-                      class="form-control"
-                      [class.is-invalid]="errors.current_password"
-                      [(ngModel)]="passwordForm.current_password"
-                      name="current_password"
-                      placeholder="Enter your current password"
-                      required>
-                    <div *ngIf="errors.current_password" class="invalid-feedback">
+                    <div class="password-field-wrapper">
+                      <input
+                        [type]="showCurrentPassword ? 'text' : 'password'"
+                        id="current_password"
+                        class="form-control"
+                        [class.is-invalid]="errors.current_password"
+                        [(ngModel)]="passwordForm.current_password"
+                        name="current_password"
+                        placeholder="Enter your current password"
+                        required>
+                      <button
+                        type="button"
+                        class="password-toggle-icon-btn"
+                        (click)="toggleCurrentPasswordVisibility()"
+                        tabindex="-1"
+                        aria-label="Toggle password visibility">
+                        <i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                      </button>
+                    </div>
+                    <div *ngIf="errors.current_password" class="invalid-feedback d-block">
                       {{ errors.current_password }}
                     </div>
                   </div>
@@ -189,34 +199,54 @@
                   <!-- New Password -->
                   <div class="mb-3">
                     <label for="new_password" class="form-label">New Password <span class="text-danger">*</span></label>
-                    <input 
-                      type="password" 
-                      id="new_password"
-                      class="form-control"
-                      [class.is-invalid]="errors.new_password"
-                      [(ngModel)]="passwordForm.new_password"
-                      name="new_password"
-                      placeholder="Enter your new password"
-                      required>
-                    <div *ngIf="errors.new_password" class="invalid-feedback">
+                    <div class="password-field-wrapper">
+                      <input
+                        [type]="showNewPassword ? 'text' : 'password'"
+                        id="new_password"
+                        class="form-control"
+                        [class.is-invalid]="errors.new_password"
+                        [(ngModel)]="passwordForm.new_password"
+                        name="new_password"
+                        placeholder="Enter your new password"
+                        required>
+                      <button
+                        type="button"
+                        class="password-toggle-icon-btn"
+                        (click)="toggleNewPasswordVisibility()"
+                        tabindex="-1"
+                        aria-label="Toggle password visibility">
+                        <i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                      </button>
+                    </div>
+                    <div *ngIf="errors.new_password" class="invalid-feedback d-block">
                       {{ errors.new_password }}
                     </div>
-                    <small class="text-muted">Password must be at least 6 characters long</small>
+                    <small class="text-muted">Must include: 8+ characters, uppercase, lowercase, number, and special character</small>
                   </div>
 
                   <!-- Confirm Password -->
                   <div class="mb-3">
                     <label for="confirm_password" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
-                    <input 
-                      type="password" 
-                      id="confirm_password"
-                      class="form-control"
-                      [class.is-invalid]="errors.confirm_password"
-                      [(ngModel)]="passwordForm.confirm_password"
-                      name="confirm_password"
-                      placeholder="Confirm your new password"
-                      required>
-                    <div *ngIf="errors.confirm_password" class="invalid-feedback">
+                    <div class="password-field-wrapper">
+                      <input
+                        [type]="showConfirmPassword ? 'text' : 'password'"
+                        id="confirm_password"
+                        class="form-control"
+                        [class.is-invalid]="errors.confirm_password"
+                        [(ngModel)]="passwordForm.confirm_password"
+                        name="confirm_password"
+                        placeholder="Confirm your new password"
+                        required>
+                      <button
+                        type="button"
+                        class="password-toggle-icon-btn"
+                        (click)="toggleConfirmPasswordVisibility()"
+                        tabindex="-1"
+                        aria-label="Toggle password visibility">
+                        <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                      </button>
+                    </div>
+                    <div *ngIf="errors.confirm_password" class="invalid-feedback d-block">
                       {{ errors.confirm_password }}
                     </div>
                   </div>

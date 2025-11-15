@@ -19,20 +19,19 @@ import { environment } from '../../../environments/environment';
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'manage-epk';
 
 @Component({
-  selector: 'app-artist',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ArtistProfileTabComponent,
-    ArtistGalleryTabComponent,
-    ArtistReleasesTabComponent,
-    ArtistTeamTabComponent,
-    ArtistNewReleaseTabComponent,
-    ArtistManageEpkTabComponent,
-    BreadcrumbComponent
-  ],
-  templateUrl: './artist.component.html',
-  styleUrl: './artist.component.scss'
+    selector: 'app-artist',
+    imports: [
+        CommonModule,
+        ArtistProfileTabComponent,
+        ArtistGalleryTabComponent,
+        ArtistReleasesTabComponent,
+        ArtistTeamTabComponent,
+        ArtistNewReleaseTabComponent,
+        ArtistManageEpkTabComponent,
+        BreadcrumbComponent
+    ],
+    templateUrl: './artist.component.html',
+    styleUrl: './artist.component.scss'
 })
 export class ArtistComponent implements OnInit, OnDestroy {
   

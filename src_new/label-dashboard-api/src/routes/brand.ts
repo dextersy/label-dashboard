@@ -4,6 +4,7 @@ import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
+import { clearOriginsCache } from '../middleware/csrf';
 
 const router = express.Router();
 
@@ -12,6 +13,15 @@ router.get('/by-domain', getBrandByDomain);
 
 // Public utility routes
 router.get('/supported-banks', getSupportedBanks);
+
+// CSRF/CORS cache refresh route (must be before /:brandId routes to avoid pattern matching)
+router.post('/refresh-allowed-origins', authenticateToken, requireAdmin, async (req, res) => {
+  await clearOriginsCache();
+  res.json({
+    message: 'CSRF/CORS allowed origins cache cleared. Will be refreshed on next request.',
+    success: true
+  });
+});
 
 // Protected routes
 router.get('/:brandId', authenticateToken, getBrandSettings);

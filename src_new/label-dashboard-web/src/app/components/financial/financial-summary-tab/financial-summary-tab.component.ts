@@ -5,11 +5,10 @@ import { RoyaltiesTableComponent } from '../royalties-table/royalties-table.comp
 import { FinancialSummary, Earning, Royalty } from '../../../pages/financial/financial.component';
 
 @Component({
-  selector: 'app-financial-summary-tab',
-  standalone: true,
-  imports: [CommonModule, EarningsTableComponent, RoyaltiesTableComponent],
-  templateUrl: './financial-summary-tab.component.html',
-  styleUrl: './financial-summary-tab.component.scss'
+    selector: 'app-financial-summary-tab',
+    imports: [CommonModule, EarningsTableComponent, RoyaltiesTableComponent],
+    templateUrl: './financial-summary-tab.component.html',
+    styleUrl: './financial-summary-tab.component.scss'
 })
 export class FinancialSummaryTabComponent {
   @Input() summary: FinancialSummary | null = null;

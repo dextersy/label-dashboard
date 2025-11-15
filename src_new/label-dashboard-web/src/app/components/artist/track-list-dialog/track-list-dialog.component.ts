@@ -11,11 +11,10 @@ import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.compon
 import { downloadFromResponse } from '../../../utils/file-utils';
 
 @Component({
-  selector: 'app-track-list-dialog',
-  standalone: true,
-  imports: [CommonModule, SongListComponent, SongFormComponent],
-  templateUrl: './track-list-dialog.component.html',
-  styleUrl: './track-list-dialog.component.scss'
+    selector: 'app-track-list-dialog',
+    imports: [CommonModule, SongListComponent, SongFormComponent],
+    templateUrl: './track-list-dialog.component.html',
+    styleUrl: './track-list-dialog.component.scss'
 })
 export class TrackListDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;

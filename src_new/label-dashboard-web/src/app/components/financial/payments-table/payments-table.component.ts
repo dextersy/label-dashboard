@@ -6,11 +6,10 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters } f
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
-  selector: 'app-payments-table',
-  standalone: true,
-  imports: [CommonModule, PaginatedTableComponent],
-  templateUrl: './payments-table.component.html',
-  styleUrl: './payments-table.component.scss'
+    selector: 'app-payments-table',
+    imports: [CommonModule, PaginatedTableComponent],
+    templateUrl: './payments-table.component.html',
+    styleUrl: './payments-table.component.scss'
 })
 export class PaymentsTableComponent implements OnInit, OnChanges {
   @Input() payments: Payment[] = [];

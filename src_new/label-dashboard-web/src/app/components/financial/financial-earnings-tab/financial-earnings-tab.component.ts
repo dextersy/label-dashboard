@@ -11,11 +11,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { ArtistStateService } from '../../../services/artist-state.service';
 
 @Component({
-  selector: 'app-financial-earnings-tab',
-  standalone: true,
-  imports: [CommonModule, EarningsTableComponent, PaginatedTableComponent, DateRangeFilterComponent],
-  templateUrl: './financial-earnings-tab.component.html',
-  styleUrl: './financial-earnings-tab.component.scss'
+    selector: 'app-financial-earnings-tab',
+    imports: [CommonModule, EarningsTableComponent, PaginatedTableComponent, DateRangeFilterComponent],
+    templateUrl: './financial-earnings-tab.component.html',
+    styleUrl: './financial-earnings-tab.component.scss'
 })
 export class FinancialEarningsTabComponent {
   @Input() earnings: Earning[] = [];

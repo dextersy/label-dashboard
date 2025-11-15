@@ -12,22 +12,21 @@ import { ToolsTabComponent } from './components/tools-tab.component';
 import { LabelFinanceTabComponent } from './components/label-finance-tab.component';
 
 @Component({
-  selector: 'app-admin',
-  standalone: true,
-  imports: [
-    CommonModule, 
-    BreadcrumbComponent,
-    BrandSettingsTabComponent, 
-    SummaryViewTabComponent, 
-    BalanceSummaryTabComponent, 
-    BulkAddEarningsTabComponent, 
-    UsersTabComponent, 
-    ChildBrandsTabComponent, 
-    ToolsTabComponent,
-    LabelFinanceTabComponent
-  ],
-  templateUrl: './admin.component.html',
-  styleUrl: './admin.component.scss'
+    selector: 'app-admin',
+    imports: [
+        CommonModule,
+        BreadcrumbComponent,
+        BrandSettingsTabComponent,
+        SummaryViewTabComponent,
+        BalanceSummaryTabComponent,
+        BulkAddEarningsTabComponent,
+        UsersTabComponent,
+        ChildBrandsTabComponent,
+        ToolsTabComponent,
+        LabelFinanceTabComponent
+    ],
+    templateUrl: './admin.component.html',
+    styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit {
   activeTab: string = 'brand';

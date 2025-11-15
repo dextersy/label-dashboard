@@ -5,11 +5,10 @@ import { Document } from '../../../pages/financial/financial.component';
 import { DocumentViewerComponent } from '../../shared/document-viewer/document-viewer.component';
 
 @Component({
-  selector: 'app-financial-documents-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, DocumentViewerComponent],
-  templateUrl: './financial-documents-tab.component.html',
-  styleUrl: './financial-documents-tab.component.scss'
+    selector: 'app-financial-documents-tab',
+    imports: [CommonModule, FormsModule, DocumentViewerComponent],
+    templateUrl: './financial-documents-tab.component.html',
+    styleUrl: './financial-documents-tab.component.scss'
 })
 export class FinancialDocumentsTabComponent {
   @Input() documents: Document[] = [];

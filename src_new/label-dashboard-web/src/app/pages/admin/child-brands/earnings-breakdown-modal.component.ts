@@ -1,13 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ChildBrand } from '../../../services/admin.service';
 
 @Component({
-  selector: 'app-earnings-breakdown-modal',
-  standalone: true,
-  imports: [CommonModule, CurrencyPipe, DecimalPipe],
-  templateUrl: './earnings-breakdown-modal.component.html',
-  styleUrls: ['./earnings-breakdown-modal.component.scss']
+    selector: 'app-earnings-breakdown-modal',
+    imports: [CommonModule],
+    templateUrl: './earnings-breakdown-modal.component.html',
+    styleUrls: ['./earnings-breakdown-modal.component.scss']
 })
 export class EarningsBreakdownModalComponent {
   @Input() show: boolean = false;

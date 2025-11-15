@@ -16,11 +16,10 @@ export interface EventSales {
 Chart.register(...registerables);
 
 @Component({
-  selector: 'app-event-sales-chart',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './event-sales-chart.component.html',
-  styleUrl: './event-sales-chart.component.scss'
+    selector: 'app-event-sales-chart',
+    imports: [CommonModule],
+    templateUrl: './event-sales-chart.component.html',
+    styleUrl: './event-sales-chart.component.scss'
 })
 export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @Input() eventSales: EventSales[] = [];

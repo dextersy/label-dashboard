@@ -4,11 +4,10 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { BrandService } from '../../services/brand.service';
 
 @Component({
-  selector: 'app-domain-not-found',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './domain-not-found.component.html',
-  styleUrl: './domain-not-found.component.scss'
+    selector: 'app-domain-not-found',
+    imports: [CommonModule],
+    templateUrl: './domain-not-found.component.html',
+    styleUrl: './domain-not-found.component.scss'
 })
 export class DomainNotFoundComponent implements OnInit {
   currentDomain: string = '';

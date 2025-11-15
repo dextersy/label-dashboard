@@ -6,6 +6,7 @@ import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { validatePassword } from '../../utils/password-utils';
 
 export interface UserProfile {
   id: number;
@@ -20,11 +21,10 @@ export interface UserProfile {
 }
 
 @Component({
-  selector: 'app-set-profile',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './set-profile.component.html',
-  styleUrl: './set-profile.component.scss'
+    selector: 'app-set-profile',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './set-profile.component.html',
+    styleUrl: './set-profile.component.scss'
 })
 export class SetProfileComponent implements OnInit, OnDestroy {
   profile: UserProfile | null = null;
@@ -36,6 +36,10 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   // Password fields (matching setprofile.php)
   password: string = '';
   confirmPassword: string = '';
+
+  // Password visibility toggles
+  showPassword: boolean = false;
+  showConfirmPassword: boolean = false;
 
   // Form validation (matching setprofile.php validation)
   errors: any = {};
@@ -77,7 +81,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.inviteHash = params['hash'];
       if (!this.inviteHash) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
+        this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.loadInviteData();
@@ -135,11 +139,9 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loading = false;
         console.error('Error loading invite data:', error);
-        if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
-        } else {
-          this.showMessage('Error loading invite data', 'error');
-        }
+        // Use backend error message for all invite errors
+        const errorMessage = error.error?.error || 'Invalid or expired invitation';
+        this.showMessage(errorMessage, 'error');
       }
     });
   }
@@ -214,8 +216,15 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.saving = false;
-        if (error.status === 400 && error.error.errors) {
-          this.errors = error.error.errors;
+        if (error.status === 400) {
+          if (error.error.errors) {
+            this.errors = error.error.errors;
+          } else if (error.error.details && Array.isArray(error.error.details)) {
+            // Handle detailed validation errors from backend
+            this.errors.password = error.error.details.join('. ');
+          } else {
+            this.showMessage(error.error?.error || error.error?.message || 'Error setting up profile', 'error');
+          }
         } else {
           this.showMessage(error.error?.message || 'Error setting up profile', 'error');
         }
@@ -247,9 +256,15 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       errors.last_name = 'Last name is required';
     }
 
-    // Password validation (matching setprofile.php)
+    // Password validation
     if (!this.password?.trim()) {
       errors.password = 'Password is required';
+    } else {
+      // Validate password against security requirements
+      const validation = validatePassword(this.password);
+      if (!validation.isValid) {
+        errors.password = validation.errors.join('. ');
+      }
     }
 
     if (!this.confirmPassword?.trim()) {
@@ -275,6 +290,14 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   private showMessage(message: string, type: 'success' | 'error'): void {
     this.message = message;
     this.messageType = type;
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 
   goToLogin(): void {

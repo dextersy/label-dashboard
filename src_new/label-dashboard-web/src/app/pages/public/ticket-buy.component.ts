@@ -16,19 +16,18 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 
 
 @Component({
-  selector: 'app-ticket-buy',
-  standalone: true,
-  imports: [
-    CommonModule, 
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    CountdownNotificationComponent
-  ],
-  templateUrl: './ticket-buy.component.html',
-  styleUrls: ['./ticket-buy.component.scss']
+    selector: 'app-ticket-buy',
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatCheckboxModule,
+        CountdownNotificationComponent
+    ],
+    templateUrl: './ticket-buy.component.html',
+    styleUrls: ['./ticket-buy.component.scss']
 })
 export class TicketBuyComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

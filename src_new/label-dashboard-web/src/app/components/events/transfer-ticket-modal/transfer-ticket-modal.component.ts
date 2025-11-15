@@ -10,11 +10,10 @@ export interface TransferData {
 }
 
 @Component({
-  selector: 'app-transfer-ticket-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './transfer-ticket-modal.component.html',
-  styleUrl: './transfer-ticket-modal.component.scss'
+    selector: 'app-transfer-ticket-modal',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './transfer-ticket-modal.component.html',
+    styleUrl: './transfer-ticket-modal.component.scss'
 })
 export class TransferTicketModalComponent {
   @Input() ticket: EventTicket | null = null;

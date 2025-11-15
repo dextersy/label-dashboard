@@ -12,11 +12,10 @@ export interface LatestRelease {
 }
 
 @Component({
-  selector: 'app-latest-albums',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './latest-albums.component.html',
-  styleUrl: './latest-albums.component.scss'
+    selector: 'app-latest-albums',
+    imports: [CommonModule],
+    templateUrl: './latest-albums.component.html',
+    styleUrl: './latest-albums.component.scss'
 })
 export class LatestAlbumsComponent {
   @Input() releases: LatestRelease[] = [];

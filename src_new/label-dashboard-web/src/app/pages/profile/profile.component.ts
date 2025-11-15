@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProfileService, UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '../../services/profile.service';
 import { NotificationService } from '../../services/notification.service';
+import { validatePassword } from '../../utils/password-utils';
 
 @Component({
-  selector: 'app-profile',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './profile.component.html',
-  styleUrl: './profile.component.scss'
+    selector: 'app-profile',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './profile.component.html',
+    styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
   profile: UserProfile | null = null;
@@ -36,6 +36,11 @@ export class ProfileComponent implements OnInit {
   // UI state
   showPasswordChange: boolean = false;
   errors: any = {};
+
+  // Password visibility toggles
+  showCurrentPassword: boolean = false;
+  showNewPassword: boolean = false;
+  showConfirmPassword: boolean = false;
   
   constructor(
     private profileService: ProfileService,
@@ -136,7 +141,14 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         this.changingPassword = false;
-        this.notificationService.showError(error.error?.message || 'Error changing password');
+        // Handle detailed validation errors from backend
+        if (error.status === 400 && error.error?.details && Array.isArray(error.error.details)) {
+          const errorMessage = error.error.details.join('. ');
+          this.notificationService.showError(errorMessage);
+          this.errors.new_password = errorMessage;
+        } else {
+          this.notificationService.showError(error.error?.error || error.error?.message || 'Error changing password');
+        }
       }
     });
   }
@@ -171,26 +183,30 @@ export class ProfileComponent implements OnInit {
   
   private validatePasswordForm(): boolean {
     const errors: any = {};
-    
+
     if (!this.passwordForm.current_password?.trim()) {
       errors.current_password = 'Current password is required';
     }
-    
+
     if (!this.passwordForm.new_password?.trim()) {
       errors.new_password = 'New password is required';
-    } else if (this.passwordForm.new_password.length < 6) {
-      errors.new_password = 'New password must be at least 6 characters long';
+    } else {
+      // Validate new password against security requirements
+      const validation = validatePassword(this.passwordForm.new_password);
+      if (!validation.isValid) {
+        errors.new_password = validation.errors.join('. ');
+      }
     }
-    
+
     if (!this.passwordForm.confirm_password?.trim()) {
       errors.confirm_password = 'Please confirm your new password';
     }
-    
-    if (this.passwordForm.new_password && this.passwordForm.confirm_password && 
+
+    if (this.passwordForm.new_password && this.passwordForm.confirm_password &&
         this.passwordForm.new_password !== this.passwordForm.confirm_password) {
       errors.confirm_password = 'Passwords do not match';
     }
-    
+
     this.errors = errors;
     return Object.keys(errors).length === 0;
   }
@@ -199,10 +215,22 @@ export class ProfileComponent implements OnInit {
     this.errors = {};
   }
   
+  toggleCurrentPasswordVisibility(): void {
+    this.showCurrentPassword = !this.showCurrentPassword;
+  }
+
+  toggleNewPasswordVisibility(): void {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
-  
+
   formatLastLogin(lastLogin: string | undefined): string {
     if (!lastLogin) return 'Never';
     const date = new Date(lastLogin);

@@ -35,11 +35,10 @@ export interface ArtistRelease {
 }
 
 @Component({
-  selector: 'app-artist-releases-tab',
-  standalone: true,
-  imports: [CommonModule, EditReleaseDialogComponent, TrackListDialogComponent],
-  templateUrl: './artist-releases-tab.component.html',
-  styleUrl: './artist-releases-tab.component.scss'
+    selector: 'app-artist-releases-tab',
+    imports: [CommonModule, EditReleaseDialogComponent, TrackListDialogComponent],
+    templateUrl: './artist-releases-tab.component.html',
+    styleUrl: './artist-releases-tab.component.scss'
 })
 export class ArtistReleasesTabComponent {
   @Input() artist: Artist | null = null;

@@ -6,11 +6,10 @@ import { ReleaseExpensesDialogComponent } from '../release-expenses-dialog/relea
 import { AddExpenseDialogComponent } from '../add-expense-dialog/add-expense-dialog.component';
 
 @Component({
-  selector: 'app-financial-release-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReleaseExpensesDialogComponent, AddExpenseDialogComponent],
-  templateUrl: './financial-release-tab.component.html',
-  styleUrl: './financial-release-tab.component.scss'
+    selector: 'app-financial-release-tab',
+    imports: [CommonModule, FormsModule, ReleaseExpensesDialogComponent, AddExpenseDialogComponent],
+    templateUrl: './financial-release-tab.component.html',
+    styleUrl: './financial-release-tab.component.scss'
 })
 export class FinancialReleaseTabComponent {
   @Input() releases: ReleaseInfo[] = [];

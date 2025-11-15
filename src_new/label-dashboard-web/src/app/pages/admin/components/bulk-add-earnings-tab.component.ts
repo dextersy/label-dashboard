@@ -14,11 +14,10 @@ interface CsvEarningRow {
 }
 
 @Component({
-  selector: 'app-bulk-add-earnings-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent],
-  templateUrl: './bulk-add-earnings-tab.component.html',
-  styleUrl: './bulk-add-earnings-tab.component.scss'
+    selector: 'app-bulk-add-earnings-tab',
+    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    templateUrl: './bulk-add-earnings-tab.component.html',
+    styleUrl: './bulk-add-earnings-tab.component.scss'
 })
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;

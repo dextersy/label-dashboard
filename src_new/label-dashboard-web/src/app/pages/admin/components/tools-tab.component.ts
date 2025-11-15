@@ -5,10 +5,9 @@ import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
-  selector: 'app-tools-tab',
-  standalone: true,
-  imports: [CommonModule, PaginatedTableComponent],
-  templateUrl: './tools-tab.component.html'
+    selector: 'app-tools-tab',
+    imports: [CommonModule, PaginatedTableComponent],
+    templateUrl: './tools-tab.component.html'
 })
 export class ToolsTabComponent implements OnInit, OnDestroy {
   emailLogs: EmailLog[] = [];

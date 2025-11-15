@@ -5,11 +5,10 @@ import { Subscription } from 'rxjs';
 import { BreadcrumbService, BreadcrumbItem } from '../../services/breadcrumb.service';
 
 @Component({
-  selector: 'app-breadcrumb',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './breadcrumb.component.html',
-  styleUrl: './breadcrumb.component.scss'
+    selector: 'app-breadcrumb',
+    imports: [CommonModule, RouterModule],
+    templateUrl: './breadcrumb.component.html',
+    styleUrl: './breadcrumb.component.scss'
 })
 export class BreadcrumbComponent implements OnInit, OnDestroy {
   breadcrumbs: BreadcrumbItem[] = [];

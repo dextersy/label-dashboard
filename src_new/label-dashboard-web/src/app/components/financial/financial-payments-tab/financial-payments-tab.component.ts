@@ -8,11 +8,10 @@ import { PaginationInfo, SearchFilters } from '../../shared/paginated-table/pagi
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
-  selector: 'app-financial-payments-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PaymentsTableComponent],
-  templateUrl: './financial-payments-tab.component.html',
-  styleUrl: './financial-payments-tab.component.scss'
+    selector: 'app-financial-payments-tab',
+    imports: [CommonModule, FormsModule, PaymentsTableComponent],
+    templateUrl: './financial-payments-tab.component.html',
+    styleUrl: './financial-payments-tab.component.scss'
 })
 export class FinancialPaymentsTabComponent {
   @Input() payments: Payment[] = [];

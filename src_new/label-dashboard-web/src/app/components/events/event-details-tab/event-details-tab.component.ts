@@ -45,11 +45,10 @@ export interface EventDetails {
 }
 
 @Component({
-  selector: 'app-event-details-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, VenueAutocompleteComponent, TicketTypesComponent],
-  templateUrl: './event-details-tab.component.html',
-  styleUrl: './event-details-tab.component.scss'
+    selector: 'app-event-details-tab',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, VenueAutocompleteComponent, TicketTypesComponent],
+    templateUrl: './event-details-tab.component.html',
+    styleUrl: './event-details-tab.component.scss'
 })
 export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() selectedEvent: Event | null = null;

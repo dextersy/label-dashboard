@@ -22,11 +22,10 @@ export interface AbandonedOrder {
 
 
 @Component({
-  selector: 'app-event-abandoned-orders-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent],
-  templateUrl: './event-abandoned-orders-tab.component.html',
-  styleUrl: './event-abandoned-orders-tab.component.scss'
+    selector: 'app-event-abandoned-orders-tab',
+    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    templateUrl: './event-abandoned-orders-tab.component.html',
+    styleUrl: './event-abandoned-orders-tab.component.scss'
 })
 export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() selectedEvent: Event | null = null;

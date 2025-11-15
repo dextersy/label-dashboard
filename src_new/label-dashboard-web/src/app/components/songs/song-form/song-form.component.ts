@@ -7,12 +7,11 @@ import { ApiService } from '../../../services/api.service';
 import { SongwriterService } from '../../../services/songwriter.service';
 
 @Component({
-  selector: 'app-song-form',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './song-form.component.html',
-  styleUrl: './song-form.component.scss',
-  encapsulation: ViewEncapsulation.None
+    selector: 'app-song-form',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './song-form.component.html',
+    styleUrl: './song-form.component.scss',
+    encapsulation: ViewEncapsulation.None
 })
 export class SongFormComponent implements OnChanges, OnInit {
   @Input() isVisible: boolean = false;

@@ -89,30 +89,59 @@
               <!-- Password -->
               <div class="mb-3">
                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                <input type="password" class="form-control" id="password"
-                       [(ngModel)]="password" 
-                       name="password"
-                       [class.is-invalid]="errors.password || errors.passwordMismatch"
-                       placeholder="Choose a password"
-                       required>
-                <div class="invalid-feedback" *ngIf="errors.password">
+                <div class="password-field-wrapper">
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    class="form-control"
+                    id="password"
+                    [(ngModel)]="password"
+                    name="password"
+                    [class.is-invalid]="errors.password || errors.passwordMismatch"
+                    placeholder="Choose a password"
+                    required>
+                  <button
+                    type="button"
+                    class="password-toggle-icon-btn"
+                    (click)="togglePasswordVisibility()"
+                    tabindex="-1"
+                    aria-label="Toggle password visibility">
+                    <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                  </button>
+                </div>
+                <div class="invalid-feedback d-block" *ngIf="errors.password">
                   {{ errors.password }}
                 </div>
+                <small class="text-muted" *ngIf="!errors.password">
+                  Must include: 8+ characters, uppercase, lowercase, number, and special character
+                </small>
               </div>
-              
+
               <!-- Confirm Password -->
               <div class="mb-3">
                 <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                <input type="password" class="form-control" id="confirmPassword"
-                       [(ngModel)]="confirmPassword" 
-                       name="confirmPassword"
-                       [class.is-invalid]="errors.confirmPassword || errors.passwordMismatch"
-                       placeholder="Confirm your password"
-                       required>
-                <div class="invalid-feedback" *ngIf="errors.confirmPassword">
+                <div class="password-field-wrapper">
+                  <input
+                    [type]="showConfirmPassword ? 'text' : 'password'"
+                    class="form-control"
+                    id="confirmPassword"
+                    [(ngModel)]="confirmPassword"
+                    name="confirmPassword"
+                    [class.is-invalid]="errors.confirmPassword || errors.passwordMismatch"
+                    placeholder="Confirm your password"
+                    required>
+                  <button
+                    type="button"
+                    class="password-toggle-icon-btn"
+                    (click)="toggleConfirmPasswordVisibility()"
+                    tabindex="-1"
+                    aria-label="Toggle password visibility">
+                    <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                  </button>
+                </div>
+                <div class="invalid-feedback d-block" *ngIf="errors.confirmPassword">
                   {{ errors.confirmPassword }}
                 </div>
-                <div class="invalid-feedback" *ngIf="errors.passwordMismatch">
+                <div class="invalid-feedback d-block" *ngIf="errors.passwordMismatch">
                   {{ errors.passwordMismatch }}
                 </div>
               </div>

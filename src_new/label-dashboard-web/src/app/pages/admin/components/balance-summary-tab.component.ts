@@ -6,10 +6,9 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
 import { PaymentConfirmationDialogComponent, PaymentArtist } from './payment-confirmation-dialog.component';
 
 @Component({
-  selector: 'app-balance-summary-tab',
-  standalone: true,
-  imports: [CommonModule, PaginatedTableComponent, PaymentConfirmationDialogComponent],
-  templateUrl: './balance-summary-tab.component.html'
+    selector: 'app-balance-summary-tab',
+    imports: [CommonModule, PaginatedTableComponent, PaymentConfirmationDialogComponent],
+    templateUrl: './balance-summary-tab.component.html'
 })
 export class BalanceSummaryTabComponent implements OnInit {
   // Artist balances data

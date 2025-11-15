@@ -8,11 +8,10 @@ import { TestEmailModalComponent, TestEmailData } from '../test-email-modal/test
 import 'quill/dist/quill.snow.css';
 
 @Component({
-  selector: 'app-event-email-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent],
-  templateUrl: './event-email-tab.component.html',
-  styleUrl: './event-email-tab.component.scss'
+    selector: 'app-event-email-tab',
+    imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent],
+    templateUrl: './event-email-tab.component.html',
+    styleUrl: './event-email-tab.component.scss'
 })
 export class EventEmailTabComponent implements OnInit, OnDestroy, OnChanges {
   @Input() selectedEvent: Event | null = null;

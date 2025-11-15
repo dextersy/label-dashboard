@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 @Component({
-  selector: 'app-lightbox',
-  standalone: true,
-  imports: [CommonModule, ModalToBodyDirective],
-  templateUrl: './lightbox.component.html',
-  styleUrl: './lightbox.component.scss'
+    selector: 'app-lightbox',
+    imports: [CommonModule, ModalToBodyDirective],
+    templateUrl: './lightbox.component.html',
+    styleUrl: './lightbox.component.scss'
 })
 export class LightboxComponent implements OnInit, OnDestroy {
   @Input() imageUrl: string = '';

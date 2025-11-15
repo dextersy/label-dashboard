@@ -54,11 +54,10 @@ export interface ArtistEPK {
 }
 
 @Component({
-  selector: 'app-artist-epk',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './artist-epk.component.html',
-  styleUrls: ['./artist-epk.component.scss']
+    selector: 'app-artist-epk',
+    imports: [CommonModule],
+    templateUrl: './artist-epk.component.html',
+    styleUrls: ['./artist-epk.component.scss']
 })
 export class ArtistEPKComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

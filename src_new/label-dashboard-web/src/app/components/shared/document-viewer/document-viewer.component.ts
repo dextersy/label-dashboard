@@ -4,11 +4,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Document } from '../../../pages/financial/financial.component';
 
 @Component({
-  selector: 'app-document-viewer',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './document-viewer.component.html',
-  styleUrl: './document-viewer.component.scss'
+    selector: 'app-document-viewer',
+    imports: [CommonModule],
+    templateUrl: './document-viewer.component.html',
+    styleUrl: './document-viewer.component.scss'
 })
 export class DocumentViewerComponent implements OnInit, OnChanges {
   @Input() document: Document | null = null;

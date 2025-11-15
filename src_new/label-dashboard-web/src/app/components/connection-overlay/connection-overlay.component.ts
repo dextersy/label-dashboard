@@ -4,10 +4,9 @@ import { ConnectionMonitorService } from '../../services/connection-monitor.serv
 import { Observable } from 'rxjs';
 
 @Component({
-  selector: 'app-connection-overlay',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-connection-overlay',
+    imports: [CommonModule],
+    template: `
     <div *ngIf="!(isConnected$ | async)" class="connection-overlay">
       <div class="connection-message">
         <div class="spinner-border text-light mb-3" role="status">
@@ -18,7 +17,7 @@ import { Observable } from 'rxjs';
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .connection-overlay {
       position: fixed;
       top: 0;

@@ -8,10 +8,9 @@ export interface PaymentArtist {
 }
 
 @Component({
-  selector: 'app-payment-confirmation-dialog',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-payment-confirmation-dialog',
+    imports: [CommonModule],
+    template: `
     <div class="payment-modal-overlay modal fade show d-block" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">

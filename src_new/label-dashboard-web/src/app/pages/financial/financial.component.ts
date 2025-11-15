@@ -104,24 +104,23 @@ export interface ReleaseInfo {
 }
 
 @Component({
-  selector: 'app-financial',
-  standalone: true,
-  imports: [
-    CommonModule, 
-    FormsModule, 
-    FinancialSummaryTabComponent,
-    FinancialDocumentsTabComponent,
-    FinancialEarningsTabComponent,
-    FinancialRoyaltiesTabComponent,
-    FinancialPaymentsTabComponent,
-    FinancialReleaseTabComponent,
-    NewRoyaltyFormComponent,
-    NewPaymentFormComponent,
-    NewEarningFormComponent,
-    BreadcrumbComponent
-  ],
-  templateUrl: './financial.component.html',
-  styleUrl: './financial.component.scss'
+    selector: 'app-financial',
+    imports: [
+        CommonModule,
+        FormsModule,
+        FinancialSummaryTabComponent,
+        FinancialDocumentsTabComponent,
+        FinancialEarningsTabComponent,
+        FinancialRoyaltiesTabComponent,
+        FinancialPaymentsTabComponent,
+        FinancialReleaseTabComponent,
+        NewRoyaltyFormComponent,
+        NewPaymentFormComponent,
+        NewEarningFormComponent,
+        BreadcrumbComponent
+    ],
+    templateUrl: './financial.component.html',
+    styleUrl: './financial.component.scss'
 })
 export class FinancialComponent implements OnInit, OnDestroy {
   @ViewChild('newPaymentFormComponent') newPaymentFormComponent?: NewPaymentFormComponent;

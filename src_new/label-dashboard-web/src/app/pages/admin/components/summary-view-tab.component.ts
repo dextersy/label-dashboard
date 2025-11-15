@@ -6,11 +6,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 
 @Component({
-  selector: 'app-summary-view-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, DateRangeFilterComponent],
-  templateUrl: './summary-view-tab.component.html',
-  styleUrls: ['./summary-view-tab.component.scss']
+    selector: 'app-summary-view-tab',
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent],
+    templateUrl: './summary-view-tab.component.html',
+    styleUrls: ['./summary-view-tab.component.scss']
 })
 export class SummaryViewTabComponent implements OnInit {
   loading: boolean = false;

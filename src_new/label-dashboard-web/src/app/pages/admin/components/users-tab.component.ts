@@ -6,10 +6,9 @@ import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
-  selector: 'app-users-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent],
-  templateUrl: './users-tab.component.html'
+    selector: 'app-users-tab',
+    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    templateUrl: './users-tab.component.html'
 })
 export class UsersTabComponent implements OnInit {
   // Users

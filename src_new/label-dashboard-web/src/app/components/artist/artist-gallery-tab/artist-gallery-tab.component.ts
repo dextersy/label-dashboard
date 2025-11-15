@@ -15,11 +15,10 @@ export interface ArtistPhoto {
 }
 
 @Component({
-  selector: 'app-artist-gallery-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, LightboxComponent],
-  templateUrl: './artist-gallery-tab.component.html',
-  styleUrl: './artist-gallery-tab.component.scss'
+    selector: 'app-artist-gallery-tab',
+    imports: [CommonModule, FormsModule, LightboxComponent],
+    templateUrl: './artist-gallery-tab.component.html',
+    styleUrl: './artist-gallery-tab.component.scss'
 })
 export class ArtistGalleryTabComponent {
   @Input() artist: Artist | null = null;

@@ -38,11 +38,10 @@ export interface ChildBrand {
 }
 
 @Component({
-  selector: 'app-sublabel-payout-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ModalToBodyDirective],
-  templateUrl: './sublabel-payout-modal.component.html',
-  styleUrls: ['./sublabel-payout-modal.component.scss']
+    selector: 'app-sublabel-payout-modal',
+    imports: [CommonModule, FormsModule, ModalToBodyDirective],
+    templateUrl: './sublabel-payout-modal.component.html',
+    styleUrls: ['./sublabel-payout-modal.component.scss']
 })
 export class SublabelPayoutModalComponent implements OnInit, OnChanges {
   @Input() show: boolean = false;

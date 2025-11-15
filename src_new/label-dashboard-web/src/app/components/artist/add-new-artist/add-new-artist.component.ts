@@ -20,11 +20,10 @@ export interface NewArtistData {
 }
 
 @Component({
-  selector: 'app-add-new-artist',
-  standalone: true,
-  imports: [CommonModule, FormsModule, BreadcrumbComponent],
-  templateUrl: './add-new-artist.component.html',
-  styleUrl: './add-new-artist.component.scss'
+    selector: 'app-add-new-artist',
+    imports: [CommonModule, FormsModule, BreadcrumbComponent],
+    templateUrl: './add-new-artist.component.html',
+    styleUrl: './add-new-artist.component.scss'
 })
 export class AddNewArtistComponent {
   @Output() artistCreated = new EventEmitter<any>();

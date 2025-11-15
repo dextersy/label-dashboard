@@ -4,11 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Event } from '../../../services/event.service';
 
 @Component({
-  selector: 'app-event-selection',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './event-selection.component.html',
-  styleUrl: './event-selection.component.scss'
+    selector: 'app-event-selection',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './event-selection.component.html',
+    styleUrl: './event-selection.component.scss'
 })
 export class EventSelectionComponent implements OnInit, OnDestroy {
   @Input() events: Event[] = [];

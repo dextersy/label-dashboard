@@ -14,11 +14,10 @@ export interface TeamMember {
 }
 
 @Component({
-  selector: 'app-artist-team-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './artist-team-tab.component.html',
-  styleUrl: './artist-team-tab.component.scss'
+    selector: 'app-artist-team-tab',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './artist-team-tab.component.html',
+    styleUrl: './artist-team-tab.component.scss'
 })
 export class ArtistTeamTabComponent {
   @Input() artist: Artist | null = null;
