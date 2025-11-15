@@ -5,6 +5,7 @@ import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { getBrandIdFromDomain } from '../utils/brandUtils';
 import { verifyPassword, migrateUserPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
+import { generateSecureToken } from '../utils/tokenUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
@@ -214,8 +215,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
     // Only process reset if user exists, but always return same message
     // This prevents email enumeration attacks
     if (user) {
-      // Generate reset hash using MD5 of current timestamp (matching original PHP)
-      const resetHash = crypto.createHash('md5').update(Date.now().toString()).digest('hex');
+      // Generate cryptographically secure reset token
+      const resetHash = generateSecureToken();
 
       // Save reset hash to user (no expiry like original)
       await user.update({
