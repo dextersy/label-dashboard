@@ -9,11 +9,10 @@ export interface DateRangeSelection {
 }
 
 @Component({
-  selector: 'app-date-range-filter',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './date-range-filter.component.html',
-  styleUrls: ['./date-range-filter.component.scss']
+    selector: 'app-date-range-filter',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './date-range-filter.component.html',
+    styleUrls: ['./date-range-filter.component.scss']
 })
 export class DateRangeFilterComponent implements OnInit {
   @Input() initialPreset: string = 'alltime';

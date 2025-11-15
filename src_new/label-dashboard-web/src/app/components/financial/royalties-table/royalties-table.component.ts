@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Royalty } from '../../../pages/financial/financial.component';
 
 @Component({
-  selector: 'app-royalties-table',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './royalties-table.component.html',
-  styleUrl: './royalties-table.component.scss'
+    selector: 'app-royalties-table',
+    imports: [CommonModule],
+    templateUrl: './royalties-table.component.html',
+    styleUrl: './royalties-table.component.scss'
 })
 export class RoyaltiesTableComponent {
   @Input() royalties: Royalty[] = [];

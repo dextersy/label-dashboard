@@ -1,6 +1,6 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, DOCUMENT } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
-import { Location, DOCUMENT } from '@angular/common';
+import { Location } from '@angular/common';
 
 export interface PageMetadata {
   title?: string;

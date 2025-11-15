@@ -6,11 +6,10 @@ import { PublicService, TicketDetails, TicketVerificationRequest, PublicEvent } 
 
 
 @Component({
-  selector: 'app-ticket-success',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './ticket-success.component.html',
-  styleUrls: ['./ticket-success.component.scss']
+    selector: 'app-ticket-success',
+    imports: [CommonModule],
+    templateUrl: './ticket-success.component.html',
+    styleUrls: ['./ticket-success.component.scss']
 })
 export class TicketSuccessComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

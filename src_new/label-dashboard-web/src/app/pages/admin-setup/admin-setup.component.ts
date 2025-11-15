@@ -25,11 +25,10 @@ export interface BrandInfo {
 }
 
 @Component({
-  selector: 'app-admin-setup',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './admin-setup.component.html',
-  styleUrl: './admin-setup.component.scss'
+    selector: 'app-admin-setup',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './admin-setup.component.html',
+    styleUrl: './admin-setup.component.scss'
 })
 export class AdminSetupComponent implements OnInit, OnDestroy {
   profile: AdminProfile | null = null;

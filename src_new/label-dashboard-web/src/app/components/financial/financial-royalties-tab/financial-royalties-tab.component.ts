@@ -11,11 +11,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { ArtistStateService } from '../../../services/artist-state.service';
 
 @Component({
-  selector: 'app-financial-royalties-tab',
-  standalone: true,
-  imports: [CommonModule, RoyaltiesTableComponent, PaginatedTableComponent, DateRangeFilterComponent],
-  templateUrl: './financial-royalties-tab.component.html',
-  styleUrl: './financial-royalties-tab.component.scss'
+    selector: 'app-financial-royalties-tab',
+    imports: [CommonModule, RoyaltiesTableComponent, PaginatedTableComponent, DateRangeFilterComponent],
+    templateUrl: './financial-royalties-tab.component.html',
+    styleUrl: './financial-royalties-tab.component.scss'
 })
 export class FinancialRoyaltiesTabComponent {
   @Input() royalties: Royalty[] = [];

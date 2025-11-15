@@ -6,11 +6,10 @@ import { NotificationService } from '../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 @Component({
-  selector: 'app-fee-settings-modal',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ModalToBodyDirective],
-  templateUrl: './fee-settings-modal.component.html',
-  styleUrls: ['./fee-settings-modal.component.scss']
+    selector: 'app-fee-settings-modal',
+    imports: [CommonModule, ReactiveFormsModule, ModalToBodyDirective],
+    templateUrl: './fee-settings-modal.component.html',
+    styleUrls: ['./fee-settings-modal.component.scss']
 })
 export class FeeSettingsModalComponent implements OnInit, OnChanges {
   @Input() show: boolean = false;

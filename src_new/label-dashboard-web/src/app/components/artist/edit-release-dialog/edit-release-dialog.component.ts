@@ -5,17 +5,14 @@ import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.compon
 import { ReleaseFormComponent, ReleaseFormSubmitData } from '../release-form/release-form.component';
 import { ReleaseService } from '../../../services/release.service';
 import { SongService, Song } from '../../../services/song.service';
-import { SongListComponent } from '../../songs/song-list/song-list.component';
-import { SongFormComponent } from '../../songs/song-form/song-form.component';
 import { AuthService } from '../../../services/auth.service';
 import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
 
 @Component({
-  selector: 'app-edit-release-dialog',
-  standalone: true,
-  imports: [CommonModule, ReleaseFormComponent, SongListComponent, SongFormComponent],
-  templateUrl: './edit-release-dialog.component.html',
-  styleUrl: './edit-release-dialog.component.scss'
+    selector: 'app-edit-release-dialog',
+    imports: [CommonModule, ReleaseFormComponent],
+    templateUrl: './edit-release-dialog.component.html',
+    styleUrl: './edit-release-dialog.component.scss'
 })
 export class EditReleaseDialogComponent implements OnChanges {
   @Input() isVisible: boolean = false;

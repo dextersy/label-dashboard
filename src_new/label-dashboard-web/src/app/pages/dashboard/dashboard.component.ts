@@ -32,18 +32,17 @@ interface DashboardData {
 }
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    CommonModule,
-    LatestAlbumsComponent,
-    TopAlbumsComponent,
-    BalanceTableComponent,
-    EventSalesChartComponent,
-    BreadcrumbComponent
-  ],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+    selector: 'app-dashboard',
+    imports: [
+        CommonModule,
+        LatestAlbumsComponent,
+        TopAlbumsComponent,
+        BalanceTableComponent,
+        EventSalesChartComponent,
+        BreadcrumbComponent
+    ],
+    templateUrl: './dashboard.component.html',
+    styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
   dashboardData: DashboardData | null = null;

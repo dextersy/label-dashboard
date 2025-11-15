@@ -33,11 +33,10 @@ export interface CreateEventForm {
 }
 
 @Component({
-  selector: 'app-create-event-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VenueAutocompleteComponent, ModalToBodyDirective],
-  templateUrl: './create-event-modal.component.html',
-  styleUrls: ['./create-event-modal.component.scss']
+    selector: 'app-create-event-modal',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, VenueAutocompleteComponent, ModalToBodyDirective],
+    templateUrl: './create-event-modal.component.html',
+    styleUrls: ['./create-event-modal.component.scss']
 })
 export class CreateEventModalComponent implements OnChanges {
   @Input() isOpen = false;

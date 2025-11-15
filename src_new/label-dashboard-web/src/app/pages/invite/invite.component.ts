@@ -5,11 +5,10 @@ import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-invite',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './invite.component.html',
-  styleUrl: './invite.component.scss'
+    selector: 'app-invite',
+    imports: [CommonModule],
+    templateUrl: './invite.component.html',
+    styleUrl: './invite.component.scss'
 })
 export class InviteComponent implements OnInit {
   loading: boolean = true;

@@ -13,11 +13,10 @@ export interface ReleaseExpense {
 }
 
 @Component({
-  selector: 'app-release-expenses-dialog',
-  standalone: true,
-  imports: [CommonModule, PaginatedTableComponent, ExpensesTableComponent],
-  templateUrl: './release-expenses-dialog.component.html',
-  styleUrl: './release-expenses-dialog.component.scss'
+    selector: 'app-release-expenses-dialog',
+    imports: [CommonModule, PaginatedTableComponent, ExpensesTableComponent],
+    templateUrl: './release-expenses-dialog.component.html',
+    styleUrl: './release-expenses-dialog.component.scss'
 })
 export class ReleaseExpensesDialogComponent implements OnInit, OnChanges {
   @Input() releaseId: number = 0;

@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ReleaseExpense } from '../release-expenses-dialog/release-expenses-dialog.component';
 
 @Component({
-  selector: 'app-expenses-table',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './expenses-table.component.html',
-  styleUrl: './expenses-table.component.scss'
+    selector: 'app-expenses-table',
+    imports: [CommonModule],
+    templateUrl: './expenses-table.component.html',
+    styleUrl: './expenses-table.component.scss'
 })
 export class ExpensesTableComponent {
   @Input() expenses: ReleaseExpense[] = [];

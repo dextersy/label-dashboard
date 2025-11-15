@@ -6,11 +6,10 @@ import { ReleaseService } from '../../../services/release.service';
 import { TrackListDialogComponent } from '../track-list-dialog/track-list-dialog.component';
 
 @Component({
-  selector: 'app-artist-new-release-tab',
-  standalone: true,
-  imports: [CommonModule, ReleaseFormComponent, TrackListDialogComponent],
-  templateUrl: './artist-new-release-tab.component.html',
-  styleUrl: './artist-new-release-tab.component.scss'
+    selector: 'app-artist-new-release-tab',
+    imports: [CommonModule, ReleaseFormComponent, TrackListDialogComponent],
+    templateUrl: './artist-new-release-tab.component.html',
+    styleUrl: './artist-new-release-tab.component.scss'
 })
 export class ArtistNewReleaseTabComponent {
   @Input() artist: Artist | null = null;

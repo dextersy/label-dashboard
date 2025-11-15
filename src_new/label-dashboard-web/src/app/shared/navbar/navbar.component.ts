@@ -9,11 +9,10 @@ import { Artist } from '../../components/artist/artist-selection/artist-selectio
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  imports: [CommonModule, RouterModule, ArtistSelectionComponent],
-  templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.scss'
+    selector: 'app-navbar',
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
+    templateUrl: './navbar.component.html',
+    styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   userFirstName: string = 'User';

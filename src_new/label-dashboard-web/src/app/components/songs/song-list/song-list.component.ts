@@ -5,11 +5,10 @@ import { Song } from '../../../services/song.service';
 import { environment } from 'environments/environment';
 
 @Component({
-  selector: 'app-song-list',
-  standalone: true,
-  imports: [CommonModule, DragDropModule],
-  templateUrl: './song-list.component.html',
-  styleUrl: './song-list.component.scss'
+    selector: 'app-song-list',
+    imports: [CommonModule, DragDropModule],
+    templateUrl: './song-list.component.html',
+    styleUrl: './song-list.component.scss'
 })
 export class SongListComponent implements OnDestroy {
   @Input() songs: Song[] = [];

@@ -7,11 +7,10 @@ import { BrandService } from '../../services/brand.service';
 import { validatePassword } from '../../utils/password-utils';
 
 @Component({
-  selector: 'app-reset-password',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './reset-password.component.html',
-  styleUrl: './reset-password.component.scss'
+    selector: 'app-reset-password',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './reset-password.component.html',
+    styleUrl: './reset-password.component.scss'
 })
 export class ResetPasswordComponent implements OnInit {
   password: string = '';

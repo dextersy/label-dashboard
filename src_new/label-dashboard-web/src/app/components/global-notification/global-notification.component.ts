@@ -4,11 +4,10 @@ import { Subscription } from 'rxjs';
 import { NotificationService, NotificationMessage } from '../../services/notification.service';
 
 @Component({
-  selector: 'app-global-notification',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './global-notification.component.html',
-  styleUrl: './global-notification.component.scss'
+    selector: 'app-global-notification',
+    imports: [CommonModule],
+    templateUrl: './global-notification.component.html',
+    styleUrl: './global-notification.component.scss'
 })
 export class GlobalNotificationComponent implements OnInit, OnDestroy {
   currentNotification: NotificationMessage | null = null;

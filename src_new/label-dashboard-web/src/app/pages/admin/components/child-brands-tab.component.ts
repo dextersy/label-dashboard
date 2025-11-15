@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -15,11 +15,10 @@ import { EarningsBreakdownModalComponent } from '../child-brands/earnings-breakd
 import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
-  selector: 'app-child-brands-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DecimalPipe, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent],
-  templateUrl: './child-brands-tab.component.html',
-  styleUrls: ['./child-brands-tab.component.scss']
+    selector: 'app-child-brands-tab',
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent],
+    templateUrl: './child-brands-tab.component.html',
+    styleUrls: ['./child-brands-tab.component.scss']
 })
 export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   loading: boolean = false;
