@@ -871,7 +871,14 @@ export class AdminService {
   getLabelPaymentMethods(): Observable<any> {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = user.brand_id;
-    
+
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payment-methods`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Get payment methods for a specific brand (useful for sublabel payouts)
+  getPaymentMethodsForBrand(brandId: number): Observable<any> {
     return this.http.get(`${environment.apiUrl}/brands/${brandId}/payment-methods`, {
       headers: this.getAuthHeaders()
     });
