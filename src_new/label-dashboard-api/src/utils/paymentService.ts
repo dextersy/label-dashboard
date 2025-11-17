@@ -632,7 +632,16 @@ export class PaymentService {
     description: string = '',
     isLabelPayment: boolean = false
   ): Promise<string | null> {
+    // Declare paymentMethod at function scope for error logging
+    let paymentMethod: any = null;
+    let transferAttemptId: string | null = null;
+
     try {
+      // Generate idempotency key to prevent duplicate transfers
+      const idempotencyKey = crypto.randomBytes(16).toString('hex');
+      transferAttemptId = `${brandId}-${Date.now()}-${idempotencyKey}`;
+
+      console.log(`[Transfer Attempt ID: ${transferAttemptId}] Starting wallet transfer...`);
       // Get brand details
       const brand = await Brand.findByPk(brandId);
       if (!brand || !brand.paymongo_wallet_id) {
@@ -641,7 +650,6 @@ export class PaymentService {
       }
 
       // Get payment method details based on payment type
-      let paymentMethod;
       if (isLabelPayment) {
         paymentMethod = await LabelPaymentMethod.findByPk(paymentMethodId);
       } else {
@@ -653,18 +661,39 @@ export class PaymentService {
         return null;
       }
 
+      // Select provider based on amount:
+      // - Use 'pesonet' for amounts greater than 50,000 PHP
+      // - Use 'instapay' for amounts 50,000 PHP or less
+      const provider = amount > 50000 ? 'pesonet' : 'instapay';
+
+      // Convert amount to cents (Paymongo expects integer amount in cents)
+      const amountInCents = Math.round(amount * 100);
+
+      console.log(`[Transfer ${transferAttemptId}] Initiating ${provider} transfer: ₱${amount.toFixed(2)} to ${paymentMethod.bank_code}`);
+
+      // Validate that the bank supports the selected provider
+      const supportedBanks = await this.getSupportedBanks(provider);
+      if (supportedBanks) {
+        const isBankSupported = supportedBanks.some(bank => bank.bank_code === paymentMethod.bank_code);
+        if (!isBankSupported) {
+          console.error(`Bank code ${paymentMethod.bank_code} is not supported by ${provider}. Supported banks:`,
+            supportedBanks.map(b => b.bank_code).join(', '));
+          return null;
+        }
+      }
+
       const response = await axios.post(
         `${this.baseUrl}/wallets/${brand.paymongo_wallet_id}/transactions`,
         {
           data: {
             attributes: {
-              amount: Math.round(amount * 100), // Convert to cents
+              amount: amountInCents, // Amount in cents (integer)
               receiver: {
                 bank_account_name: paymentMethod.account_name,
                 bank_account_number: paymentMethod.account_number_or_email,
                 bank_code: paymentMethod.bank_code
               },
-              provider: 'instapay',
+              provider: provider,
               type: 'send_money',
               description: description
             }
@@ -674,22 +703,43 @@ export class PaymentService {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': this.getAuthHeader()
-          }
+            'Authorization': this.getAuthHeader(),
+            'Idempotency-Key': idempotencyKey
+          },
+          timeout: 60000 // 60 second timeout
         }
       );
 
-      return response.data.data.attributes.reference_number;
-    } catch (error) {
-      console.error('PayMongo send money transfer error:', error);
+      const referenceNumber = response.data?.data?.attributes?.reference_number;
+
+      console.log(`[Transfer ${transferAttemptId}] ✓ SUCCESS - Ref: ${referenceNumber}`);
+
+      return referenceNumber;
+    } catch (error: any) {
+      const provider = amount > 50000 ? 'pesonet' : 'instapay';
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+      const isNetworkError = error.code === 'ECONNRESET' || error.code === 'ENOTFOUND';
+
+      console.error(`[Transfer ${transferAttemptId}] ✗ FAILED: ${error.message}`);
+
+      // Critical warning for timeout/network errors - transaction might have succeeded
+      if (isTimeout || isNetworkError) {
+        console.error(`⚠️  WARNING: Transfer may have succeeded on Paymongo. Check dashboard before retry.`);
+      }
+
+      // Log API error details if available
+      if (error.response?.data?.errors) {
+        console.error('Paymongo error:', error.response.data.errors[0]?.detail || JSON.stringify(error.response.data));
+      }
+
       return null;
     }
   }
 
-  async getSupportedBanks(): Promise<Array<{bank_code: string, bank_name: string}> | null> {
+  async getSupportedBanks(provider: 'instapay' | 'pesonet' = 'instapay'): Promise<Array<{bank_code: string, bank_name: string}> | null> {
     try {
       const response = await axios.get(
-        `${this.baseUrl}/wallets/receiving_institutions?provider=instapay`,
+        `${this.baseUrl}/wallets/receiving_institutions?provider=${provider}`,
         {
           headers: {
             'Accept': 'application/json',
@@ -703,7 +753,7 @@ export class PaymentService {
         bank_name: bank.attributes.name
       }));
     } catch (error) {
-      console.error('PayMongo get supported banks error:', error);
+      console.error(`PayMongo get supported banks error (${provider}):`, error);
       return null;
     }
   }
