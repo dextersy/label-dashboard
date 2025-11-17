@@ -102,12 +102,17 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
   }
 
   loadPaymentMethods(): void {
+    if (!this.sublabel) {
+      return;
+    }
+
     this.loadingPaymentMethods = true;
-    
-    this.adminService.getLabelPaymentMethods().subscribe({
+
+    // Load payment methods for the sublabel (not the parent label)
+    this.adminService.getPaymentMethodsForBrand(this.sublabel.brand_id).subscribe({
       next: (response: any) => {
         this.paymentMethods = response.paymentMethods || [];
-        
+
         // Set default payment method if available
         const defaultMethod = this.paymentMethods.find(method => method.is_default_for_brand);
         if (defaultMethod) {
@@ -117,13 +122,13 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
           // Default to manual payment if no default method
           this.selectedPaymentMethodId = '-1';
         }
-        
+
         this.onPaymentMethodChange();
-        
+
         this.loadingPaymentMethods = false;
       },
       error: (error) => {
-        console.error('Error loading payment methods:', error);
+        console.error('Error loading payment methods for sublabel:', error);
         this.loadingPaymentMethods = false;
         // Don't show error notification as this is not critical
       }

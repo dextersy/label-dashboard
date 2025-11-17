@@ -60,8 +60,32 @@ export const getLabelPaymentMethods = async (req: AuthRequest, res: Response) =>
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    const { brandId } = req.params;
+    const targetBrandId = parseInt(brandId, 10);
+
+    if (!targetBrandId || isNaN(targetBrandId)) {
+      return res.status(400).json({ error: 'Valid brand ID is required' });
+    }
+
+    // Allow access if:
+    // 1. User is requesting their own brand's payment methods
+    // 2. User is requesting a sublabel's payment methods (parent brand access)
+    if (targetBrandId !== req.user.brand_id) {
+      // Verify that the target brand is a child of the current user's brand
+      const targetBrand = await Brand.findOne({
+        where: {
+          id: targetBrandId,
+          parent_brand: req.user.brand_id
+        }
+      });
+
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Brand not found or not accessible' });
+      }
+    }
+
     const paymentMethods = await LabelPaymentMethod.findAll({
-      where: { brand_id: req.user.brand_id },
+      where: { brand_id: targetBrandId },
       order: [['is_default_for_brand', 'DESC'], ['id', 'DESC']]
     });
 
@@ -258,11 +282,11 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
 
     // Set payment_method_id if provided, otherwise fall back to legacy fields
     if (payment_method_id && payment_method_id !== '-1') {
-      // Verify payment method belongs to the parent brand (payment methods are stored for parent brand)
+      // Verify payment method belongs to the sublabel (payment methods are stored for the target brand)
       const paymentMethod = await LabelPaymentMethod.findOne({
-        where: { 
+        where: {
           id: payment_method_id,
-          brand_id: req.user.brand_id 
+          brand_id: targetBrandId  // Changed from req.user.brand_id to targetBrandId
         }
       });
 
