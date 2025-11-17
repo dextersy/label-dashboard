@@ -32,10 +32,10 @@ export class PaymentService {
   private baseUrl = 'https://api.paymongo.com/v1';
 
   constructor() {
-    this.secretKey = process.env.PAYMONGO_SECRET_KEY || '';
-    if (!this.secretKey) {
-      throw new Error('PAYMONGO_SECRET_KEY is required');
+    if (!process.env.PAYMONGO_SECRET_KEY) {
+      throw new Error('CRITICAL: PAYMONGO_SECRET_KEY environment variable is required for payment processing');
     }
+    this.secretKey = process.env.PAYMONGO_SECRET_KEY;
   }
 
   private getAuthHeader(): string {

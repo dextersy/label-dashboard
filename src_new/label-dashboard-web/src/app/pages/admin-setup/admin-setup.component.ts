@@ -6,6 +6,7 @@ import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { validatePassword } from '../../utils/password-utils';
 
 export interface AdminProfile {
   id: number;
@@ -24,11 +25,10 @@ export interface BrandInfo {
 }
 
 @Component({
-  selector: 'app-admin-setup',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './admin-setup.component.html',
-  styleUrl: './admin-setup.component.scss'
+    selector: 'app-admin-setup',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './admin-setup.component.html',
+    styleUrl: './admin-setup.component.scss'
 })
 export class AdminSetupComponent implements OnInit, OnDestroy {
   profile: AdminProfile | null = null;
@@ -41,6 +41,10 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
   // Password fields
   password: string = '';
   confirmPassword: string = '';
+
+  // Password visibility toggles
+  showPassword: boolean = false;
+  showConfirmPassword: boolean = false;
 
   // Form validation
   errors: any = {};
@@ -81,7 +85,7 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       this.inviteToken = params['token'];
       if (!this.inviteToken) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
+        this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.loadInviteData();
@@ -139,11 +143,9 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.loading = false;
         console.error('Error loading admin invite data:', error);
-        if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_token' } });
-        } else {
-          this.showMessage('Error loading invite data', 'error');
-        }
+        // Use backend error message for all admin invite errors
+        const errorMessage = error.error?.error || 'Invalid or expired invitation';
+        this.showMessage(errorMessage, 'error');
       }
     });
   }
@@ -214,8 +216,15 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.saving = false;
-        if (error.status === 400 && error.error.errors) {
-          this.errors = error.error.errors;
+        if (error.status === 400) {
+          if (error.error.errors) {
+            this.errors = error.error.errors;
+          } else if (error.error.details && Array.isArray(error.error.details)) {
+            // Handle detailed validation errors from backend
+            this.errors.password = error.error.details.join('. ');
+          } else {
+            this.showMessage(error.error?.error || 'Error setting up profile', 'error');
+          }
         } else {
           this.showMessage(error.error?.error || 'Error setting up profile', 'error');
         }
@@ -249,6 +258,12 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
     // Password validation
     if (!this.password?.trim()) {
       errors.password = 'Password is required';
+    } else {
+      // Validate password against security requirements
+      const validation = validatePassword(this.password);
+      if (!validation.isValid) {
+        errors.password = validation.errors.join('. ');
+      }
     }
 
     if (!this.confirmPassword?.trim()) {
@@ -274,6 +289,14 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
   private showMessage(message: string, type: 'success' | 'error'): void {
     this.message = message;
     this.messageType = type;
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 
   goToLogin(): void {

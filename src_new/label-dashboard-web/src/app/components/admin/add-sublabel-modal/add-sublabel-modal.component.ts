@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 
 @Component({
-  selector: 'app-add-sublabel-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './add-sublabel-modal.component.html',
-  styleUrls: ['./add-sublabel-modal.component.scss']
+    selector: 'app-add-sublabel-modal',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './add-sublabel-modal.component.html',
+    styleUrls: ['./add-sublabel-modal.component.scss']
 })
 export class AddSublabelModalComponent {
   @Input() show: boolean = false;

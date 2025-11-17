@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { generateSecureToken } from '../utils/tokenUtils';
+import { hashPassword, hasPassword } from '../utils/passwordUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
 
@@ -51,8 +53,8 @@ export const sendResetLink = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Generate reset hash
-    const resetHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong reset hash
+    const resetHash = generateSecureToken();
     await user.update({ reset_hash: resetHash });
 
     // Send reset email
@@ -111,15 +113,15 @@ export const initUser = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Username already exists' });
     }
 
-    // Create password hash (MD5 for compatibility, should migrate to bcrypt)
-    const passwordHash = crypto.createHash('md5').update(password).digest('hex');
+    // Create password hash using bcrypt (secure encryption)
+    const passwordHash = await hashPassword(password);
 
     const user = await User.create({
       username,
       email_address,
       first_name,
       last_name,
-      password_md5: passwordHash,
+      password_hash: passwordHash,
       brand_id: brand_id || 1,
       is_admin: false
     });
@@ -179,8 +181,8 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Generate invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
 
     // Create artist access record
     const { ArtistAccess } = require('../models');
@@ -333,27 +335,63 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
     // Special handling for last_logged_in sorting - we need to use raw SQL for this
     if (sortBy === 'last_logged_in') {
-      const direction = sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-      
+      // SECURITY: Strict allowlist for sort direction - never interpolate user input
+      const isDescending = sortDirection.toUpperCase() === 'DESC';
+
       // MySQL doesn't support NULLS FIRST/LAST, so we use a CASE statement workaround
       // For DESC: non-null values first (DESC), then NULL values
       // For ASC: NULL values first, then non-null values (ASC)
-      
-      // Build additional filter conditions for the raw query
-      const additionalFilters = Object.keys(whereCondition)
+
+      // SECURITY: Use complete pre-built strings to make SQL injection protection obvious to reviewers
+      const orderByClause = isDescending
+        ? `ORDER BY CASE
+          WHEN la_max.last_logged_in IS NULL
+          THEN 1
+          ELSE 0
+        END,
+        la_max.last_logged_in DESC`
+        : `ORDER BY CASE
+          WHEN la_max.last_logged_in IS NULL
+          THEN 0
+          ELSE 1
+        END,
+        la_max.last_logged_in ASC`;
+
+      // Build additional filter conditions for the raw query using parameterized queries
+      // SECURITY: Use parameterized queries to prevent SQL injection
+      const filterConditions: string[] = [];
+      const filterReplacements: any[] = [];
+
+      // SECURITY: Column name mapping - prevents SQL injection by never interpolating user input
+      // Maps filter keys to actual SQL column names
+      const columnMapping: Record<string, string> = {
+        'email_address': 'u.email_address',
+        'first_name': 'u.first_name',
+        'last_name': 'u.last_name',
+        'is_admin': 'u.is_admin'
+      };
+
+      Object.keys(whereCondition)
         .filter(key => key !== 'brand_id' && key !== 'username')
-        .map(key => {
+        .forEach(key => {
+          // SECURITY: Only process keys that exist in our mapping
+          const columnName = columnMapping[key];
+          if (!columnName) {
+            return; // Skip invalid columns
+          }
+
           const value = whereCondition[key];
           if (key === 'is_admin') {
-            return `AND u.${key} = ${value ? 1 : 0}`;
+            filterConditions.push(`AND ${columnName} = ?`);
+            filterReplacements.push(value ? 1 : 0);
           } else if (typeof value === 'object' && value[Op.like]) {
             const likeValue = value[Op.like].replace(/%/g, '');
-            return `AND u.${key} LIKE '%${likeValue}%'`;
+            filterConditions.push(`AND ${columnName} LIKE ?`);
+            filterReplacements.push(`%${likeValue}%`);
           }
-          return '';
-        })
-        .filter(condition => condition !== '')
-        .join(' ');
+        });
+
+      const additionalFilters = filterConditions.join(' ');
 
       // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
@@ -361,39 +399,34 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         FROM user u
         LEFT JOIN (
           SELECT user_id, MAX(date_and_time) as last_logged_in
-          FROM login_attempt 
+          FROM login_attempt
           WHERE status = 'Successful' AND brand_id = ?
           GROUP BY user_id
         ) la_max ON u.id = la_max.user_id
-        WHERE u.brand_id = ? 
-          AND u.username != '' 
+        WHERE u.brand_id = ?
+          AND u.username != ''
           AND u.username IS NOT NULL
           ${additionalFilters}
-        ORDER BY CASE 
-          WHEN la_max.last_logged_in IS NULL 
-          THEN ${direction === 'DESC' ? '1' : '0'} 
-          ELSE ${direction === 'DESC' ? '0' : '1'} 
-        END,
-        la_max.last_logged_in ${direction}
+        ${orderByClause}
         LIMIT ? OFFSET ?
       `;
 
       const countQuery = `
         SELECT COUNT(*) as total
         FROM user u
-        WHERE u.brand_id = ? 
-          AND u.username != '' 
+        WHERE u.brand_id = ?
+          AND u.username != ''
           AND u.username IS NOT NULL
           ${additionalFilters}
       `;
 
       const [users, countResult] = await Promise.all([
         sequelize.query(usersQuery, {
-          replacements: [req.user.brand_id, req.user.brand_id, limit, offset],
+          replacements: [req.user.brand_id, req.user.brand_id, ...filterReplacements, limit, offset],
           type: QueryTypes.SELECT
         }),
         sequelize.query(countQuery, {
-          replacements: [req.user.brand_id],
+          replacements: [req.user.brand_id, ...filterReplacements],
           type: QueryTypes.SELECT
         })
       ]);
@@ -669,8 +702,8 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    // Generate invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
 
     // Create new admin user
     user = await User.create({
@@ -775,13 +808,13 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Admin user not found' });
     }
 
-    // Check if user has already set up their account
-    if (user.password_md5) {
+    // Check if user has already set up their account (bcrypt or MD5)
+    if (hasPassword(user)) {
       return res.status(400).json({ error: 'User has already set up their account' });
     }
 
-    // Generate new invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
     await user.update({ reset_hash: inviteHash });
 
     // Get brand frontend URL - NEVER use fallback URL for multi-brand security
@@ -849,8 +882,8 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Admin user not found' });
     }
 
-    // Check if user has already set up their account
-    if (user.password_md5) {
+    // Check if user has already set up their account (bcrypt or MD5)
+    if (hasPassword(user)) {
       return res.status(400).json({ error: 'Cannot cancel - user has already set up their account' });
     }
 

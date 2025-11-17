@@ -987,7 +987,10 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       // Get artist team members
       const { ArtistAccess, User, Brand } = require('../models');
       const artistAccess = await ArtistAccess.findAll({
-        where: { artist_id: artistIdNum },
+        where: {
+          artist_id: artistIdNum,
+          status: 'Accepted' // SECURITY: Only send notifications to accepted users
+        },
         include: [{ model: User, as: 'user' }]
       });
 
@@ -1563,7 +1566,10 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
 
       // Get artist access (team members with email addresses)
       const artistAccess = await ArtistAccess.findAll({
-        where: { artist_id: releaseArtist.artist.id },
+        where: {
+          artist_id: releaseArtist.artist.id,
+          status: 'Accepted' // SECURITY: Only send notifications to accepted users
+        },
         include: [
           {
             model: User,
@@ -2073,7 +2079,10 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
     // Get artist team members
     const { ArtistAccess, User, Brand } = require('../models');
     const artistAccess = await ArtistAccess.findAll({
-      where: { artist_id: artist.id },
+      where: {
+        artist_id: artist.id,
+        status: 'Accepted' // SECURITY: Only send notifications to accepted users
+      },
       include: [{ model: User, as: 'user' }]
     });
 
@@ -2196,7 +2205,8 @@ export const downloadEarningsCSV = async (req: AuthRequest, res: Response) => {
       const artistAccess = await ArtistAccess.findOne({
         where: {
           artist_id: artistIdNum,
-          user_id: req.user.id
+          user_id: req.user.id,
+          status: 'Accepted' // SECURITY: Only accepted users can access financial data
         }
       });
       if (!artistAccess) {
@@ -2308,7 +2318,8 @@ export const downloadRoyaltiesCSV = async (req: AuthRequest, res: Response) => {
       const artistAccess = await ArtistAccess.findOne({
         where: {
           artist_id: artistIdNum,
-          user_id: req.user.id
+          user_id: req.user.id,
+          status: 'Accepted' // SECURITY: Only accepted users can access financial data
         }
       });
       if (!artistAccess) {

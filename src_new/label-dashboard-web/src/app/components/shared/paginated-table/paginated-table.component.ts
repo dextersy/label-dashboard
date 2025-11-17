@@ -35,11 +35,10 @@ export interface SortInfo {
 }
 
 @Component({
-  selector: 'app-paginated-table',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './paginated-table.component.html',
-  styleUrl: './paginated-table.component.scss'
+    selector: 'app-paginated-table',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './paginated-table.component.html',
+    styleUrl: './paginated-table.component.scss'
 })
 export class PaginatedTableComponent implements OnInit, OnChanges {
   @Input() title: string = '';

@@ -42,11 +42,10 @@ export interface TicketSummary {
 }
 
 @Component({
-  selector: 'app-event-tickets-tab',
-  standalone: true,
-  imports: [CommonModule, PaginatedTableComponent, TransferTicketModalComponent],
-  templateUrl: './event-tickets-tab.component.html',
-  styleUrl: './event-tickets-tab.component.scss'
+    selector: 'app-event-tickets-tab',
+    imports: [CommonModule, PaginatedTableComponent, TransferTicketModalComponent],
+    templateUrl: './event-tickets-tab.component.html',
+    styleUrl: './event-tickets-tab.component.scss'
 })
 export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() selectedEvent: Event | null = null;

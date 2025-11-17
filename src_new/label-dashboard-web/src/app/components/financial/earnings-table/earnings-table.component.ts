@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Earning } from '../../../pages/financial/financial.component';
 
 @Component({
-  selector: 'app-earnings-table',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './earnings-table.component.html',
-  styleUrl: './earnings-table.component.scss'
+    selector: 'app-earnings-table',
+    imports: [CommonModule],
+    templateUrl: './earnings-table.component.html',
+    styleUrl: './earnings-table.component.scss'
 })
 export class EarningsTableComponent {
   @Input() earnings: Earning[] = [];

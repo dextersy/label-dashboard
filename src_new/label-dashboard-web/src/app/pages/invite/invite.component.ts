@@ -5,11 +5,10 @@ import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-invite',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './invite.component.html',
-  styleUrl: './invite.component.scss'
+    selector: 'app-invite',
+    imports: [CommonModule],
+    templateUrl: './invite.component.html',
+    styleUrl: './invite.component.scss'
 })
 export class InviteComponent implements OnInit {
   loading: boolean = true;
@@ -32,7 +31,7 @@ export class InviteComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.inviteHash = params['hash'];
       if (!this.inviteHash) {
-        this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
+        this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.processInvite();
@@ -63,12 +62,10 @@ export class InviteComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         console.error('Error processing invite:', error);
-        
-        if (error.status === 404) {
-          this.router.navigate(['/login'], { queryParams: { err: 'invalid_hash' } });
-        } else {
-          this.showMessage(error.error?.message || 'Error processing invite', 'error');
-        }
+
+        // Use backend error message for all invite errors
+        const errorMessage = error.error?.error || 'Invalid or expired invitation';
+        this.showMessage(errorMessage, 'error');
       }
     });
   }

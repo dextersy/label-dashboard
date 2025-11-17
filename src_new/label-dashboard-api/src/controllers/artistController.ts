@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { generateSecureToken } from '../utils/tokenUtils';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -135,7 +136,7 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
         where: {
           artist_id: artistId,
           user_id: req.user.id,
-          // status: 'Accepted' // Temporarily removing for debug
+          status: 'Accepted' // SECURITY: Only accepted users can access artist data
         }
       });
 
@@ -422,7 +423,10 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       if (changes.length > 0) {
         // Get all users with access to this artist
         const artistAccess = await ArtistAccess.findAll({
-          where: { artist_id: artistId },
+          where: {
+            artist_id: artistId,
+            status: 'Accepted' // SECURITY: Only send notifications to accepted users
+          },
           include: [{ model: User, as: 'user' }]
         });
 
@@ -612,7 +616,10 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
     if (payout_point !== undefined && payout_point !== oldPayoutPoint) {
       try {
         const artistAccess = await ArtistAccess.findAll({
-          where: { artist_id: artistId },
+          where: {
+            artist_id: artistId,
+            status: 'Accepted' // SECURITY: Only send notifications to accepted users
+          },
           include: [{ model: User, as: 'user' }]
         });
 
@@ -1334,8 +1341,8 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ error: 'User is already a team member' });
     }
 
-    // Generate random invite hash
-    const inviteHash = crypto.randomBytes(32).toString('hex');
+    // Generate cryptographically strong invite hash
+    const inviteHash = generateSecureToken();
 
     // Create artist access
     const access = await ArtistAccess.create({
@@ -1590,10 +1597,13 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
     try {
       // Get brand info
       const brand = await Brand.findByPk(req.user.brand_id);
-      
+
       // Get all team members for this artist
       const artistAccess = await ArtistAccess.findAll({
-        where: { artist_id: artistId },
+        where: {
+          artist_id: artistId,
+          status: 'Accepted' // SECURITY: Only send notifications to accepted users
+        },
         include: [{ model: User, as: 'user' }]
       });
 

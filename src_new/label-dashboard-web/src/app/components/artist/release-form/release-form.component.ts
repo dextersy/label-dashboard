@@ -15,11 +15,10 @@ export interface ReleaseFormSubmitData {
 }
 
 @Component({
-  selector: 'app-release-form',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
-  templateUrl: './release-form.component.html',
-  styleUrl: './release-form.component.scss'
+    selector: 'app-release-form',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
+    templateUrl: './release-form.component.html',
+    styleUrl: './release-form.component.scss'
 })
 export class ReleaseFormComponent implements OnInit, OnChanges {
   @Input() artist: Artist | null = null;

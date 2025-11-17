@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { getBrandIdFromDomain } from '../utils/brandUtils';
+import { verifyPassword, migrateUserPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
+import { generateSecureToken } from '../utils/tokenUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
@@ -33,35 +35,54 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    if (!user) {
-      return res.status(404).json({ error: 'User does not exist' });
+    // Check login lock (matching PHP logic) - only if user exists
+    if (user) {
+      const isLocked = await checkLoginLock(user.id);
+      if (isLocked) {
+        await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id);
+        const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
+        return res.status(423).json({
+          error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.`
+        });
+      }
     }
 
-    // Check login lock (matching PHP logic)
-    const isLocked = await checkLoginLock(user.id);
-    if (isLocked) {
-      await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id);
-      const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
-      return res.status(423).json({ 
-        error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.` 
-      });
+    // Verify password with automatic MD5 → bcrypt migration
+    let isValidPassword = false;
+    let needsMigration = false;
+
+    if (user) {
+      const verification = await verifyPassword(password, user);
+      isValidPassword = verification.isValid;
+      needsMigration = verification.needsMigration;
     }
 
-    // Verify password (PHP uses MD5, but we should migrate to bcrypt)
-    const isValidPassword = user.password_md5 === crypto.createHash('md5').update(password).digest('hex');
-    
-    if (!isValidPassword) {
-      // Record failed login attempt (matching PHP logic)
-      await LoginAttempt.create({
-        user_id: user.id,
-        status: 'Failed',
-        date_and_time: new Date(),
-        brand_id: user.brand_id,
-        proxy_ip: proxyIp,
-        remote_ip: remoteIp
+    // Generic error for both "user not found" and "invalid password"
+    // This prevents user enumeration attacks
+    if (!user || !isValidPassword) {
+      // Only record failed login attempt if user exists (can't log for non-existent users)
+      if (user) {
+        await LoginAttempt.create({
+          user_id: user.id,
+          status: 'Failed',
+          date_and_time: new Date(),
+          brand_id: user.brand_id,
+          proxy_ip: proxyIp,
+          remote_ip: remoteIp
+        });
+      }
+
+      // Log detailed reason server-side for debugging
+      console.warn('Login failed', {
+        username,
+        brand_id,
+        reason: !user ? 'user_not_found' : 'invalid_password',
+        ip: remoteIp,
+        timestamp: new Date()
       });
 
-      return res.status(401).json({ error: 'Invalid credentials' });
+      // Return same generic message for both cases
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Record successful login attempt (matching PHP logic)
@@ -73,6 +94,11 @@ export const login = async (req: Request, res: Response) => {
       proxy_ip: proxyIp,
       remote_ip: remoteIp
     });
+
+    // Migrate from MD5 to bcrypt if needed (lazy migration)
+    if (needsMigration) {
+      await migrateUserPassword(user, password);
+    }
 
     // Update last login time
     await user.update({ last_logged_in: new Date() });
@@ -179,44 +205,58 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     // Find user by email (brand-scoped like original PHP)
     const user = await User.findOne({
-      where: { 
+      where: {
         email_address: email,
         brand_id: brandId
       },
       include: [{ model: Brand, as: 'brand' }]
     });
 
-    if (!user) {
-      return res.status(404).json({ error: 'No account found with this email address' });
-    }
+    // Only process reset if user exists, but always return same message
+    // This prevents email enumeration attacks
+    if (user) {
+      // Generate cryptographically secure reset token
+      const resetHash = generateSecureToken();
 
-    // Generate reset hash using MD5 of current timestamp (matching original PHP)
-    const resetHash = crypto.createHash('md5').update(Date.now().toString()).digest('hex');
+      // Save reset hash to user (no expiry like original)
+      await user.update({
+        reset_hash: resetHash
+      });
 
-    // Save reset hash to user (no expiry like original)
-    await user.update({
-      reset_hash: resetHash
-    });
+      // Send reset email using the same function as original PHP
+      await sendResetLink(
+        user.email_address,
+        resetHash,
+        user.brand?.brand_name || 'Label Dashboard',
+        user.brand?.brand_color || '#5fbae9',
+        user.brand?.logo_url || '',
+        user.brand_id,
+        refererUrl // Pass the frontend domain
+      ).catch(error => {
+        console.error('Failed to send reset email:', error);
+        // Don't expose email failure to client
+      });
 
-    // Send reset email using the same function as original PHP
-    const emailSent = await sendResetLink(
-      user.email_address, 
-      resetHash, 
-      user.brand?.brand_name || 'Label Dashboard',
-      user.brand?.brand_color || '#5fbae9',
-      user.brand?.logo_url || '',
-      user.brand_id,
-      refererUrl // Pass the frontend domain
-    );
-
-    // Send admin notification (matching original PHP)
-    await sendAdminNotification(user, req.ip || 'unknown', req.get('X-Forwarded-For') || 'unknown');
-
-    if (emailSent) {
-      res.json({ message: 'Password reset instructions sent to your email' });
+      // Send admin notification (matching original PHP)
+      await sendAdminNotification(user, req.ip || 'unknown', req.get('X-Forwarded-For') || 'unknown')
+        .catch(error => {
+          console.error('Failed to send admin notification:', error);
+        });
     } else {
-      res.status(500).json({ error: 'Failed to send reset email' });
+      // Log the attempt server-side for monitoring
+      console.warn('Password reset requested for non-existent email', {
+        email,
+        brand_id: brandId,
+        ip: req.ip,
+        timestamp: new Date()
+      });
     }
+
+    // Always return success message regardless of whether email exists
+    // This prevents attackers from enumerating valid email addresses
+    res.json({
+      message: 'If an account exists with this email address, password reset instructions have been sent.'
+    });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -231,8 +271,13 @@ export const resetPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Token and new password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    // Validate password against security requirements
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        error: 'Password does not meet security requirements',
+        details: validation.errors
+      });
     }
 
     // Find user with valid reset hash (no expiry check like original PHP)
@@ -243,15 +288,25 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Invalid reset token' });
+      // Log server-side for monitoring
+      console.warn('Invalid reset token used', {
+        token,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+
+      // Generic error message
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
 
-    // Update password using MD5 to match existing system
-    const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+    // Hash new password with bcrypt (migrate to strong encryption)
+    const hashedPassword = await hashPassword(password);
 
-    // Update user password and clear reset hash
+    // Update user password with bcrypt and clear reset hash
+    // Clear old MD5 hash if it exists
     await user.update({
-      password_md5: hashedPassword,
+      password_hash: hashedPassword,
+      password_md5: null,
       reset_hash: null
     });
 
@@ -365,7 +420,19 @@ export const validateResetHash = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ valid: false, error: 'Invalid reset hash' });
+      // Log server-side for monitoring
+      console.warn('Invalid reset hash validation attempt', {
+        hash,
+        brand_id: brandId,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+
+      // Generic error message to prevent hash enumeration
+      return res.status(400).json({
+        valid: false,
+        error: 'Invalid or expired reset token'
+      });
     }
 
     res.json({ valid: true, message: 'Reset hash is valid' });

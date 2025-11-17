@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ng update:*)",
+      "Bash(npx @angular/cli update @angular/core@20 @angular/cli@20)",
+      "Bash(npx @angular/cli update:*)",
+      "Bash(npm install:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

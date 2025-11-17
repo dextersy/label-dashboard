@@ -14,7 +14,7 @@
     <div class="col-md-3">
       <div class="current-balance-section text-center p-4">
         <h2 class="balance-title">Receivable Balance</h2>
-        <h1 class="balance-amount">₱{{ dashboard?.receivable_balance | number:'1.2-2' || '0.00' }}</h1>
+        <h1 class="balance-amount">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
         <p class="balance-subtitle">Net earnings - payments received</p>
       </div>
     </div>
@@ -23,7 +23,7 @@
       <div class="card text-center financial-card">
         <div class="card-body">
           <h3 class="card-title">Net Music Earnings</h3>
-          <h2>₱{{ dashboard?.net_music_earnings | number:'1.2-2' || '0.00' }}</h2>
+          <h2>₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</h2>
           <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('music')">
             View Details
           </button>
@@ -35,7 +35,7 @@
       <div class="card text-center financial-card">
         <div class="card-body">
           <h3 class="card-title">Net Event Earnings</h3>
-          <h2>₱{{ dashboard?.net_event_earnings | number:'1.2-2' || '0.00' }}</h2>
+          <h2>₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</h2>
           <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('event')">
             View Details
           </button>
@@ -47,7 +47,7 @@
       <div class="card text-center financial-card">
         <div class="card-body">
           <h3 class="card-title">Total Payments</h3>
-          <h2>₱{{ dashboard?.total_payments | number:'1.2-2' || '0.00' }}</h2>
+          <h2>₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</h2>
           <p class="text-muted small">Payments received</p>
         </div>
       </div>

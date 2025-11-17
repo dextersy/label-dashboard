@@ -15,11 +15,10 @@ export interface TicketType {
 }
 
 @Component({
-  selector: 'app-ticket-types',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './ticket-types.component.html',
-  styleUrls: ['./ticket-types.component.scss']
+    selector: 'app-ticket-types',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './ticket-types.component.html',
+    styleUrls: ['./ticket-types.component.scss']
 })
 export class TicketTypesComponent implements OnInit, OnChanges {
   @Input() selectedEvent: Event | null = null;

@@ -5,6 +5,7 @@ import { Op } from 'sequelize';
 import { User, LoginAttempt } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { sendAdminFailedLoginAlert } from '../utils/emailService';
+import { verifyPassword, migrateUserPassword } from '../utils/passwordUtils';
 
 /**
  * System User Authentication Controller
@@ -77,13 +78,18 @@ export const systemLogin = async (req: Request, res: Response) => {
       });
     }
 
-    // Verify password (MD5 to match existing system)
-    const isValidPassword = user.password_md5 === crypto.createHash('md5').update(password).digest('hex');
+    // Verify password with automatic MD5 → bcrypt migration
+    const { isValid: isValidPassword, needsMigration } = await verifyPassword(password, user);
 
     if (!isValidPassword) {
       auditLogger.logAuthAttempt(req, false, email, 'Invalid password');
 
       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Migrate from MD5 to bcrypt if needed (lazy migration)
+    if (needsMigration) {
+      await migrateUserPassword(user, password);
     }
 
     // Update last login time

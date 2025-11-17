@@ -7,11 +7,10 @@ import { BrandService } from '../../services/brand.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+    selector: 'app-login',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './login.component.html',
+    styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
   @ViewChild('passwordField', { static: false }) passwordField!: ElementRef<HTMLInputElement>;
@@ -24,6 +23,9 @@ export class LoginComponent implements OnInit {
   redirectUrl: string = '';
   showResetSuccess: boolean = false;
   lockTimeMinutes: number = 0;
+
+  // Password visibility toggle
+  showPassword: boolean = false;
   
   // Brand settings (matching original PHP defaults)
   brandLogo: string = 'assets/img/Your Logo Here.png';
@@ -40,19 +42,13 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Check for query parameters (matching original PHP conditions)
+    // Check for query parameters
     this.route.queryParams.subscribe(params => {
-      // Handle error parameters
-      if (params['err']) {
-        this.errorType = params['err'];
-        this.errorMessage = '';
-      }
-      
       // Handle reset password success
       if (params['resetpass'] === '1') {
         this.showResetSuccess = true;
       }
-      
+
       // Handle redirect URL
       if (params['url']) {
         this.redirectUrl = params['url'];
@@ -147,12 +143,14 @@ export class LoginComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.hideLoadingOverlay();
-        
-        if (error.status === 404) {
-          this.errorType = 'no_user';
-        } else if (error.status === 401) {
-          this.errorType = 'pass';
-          // Clear password field and focus it for wrong password
+
+        // Handle authentication errors with generic messaging to prevent user enumeration
+        if (error.status === 401) {
+          // Use backend error message or fallback to generic message
+          this.errorMessage = error.error?.error || 'Invalid username or password';
+          this.errorType = ''; // Clear any specific error type
+
+          // Clear password field and focus it for authentication failure
           this.password = '';
           setTimeout(() => {
             if (this.passwordField) {
@@ -160,12 +158,21 @@ export class LoginComponent implements OnInit {
             }
           }, 100);
         } else if (error.status === 423) {
+          // Account locked - this is safe to be specific about
           this.errorType = 'lock';
-          this.lockTimeMinutes = error.error.lockTime || 2; // Default 2 minutes like original
+          // Extract lock time from backend error message if available
+          const lockTimeMatch = error.error?.error?.match(/(\d+)\s+minutes?/);
+          this.lockTimeMinutes = lockTimeMatch ? parseInt(lockTimeMatch[1]) : 2;
         } else {
-          this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+          // Generic error for other cases
+          this.errorMessage = error.error?.error || 'Login failed. Please try again.';
+          this.errorType = '';
         }
       }
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

@@ -31,22 +31,21 @@ export type EventSelection = Event;
  * for event management, ticket tracking, and referral management.
  */
 @Component({
-  selector: 'app-events',
-  standalone: true,
-  imports: [
-    CommonModule, 
-    FormsModule,
-    EventDetailsTabComponent,
-    EventTicketsTabComponent,
-    EventAbandonedOrdersTabComponent,
-    EventReferralsTabComponent,
-    EventEmailTabComponent,
-    CreateEventModalComponent,
-    EventSelectionComponent,
-    BreadcrumbComponent
-  ],
-  templateUrl: './events.component.html',
-  styleUrl: './events.component.scss'
+    selector: 'app-events',
+    imports: [
+        CommonModule,
+        FormsModule,
+        EventDetailsTabComponent,
+        EventTicketsTabComponent,
+        EventAbandonedOrdersTabComponent,
+        EventReferralsTabComponent,
+        EventEmailTabComponent,
+        CreateEventModalComponent,
+        EventSelectionComponent,
+        BreadcrumbComponent
+    ],
+    templateUrl: './events.component.html',
+    styleUrl: './events.component.scss'
 })
 export class EventsComponent implements OnInit, OnDestroy {
   @ViewChild(CreateEventModalComponent) createEventModal!: CreateEventModalComponent;

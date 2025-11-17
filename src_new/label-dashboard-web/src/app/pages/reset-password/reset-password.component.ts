@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
+import { validatePassword } from '../../utils/password-utils';
 
 @Component({
-  selector: 'app-reset-password',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './reset-password.component.html',
-  styleUrl: './reset-password.component.scss'
+    selector: 'app-reset-password',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './reset-password.component.html',
+    styleUrl: './reset-password.component.scss'
 })
 export class ResetPasswordComponent implements OnInit {
   password: string = '';
@@ -19,7 +19,11 @@ export class ResetPasswordComponent implements OnInit {
   loading: boolean = false;
   error: boolean = false;
   errorMessage: string = '';
-  
+
+  // Password visibility toggles
+  showPassword: boolean = false;
+  showValidation: boolean = false;
+
   // Brand settings
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
@@ -38,13 +42,13 @@ export class ResetPasswordComponent implements OnInit {
       this.resetCode = params['code'];
       if (!this.resetCode) {
         this.error = true;
-        this.errorMessage = 'The link you used is invalid.';
+        this.errorMessage = 'Invalid or expired reset link';
         this.loadBrandSettings();
       } else {
         // Validate reset hash like original PHP
         this.validateResetHash();
       }
-      
+
       // Handle mismatch error from URL
       if (params['err'] === 'mismatch') {
         this.errorMessage = 'The passwords you input were mismatched. Please try again.';
@@ -60,9 +64,9 @@ export class ResetPasswordComponent implements OnInit {
         this.loadBrandSettings();
       },
       error: (error) => {
-        // Hash is invalid, show error
+        // Hash is invalid, show error with backend message
         this.error = true;
-        this.errorMessage = 'The link you used is invalid.';
+        this.errorMessage = error.error?.error || 'Invalid or expired reset link';
         this.loadBrandSettings();
       }
     });
@@ -100,8 +104,10 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
-    if (this.password.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters long';
+    // Validate password against security requirements
+    const validation = validatePassword(this.password);
+    if (!validation.isValid) {
+      this.errorMessage = validation.errors.join('. ');
       return;
     }
 
@@ -112,20 +118,33 @@ export class ResetPasswordComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         // Redirect to login with success message
-        this.router.navigate(['/login'], { 
-          queryParams: { resetpass: '1' } 
+        this.router.navigate(['/login'], {
+          queryParams: { resetpass: '1' }
         });
       },
       error: (error) => {
         this.loading = false;
         if (error.status === 400) {
-          this.errorMessage = error.error?.message || 'Invalid reset token';
+          // Handle detailed validation errors from backend
+          if (error.error?.details && Array.isArray(error.error.details)) {
+            this.errorMessage = error.error.details.join('. ');
+          } else {
+            this.errorMessage = error.error?.error || 'Invalid or expired reset token';
+          }
           this.error = true;
         } else {
-          this.errorMessage = 'An error occurred. Please try again.';
+          this.errorMessage = error.error?.error || 'An error occurred. Please try again.';
         }
       }
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleValidationVisibility(): void {
+    this.showValidation = !this.showValidation;
   }
 
   goToLogin(): void {

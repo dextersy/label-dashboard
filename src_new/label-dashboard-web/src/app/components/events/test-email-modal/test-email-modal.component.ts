@@ -9,11 +9,10 @@ export interface TestEmailData {
 }
 
 @Component({
-  selector: 'app-test-email-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './test-email-modal.component.html',
-  styleUrl: './test-email-modal.component.scss'
+    selector: 'app-test-email-modal',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './test-email-modal.component.html',
+    styleUrl: './test-email-modal.component.scss'
 })
 export class TestEmailModalComponent {
   @Input() show: boolean = false;

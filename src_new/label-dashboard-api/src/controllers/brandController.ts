@@ -12,6 +12,7 @@ import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
 import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
+import { clearOriginsCache } from '../middleware/csrf';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -531,6 +532,9 @@ export const addDomain = async (req: Request, res: Response) => {
       status: 'Unverified'
     });
 
+    // NOTE: Cache clearing not needed here - unverified domains don't affect CORS/CSRF
+    // Cache will be cleared when domain is verified and status changes to 'Connected'
+
     res.status(201).json({
       message: 'Domain added successfully',
       domain: {
@@ -568,6 +572,10 @@ export const deleteDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Domain not found' });
     }
 
+    // Store status before deletion for cache clearing decision
+    const wasConnected = domain.status === 'Connected';
+
+    // Delete the domain
     // Store status before deletion for SSL removal decision
     const wasConnectedOrNoSSL = domain.status === 'Connected' || domain.status === 'No SSL';
 
@@ -594,6 +602,13 @@ export const deleteDomain = async (req: Request, res: Response) => {
 
     // Delete the domain from database
     await domain.destroy();
+
+    // SECURITY: Clear CSRF/CORS origins cache only if deleted domain was 'Connected'
+    // Unverified/Pending/No SSL domains don't affect the cache
+    if (wasConnected) {
+      await clearOriginsCache();
+      console.log(`[Security] CSRF/CORS cache cleared after deleting connected domain: ${domainName}`);
+    }
 
     res.json({
       message: 'Domain deleted successfully'
@@ -703,7 +718,14 @@ const verifyDomainAsync = async (
     
     // Update domain status
     await domain.update({ status: finalStatus });
-    
+
+    // SECURITY: Clear CSRF/CORS origins cache since domain status changed
+    // Only clear if domain was successfully verified (status changed to 'Connected')
+    if (finalStatus === 'Connected') {
+      await clearOriginsCache();
+      console.log(`[Async][Security] CSRF/CORS cache cleared after domain verification`);
+    }
+
     console.log(`[Async] Domain verification completed for ${domainName} with status: ${finalStatus}`);
     
     return {

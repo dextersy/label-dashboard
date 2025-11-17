@@ -21,11 +21,10 @@ export interface ReferrerForm {
 }
 
 @Component({
-  selector: 'app-event-referrals-tab',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './event-referrals-tab.component.html',
-  styleUrl: './event-referrals-tab.component.scss'
+    selector: 'app-event-referrals-tab',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './event-referrals-tab.component.html',
+    styleUrl: './event-referrals-tab.component.scss'
 })
 export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() selectedEvent: Event | null = null;
