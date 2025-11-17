@@ -140,10 +140,18 @@
                      *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">
                   Email address is not valid.
                 </div>
-                <div class="valid-feedback d-block" 
-                     *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value">
+                <div class="valid-feedback d-block"
+                     *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
                   <i class="fas fa-check-circle text-success"></i>
                   Please make sure your email address is correct.
+                </div>
+                <div class="text-warning d-block"
+                     style="cursor: pointer;"
+                     *ngIf="emailTypoResult?.suggestedEmail"
+                     (click)="applySuggestedEmail()"
+                     title="Click to use this email address">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>? <small>(click to fix)</small>
                 </div>
               </div>
 
