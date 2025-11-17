@@ -422,7 +422,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     const name = this.ticketForm.get('name')?.value;
     const email = this.ticketForm.get('email_address')?.value;
 
-    if (email && typeof email === 'string' && email.includes('@')) {
+    if (email && typeof email === 'string') {
       this.emailTypoResult = checkEmailIssues(email, name);
     } else {
       this.emailTypoResult = null;

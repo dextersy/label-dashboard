@@ -190,7 +190,6 @@ export function checkNameEmailMismatch(name: string, email: string): NameEmailMi
   // Priority: patterns with separators first, then concatenated
   const expectedPatterns: string[] = [];
   const separatorsWithPriority = ['.', '_', '-']; // Common separators
-  const concatenated = ''; // No separator (lower priority)
 
   // Forward order with separators: first.last, first_last, first-last
   for (const sep of separatorsWithPriority) {
@@ -206,10 +205,10 @@ export function checkNameEmailMismatch(name: string, email: string): NameEmailMi
   }
 
   // Concatenated patterns (lower priority)
-  expectedPatterns.push(nameTokens.join(concatenated)); // firstlast
+  expectedPatterns.push(nameTokens.join('')); // firstlast
   if (nameTokens.length >= 2) {
     const reversedTokens = [...nameTokens].reverse();
-    expectedPatterns.push(reversedTokens.join(concatenated)); // lastfirst
+    expectedPatterns.push(reversedTokens.join('')); // lastfirst
   }
 
   // Check if email matches any expected pattern exactly
@@ -269,8 +268,10 @@ export function checkNameEmailMismatch(name: string, email: string): NameEmailMi
       // If tokens are similar (within 1-2 edits), might be a typo
       if (distance > 0 && distance <= 2 && nameToken.length >= 2) {
         // Generate suggested email by replacing the mismatched token
+        // Escape special regex characters in emailToken
+        const escapedToken = emailToken.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const suggestedLocalPart = emailLocalPart.replace(
-          new RegExp(emailToken, 'gi'),
+          new RegExp(escapedToken, 'gi'),
           nameToken.toLowerCase()
         );
         const suggestedEmail = `${suggestedLocalPart}@${domain}`;
