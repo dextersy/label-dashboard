@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PublicService, PublicEvent, TicketPurchaseRequest } from '../../services/public.service';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { MetaService } from '../../services/meta.service';
 import { CountdownNotificationComponent } from '../../shared/countdown-notification/countdown-notification.component';
+import { checkEmailIssues, EmailTypoResult } from '../../utils/email-typo-detector';
 
 // Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -43,6 +45,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   currentBrand: BrandSettings | null = null;
   selectedTicketType: any = null;
   showLightbox = false;
+  emailTypoResult: EmailTypoResult | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -77,6 +80,28 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         this.ticketForm.patchValue({ referral_code: params['ref'] });
       }
     });
+
+    // Add email typo and name/email mismatch checking
+    this.ticketForm.get('email_address')?.valueChanges
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.checkEmailIssues();
+      });
+
+    // Check email issues when name changes too
+    this.ticketForm.get('name')?.valueChanges
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.checkEmailIssues();
+      });
   }
 
   ngOnDestroy() {
@@ -384,6 +409,24 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   closeLightbox() {
     this.showLightbox = false;
     document.body.style.overflow = ''; // Restore scrolling
+  }
+
+  applySuggestedEmail() {
+    if (this.emailTypoResult?.suggestedEmail) {
+      this.ticketForm.patchValue({ email_address: this.emailTypoResult.suggestedEmail });
+      this.emailTypoResult = null; // Clear the warning after applying
+    }
+  }
+
+  checkEmailIssues() {
+    const name = this.ticketForm.get('name')?.value;
+    const email = this.ticketForm.get('email_address')?.value;
+
+    if (email && typeof email === 'string') {
+      this.emailTypoResult = checkEmailIssues(email, name);
+    } else {
+      this.emailTypoResult = null;
+    }
   }
 
 }

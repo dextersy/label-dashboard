@@ -460,15 +460,15 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isTicketResendable(ticket: EventTicket): boolean {
-    return !this.isEventPast()
-      && ticket.status !== 'Refunded'
+    // Allow resend even if event is past, but only if not all entries claimed
+    return ticket.status !== 'Refunded'
       && Number(ticket.number_of_claimed_entries) < Number(ticket.number_of_entries)
       && !!this.isAdmin;
   }
 
   isTicketTransferable(ticket: EventTicket): boolean {
-    return !this.isEventPast()
-      && (ticket.status === 'Ticket sent.')
+    // Allow transfer even if event is past, but only if no entries claimed
+    return ticket.status === 'Ticket sent.'
       && Number(ticket.number_of_claimed_entries) === 0
       && !!this.isAdmin;
   }
