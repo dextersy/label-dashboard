@@ -29,7 +29,8 @@ export const routes: Routes = [
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'set-profile', component: SetProfileComponent }, // No auth guard - standalone (also used for profile completion)
-  { path: 'invite/accept', component: InviteComponent }, // No auth guard - standalone
+  { path: 'invite', component: InviteComponent }, // No auth guard - standalone
+  { path: 'invite/accept', component: InviteComponent }, // Legacy route - redirect to /invite
   { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone
   { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
   

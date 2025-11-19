@@ -1,40 +1,73 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { BrandService } from '../../services/brand.service';
 
 @Component({
     selector: 'app-invite',
-    imports: [CommonModule],
+    imports: [CommonModule, RouterLink],
     templateUrl: './invite.component.html',
     styleUrl: './invite.component.scss'
 })
-export class InviteComponent implements OnInit {
+export class InviteComponent implements OnInit, OnDestroy {
   loading: boolean = true;
   message: string = '';
   messageType: 'success' | 'error' | '' = '';
   inviteHash: string = '';
 
+  // Brand settings (matching login page)
+  brandLogo: string = 'assets/img/Your Logo Here.png';
+  brandName: string = 'Label Dashboard';
+  brandColor: string = '#667eea';
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
+    private brandService: BrandService
   ) {}
 
   ngOnInit(): void {
+    // Load brand settings
+    this.loadBrandSettings();
+
     // First logout any existing session (matching setprofile.php behavior)
     this.authService.logout();
-    
+
     // Get invite hash from query parameters (matching original PHP invite flow)
     this.route.queryParams.subscribe(params => {
       this.inviteHash = params['hash'];
+
       if (!this.inviteHash) {
+        this.loading = false;
         this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.processInvite();
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Component cleanup
+  }
+
+  loadBrandSettings(): void {
+    this.brandService.loadBrandByDomain().subscribe({
+      next: (brandSettings) => {
+        this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
+        this.brandName = brandSettings.name;
+        this.brandColor = brandSettings.brand_color;
+
+        // Apply brand styling to the page
+        document.documentElement.style.setProperty('--brand-color', this.brandColor);
+        document.title = `${this.brandName} - Invite`;
+      },
+      error: (error) => {
+        console.error('Error loading brand settings:', error);
+      }
     });
   }
 
