@@ -6,17 +6,20 @@ import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { GlobalNotificationComponent } from './components/global-notification/global-notification.component';
 import { ConnectionOverlayComponent } from './components/connection-overlay/connection-overlay.component';
+import { AppNotificationBannerComponent } from './components/shared/app-notification-banner/app-notification-banner.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
 import { NotificationService } from './services/notification.service';
 import { SidebarService } from './services/sidebar.service';
 import { ConnectionMonitorService } from './services/connection-monitor.service';
+import { AppNotificationService } from './services/app-notification.service';
+import { PendingInviteNotificationProvider } from './services/notification-providers/pending-invite-notification.provider';
 import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
-    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
@@ -34,8 +37,13 @@ export class AppComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private notificationService: NotificationService,
     private sidebarService: SidebarService,
-    private connectionMonitor: ConnectionMonitorService
-  ) {}
+    private connectionMonitor: ConnectionMonitorService,
+    private appNotificationService: AppNotificationService,
+    private pendingInviteProvider: PendingInviteNotificationProvider
+  ) {
+    // Register notification providers
+    this.appNotificationService.registerProvider(this.pendingInviteProvider);
+  }
 
   ngOnInit(): void {
     // Initialize brand information before anything else

@@ -1,0 +1,36 @@
+<div *ngFor="let notification of notifications" class="notification-banner" [ngClass]="getStyleClass(notification)">
+  <div class="container-fluid">
+    <div class="notification-content">
+      <div class="notification-icon">
+        <i [class]="getIconClass(notification)"></i>
+      </div>
+      <div class="notification-message">
+        <strong>{{ notification.title }}</strong>
+        <div *ngIf="notification.message" class="notification-description">
+          {{ notification.message }}
+        </div>
+        <div *ngIf="notification.actions && notification.actions.length > 0" class="notification-actions">
+          <span *ngFor="let action of notification.actions; let i = index">
+            <a
+              href="javascript:void(0)"
+              (click)="handleAction(notification, action)"
+              class="action-link"
+              [class.processing]="isActionProcessing(notification, action)">
+              <span *ngIf="isActionProcessing(notification, action)" class="spinner-border spinner-border-sm me-1"></span>
+              {{ action.label }}
+            </a>
+            <span *ngIf="i < notification.actions.length - 1">, </span>
+          </span>
+        </div>
+      </div>
+      <button
+        *ngIf="notification.dismissible"
+        type="button"
+        class="btn-close-notification"
+        (click)="dismiss(notification)"
+        aria-label="Dismiss">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>

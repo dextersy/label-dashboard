@@ -5,9 +5,11 @@ import {
   setupUserProfile,
   processAdminInvite,
   getAdminInviteData,
-  setupAdminProfile
+  setupAdminProfile,
+  getPendingInvites
 } from '../controllers/inviteController';
 import { authRateLimit } from '../middleware/rateLimiting';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
@@ -20,5 +22,8 @@ router.post('/setup-profile', authRateLimit, setupUserProfile);
 router.post('/admin/process', authRateLimit, processAdminInvite);
 router.get('/admin/:hash', getAdminInviteData);
 router.post('/admin/setup', authRateLimit, setupAdminProfile);
+
+// Authenticated routes
+router.get('/pending', authenticateToken, getPendingInvites);
 
 export default router;
