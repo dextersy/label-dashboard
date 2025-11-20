@@ -66,20 +66,12 @@ export class DashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
-  private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-  }
-
   loadDashboardData(): void {
     this.loading = true;
     this.error = null;
 
-    this.http.get<DashboardData>(`${environment.apiUrl}/dashboard`, {
-      headers: this.getAuthHeaders()
-    }).subscribe({
+    // Let the auth interceptor handle adding the Authorization header
+    this.http.get<DashboardData>(`${environment.apiUrl}/dashboard`).subscribe({
       next: (data) => {
         this.dashboardData = data;
         this.loading = false;

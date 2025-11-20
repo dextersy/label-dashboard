@@ -15,7 +15,8 @@ import { AuthService } from '../../../services/auth.service';
 export class AppNotificationBannerComponent implements OnInit, OnDestroy {
   notifications: AppNotification[] = [];
   processingActions = new Map<string, boolean>(); // Track which actions are processing
-  private subscription?: Subscription;
+  private notificationSubscription?: Subscription;
+  private authSubscription?: Subscription;
 
   constructor(
     private notificationService: AppNotificationService,
@@ -23,25 +24,32 @@ export class AppNotificationBannerComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Only show notifications if user is logged in
-    if (!this.authService.isLoggedIn()) {
-      return;
-    }
+    // Subscribe to auth state changes
+    this.authSubscription = this.authService.currentUser.subscribe(user => {
+      if (user) {
+        // User is logged in - subscribe to notifications if not already subscribed
+        if (!this.notificationSubscription) {
+          this.notificationSubscription = this.notificationService.notifications$.subscribe(
+            notifications => {
+              this.notifications = notifications;
+            }
+          );
+        }
 
-    // Subscribe to notifications
-    this.subscription = this.notificationService.notifications$.subscribe(
-      notifications => {
-        console.log('[AppNotificationBanner] Received notifications:', notifications);
-        this.notifications = notifications;
+        // Refresh notifications when user logs in
+        this.notificationService.refreshNotifications();
+      } else {
+        // User logged out - clear notifications and unsubscribe
+        this.notifications = [];
+        this.notificationSubscription?.unsubscribe();
+        this.notificationSubscription = undefined;
       }
-    );
-
-    // Initial load
-    this.notificationService.refreshNotifications();
+    });
   }
 
   ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
+    this.notificationSubscription?.unsubscribe();
+    this.authSubscription?.unsubscribe();
   }
 
   async handleAction(notification: AppNotification, action: NotificationAction): Promise<void> {

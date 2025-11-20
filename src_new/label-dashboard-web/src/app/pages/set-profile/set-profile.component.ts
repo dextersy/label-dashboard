@@ -78,6 +78,14 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Check if user is already fully authenticated (has full auth token, not just temp)
+    const fullAuthToken = localStorage.getItem('auth_token');
+    if (fullAuthToken && fullAuthToken !== 'null' && fullAuthToken !== 'undefined') {
+      // User is already authenticated - shouldn't be on this page
+      // This can happen during route transitions
+      return;
+    }
+
     // Check if this is profile completion mode (temp token exists) or invite mode (hash exists)
     const tempUserData = this.authService.getTempUserData();
 
@@ -227,9 +235,9 @@ export class SetProfileComponent implements OnInit, OnDestroy {
         this.profile.last_name || undefined
       ).subscribe({
         next: (response) => {
-          this.saving = false;
           this.showMessage('Profile completed successfully!', 'success');
           // Token already stored by authService.completeProfile
+          // Keep saving = true to prevent duplicate submissions during navigation delay
           setTimeout(() => {
             this.router.navigate(['/dashboard']);
           }, 1000);
@@ -270,11 +278,16 @@ export class SetProfileComponent implements OnInit, OnDestroy {
 
       this.apiService.setupUserProfile(setupData).subscribe({
         next: (response) => {
-          this.saving = false;
-          // Store auth token and redirect to dashboard (matching setprofile.php)
+          // Store auth token and redirect to dashboard
           if (response.token) {
+            // Update auth service state before navigation
             localStorage.setItem('auth_token', response.token);
             localStorage.setItem('currentUser', JSON.stringify(response.user));
+
+            // Notify AuthService of the new user (updates currentUserSubject)
+            this.authService.setCurrentUser(response.user);
+
+            // Navigate to dashboard - auth guard should now pass
             this.router.navigate(['/dashboard']);
           }
         },
