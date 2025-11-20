@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 export interface User {
@@ -75,7 +75,7 @@ export class AuthService {
   completeProfile(username: string, firstName?: string, lastName?: string): Observable<LoginResponse> {
     const tempToken = localStorage.getItem('temp_auth_token');
     if (!tempToken) {
-      throw new Error('No temporary token found. Please log in again.');
+      return throwError(() => new Error('No temporary token found. Please log in again.'));
     }
 
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/complete-profile`, {

@@ -71,6 +71,12 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
       const response = await this.apiService.processInvite(invite.invite_hash).toPromise();
 
       if (response.action === 'redirect_to_artist') {
+        // Store authentication token if provided
+        if (response.token) {
+          localStorage.setItem('auth_token', response.token);
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
+        }
+
         // Trigger artist refresh and selection
         this.artistStateService.triggerArtistsRefresh(response.artist_id);
 
