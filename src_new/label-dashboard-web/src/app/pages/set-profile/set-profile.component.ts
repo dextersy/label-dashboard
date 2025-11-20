@@ -236,17 +236,20 @@ export class SetProfileComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.saving = false;
+          // Handle validation errors - DO NOT clear temp auth data so user can retry
           if (error.status === 409) {
             this.errors.username = 'This username is already taken. Please choose another.';
           } else if (error.status === 400) {
             this.showMessage(error.error?.error || 'Please check your input and try again', 'error');
           } else if (error.status === 401) {
+            // Session expired - clear temp auth data and redirect to login
             this.showMessage('Your session has expired. Please log in again.', 'error');
             this.authService.clearTempAuthData();
             setTimeout(() => {
               this.router.navigate(['/login']);
             }, 2000);
           } else {
+            // Other errors - DO NOT clear temp auth data so user can retry
             this.showMessage(error.error?.error || 'Error completing profile', 'error');
           }
         }
@@ -368,7 +371,8 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   }
 
   goToLogin(): void {
-    // Clear temp auth data when navigating back to login
+    // Clear temp auth data when user explicitly abandons profile completion flow
+    // This prevents stale session data but means user must re-authenticate
     this.authService.clearTempAuthData();
     this.router.navigate(['/login']);
   }

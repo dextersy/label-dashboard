@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FinancialSummary, Earning, Royalty, Payment, PaymentMethod, PayoutSettings } from '../pages/financial/financial.component';
 
@@ -19,9 +20,9 @@ export class FinancialService {
   }
 
   async getFinancialSummary(artistId: number): Promise<FinancialSummary> {
-    const response = await this.http.get<any>(`${environment.apiUrl}/financial/summary?artist_id=${artistId}`, {
+    const response = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/financial/summary?artist_id=${artistId}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     const summary = response.summary;
     return {
@@ -52,9 +53,9 @@ export class FinancialService {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
 
-    const response = await this.http.get<{earnings: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings?${queryParams}`, {
+    const response = await firstValueFrom(this.http.get<{earnings: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/earnings?${queryParams}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     const earnings = response?.earnings || [];
     return {
@@ -89,9 +90,9 @@ export class FinancialService {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
 
-    const response = await this.http.get<{royalties: any[], pagination: any}>(`${environment.apiUrl}/financial/royalties?${queryParams}`, {
+    const response = await firstValueFrom(this.http.get<{royalties: any[], pagination: any}>(`${environment.apiUrl}/financial/royalties?${queryParams}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     const royalties = response?.royalties || [];
     return {
@@ -121,9 +122,9 @@ export class FinancialService {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
     
-    const response = await this.http.get<{payments: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/payments?${queryParams}`, {
+    const response = await firstValueFrom(this.http.get<{payments: any[], pagination: any}>(`${environment.apiUrl}/financial/artists/${artistId}/payments?${queryParams}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     const payments = response?.payments || [];
     return {
@@ -149,9 +150,9 @@ export class FinancialService {
   }
 
   async getPaymentMethods(artistId: number): Promise<PaymentMethod[]> {
-    const response = await this.http.get<{paymentMethods: any[]}>(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
+    const response = await firstValueFrom(this.http.get<{paymentMethods: any[]}>(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     const paymentMethods = response?.paymentMethods || [];
     return paymentMethods.map(method => ({
@@ -164,9 +165,9 @@ export class FinancialService {
   }
 
   async getPayoutSettings(artistId: number): Promise<PayoutSettings> {
-    const response = await this.http.get<any>(`${environment.apiUrl}/artists/${artistId}/payout-settings`, {
+    const response = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/artists/${artistId}/payout-settings`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return {
       payout_point: response.payout_point,
@@ -175,62 +176,62 @@ export class FinancialService {
   }
 
   async createRoyalty(artistId: number, royaltyData: any): Promise<void> {
-    await this.http.post(`${environment.apiUrl}/financial/royalties`, {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/financial/royalties`, {
       artist_id: artistId,
       ...royaltyData
     }, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async createPayment(artistId: number, paymentData: any): Promise<void> {
-    await this.http.post(`${environment.apiUrl}/financial/payments`, {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/financial/payments`, {
       artist_id: artistId,
       ...paymentData
     }, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async createEarning(artistId: number, earningData: any): Promise<void> {
-    await this.http.post(`${environment.apiUrl}/financial/earnings`, {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/financial/earnings`, {
       artist_id: artistId,
       ...earningData
     }, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async addPaymentMethod(artistId: number, paymentMethodData: any): Promise<void> {
-    await this.http.post(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
       ...paymentMethodData
     }, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async updatePayoutSettings(artistId: number, payoutSettings: PayoutSettings): Promise<void> {
-    await this.http.put(`${environment.apiUrl}/artists/${artistId}/payout-settings`, payoutSettings, {
+    await firstValueFrom(this.http.put(`${environment.apiUrl}/artists/${artistId}/payout-settings`, payoutSettings, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async deletePaymentMethod(artistId: number, paymentMethodId: number): Promise<void> {
-    await this.http.delete(`${environment.apiUrl}/artists/${artistId}/payment-methods/${paymentMethodId}`, {
+    await firstValueFrom(this.http.delete(`${environment.apiUrl}/artists/${artistId}/payment-methods/${paymentMethodId}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async setDefaultPaymentMethod(artistId: number, paymentMethodId: number): Promise<void> {
-    await this.http.put(`${environment.apiUrl}/artists/${artistId}/payment-methods/${paymentMethodId}/set-default`, {}, {
+    await firstValueFrom(this.http.put(`${environment.apiUrl}/artists/${artistId}/payment-methods/${paymentMethodId}/set-default`, {}, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async getDocuments(artistId: number): Promise<any[]> {
-    const response = await this.http.get<{documents: any[]}>(`${environment.apiUrl}/artists/${artistId}/documents`, {
+    const response = await firstValueFrom(this.http.get<{documents: any[]}>(`${environment.apiUrl}/artists/${artistId}/documents`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return response?.documents || [];
   }
@@ -244,57 +245,57 @@ export class FinancialService {
       'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
     });
 
-    const response = await this.http.post<any>(`${environment.apiUrl}/artists/${artistId}/documents`, formData, {
+    const response = await firstValueFrom(this.http.post<any>(`${environment.apiUrl}/artists/${artistId}/documents`, formData, {
       headers: headers
-    }).toPromise();
+    }));
 
     return response;
   }
 
   async deleteDocument(artistId: number, documentId: number): Promise<void> {
-    await this.http.delete(`${environment.apiUrl}/artists/${artistId}/documents/${documentId}`, {
+    await firstValueFrom(this.http.delete(`${environment.apiUrl}/artists/${artistId}/documents/${documentId}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
   }
 
   async getReleaseInformation(artistId: number): Promise<any> {
-    const response = await this.http.get<any>(`${environment.apiUrl}/artists/${artistId}/releases`, {
+    const response = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/artists/${artistId}/releases`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return response;
   }
 
   async updateRoyalties(artistId: number, releases: any[]): Promise<any> {
-    const response = await this.http.put<any>(`${environment.apiUrl}/artists/${artistId}/royalties`, {
+    const response = await firstValueFrom(this.http.put<any>(`${environment.apiUrl}/artists/${artistId}/royalties`, {
       releases
     }, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return response;
   }
 
   async addRecuperableExpense(releaseId: number, expenseData: any): Promise<any> {
-    const response = await this.http.post<any>(`${environment.apiUrl}/releases/${releaseId}/expenses`, expenseData, {
+    const response = await firstValueFrom(this.http.post<any>(`${environment.apiUrl}/releases/${releaseId}/expenses`, expenseData, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return response;
   }
 
   async getWalletBalance(): Promise<number> {
-    const response = await this.http.get<{balance: number}>(`${environment.apiUrl}/financial/wallet/balance`, {
+    const response = await firstValueFrom(this.http.get<{balance: number}>(`${environment.apiUrl}/financial/wallet/balance`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return response?.balance || 0;
   }
 
   async getReleaseExpenses(releaseId: number, page: number = 1, limit: number = 10): Promise<{expenses: any[], pagination: any}> {
-    const response = await this.http.get<{expenses: any[], pagination: any}>(`${environment.apiUrl}/releases/${releaseId}/expenses?page=${page}&limit=${limit}`, {
+    const response = await firstValueFrom(this.http.get<{expenses: any[], pagination: any}>(`${environment.apiUrl}/releases/${releaseId}/expenses?page=${page}&limit=${limit}`, {
       headers: this.getAuthHeaders()
-    }).toPromise();
+    }));
 
     return {
       expenses: response?.expenses || [],
@@ -323,10 +324,10 @@ export class FinancialService {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
 
-    const response = await this.http.get(`${environment.apiUrl}/financial/earnings/csv?${queryParams}`, {
+    const response = await firstValueFrom(this.http.get(`${environment.apiUrl}/financial/earnings/csv?${queryParams}`, {
       headers: this.getAuthHeaders(),
       responseType: 'blob'
-    }).toPromise();
+    }));
 
     // Create download link
     const blob = new Blob([response as any], { type: 'text/csv' });
@@ -360,10 +361,10 @@ export class FinancialService {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
 
-    const response = await this.http.get(`${environment.apiUrl}/financial/royalties/csv?${queryParams}`, {
+    const response = await firstValueFrom(this.http.get(`${environment.apiUrl}/financial/royalties/csv?${queryParams}`, {
       headers: this.getAuthHeaders(),
       responseType: 'blob'
-    }).toPromise();
+    }));
 
     // Create download link
     const blob = new Blob([response as any], { type: 'text/csv' });

@@ -535,7 +535,7 @@ export const getPendingInvites = async (req: any, res: Response) => {
     // Format response
     const invites = pendingInvites.map(invite => ({
       artist_id: invite.artist_id,
-      artist_name: invite.artist?.name,
+      artist_name: invite.artist?.name || 'Unknown Artist',
       invite_hash: invite.invite_hash,
       can_view_payments: invite.can_view_payments,
       can_view_royalties: invite.can_view_royalties,

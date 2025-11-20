@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AppNotification, NotificationProvider, NotificationAction } from '../../models/notification.model';
 import { ApiService } from '../api.service';
 import { ArtistStateService } from '../artist-state.service';
@@ -27,7 +28,7 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
 
   async getNotifications(): Promise<AppNotification[]> {
     try {
-      const response = await this.apiService.getPendingInvites().toPromise();
+      const response = await firstValueFrom(this.apiService.getPendingInvites());
       this.pendingInvites = response.invites || [];
 
       if (this.pendingInvites.length === 0) {
@@ -68,9 +69,14 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
 
     try {
       // Process the invite
-      const response = await this.apiService.processInvite(invite.invite_hash).toPromise();
+      const response = await firstValueFrom(this.apiService.processInvite(invite.invite_hash));
 
       if (response.action === 'redirect_to_artist') {
+        // Validate artist_id is present
+        if (!response.artist_id) {
+          throw new Error('Artist ID missing from response');
+        }
+
         // Store authentication token if provided
         if (response.token) {
           localStorage.setItem('auth_token', response.token);
