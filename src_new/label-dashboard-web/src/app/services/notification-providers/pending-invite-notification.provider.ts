@@ -34,24 +34,22 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
         return [];
       }
 
-      // Create notification with actions for each pending invite
-      const actions = this.pendingInvites.map(invite => ({
-        label: invite.artist_name,
-        data: invite
-      }));
-
-      const notification: AppNotification = {
-        id: 'pending-invites',
-        type: 'invite',
-        style: 'gradient-purple',
+      // Create a separate notification for each pending invite
+      const notifications: AppNotification[] = this.pendingInvites.map(invite => ({
+        id: `pending-invite-${invite.invite_hash}`,
+        type: 'invite' as const,
+        style: 'gradient-purple' as const,
         icon: 'fa-user-plus',
-        title: `You have ${this.pendingInvites.length} pending team ${this.pendingInvites.length === 1 ? 'invite' : 'invites'}!`,
-        actions,
+        title: `You have a pending invite to join ${invite.artist_name}'s team!`,
+        actions: [{
+          label: 'Accept',
+          data: invite
+        }],
         dismissible: true,
         priority: 100 // High priority
-      };
+      }));
 
-      return [notification];
+      return notifications;
     } catch (error) {
       console.error('[PendingInviteNotificationProvider] Error fetching invites:', error);
       return [];
@@ -59,7 +57,7 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
   }
 
   async handleAction(notificationId: string, action: NotificationAction): Promise<void> {
-    if (notificationId !== 'pending-invites') {
+    if (!notificationId.startsWith('pending-invite-')) {
       throw new Error('Not my notification');
     }
 
