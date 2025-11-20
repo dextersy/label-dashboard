@@ -78,16 +78,24 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Check if user is already fully authenticated (has full auth token, not just temp)
-    const fullAuthToken = localStorage.getItem('auth_token');
-    if (fullAuthToken && fullAuthToken !== 'null' && fullAuthToken !== 'undefined') {
-      // User is already authenticated - shouldn't be on this page
-      // This can happen during route transitions
-      return;
-    }
-
     // Check if this is profile completion mode (temp token exists) or invite mode (hash exists)
     const tempUserData = this.authService.getTempUserData();
+
+    // Get invite hash from query parameters first (to determine if this is a legitimate invite flow)
+    let hasInviteHash = false;
+    this.route.queryParams.subscribe(params => {
+      this.inviteHash = params['hash'];
+      hasInviteHash = !!this.inviteHash;
+    });
+
+    // Check if user is already fully authenticated (has full auth token, not just temp)
+    // Only skip initialization if there's NO invite hash (route transition case)
+    const fullAuthToken = localStorage.getItem('auth_token');
+    if (fullAuthToken && !hasInviteHash && !tempUserData) {
+      // User is already authenticated and not in invite/profile completion flow
+      // This can happen during route transitions - skip initialization
+      return;
+    }
 
     if (tempUserData) {
       // Profile completion mode - user has password but no username
@@ -106,20 +114,20 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       this.setupUsernameValidation();
       this.loadBrandSettings();
     } else {
-      // Original invite flow - logout and check for invite hash
-      this.authService.logout();
-      // Clear any stale temp auth data from previous incomplete profile attempts
-      this.authService.clearTempAuthData();
+      // Original invite flow - check for invite hash
+      // Note: Don't call logout here if user is already authenticated (they might be accepting multiple invites)
+      if (!fullAuthToken) {
+        // Only logout if not authenticated (prevents clearing auth during multi-invite acceptance)
+        this.authService.logout();
+        // Clear any stale temp auth data from previous incomplete profile attempts
+        this.authService.clearTempAuthData();
+      }
 
-      // Get invite hash from query parameters (matching invite email links)
-      this.route.queryParams.subscribe(params => {
-        this.inviteHash = params['hash'];
-        if (!this.inviteHash) {
-          this.showMessage('Invalid or expired invitation link', 'error');
-          return;
-        }
-        this.loadInviteData();
-      });
+      if (!this.inviteHash) {
+        this.showMessage('Invalid or expired invitation link', 'error');
+        return;
+      }
+      this.loadInviteData();
       this.setupUsernameValidation();
       this.loadBrandSettings();
     }
@@ -239,7 +247,11 @@ export class SetProfileComponent implements OnInit, OnDestroy {
           // Token already stored by authService.completeProfile
           // Keep saving = true to prevent duplicate submissions during navigation delay
           setTimeout(() => {
-            this.router.navigate(['/dashboard']);
+            this.router.navigate(['/dashboard']).catch((error) => {
+              console.error('Navigation error:', error);
+              this.saving = false;
+              this.showMessage('Redirecting failed. Please click the dashboard link to continue.', 'error');
+            });
           }, 1000);
         },
         error: (error) => {
@@ -280,15 +292,16 @@ export class SetProfileComponent implements OnInit, OnDestroy {
         next: (response) => {
           // Store auth token and redirect to dashboard
           if (response.token) {
-            // Update auth service state before navigation
+            // Store token and update auth service state
             localStorage.setItem('auth_token', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
-
-            // Notify AuthService of the new user (updates currentUserSubject)
-            this.authService.setCurrentUser(response.user);
+            this.authService.updateUserData(response.user);
 
             // Navigate to dashboard - auth guard should now pass
-            this.router.navigate(['/dashboard']);
+            this.router.navigate(['/dashboard']).catch((error) => {
+              console.error('Navigation error:', error);
+              this.saving = false;
+              this.showMessage('Redirecting failed. Please click the dashboard link to continue.', 'error');
+            });
           }
         },
         error: (error) => {

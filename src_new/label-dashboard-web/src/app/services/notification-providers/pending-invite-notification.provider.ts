@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { AppNotification, NotificationProvider, NotificationAction } from '../../models/notification.model';
 import { ApiService } from '../api.service';
 import { ArtistStateService } from '../artist-state.service';
+import { AuthService } from '../auth.service';
 
 export interface PendingInvite {
   artist_id: number;
@@ -23,7 +24,8 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
   constructor(
     private apiService: ApiService,
     private router: Router,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private authService: AuthService
   ) {}
 
   async getNotifications(): Promise<AppNotification[]> {
@@ -77,10 +79,10 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
           throw new Error('Artist ID missing from response');
         }
 
-        // Store authentication token if provided
+        // Store authentication token and update auth state if provided
         if (response.token) {
           localStorage.setItem('auth_token', response.token);
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          this.authService.updateUserData(response.user);
         }
 
         // Trigger artist refresh and selection
