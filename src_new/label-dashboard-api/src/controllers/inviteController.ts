@@ -208,12 +208,12 @@ export const setupUserProfile = async (req: Request, res: Response) => {
         });
       }
 
-      // Validate username format
-      const usernamePattern = /^[A-Za-z0-9_]+$/;
+      // Validate username format (matching authController validation)
+      const usernamePattern = /^[a-zA-Z0-9_-]{3,30}$/;
       if (!usernamePattern.test(username.trim())) {
         return res.status(400).json({
           errors: {
-            username: 'Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed'
+            username: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
           }
         });
       }
@@ -447,12 +447,12 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
         });
       }
 
-      // Validate username format
-      const usernamePattern = /^[A-Za-z0-9_]+$/;
+      // Validate username format (matching authController validation)
+      const usernamePattern = /^[a-zA-Z0-9_-]{3,30}$/;
       if (!usernamePattern.test(username.trim())) {
         return res.status(400).json({
           errors: {
-            username: 'Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed'
+            username: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
           }
         });
       }

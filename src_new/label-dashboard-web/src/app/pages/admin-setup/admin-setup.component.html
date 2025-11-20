@@ -51,7 +51,7 @@
                   Sorry, this username is already in use. Please choose another.
                 </div>
                 <div class="invalid-feedback" *ngIf="usernameInvalid && !errors.username">
-                  Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed.
+                  Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens.
                 </div>
                 <div class="valid-feedback" *ngIf="usernameValid && !errors.username">
                   Username is available!

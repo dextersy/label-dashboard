@@ -45,7 +45,7 @@
           {{ errors.username }}
         </div>
         <div class="field-error-message" *ngIf="usernameInvalid && !errors.username">
-          Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed.
+          Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens.
         </div>
         <div class="field-error-message" *ngIf="usernameExists && !errors.username">
           Sorry, this username is already in use. Please choose another.
