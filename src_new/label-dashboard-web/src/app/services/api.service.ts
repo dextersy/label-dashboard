@@ -80,4 +80,9 @@ export class ApiService {
   setupAdminProfile(setupData: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/invite/admin/setup`, setupData);
   }
+
+  // Get pending invites for current user
+  getPendingInvites(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/invite/pending`, { headers: this.getAuthHeaders() });
+  }
 }

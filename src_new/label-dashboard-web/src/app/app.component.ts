@@ -6,17 +6,20 @@ import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { GlobalNotificationComponent } from './components/global-notification/global-notification.component';
 import { ConnectionOverlayComponent } from './components/connection-overlay/connection-overlay.component';
+import { AppNotificationBannerComponent } from './components/shared/app-notification-banner/app-notification-banner.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
 import { NotificationService } from './services/notification.service';
 import { SidebarService } from './services/sidebar.service';
 import { ConnectionMonitorService } from './services/connection-monitor.service';
+import { AppNotificationService } from './services/app-notification.service';
+import { PendingInviteNotificationProvider } from './services/notification-providers/pending-invite-notification.provider';
 import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
-    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
@@ -34,8 +37,13 @@ export class AppComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private notificationService: NotificationService,
     private sidebarService: SidebarService,
-    private connectionMonitor: ConnectionMonitorService
-  ) {}
+    private connectionMonitor: ConnectionMonitorService,
+    private appNotificationService: AppNotificationService,
+    private pendingInviteProvider: PendingInviteNotificationProvider
+  ) {
+    // Register notification providers
+    this.appNotificationService.registerProvider(this.pendingInviteProvider);
+  }
 
   ngOnInit(): void {
     // Initialize brand information before anything else
@@ -47,7 +55,7 @@ export class AppComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Failed to load brand settings:', error);
         this.brandLoaded = true; // Allow rendering even on error to show error page
-        
+
         // Check if this is a connection error vs a domain configuration error
         if (this.connectionMonitor.isConnectionError(error)) {
           // This is a connection issue - let connection monitor handle it
@@ -55,22 +63,28 @@ export class AppComponent implements OnInit, OnDestroy {
           // Don't redirect to domain-not-found for connection errors
         } else {
           // This is likely a real domain configuration issue
-          if (!window.location.pathname.includes('/domain-not-found')) {
-            // First time redirecting to domain-not-found, capture current URL
-            const currentUrl = window.location.href;
-            this.router.navigate(['/domain-not-found'], { 
-              queryParams: { returnUrl: currentUrl } 
-            });
-          } else {
-            // Already on domain-not-found, preserve existing returnUrl
-            const urlParams = new URLSearchParams(window.location.search);
-            const existingReturnUrl = urlParams.get('returnUrl');
-            if (existingReturnUrl) {
-              this.router.navigate(['/domain-not-found'], { 
-                queryParams: { returnUrl: existingReturnUrl } 
+          // Don't redirect if on standalone/public pages that should work without brand settings
+          const standalonePages = ['/domain-not-found', '/invite', '/admin-invite', '/admin-setup', '/public'];
+          const isStandalonePage = standalonePages.some(page => window.location.pathname.startsWith(page));
+
+          if (!isStandalonePage) {
+            if (!window.location.pathname.includes('/domain-not-found')) {
+              // First time redirecting to domain-not-found, capture current URL
+              const currentUrl = window.location.href;
+              this.router.navigate(['/domain-not-found'], {
+                queryParams: { returnUrl: currentUrl }
               });
             } else {
-              this.router.navigate(['/domain-not-found']);
+              // Already on domain-not-found, preserve existing returnUrl
+              const urlParams = new URLSearchParams(window.location.search);
+              const existingReturnUrl = urlParams.get('returnUrl');
+              if (existingReturnUrl) {
+                this.router.navigate(['/domain-not-found'], {
+                  queryParams: { returnUrl: existingReturnUrl }
+                });
+              } else {
+                this.router.navigate(['/domain-not-found']);
+              }
             }
           }
         }

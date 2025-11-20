@@ -1,26 +1,35 @@
-// Invite processing page styling
+/* Invite page styling matching login page */
 
-.invite-container {
-  min-height: 100vh;
+.invite-wrapper {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.invite-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-  padding: 60px 40px;
-  text-align: center;
+/* Ensure the button aligns properly (matching login page) */
+#formContent {
+  .btn-block {
+    width: 100% !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Fix for potential Angular Material button interference */
+  button.btn {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
 }
 
-// Loading section
+/* Loading section */
 .loading-section {
+  padding: 20px 0;
+
   .loading-spinner {
     width: 60px;
     height: 60px;
@@ -30,14 +39,14 @@
     animation: spin 1s linear infinite;
     margin: 0 auto 30px auto;
   }
-  
+
   h2 {
     color: #333;
     margin-bottom: 15px;
     font-size: 24px;
     font-weight: 600;
   }
-  
+
   p {
     color: #666;
     font-size: 16px;
@@ -46,76 +55,43 @@
   }
 }
 
-// Error section
+/* Error section */
 .error-section {
-  .error-icon {
-    font-size: 60px;
-    color: #dc3545;
-    margin-bottom: 20px;
+  padding: 20px 0;
+
+  .alert {
+    margin-bottom: 25px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    text-align: left;
   }
-  
-  h2 {
-    color: #333;
-    margin-bottom: 15px;
-    font-size: 24px;
-    font-weight: 600;
-  }
-  
-  p {
-    color: #666;
-    font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 30px;
+
+  .alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
   }
 }
 
-// Button styles
-.btn {
-  border: none;
-  border-radius: 8px;
-  padding: 14px 28px;
-  font-size: 16px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-block;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--brand-color, #667eea) 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  }
-}
-
-// Animations
+/* Animations */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-// Responsive design
+/* Responsive design */
 @media (max-width: 768px) {
-  .invite-container {
+  .invite-wrapper {
     padding: 15px;
   }
-  
-  .invite-content {
-    padding: 40px 30px;
-    max-width: 100%;
-  }
-  
+
   .loading-section,
   .error-section {
     h2 {
       font-size: 20px;
     }
-    
+
     p {
       font-size: 14px;
     }

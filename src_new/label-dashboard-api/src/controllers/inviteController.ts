@@ -6,6 +6,7 @@ import User from '../models/User';
 import Artist from '../models/Artist';
 import Brand from '../models/Brand';
 import { hasPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
+import { Op } from 'sequelize';
 
 // Fail fast if JWT_SECRET is not configured - critical security requirement
 if (!process.env.JWT_SECRET) {
@@ -207,12 +208,12 @@ export const setupUserProfile = async (req: Request, res: Response) => {
         });
       }
 
-      // Validate username format
-      const usernamePattern = /^[A-Za-z0-9_]+$/;
+      // Validate username format (matching authController validation)
+      const usernamePattern = /^[a-zA-Z0-9_-]{3,30}$/;
       if (!usernamePattern.test(username.trim())) {
         return res.status(400).json({
           errors: {
-            username: 'Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed'
+            username: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
           }
         });
       }
@@ -446,12 +447,12 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
         });
       }
 
-      // Validate username format
-      const usernamePattern = /^[A-Za-z0-9_]+$/;
+      // Validate username format (matching authController validation)
+      const usernamePattern = /^[a-zA-Z0-9_-]{3,30}$/;
       if (!usernamePattern.test(username.trim())) {
         return res.status(400).json({
           errors: {
-            username: 'Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed'
+            username: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
           }
         });
       }
@@ -504,6 +505,46 @@ export const setupAdminProfile = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error setting up admin profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Get pending invites for the current user
+export const getPendingInvites = async (req: any, res: Response) => {
+  try {
+    const userId = req.user.id;
+
+    // Find all pending artist access invites for this user
+    const pendingInvites = await ArtistAccess.findAll({
+      where: {
+        user_id: userId,
+        status: 'Pending',
+        invite_hash: {
+          [Op.ne]: null // Only invites with valid hash
+        }
+      },
+      include: [
+        {
+          model: Artist,
+          as: 'artist',
+          attributes: ['id', 'name', 'brand_id']
+        }
+      ]
+    });
+
+    // Format response
+    const invites = pendingInvites.map(invite => ({
+      artist_id: invite.artist_id,
+      artist_name: invite.artist?.name || 'Unknown Artist',
+      invite_hash: invite.invite_hash,
+      can_view_payments: invite.can_view_payments,
+      can_view_royalties: invite.can_view_royalties,
+      can_edit_artist_profile: invite.can_edit_artist_profile
+    }));
+
+    res.json({ invites });
+  } catch (error) {
+    console.error('Error getting pending invites:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

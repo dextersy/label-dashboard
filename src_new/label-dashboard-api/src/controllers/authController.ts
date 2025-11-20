@@ -100,6 +100,34 @@ export const login = async (req: Request, res: Response) => {
       await migrateUserPassword(user, password);
     }
 
+    // Check if user has password but no username (incomplete profile)
+    // This happens when user resets password before accepting invite
+    if (!user.username) {
+      // Generate a temporary JWT for profile completion
+      if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET environment variable is required');
+      }
+
+      const tempToken = jwt.sign(
+        { userId: user.id, email: user.email_address, brandId: user.brand_id, profileIncomplete: true },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' } // Shorter expiry for incomplete profiles
+      );
+
+      return res.status(200).json({
+        status: 'profile_incomplete',
+        message: 'Please complete your profile by setting a username',
+        token: tempToken,
+        user: {
+          id: user.id,
+          email_address: user.email_address,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          brand_id: user.brand_id
+        }
+      });
+    }
+
     // Update last login time
     await user.update({ last_logged_in: new Date() });
 
@@ -107,7 +135,7 @@ export const login = async (req: Request, res: Response) => {
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is required');
     }
-    
+
     const token = jwt.sign(
       { userId: user.id, username: user.username, brandId: user.brand_id },
       process.env.JWT_SECRET,
@@ -259,6 +287,109 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const completeProfile = async (req: Request, res: Response) => {
+  try {
+    const { username, first_name, last_name } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication token is required' });
+    }
+
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // Verify token
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    // Check if this is a profile-incomplete token
+    if (!decoded.profileIncomplete) {
+      return res.status(400).json({ error: 'This endpoint is only for completing incomplete profiles' });
+    }
+
+    // Find user
+    const user = await User.findByPk(decoded.userId, {
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user already has a username (prevent abuse)
+    if (user.username) {
+      return res.status(400).json({ error: 'Profile is already complete' });
+    }
+
+    // Check if username is already taken
+    const existingUser = await User.findOne({
+      where: {
+        username,
+        brand_id: user.brand_id
+      }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+
+    // Validate username format (alphanumeric, underscore, hyphen, 3-30 chars)
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({
+        error: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
+      });
+    }
+
+    // Update user with username and optional names
+    await user.update({
+      username: username.trim(),
+      first_name: first_name?.trim() || user.first_name,
+      last_name: last_name?.trim() || user.last_name,
+      last_logged_in: new Date()
+    });
+
+    // Generate full JWT token now that profile is complete
+    const fullToken = jwt.sign(
+      { userId: user.id, username: user.username, brandId: user.brand_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Check if user is superadmin
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const isSuperadmin = adminEmail && user.email_address === adminEmail;
+
+    res.json({
+      message: 'Profile completed successfully',
+      token: fullToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        is_admin: user.is_admin,
+        is_superadmin: isSuperadmin,
+        brand_id: user.brand_id
+      }
+    });
+  } catch (error) {
+    console.error('Complete profile error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

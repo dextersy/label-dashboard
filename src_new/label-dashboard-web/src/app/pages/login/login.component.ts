@@ -133,12 +133,21 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(this.loginField, this.password, this.brandId).subscribe({
       next: (response) => {
+        this.loading = false;
+        this.hideLoadingOverlay();
+
+        // Check if profile is incomplete
+        if (response.status === 'profile_incomplete') {
+          // Redirect to set-profile page (reused for profile completion)
+          this.router.navigate(['/set-profile']);
+          return;
+        }
+
+        // Normal login - redirect to dashboard or specified URL
         if (response.token) {
           const redirectTo = this.redirectUrl || '/dashboard';
           this.router.navigate([redirectTo]);
         }
-        this.loading = false;
-        this.hideLoadingOverlay();
       },
       error: (error) => {
         this.loading = false;

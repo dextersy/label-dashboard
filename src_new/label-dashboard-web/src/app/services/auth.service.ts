@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 export interface User {
@@ -18,6 +18,15 @@ export interface LoginResponse {
   message: string;
   token: string;
   user: User;
+  status?: string; // 'profile_incomplete' when user needs to complete profile
+}
+
+export interface ProfileIncompleteUser {
+  id: number;
+  email_address: string;
+  first_name?: string;
+  last_name?: string;
+  brand_id: number;
 }
 
 @Injectable({
@@ -46,6 +55,16 @@ export class AuthService {
       password,
       brand_id: brandId
     }).pipe(map(response => {
+      // Check if profile is incomplete
+      if (response.status === 'profile_incomplete') {
+        // Store temporary token for profile completion
+        localStorage.setItem('temp_auth_token', response.token);
+        localStorage.setItem('temp_user_data', JSON.stringify(response.user));
+        // Don't update current user or auth token
+        return response;
+      }
+
+      // Normal login - profile is complete
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       this.currentUserSubject.next(response.user);
@@ -53,9 +72,46 @@ export class AuthService {
     }));
   }
 
+  completeProfile(username: string, firstName?: string, lastName?: string): Observable<LoginResponse> {
+    const tempToken = localStorage.getItem('temp_auth_token');
+    if (!tempToken) {
+      return throwError(() => new Error('No temporary token found. Please log in again.'));
+    }
+
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/complete-profile`, {
+      username,
+      first_name: firstName,
+      last_name: lastName
+    }, {
+      headers: { 'Authorization': `Bearer ${tempToken}` }
+    }).pipe(map(response => {
+      // Clear temporary storage
+      localStorage.removeItem('temp_auth_token');
+      localStorage.removeItem('temp_user_data');
+
+      // Store full auth token and user data
+      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      this.currentUserSubject.next(response.user);
+      return response;
+    }));
+  }
+
+  getTempUserData(): ProfileIncompleteUser | null {
+    const tempData = localStorage.getItem('temp_user_data');
+    return tempData ? JSON.parse(tempData) : null;
+  }
+
+  clearTempAuthData(): void {
+    localStorage.removeItem('temp_auth_token');
+    localStorage.removeItem('temp_user_data');
+  }
+
   logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('currentUser');
+    // Clear temp auth data to prevent stale data issues
+    this.clearTempAuthData();
     this.currentUserSubject.next(null);
   }
 

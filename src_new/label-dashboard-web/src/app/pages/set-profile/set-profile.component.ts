@@ -60,6 +60,10 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   inviteHash: string = '';
   artistAccessId: number | null = null;
 
+  // Profile completion mode (when user has password but no username)
+  isProfileCompletionMode: boolean = false;
+  passwordAlreadySet: boolean = false;
+
   // Brand settings (matching original PHP defaults)
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
@@ -74,20 +78,59 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // First logout any existing session (matching setprofile.php behavior)
-    this.authService.logout();
-    
-    // Get invite hash from query parameters (matching invite email links)
+    // Check if this is profile completion mode (temp token exists) or invite mode (hash exists)
+    const tempUserData = this.authService.getTempUserData();
+
+    // Get invite hash from query parameters first (to determine if this is a legitimate invite flow)
+    let hasInviteHash = false;
     this.route.queryParams.subscribe(params => {
       this.inviteHash = params['hash'];
+      hasInviteHash = !!this.inviteHash;
+    });
+
+    // Check if user is already fully authenticated (has full auth token, not just temp)
+    // Only skip initialization if there's NO invite hash (route transition case)
+    const fullAuthToken = localStorage.getItem('auth_token');
+    if (fullAuthToken && !hasInviteHash && !tempUserData) {
+      // User is already authenticated and not in invite/profile completion flow
+      // This can happen during route transitions - skip initialization
+      return;
+    }
+
+    if (tempUserData) {
+      // Profile completion mode - user has password but no username
+      this.isProfileCompletionMode = true;
+      this.passwordAlreadySet = true;
+      this.profile = {
+        id: tempUserData.id,
+        username: '',
+        email_address: tempUserData.email_address,
+        first_name: tempUserData.first_name || '',
+        last_name: tempUserData.last_name || '',
+        is_admin: false,
+        brand_id: tempUserData.brand_id
+      };
+      this.canChangeUsername = true;
+      this.setupUsernameValidation();
+      this.loadBrandSettings();
+    } else {
+      // Original invite flow - check for invite hash
+      // Note: Don't call logout here if user is already authenticated (they might be accepting multiple invites)
+      if (!fullAuthToken) {
+        // Only logout if not authenticated (prevents clearing auth during multi-invite acceptance)
+        this.authService.logout();
+        // Clear any stale temp auth data from previous incomplete profile attempts
+        this.authService.clearTempAuthData();
+      }
+
       if (!this.inviteHash) {
         this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
       this.loadInviteData();
-    });
-    this.setupUsernameValidation();
-    this.loadBrandSettings();
+      this.setupUsernameValidation();
+      this.loadBrandSettings();
+    }
   }
 
   ngOnDestroy(): void {
@@ -158,8 +201,8 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.usernameInvalid = false;
     this.usernameValid = false;
 
-    // Check username pattern (matching setprofile.php validation)
-    const pattern = /^[A-Za-z0-9_]+$/;
+    // Check username pattern (matching backend validation in authController.ts)
+    const pattern = /^[a-zA-Z0-9_-]{3,30}$/;
     if (!pattern.test(username)) {
       this.usernameInvalid = true;
       return;
@@ -184,7 +227,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     if (!this.profile) return;
 
     this.clearErrors();
-    
+
     if (!this.validateForm()) {
       return;
     }
@@ -192,44 +235,92 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     this.saving = true;
     this.message = '';
 
-    const setupData = {
-      id: this.profile.id,
-      username: this.canChangeUsername ? this.profile.username : undefined,
-      first_name: this.profile.first_name,
-      last_name: this.profile.last_name,
-      password: this.password,
-      brand_id: this.profile.brand_id,
-      is_admin: this.profile.is_admin,
-      invite_hash: this.inviteHash,
-      artist_access_id: this.artistAccessId
-    };
-
-    this.apiService.setupUserProfile(setupData).subscribe({
-      next: (response) => {
-        this.saving = false;
-        // Store auth token and redirect to dashboard (matching setprofile.php)
-        if (response.token) {
-          localStorage.setItem('auth_token', response.token);
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
-          this.router.navigate(['/dashboard']);
-        }
-      },
-      error: (error) => {
-        this.saving = false;
-        if (error.status === 400) {
-          if (error.error.errors) {
-            this.errors = error.error.errors;
-          } else if (error.error.details && Array.isArray(error.error.details)) {
-            // Handle detailed validation errors from backend
-            this.errors.password = error.error.details.join('. ');
+    if (this.isProfileCompletionMode) {
+      // Profile completion mode - call completeProfile API
+      this.authService.completeProfile(
+        this.profile.username,
+        this.profile.first_name || undefined,
+        this.profile.last_name || undefined
+      ).subscribe({
+        next: (response) => {
+          this.showMessage('Profile completed successfully!', 'success');
+          // Token already stored by authService.completeProfile
+          // Keep saving = true to prevent duplicate submissions during navigation delay
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']).catch((error) => {
+              console.error('Navigation error:', error);
+              this.saving = false;
+              this.showMessage('Redirecting failed. Please click the dashboard link to continue.', 'error');
+            });
+          }, 1000);
+        },
+        error: (error) => {
+          this.saving = false;
+          // Handle validation errors - DO NOT clear temp auth data so user can retry
+          if (error.status === 409) {
+            this.errors.username = 'This username is already taken. Please choose another.';
+          } else if (error.status === 400) {
+            this.showMessage(error.error?.error || 'Please check your input and try again', 'error');
+          } else if (error.status === 401) {
+            // Session expired - clear temp auth data and redirect to login
+            this.showMessage('Your session has expired. Please log in again.', 'error');
+            this.authService.clearTempAuthData();
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 2000);
           } else {
-            this.showMessage(error.error?.error || error.error?.message || 'Error setting up profile', 'error');
+            // Other errors - DO NOT clear temp auth data so user can retry
+            this.showMessage(error.error?.error || 'Error completing profile', 'error');
           }
-        } else {
-          this.showMessage(error.error?.message || 'Error setting up profile', 'error');
         }
-      }
-    });
+      });
+    } else {
+      // Original invite flow - call setupUserProfile API
+      const setupData = {
+        id: this.profile.id,
+        username: this.canChangeUsername ? this.profile.username : undefined,
+        first_name: this.profile.first_name,
+        last_name: this.profile.last_name,
+        password: this.password,
+        brand_id: this.profile.brand_id,
+        is_admin: this.profile.is_admin,
+        invite_hash: this.inviteHash,
+        artist_access_id: this.artistAccessId
+      };
+
+      this.apiService.setupUserProfile(setupData).subscribe({
+        next: (response) => {
+          // Store auth token and redirect to dashboard
+          if (response.token) {
+            // Store token and update auth service state
+            localStorage.setItem('auth_token', response.token);
+            this.authService.updateUserData(response.user);
+
+            // Navigate to dashboard - auth guard should now pass
+            this.router.navigate(['/dashboard']).catch((error) => {
+              console.error('Navigation error:', error);
+              this.saving = false;
+              this.showMessage('Redirecting failed. Please click the dashboard link to continue.', 'error');
+            });
+          }
+        },
+        error: (error) => {
+          this.saving = false;
+          if (error.status === 400) {
+            if (error.error.errors) {
+              this.errors = error.error.errors;
+            } else if (error.error.details && Array.isArray(error.error.details)) {
+              // Handle detailed validation errors from backend
+              this.errors.password = error.error.details.join('. ');
+            } else {
+              this.showMessage(error.error?.error || error.error?.message || 'Error setting up profile', 'error');
+            }
+          } else {
+            this.showMessage(error.error?.message || 'Error setting up profile', 'error');
+          }
+        }
+      });
+    }
   }
 
 
@@ -241,38 +332,43 @@ export class SetProfileComponent implements OnInit, OnDestroy {
       if (!this.profile?.username?.trim()) {
         errors.username = 'Username is required';
       } else if (this.usernameInvalid) {
-        errors.username = 'Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed';
+        errors.username = 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens';
       } else if (this.usernameExists) {
         errors.username = 'Sorry, this username is already in use. Please choose another';
       }
     }
 
-    // Required fields (matching setprofile.php)
-    if (!this.profile?.first_name?.trim()) {
-      errors.first_name = 'First name is required';
-    }
+    // In profile completion mode, first/last name are optional
+    // In invite mode, they are required
+    if (!this.isProfileCompletionMode) {
+      if (!this.profile?.first_name?.trim()) {
+        errors.first_name = 'First name is required';
+      }
 
-    if (!this.profile?.last_name?.trim()) {
-      errors.last_name = 'Last name is required';
-    }
-
-    // Password validation
-    if (!this.password?.trim()) {
-      errors.password = 'Password is required';
-    } else {
-      // Validate password against security requirements
-      const validation = validatePassword(this.password);
-      if (!validation.isValid) {
-        errors.password = validation.errors.join('. ');
+      if (!this.profile?.last_name?.trim()) {
+        errors.last_name = 'Last name is required';
       }
     }
 
-    if (!this.confirmPassword?.trim()) {
-      errors.confirmPassword = 'Please confirm your chosen password';
-    }
+    // Password validation (skip in profile completion mode - password already set)
+    if (!this.isProfileCompletionMode) {
+      if (!this.password?.trim()) {
+        errors.password = 'Password is required';
+      } else {
+        // Validate password against security requirements
+        const validation = validatePassword(this.password);
+        if (!validation.isValid) {
+          errors.password = validation.errors.join('. ');
+        }
+      }
 
-    if (this.password && this.confirmPassword && this.password !== this.confirmPassword) {
-      errors.passwordMismatch = 'Oops, the passwords did not match. Please check your password again';
+      if (!this.confirmPassword?.trim()) {
+        errors.confirmPassword = 'Please confirm your chosen password';
+      }
+
+      if (this.password && this.confirmPassword && this.password !== this.confirmPassword) {
+        errors.passwordMismatch = 'Oops, the passwords did not match. Please check your password again';
+      }
     }
 
     this.errors = errors;
@@ -301,6 +397,9 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   }
 
   goToLogin(): void {
+    // Clear temp auth data when user explicitly abandons profile completion flow
+    // This prevents stale session data but means user must re-authenticate
+    this.authService.clearTempAuthData();
     this.router.navigate(['/login']);
   }
 }

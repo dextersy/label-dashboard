@@ -9,9 +9,12 @@
 
   <!-- Form Content -->
   <div id="formContent" *ngIf="profile">
-    <!-- Header Text -->
-    <h3><strong>Complete Your Profile 🏁</strong></h3>
-    <small class="text-muted">Please update your profile information so we can set up your account correctly.</small>
+    <!-- Header Text - different for profile completion vs invite -->
+    <h3 *ngIf="!isProfileCompletionMode"><strong>Complete Your Profile 🏁</strong></h3>
+    <small class="text-muted" *ngIf="!isProfileCompletionMode">Please update your profile information so we can set up your account correctly.</small>
+
+    <h3 *ngIf="isProfileCompletionMode"><strong>Set Your Username 🏁</strong></h3>
+    <small class="text-muted" *ngIf="isProfileCompletionMode">Your password is already set. Just choose a username to complete your profile.</small>
 
     <!-- Error Alert -->
     <div class="alert alert-danger" role="alert" *ngIf="message && messageType === 'error'">
@@ -42,7 +45,7 @@
           {{ errors.username }}
         </div>
         <div class="field-error-message" *ngIf="usernameInvalid && !errors.username">
-          Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed.
+          Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens.
         </div>
         <div class="field-error-message" *ngIf="usernameExists && !errors.username">
           Sorry, this username is already in use. Please choose another.
@@ -97,64 +100,72 @@
         {{ errors.last_name }}
       </div>
 
-      <!-- Password -->
-      <div class="password-input-wrapper">
-        <input
-          [type]="showPassword ? 'text' : 'password'"
-          id="password"
-          class="fadeIn fifth password-input"
-          name="password"
-          placeholder="Password"
-          [(ngModel)]="password"
-          [disabled]="saving"
-          required
-        >
-        <button
-          type="button"
-          class="password-toggle-btn"
-          (click)="togglePasswordVisibility()"
-          [disabled]="saving"
-          tabindex="-1"
-          aria-label="Toggle password visibility"
-        >
-          <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-        </button>
-      </div>
-      <div class="field-error-message" *ngIf="errors.password">
-        {{ errors.password }}
-      </div>
-      <small class="field-hint-message" *ngIf="!errors.password">
-        Must include: 8+ characters, uppercase, lowercase, number, and special character
-      </small>
+      <!-- Password fields - only show in invite mode, not in profile completion mode -->
+      <ng-container *ngIf="!isProfileCompletionMode">
+        <!-- Password -->
+        <div class="password-input-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            class="fadeIn fifth password-input"
+            name="password"
+            placeholder="Password"
+            [(ngModel)]="password"
+            [disabled]="saving"
+            required
+          >
+          <button
+            type="button"
+            class="password-toggle-btn"
+            (click)="togglePasswordVisibility()"
+            [disabled]="saving"
+            tabindex="-1"
+            aria-label="Toggle password visibility"
+          >
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div class="field-error-message" *ngIf="errors.password">
+          {{ errors.password }}
+        </div>
+        <small class="field-hint-message" *ngIf="!errors.password">
+          Must include: 8+ characters, uppercase, lowercase, number, and special character
+        </small>
 
-      <!-- Confirm Password -->
-      <div class="password-input-wrapper">
-        <input
-          [type]="showConfirmPassword ? 'text' : 'password'"
-          id="confirmPassword"
-          class="fadeIn sixth password-input"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          [(ngModel)]="confirmPassword"
-          [disabled]="saving"
-          required
-        >
-        <button
-          type="button"
-          class="password-toggle-btn"
-          (click)="toggleConfirmPasswordVisibility()"
-          [disabled]="saving"
-          tabindex="-1"
-          aria-label="Toggle password visibility"
-        >
-          <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-        </button>
-      </div>
-      <div class="field-error-message" *ngIf="errors.confirmPassword">
-        {{ errors.confirmPassword }}
-      </div>
-      <div class="field-error-message" *ngIf="errors.passwordMismatch">
-        {{ errors.passwordMismatch }}
+        <!-- Confirm Password -->
+        <div class="password-input-wrapper">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            class="fadeIn sixth password-input"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            [(ngModel)]="confirmPassword"
+            [disabled]="saving"
+            required
+          >
+          <button
+            type="button"
+            class="password-toggle-btn"
+            (click)="toggleConfirmPasswordVisibility()"
+            [disabled]="saving"
+            tabindex="-1"
+            aria-label="Toggle password visibility"
+          >
+            <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div class="field-error-message" *ngIf="errors.confirmPassword">
+          {{ errors.confirmPassword }}
+        </div>
+        <div class="field-error-message" *ngIf="errors.passwordMismatch">
+          {{ errors.passwordMismatch }}
+        </div>
+      </ng-container>
+
+      <!-- Info message for profile completion mode -->
+      <div class="alert alert-info" role="alert" *ngIf="isProfileCompletionMode" style="margin-top: 15px;">
+        <i class="fa fa-info-circle"></i> Your password is already set. You only need to choose a username.
       </div>
 
       <!-- Submit button -->

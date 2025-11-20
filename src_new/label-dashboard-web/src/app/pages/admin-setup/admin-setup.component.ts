@@ -162,8 +162,8 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
     this.usernameInvalid = false;
     this.usernameValid = false;
 
-    // Check username pattern
-    const pattern = /^[A-Za-z0-9_]+$/;
+    // Check username pattern (matching backend validation in authController.ts)
+    const pattern = /^[a-zA-Z0-9_-]{3,30}$/;
     if (!pattern.test(username)) {
       this.usernameInvalid = true;
       return;
@@ -240,7 +240,7 @@ export class AdminSetupComponent implements OnInit, OnDestroy {
       if (!this.profile?.username?.trim()) {
         errors.username = 'Username is required';
       } else if (this.usernameInvalid) {
-        errors.username = 'Only alphanumeric characters [A-Z, a-z, 0-9] and underscores are allowed';
+        errors.username = 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens';
       } else if (this.usernameExists) {
         errors.username = 'Sorry, this username is already in use. Please choose another';
       }
