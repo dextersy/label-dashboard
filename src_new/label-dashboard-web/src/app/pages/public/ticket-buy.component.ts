@@ -282,6 +282,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  formatPriceDisplay(price?: number): string {
+    if (!price || price === 0) return 'FREE';
+    return '₱' + this.formatPrice(price);
+  }
+
   formatEventDate(dateString?: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -377,9 +382,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
-            if (response.success && response.checkout_url) {
-              // Redirect to PayMongo checkout
-              window.location.href = response.checkout_url;
+            if (response.success && response.url) {
+              // Redirect to the provided URL (checkout for paid, success for free)
+              window.location.href = response.url;
             }
           },
           error: (error) => {

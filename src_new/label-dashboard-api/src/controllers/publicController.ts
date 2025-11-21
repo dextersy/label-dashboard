@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
-import { generateUniqueTicketCode } from '../utils/ticketEmailService';
+import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
@@ -479,6 +479,73 @@ export const buyTicket = async (req: Request, res: Response) => {
     const ticketTypeName = selectedTicketType?.name || event.ticket_naming || 'Regular';
     const description = `${event.title} - ${number_of_entries} ${ticketTypeName} ${number_of_entries === 1 ? 'ticket' : 'tickets'}`;
 
+    // Get brand's domain for success URL
+    const brandDomain = await getBrandFrontendUrl(event.brand_id);
+
+    // Handle FREE tickets (skip payment workflow)
+    if (totalAmount === 0) {
+      // Create ticket record with "Ticket sent." status
+      const ticket = await Ticket.create({
+        event_id: eventIdNum,
+        name,
+        email_address,
+        contact_number,
+        number_of_entries,
+        ticket_code: ticketCode,
+        status: 'Ticket sent.',
+        price_per_ticket: 0,
+        ticket_type_id: selectedTicketType?.id || null,
+        referrer_id: referrer?.id || null,
+        order_timestamp: new Date(),
+        date_paid: new Date()
+      });
+
+      // Send ticket email immediately
+      try {
+        await sendTicketEmail(
+          {
+            email_address: ticket.email_address,
+            name: ticket.name,
+            ticket_code: ticket.ticket_code,
+            number_of_entries: ticket.number_of_entries,
+            ticket_type: selectedTicketType ? {
+              id: selectedTicketType.id,
+              name: selectedTicketType.name
+            } : undefined
+          },
+          {
+            id: event.id,
+            title: event.title,
+            date_and_time: event.date_and_time,
+            venue: event.venue,
+            rsvp_link: event.rsvp_link,
+            venue_address: event.venue_address,
+            venue_latitude: event.venue_latitude,
+            venue_longitude: event.venue_longitude,
+            venue_maps_url: event.venue_maps_url
+          },
+          {
+            brand_name: event.brand?.brand_name
+          },
+          event.brand_id
+        );
+      } catch (emailError) {
+        console.error('Failed to send free ticket email:', emailError);
+        // Continue even if email fails - ticket is still registered
+      }
+
+      // Return success response with direct URL to success page
+      return res.json({
+        success: true,
+        ticket_id: ticket.id,
+        ticket_code: ticketCode,
+        total_amount: 0,
+        url: `${brandDomain}/public/tickets/success/${eventIdNum}`,
+        message: 'Free ticket registered successfully!'
+      });
+    }
+
+    // Handle PAID tickets (PayMongo checkout flow)
     // Prepare payment methods based on event settings
     const paymentMethods: string[] = [];
     if (event.supports_card) paymentMethods.push('card');
@@ -488,9 +555,6 @@ export const buyTicket = async (req: Request, res: Response) => {
     if (event.supports_qrph) paymentMethods.push('qrph');
     if (event.supports_maya) paymentMethods.push('paymaya');
     if (event.supports_grabpay) paymentMethods.push('grab_pay');
-
-    // Get brand's domain for success URL (matching PHP implementation)
-    const brandDomain = await getBrandFrontendUrl(event.brand_id);
 
     // Create checkout session with billing information (matching PHP implementation)
     const checkoutSession = await paymentService.createCheckoutSession({
@@ -540,8 +604,8 @@ export const buyTicket = async (req: Request, res: Response) => {
       success: true,
       ticket_id: ticket.id,
       ticket_code: ticketCode,
-      checkout_url: checkoutSession.attributes.checkout_url,
       total_amount: totalAmount,
+      url: checkoutSession.attributes.checkout_url,
       message: 'Ticket created successfully. Redirecting to payment...'
     });
   } catch (error) {
