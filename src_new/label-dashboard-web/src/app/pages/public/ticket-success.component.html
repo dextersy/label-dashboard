@@ -35,9 +35,17 @@
 
       <!-- Success Message -->
       <div class="card-body text-center">
-        
+
         <p><i class="fas fa-check-circle" style="font-size:150px;color:green;"></i></p>
         <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
+
+        <!-- Download PDF Button -->
+        <div class="mb-4">
+          <button class="btn btn-lg btn-primary" (click)="downloadPDF()">
+            <i class="fas fa-download me-2"></i>Download Ticket PDF
+          </button>
+          <p class="text-muted small mt-2">Save or print your ticket for easy access at the event</p>
+        </div>
 
         <!-- Instructions -->
       <div class="alert alert-info field-description text-dark text-left">

@@ -29,24 +29,8 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.eventId = params['id'];
-      if (this.eventId) {
-        this.loadEventDetails();
-      }
-    });
-
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const ticketCode = params['ticket_code'];
-      const sessionId = params['session_id'];
-      
-      if (ticketCode) {
-        this.checkTicketStatus(ticketCode);
-      } else if (sessionId) {
-        // Handle PayMongo success callback
-        this.handlePaymentSuccess(sessionId);
-      } else {
-        // No ticket code or session ID, show generic success
-        this.showGenericSuccess();
-      }
+      // Load ticket details from cookie
+      this.loadTicketFromCookie();
     });
   }
 
@@ -55,89 +39,78 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  checkTicketStatus(ticketCode: string) {
-    const requestData: TicketVerificationRequest = { 
-      ticket_code: ticketCode 
-    };
-    if (this.eventId) {
-      requestData.event_id = parseInt(this.eventId, 10);
-    }
-
-    this.publicService.verifyTicket(requestData)
+  loadTicketFromCookie() {
+    this.publicService.getTicketFromCookie()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.isLoading = false;
-          if (response.valid && response.ticket) {
+          if (response.success && response.ticket) {
             this.isSuccess = true;
-            this.ticketDetails = response.ticket;
+            // Convert the ticket response to TicketDetails format
+            this.ticketDetails = {
+              ticket_code: response.ticket.ticket_code,
+              name: response.ticket.name,
+              number_of_entries: response.ticket.number_of_entries,
+              status: response.ticket.status,
+              event: {
+                title: response.ticket.event?.title || '',
+                date_and_time: response.ticket.event?.date_and_time || '',
+                venue: response.ticket.event?.venue || ''
+              }
+            };
+            // Store event data separately
+            if (response.ticket.event) {
+              this.event = {
+                id: response.ticket.event.id,
+                title: response.ticket.event.title,
+                date_and_time: response.ticket.event.date_and_time,
+                venue: response.ticket.event.venue,
+                venue_address: response.ticket.event.venue_address,
+                venue_maps_url: response.ticket.event.venue_maps_url,
+                poster_url: response.ticket.event.poster_url,
+                ticket_price: response.ticket.price_per_ticket,
+                ticket_naming: response.ticket.ticketType?.name || 'Regular',
+                is_closed: false,
+                show_countdown: false,
+                show_tickets_remaining: false,
+                supports_card: false,
+                supports_gcash: false,
+                supports_qrph: false,
+                supports_ubp: false,
+                supports_dob: false,
+                supports_maya: false,
+                supports_grabpay: false,
+                brand: response.ticket.event.brand ? {
+                  id: response.ticket.event.brand.id,
+                  name: response.ticket.event.brand.name,
+                  color: response.ticket.event.brand.color,
+                  logo_url: response.ticket.event.brand.logo_url
+                } : undefined
+              };
+            }
           } else {
             this.isSuccess = false;
-          }
-        },
-        error: (error) => {
-          console.error('Error checking ticket status:', error);
-          this.isLoading = false;
-          this.isSuccess = false;
-        }
-      });
-  }
-
-  handlePaymentSuccess(sessionId: string) {
-    // For now, just show loading and then success
-    // In a real implementation, you might verify the session with your backend
-    setTimeout(() => {
-      this.isLoading = false;
-      this.isSuccess = true;
-    }, 2000);
-  }
-
-  loadEventDetails() {
-    if (!this.eventId) {
-      this.showError();
-      return;
-    }
-    
-    this.publicService.getEvent(parseInt(this.eventId, 10))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response.event) {
-            this.event = response.event;
-          } else {
             this.showError();
           }
         },
         error: (error) => {
-          console.error('Error loading event details:', error);
+          console.error('Error loading ticket from cookie:', error);
+          this.isLoading = false;
+          this.isSuccess = false;
           this.showError();
         }
       });
   }
 
-  showGenericSuccess() {
-    setTimeout(() => {
-      this.isLoading = false;
-      this.isSuccess = true;
-    }, 1000);
+  downloadPDF() {
+    this.publicService.downloadTicketPDF();
   }
 
   showError() {
     this.isLoading = false;
     this.isSuccess = false;
     this.isError = true;
-  }
-
-  refreshStatus() {
-    this.isLoading = true;
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const ticketCode = params['ticket_code'];
-      if (ticketCode) {
-        this.checkTicketStatus(ticketCode);
-      } else {
-        this.showGenericSuccess();
-      }
-    });
   }
 
   formatEventDate(dateString?: string): string {

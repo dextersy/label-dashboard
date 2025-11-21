@@ -177,7 +177,7 @@ export class PublicService {
    * Purchase a ticket for an event
    */
   buyTicket(request: TicketPurchaseRequest): Observable<TicketPurchaseResponse> {
-    return this.http.post<TicketPurchaseResponse>(`${this.apiUrl}/public/tickets/buy`, request);
+    return this.http.post<TicketPurchaseResponse>(`${this.apiUrl}/public/tickets/buy`, request, { withCredentials: true });
   }
 
   /**
@@ -238,6 +238,7 @@ export class PublicService {
 
   /**
    * Get ticket details by code and event
+   * Uses unified endpoint that supports both cookie and code-based authentication
    */
   getTicketFromCode(eventId: number, verificationPin: string, ticketCode: string): Observable<{
     ticket: {
@@ -290,7 +291,7 @@ export class PublicService {
           name: string;
         };
       };
-    }>(`${this.apiUrl}/public/tickets/get-from-code`, {
+    }>(`${this.apiUrl}/public/tickets/details`, {
       event_id: eventId,
       verification_pin: verificationPin,
       ticket_code: ticketCode
@@ -380,5 +381,57 @@ export class PublicService {
       remaining_tickets?: number | null;
       sold_count: number;
     }> }>(`${this.apiUrl}/public/events/ticket-types/available?event_id=${eventId}`);
+  }
+
+  /**
+   * Get ticket details from cookie (for success page)
+   * Uses unified endpoint that supports both cookie and code-based authentication
+   */
+  getTicketFromCookie(): Observable<{
+    success: boolean;
+    ticket: {
+      id: number;
+      ticket_code: string;
+      name: string;
+      email_address: string;
+      contact_number: string;
+      number_of_entries: number;
+      status: string;
+      price_per_ticket: number;
+      total_price: number;
+      order_timestamp: string;
+      date_paid: string;
+      event?: {
+        id: number;
+        title: string;
+        date_and_time: string;
+        venue: string;
+        venue_address?: string;
+        venue_maps_url?: string;
+        poster_url?: string;
+        brand?: {
+          id: number;
+          name: string;
+          color?: string;
+          logo_url?: string;
+        };
+      };
+      ticketType?: {
+        id: number;
+        name: string;
+        price: number;
+      };
+    };
+  }> {
+    // POST with empty body - endpoint will use cookie for authentication
+    return this.http.post<any>(`${this.apiUrl}/public/tickets/details`, {}, { withCredentials: true });
+  }
+
+  /**
+   * Download ticket PDF (uses cookie for authentication)
+   */
+  downloadTicketPDF(): void {
+    // Open PDF download in new window/tab
+    window.open(`${this.apiUrl}/public/tickets/pdf`, '_blank');
   }
 }

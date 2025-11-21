@@ -7,8 +7,42 @@ import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 
 const paymentService = new PaymentService();
+
+// Helper function to extract domain from request
+const getRequestDomain = (req: Request): string => {
+  let requestDomain = '';
+
+  // Try Origin header first (for CORS/XHR requests - contains the frontend domain)
+  const originHeader = req.get('origin') || '';
+  if (originHeader) {
+    try {
+      const url = new URL(originHeader);
+      requestDomain = url.hostname;
+    } catch (error) {
+      console.error('Invalid origin header:', originHeader);
+    }
+  }
+
+  // Fallback to Referer header (for navigation/redirect - also contains frontend domain)
+  if (!requestDomain) {
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+  }
+
+  return requestDomain;
+};
 
 // Helper function to determine if countdown should be shown for an event
 const shouldShowCountdown = (event: any): boolean => {
@@ -39,6 +73,27 @@ const shouldShowCountdown = (event: any): boolean => {
   }
 };
 
+// Helper function to set ticket access cookie
+const setTicketAccessCookie = (res: Response, ticketId: number, eventId: number): void => {
+  if (!process.env.JWT_SECRET) {
+    console.error('JWT_SECRET not configured, skipping cookie');
+    return;
+  }
+
+  const token = jwt.sign(
+    { ticketId, eventId },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' } // Cookie expires in 1 hour
+  );
+
+  res.cookie('ticket_access_token', token, {
+    httpOnly: true,  // Prevents JavaScript access (XSS protection)
+    secure: true, // HTTPS required (for cross-origin cookies with sameSite=none)
+    sameSite: 'none', // Allow cross-origin cookies (frontend and backend on different ports)
+    maxAge: 3600000  // 1 hour in milliseconds
+  });
+};
+
 // Helper function to get total tickets sold for an event
 const getTotalTicketsSold = async (eventId: number): Promise<number> => {
   const result = await Ticket.sum('number_of_entries', {
@@ -57,25 +112,14 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id, 10);
-    // Extract domain from referer URL (frontend domain)
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
-    
+    const requestDomain = getRequestDomain(req);
+
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
     const event = await Event.findOne({
-      where: { 
+      where: {
         id: eventId,
         status: 'published'
       },
@@ -97,7 +141,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         }
       ]
     });
-    
+
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
@@ -107,7 +151,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     if (event.brand && event.brand.domains && requestDomain) {
       const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
+
       if (!isDomainValid) {
         return res.status(404).json({ error: 'Event not found' });
       }
@@ -253,35 +297,111 @@ export const getAvailableTicketTypesPublic = async (req: Request, res: Response)
   }
 };
 
-export const getTicketFromCode = async (req: Request, res: Response) => {
+// Unified endpoint to get ticket details - supports both cookie and code-based authentication
+export const getTicketDetails = async (req: Request, res: Response) => {
   try {
-    const { event_id, verification_pin, ticket_code } = req.body;
+    // Check if authenticating via cookie or via code/pin parameters
+    const token = req.cookies?.ticket_access_token;
+    const { ticket_code, event_id, verification_pin } = req.body;
 
-    if (!event_id || !ticket_code || !verification_pin) {
-      return res.status(400).json({ error: 'Event ID, ticket code, and verification PIN are required' });
-    }
-
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+    // Try cookie authentication first
+    if (token) {
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ error: 'Server configuration error' });
       }
+
+      // Verify and decode the JWT token
+      let decoded: any;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (jwtError) {
+        return res.status(401).json({ error: 'Invalid or expired ticket access token' });
+      }
+
+      const { ticketId, eventId } = decoded;
+
+      // Load ticket with related data
+      const ticket = await Ticket.findOne({
+        where: { id: ticketId, event_id: eventId },
+        include: [
+          {
+            model: Event,
+            as: 'event',
+            include: [
+              {
+                model: Brand,
+                as: 'brand'
+              }
+            ]
+          },
+          {
+            model: TicketType,
+            as: 'ticketType'
+          }
+        ]
+      });
+
+      if (!ticket) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+
+      // Return ticket details for cookie-authenticated request
+      return res.json({
+        success: true,
+        ticket: {
+          id: ticket.id,
+          ticket_code: ticket.ticket_code,
+          name: ticket.name,
+          email_address: ticket.email_address,
+          contact_number: ticket.contact_number,
+          number_of_entries: ticket.number_of_entries,
+          status: ticket.status,
+          price_per_ticket: ticket.price_per_ticket,
+          total_price: ticket.price_per_ticket * ticket.number_of_entries,
+          order_timestamp: ticket.order_timestamp,
+          date_paid: ticket.date_paid,
+          event: ticket.event ? {
+            id: ticket.event.id,
+            title: ticket.event.title,
+            date_and_time: ticket.event.date_and_time,
+            venue: ticket.event.venue,
+            venue_address: ticket.event.venue_address,
+            venue_maps_url: ticket.event.venue_maps_url,
+            poster_url: ticket.event.poster_url,
+            brand: ticket.event.brand ? {
+              id: ticket.event.brand.id,
+              name: ticket.event.brand.brand_name,
+              color: ticket.event.brand.brand_color,
+              logo_url: ticket.event.brand.logo_url
+            } : undefined
+          } : undefined,
+          ticketType: ticket.ticketType ? {
+            id: ticket.ticketType.id,
+            name: ticket.ticketType.name,
+            price: ticket.ticketType.price
+          } : undefined
+        }
+      });
     }
+
+    // Fall back to code-based authentication
+    if (!event_id || !ticket_code || !verification_pin) {
+      return res.status(400).json({
+        error: 'Authentication required: provide either valid cookie or ticket_code, event_id, and verification_pin'
+      });
+    }
+
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const ticket = await Ticket.findOne({
-      where: { 
+      where: {
         event_id,
         ticket_code: ticket_code.toUpperCase()
       },
       include: [
-        { 
-          model: Event, 
+        {
+          model: Event,
           as: 'event',
           include: [{
             model: Brand,
@@ -293,8 +413,8 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
             }]
           }]
         },
-        { 
-          model: TicketType, 
+        {
+          model: TicketType,
           as: 'ticketType',
           attributes: ['id', 'name', 'price']
         },
@@ -310,7 +430,7 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
     if (ticket.event.brand && ticket.event.brand.domains && requestDomain) {
       const eventBrandDomains = ticket.event.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
+
       if (!isDomainValid) {
         return res.status(404).json({ error: 'Ticket not found' });
       }
@@ -329,9 +449,10 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found or not confirmed' });
     }
 
-    // Calculate remaining entries - model handles type conversion automatically
+    // Calculate remaining entries
     const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
 
+    // Return ticket details for code-authenticated request
     res.json({
       ticket: {
         id: ticket.id,
@@ -360,7 +481,7 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Get ticket from code error:', error);
+    console.error('Get ticket details error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -384,18 +505,7 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     const eventIdNum = parseInt(event_id, 10);
-    // Extract domain from referer URL (frontend domain)
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
+    const requestDomain = getRequestDomain(req);
 
     // Get event details
     const event = await Event.findOne({
@@ -534,6 +644,9 @@ export const buyTicket = async (req: Request, res: Response) => {
         // Continue even if email fails - ticket is still registered
       }
 
+      // Set secure cookie for success page access
+      setTicketAccessCookie(res, ticket.id, eventIdNum);
+
       // Return success response with direct URL to success page
       return res.json({
         success: true,
@@ -600,6 +713,9 @@ export const buyTicket = async (req: Request, res: Response) => {
       payment_link_id: null
     });
 
+    // Set secure cookie for success page access (will persist through PayMongo redirect)
+    setTicketAccessCookie(res, ticket.id, eventIdNum);
+
     res.json({
       success: true,
       ticket_id: ticket.id,
@@ -611,6 +727,264 @@ export const buyTicket = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Buy ticket error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getTicketFromCookie = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.ticket_access_token;
+
+    if (!token) {
+      return res.status(401).json({ error: 'No ticket access token found' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    // Verify and decode the JWT token
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res.status(401).json({ error: 'Invalid or expired ticket access token' });
+    }
+
+    const { ticketId, eventId } = decoded;
+
+    // Load ticket with related data
+    const ticket = await Ticket.findOne({
+      where: { id: ticketId, event_id: eventId },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          include: [
+            {
+              model: Brand,
+              as: 'brand'
+            }
+          ]
+        },
+        {
+          model: TicketType,
+          as: 'ticketType'
+        }
+      ]
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Return ticket details
+    res.json({
+      success: true,
+      ticket: {
+        id: ticket.id,
+        ticket_code: ticket.ticket_code,
+        name: ticket.name,
+        email_address: ticket.email_address,
+        contact_number: ticket.contact_number,
+        number_of_entries: ticket.number_of_entries,
+        status: ticket.status,
+        price_per_ticket: ticket.price_per_ticket,
+        total_price: ticket.price_per_ticket * ticket.number_of_entries,
+        order_timestamp: ticket.order_timestamp,
+        date_paid: ticket.date_paid,
+        event: ticket.event ? {
+          id: ticket.event.id,
+          title: ticket.event.title,
+          date_and_time: ticket.event.date_and_time,
+          venue: ticket.event.venue,
+          venue_address: ticket.event.venue_address,
+          venue_maps_url: ticket.event.venue_maps_url,
+          poster_url: ticket.event.poster_url,
+          brand: ticket.event.brand ? {
+            id: ticket.event.brand.id,
+            name: ticket.event.brand.brand_name,
+            color: ticket.event.brand.brand_color,
+            logo_url: ticket.event.brand.logo_url
+          } : undefined
+        } : undefined,
+        ticketType: ticket.ticketType ? {
+          id: ticket.ticketType.id,
+          name: ticket.ticketType.name,
+          price: ticket.ticketType.price
+        } : undefined
+      }
+    });
+  } catch (error) {
+    console.error('Get ticket from cookie error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const downloadTicketPDF = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.ticket_access_token;
+
+    if (!token) {
+      return res.status(401).json({ error: 'No ticket access token found' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    // Verify and decode the JWT token
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res.status(401).json({ error: 'Invalid or expired ticket access token' });
+    }
+
+    const { ticketId, eventId } = decoded;
+
+    // Load ticket with related data
+    const ticket = await Ticket.findOne({
+      where: { id: ticketId, event_id: eventId },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          include: [
+            {
+              model: Brand,
+              as: 'brand'
+            }
+          ]
+        },
+        {
+          model: TicketType,
+          as: 'ticketType'
+        }
+      ]
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Generate QR code as data URL
+    const qrCodeDataUrl = await QRCode.toDataURL(ticket.ticket_code, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      width: 200,
+      margin: 1
+    });
+
+    // Create PDF document
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+    // Set response headers for PDF download
+    const filename = `ticket-${ticket.ticket_code}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Pipe the PDF to the response
+    doc.pipe(res);
+
+    // Get brand info
+    const brandName = ticket.event?.brand?.brand_name || 'Event Organizer';
+    const brandColor = ticket.event?.brand?.brand_color || '#6f42c1';
+
+    // Header
+    doc.fontSize(24).fillColor(brandColor).text('EVENT TICKET', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor('#666666').text(brandName, { align: 'center' });
+    doc.moveDown(1.5);
+
+    // Ticket code and QR code section
+    doc.fontSize(14).fillColor('#000000').text('Ticket Code:', 50, doc.y);
+    doc.fontSize(20).fillColor(brandColor).text(ticket.ticket_code, { align: 'center' });
+    doc.moveDown(1);
+
+    // Add QR code
+    const qrImageBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
+    const qrX = (doc.page.width - 150) / 2;
+    doc.image(qrImageBuffer, qrX, doc.y, { width: 150 });
+    doc.moveDown(10);
+
+    // Divider line
+    doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).stroke();
+    doc.moveDown(1);
+
+    // Event details
+    doc.fontSize(18).fillColor(brandColor).text(ticket.event?.title || 'Event', 50, doc.y);
+    doc.moveDown(0.5);
+
+    if (ticket.event) {
+      // Date and time
+      const eventDate = new Date(ticket.event.date_and_time);
+      doc.fontSize(12).fillColor('#000000').text('Date & Time:', 50, doc.y);
+      doc.fontSize(11).fillColor('#333333').text(
+        eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) +
+        ' at ' +
+        eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        50,
+        doc.y
+      );
+      doc.moveDown(0.8);
+
+      // Venue
+      doc.fontSize(12).fillColor('#000000').text('Venue:', 50, doc.y);
+      doc.fontSize(11).fillColor('#333333').text(ticket.event.venue, 50, doc.y);
+      if (ticket.event.venue_address) {
+        doc.fontSize(10).fillColor('#666666').text(ticket.event.venue_address, 50, doc.y);
+      }
+      doc.moveDown(0.8);
+    }
+
+    // Ticket holder details
+    doc.fontSize(12).fillColor('#000000').text('Ticket Holder:', 50, doc.y);
+    doc.fontSize(11).fillColor('#333333').text(ticket.name, 50, doc.y);
+    doc.moveDown(0.8);
+
+    // Ticket type and quantity
+    doc.fontSize(12).fillColor('#000000').text('Ticket Type:', 50, doc.y);
+    doc.fontSize(11).fillColor('#333333').text(ticket.ticketType?.name || 'Regular', 50, doc.y);
+    doc.moveDown(0.8);
+
+    doc.fontSize(12).fillColor('#000000').text('Number of Entries:', 50, doc.y);
+    doc.fontSize(11).fillColor('#333333').text(ticket.number_of_entries.toString(), 50, doc.y);
+    doc.moveDown(0.8);
+
+    // Price
+    const totalPrice = ticket.price_per_ticket * ticket.number_of_entries;
+    doc.fontSize(12).fillColor('#000000').text('Total Price:', 50, doc.y);
+    if (totalPrice === 0) {
+      doc.fontSize(14).fillColor('#28a745').text('FREE', 50, doc.y);
+    } else {
+      doc.fontSize(11).fillColor('#333333').text(`₱${totalPrice.toFixed(2)}`, 50, doc.y);
+    }
+    doc.moveDown(1.5);
+
+    // Footer
+    doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).stroke();
+    doc.moveDown(0.5);
+    doc.fontSize(9).fillColor('#666666').text(
+      'Please present this ticket (digital or printed) at the event entrance.',
+      50,
+      doc.y,
+      { align: 'center' }
+    );
+    doc.moveDown(0.3);
+    doc.fontSize(8).fillColor('#999999').text(
+      `Generated on ${new Date().toLocaleDateString('en-US')}`,
+      50,
+      doc.y,
+      { align: 'center' }
+    );
+
+    // Finalize the PDF
+    doc.end();
+  } catch (error) {
+    console.error('Download ticket PDF error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate PDF' });
+    }
   }
 };
 
@@ -694,18 +1068,8 @@ export const checkPin = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID and PIN are required' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const event = await Event.findOne({
       where: { id: event_id },
@@ -781,18 +1145,8 @@ export const checkInTicket = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Entries to claim must be a valid number greater than 0' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const ticket = await Ticket.findOne({
       where: { 
@@ -893,18 +1247,8 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const event = await Event.findOne({
       where: { 
@@ -1634,18 +1978,8 @@ export const getArtistEPK = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-    
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     // Get artist with brand and domain information for validation
     const artist = await Artist.findOne({
