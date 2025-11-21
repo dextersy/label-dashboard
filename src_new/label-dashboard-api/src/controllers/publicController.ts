@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
-import { generateUniqueTicketCode } from '../utils/ticketEmailService';
+import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
@@ -502,7 +502,6 @@ export const buyTicket = async (req: Request, res: Response) => {
 
       // Send ticket email immediately
       try {
-        const { sendTicketEmail } = require('../utils/ticketEmailService');
         await sendTicketEmail(
           {
             email_address: ticket.email_address,

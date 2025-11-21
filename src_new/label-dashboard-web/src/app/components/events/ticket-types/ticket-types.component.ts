@@ -359,20 +359,4 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       return '';
     }
   }
-
-  // Toggle free status for a ticket type
-  toggleFree(ticketType: TicketType): void {
-    ticketType.isFree = !ticketType.isFree;
-    if (ticketType.isFree) {
-      ticketType.price = 0;
-    }
-  }
-
-  // Toggle free status for new ticket type
-  toggleNewTicketFree(): void {
-    this.newTicketType.isFree = !this.newTicketType.isFree;
-    if (this.newTicketType.isFree) {
-      this.newTicketType.price = 0;
-    }
-  }
 }
