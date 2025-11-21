@@ -887,94 +887,138 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     doc.pipe(res);
 
     // Get brand info
-    const brandName = ticket.event?.brand?.brand_name || 'Event Organizer';
-    const brandColor = ticket.event?.brand?.brand_color || '#6f42c1';
+    const brandName = ticket.event?.brand?.brand_name || 'Melt Records';
 
-    // Header
-    doc.fontSize(24).fillColor(brandColor).text('EVENT TICKET', { align: 'center' });
+    const pageWidth = doc.page.width;
+    const margin = 50;
+    const contentWidth = pageWidth - margin * 2;
+
+    // Header: Brand Tickets
+    doc.fontSize(10).fillColor('#060606').text(`${brandName} Tickets`, { align: 'center' });
+    doc.moveDown(0.3);
+
+    // Main heading: "You're In!"
+    doc.fontSize(24).font('Helvetica-Bold').fillColor('#000000').text("You're In!", { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(12).fillColor('#666666').text(brandName, { align: 'center' });
-    doc.moveDown(1.5);
 
-    // Ticket code and QR code section
-    doc.fontSize(14).fillColor('#000000').text('Ticket Code:', 50, doc.y);
-    doc.fontSize(20).fillColor(brandColor).text(ticket.ticket_code, { align: 'center' });
-    doc.moveDown(1);
-
-    // Add QR code
-    const qrImageBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
-    const qrX = (doc.page.width - 150) / 2;
-    doc.image(qrImageBuffer, qrX, doc.y, { width: 150 });
-    doc.moveDown(10);
+    // Thank you message
+    doc.fontSize(11).font('Helvetica').fillColor('#333333').text('Thank you for your purchase!', { align: 'center' });
+    const eventText = `This is your official ticket to ${ticket.event?.title || 'the event'}!`;
+    doc.text(eventText, { align: 'center' });
+    doc.moveDown(0.5);
 
     // Divider line
-    doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).stroke();
-    doc.moveDown(1);
-
-    // Event details
-    doc.fontSize(18).fillColor(brandColor).text(ticket.event?.title || 'Event', 50, doc.y);
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
     doc.moveDown(0.5);
 
-    if (ticket.event) {
-      // Date and time
-      const eventDate = new Date(ticket.event.date_and_time);
-      doc.fontSize(12).fillColor('#000000').text('Date & Time:', 50, doc.y);
-      doc.fontSize(11).fillColor('#333333').text(
-        eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) +
-        ' at ' +
-        eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-        50,
-        doc.y
-      );
-      doc.moveDown(0.8);
-
-      // Venue
-      doc.fontSize(12).fillColor('#000000').text('Venue:', 50, doc.y);
-      doc.fontSize(11).fillColor('#333333').text(ticket.event.venue, 50, doc.y);
-      if (ticket.event.venue_address) {
-        doc.fontSize(10).fillColor('#666666').text(ticket.event.venue_address, 50, doc.y);
-      }
-      doc.moveDown(0.8);
-    }
-
-    // Ticket holder details
-    doc.fontSize(12).fillColor('#000000').text('Ticket Holder:', 50, doc.y);
-    doc.fontSize(11).fillColor('#333333').text(ticket.name, 50, doc.y);
-    doc.moveDown(0.8);
-
-    // Ticket type and quantity
-    doc.fontSize(12).fillColor('#000000').text('Ticket Type:', 50, doc.y);
-    doc.fontSize(11).fillColor('#333333').text(ticket.ticketType?.name || 'Regular', 50, doc.y);
-    doc.moveDown(0.8);
-
-    doc.fontSize(12).fillColor('#000000').text('Number of Entries:', 50, doc.y);
-    doc.fontSize(11).fillColor('#333333').text(ticket.number_of_entries.toString(), 50, doc.y);
-    doc.moveDown(0.8);
-
-    // Price
-    const totalPrice = ticket.price_per_ticket * ticket.number_of_entries;
-    doc.fontSize(12).fillColor('#000000').text('Total Price:', 50, doc.y);
-    if (totalPrice === 0) {
-      doc.fontSize(14).fillColor('#28a745').text('FREE', 50, doc.y);
-    } else {
-      doc.fontSize(11).fillColor('#333333').text(`₱${totalPrice.toFixed(2)}`, 50, doc.y);
-    }
-    doc.moveDown(1.5);
-
-    // Footer
-    doc.strokeColor('#cccccc').lineWidth(1).moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).stroke();
+    // Ticket holder
+    doc.fontSize(10).fillColor('#333333').text(`This ticket is issued to ${ticket.name}.`, { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(9).fillColor('#666666').text(
-      'Please present this ticket (digital or printed) at the event entrance.',
-      50,
-      doc.y,
+
+    // Ticket type
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#333333').text(ticket.ticketType?.name || 'Regular', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // QR Code (centered, smaller)
+    const qrImageBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
+    const qrSize = 140;
+    const qrX = (pageWidth - qrSize) / 2;
+    doc.image(qrImageBuffer, qrX, doc.y, { width: qrSize });
+    doc.moveDown(9);
+
+    // Ticket code (large, bold, centered)
+    doc.fontSize(32).font('Helvetica-Bold').fillColor('#333333').text(ticket.ticket_code, { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Admit X person(s)
+    doc.fontSize(11).font('Helvetica').fillColor('#333333').text(
+      `Admit ${ticket.number_of_entries} person(s).`,
       { align: 'center' }
     );
+    doc.moveDown(0.5);
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Event Details box (light gray background)
+    const boxY = doc.y;
+    const boxPadding = 15;
+    const lineHeight = 16;
+    const boxHeight = ticket.event?.venue_address ? 100 : 85;
+    doc.rect(margin, boxY, contentWidth, boxHeight).fillAndStroke('#f8f9fa', '#f8f9fa');
+
+    // Event Details heading
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#000000').text('Event Details', margin + boxPadding, boxY + boxPadding);
+
+    if (ticket.event) {
+      const eventDate = new Date(ticket.event.date_and_time);
+      const formattedDate = eventDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Manila'
+      });
+      const formattedTime = eventDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Manila'
+      });
+
+      let detailY = boxY + boxPadding + 25;
+      doc.fontSize(9).font('Helvetica').fillColor('#333333');
+
+      doc.font('Helvetica-Bold').text('Date: ', margin + boxPadding, detailY, { continued: true });
+      doc.font('Helvetica').text(formattedDate);
+
+      detailY += lineHeight;
+      doc.font('Helvetica-Bold').text('Time: ', margin + boxPadding, detailY, { continued: true });
+      doc.font('Helvetica').text(formattedTime);
+
+      detailY += lineHeight;
+      doc.font('Helvetica-Bold').text('Venue: ', margin + boxPadding, detailY, { continued: true });
+      doc.font('Helvetica').text(ticket.event.venue);
+
+      if (ticket.event.venue_address) {
+        detailY += lineHeight;
+        doc.font('Helvetica-Bold').text('Address: ', margin + boxPadding, detailY, { continued: true });
+        doc.font('Helvetica').text(ticket.event.venue_address, { width: contentWidth - boxPadding * 3 });
+      }
+    }
+
+    doc.y = boxY + boxHeight + 15;
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Important reminders
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#333333').text('Important reminders:', margin, doc.y);
     doc.moveDown(0.3);
-    doc.fontSize(8).fillColor('#999999').text(
-      `Generated on ${new Date().toLocaleDateString('en-US')}`,
-      50,
-      doc.y,
+
+    doc.fontSize(8).font('Helvetica').fillColor('#333333');
+    const reminders = [
+      'Please show this ticket at the gate to gain admission to the event.',
+      'Tickets are non-refundable.',
+      'If you need to change the name for this ticket, please contact us for support.',
+      'Do not share this ticket code to anyone else, to avoid unauthorized use.'
+    ];
+
+    reminders.forEach(reminder => {
+      doc.text(`• ${reminder}`, margin + 5, doc.y);
+      doc.moveDown(0.2);
+    });
+    doc.moveDown(0.3);
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Footer
+    doc.fontSize(9).font('Helvetica-Oblique').fillColor('#666666').text(
+      'Powered by Melt Records Tickets.',
       { align: 'center' }
     );
 
