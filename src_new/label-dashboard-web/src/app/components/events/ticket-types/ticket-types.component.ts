@@ -12,6 +12,7 @@ export interface TicketType {
   start_date?: string | null;
   end_date?: string | null;
   showDateRange?: boolean; // UI state
+  isFree?: boolean; // UI state - whether ticket is free
 }
 
 @Component({
@@ -27,13 +28,14 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   @Output() ticketTypesChanged = new EventEmitter<boolean>();
 
   ticketTypes: TicketType[] = [];
-  newTicketType: { name: string; price: number; max_tickets: number; start_date?: string | null; end_date?: string | null; showDateRange?: boolean } = {
+  newTicketType: { name: string; price: number; max_tickets: number; start_date?: string | null; end_date?: string | null; showDateRange?: boolean; isFree?: boolean } = {
     name: '',
     price: 0,
     max_tickets: 0,
     start_date: null,
     end_date: null,
-    showDateRange: false
+    showDateRange: false,
+    isFree: false
   };
   loading = false;
   creating = false;
@@ -63,7 +65,8 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       next: (response) => {
         this.ticketTypes = (response.ticketTypes || []).map(tt => ({
           ...tt,
-          showDateRange: false // Always start collapsed
+          showDateRange: false, // Always start collapsed
+          isFree: tt.price === 0 // Set isFree based on price
         }));
         this.loading = false;
       },
@@ -80,16 +83,16 @@ export class TicketTypesComponent implements OnInit, OnChanges {
 
   createTicketType(): void {
 
-    if (!this.selectedEvent || !this.newTicketType.name.trim() || this.newTicketType.price < 0) {
+    if (!this.selectedEvent || !this.newTicketType.name.trim() || (!this.newTicketType.isFree && this.newTicketType.price < 0)) {
       return;
     }
 
     this.creating = true;
-    
+
     const ticketTypeData: any = {
       event_id: this.selectedEvent.id,
       name: this.newTicketType.name.trim(),
-      price: Number(this.newTicketType.price),
+      price: this.newTicketType.isFree ? 0 : Number(this.newTicketType.price),
       max_tickets: Number(this.newTicketType.max_tickets)
     };
 
@@ -103,14 +106,19 @@ export class TicketTypesComponent implements OnInit, OnChanges {
 
     this.eventService.createTicketType(ticketTypeData).subscribe({
       next: (response) => {
-        this.ticketTypes.push(response.ticketType);
+        this.ticketTypes.push({
+          ...response.ticketType,
+          isFree: response.ticketType.price === 0, // Set isFree based on price
+          showDateRange: false
+        });
         this.newTicketType = {
           name: '',
           price: 0,
           max_tickets: 0,
           start_date: null,
           end_date: null,
-          showDateRange: false
+          showDateRange: false,
+          isFree: false
         };
         this.alertMessage.emit({
           type: 'success',
@@ -131,7 +139,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   }
 
   updateTicketType(ticketType: TicketType): void {
-    if (!ticketType.id || !ticketType.name || (ticketType.price ?? -1) < 0) {
+    if (!ticketType.id || !ticketType.name || (!ticketType.isFree && (ticketType.price ?? -1) < 0)) {
       return;
     }
 
@@ -139,7 +147,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
 
     const updateData: any = {
       name: ticketType.name.trim(),
-      price: Number(ticketType.price),
+      price: ticketType.isFree ? 0 : Number(ticketType.price),
       max_tickets: Number(ticketType.max_tickets)
     };
 
@@ -152,7 +160,11 @@ export class TicketTypesComponent implements OnInit, OnChanges {
         // Update the ticket type in the list
         const index = this.ticketTypes.findIndex(t => t.id === ticketType.id);
         if (index !== -1) {
-          this.ticketTypes[index] = response.ticketType;
+          this.ticketTypes[index] = {
+            ...response.ticketType,
+            isFree: response.ticketType.price === 0, // Preserve isFree state based on price
+            showDateRange: this.ticketTypes[index].showDateRange // Preserve UI state
+          };
         }
         this.alertMessage.emit({
           type: 'success',
@@ -345,6 +357,22 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     } catch (error) {
       console.error('Error formatting date for API:', dateString, error);
       return '';
+    }
+  }
+
+  // Toggle free status for a ticket type
+  toggleFree(ticketType: TicketType): void {
+    ticketType.isFree = !ticketType.isFree;
+    if (ticketType.isFree) {
+      ticketType.price = 0;
+    }
+  }
+
+  // Toggle free status for new ticket type
+  toggleNewTicketFree(): void {
+    this.newTicketType.isFree = !this.newTicketType.isFree;
+    if (this.newTicketType.isFree) {
+      this.newTicketType.price = 0;
     }
   }
 }

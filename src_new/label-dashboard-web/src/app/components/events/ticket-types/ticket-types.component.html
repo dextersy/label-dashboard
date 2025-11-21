@@ -29,14 +29,27 @@
           <div class="col-md-3">
             <div class="mb-2">
               <label class="form-label small">Price (₱)</label>
-              <input
-                type="number"
-                class="form-control form-control-sm"
-                [(ngModel)]="ticketType.price"
-                [disabled]="!isAdmin"
-                min="0"
-                step="0.01"
-                placeholder="0.00">
+              <div class="d-flex align-items-center gap-2">
+                <div *ngIf="isAdmin" class="form-check form-switch mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [ngModel]="ticketType.isFree"
+                    (ngModelChange)="ticketType.isFree = $event; ticketType.price = $event ? 0 : ticketType.price"
+                    [id]="'freeToggle' + i">
+                  <label class="form-check-label small" [for]="'freeToggle' + i">Free</label>
+                </div>
+                <input
+                  *ngIf="!ticketType.isFree"
+                  type="number"
+                  class="form-control form-control-sm flex-grow-1"
+                  [(ngModel)]="ticketType.price"
+                  [disabled]="!isAdmin"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00">
+              </div>
             </div>
           </div>
           <div class="col-md-3">
@@ -163,13 +176,26 @@
           <div class="col-md-3">
             <div class="mb-2">
               <label class="form-label small">Price (₱)</label>
-              <input
-                type="number"
-                class="form-control form-control-sm"
-                [(ngModel)]="newTicketType.price"
-                min="0"
-                step="0.01"
-                placeholder="0.00">
+              <div class="d-flex align-items-center gap-2">
+                <div class="form-check form-switch mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [ngModel]="newTicketType.isFree"
+                    (ngModelChange)="newTicketType.isFree = $event; newTicketType.price = $event ? 0 : newTicketType.price"
+                    id="newFreeToggle">
+                  <label class="form-check-label small" for="newFreeToggle">Free</label>
+                </div>
+                <input
+                  *ngIf="!newTicketType.isFree"
+                  type="number"
+                  class="form-control form-control-sm flex-grow-1"
+                  [(ngModel)]="newTicketType.price"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00">
+              </div>
             </div>
           </div>
           <div class="col-md-3">
@@ -199,7 +225,7 @@
               <button
                 type="button"
                 class="btn btn-success btn-sm"
-                [disabled]="creating || !newTicketType.name.trim() || newTicketType.price < 0"
+                [disabled]="creating || !newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)"
                 (click)="createTicketType()">
                 <i class="fas fa-plus me-1"></i>Add Type
               </button>

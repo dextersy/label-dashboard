@@ -191,7 +191,7 @@
                               [disabled]="ticketType.is_sold_out"
                               [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
                               [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
-                        {{ ticketType.name }} - ₱{{ formatPrice(ticketType.price) }}
+                        {{ ticketType.name }} - {{ formatPriceDisplay(ticketType.price) }}
                         <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
                       </option>
                     </select>
@@ -208,7 +208,7 @@
               <div class="ticket-quantity-container fadeIn fourth">
                 <div class="input-group">
                   <span class="input-group-text">
-                    {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} - <strong>₱{{ formatPrice(selectedTicketType?.price || event.ticket_price) }}</strong>
+                    {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} - <strong>{{ formatPriceDisplay(selectedTicketType?.price || event.ticket_price) }}</strong>
                   </span>
                   <div class="form-floating flex-fill">
                     <input 
@@ -263,9 +263,13 @@
               </div>
               
               <!-- Payment Calculation -->
-              <div id="div_paymentCalculation" [style.display]="totalAmount > 0 ? 'block' : 'none'">
+              <div id="div_paymentCalculation">
                 <hr>
-                <h5>Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h5>
+                <h5 *ngIf="totalAmount > 0">Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h5>
+                <h5 *ngIf="totalAmount === 0" class="text-success">
+                  <i class="fas fa-check-circle me-2"></i>
+                  <b>Admission is FREE</b>
+                </h5>
                 <hr>
               </div>
 
@@ -283,17 +287,17 @@
                 </div>
               </div>
 
-              <button 
-                mat-raised-button 
+              <button
+                mat-raised-button
                 color="primary"
-                type="submit" 
+                type="submit"
                 class="submit-button w-100"
                 [disabled]="ticketForm.invalid || isSubmitting">
-                <i class="fas fa-credit-card me-1"></i>
-                {{ isSubmitting ? 'Processing...' : 'Proceed to Payment' }}
+                <i class="fas me-1" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
+                {{ isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now') }}
               </button>
-              <div class="fadeIn sixth" style="font-size:12px;">
-                Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page. 
+              <div *ngIf="totalAmount > 0" class="fadeIn sixth" style="font-size:12px;">
+                Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page.
                 Payee information will be <strong>Melt Records</strong>.
               </div>
             </div>

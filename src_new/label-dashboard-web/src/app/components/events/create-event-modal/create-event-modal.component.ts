@@ -8,6 +8,7 @@ import { ModalToBodyDirective } from '../../../directives/modal-to-body.directiv
 export interface TicketTypeForm {
   name: string;
   price: number;
+  isFree?: boolean;
 }
 
 export interface CreateEventForm {
@@ -49,7 +50,7 @@ export class CreateEventModalComponent implements OnChanges {
   posterPreview: string | null = null;
   selectedVenue: VenueSelection | null = null;
   actionType: 'draft' | 'published' | null = null;
-  ticketTypes: TicketTypeForm[] = [{ name: 'Regular', price: 0 }];
+  ticketTypes: TicketTypeForm[] = [{ name: 'Regular', price: 0, isFree: false }];
 
   constructor(private fb: FormBuilder) {
     this.eventForm = this.fb.group({
@@ -80,8 +81,12 @@ export class CreateEventModalComponent implements OnChanges {
 
     // Validate each ticket type
     for (const ticketType of this.ticketTypes) {
-      if (!ticketType.name.trim() || ticketType.price < 0) {
+      if (!ticketType.name.trim() || (!ticketType.isFree && ticketType.price < 0)) {
         return; // Don't submit if any ticket type is invalid
+      }
+      // Set price to 0 if marked as free
+      if (ticketType.isFree) {
+        ticketType.price = 0;
       }
     }
 
@@ -194,7 +199,7 @@ export class CreateEventModalComponent implements OnChanges {
     this.actionType = null;
 
     // Reset ticket types to default
-    this.ticketTypes = [{ name: 'Regular', price: 0 }];
+    this.ticketTypes = [{ name: 'Regular', price: 0, isFree: false }];
 
     // Set default values
     const tomorrow = new Date();
@@ -273,7 +278,7 @@ export class CreateEventModalComponent implements OnChanges {
 
   // Ticket Type Management Methods
   addTicketType(): void {
-    this.ticketTypes.push({ name: '', price: 0 });
+    this.ticketTypes.push({ name: '', price: 0, isFree: false });
   }
 
   removeTicketType(index: number): void {
@@ -283,7 +288,7 @@ export class CreateEventModalComponent implements OnChanges {
   }
 
   isTicketTypeValid(ticketType: TicketTypeForm): boolean {
-    return ticketType.name.trim().length > 0 && ticketType.price >= 0;
+    return ticketType.name.trim().length > 0 && (ticketType.isFree || ticketType.price >= 0);
   }
 
   areAllTicketTypesValid(): boolean {

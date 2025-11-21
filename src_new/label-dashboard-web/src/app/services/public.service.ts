@@ -67,8 +67,8 @@ export interface TicketPurchaseResponse {
   success: boolean;
   ticket_id: number;
   ticket_code: string;
-  checkout_url: string;
   total_amount: number;
+  url: string;
   message: string;
 }
 
