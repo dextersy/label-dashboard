@@ -827,7 +827,14 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     doc.moveDown(0.5);
 
     // QR Code (centered, smaller)
-    const qrImageBuffer = Buffer.from(qrCodeDataUrl.split(',')[1], 'base64');
+    // Validate and extract base64 data from data URL
+    const qrDataParts = qrCodeDataUrl.split(',');
+    if (qrDataParts.length < 2) {
+      console.error('Invalid QR code data URL format:', qrCodeDataUrl);
+      doc.end();
+      return res.status(500).json({ error: 'Failed to generate ticket QR code' });
+    }
+    const qrImageBuffer = Buffer.from(qrDataParts[1], 'base64');
     const qrSize = 140;
     const qrX = (pageWidth - qrSize) / 2;
     doc.image(qrImageBuffer, qrX, doc.y, { width: qrSize });
