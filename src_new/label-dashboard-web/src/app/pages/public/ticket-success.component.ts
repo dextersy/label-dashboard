@@ -102,11 +102,15 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
         next: (blob) => {
           this.isDownloading = false;
 
+          // Sanitize ticket code for filename (match backend sanitization)
+          const ticketCode = this.ticketDetails?.ticket_code || 'download';
+          const sanitizedCode = ticketCode.replace(/[^A-Z0-9]/gi, '');
+
           // Create a blob URL and trigger download
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `ticket-${this.ticketDetails?.ticket_code || 'download'}.pdf`;
+          link.download = `ticket-${sanitizedCode}.pdf`;
           document.body.appendChild(link);
           link.click();
 
