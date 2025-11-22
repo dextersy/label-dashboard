@@ -781,6 +781,13 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
       margin: 1
     });
 
+    // Validate QR code data URL format BEFORE creating PDF
+    const qrDataParts = qrCodeDataUrl.split(',');
+    if (qrDataParts.length < 2) {
+      console.error('Invalid QR code data URL format:', qrCodeDataUrl);
+      return res.status(500).json({ error: 'Failed to generate ticket QR code' });
+    }
+
     // Create PDF document
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
@@ -827,13 +834,7 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     doc.moveDown(0.5);
 
     // QR Code (centered, smaller)
-    // Validate and extract base64 data from data URL
-    const qrDataParts = qrCodeDataUrl.split(',');
-    if (qrDataParts.length < 2) {
-      console.error('Invalid QR code data URL format:', qrCodeDataUrl);
-      doc.end();
-      return res.status(500).json({ error: 'Failed to generate ticket QR code' });
-    }
+    // Extract base64 data from validated data URL
     const qrImageBuffer = Buffer.from(qrDataParts[1], 'base64');
     const qrSize = 140;
     const qrX = (pageWidth - qrSize) / 2;
