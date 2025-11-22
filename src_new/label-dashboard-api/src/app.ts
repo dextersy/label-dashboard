@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import * as fs from 'fs';
@@ -104,6 +105,7 @@ const startServer = async () => {
     // Malicious requests are rejected before parsing large payloads (up to 50mb)
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+    app.use(cookieParser());
     console.log('🔒 Body parsers: Configured after security middleware');
 
     // Import and register routes (must be done after CORS and CSRF middleware)
