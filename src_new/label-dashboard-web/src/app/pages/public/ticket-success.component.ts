@@ -122,9 +122,7 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
           console.error('Error downloading PDF:', error);
           this.isDownloading = false;
           this.downloadError = true;
-
-          // Show error message to user (could be cookie expired, network error, etc.)
-          alert('Failed to download ticket PDF. Please try refreshing the page or contact support if the issue persists.');
+          // Error message is displayed inline via downloadError state
         }
       });
   }
