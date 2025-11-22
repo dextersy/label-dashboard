@@ -88,7 +88,7 @@ const setTicketAccessCookie = (res: Response, ticketId: number, eventId: number)
 
   res.cookie('ticket_access_token', token, {
     httpOnly: true,  // Prevents JavaScript access (XSS protection)
-    secure: true, // HTTPS required (for cross-origin cookies with sameSite=none)
+    secure: true, // Required for sameSite=none (browser enforced, regardless of actual protocol)
     sameSite: 'none', // Allow cross-origin cookies (frontend and backend on different ports)
     maxAge: 3600000  // 1 hour in milliseconds
   });
@@ -304,84 +304,80 @@ export const getTicketDetails = async (req: Request, res: Response) => {
     const token = req.cookies?.ticket_access_token;
     const { ticket_code, event_id, verification_pin } = req.body;
 
-    // Try cookie authentication first
-    if (token) {
-      if (!process.env.JWT_SECRET) {
-        return res.status(500).json({ error: 'Server configuration error' });
-      }
-
+    // Try cookie authentication first (but fall through to code auth if JWT is invalid)
+    if (token && process.env.JWT_SECRET) {
       // Verify and decode the JWT token
       let decoded: any;
       try {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (jwtError) {
-        return res.status(401).json({ error: 'Invalid or expired ticket access token' });
-      }
+        const { ticketId, eventId } = decoded;
 
-      const { ticketId, eventId } = decoded;
+        // Load ticket with related data
+        const ticket = await Ticket.findOne({
+          where: { id: ticketId, event_id: eventId },
+          include: [
+            {
+              model: Event,
+              as: 'event',
+              include: [
+                {
+                  model: Brand,
+                  as: 'brand'
+                }
+              ]
+            },
+            {
+              model: TicketType,
+              as: 'ticketType'
+            }
+          ]
+        });
 
-      // Load ticket with related data
-      const ticket = await Ticket.findOne({
-        where: { id: ticketId, event_id: eventId },
-        include: [
-          {
-            model: Event,
-            as: 'event',
-            include: [
-              {
-                model: Brand,
-                as: 'brand'
-              }
-            ]
-          },
-          {
-            model: TicketType,
-            as: 'ticketType'
-          }
-        ]
-      });
-
-      if (!ticket) {
-        return res.status(404).json({ error: 'Ticket not found' });
-      }
-
-      // Return ticket details for cookie-authenticated request
-      return res.json({
-        success: true,
-        ticket: {
-          id: ticket.id,
-          ticket_code: ticket.ticket_code,
-          name: ticket.name,
-          email_address: ticket.email_address,
-          contact_number: ticket.contact_number,
-          number_of_entries: ticket.number_of_entries,
-          status: ticket.status,
-          price_per_ticket: ticket.price_per_ticket,
-          total_price: ticket.price_per_ticket * ticket.number_of_entries,
-          order_timestamp: ticket.order_timestamp,
-          date_paid: ticket.date_paid,
-          event: ticket.event ? {
-            id: ticket.event.id,
-            title: ticket.event.title,
-            date_and_time: ticket.event.date_and_time,
-            venue: ticket.event.venue,
-            venue_address: ticket.event.venue_address,
-            venue_maps_url: ticket.event.venue_maps_url,
-            poster_url: ticket.event.poster_url,
-            brand: ticket.event.brand ? {
-              id: ticket.event.brand.id,
-              name: ticket.event.brand.brand_name,
-              color: ticket.event.brand.brand_color,
-              logo_url: ticket.event.brand.logo_url
-            } : undefined
-          } : undefined,
-          ticketType: ticket.ticketType ? {
-            id: ticket.ticketType.id,
-            name: ticket.ticketType.name,
-            price: ticket.ticketType.price
-          } : undefined
+        if (!ticket) {
+          return res.status(404).json({ error: 'Ticket not found' });
         }
-      });
+
+        // Return ticket details for cookie-authenticated request
+        return res.json({
+          success: true,
+          ticket: {
+            id: ticket.id,
+            ticket_code: ticket.ticket_code,
+            name: ticket.name,
+            email_address: ticket.email_address,
+            contact_number: ticket.contact_number,
+            number_of_entries: ticket.number_of_entries,
+            status: ticket.status,
+            price_per_ticket: ticket.price_per_ticket,
+            total_price: ticket.price_per_ticket * ticket.number_of_entries,
+            order_timestamp: ticket.order_timestamp,
+            date_paid: ticket.date_paid,
+            event: ticket.event ? {
+              id: ticket.event.id,
+              title: ticket.event.title,
+              date_and_time: ticket.event.date_and_time,
+              venue: ticket.event.venue,
+              venue_address: ticket.event.venue_address,
+              venue_maps_url: ticket.event.venue_maps_url,
+              poster_url: ticket.event.poster_url,
+              brand: ticket.event.brand ? {
+                id: ticket.event.brand.id,
+                name: ticket.event.brand.brand_name,
+                color: ticket.event.brand.brand_color,
+                logo_url: ticket.event.brand.logo_url
+              } : undefined
+            } : undefined,
+            ticketType: ticket.ticketType ? {
+              id: ticket.ticketType.id,
+              name: ticket.ticketType.name,
+              price: ticket.ticketType.price
+            } : undefined
+          }
+        });
+      } catch (jwtError) {
+        // JWT verification failed - fall through to code-based auth if available
+        // Don't return early to allow fallback authentication
+      }
     }
 
     // Fall back to code-based authentication
@@ -653,7 +649,7 @@ export const buyTicket = async (req: Request, res: Response) => {
         ticket_id: ticket.id,
         ticket_code: ticketCode,
         total_amount: 0,
-        url: `${brandDomain}/public/tickets/success/${eventIdNum}`,
+        url: `${brandDomain}/public/tickets/success`,
         message: 'Free ticket registered successfully!'
       });
     }
@@ -678,7 +674,7 @@ export const buyTicket = async (req: Request, res: Response) => {
         quantity: number_of_entries
       }],
       payment_method_types: paymentMethods,
-      success_url: `${brandDomain}/public/tickets/success/${eventIdNum}`,
+      success_url: `${brandDomain}/public/tickets/success`,
       description,
       billing: {
         name: name,
@@ -726,96 +722,6 @@ export const buyTicket = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Buy ticket error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-export const getTicketFromCookie = async (req: Request, res: Response) => {
-  try {
-    const token = req.cookies.ticket_access_token;
-
-    if (!token) {
-      return res.status(401).json({ error: 'No ticket access token found' });
-    }
-
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
-
-    // Verify and decode the JWT token
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (jwtError) {
-      return res.status(401).json({ error: 'Invalid or expired ticket access token' });
-    }
-
-    const { ticketId, eventId } = decoded;
-
-    // Load ticket with related data
-    const ticket = await Ticket.findOne({
-      where: { id: ticketId, event_id: eventId },
-      include: [
-        {
-          model: Event,
-          as: 'event',
-          include: [
-            {
-              model: Brand,
-              as: 'brand'
-            }
-          ]
-        },
-        {
-          model: TicketType,
-          as: 'ticketType'
-        }
-      ]
-    });
-
-    if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' });
-    }
-
-    // Return ticket details
-    res.json({
-      success: true,
-      ticket: {
-        id: ticket.id,
-        ticket_code: ticket.ticket_code,
-        name: ticket.name,
-        email_address: ticket.email_address,
-        contact_number: ticket.contact_number,
-        number_of_entries: ticket.number_of_entries,
-        status: ticket.status,
-        price_per_ticket: ticket.price_per_ticket,
-        total_price: ticket.price_per_ticket * ticket.number_of_entries,
-        order_timestamp: ticket.order_timestamp,
-        date_paid: ticket.date_paid,
-        event: ticket.event ? {
-          id: ticket.event.id,
-          title: ticket.event.title,
-          date_and_time: ticket.event.date_and_time,
-          venue: ticket.event.venue,
-          venue_address: ticket.event.venue_address,
-          venue_maps_url: ticket.event.venue_maps_url,
-          poster_url: ticket.event.poster_url,
-          brand: ticket.event.brand ? {
-            id: ticket.event.brand.id,
-            name: ticket.event.brand.brand_name,
-            color: ticket.event.brand.brand_color,
-            logo_url: ticket.event.brand.logo_url
-          } : undefined
-        } : undefined,
-        ticketType: ticket.ticketType ? {
-          id: ticket.ticketType.id,
-          name: ticket.ticketType.name,
-          price: ticket.ticketType.price
-        } : undefined
-      }
-    });
-  } catch (error) {
-    console.error('Get ticket from cookie error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -878,8 +784,9 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     // Create PDF document
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
-    // Set response headers for PDF download
-    const filename = `ticket-${ticket.ticket_code}.pdf`;
+    // Set response headers for PDF download (sanitize ticket code for filename safety)
+    const sanitizedCode = ticket.ticket_code.replace(/[^A-Z0-9]/gi, '');
+    const filename = `ticket-${sanitizedCode}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 

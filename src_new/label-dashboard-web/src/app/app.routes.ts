@@ -38,7 +38,7 @@ export const routes: Routes = [
   { path: 'public/events', component: PublicEventsComponent },
   { path: 'public/epk/:artist_id', component: ArtistEPKComponent },
   { path: 'public/tickets/buy/:id', component: TicketBuyComponent },
-  { path: 'public/tickets/success/:id', component: TicketSuccessComponent },
+  { path: 'public/tickets/success', component: TicketSuccessComponent },
   { path: 'public/tickets/verify/:id', component: TicketVerifyComponent },
 
   // EPK Preview (protected)

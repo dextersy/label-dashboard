@@ -18,20 +18,15 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   isSuccess = false;
   isError = false;
   ticketDetails: TicketDetails | null = null;
-  eventId: string | null = null;
   event: PublicEvent | null = null;
 
   constructor(
-    private route: ActivatedRoute,
     private publicService: PublicService
   ) {}
 
   ngOnInit() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      this.eventId = params['id'];
-      // Load ticket details from cookie
-      this.loadTicketFromCookie();
-    });
+    // Load ticket details from cookie (no route params needed)
+    this.loadTicketFromCookie();
   }
 
   ngOnDestroy() {
@@ -59,7 +54,7 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
                 venue: response.ticket.event?.venue || ''
               }
             };
-            // Store event data separately
+            // Store event data separately (only fields provided by backend or needed for display)
             if (response.ticket.event) {
               this.event = {
                 id: response.ticket.event.id,
@@ -71,23 +66,13 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
                 poster_url: response.ticket.event.poster_url,
                 ticket_price: response.ticket.price_per_ticket,
                 ticket_naming: response.ticket.ticketType?.name || 'Regular',
-                is_closed: false,
-                show_countdown: false,
-                show_tickets_remaining: false,
-                supports_card: false,
-                supports_gcash: false,
-                supports_qrph: false,
-                supports_ubp: false,
-                supports_dob: false,
-                supports_maya: false,
-                supports_grabpay: false,
                 brand: response.ticket.event.brand ? {
                   id: response.ticket.event.brand.id,
                   name: response.ticket.event.brand.name,
                   color: response.ticket.event.brand.color,
                   logo_url: response.ticket.event.brand.logo_url
                 } : undefined
-              };
+              } as PublicEvent;
             }
           } else {
             this.isSuccess = false;
