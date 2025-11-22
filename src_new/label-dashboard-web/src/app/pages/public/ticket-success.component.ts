@@ -17,6 +17,8 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   isLoading = true;
   isSuccess = false;
   isError = false;
+  isDownloading = false;
+  downloadError = false;
   ticketDetails: TicketDetails | null = null;
   event: PublicEvent | null = null;
 
@@ -89,7 +91,38 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   }
 
   downloadPDF() {
-    this.publicService.downloadTicketPDF();
+    if (this.isDownloading) return; // Prevent multiple simultaneous downloads
+
+    this.isDownloading = true;
+    this.downloadError = false;
+
+    this.publicService.downloadTicketPDF()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          this.isDownloading = false;
+
+          // Create a blob URL and trigger download
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `ticket-${this.ticketDetails?.ticket_code || 'download'}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+
+          // Cleanup
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        },
+        error: (error) => {
+          console.error('Error downloading PDF:', error);
+          this.isDownloading = false;
+          this.downloadError = true;
+
+          // Show error message to user (could be cookie expired, network error, etc.)
+          alert('Failed to download ticket PDF. Please try refreshing the page or contact support if the issue persists.');
+        }
+      });
   }
 
   showError() {

@@ -429,9 +429,12 @@ export class PublicService {
 
   /**
    * Download ticket PDF (uses cookie for authentication)
+   * Returns Observable for error handling
    */
-  downloadTicketPDF(): void {
-    // Open PDF download in new window/tab
-    window.open(`${this.apiUrl}/public/tickets/pdf`, '_blank');
+  downloadTicketPDF(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/public/tickets/pdf`, {
+      responseType: 'blob',
+      withCredentials: true
+    });
   }
 }
