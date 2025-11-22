@@ -189,15 +189,22 @@ const extractOrigin = (url: string): string | null => {
  * SECURITY NOTE: These endpoints MUST implement their own security mechanisms:
  * - /api/public/webhook/payment: Uses PayMongo signature verification (paymongo-signature header)
  * - Other webhooks: Must implement signature verification or API key authentication
+ * - /api/system/*: Uses JWT authentication with system user verification (authenticateSystemUser middleware)
  *
  * Webhooks are exempt because they:
  * 1. Come from external servers (no Origin/Referer headers)
  * 2. Cannot be triggered by browsers (no CSRF risk)
  * 3. Use cryptographic signatures for authentication
+ *
+ * System API endpoints are exempt because they:
+ * 1. Are server-to-server (Lambda jobs, automated tasks)
+ * 2. Use JWT token authentication (cannot be sent by browsers in CSRF attacks)
+ * 3. Have additional security checks (system user validation, IP whitelisting)
  */
 const CSRF_EXEMPT_PATHS = [
   '/api/public/webhook/payment', // PayMongo payment webhook (signature verified)
   '/api/public/webhook/',         // Generic webhook prefix (must verify signatures)
+  '/api/system/',                 // System API (JWT authenticated, system user required)
 ];
 
 /**
