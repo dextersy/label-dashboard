@@ -41,10 +41,20 @@
 
         <!-- Download PDF Button -->
         <div class="mb-4">
-          <button class="btn btn-lg btn-primary" (click)="downloadPDF()">
-            <i class="fas fa-download me-2"></i>Download Ticket PDF
+          <button
+            class="btn btn-lg btn-primary"
+            (click)="downloadPDF()"
+            [disabled]="isDownloading"
+            [attr.aria-busy]="isDownloading"
+            [attr.aria-label]="isDownloading ? 'Downloading ticket PDF, please wait' : 'Download ticket PDF'">
+            <i class="fas me-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+            {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
           <p class="text-muted small mt-2">Save or print your ticket for easy access at the event</p>
+          <div *ngIf="downloadError" class="alert alert-danger small mt-2 mb-0" role="alert">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            Failed to download PDF. Please try again or contact support if the issue persists.
+          </div>
         </div>
 
         <!-- Instructions -->
