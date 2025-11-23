@@ -118,8 +118,12 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
             link.click();
           } finally {
             // Always cleanup, even if download fails
-            if (link && link.parentNode) {
-              document.body.removeChild(link);
+            if (link) {
+              try {
+                document.body.removeChild(link);
+              } catch (e) {
+                // Element may not be in DOM if error occurred before appendChild
+              }
             }
             window.URL.revokeObjectURL(url);
           }
