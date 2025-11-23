@@ -35,9 +35,26 @@
 
       <!-- Success Message -->
       <div class="card-body text-center">
-        
+
         <p><i class="fas fa-check-circle" style="font-size:150px;color:green;"></i></p>
         <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
+
+        <!-- Download PDF Button -->
+        <div class="mb-4">
+          <button
+            class="btn btn-lg btn-primary"
+            (click)="downloadPDF()"
+            [disabled]="isDownloading"
+            [attr.aria-busy]="isDownloading">
+            <i class="fas me-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
+            {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
+          </button>
+          <p class="text-muted small mt-2">Save or print your ticket for easy access at the event</p>
+          <div *ngIf="downloadError" class="alert alert-danger small mt-2 mb-0" role="alert">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            Failed to download PDF. Please try again or contact support if the issue persists.
+          </div>
+        </div>
 
         <!-- Instructions -->
       <div class="alert alert-info field-description text-dark text-left">
