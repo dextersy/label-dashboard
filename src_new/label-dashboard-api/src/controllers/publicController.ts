@@ -819,15 +819,30 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     // Create PDF document
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
-    // Set response headers for PDF download (sanitize ticket code for filename safety)
-    const ticketCode = ticket.ticket_code || 'download';
-    const sanitizedCode = ticketCode.replace(/[^A-Z0-9]/gi, '');
-    const filename = `ticket-${sanitizedCode}.pdf`;
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    // Buffer the PDF in memory to ensure atomic success/failure
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+    doc.on('end', () => {
+      // PDF generation completed successfully - now send it
+      const pdfBuffer = Buffer.concat(chunks);
 
-    // Pipe the PDF to the response
-    doc.pipe(res);
+      // Set response headers for PDF download (sanitize ticket code for filename safety)
+      const ticketCode = ticket.ticket_code || 'download';
+      const sanitizedCode = ticketCode.replace(/[^A-Z0-9]/gi, '');
+      const filename = `ticket-${sanitizedCode}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length.toString());
+
+      res.send(pdfBuffer);
+    });
+    doc.on('error', (err: Error) => {
+      // PDF generation failed - send error response (headers not sent yet)
+      console.error('PDF generation error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to generate PDF' });
+      }
+    });
 
     // Get brand info
     const brandName = ticket.event?.brand?.brand_name || 'Melt Records';
