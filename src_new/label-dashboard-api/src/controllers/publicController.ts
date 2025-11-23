@@ -792,6 +792,15 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
+    // Validate ticket status - only allow PDF download for confirmed/paid tickets
+    const validStatuses = ['Payment Confirmed', 'Ticket sent.'];
+    if (!validStatuses.includes(ticket.status)) {
+      return res.status(403).json({
+        error: 'Ticket PDF not available',
+        message: 'PDF download is only available for confirmed tickets. Your ticket status is: ' + ticket.status
+      });
+    }
+
     // Generate QR code as data URL
     const qrCodeDataUrl = await QRCode.toDataURL(ticket.ticket_code, {
       errorCorrectionLevel: 'M',
