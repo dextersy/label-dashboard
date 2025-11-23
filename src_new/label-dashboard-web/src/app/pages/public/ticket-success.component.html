@@ -45,9 +45,8 @@
             class="btn btn-lg btn-primary"
             (click)="downloadPDF()"
             [disabled]="isDownloading"
-            [attr.aria-busy]="isDownloading"
-            [attr.aria-label]="isDownloading ? 'Downloading ticket PDF, please wait' : 'Download ticket PDF'">
-            <i class="fas me-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+            [attr.aria-busy]="isDownloading">
+            <i class="fas me-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
             {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
           <p class="text-muted small mt-2">Save or print your ticket for easy access at the event</p>
