@@ -811,7 +811,8 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
 
     // Set response headers for PDF download (sanitize ticket code for filename safety)
-    const sanitizedCode = ticket.ticket_code.replace(/[^A-Z0-9]/gi, '');
+    const ticketCode = ticket.ticket_code || 'download';
+    const sanitizedCode = ticketCode.replace(/[^A-Z0-9]/gi, '');
     const filename = `ticket-${sanitizedCode}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
