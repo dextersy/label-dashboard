@@ -20,7 +20,7 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   isDownloading = false;
   downloadError = false;
   ticketDetails: TicketDetails | null = null;
-  event: PublicEvent | null = null;
+  event: Partial<PublicEvent> | null = null;
 
   constructor(
     private publicService: PublicService
@@ -74,7 +74,7 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
                   color: response.ticket.event.brand.color,
                   logo_url: response.ticket.event.brand.logo_url
                 } : undefined
-              } as PublicEvent;
+              };
             }
           } else {
             this.isSuccess = false;

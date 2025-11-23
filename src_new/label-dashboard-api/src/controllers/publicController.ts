@@ -392,8 +392,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
 
     // Fall back to code-based authentication
     if (!event_id || !ticket_code || !verification_pin) {
-      return res.status(400).json({
-        error: 'Authentication required: provide either valid cookie or ticket_code, event_id, and verification_pin'
+      return res.status(401).json({
+        error: 'Authentication required'
       });
     }
 
