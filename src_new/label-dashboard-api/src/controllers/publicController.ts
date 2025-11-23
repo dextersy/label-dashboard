@@ -737,6 +737,8 @@ export const buyTicket = async (req: Request, res: Response) => {
 };
 
 export const downloadTicketPDF = async (req: Request, res: Response) => {
+  let doc: any = null; // Declare doc outside try block for cleanup in catch
+
   try {
     const token = req.cookies.ticket_access_token;
 
@@ -796,8 +798,7 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     const validStatuses = ['Payment Confirmed', 'Ticket sent.'];
     if (!validStatuses.includes(ticket.status)) {
       return res.status(403).json({
-        error: 'Ticket PDF not available',
-        message: 'PDF download is only available for confirmed tickets. Your ticket status is: ' + ticket.status
+        error: 'PDF download is only available for confirmed tickets'
       });
     }
 
@@ -817,7 +818,7 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     }
 
     // Create PDF document
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    doc = new PDFDocument({ size: 'A4', margin: 50 });
 
     // Buffer the PDF in memory to ensure atomic success/failure
     const chunks: Buffer[] = [];
@@ -985,6 +986,16 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     doc.end();
   } catch (error) {
     console.error('Download ticket PDF error:', error);
+
+    // Clean up PDF document stream if it was created
+    if (doc) {
+      try {
+        doc.destroy();
+      } catch (destroyError) {
+        console.error('Error destroying PDF document:', destroyError);
+      }
+    }
+
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to generate PDF' });
     }
