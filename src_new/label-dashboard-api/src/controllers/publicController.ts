@@ -312,6 +312,16 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { ticketId, eventId } = decoded;
 
+        // Validate JWT payload data
+        if (!ticketId || !eventId ||
+            typeof ticketId !== 'number' || typeof eventId !== 'number' ||
+            !Number.isInteger(ticketId) || !Number.isInteger(eventId) ||
+            ticketId <= 0 || eventId <= 0) {
+          console.warn('Invalid JWT payload: ticketId or eventId is not a valid positive integer');
+          // Fall through to code-based auth
+          throw new Error('Invalid token payload');
+        }
+
         // Load ticket with related data
         const ticket = await Ticket.findOne({
           where: { id: ticketId, event_id: eventId },
@@ -747,6 +757,15 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
     }
 
     const { ticketId, eventId } = decoded;
+
+    // Validate JWT payload data
+    if (!ticketId || !eventId ||
+        typeof ticketId !== 'number' || typeof eventId !== 'number' ||
+        !Number.isInteger(ticketId) || !Number.isInteger(eventId) ||
+        ticketId <= 0 || eventId <= 0) {
+      console.warn('Invalid JWT payload in PDF download: ticketId or eventId is not a valid positive integer');
+      return res.status(400).json({ error: 'Invalid ticket access token payload' });
+    }
 
     // Load ticket with related data
     const ticket = await Ticket.findOne({
