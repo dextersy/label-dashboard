@@ -57,16 +57,16 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id, 10);
-    // Extract domain from referer URL (frontend domain)
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL (frontend domain)
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
     
@@ -109,11 +109,11 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       const isDomainValid = eventBrandDomains.includes(requestDomain);
       
       if (!isDomainValid) {
-        return res.status(404).json({ error: 'Event not found' });
+        return res.status(403).json({ error: 'Invalid domain' });
       }
     } else {
       // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(403).json({ error: 'Can\'t validate domain : ' + requestDomain });
     }
 
     // Check if event is closed due to time
@@ -261,16 +261,16 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID, ticket code, and verification PIN are required' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL for multibrand validation
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
 
@@ -384,16 +384,16 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     const eventIdNum = parseInt(event_id, 10);
-    // Extract domain from referer URL (frontend domain)
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL (frontend domain)
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
 
@@ -428,11 +428,11 @@ export const buyTicket = async (req: Request, res: Response) => {
       const isDomainValid = eventBrandDomains.includes(requestDomain);
       
       if (!isDomainValid) {
-        return res.status(404).json({ error: 'Event not found' });
+        return res.status(404).json({ error: 'Invalid domain' });
       }
     } else {
       // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(404).json({ error: 'Invalid domain' });
     }
 
     // Check if event is closed
@@ -694,16 +694,16 @@ export const checkPin = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID and PIN are required' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL for multibrand validation
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
 
@@ -781,16 +781,16 @@ export const checkInTicket = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Entries to claim must be a valid number greater than 0' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL for multibrand validation
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
 
@@ -893,16 +893,16 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL for multibrand validation
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
 
@@ -1634,16 +1634,16 @@ export const getArtistEPK = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    // Extract domain from referer URL for multibrand validation
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    // Extract domain from origin or referer URL for multibrand validation
+    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
     let requestDomain = '';
-    
-    if (refererUrl) {
+
+    if (originUrl) {
       try {
-        const url = new URL(refererUrl);
+        const url = new URL(originUrl);
         requestDomain = url.hostname;
       } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
+        console.error('Invalid origin/referer URL:', originUrl);
       }
     }
 
