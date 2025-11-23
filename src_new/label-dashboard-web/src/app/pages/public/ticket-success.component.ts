@@ -108,15 +108,21 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
 
           // Create a blob URL and trigger download
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `ticket-${sanitizedCode}.pdf`;
-          document.body.appendChild(link);
-          link.click();
+          let link: HTMLAnchorElement | null = null;
 
-          // Cleanup
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+          try {
+            link = document.createElement('a');
+            link.href = url;
+            link.download = `ticket-${sanitizedCode}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+          } finally {
+            // Always cleanup, even if download fails
+            if (link && link.parentNode) {
+              document.body.removeChild(link);
+            }
+            window.URL.revokeObjectURL(url);
+          }
         },
         error: (error) => {
           console.error('Error downloading PDF:', error);
