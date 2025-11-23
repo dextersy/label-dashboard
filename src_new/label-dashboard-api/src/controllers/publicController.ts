@@ -7,8 +7,42 @@ import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 
 const paymentService = new PaymentService();
+
+// Helper function to extract domain from request
+const getRequestDomain = (req: Request): string => {
+  let requestDomain = '';
+
+  // Try Origin header first (for CORS/XHR requests - contains the frontend domain)
+  const originHeader = req.get('origin') || '';
+  if (originHeader) {
+    try {
+      const url = new URL(originHeader);
+      requestDomain = url.hostname;
+    } catch (error) {
+      console.error('Invalid origin header:', originHeader);
+    }
+  }
+
+  // Fallback to Referer header (for navigation/redirect - also contains frontend domain)
+  if (!requestDomain) {
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    if (refererUrl) {
+      try {
+        const url = new URL(refererUrl);
+        requestDomain = url.hostname;
+      } catch (error) {
+        console.error('Invalid referer URL:', refererUrl);
+      }
+    }
+  }
+
+  return requestDomain;
+};
 
 // Helper function to determine if countdown should be shown for an event
 const shouldShowCountdown = (event: any): boolean => {
@@ -39,6 +73,27 @@ const shouldShowCountdown = (event: any): boolean => {
   }
 };
 
+// Helper function to set ticket access cookie
+const setTicketAccessCookie = (res: Response, ticketId: number, eventId: number): void => {
+  if (!process.env.JWT_SECRET) {
+    console.error('JWT_SECRET not configured, skipping cookie');
+    return;
+  }
+
+  const token = jwt.sign(
+    { ticketId, eventId },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' } // Cookie expires in 1 hour
+  );
+
+  res.cookie('ticket_access_token', token, {
+    httpOnly: true,  // Prevents JavaScript access (XSS protection)
+    secure: true, // Required for sameSite=none (browser enforced, regardless of actual protocol)
+    sameSite: 'none', // Allow cross-origin cookies (frontend and backend on different ports)
+    maxAge: 3600000  // 1 hour in milliseconds
+  });
+};
+
 // Helper function to get total tickets sold for an event
 const getTotalTicketsSold = async (eventId: number): Promise<number> => {
   const result = await Ticket.sum('number_of_entries', {
@@ -57,25 +112,14 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id, 10);
-    // Extract domain from origin or referer URL (frontend domain)
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
+    const requestDomain = getRequestDomain(req);
 
-    if (originUrl) {
-      try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
-      }
-    }
-    
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
     const event = await Event.findOne({
-      where: { 
+      where: {
         id: eventId,
         status: 'published'
       },
@@ -97,7 +141,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         }
       ]
     });
-    
+
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
@@ -107,7 +151,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     if (event.brand && event.brand.domains && requestDomain) {
       const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
+
       if (!isDomainValid) {
         return res.status(403).json({ error: 'Invalid domain' });
       }
@@ -253,35 +297,117 @@ export const getAvailableTicketTypesPublic = async (req: Request, res: Response)
   }
 };
 
-export const getTicketFromCode = async (req: Request, res: Response) => {
+// Unified endpoint to get ticket details - supports both cookie and code-based authentication
+export const getTicketDetails = async (req: Request, res: Response) => {
   try {
-    const { event_id, verification_pin, ticket_code } = req.body;
+    // Check if authenticating via cookie or via code/pin parameters
+    const token = req.cookies?.ticket_access_token;
+    const { ticket_code, event_id, verification_pin } = req.body;
 
-    if (!event_id || !ticket_code || !verification_pin) {
-      return res.status(400).json({ error: 'Event ID, ticket code, and verification PIN are required' });
-    }
-
-    // Extract domain from origin or referer URL for multibrand validation
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-
-    if (originUrl) {
+    // Try cookie authentication first (but fall through to code auth if JWT is invalid)
+    if (token && process.env.JWT_SECRET) {
+      // Verify and decode the JWT token
+      let decoded: any;
       try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { ticketId, eventId } = decoded;
+
+        // Validate JWT payload data
+        if (!ticketId || !eventId ||
+            typeof ticketId !== 'number' || typeof eventId !== 'number' ||
+            !Number.isInteger(ticketId) || !Number.isInteger(eventId) ||
+            ticketId <= 0 || eventId <= 0) {
+          console.warn('Invalid JWT payload: ticketId or eventId is not a valid positive integer');
+          // Fall through to code-based auth
+          throw new Error('Invalid token payload');
+        }
+
+        // Load ticket with related data
+        const ticket = await Ticket.findOne({
+          where: { id: ticketId, event_id: eventId },
+          include: [
+            {
+              model: Event,
+              as: 'event',
+              include: [
+                {
+                  model: Brand,
+                  as: 'brand'
+                }
+              ]
+            },
+            {
+              model: TicketType,
+              as: 'ticketType'
+            }
+          ]
+        });
+
+        if (!ticket) {
+          return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        // Return ticket details for cookie-authenticated request
+        return res.json({
+          success: true,
+          ticket: {
+            id: ticket.id,
+            ticket_code: ticket.ticket_code,
+            name: ticket.name,
+            email_address: ticket.email_address,
+            contact_number: ticket.contact_number,
+            number_of_entries: ticket.number_of_entries,
+            status: ticket.status,
+            price_per_ticket: ticket.price_per_ticket,
+            total_price: ticket.price_per_ticket * ticket.number_of_entries,
+            order_timestamp: ticket.order_timestamp,
+            date_paid: ticket.date_paid,
+            event: ticket.event ? {
+              id: ticket.event.id,
+              title: ticket.event.title,
+              date_and_time: ticket.event.date_and_time,
+              venue: ticket.event.venue,
+              venue_address: ticket.event.venue_address,
+              venue_maps_url: ticket.event.venue_maps_url,
+              poster_url: ticket.event.poster_url,
+              brand: ticket.event.brand ? {
+                id: ticket.event.brand.id,
+                name: ticket.event.brand.brand_name,
+                color: ticket.event.brand.brand_color,
+                logo_url: ticket.event.brand.logo_url
+              } : undefined
+            } : undefined,
+            ticketType: ticket.ticketType ? {
+              id: ticket.ticketType.id,
+              name: ticket.ticketType.name,
+              price: ticket.ticketType.price
+            } : undefined
+          }
+        });
+      } catch (jwtError) {
+        // JWT verification failed - fall through to code-based auth if available
+        // Don't return early to allow fallback authentication
       }
     }
 
+    // Fall back to code-based authentication
+    if (!event_id || !ticket_code || !verification_pin) {
+      return res.status(401).json({
+        error: 'Authentication required'
+      });
+    }
+
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
+
     const ticket = await Ticket.findOne({
-      where: { 
+      where: {
         event_id,
         ticket_code: ticket_code.toUpperCase()
       },
       include: [
-        { 
-          model: Event, 
+        {
+          model: Event,
           as: 'event',
           include: [{
             model: Brand,
@@ -293,8 +419,8 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
             }]
           }]
         },
-        { 
-          model: TicketType, 
+        {
+          model: TicketType,
           as: 'ticketType',
           attributes: ['id', 'name', 'price']
         },
@@ -310,7 +436,7 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
     if (ticket.event.brand && ticket.event.brand.domains && requestDomain) {
       const eventBrandDomains = ticket.event.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
+
       if (!isDomainValid) {
         return res.status(404).json({ error: 'Ticket not found' });
       }
@@ -329,9 +455,10 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found or not confirmed' });
     }
 
-    // Calculate remaining entries - model handles type conversion automatically
+    // Calculate remaining entries
     const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
 
+    // Return ticket details for code-authenticated request
     res.json({
       ticket: {
         id: ticket.id,
@@ -360,7 +487,7 @@ export const getTicketFromCode = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Get ticket from code error:', error);
+    console.error('Get ticket details error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -384,18 +511,7 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     const eventIdNum = parseInt(event_id, 10);
-    // Extract domain from origin or referer URL (frontend domain)
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-
-    if (originUrl) {
-      try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
-      }
-    }
+    const requestDomain = getRequestDomain(req);
 
     // Get event details
     const event = await Event.findOne({
@@ -534,13 +650,16 @@ export const buyTicket = async (req: Request, res: Response) => {
         // Continue even if email fails - ticket is still registered
       }
 
+      // Set secure cookie for success page access
+      setTicketAccessCookie(res, ticket.id, eventIdNum);
+
       // Return success response with direct URL to success page
       return res.json({
         success: true,
         ticket_id: ticket.id,
         ticket_code: ticketCode,
         total_amount: 0,
-        url: `${brandDomain}/public/tickets/success/${eventIdNum}`,
+        url: `${brandDomain}/public/tickets/success`,
         message: 'Free ticket registered successfully!'
       });
     }
@@ -565,7 +684,7 @@ export const buyTicket = async (req: Request, res: Response) => {
         quantity: number_of_entries
       }],
       payment_method_types: paymentMethods,
-      success_url: `${brandDomain}/public/tickets/success/${eventIdNum}`,
+      success_url: `${brandDomain}/public/tickets/success`,
       description,
       billing: {
         name: name,
@@ -600,6 +719,9 @@ export const buyTicket = async (req: Request, res: Response) => {
       payment_link_id: null
     });
 
+    // Set secure cookie for success page access (will persist through PayMongo redirect)
+    setTicketAccessCookie(res, ticket.id, eventIdNum);
+
     res.json({
       success: true,
       ticket_id: ticket.id,
@@ -611,6 +733,272 @@ export const buyTicket = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Buy ticket error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const downloadTicketPDF = async (req: Request, res: Response) => {
+  let doc: any = null; // Declare doc outside try block for cleanup in catch
+
+  try {
+    const token = req.cookies.ticket_access_token;
+
+    if (!token) {
+      return res.status(401).json({ error: 'No ticket access token found' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    // Verify and decode the JWT token
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res.status(401).json({ error: 'Invalid or expired ticket access token' });
+    }
+
+    const { ticketId, eventId } = decoded;
+
+    // Validate JWT payload data
+    if (!ticketId || !eventId ||
+        typeof ticketId !== 'number' || typeof eventId !== 'number' ||
+        !Number.isInteger(ticketId) || !Number.isInteger(eventId) ||
+        ticketId <= 0 || eventId <= 0) {
+      console.warn('Invalid JWT payload in PDF download: ticketId or eventId is not a valid positive integer');
+      return res.status(400).json({ error: 'Invalid ticket access token payload' });
+    }
+
+    // Load ticket with related data
+    const ticket = await Ticket.findOne({
+      where: { id: ticketId, event_id: eventId },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          include: [
+            {
+              model: Brand,
+              as: 'brand'
+            }
+          ]
+        },
+        {
+          model: TicketType,
+          as: 'ticketType'
+        }
+      ]
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Validate ticket status - only allow PDF download for confirmed/paid tickets
+    const validStatuses = ['Payment Confirmed', 'Ticket sent.'];
+    if (!validStatuses.includes(ticket.status)) {
+      return res.status(403).json({
+        error: 'PDF download is only available for confirmed tickets'
+      });
+    }
+
+    // Generate QR code as data URL
+    const qrCodeDataUrl = await QRCode.toDataURL(ticket.ticket_code, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      width: 200,
+      margin: 1
+    });
+
+    // Validate QR code data URL format BEFORE creating PDF
+    const qrDataParts = qrCodeDataUrl.split(',');
+    if (qrDataParts.length < 2) {
+      console.error('Invalid QR code data URL format:', qrCodeDataUrl);
+      return res.status(500).json({ error: 'Failed to generate ticket QR code' });
+    }
+
+    // Create PDF document
+    doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+    // Buffer the PDF in memory to ensure atomic success/failure
+    const chunks: Buffer[] = [];
+    doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+    doc.on('end', () => {
+      // PDF generation completed successfully - now send it
+      const pdfBuffer = Buffer.concat(chunks);
+
+      // Set response headers for PDF download (sanitize ticket code for filename safety)
+      const ticketCode = ticket.ticket_code || 'download';
+      const sanitizedCode = ticketCode.replace(/[^A-Z0-9]/gi, '');
+      const filename = `ticket-${sanitizedCode}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length.toString());
+
+      res.send(pdfBuffer);
+    });
+    doc.on('error', (err: Error) => {
+      // PDF generation failed - send error response (headers not sent yet)
+      console.error('PDF generation error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to generate PDF' });
+      }
+    });
+
+    // Get brand info
+    const brandName = ticket.event?.brand?.brand_name || 'Melt Records';
+
+    const pageWidth = doc.page.width;
+    const margin = 50;
+    const contentWidth = pageWidth - margin * 2;
+
+    // Header: Brand Tickets
+    doc.fontSize(10).fillColor('#060606').text(`${brandName} Tickets`, { align: 'center' });
+    doc.moveDown(0.3);
+
+    // Main heading: "You're In!"
+    doc.fontSize(24).font('Helvetica-Bold').fillColor('#000000').text("You're In!", { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Thank you message
+    doc.fontSize(11).font('Helvetica').fillColor('#333333').text('Thank you for your purchase!', { align: 'center' });
+    const eventText = `This is your official ticket to ${ticket.event?.title || 'the event'}!`;
+    doc.text(eventText, { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Ticket holder
+    doc.fontSize(10).fillColor('#333333').text(`This ticket is issued to ${ticket.name}.`, { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Ticket type
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#333333').text(ticket.ticketType?.name || 'Regular', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // QR Code (centered, smaller)
+    // Extract base64 data from validated data URL
+    const qrImageBuffer = Buffer.from(qrDataParts[1], 'base64');
+    const qrSize = 140;
+    const qrX = (pageWidth - qrSize) / 2;
+    doc.image(qrImageBuffer, qrX, doc.y, { width: qrSize });
+    doc.moveDown(9);
+
+    // Ticket code (large, bold, centered)
+    doc.fontSize(32).font('Helvetica-Bold').fillColor('#333333').text(ticket.ticket_code, { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Admit X person(s)
+    doc.fontSize(11).font('Helvetica').fillColor('#333333').text(
+      `Admit ${ticket.number_of_entries} person(s).`,
+      { align: 'center' }
+    );
+    doc.moveDown(0.5);
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Event Details box (light gray background)
+    const boxY = doc.y;
+    const boxPadding = 15;
+    const lineHeight = 16;
+    const boxHeight = ticket.event?.venue_address ? 100 : 85;
+    doc.rect(margin, boxY, contentWidth, boxHeight).fillAndStroke('#f8f9fa', '#f8f9fa');
+
+    // Event Details heading
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#000000').text('Event Details', margin + boxPadding, boxY + boxPadding);
+
+    if (ticket.event) {
+      const eventDate = new Date(ticket.event.date_and_time);
+      const formattedDate = eventDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Manila'
+      });
+      const formattedTime = eventDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Manila'
+      });
+
+      let detailY = boxY + boxPadding + 25;
+      doc.fontSize(9).font('Helvetica').fillColor('#333333');
+
+      doc.font('Helvetica-Bold').text('Date: ', margin + boxPadding, detailY, { continued: true });
+      doc.font('Helvetica').text(formattedDate);
+
+      detailY += lineHeight;
+      doc.font('Helvetica-Bold').text('Time: ', margin + boxPadding, detailY, { continued: true });
+      doc.font('Helvetica').text(formattedTime);
+
+      detailY += lineHeight;
+      doc.font('Helvetica-Bold').text('Venue: ', margin + boxPadding, detailY, { continued: true });
+      doc.font('Helvetica').text(ticket.event.venue);
+
+      if (ticket.event.venue_address) {
+        detailY += lineHeight;
+        doc.font('Helvetica-Bold').text('Address: ', margin + boxPadding, detailY, { continued: true });
+        doc.font('Helvetica').text(ticket.event.venue_address, { width: contentWidth - boxPadding * 3 });
+      }
+    }
+
+    doc.y = boxY + boxHeight + 15;
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Important reminders
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#333333').text('Important reminders:', margin, doc.y);
+    doc.moveDown(0.3);
+
+    doc.fontSize(8).font('Helvetica').fillColor('#333333');
+    const reminders = [
+      'Please show this ticket at the gate to gain admission to the event.',
+      'Tickets are non-refundable.',
+      'If you need to change the name for this ticket, please contact us for support.',
+      'Do not share this ticket code to anyone else, to avoid unauthorized use.'
+    ];
+
+    reminders.forEach(reminder => {
+      doc.text(`• ${reminder}`, margin + 5, doc.y);
+      doc.moveDown(0.2);
+    });
+    doc.moveDown(0.3);
+
+    // Divider line
+    doc.strokeColor('#D9D9D9').lineWidth(1.5).moveTo(margin, doc.y).lineTo(pageWidth - margin, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Footer
+    doc.fontSize(9).font('Helvetica-Oblique').fillColor('#666666').text(
+      'Powered by Melt Records Tickets.',
+      { align: 'center' }
+    );
+
+    // Finalize the PDF
+    doc.end();
+  } catch (error) {
+    console.error('Download ticket PDF error:', error);
+
+    // Clean up PDF document stream if it was created
+    if (doc) {
+      try {
+        doc.destroy();
+      } catch (destroyError) {
+        console.error('Error destroying PDF document:', destroyError);
+      }
+    }
+
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate PDF' });
+    }
   }
 };
 
@@ -694,18 +1082,8 @@ export const checkPin = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID and PIN are required' });
     }
 
-    // Extract domain from origin or referer URL for multibrand validation
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-
-    if (originUrl) {
-      try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const event = await Event.findOne({
       where: { id: event_id },
@@ -781,18 +1159,8 @@ export const checkInTicket = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Entries to claim must be a valid number greater than 0' });
     }
 
-    // Extract domain from origin or referer URL for multibrand validation
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-
-    if (originUrl) {
-      try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const ticket = await Ticket.findOne({
       where: { 
@@ -893,18 +1261,8 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    // Extract domain from origin or referer URL for multibrand validation
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-
-    if (originUrl) {
-      try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     const event = await Event.findOne({
       where: { 
@@ -1634,18 +1992,8 @@ export const getArtistEPK = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    // Extract domain from origin or referer URL for multibrand validation
-    const originUrl = req.get('origin') || req.get('referer') || req.get('referrer') || '';
-    let requestDomain = '';
-
-    if (originUrl) {
-      try {
-        const url = new URL(originUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid origin/referer URL:', originUrl);
-      }
-    }
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
 
     // Get artist with brand and domain information for validation
     const artist = await Artist.findOne({
