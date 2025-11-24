@@ -181,9 +181,30 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
 
   shareOnTwitter() {
     if (!this.event) return;
-    
+
     const text = `Join me at ${this.event.title}! You can get your ticket here: ${this.event.buy_shortlink || ''}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'width=600,height=400');
+  }
+
+  /**
+   * Calculate contrasting text color (white or black) based on background color luminance
+   */
+  getContrastingColor(hexColor?: string): string {
+    if (!hexColor) return '#ffffff';
+
+    // Remove # if present
+    const hex = hexColor.replace('#', '');
+
+    // Convert to RGB
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    // Calculate luminance using relative luminance formula
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return white for dark backgrounds, black for light backgrounds
+    return luminance > 0.5 ? '#000000' : '#ffffff';
   }
 }

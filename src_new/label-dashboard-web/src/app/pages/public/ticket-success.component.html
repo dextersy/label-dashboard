@@ -29,8 +29,12 @@
            [alt]="event.title + ' poster'">
 
       <!-- Success Header -->
-      <div class="card-header text-center text-white bg-success">
-        <h1><strong>Thank you! 🙌</strong></h1>
+      <div class="card-header text-center"
+           [style.background-color]="event?.brand?.color || '#28a745'">
+        <h1 [style.color]="getContrastingColor(event?.brand?.color)"
+            style="font-weight: 700;">
+          <strong>Thank you! 🙌</strong>
+        </h1>
       </div>
 
       <!-- Success Message -->
@@ -40,17 +44,18 @@
         <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
 
         <!-- Download PDF Button -->
-        <div class="mb-4">
+        <div class="mb-4 p-4 bg-light border border-primary rounded" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
           <button
-            class="btn btn-lg btn-primary"
+            class="btn btn-primary py-3 px-5"
+            style="font-size: 1.5rem; font-weight: bold; min-width: 300px;"
             (click)="downloadPDF()"
             [disabled]="isDownloading"
             [attr.aria-busy]="isDownloading">
-            <i class="fas me-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
+            <i class="fas me-2" style="font-size: 1.75rem;" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
             {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
-          <p class="text-muted small mt-2">Save or print your ticket for easy access at the event</p>
-          <div *ngIf="downloadError" class="alert alert-danger small mt-2 mb-0" role="alert">
+          <p class="text-muted mt-3 mb-0" style="font-size: 1rem;">Save or print your ticket for easy access at the event</p>
+          <div *ngIf="downloadError" class="alert alert-danger mt-3 mb-0" role="alert">
             <i class="fas fa-exclamation-triangle me-1"></i>
             Failed to download PDF. Please try again or contact support if the issue persists.
           </div>
@@ -79,20 +84,35 @@
         </p>
         <div class="row">
           <div class="col-6 text-right">
-            <a (click)="shareOnFacebook()" 
-               class="btn btn-primary" 
+            <a (click)="shareOnFacebook()"
+               class="btn btn-primary"
                style="background-color: #1877f2; border-color: #1877f2;">
               <i class="fab fa-facebook"></i> Share
             </a>
           </div>
           <div class="col-6 text-left">
-            <a (click)="shareOnTwitter()" 
-               class="btn btn-info" 
+            <a (click)="shareOnTwitter()"
+               class="btn btn-info"
                style="background-color: #1da1f2; border-color: #1da1f2;">
               <i class="fab fa-twitter"></i> Tweet
             </a>
           </div>
         </div>
+      </div>
+
+      <!-- Brand Logo Footer -->
+      <div class="card-footer text-center py-3"
+           *ngIf="event?.brand?.logo_url"
+           [style.background-color]="event?.brand?.color || '#ffffff'">
+        <img [src]="event.brand?.logo_url"
+             [alt]="(event.brand?.name || 'Brand') + ' logo'"
+             class="mb-2"
+             style="max-height: 30px; max-width: 120px; opacity: 0.9;">
+        <p class="mb-0 small"
+           [style.color]="getContrastingColor(event?.brand?.color)"
+           style="opacity: 0.7;">
+          Powered by Melt Records Dashboard
+        </p>
       </div>
     </div>
   </div>
