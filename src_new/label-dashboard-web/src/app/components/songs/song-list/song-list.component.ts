@@ -39,9 +39,7 @@ export class SongListComponent implements OnDestroy {
   }
 
   onDelete(song: Song): void {
-    if (confirm(`Are you sure you want to delete "${song.title}"?`)) {
-      this.deleteSong.emit(song);
-    }
+    this.deleteSong.emit(song);
   }
 
   onUploadAudio(song: Song): void {

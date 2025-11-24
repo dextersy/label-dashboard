@@ -102,6 +102,21 @@ export class TrackListDialogComponent implements OnChanges {
   onDeleteSong(song: Song): void {
     if (!song.id) return;
 
+    // Show confirmation dialog with warning about master file deletion
+    const songTitle = song.title || 'this track';
+    const confirmMessage = `Are you sure you want to delete "${songTitle}"?\n\n` +
+      `⚠️ WARNING: This will permanently delete the master audio file and cannot be undone.\n\n` +
+      `The following will be deleted:\n` +
+      `• Track metadata (title, artists, ISRC, etc.)\n` +
+      `• Master audio file (WAV)\n` +
+      `• All associated data\n\n` +
+      `💡 IMPORTANT: Make sure you have a copy of the master audio file before proceeding.\n\n` +
+      `This action is PERMANENT and IRREVERSIBLE.`;
+
+    if (!confirm(confirmMessage)) {
+      return; // User cancelled
+    }
+
     this.songService.deleteSong(song.id).subscribe({
       next: () => {
         this.alertMessage.emit({
