@@ -23,10 +23,19 @@ export class ConfirmationDialogComponent implements OnInit, OnDestroy {
       .subscribe(state => {
         this.isVisible = state.isVisible;
         this.data = state.data;
+
+        // Prevent body scrolling when dialog is open
+        if (state.isVisible) {
+          document.body.classList.add('modal-open');
+        } else {
+          document.body.classList.remove('modal-open');
+        }
       });
   }
 
   ngOnDestroy(): void {
+    // Ensure modal-open class is removed on component destroy
+    document.body.classList.remove('modal-open');
     this.destroy$.next();
     this.destroy$.complete();
   }
