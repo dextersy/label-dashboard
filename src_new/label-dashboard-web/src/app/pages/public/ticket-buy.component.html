@@ -146,12 +146,21 @@
                   Please make sure your email address is correct.
                 </div>
                 <div class="text-warning d-block"
-                     style="cursor: pointer;"
-                     *ngIf="emailTypoResult?.suggestedEmail"
-                     (click)="applySuggestedEmail()"
-                     title="Click to use this email address">
+                     *ngIf="emailTypoResult?.suggestedEmail">
                   <i class="fas fa-exclamation-triangle"></i>
-                  Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>? <small>(click to fix)</small>
+                  Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?
+                  <button type="button"
+                          class="btn btn-success btn-sm ms-2 py-0 px-2"
+                          style="font-size: 0.75rem; box-shadow: none;"
+                          (click)="applySuggestedEmail()">
+                    Yes
+                  </button>
+                  <button type="button"
+                          class="btn btn-success btn-sm ms-1 py-0 px-2"
+                          style="font-size: 0.75rem; box-shadow: none;"
+                          (click)="dismissEmailSuggestion()">
+                    No
+                  </button>
                 </div>
               </div>
 

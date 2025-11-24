@@ -423,6 +423,10 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     }
   }
 
+  dismissEmailSuggestion() {
+    this.emailTypoResult = null; // Clear the warning without applying
+  }
+
   checkEmailIssues() {
     const name = this.ticketForm.get('name')?.value;
     const email = this.ticketForm.get('email_address')?.value;
