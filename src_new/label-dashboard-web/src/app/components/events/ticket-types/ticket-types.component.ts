@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventService, Event } from '../../../services/event.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface TicketType {
   id?: number;
@@ -42,7 +43,10 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   updating = false;
   deleting = false;
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private confirmationService: ConfirmationService
+  ) {}
 
   ngOnInit(): void {
     this.loadTicketTypes();
@@ -184,17 +188,20 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     });
   }
 
-  deleteTicketType(ticketType: TicketType, index: number): void {
+  async deleteTicketType(ticketType: TicketType, index: number): Promise<void> {
     if (!ticketType.id) {
       return;
     }
 
-    const confirmation = confirm(
-      `Are you sure you want to delete the "${ticketType.name}" ticket type?\n\n` +
-      'This action cannot be undone and will fail if there are existing tickets of this type.'
-    );
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Ticket Type',
+      message: `Are you sure you want to delete the "${ticketType.name}" ticket type?\n\nThis action cannot be undone and will fail if there are existing tickets of this type.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
 
-    if (!confirmation) return;
+    if (!confirmed) return;
 
     this.deleting = true;
 

@@ -6,6 +6,7 @@ import { EventService, Event } from '../../../services/event.service';
 import { QuillModule } from 'ngx-quill';
 import { VenueAutocompleteComponent, VenueSelection } from '../venue-autocomplete/venue-autocomplete.component';
 import { TicketTypesComponent, TicketType } from '../ticket-types/ticket-types.component';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface EventDetails {
   id?: number;
@@ -77,7 +78,10 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   private subscriptions = new Subscription();
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private confirmationService: ConfirmationService
+  ) {}
 
   ngOnInit(): void {
     this.loadEventDetails();
@@ -600,16 +604,20 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     return this.ticketTypesModified;
   }
 
-  onPublishEvent(): void {
+  async onPublishEvent(): Promise<void> {
     if (!this.event || !this.event.id) return;
 
-    const confirmation = confirm(
-      'Are you sure you want to publish this event?\n\n' +
-      '⚠️ WARNING: Once published, the shortlinks can no longer be changed and the event will be visible to the public.\n\n' +
-      'Click OK to proceed with publishing.'
-    );
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Publish Event',
+      message: 'Are you sure you want to publish this event?\n\n' +
+        '⚠️ WARNING: Once published, the shortlinks can no longer be changed and the event will be visible to the public.\n\n' +
+        'Click OK to proceed with publishing.',
+      confirmText: 'Publish',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
 
-    if (!confirmation) return;
+    if (!confirmed) return;
 
     const slug = this.event.slug;
     this.loading = true;
@@ -638,14 +646,18 @@ export class EventDetailsTabComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
-  onUnpublishEvent(): void {
+  async onUnpublishEvent(): Promise<void> {
     if (!this.event || !this.event.id) return;
 
-    const confirmation = confirm(
-      'Are you sure you want to unpublish this event? It will no longer be visible to the public and ticket sales will stop.'
-    );
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Unpublish Event',
+      message: 'Are you sure you want to unpublish this event? It will no longer be visible to the public and ticket sales will stop.',
+      confirmText: 'Unpublish',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
 
-    if (!confirmation) return;
+    if (!confirmed) return;
 
     this.loading = true;
 

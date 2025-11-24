@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
 import { environment } from '../../../../environments/environment';
@@ -90,7 +91,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     private eventService: EventService,
     private csvService: CsvService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -267,7 +269,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
-  onCancelTicket(ticketId: number): void {
+  async onCancelTicket(ticketId: number): Promise<void> {
     this.selectedTicketId = ticketId;
     
     // Find the ticket to get its status
@@ -282,41 +284,52 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
     // Show different confirmation messages based on ticket status
     let confirmMessage = '';
+    let confirmTitle = 'Cancel Ticket';
+    let confirmType: 'danger' | 'warning' = 'warning';
+
     if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
-      confirmMessage = 'WARNING: This ticket is already paid and sent to the customer. The customer will receive a cancellation email. Are you sure you want to cancel this ticket?';
+      confirmMessage = 'WARNING: This ticket is already paid and sent to the customer. The customer will receive a cancellation email.\n\nAre you sure you want to cancel this ticket?';
+      confirmType = 'danger';
     } else {
       confirmMessage = 'Are you sure you want to cancel this ticket?';
     }
 
-    const confirmed = confirm(confirmMessage);
-    if (confirmed) {
-      this.bulkOperationsLoading = true;
-      this.subscriptions.add(
-        this.eventService.cancelTicket(ticketId).subscribe({
-          next: () => {
-            this.bulkOperationsLoading = false;
-            this.alertMessage.emit({
-              type: 'success',
-              text: 'Ticket cancelled successfully!'
-            });
-            // Remove ticket from list and reload summary from backend
-            this.tickets = this.tickets.filter(t => t.id !== ticketId);
-            this.loadTicketSummary();
-          },
-          error: (error) => {
-            this.bulkOperationsLoading = false;
-            console.error('Failed to cancel ticket:', error);
-            this.alertMessage.emit({
-              type: 'error',
-              text: 'Failed to cancel ticket'
-            });
-          }
-        })
-      );
-    }
+    const confirmed = await this.confirmationService.confirm({
+      title: confirmTitle,
+      message: confirmMessage,
+      confirmText: 'Cancel Ticket',
+      cancelText: 'Keep Ticket',
+      type: confirmType
+    });
+
+    if (!confirmed) return;
+
+    this.bulkOperationsLoading = true;
+    this.subscriptions.add(
+      this.eventService.cancelTicket(ticketId).subscribe({
+        next: () => {
+          this.bulkOperationsLoading = false;
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Ticket cancelled successfully!'
+          });
+          // Remove ticket from list and reload summary from backend
+          this.tickets = this.tickets.filter(t => t.id !== ticketId);
+          this.loadTicketSummary();
+        },
+        error: (error) => {
+          this.bulkOperationsLoading = false;
+          console.error('Failed to cancel ticket:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to cancel ticket'
+          });
+        }
+      })
+    );
   }
 
-  onRefundTicket(ticketId: number): void {
+  async onRefundTicket(ticketId: number): Promise<void> {
     this.selectedTicketId = ticketId;
 
     // Find the ticket to get its status
@@ -329,37 +342,42 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    const confirmMessage = 'WARNING: This will process a refund through Paymongo and return the ticket price to the customer.\n\nIMPORTANT: Platform fees and processing fees will be RETAINED and NOT refunded.\n\nThis action cannot be undone. Are you sure you want to refund this ticket?';
-    const confirmed = confirm(confirmMessage);
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Refund Ticket',
+      message: 'WARNING: This will process a refund through Paymongo and return the ticket price to the customer.\n\nIMPORTANT: Platform fees and processing fees will be RETAINED and NOT refunded.\n\nThis action cannot be undone. Are you sure you want to refund this ticket?',
+      confirmText: 'Refund Ticket',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
 
-    if (confirmed) {
-      this.bulkOperationsLoading = true;
-      this.subscriptions.add(
-        this.eventService.refundTicket(ticketId).subscribe({
-          next: () => {
-            this.bulkOperationsLoading = false;
-            this.alertMessage.emit({
-              type: 'success',
-              text: 'Ticket refunded successfully!'
-            });
-            // Update ticket status in list and reload summary
-            const ticketIndex = this.tickets.findIndex(t => t.id === ticketId);
-            if (ticketIndex !== -1) {
-              this.tickets[ticketIndex].status = 'Refunded';
-            }
-            this.loadTicketSummary();
-          },
-          error: (error) => {
-            this.bulkOperationsLoading = false;
-            console.error('Failed to refund ticket:', error);
-            this.alertMessage.emit({
-              type: 'error',
-              text: error.error?.error || 'Failed to refund ticket'
-            });
+    if (!confirmed) return;
+
+    this.bulkOperationsLoading = true;
+    this.subscriptions.add(
+      this.eventService.refundTicket(ticketId).subscribe({
+        next: () => {
+          this.bulkOperationsLoading = false;
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Ticket refunded successfully!'
+          });
+          // Update ticket status in list and reload summary
+          const ticketIndex = this.tickets.findIndex(t => t.id === ticketId);
+          if (ticketIndex !== -1) {
+            this.tickets[ticketIndex].status = 'Refunded';
           }
-        })
-      );
-    }
+          this.loadTicketSummary();
+        },
+        error: (error) => {
+          this.bulkOperationsLoading = false;
+          console.error('Failed to refund ticket:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: error.error?.error || 'Failed to refund ticket'
+          });
+        }
+      })
+    );
   }
 
   onDownloadCSV(): void {

@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 
 export interface AbandonedOrder {
@@ -64,7 +65,8 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   constructor(
     private eventService: EventService,
     private csvService: CsvService,
-    private router: Router
+    private router: Router,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -199,32 +201,39 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     );
   }
 
-  onCancelOrder(orderId: number): void {
-    const confirmed = confirm('Are you sure you want to cancel this order?');
-    if (confirmed) {
-      this.bulkOperationsLoading = true;
-      this.subscriptions.add(
-        this.eventService.cancelTicket(orderId).subscribe({
-          next: () => {
-            this.bulkOperationsLoading = false;
-            this.alertMessage.emit({
-              type: 'success',
-              text: 'Order cancelled successfully!'
-            });
-            // Remove order from list
-            this.orders = this.orders.filter(o => o.id !== orderId);
-          },
-          error: (error) => {
-            this.bulkOperationsLoading = false;
-            console.error('Failed to cancel order:', error);
-            this.alertMessage.emit({
-              type: 'error',
-              text: 'Failed to cancel order'
-            });
-          }
-        })
-      );
-    }
+  async onCancelOrder(orderId: number): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order?',
+      confirmText: 'Cancel Order',
+      cancelText: 'Keep Order',
+      type: 'warning'
+    });
+
+    if (!confirmed) return;
+
+    this.bulkOperationsLoading = true;
+    this.subscriptions.add(
+      this.eventService.cancelTicket(orderId).subscribe({
+        next: () => {
+          this.bulkOperationsLoading = false;
+          this.alertMessage.emit({
+            type: 'success',
+            text: 'Order cancelled successfully!'
+          });
+          // Remove order from list
+          this.orders = this.orders.filter(o => o.id !== orderId);
+        },
+        error: (error) => {
+          this.bulkOperationsLoading = false;
+          console.error('Failed to cancel order:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to cancel order'
+          });
+        }
+      })
+    );
   }
 
   onVerifyPayments(): void {
@@ -275,7 +284,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     });
   }
 
-  onCancelAllUnpaid(): void {
+  async onCancelAllUnpaid(): Promise<void> {
     if (!this.selectedEvent) {
       this.alertMessage.emit({
         type: 'error',
@@ -284,28 +293,35 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       return;
     }
 
-    const confirmed = confirm('Are you sure you want to cancel ALL unpaid orders? This action cannot be undone.');
-    if (confirmed) {
-      this.subscriptions.add(
-        this.eventService.cancelAllUnpaidTickets(this.selectedEvent.id).subscribe({
-          next: (response) => {
-            this.alertMessage.emit({
-              type: 'success',
-              text: response.message || 'All unpaid orders cancelled successfully!'
-            });
-            // Refresh the abandoned orders list
-            this.loadAbandonedOrders();
-          },
-          error: (error) => {
-            console.error('Failed to cancel all unpaid orders:', error);
-            this.alertMessage.emit({
-              type: 'error',
-              text: 'Failed to cancel all unpaid orders'
-            });
-          }
-        })
-      );
-    }
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Cancel All Unpaid Orders',
+      message: 'Are you sure you want to cancel ALL unpaid orders?\n\nThis action cannot be undone.',
+      confirmText: 'Cancel All',
+      cancelText: 'Keep Orders',
+      type: 'danger'
+    });
+
+    if (!confirmed) return;
+
+    this.subscriptions.add(
+      this.eventService.cancelAllUnpaidTickets(this.selectedEvent.id).subscribe({
+        next: (response) => {
+          this.alertMessage.emit({
+            type: 'success',
+            text: response.message || 'All unpaid orders cancelled successfully!'
+          });
+          // Refresh the abandoned orders list
+          this.loadAbandonedOrders();
+        },
+        error: (error) => {
+          console.error('Failed to cancel all unpaid orders:', error);
+          this.alertMessage.emit({
+            type: 'error',
+            text: 'Failed to cancel all unpaid orders'
+          });
+        }
+      })
+    );
   }
 
   onDownloadCSV(): void {
@@ -557,9 +573,9 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     );
   }
 
-  onBulkCancel(selectedOrders: AbandonedOrder[]): void {
+  async onBulkCancel(selectedOrders: AbandonedOrder[]): Promise<void> {
     const eligibleOrders = selectedOrders.filter(order => order.status === 'New');
-    
+
     if (eligibleOrders.length === 0) {
       this.alertMessage.emit({
         type: 'warning',
@@ -568,14 +584,19 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       return;
     }
 
-    const confirmed = confirm(`Are you sure you want to cancel ${eligibleOrders.length} order(s)? This action cannot be undone.`);
-    if (!confirmed) {
-      return;
-    }
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Cancel Multiple Orders',
+      message: `Are you sure you want to cancel ${eligibleOrders.length} order(s)?\n\nThis action cannot be undone.`,
+      confirmText: `Cancel ${eligibleOrders.length} Order${eligibleOrders.length > 1 ? 's' : ''}`,
+      cancelText: 'Keep Orders',
+      type: 'danger'
+    });
+
+    if (!confirmed) return;
 
     const ticketIds = eligibleOrders.map(order => order.id);
     this.bulkOperationsLoading = true;
-    
+
     this.subscriptions.add(
       this.eventService.cancelTicket(ticketIds).subscribe({
         next: (response) => {
