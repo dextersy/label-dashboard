@@ -10,6 +10,7 @@ import { ReleaseValidationService } from '../../../services/release-validation.s
 import { Song } from '../../../services/song.service';
 import { ReleaseService } from '../../../services/release.service';
 import { downloadFromResponse } from '../../../utils/file-utils';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface ArtistRelease {
   id: number;
@@ -57,7 +58,8 @@ export class ArtistReleasesTabComponent {
     private http: HttpClient,
     private router: Router,
     private validationService: ReleaseValidationService,
-    private releaseService: ReleaseService
+    private releaseService: ReleaseService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -230,17 +232,21 @@ export class ArtistReleasesTabComponent {
     return release.status === 'Draft' && !this.hasValidationErrors(release);
   }
 
-  onSubmitForReview(release: ArtistRelease): void {
+  async onSubmitForReview(release: ArtistRelease): Promise<void> {
     if (!this.canSubmitForReview(release) || this.submittingReleaseId) {
       return;
     }
 
     // Show confirmation dialog
-    const confirmed = confirm(
-      'Once you submit for review, certain fields will be locked and no longer editable. ' +
-      'You can still contact your label admin for changes. ' +
-      'Do you want to proceed with submission?'
-    );
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Submit for Review',
+      message: 'Once you submit for review, certain fields will be locked and no longer editable. ' +
+        'You can still contact your label admin for changes.\n\n' +
+        'Do you want to proceed with submission?',
+      confirmText: 'Submit',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
 
     if (!confirmed) {
       return;
