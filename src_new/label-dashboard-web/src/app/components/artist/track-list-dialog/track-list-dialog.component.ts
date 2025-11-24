@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ReleaseValidationService, ValidationResult } from '../../../services/release-validation.service';
 import { ArtistRelease } from '../artist-releases-tab/artist-releases-tab.component';
 import { downloadFromResponse } from '../../../utils/file-utils';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 @Component({
     selector: 'app-track-list-dialog',
@@ -39,7 +40,8 @@ export class TrackListDialogComponent implements OnChanges {
     private songService: SongService,
     private releaseService: ReleaseService,
     private authService: AuthService,
-    private validationService: ReleaseValidationService
+    private validationService: ReleaseValidationService,
+    private confirmationService: ConfirmationService
   ) {
     this.isAdmin = this.authService.isAdmin();
   }
@@ -99,7 +101,7 @@ export class TrackListDialogComponent implements OnChanges {
     this.showSongForm = true;
   }
 
-  onDeleteSong(song: Song): void {
+  async onDeleteSong(song: Song): Promise<void> {
     if (!song.id) return;
 
     // Show confirmation dialog with warning about master file deletion
@@ -113,7 +115,15 @@ export class TrackListDialogComponent implements OnChanges {
       `💡 IMPORTANT: Make sure you have a copy of the master audio file before proceeding.\n\n` +
       `This action is PERMANENT and IRREVERSIBLE.`;
 
-    if (!confirm(confirmMessage)) {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Track',
+      message: confirmMessage,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return; // User cancelled
     }
 

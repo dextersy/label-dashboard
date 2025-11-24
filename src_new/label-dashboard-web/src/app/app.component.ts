@@ -7,6 +7,7 @@ import { NavbarComponent } from './shared/navbar/navbar.component';
 import { GlobalNotificationComponent } from './components/global-notification/global-notification.component';
 import { ConnectionOverlayComponent } from './components/connection-overlay/connection-overlay.component';
 import { AppNotificationBannerComponent } from './components/shared/app-notification-banner/app-notification-banner.component';
+import { ConfirmationDialogComponent } from './components/shared/confirmation-dialog/confirmation-dialog.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
@@ -19,7 +20,7 @@ import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
-    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })

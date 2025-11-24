@@ -1,0 +1,43 @@
+<!-- Modal backdrop -->
+<div *ngIf="isVisible" class="modal-backdrop fade show" (click)="onBackdropClick()"></div>
+
+<!-- Modal -->
+<div *ngIf="isVisible" class="modal fade show" style="display: block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header" [ngClass]="{
+        'bg-danger text-white': data?.type === 'danger',
+        'bg-warning': data?.type === 'warning',
+        'bg-info text-white': data?.type === 'info'
+      }">
+        <h5 class="modal-title">
+          <i class="fas me-2" [ngClass]="{
+            'fa-exclamation-triangle': data?.type === 'danger' || data?.type === 'warning',
+            'fa-info-circle': data?.type === 'info'
+          }"></i>
+          {{ data?.title }}
+        </h5>
+        <button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"
+                [class.btn-close-white]="data?.type === 'danger' || data?.type === 'info'"></button>
+      </div>
+      <div class="modal-body">
+        <p style="white-space: pre-line;">{{ data?.message }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">
+          {{ data?.cancelText || 'No' }}
+        </button>
+        <button type="button"
+                class="btn"
+                [ngClass]="{
+                  'btn-danger': data?.type === 'danger',
+                  'btn-warning': data?.type === 'warning',
+                  'btn-primary': data?.type === 'info' || !data?.type
+                }"
+                (click)="onConfirm()">
+          {{ data?.confirmText || 'Yes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
