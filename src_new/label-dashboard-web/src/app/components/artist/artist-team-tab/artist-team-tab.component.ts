@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface TeamMember {
   id: number;
@@ -28,7 +29,10 @@ export class ArtistTeamTabComponent {
   inviteEmail = '';
   sendingInvite = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private confirmationService: ConfirmationService
+  ) {}
 
   ngOnInit(): void {
     if (this.artist) {
@@ -154,10 +158,18 @@ export class ArtistTeamTabComponent {
     });
   }
 
-  removeMember(member: TeamMember): void {
+  async removeMember(member: TeamMember): Promise<void> {
     if (!this.artist) return;
 
-    if (!confirm(`Are you sure you want to remove ${member.name} from the team?`)) {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Remove Team Member',
+      message: `Are you sure you want to remove ${member.name} from the team?`,
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
+
+    if (!confirmed) {
       return;
     }
 

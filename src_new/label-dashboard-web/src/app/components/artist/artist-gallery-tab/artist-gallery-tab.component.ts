@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
 import { LightboxComponent } from '../../shared/lightbox/lightbox.component';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface ArtistPhoto {
   id: number;
@@ -39,7 +40,10 @@ export class ArtistGalleryTabComponent {
   lightboxImageAlt = '';
   lightboxCaption = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private confirmationService: ConfirmationService
+  ) {}
 
   ngOnInit(): void {
     if (this.artist) {
@@ -220,10 +224,18 @@ export class ArtistGalleryTabComponent {
     });
   }
 
-  deletePhoto(photo: ArtistPhoto): void {
+  async deletePhoto(photo: ArtistPhoto): Promise<void> {
     if (!this.artist) return;
 
-    if (!confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Photo',
+      message: 'Are you sure you want to delete this photo? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -298,10 +310,18 @@ export class ArtistGalleryTabComponent {
     this.openLightbox(photo);
   }
 
-  setAsProfilePhoto(photo: ArtistPhoto): void {
+  async setAsProfilePhoto(photo: ArtistPhoto): Promise<void> {
     if (!this.artist) return;
 
-    if (!confirm('Set this photo as the profile photo?')) {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Set Profile Photo',
+      message: 'Set this photo as the profile photo?',
+      confirmText: 'Yes',
+      cancelText: 'No',
+      type: 'info'
+    });
+
+    if (!confirmed) {
       return;
     }
 

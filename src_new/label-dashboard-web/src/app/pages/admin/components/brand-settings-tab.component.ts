@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { AdminService, BrandSettings, DomainVerificationState, DomainVerificationEvent, SublabelCreationState } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { BrandService } from '../../../services/brand.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 @Component({
     selector: 'app-brand-settings-tab',
@@ -27,7 +28,8 @@ export class BrandSettingsTabComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private fb: FormBuilder,
     private notificationService: NotificationService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private confirmationService: ConfirmationService
   ) {
     this.brandForm = this.fb.group({
       name: ['', Validators.required],
@@ -247,18 +249,26 @@ export class BrandSettingsTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  deleteDomain(domainName: string): void {
-    if (confirm(`Are you sure you want to delete domain "${domainName}"?`)) {
-      this.adminService.deleteDomain(domainName).subscribe({
-        next: () => {
-          this.loadDomains();
-          this.notificationService.showSuccess('Domain deleted successfully');
-        },
-        error: (error) => {
-          this.notificationService.showError('Error deleting domain');
-        }
-      });
-    }
+  async deleteDomain(domainName: string): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Domain',
+      message: `Are you sure you want to delete domain "${domainName}"?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) return;
+
+    this.adminService.deleteDomain(domainName).subscribe({
+      next: () => {
+        this.loadDomains();
+        this.notificationService.showSuccess('Domain deleted successfully');
+      },
+      error: (error) => {
+        this.notificationService.showError('Error deleting domain');
+      }
+    });
   }
 
   verifyDomain(domainName: string): void {

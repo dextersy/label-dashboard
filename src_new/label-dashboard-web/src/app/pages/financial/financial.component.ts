@@ -18,6 +18,7 @@ import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
+import { ConfirmationService } from '../../services/confirmation.service';
 import { DateRangeSelection } from '../../components/shared/date-range-filter/date-range-filter.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
@@ -234,7 +235,8 @@ export class FinancialComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private adminService: AdminService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -682,9 +684,15 @@ export class FinancialComponent implements OnInit, OnDestroy {
   async onDeleteDocument(documentId: number): Promise<void> {
     if (!this.selectedArtist) return;
 
-    if (!confirm('Are you sure you want to delete this document?')) {
-      return;
-    }
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Document',
+      message: 'Are you sure you want to delete this document?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) return;
 
     try {
       await this.financialService.deleteDocument(this.selectedArtist.id, documentId);

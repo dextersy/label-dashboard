@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, User, LoginAttempt } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
@@ -54,7 +55,8 @@ export class UsersTabComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -187,17 +189,25 @@ export class UsersTabComponent implements OnInit {
     });
   }
 
-  cancelInvite(userId: number): void {
-    if (confirm('Are you sure you want to cancel this admin invitation?')) {
-      this.adminService.cancelAdminInvite(userId).subscribe({
-        next: () => {
-          this.notificationService.showSuccess('Admin invitation cancelled successfully');
-          this.loadUsers(this.usersPagination?.current_page || 1);
-        },
-        error: (error) => {
-          this.notificationService.showError(error.error?.error || 'Failed to cancel invitation');
-        }
-      });
-    }
+  async cancelInvite(userId: number): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Cancel Admin Invitation',
+      message: 'Are you sure you want to cancel this admin invitation?',
+      confirmText: 'Cancel Invitation',
+      cancelText: 'Keep Invitation',
+      type: 'warning'
+    });
+
+    if (!confirmed) return;
+
+    this.adminService.cancelAdminInvite(userId).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Admin invitation cancelled successfully');
+        this.loadUsers(this.usersPagination?.current_page || 1);
+      },
+      error: (error) => {
+        this.notificationService.showError(error.error?.error || 'Failed to cancel invitation');
+      }
+    });
   }
 }

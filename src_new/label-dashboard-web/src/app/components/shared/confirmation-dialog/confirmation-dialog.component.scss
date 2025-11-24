@@ -1,0 +1,23 @@
+// Modal backdrop and dialog styles
+.modal-backdrop {
+  z-index: 1050;
+}
+
+.modal {
+  z-index: 1060;
+}
+
+.modal-dialog {
+  max-width: 500px;
+}
+
+.modal-body p {
+  margin-bottom: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+// Ensure proper contrast for warning header
+.modal-header.bg-warning {
+  color: #000;
+}

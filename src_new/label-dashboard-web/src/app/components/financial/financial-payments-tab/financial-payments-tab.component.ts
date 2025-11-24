@@ -6,6 +6,7 @@ import { Payment, PaymentMethod, PayoutSettings } from '../../../pages/financial
 import { PaymentsTableComponent } from '../payments-table/payments-table.component';
 import { PaginationInfo, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 @Component({
     selector: 'app-financial-payments-tab',
@@ -34,7 +35,11 @@ export class FinancialPaymentsTabComponent {
   isAdmin = false;
   isAddPaymentMethodCollapsed = true;
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private confirmationService: ConfirmationService
+  ) {}
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe(user => {
@@ -54,9 +59,17 @@ export class FinancialPaymentsTabComponent {
   }
 
   async deletePaymentMethod(paymentMethodId: number): Promise<void> {
-    if (confirm('Are you sure you want to delete this payment method?')) {
-      await this.onDeletePaymentMethod(paymentMethodId);
-    }
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Payment Method',
+      message: 'Are you sure you want to delete this payment method?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) return;
+
+    await this.onDeletePaymentMethod(paymentMethodId);
   }
 
   async setDefaultPaymentMethod(paymentMethodId: number): Promise<void> {
