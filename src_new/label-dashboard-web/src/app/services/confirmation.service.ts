@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 export interface ConfirmationDialogData {
   title: string;
@@ -29,8 +29,16 @@ export class ConfirmationService {
 
   /**
    * Show a confirmation dialog and return a promise that resolves to true/false
+   * If a dialog is already open, the previous promise will be resolved as false (cancelled)
    */
   confirm(data: ConfirmationDialogData): Promise<boolean> {
+    // Resolve any pending promise with false before opening a new dialog
+    // This prevents memory leaks and unresolved promises
+    const currentState = this.dialogStateSubject.value;
+    if (currentState.resolve && currentState.isVisible) {
+      currentState.resolve(false);
+    }
+
     return new Promise((resolve) => {
       this.dialogStateSubject.next({
         isVisible: true,
