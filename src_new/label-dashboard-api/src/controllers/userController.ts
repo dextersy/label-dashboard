@@ -413,22 +413,21 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         'email_address': 'u.email_address',
         'first_name': 'u.first_name',
         'last_name': 'u.last_name',
-        'is_admin': 'u.is_admin',
-        'username': 'u.username'
+        'is_admin': 'u.is_admin'
       };
 
-      // Only process string keys that are actual column filters (not brand_id)
-      // Note: Object.keys() only returns string keys, not Symbol keys like Op.or
+      // SECURITY: Only process keys that exist in our column mapping
+      // This explicitly filters for valid columns and excludes:
+      // - brand_id (used in WHERE clause separately)
+      // - username (handled separately in WHERE clause)
+      // - Symbol keys like Op.or (Object.keys() won't return them anyway)
       const filterKeys = Object.keys(whereCondition).filter(key => 
-        key !== 'brand_id'
+        key in columnMapping
       );
 
       filterKeys.forEach(key => {
-          // SECURITY: Only process keys that exist in our mapping
+          // At this point, we know the key exists in columnMapping due to the filter above
           const columnName = columnMapping[key];
-          if (!columnName) {
-            return; // Skip invalid columns
-          }
 
           const value = whereCondition[key];
           if (key === 'is_admin') {
