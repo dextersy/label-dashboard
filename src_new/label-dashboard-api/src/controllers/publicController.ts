@@ -1,16 +1,23 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song } from '../models';
 import { PaymentService } from '../utils/paymentService';
-import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
-import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import AWS from 'aws-sdk';
 
+// Configure AWS S3
+AWS.config.update({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  region: process.env.S3_REGION
+});
+
+const s3 = new AWS.S3();
 const paymentService = new PaymentService();
 
 // Helper function to extract domain from request
@@ -2053,13 +2060,21 @@ export const getArtistEPK = async (req: Request, res: Response) => {
 
     // Get artist's releases using the proper many-to-many relationship
     const releases = await Release.findAll({
-      include: [{
-        model: Artist,
-        as: 'artists',
-        where: { id: artistId },
-        attributes: [],
-        through: { attributes: [] } // Don't include junction table data
-      }],
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          where: { id: artistId },
+          attributes: [],
+          through: { attributes: [] } // Don't include junction table data
+        },
+        {
+          model: Song,
+          as: 'songs',
+          attributes: ['id', 'title', 'track_number', 'audio_file'],
+          required: false // LEFT JOIN - include releases even without songs
+        }
+      ],
       attributes: [
         'id',
         'title',
@@ -2070,7 +2085,10 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'apple_music_link',
         'youtube_link'
       ],
-      order: [['release_date', 'DESC']]
+      order: [
+        ['release_date', 'DESC'],
+        [{ model: Song, as: 'songs' }, 'track_number', 'ASC']
+      ]
     });
 
     // Format the response
@@ -2114,7 +2132,13 @@ export const getArtistEPK = async (req: Request, res: Response) => {
           youtube: release.youtube_link,
           soundcloud: null,
           bandcamp: null
-        }
+        },
+        songs: (release as any).songs?.map((song: any) => ({
+          id: song.id,
+          title: song.title,
+          track_number: song.track_number,
+          has_audio: !!song.audio_file
+        })) || []
       }))
     };
 
@@ -2272,5 +2296,195 @@ ${JSON.stringify(structuredData, null, 4)}
   } catch (error) {
     console.error('Generate artist EPK SEO page error:', error);
     res.status(500).send('Internal server error');
+  }
+};
+
+// Stream audio for public EPK (no authentication required, but validated against artist/brand)
+export const streamPublicAudio = async (req: Request, res: Response) => {
+  try {
+    const songId = parseInt(req.params.songId, 10);
+    const artistId = parseInt(req.params.artistId, 10);
+
+    if (isNaN(songId) || isNaN(artistId)) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
+
+    // Find song and verify it belongs to a release associated with the specified artist
+    // Also get the artist's brand and domains for CORS validation
+    const song = await Song.findOne({
+      where: { id: songId },
+      include: [
+        {
+          model: Release,
+          as: 'release',
+          required: true,
+          attributes: ['id', 'title', 'brand_id'], // Include brand_id for validation
+          include: [
+            {
+              model: Artist,
+              as: 'artists',
+              where: { id: artistId },
+              attributes: ['id', 'name', 'brand_id'], // Include brand_id for validation
+              through: { attributes: [] },
+              include: [
+                {
+                  model: Brand,
+                  as: 'brand',
+                  attributes: ['id'],
+                  include: [
+                    {
+                      model: Domain,
+                      as: 'domains',
+                      attributes: ['domain_name']
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found or does not belong to this artist' });
+    }
+
+    if (!song.audio_file) {
+      return res.status(404).json({ error: 'No audio file available for this song' });
+    }
+
+    // SECURITY: Verify the release belongs to the same brand as the artist
+    const artist = (song as any).release?.artists?.[0];
+    const release = (song as any).release;
+    
+    if (!artist || !release) {
+      return res.status(404).json({ error: 'Song not found or does not belong to this artist' });
+    }
+    
+    if (artist.brand_id !== release.brand_id) {
+      return res.status(403).json({ error: 'Access denied - brand mismatch' });
+    }
+
+    // Validate request domain against artist's brand domains
+    const artistBrandDomains = artist.brand.domains?.map((d: any) => d.domain_name) || [];
+    
+    if (!requestDomain || !artistBrandDomains.includes(requestDomain)) {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(403).json({ error: 'Access denied from this domain' });
+    }
+
+    // Get audio file from S3
+    // Validate S3 configuration before attempting to stream
+    if (!process.env.S3_BUCKET_MASTERS || !process.env.S3_ACCESS_KEY || !process.env.S3_SECRET_KEY || !process.env.S3_REGION) {
+      console.error('S3 configuration missing - check environment variables');
+      return res.status(500).json({ error: 'Audio streaming service unavailable' });
+    }
+
+    const params = {
+      Bucket: process.env.S3_BUCKET_MASTERS,
+      Key: song.audio_file
+    };
+
+    // Get file metadata first (this validates the file exists before we commit to streaming)
+    let headData;
+    try {
+      headData = await s3.headObject(params).promise();
+    } catch (s3Error: any) {
+      console.error('S3 headObject error:', s3Error);
+      // Check for common S3 errors
+      if (s3Error.code === 'NoSuchKey') {
+        return res.status(404).json({ error: 'Audio file not found' });
+      } else if (s3Error.code === 'Forbidden' || s3Error.code === 'AccessDenied') {
+        console.error('S3 access denied - check AWS credentials and permissions');
+        return res.status(500).json({ error: 'Audio streaming service unavailable' });
+      }
+      // Other S3 errors
+      return res.status(500).json({ error: 'Failed to access audio file' });
+    }
+
+    const fileSize = headData.ContentLength || 0;
+    const contentType = headData.ContentType || 'audio/wav'; // Default to audio/mpeg if not specified
+
+    // SECURITY: Use the already-validated requestDomain for CORS
+    // requestDomain was validated against artistBrandDomains earlier
+    // Construct proper origin URL for CORS header (browsers expect full origin, not just hostname)
+    const origin = req.get('origin') || `https://${requestDomain}`;
+
+    // Set base response headers for streaming (but don't expose filename to prevent easy downloads)
+    res.set({
+      'Content-Type': contentType,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      // Set CORS headers using validated domain
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type, Range'
+    });
+
+    // Handle range requests for seeking and resuming interrupted downloads
+    const range = req.headers.range;
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      // SECURITY: Validate range values to prevent invalid requests
+      if (isNaN(start) || isNaN(end) || start < 0 || end >= fileSize || start > end) {
+        return res.status(416).set('Content-Range', `bytes */${fileSize}`).end();
+      }
+
+      const chunkSize = (end - start) + 1;
+
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Content-Length', chunkSize);
+
+      const fileStream = s3.getObject({
+        ...params,
+        Range: `bytes=${start}-${end}`
+      }).createReadStream();
+
+      fileStream.on('error', (error: any) => {
+        console.error('S3 streaming error:', error);
+        if (!res.headersSent) {
+          res.status(500).end();
+        } else {
+          res.end();
+        }
+      });
+
+      fileStream.pipe(res);
+    } else {
+      // Stream entire file
+      res.setHeader('Content-Length', fileSize.toString());
+
+      const fileStream = s3.getObject(params).createReadStream();
+      
+      fileStream.on('error', (error: any) => {
+        console.error('S3 streaming error:', error);
+        if (!res.headersSent) {
+          res.status(500).end();
+        } else {
+          res.end();
+        }
+      });
+
+      fileStream.pipe(res);
+    }
+  } catch (error) {
+    console.error('Stream public audio error:', error);
+    // Only send JSON error if headers haven't been sent yet
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      // Headers already sent, just end the response
+      res.end();
+    }
   }
 };

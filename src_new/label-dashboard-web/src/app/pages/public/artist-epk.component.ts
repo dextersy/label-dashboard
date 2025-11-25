@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { PublicService } from '../../services/public.service';
 import { MetaService } from '../../services/meta.service';
+import { environment } from '../../../environments/environment';
 
 export interface ArtistEPK {
   artist: {
@@ -50,6 +51,12 @@ export interface ArtistEPK {
       soundcloud?: string;
       bandcamp?: string;
     };
+    songs?: Array<{
+      id: number;
+      title: string;
+      track_number?: number;
+      has_audio: boolean;
+    }>;
   }>;
 }
 
@@ -72,6 +79,17 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   lightboxOpen = false;
   currentImageIndex = 0;
   galleryImages: Array<{url: string, caption?: string}> = [];
+
+  // Audio player properties
+  playingReleaseId: number | null = null;
+  playingSongIndex: number = 0;
+  private audioElement: HTMLAudioElement | null = null;
+  private currentBlobUrl: string | null = null;
+  private isLoadingAudio: boolean = false;
+  private isPaused: boolean = false;
+  private audioEndedHandler: (() => void) | null = null;
+  private audioErrorHandler: ((e: Event) => void) | null = null;
+  private currentAbortController: AbortController | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -104,6 +122,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // Clean up audio resources properly (removes event listeners to prevent memory leaks)
+    this.cleanupAudio();
+    
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -344,5 +365,229 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       return this.previewTemplate;
     }
     return this.epkData?.artist.epk_template || 1;
+  }
+
+  // Audio player methods
+  releaseHasAudio(release: any): boolean {
+    return release.songs && release.songs.length > 0 && release.songs.some((s: any) => s.has_audio);
+  }
+
+  isReleasePlaying(release: any): boolean {
+    return this.playingReleaseId === release.id && !this.isPaused && !this.isLoadingAudio;
+  }
+
+  isReleasePaused(release: any): boolean {
+    return this.playingReleaseId === release.id && this.isPaused;
+  }
+
+  isReleaseLoading(release: any): boolean {
+    return this.playingReleaseId === release.id && this.isLoadingAudio;
+  }
+
+  togglePlayRelease(release: any): void {
+    if (!this.releaseHasAudio(release)) return;
+
+    // If already playing this release, pause/resume it
+    if (this.playingReleaseId === release.id) {
+      if (this.isPaused && this.audioElement) {
+        // Resume playback
+        this.audioElement.play();
+        this.isPaused = false;
+      } else if (this.audioElement) {
+        // Pause playback
+        this.audioElement.pause();
+        this.isPaused = true;
+      }
+    } else {
+      // Stop current audio if playing different release
+      if (this.audioElement) {
+        this.stopAudio();
+      }
+      // Find first track with audio
+      const firstSongIndex = release.songs.findIndex((song: any) => song.has_audio);
+      if (firstSongIndex === -1) return; // Should not happen due to releaseHasAudio check
+      
+      this.playingReleaseId = release.id;
+      this.playingSongIndex = firstSongIndex;
+      this.isPaused = false;
+      this.playAudio(release.songs[firstSongIndex]);
+    }
+  }
+
+  private async playAudio(song: any): Promise<void> {
+    if (!song || !song.has_audio || !this.epkData) return;
+
+    // Prevent concurrent loading attempts
+    if (this.isLoadingAudio) return;
+    this.isLoadingAudio = true;
+
+    // Clean up previous audio (this will abort any in-flight requests)
+    this.cleanupAudio();
+
+    // Create new abort controller for this request (after cleanup)
+    this.currentAbortController = new AbortController();
+    const signal = this.currentAbortController.signal;
+
+    try {
+      // Fetch audio as blob to prevent direct downloads
+      const response = await fetch(
+        `${environment.apiUrl}/public/epk/${this.epkData.artist.id}/audio/${song.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'audio/wav, audio/*'
+          },
+          signal // Attach abort signal to request
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Audio fetch failed:', response.status, errorText);
+        throw new Error(`Failed to fetch audio: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      
+      // Check if request was aborted before creating blob URL
+      if (signal.aborted) {
+        this.isLoadingAudio = false;
+        return;
+      }
+      
+      this.currentBlobUrl = URL.createObjectURL(blob);
+
+      // Check again after creating blob URL in case abort happened during URL creation
+      if (signal.aborted) {
+        URL.revokeObjectURL(this.currentBlobUrl);
+        this.currentBlobUrl = null;
+        this.isLoadingAudio = false;
+        return;
+      }
+
+      // Create and play audio element
+      this.audioElement = new Audio(this.currentBlobUrl);
+      
+      // Store event handlers for proper cleanup
+      this.audioEndedHandler = () => this.onAudioEnded();
+      this.audioErrorHandler = (e) => {
+        console.error('Audio element error:', e);
+        this.onAudioError();
+      };
+      
+      this.audioElement.addEventListener('ended', this.audioEndedHandler);
+      this.audioElement.addEventListener('error', this.audioErrorHandler);
+      
+      await this.audioElement.play().catch(err => {
+        console.error('Play failed:', err);
+        throw err;
+      });
+
+      this.currentAbortController = null; // Clear controller after successful load
+      this.isLoadingAudio = false;
+    } catch (error) {
+      // Check if error is due to abort
+      if (error instanceof Error && error.name === 'AbortError') {
+        this.isLoadingAudio = false;
+        return;
+      }
+      
+      // Clean up any partially created resources (blob URL, event listeners, etc.)
+      this.cleanupAudio();
+      
+      console.error('Error playing audio:', error);
+      this.playingReleaseId = null;
+      this.isLoadingAudio = false;
+    }
+  }
+
+  private cleanupAudio(): void {
+    // Abort any in-flight fetch requests
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      this.currentAbortController = null;
+    }
+    
+    // Remove event listeners to prevent memory leaks
+    if (this.audioElement && this.audioEndedHandler) {
+      this.audioElement.removeEventListener('ended', this.audioEndedHandler);
+      this.audioEndedHandler = null;
+    }
+    if (this.audioElement && this.audioErrorHandler) {
+      this.audioElement.removeEventListener('error', this.audioErrorHandler);
+      this.audioErrorHandler = null;
+    }
+    
+    // Clean up blob URL
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
+    }
+    
+    // Clean up audio element
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
+    }
+  }
+
+  private stopAudio(): void {
+    // Clean up all audio resources (event listeners, blob URLs, etc.)
+    this.cleanupAudio();
+    this.playingReleaseId = null;
+    this.isPaused = false;
+  }
+
+  private async onAudioEnded(): Promise<void> {
+    // Auto-play next track if available
+    const currentRelease = this.epkData?.releases.find(r => r.id === this.playingReleaseId);
+    if (!currentRelease || !currentRelease.songs) {
+      this.playingReleaseId = null;
+      return;
+    }
+
+    // Store the release ID to check if playback was cancelled during async operations
+    const currentReleaseId = currentRelease.id;
+
+    // Find next song with audio
+    let nextIndex = this.playingSongIndex + 1;
+    while (nextIndex < currentRelease.songs.length) {
+      // Check if playback was stopped/cancelled while we were in the loop
+      if (this.playingReleaseId !== currentReleaseId) {
+        return;
+      }
+
+      const nextSong = currentRelease.songs[nextIndex];
+      if (nextSong.has_audio) {
+        this.playingSongIndex = nextIndex;
+        try {
+          await this.playAudio(nextSong);
+          
+          // Check again after async playAudio completes
+          if (this.playingReleaseId !== currentReleaseId) {
+            return;
+          }
+        } catch (error) {
+          console.error('Error auto-playing next track:', error);
+          // playAudio already resets isLoadingAudio on error, just stop playback
+          this.playingReleaseId = null;
+          this.playingSongIndex = 0;
+        }
+        return;
+      }
+      nextIndex++;
+    }
+
+    // No more songs with audio
+    this.playingReleaseId = null;
+    this.playingSongIndex = 0;
+  }
+
+  private onAudioError(): void {
+    console.error('Audio playback error');
+    // Clean up resources to prevent memory leaks
+    this.cleanupAudio();
+    this.playingReleaseId = null;
+    this.isLoadingAudio = false; // Reset loading flag to allow retry
   }
 }
