@@ -449,18 +449,18 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
       const additionalFilters = filterConditions.join(' ');
 
-      // Build username filter condition that only applies to users with usernames
-      let usernameFilterCondition = '';
-      if (usernameFilter && usernameFilter.trim() !== '') {
-        usernameFilterCondition = 'AND u.username LIKE ?';
-        filterReplacements.push(`%${usernameFilter}%`);
-      }
-
       // Build WHERE clause based on filter state to match ORM path logic
       // When ANY filter is applied, exclude pending invites
       let whereClause = '';
       if (hasAnyFilter) {
         // When filters are applied, only show regular users (exclude pending invites)
+        // Apply username filter if present
+        let usernameFilterCondition = '';
+        if (usernameFilter && usernameFilter.trim() !== '') {
+          usernameFilterCondition = 'AND u.username LIKE ?';
+          filterReplacements.push(`%${usernameFilter}%`);
+        }
+        
         whereClause = `
           WHERE u.brand_id = ?
             AND u.username != '' 
@@ -470,10 +470,11 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         `;
       } else {
         // When no filters, show both regular users and pending invites
+        // No username filter needed here since hasAnyFilter would be true if it existed
         whereClause = `
           WHERE u.brand_id = ?
             AND (
-              (u.username != '' AND u.username IS NOT NULL ${usernameFilterCondition})
+              (u.username != '' AND u.username IS NOT NULL)
               OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
             )
             ${additionalFilters}
