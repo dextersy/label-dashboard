@@ -460,15 +460,21 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const nextIndex = this.playingSongIndex + 1;
-    if (nextIndex < currentRelease.songs.length) {
-      this.playingSongIndex = nextIndex;
-      this.playAudio(currentRelease.songs[nextIndex]);
-    } else {
-      // End of album
-      this.playingReleaseId = null;
-      this.playingSongIndex = 0;
+    // Find next song with audio
+    let nextIndex = this.playingSongIndex + 1;
+    while (nextIndex < currentRelease.songs.length) {
+      const nextSong = currentRelease.songs[nextIndex];
+      if (nextSong.has_audio) {
+        this.playingSongIndex = nextIndex;
+        this.playAudio(nextSong);
+        return;
+      }
+      nextIndex++;
     }
+
+    // No more songs with audio
+    this.playingReleaseId = null;
+    this.playingSongIndex = 0;
   }
 
   private onAudioError(): void {
