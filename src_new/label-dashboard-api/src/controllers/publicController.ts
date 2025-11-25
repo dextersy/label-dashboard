@@ -2396,9 +2396,21 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     // SECURITY: Validate origin header against brand domains before setting CORS
     // Only allow CORS from validated brand domains to prevent bandwidth theft
     const origin = req.get('origin') || '';
-    const originHostname = origin ? new URL(origin).hostname : '';
-    const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
-    const isOriginValid = artistBrandDomains.includes(originHostname);
+    let originHostname = '';
+    let isOriginValid = false;
+    
+    if (origin) {
+      try {
+        // Parse origin URL safely - malformed URLs will be caught and treated as invalid
+        originHostname = new URL(origin).hostname;
+        const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
+        isOriginValid = artistBrandDomains.includes(originHostname);
+      } catch (error) {
+        // Malformed origin header - treat as invalid origin (fail securely)
+        console.warn('Invalid origin header:', origin);
+        isOriginValid = false;
+      }
+    }
 
     // Set base response headers for streaming (but don't expose filename to prevent easy downloads)
     res.set({
