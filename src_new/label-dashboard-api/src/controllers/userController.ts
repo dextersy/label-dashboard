@@ -322,8 +322,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         {
           // Pending invites (could be admin or had admin removed)
           [Op.or]: [
-            { username: { [Op.eq]: '' } },
-            { username: { [Op.is]: null } }
+            { username: '' },
+            { username: null }
           ],
           reset_hash: {
             [Op.not]: null
@@ -399,12 +399,18 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         'email_address': 'u.email_address',
         'first_name': 'u.first_name',
         'last_name': 'u.last_name',
-        'is_admin': 'u.is_admin'
+        'is_admin': 'u.is_admin',
+        'username': 'u.username'
       };
 
       Object.keys(whereCondition)
-        .filter(key => key !== 'brand_id' && key !== 'username')
+        .filter(key => key !== 'brand_id')
         .forEach(key => {
+          // Skip Op.or key as it's part of the base WHERE condition
+          if (key === Op.or.toString()) {
+            return;
+          }
+
           // SECURITY: Only process keys that exist in our mapping
           const columnName = columnMapping[key];
           if (!columnName) {
@@ -421,6 +427,12 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
             filterReplacements.push(`%${likeValue}%`);
           }
         });
+
+      // Handle username filter specially for raw SQL path
+      if (usernameFilter && usernameFilter.trim() !== '') {
+        filterConditions.push(`AND u.username LIKE ?`);
+        filterReplacements.push(`%${usernameFilter}%`);
+      }
 
       const additionalFilters = filterConditions.join(' ');
 
