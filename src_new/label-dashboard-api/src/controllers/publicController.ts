@@ -2370,16 +2370,11 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     }
 
     // Validate request domain against artist's brand domains
-    if (artist?.brand?.domains && requestDomain) {
-      const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = artistBrandDomains.includes(requestDomain);
-      
-      if (!isDomainValid) {
-        return res.status(403).json({ error: 'Access denied from this domain' });
-      }
-    } else {
+    const artistBrandDomains = artist.brand.domains?.map((d: any) => d.domain_name) || [];
+    
+    if (!requestDomain || !artistBrandDomains.includes(requestDomain)) {
       // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: 'Access denied from this domain' });
     }
 
     // Get audio file from S3
@@ -2414,24 +2409,10 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     const fileSize = headData.ContentLength || 0;
     const contentType = headData.ContentType || 'audio/wav'; // Default to audio/mpeg if not specified
 
-    // SECURITY: Validate origin header against brand domains before setting CORS
-    // Only allow CORS from validated brand domains to prevent bandwidth theft
-    const origin = req.get('origin') || '';
-    let originHostname = '';
-    let isOriginValid = false;
-    
-    if (origin) {
-      try {
-        // Parse origin URL safely - malformed URLs will be caught and treated as invalid
-        originHostname = new URL(origin).hostname;
-        const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
-        isOriginValid = artistBrandDomains.includes(originHostname);
-      } catch (error) {
-        // Malformed origin header - treat as invalid origin (fail securely)
-        console.warn('Invalid origin header:', origin);
-        isOriginValid = false;
-      }
-    }
+    // SECURITY: Use the already-validated requestDomain for CORS
+    // requestDomain was validated against artistBrandDomains earlier
+    // Construct proper origin URL for CORS header (browsers expect full origin, not just hostname)
+    const origin = req.get('origin') || `https://${requestDomain}`;
 
     // Set base response headers for streaming (but don't expose filename to prevent easy downloads)
     res.set({
@@ -2440,12 +2421,10 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       'Cache-Control': 'no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
-      // Only set CORS headers if origin is from a validated brand domain
-      ...(isOriginValid && {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'GET',
-        'Access-Control-Allow-Headers': 'Content-Type, Range'
-      })
+      // Set CORS headers using validated domain
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type, Range'
     });
 
     // Handle range requests for seeking and resuming interrupted downloads
