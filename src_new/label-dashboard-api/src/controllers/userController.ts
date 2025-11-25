@@ -407,11 +407,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         'username': 'u.username'
       };
 
-      // Only process string keys that are actual column filters (not brand_id or Symbol keys)
+      // Only process string keys that are actual column filters (not brand_id)
+      // Note: Object.keys() only returns string keys, not Symbol keys like Op.or
       const filterKeys = Object.keys(whereCondition).filter(key => 
-        key !== 'brand_id' && 
-        typeof key === 'string' &&
-        !key.startsWith('Symbol(')
+        key !== 'brand_id'
       );
 
       filterKeys.forEach(key => {
@@ -434,23 +433,31 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
       const additionalFilters = filterConditions.join(' ');
 
-      // Build username filter condition for SQL
-      let usernameFilterCondition = '';
+      // Build WHERE clause to match ORM path logic
+      let whereClause = '';
       if (usernameFilter && usernameFilter.trim() !== '') {
-        usernameFilterCondition = 'AND u.username LIKE ?';
+        // When username filter is applied, exclude pending invites (only search actual usernames)
+        const usernameFilterCondition = 'AND u.username LIKE ?';
         filterReplacements.push(`%${usernameFilter}%`);
+        
+        whereClause = `
+          WHERE u.brand_id = ?
+            AND u.username != '' 
+            AND u.username IS NOT NULL
+            ${usernameFilterCondition}
+            ${additionalFilters}
+        `;
+      } else {
+        // When no username filter, include both regular users and pending invites
+        whereClause = `
+          WHERE u.brand_id = ?
+            AND (
+              (u.username != '' AND u.username IS NOT NULL)
+              OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
+            )
+            ${additionalFilters}
+        `;
       }
-
-      // Build WHERE clause - always include both regular users and pending invites
-      // Filters will naturally exclude non-matching records (e.g., username filter won't match empty usernames)
-      const whereClause = `
-        WHERE u.brand_id = ?
-          AND (
-            (u.username != '' AND u.username IS NOT NULL ${usernameFilterCondition})
-            OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
-          )
-          ${additionalFilters}
-      `;
 
       // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
