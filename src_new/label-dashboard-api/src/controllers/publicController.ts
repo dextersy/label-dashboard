@@ -2379,12 +2379,13 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     // Get file metadata first (this validates the file exists before we commit to streaming)
     const headData = await s3.headObject(params).promise();
     const fileSize = headData.ContentLength || 0;
+    const contentType = headData.ContentType || 'audio/wav'; // Default to audio/mpeg if not specified
 
     // Set response headers for streaming (but don't expose filename to prevent easy downloads)
     // Use validated origin for CORS instead of wildcard to prevent bandwidth theft
     const origin = req.get('origin') || '';
     res.set({
-      'Content-Type': 'audio/wav',
+      'Content-Type': contentType,
       'Content-Length': fileSize.toString(),
       'Accept-Ranges': 'bytes',
       'Cache-Control': 'no-store, must-revalidate',
