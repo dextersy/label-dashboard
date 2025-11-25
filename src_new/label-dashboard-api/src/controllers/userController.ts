@@ -307,10 +307,39 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     const sortBy = req.query.sortBy as string;
     const sortDirection = (req.query.sortDirection as string) || 'ASC';
 
-    // Build base where condition - include both regular users and pending invites
+    // Helper function to escape LIKE wildcards to prevent pattern injection
+    const escapeLikeWildcards = (value: string): string => {
+      return value.replace(/[%_]/g, '\\$&');
+    };
+
+    // Build base where condition
+    const usernameFilter = req.query.username as string;
     const whereCondition: any = {
-      brand_id: req.user.brand_id,
-      [Op.or]: [
+      brand_id: req.user.brand_id
+    };
+
+    // IMPORTANT: Username filter changes the base condition
+    // - With username filter: only search regular users (pending invites have no username to match)
+    // - Without username filter: include both regular users and pending invites
+    if (usernameFilter && usernameFilter.trim() !== '') {
+      // SECURITY: Escape LIKE wildcards (% and _) to prevent pattern injection
+      const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
+      
+      // Username filter: only search regular users with matching usernames
+      whereCondition[Op.or] = [
+        {
+          username: {
+            [Op.and]: [
+              { [Op.ne]: '' },
+              { [Op.not]: null },
+              { [Op.like]: `%${escapedUsername}%` }
+            ]
+          }
+        }
+      ];
+    } else {
+      // No username filter: include both regular users and pending invites
+      whereCondition[Op.or] = [
         {
           // Regular users with usernames
           username: {
@@ -327,40 +356,13 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
             [Op.not]: null
           }
         }
-      ]
-    };
-
-    // Helper function to escape LIKE wildcards to prevent pattern injection
-    const escapeLikeWildcards = (value: string): string => {
-      return value.replace(/[%_]/g, '\\$&');
-    };
-
-    // Add filters (removed last_logged_in as it's not filterable)
-    // Filters will naturally exclude pending invites that don't match (e.g., searching for username won't match empty usernames)
-    const filterableFields = ['first_name', 'last_name', 'email_address', 'is_admin'];
-    const usernameFilter = req.query.username as string;
-    
-    // Apply username filter if present
-    if (usernameFilter && usernameFilter.trim() !== '') {
-      // SECURITY: Escape LIKE wildcards (% and _) to prevent pattern injection
-      const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
-      
-      // Username filter: only search regular users with matching usernames
-      // Remove the pending invites branch since they have no usernames to match
-      whereCondition[Op.or] = [
-        {
-          username: {
-            [Op.and]: [
-              { [Op.ne]: '' },
-              { [Op.not]: null },
-              { [Op.like]: `%${escapedUsername}%` }
-            ]
-          }
-        }
       ];
     }
     
     // Apply other filters
+    // NOTE: These field filters are automatically ANDed with the Op.or condition above
+    // Sequelize combines top-level conditions with AND, creating: brand_id AND Op.or AND field1 AND field2...
+    const filterableFields = ['first_name', 'last_name', 'email_address', 'is_admin'];
     filterableFields.forEach(field => {
       const filterValue = req.query[field] as string;
       if (filterValue && filterValue.trim() !== '') {
@@ -452,7 +454,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         
         // When username filter is applied, exclude pending invites (only search actual usernames)
         // Use ESCAPE clause to tell MySQL that backslash is our escape character
-        const usernameFilterCondition = "AND u.username LIKE ? ESCAPE '\\\\'";
+        const usernameFilterCondition = "AND u.username LIKE ? ESCAPE '\\'";
         filterReplacements.push(`%${escapedUsername}%`);
         
         whereClause = `
@@ -475,8 +477,21 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       }
 
       // Use raw query with LEFT JOIN to properly sort by last login
+      // SECURITY: Compute has_pending_invite directly instead of selecting reset_hash
       const usersQuery = `
-        SELECT u.id, u.username, u.email_address, u.first_name, u.last_name, u.is_admin, u.reset_hash, la_max.last_logged_in
+        SELECT 
+          u.id, 
+          u.username, 
+          u.email_address, 
+          u.first_name, 
+          u.last_name, 
+          u.is_admin, 
+          la_max.last_logged_in,
+          CASE 
+            WHEN (u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL 
+            THEN 1 
+            ELSE 0 
+          END as has_pending_invite
         FROM user u
         LEFT JOIN (
           SELECT user_id, MAX(date_and_time) as last_logged_in
@@ -509,7 +524,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const count = (countResult[0] as any).total;
       const totalPages = Math.ceil(count / limit);
 
-      // Format users to match ORM path response structure and exclude sensitive fields
+      // Format users to match ORM path response structure
+      // has_pending_invite is computed in the SQL query, not here
       const formattedUsers = (rawUsers as any[]).map(user => ({
         id: user.id,
         username: user.username,
@@ -518,7 +534,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         last_name: user.last_name,
         is_admin: user.is_admin,
         last_logged_in: user.last_logged_in || null,
-        has_pending_invite: (!user.username || user.username === '') && !!user.reset_hash
+        has_pending_invite: !!user.has_pending_invite // Convert 1/0 to boolean
       }));
 
       res.json({
