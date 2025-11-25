@@ -86,6 +86,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   private audioElement: HTMLAudioElement | null = null;
   private currentBlobUrl: string | null = null;
   private isLoadingAudio: boolean = false;
+  private isPaused: boolean = false;
   private audioEndedHandler: (() => void) | null = null;
   private audioErrorHandler: ((e: Event) => void) | null = null;
 
@@ -376,16 +377,36 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     return release.songs && release.songs.length > 0 && release.songs.some((s: any) => s.has_audio);
   }
 
+  isReleasePlaying(release: any): boolean {
+    return this.playingReleaseId === release.id && !this.isPaused && !this.isLoadingAudio;
+  }
+
+  isReleasePaused(release: any): boolean {
+    return this.playingReleaseId === release.id && this.isPaused;
+  }
+
+  isReleaseLoading(release: any): boolean {
+    return this.playingReleaseId === release.id && this.isLoadingAudio;
+  }
+
   togglePlayRelease(release: any): void {
     if (!this.releaseHasAudio(release)) return;
 
-    // If already playing this release, pause it
+    // If already playing this release, pause/resume it
     if (this.playingReleaseId === release.id) {
-      this.pauseAudio();
+      if (this.isPaused && this.audioElement) {
+        // Resume playback
+        this.audioElement.play();
+        this.isPaused = false;
+      } else if (this.audioElement) {
+        // Pause playback
+        this.audioElement.pause();
+        this.isPaused = true;
+      }
     } else {
       // Stop current audio if playing different release
       if (this.audioElement) {
-        this.pauseAudio();
+        this.stopAudio();
       }
       // Find first track with audio
       const firstSongIndex = release.songs.findIndex((song: any) => song.has_audio);
@@ -393,6 +414,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       
       this.playingReleaseId = release.id;
       this.playingSongIndex = firstSongIndex;
+      this.isPaused = false;
       this.playAudio(release.songs[firstSongIndex]);
     }
   }
@@ -480,11 +502,12 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     }
   }
 
-  private pauseAudio(): void {
+  private stopAudio(): void {
     if (this.audioElement) {
       this.audioElement.pause();
     }
     this.playingReleaseId = null;
+    this.isPaused = false;
   }
 
   private async onAudioEnded(): Promise<void> {

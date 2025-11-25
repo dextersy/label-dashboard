@@ -87,9 +87,13 @@
                 <button 
                   *ngIf="releaseHasAudio(release)"
                   class="play-pause-btn"
+                  [class.paused]="isReleasePaused(release)"
+                  [class.loading]="isReleaseLoading(release)"
+                  [disabled]="isReleaseLoading(release)"
                   (click)="togglePlayRelease(release); $event.stopPropagation()"
-                  [attr.aria-label]="playingReleaseId === release.id ? 'Pause' : 'Play'">
-                  <i [class]="playingReleaseId === release.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+                  [attr.aria-label]="isReleaseLoading(release) ? 'Loading' : isReleasePlaying(release) ? 'Pause' : isReleasePaused(release) ? 'Resume' : 'Play'">
+                  <i *ngIf="!isReleaseLoading(release)" [class]="isReleasePlaying(release) ? 'fas fa-pause' : 'fas fa-play'"></i>
+                  <i *ngIf="isReleaseLoading(release)" class="fas fa-spinner fa-spin"></i>
                 </button>
                 
                 <div class="streaming-icons" *ngIf="getStreamingLinks(release).length > 0">
@@ -224,9 +228,13 @@
                   <button 
                     *ngIf="releaseHasAudio(release)"
                     class="play-pause-btn minimal"
+                    [class.paused]="isReleasePaused(release)"
+                    [class.loading]="isReleaseLoading(release)"
+                    [disabled]="isReleaseLoading(release)"
                     (click)="togglePlayRelease(release); $event.stopPropagation()"
-                    [attr.aria-label]="playingReleaseId === release.id ? 'Pause' : 'Play'">
-                    <i [class]="playingReleaseId === release.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+                    [attr.aria-label]="isReleaseLoading(release) ? 'Loading' : isReleasePlaying(release) ? 'Pause' : isReleasePaused(release) ? 'Resume' : 'Play'">
+                    <i *ngIf="!isReleaseLoading(release)" [class]="isReleasePlaying(release) ? 'fas fa-pause' : 'fas fa-play'"></i>
+                    <i *ngIf="isReleaseLoading(release)" class="fas fa-spinner fa-spin"></i>
                   </button>
                 </div>
               </div>
