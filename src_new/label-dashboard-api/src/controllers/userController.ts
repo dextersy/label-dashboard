@@ -307,17 +307,62 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     const sortBy = req.query.sortBy as string;
     const sortDirection = (req.query.sortDirection as string) || 'ASC';
 
-    // Build base where condition (exclude users with blank usernames)
-    const whereCondition: any = {
-      brand_id: req.user.brand_id,
-      username: {
-        [Op.ne]: '',
-        [Op.not]: null
-      }
+    // Helper function to escape LIKE wildcards to prevent pattern injection
+    const escapeLikeWildcards = (value: string): string => {
+      return value.replace(/[%_]/g, '\\$&');
     };
 
-    // Add filters (removed last_logged_in as it's not filterable)
-    const filterableFields = ['username', 'first_name', 'last_name', 'email_address', 'is_admin'];
+    // Build base where condition
+    const usernameFilter = req.query.username as string;
+    const whereCondition: any = {
+      brand_id: req.user.brand_id
+    };
+
+    // IMPORTANT: Username filter changes the base condition
+    // - With username filter: only search regular users (pending invites have no username to match)
+    // - Without username filter: include both regular users and pending invites
+    if (usernameFilter && usernameFilter.trim() !== '') {
+      // SECURITY: Escape LIKE wildcards (% and _) to prevent pattern injection
+      const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
+      
+      // Username filter: only search regular users with matching usernames
+      whereCondition[Op.or] = [
+        {
+          username: {
+            [Op.and]: [
+              { [Op.ne]: '' },
+              { [Op.not]: null },
+              { [Op.like]: `%${escapedUsername}%` }
+            ]
+          }
+        }
+      ];
+    } else {
+      // No username filter: include both regular users and pending invites
+      whereCondition[Op.or] = [
+        {
+          // Regular users with usernames
+          username: {
+            [Op.ne]: '',
+            [Op.not]: null
+          }
+        },
+        {
+          // Pending invites
+          username: {
+            [Op.or]: ['', null]
+          },
+          reset_hash: {
+            [Op.not]: null
+          }
+        }
+      ];
+    }
+    
+    // Apply other filters
+    // NOTE: These field filters are automatically ANDed with the Op.or condition above
+    // Sequelize combines top-level conditions with AND, creating: brand_id AND Op.or AND field1 AND field2...
+    const filterableFields = ['first_name', 'last_name', 'email_address', 'is_admin'];
     filterableFields.forEach(field => {
       const filterValue = req.query[field] as string;
       if (filterValue && filterValue.trim() !== '') {
@@ -325,9 +370,11 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           // Handle boolean filter
           whereCondition[field] = filterValue.toLowerCase() === 'true';
         } else {
+          // SECURITY: Escape LIKE wildcards to prevent pattern injection
+          const escapedValue = escapeLikeWildcards(filterValue.trim());
           // Handle text filters with partial matching
           whereCondition[field] = {
-            [Op.like]: `%${filterValue}%`
+            [Op.like]: `%${escapedValue}%`
           };
         }
       }
@@ -371,31 +418,80 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         'is_admin': 'u.is_admin'
       };
 
-      Object.keys(whereCondition)
-        .filter(key => key !== 'brand_id' && key !== 'username')
-        .forEach(key => {
-          // SECURITY: Only process keys that exist in our mapping
+      // SECURITY: Only process keys that exist in our column mapping
+      // This explicitly filters for valid columns and excludes:
+      // - brand_id (used in WHERE clause separately)
+      // - username (handled separately in WHERE clause)
+      // - Symbol keys like Op.or (Object.keys() won't return them anyway)
+      const filterKeys = Object.keys(whereCondition).filter(key => 
+        key in columnMapping
+      );
+
+      filterKeys.forEach(key => {
+          // At this point, we know the key exists in columnMapping due to the filter above
           const columnName = columnMapping[key];
-          if (!columnName) {
-            return; // Skip invalid columns
-          }
 
           const value = whereCondition[key];
           if (key === 'is_admin') {
             filterConditions.push(`AND ${columnName} = ?`);
             filterReplacements.push(value ? 1 : 0);
           } else if (typeof value === 'object' && value[Op.like]) {
-            const likeValue = value[Op.like].replace(/%/g, '');
-            filterConditions.push(`AND ${columnName} LIKE ?`);
-            filterReplacements.push(`%${likeValue}%`);
+            // SECURITY: Extract the escaped value (already escaped by escapeLikeWildcards earlier)
+            // The value is already in format %escapedValue%, just use it directly
+            // Use ESCAPE clause to tell MySQL that backslash is our escape character
+            filterConditions.push(`AND ${columnName} LIKE ? ESCAPE '\\'`);
+            filterReplacements.push(value[Op.like]);
           }
         });
 
       const additionalFilters = filterConditions.join(' ');
 
+      // Build WHERE clause to match ORM path logic
+      let whereClause = '';
+      if (usernameFilter && usernameFilter.trim() !== '') {
+        // SECURITY: Use the escaped username value (already escaped by escapeLikeWildcards earlier)
+        const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
+        
+        // When username filter is applied, exclude pending invites (only search actual usernames)
+        // Use ESCAPE clause to tell MySQL that backslash is our escape character
+        const usernameFilterCondition = "AND u.username LIKE ? ESCAPE '\\'";
+        filterReplacements.push(`%${escapedUsername}%`);
+        
+        whereClause = `
+          WHERE u.brand_id = ?
+            AND u.username != '' 
+            AND u.username IS NOT NULL
+            ${usernameFilterCondition}
+            ${additionalFilters}
+        `;
+      } else {
+        // When no username filter, include both regular users and pending invites
+        whereClause = `
+          WHERE u.brand_id = ?
+            AND (
+              (u.username != '' AND u.username IS NOT NULL)
+              OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
+            )
+            ${additionalFilters}
+        `;
+      }
+
       // Use raw query with LEFT JOIN to properly sort by last login
+      // SECURITY: Compute has_pending_invite directly instead of selecting reset_hash
       const usersQuery = `
-        SELECT u.*, la_max.last_logged_in
+        SELECT 
+          u.id, 
+          u.username, 
+          u.email_address, 
+          u.first_name, 
+          u.last_name, 
+          u.is_admin, 
+          la_max.last_logged_in,
+          CASE 
+            WHEN (u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL 
+            THEN 1 
+            ELSE 0 
+          END as has_pending_invite
         FROM user u
         LEFT JOIN (
           SELECT user_id, MAX(date_and_time) as last_logged_in
@@ -403,10 +499,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           WHERE status = 'Successful' AND brand_id = ?
           GROUP BY user_id
         ) la_max ON u.id = la_max.user_id
-        WHERE u.brand_id = ?
-          AND u.username != ''
-          AND u.username IS NOT NULL
-          ${additionalFilters}
+        ${whereClause}
         ${orderByClause}
         LIMIT ? OFFSET ?
       `;
@@ -414,13 +507,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const countQuery = `
         SELECT COUNT(*) as total
         FROM user u
-        WHERE u.brand_id = ?
-          AND u.username != ''
-          AND u.username IS NOT NULL
-          ${additionalFilters}
+        ${whereClause}
       `;
 
-      const [users, countResult] = await Promise.all([
+      const [rawUsers, countResult] = await Promise.all([
         sequelize.query(usersQuery, {
           replacements: [req.user.brand_id, req.user.brand_id, ...filterReplacements, limit, offset],
           type: QueryTypes.SELECT
@@ -434,8 +524,21 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const count = (countResult[0] as any).total;
       const totalPages = Math.ceil(count / limit);
 
+      // Format users to match ORM path response structure
+      // has_pending_invite is computed in the SQL query, not here
+      const formattedUsers = (rawUsers as any[]).map(user => ({
+        id: user.id,
+        username: user.username,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        is_admin: user.is_admin,
+        last_logged_in: user.last_logged_in || null,
+        has_pending_invite: !!user.has_pending_invite // Convert 1/0 to boolean
+      }));
+
       res.json({
-        data: users,
+        data: formattedUsers,
         pagination: {
           current_page: page,
           total_pages: totalPages,
@@ -462,7 +565,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           'email_address', 
           'first_name', 
           'last_name', 
-          'is_admin'
+          'is_admin',
+          'reset_hash'
         ],
         order: orderClause,
         limit,
@@ -502,7 +606,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         first_name: user.first_name,
         last_name: user.last_name,
         is_admin: user.is_admin,
-        last_logged_in: loginMap.get(user.id) || null
+        last_logged_in: loginMap.get(user.id) || null,
+        has_pending_invite: (!user.username || user.username === '') && !!user.reset_hash
       }));
 
       const totalPages = Math.ceil(count / limit);
@@ -791,13 +896,13 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Find user
+    // Find user with pending invite (has reset_hash)
     const user = await User.findOne({
       where: { 
         id,
-        brand_id: req.user.brand_id,
-        is_admin: true
+        brand_id: req.user.brand_id
       },
+      attributes: ['id', 'email_address', 'first_name', 'last_name', 'is_admin', 'reset_hash', 'password_hash', 'password_md5', 'username', 'brand_id'],
       include: [{
         model: Brand,
         as: 'brand'
@@ -805,7 +910,12 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Admin user not found' });
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has a pending invite
+    if (!user.reset_hash) {
+      return res.status(400).json({ error: 'User does not have a pending invitation' });
     }
 
     // Check if user has already set up their account (bcrypt or MD5)
@@ -843,15 +953,17 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       .replace(/%LOGO%/g, brand?.logo_url || '')
       .replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
 
+    // Determine the role for email subject based on current admin status
+    const roleText = user.is_admin ? 'an admin' : 'a member';
     const emailSent = await sendEmail(
       [user.email_address],
-      `You're invited to be an admin for ${brand?.brand_name || 'Label Dashboard'}`,
+      `You're invited to be ${roleText} for ${brand?.brand_name || 'Label Dashboard'}`,
       emailTemplate,
       req.user.brand_id
     );
 
     if (emailSent) {
-      res.json({ message: 'Admin invitation resent successfully' });
+      res.json({ message: 'Invitation resent successfully' });
     } else {
       res.status(500).json({ error: 'Failed to resend invitation email' });
     }
@@ -869,17 +981,22 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Find user
+    // Find user with pending invite (has reset_hash)
     const user = await User.findOne({
       where: { 
         id,
-        brand_id: req.user.brand_id,
-        is_admin: true
-      }
+        brand_id: req.user.brand_id
+      },
+      attributes: ['id', 'email_address', 'first_name', 'last_name', 'is_admin', 'reset_hash', 'password_hash', 'password_md5', 'username', 'brand_id']
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Admin user not found' });
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has a pending invite
+    if (!user.reset_hash) {
+      return res.status(400).json({ error: 'User does not have a pending invitation' });
     }
 
     // Check if user has already set up their account (bcrypt or MD5)
@@ -890,7 +1007,7 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
     // Remove the user
     await user.destroy();
 
-    res.json({ message: 'Admin invitation cancelled successfully' });
+    res.json({ message: 'Invitation cancelled successfully' });
   } catch (error) {
     console.error('Cancel admin invite error:', error);
     res.status(500).json({ error: 'Internal server error' });

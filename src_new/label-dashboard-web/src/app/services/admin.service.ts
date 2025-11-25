@@ -51,6 +51,7 @@ export interface User {
   email_address: string;
   last_logged_in?: string;
   is_admin: boolean;
+  has_pending_invite?: boolean;
 }
 
 export interface LoginAttempt {
