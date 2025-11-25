@@ -83,6 +83,15 @@
                 [alt]="release.title + ' Cover Art'"
                 class="release-image">
               <div class="release-overlay">
+                <!-- Play/Pause Button for Releases with Audio -->
+                <button 
+                  *ngIf="releaseHasAudio(release)"
+                  class="play-pause-btn"
+                  (click)="togglePlayRelease(release); $event.stopPropagation()"
+                  [attr.aria-label]="playingReleaseId === release.id ? 'Pause' : 'Play'">
+                  <i [class]="playingReleaseId === release.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+                </button>
+                
                 <div class="streaming-icons" *ngIf="getStreamingLinks(release).length > 0">
                   <a 
                     *ngFor="let link of getStreamingLinks(release)" 
@@ -206,10 +215,20 @@
           <div *ngFor="let release of epkData.releases" class="minimal-release-card">
             <div class="row align-items-center">
               <div class="col-md-3 col-sm-4">
-                <img
-                  [src]="getCoverArtUrl(release.cover_art_url)"
-                  [alt]="release.title + ' Cover Art'"
-                  class="minimal-release-cover">
+                <div class="minimal-release-cover-wrapper">
+                  <img
+                    [src]="getCoverArtUrl(release.cover_art_url)"
+                    [alt]="release.title + ' Cover Art'"
+                    class="minimal-release-cover">
+                  <!-- Play/Pause Button Overlay -->
+                  <button 
+                    *ngIf="releaseHasAudio(release)"
+                    class="play-pause-btn minimal"
+                    (click)="togglePlayRelease(release); $event.stopPropagation()"
+                    [attr.aria-label]="playingReleaseId === release.id ? 'Pause' : 'Play'">
+                    <i [class]="playingReleaseId === release.id ? 'fas fa-pause' : 'fas fa-play'"></i>
+                  </button>
+                </div>
               </div>
               <div class="col-md-6 col-sm-8">
                 <h3 class="minimal-release-title">{{ release.title }}</h3>

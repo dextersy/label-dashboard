@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { PublicService } from '../../services/public.service';
 import { MetaService } from '../../services/meta.service';
+import { environment } from '../../../environments/environment';
 
 export interface ArtistEPK {
   artist: {
@@ -50,6 +51,12 @@ export interface ArtistEPK {
       soundcloud?: string;
       bandcamp?: string;
     };
+    songs?: Array<{
+      id: number;
+      title: string;
+      track_number?: number;
+      has_audio: boolean;
+    }>;
   }>;
 }
 
@@ -72,6 +79,12 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   lightboxOpen = false;
   currentImageIndex = 0;
   galleryImages: Array<{url: string, caption?: string}> = [];
+
+  // Audio player properties
+  playingReleaseId: number | null = null;
+  playingSongIndex: number = 0;
+  private audioElement: HTMLAudioElement | null = null;
+  private currentBlobUrl: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -104,6 +117,15 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // Clean up audio resources
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+    }
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
+    }
+    
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -344,5 +366,113 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       return this.previewTemplate;
     }
     return this.epkData?.artist.epk_template || 1;
+  }
+
+  // Audio player methods
+  releaseHasAudio(release: any): boolean {
+    return release.songs && release.songs.length > 0 && release.songs.some((s: any) => s.has_audio);
+  }
+
+  togglePlayRelease(release: any): void {
+    if (!this.releaseHasAudio(release)) return;
+
+    // If already playing this release, pause it
+    if (this.playingReleaseId === release.id) {
+      this.pauseAudio();
+    } else {
+      // Stop current audio if playing different release
+      if (this.audioElement) {
+        this.pauseAudio();
+      }
+      // Start playing from first track
+      this.playingReleaseId = release.id;
+      this.playingSongIndex = 0;
+      this.playAudio(release.songs[0]);
+    }
+  }
+
+  private async playAudio(song: any): Promise<void> {
+    if (!song || !song.has_audio || !this.epkData) return;
+
+    // Clean up previous audio
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
+    }
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
+    }
+
+    try {
+      // Fetch audio as blob to prevent direct downloads
+      const response = await fetch(
+        `${environment.apiUrl}/public/epk/${this.epkData.artist.id}/audio/${song.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'audio/wav, audio/*'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Audio fetch failed:', response.status, errorText);
+        throw new Error(`Failed to fetch audio: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      console.log('Audio blob received:', blob.type, blob.size);
+      
+      this.currentBlobUrl = URL.createObjectURL(blob);
+
+      // Create and play audio element
+      this.audioElement = new Audio(this.currentBlobUrl);
+      this.audioElement.addEventListener('ended', () => this.onAudioEnded());
+      this.audioElement.addEventListener('error', (e) => {
+        console.error('Audio element error:', e);
+        this.onAudioError();
+      });
+      
+      await this.audioElement.play().catch(err => {
+        console.error('Play failed:', err);
+        throw err;
+      });
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      this.playingReleaseId = null;
+    }
+  }
+
+  private pauseAudio(): void {
+    if (this.audioElement) {
+      this.audioElement.pause();
+    }
+    this.playingReleaseId = null;
+  }
+
+  private onAudioEnded(): void {
+    // Auto-play next track if available
+    const currentRelease = this.epkData?.releases.find(r => r.id === this.playingReleaseId);
+    if (!currentRelease || !currentRelease.songs) {
+      this.playingReleaseId = null;
+      return;
+    }
+
+    const nextIndex = this.playingSongIndex + 1;
+    if (nextIndex < currentRelease.songs.length) {
+      this.playingSongIndex = nextIndex;
+      this.playAudio(currentRelease.songs[nextIndex]);
+    } else {
+      // End of album
+      this.playingReleaseId = null;
+      this.playingSongIndex = 0;
+    }
+  }
+
+  private onAudioError(): void {
+    console.error('Audio playback error');
+    this.playingReleaseId = null;
   }
 }

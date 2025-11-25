@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
@@ -2053,13 +2053,27 @@ export const getArtistEPK = async (req: Request, res: Response) => {
 
     // Get artist's releases using the proper many-to-many relationship
     const releases = await Release.findAll({
-      include: [{
-        model: Artist,
-        as: 'artists',
-        where: { id: artistId },
-        attributes: [],
-        through: { attributes: [] } // Don't include junction table data
-      }],
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          where: { id: artistId },
+          attributes: [],
+          through: { attributes: [] } // Don't include junction table data
+        },
+        {
+          model: Song,
+          as: 'songs',
+          attributes: ['id', 'title', 'track_number', 'audio_file'],
+          where: {
+            audio_file: {
+              [require('sequelize').Op.not]: null
+            }
+          },
+          required: false, // LEFT JOIN - include releases even without songs
+          order: [['track_number', 'ASC']]
+        }
+      ],
       attributes: [
         'id',
         'title',
@@ -2114,7 +2128,13 @@ export const getArtistEPK = async (req: Request, res: Response) => {
           youtube: release.youtube_link,
           soundcloud: null,
           bandcamp: null
-        }
+        },
+        songs: (release as any).songs?.map((song: any) => ({
+          id: song.id,
+          title: song.title,
+          track_number: song.track_number,
+          has_audio: !!song.audio_file
+        })) || []
       }))
     };
 
@@ -2272,5 +2292,92 @@ ${JSON.stringify(structuredData, null, 4)}
   } catch (error) {
     console.error('Generate artist EPK SEO page error:', error);
     res.status(500).send('Internal server error');
+  }
+};
+
+// Stream audio for public EPK (no authentication required, but validated against artist/brand)
+export const streamPublicAudio = async (req: Request, res: Response) => {
+  try {
+    const songId = parseInt(req.params.songId, 10);
+    const artistId = parseInt(req.params.artistId, 10);
+
+    if (isNaN(songId) || isNaN(artistId)) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+
+    // Find song and verify it belongs to a release associated with the specified artist
+    const song = await Song.findOne({
+      where: { id: songId },
+      include: [
+        {
+          model: Release,
+          as: 'release',
+          required: true,
+          include: [
+            {
+              model: Artist,
+              as: 'artists',
+              where: { id: artistId },
+              attributes: ['id', 'name'],
+              through: { attributes: [] }
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found or does not belong to this artist' });
+    }
+
+    if (!song.audio_file) {
+      return res.status(404).json({ error: 'No audio file available for this song' });
+    }
+
+    // Get audio file from S3
+    const AWS = require('aws-sdk');
+    const s3 = new AWS.S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.S3_REGION
+    });
+
+    const params = {
+      Bucket: process.env.S3_BUCKET_MASTERS!,
+      Key: song.audio_file
+    };
+
+    // Get file metadata
+    const headData = await s3.headObject(params).promise();
+    const fileSize = headData.ContentLength || 0;
+
+    // Set response headers for streaming (but don't expose filename to prevent easy downloads)
+    res.set({
+      'Content-Type': 'audio/wav',
+      'Content-Length': fileSize.toString(),
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+
+    // Stream the file
+    const fileStream = s3.getObject(params).createReadStream();
+    fileStream.on('error', (error: any) => {
+      console.error('S3 streaming error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error streaming audio file' });
+      }
+    });
+
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Stream public audio error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 };
