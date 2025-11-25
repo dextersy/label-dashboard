@@ -29,7 +29,7 @@ export class ReleaseValidationService {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
-    if (!release || release.status !== 'Draft') {
+    if (!release) {
       return {
         errors,
         warnings,

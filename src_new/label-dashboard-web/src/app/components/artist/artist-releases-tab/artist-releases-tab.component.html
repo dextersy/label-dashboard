@@ -64,7 +64,7 @@
                     <i class="fa" [ngClass]="getStatusIcon(release.status)"></i>
                     {{ release.status }}
                   </span>
-                  <ng-container *ngIf="release.status === 'Draft' && hasValidationIssues(release)">
+                  <ng-container *ngIf="hasValidationIssues(release)">
                     <i *ngIf="hasValidationErrors(release)"
                        class="fa fa-exclamation-circle text-danger ms-2"
                        [title]="getValidationTooltip(release)"
