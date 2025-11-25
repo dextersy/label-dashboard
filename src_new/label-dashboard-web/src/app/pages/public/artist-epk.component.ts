@@ -487,7 +487,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     this.playingReleaseId = null;
   }
 
-  private onAudioEnded(): void {
+  private async onAudioEnded(): Promise<void> {
     // Auto-play next track if available
     const currentRelease = this.epkData?.releases.find(r => r.id === this.playingReleaseId);
     if (!currentRelease || !currentRelease.songs) {
@@ -501,7 +501,14 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       const nextSong = currentRelease.songs[nextIndex];
       if (nextSong.has_audio) {
         this.playingSongIndex = nextIndex;
-        this.playAudio(nextSong);
+        try {
+          await this.playAudio(nextSong);
+        } catch (error) {
+          console.error('Error auto-playing next track:', error);
+          // playAudio already resets isLoadingAudio on error, just stop playback
+          this.playingReleaseId = null;
+          this.playingSongIndex = 0;
+        }
         return;
       }
       nextIndex++;
@@ -515,5 +522,6 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   private onAudioError(): void {
     console.error('Audio playback error');
     this.playingReleaseId = null;
+    this.isLoadingAudio = false; // Reset loading flag to allow retry
   }
 }
