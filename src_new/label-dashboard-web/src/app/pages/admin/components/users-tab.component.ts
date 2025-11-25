@@ -53,6 +53,16 @@ export class UsersTabComponent implements OnInit {
     { key: 'remote_ip', label: 'Remote IP', type: 'text', searchable: true, sortable: true }
   ];
 
+  // Getter for formatted users with pending invite labels
+  get displayUsers(): any[] {
+    return this.users.map(user => ({
+      ...user,
+      username: user.has_pending_invite ? '(Pending Invite)' : user.username,
+      first_name: user.has_pending_invite && !user.first_name ? '-' : user.first_name,
+      last_name: user.has_pending_invite && !user.last_name ? '-' : user.last_name
+    }));
+  }
+
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService,

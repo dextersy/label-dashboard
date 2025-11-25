@@ -307,13 +307,31 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     const sortBy = req.query.sortBy as string;
     const sortDirection = (req.query.sortDirection as string) || 'ASC';
 
-    // Build base where condition (exclude users with blank usernames)
+    // Build base where condition
+    // Include users with usernames OR users with pending invites (reset_hash set, regardless of admin status)
     const whereCondition: any = {
       brand_id: req.user.brand_id,
-      username: {
-        [Op.ne]: '',
-        [Op.not]: null
-      }
+      [Op.or]: [
+        {
+          // Regular users with usernames
+          username: {
+            [Op.ne]: '',
+            [Op.not]: null
+          }
+        },
+        {
+          // Pending invites (could be admin or had admin removed)
+          username: {
+            [Op.or]: [
+              { [Op.eq]: '' },
+              { [Op.is]: null }
+            ]
+          },
+          reset_hash: {
+            [Op.not]: null
+          }
+        }
+      ]
     };
 
     // Add filters (removed last_logged_in as it's not filterable)
@@ -404,8 +422,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           GROUP BY user_id
         ) la_max ON u.id = la_max.user_id
         WHERE u.brand_id = ?
-          AND u.username != ''
-          AND u.username IS NOT NULL
+          AND (
+            (u.username != '' AND u.username IS NOT NULL)
+            OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
+          )
           ${additionalFilters}
         ${orderByClause}
         LIMIT ? OFFSET ?
@@ -415,8 +435,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         SELECT COUNT(*) as total
         FROM user u
         WHERE u.brand_id = ?
-          AND u.username != ''
-          AND u.username IS NOT NULL
+          AND (
+            (u.username != '' AND u.username IS NOT NULL)
+            OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
+          )
           ${additionalFilters}
       `;
 
@@ -462,7 +484,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           'email_address', 
           'first_name', 
           'last_name', 
-          'is_admin'
+          'is_admin',
+          'reset_hash'
         ],
         order: orderClause,
         limit,
@@ -502,7 +525,8 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         first_name: user.first_name,
         last_name: user.last_name,
         is_admin: user.is_admin,
-        last_logged_in: loginMap.get(user.id) || null
+        last_logged_in: loginMap.get(user.id) || null,
+        has_pending_invite: (!user.username || user.username === '') && user.reset_hash ? true : false
       }));
 
       const totalPages = Math.ceil(count / limit);
@@ -791,13 +815,13 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Find user
+    // Find user with pending invite (has reset_hash)
     const user = await User.findOne({
       where: { 
         id,
-        brand_id: req.user.brand_id,
-        is_admin: true
+        brand_id: req.user.brand_id
       },
+      attributes: ['id', 'email_address', 'first_name', 'last_name', 'is_admin', 'reset_hash', 'password_hash', 'password_md5', 'username', 'brand_id'],
       include: [{
         model: Brand,
         as: 'brand'
@@ -805,7 +829,12 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Admin user not found' });
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has a pending invite
+    if (!user.reset_hash) {
+      return res.status(400).json({ error: 'User does not have a pending invitation' });
     }
 
     // Check if user has already set up their account (bcrypt or MD5)
@@ -843,15 +872,17 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       .replace(/%LOGO%/g, brand?.logo_url || '')
       .replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
 
+    // Determine the role for email subject based on current admin status
+    const roleText = user.is_admin ? 'an admin' : 'a member';
     const emailSent = await sendEmail(
       [user.email_address],
-      `You're invited to be an admin for ${brand?.brand_name || 'Label Dashboard'}`,
+      `You're invited to be ${roleText} for ${brand?.brand_name || 'Label Dashboard'}`,
       emailTemplate,
       req.user.brand_id
     );
 
     if (emailSent) {
-      res.json({ message: 'Admin invitation resent successfully' });
+      res.json({ message: 'Invitation resent successfully' });
     } else {
       res.status(500).json({ error: 'Failed to resend invitation email' });
     }
@@ -869,17 +900,22 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Find user
+    // Find user with pending invite (has reset_hash)
     const user = await User.findOne({
       where: { 
         id,
-        brand_id: req.user.brand_id,
-        is_admin: true
-      }
+        brand_id: req.user.brand_id
+      },
+      attributes: ['id', 'email_address', 'first_name', 'last_name', 'is_admin', 'reset_hash', 'password_hash', 'password_md5', 'username', 'brand_id']
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'Admin user not found' });
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has a pending invite
+    if (!user.reset_hash) {
+      return res.status(400).json({ error: 'User does not have a pending invitation' });
     }
 
     // Check if user has already set up their account (bcrypt or MD5)
@@ -890,7 +926,7 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
     // Remove the user
     await user.destroy();
 
-    res.json({ message: 'Admin invitation cancelled successfully' });
+    res.json({ message: 'Invitation cancelled successfully' });
   } catch (error) {
     console.error('Cancel admin invite error:', error);
     res.status(500).json({ error: 'Internal server error' });
