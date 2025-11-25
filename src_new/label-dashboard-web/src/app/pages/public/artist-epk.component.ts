@@ -527,9 +527,8 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   private stopAudio(): void {
-    if (this.audioElement) {
-      this.audioElement.pause();
-    }
+    // Clean up all audio resources (event listeners, blob URLs, etc.)
+    this.cleanupAudio();
     this.playingReleaseId = null;
     this.isPaused = false;
   }
