@@ -448,11 +448,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       }
 
       const blob = await response.blob();
-      console.log('Audio blob received:', blob.type, blob.size);
       
       // Check if request was aborted before creating blob URL
       if (signal.aborted) {
-        console.log('Audio load aborted');
         this.isLoadingAudio = false;
         return;
       }
@@ -461,7 +459,6 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
 
       // Check again after creating blob URL in case abort happened during URL creation
       if (signal.aborted) {
-        console.log('Audio load aborted after blob URL creation');
         URL.revokeObjectURL(this.currentBlobUrl);
         this.currentBlobUrl = null;
         this.isLoadingAudio = false;
@@ -491,7 +488,6 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     } catch (error) {
       // Check if error is due to abort
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Audio fetch aborted by user');
         this.isLoadingAudio = false;
         return;
       }
