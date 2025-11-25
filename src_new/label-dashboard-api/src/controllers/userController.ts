@@ -456,6 +456,30 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         filterReplacements.push(`%${usernameFilter}%`);
       }
 
+      // Build WHERE clause based on filter state to match ORM path logic
+      // When ANY filter is applied, exclude pending invites
+      let whereClause = '';
+      if (hasAnyFilter) {
+        // When filters are applied, only show regular users (exclude pending invites)
+        whereClause = `
+          WHERE u.brand_id = ?
+            AND u.username != '' 
+            AND u.username IS NOT NULL
+            ${usernameFilterCondition}
+            ${additionalFilters}
+        `;
+      } else {
+        // When no filters, show both regular users and pending invites
+        whereClause = `
+          WHERE u.brand_id = ?
+            AND (
+              (u.username != '' AND u.username IS NOT NULL ${usernameFilterCondition})
+              OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
+            )
+            ${additionalFilters}
+        `;
+      }
+
       // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
         SELECT u.id, u.username, u.email_address, u.first_name, u.last_name, u.is_admin, u.reset_hash, la_max.last_logged_in
@@ -466,12 +490,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           WHERE status = 'Successful' AND brand_id = ?
           GROUP BY user_id
         ) la_max ON u.id = la_max.user_id
-        WHERE u.brand_id = ?
-          AND (
-            (u.username != '' AND u.username IS NOT NULL ${usernameFilterCondition})
-            OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
-          )
-          ${additionalFilters}
+        ${whereClause}
         ${orderByClause}
         LIMIT ? OFFSET ?
       `;
@@ -479,12 +498,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const countQuery = `
         SELECT COUNT(*) as total
         FROM user u
-        WHERE u.brand_id = ?
-          AND (
-            (u.username != '' AND u.username IS NOT NULL ${usernameFilterCondition})
-            OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
-          )
-          ${additionalFilters}
+        ${whereClause}
       `;
 
       const [rawUsers, countResult] = await Promise.all([
