@@ -248,10 +248,69 @@
             bottom: 0;
             background: linear-gradient(45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 1rem;
             opacity: 0;
             transition: all 0.3s ease;
+            
+            .play-pause-btn {
+              width: 60px;
+              height: 60px;
+              border-radius: 50%;
+              border: none;
+              background: rgba(255,255,255,0.95);
+              color: #667eea;
+              font-size: 1.5rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+              
+              i {
+                margin-left: 3px; // Center play icon visually
+              }
+              
+              &:hover {
+                transform: scale(1.1);
+                background: white;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+              }
+              
+              &:active {
+                transform: scale(0.95);
+              }
+
+              // Paused state - different color to indicate resume
+              &.paused {
+                background: rgba(255,255,255,0.85);
+                color: #f59e0b; // Amber/orange color to differentiate from fresh play
+                
+                &:hover {
+                  background: rgba(255,255,255,0.95);
+                  color: #d97706;
+                }
+              }
+
+              // Loading state - subtle gray with disabled cursor
+              &.loading {
+                background: rgba(255,255,255,0.9);
+                color: #9ca3af; // Gray color for loading
+                cursor: wait;
+                
+                &:hover {
+                  transform: scale(1); // Don't scale on hover when loading
+                  background: rgba(255,255,255,0.9);
+                }
+                
+                &:active {
+                  transform: scale(1); // Don't scale on active when loading
+                }
+              }
+            }
             
             .streaming-icons {
               display: flex;
@@ -883,11 +942,83 @@
           box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
-        .minimal-release-cover {
+        .minimal-release-cover-wrapper {
+          position: relative;
           width: 100%;
-          aspect-ratio: 1;
-          object-fit: cover;
-          border: 1px solid #dee2e6;
+          
+          .minimal-release-cover {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border: 1px solid #dee2e6;
+          }
+          
+          .play-pause-btn.minimal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.95);
+            color: #212529;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            opacity: 0;
+            
+            i {
+              margin-left: 2px; // Center play icon visually
+            }
+            
+            &:hover {
+              transform: translate(-50%, -50%) scale(1.1);
+              box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
+            
+            &:active {
+              transform: translate(-50%, -50%) scale(0.95);
+            }
+
+            // Paused state - different color to indicate resume
+            &.paused {
+              background: rgba(255,255,255,0.85);
+              color: #f59e0b; // Amber/orange color to differentiate from fresh play
+              opacity: 1; // Always show when paused
+              
+              &:hover {
+                background: rgba(255,255,255,0.95);
+                color: #d97706;
+              }
+            }
+
+            // Loading state - subtle gray with disabled cursor
+            &.loading {
+              background: rgba(255,255,255,0.9);
+              color: #9ca3af; // Gray color for loading
+              cursor: wait;
+              opacity: 1; // Always show when loading
+              
+              &:hover {
+                transform: translate(-50%, -50%) scale(1); // Don't scale on hover when loading
+                background: rgba(255,255,255,0.9);
+              }
+              
+              &:active {
+                transform: translate(-50%, -50%) scale(1); // Don't scale on active when loading
+              }
+            }
+          }
+          
+          &:hover .play-pause-btn.minimal {
+            opacity: 1;
+          }
         }
 
         .minimal-release-title {
