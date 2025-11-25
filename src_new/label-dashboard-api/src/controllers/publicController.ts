@@ -2433,6 +2433,12 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      // SECURITY: Validate range values to prevent invalid requests
+      if (isNaN(start) || isNaN(end) || start < 0 || end >= fileSize || start > end) {
+        return res.status(416).set('Content-Range', `bytes */${fileSize}`).end();
+      }
+
       const chunkSize = (end - start) + 1;
 
       res.status(206);
