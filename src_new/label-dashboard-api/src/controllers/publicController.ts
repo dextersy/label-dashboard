@@ -2383,13 +2383,34 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     }
 
     // Get audio file from S3
+    // Validate S3 configuration before attempting to stream
+    if (!process.env.S3_BUCKET_MASTERS || !process.env.S3_ACCESS_KEY || !process.env.S3_SECRET_KEY || !process.env.S3_REGION) {
+      console.error('S3 configuration missing - check environment variables');
+      return res.status(500).json({ error: 'Audio streaming service unavailable' });
+    }
+
     const params = {
-      Bucket: process.env.S3_BUCKET_MASTERS!,
+      Bucket: process.env.S3_BUCKET_MASTERS,
       Key: song.audio_file
     };
 
     // Get file metadata first (this validates the file exists before we commit to streaming)
-    const headData = await s3.headObject(params).promise();
+    let headData;
+    try {
+      headData = await s3.headObject(params).promise();
+    } catch (s3Error: any) {
+      console.error('S3 headObject error:', s3Error);
+      // Check for common S3 errors
+      if (s3Error.code === 'NoSuchKey') {
+        return res.status(404).json({ error: 'Audio file not found' });
+      } else if (s3Error.code === 'Forbidden' || s3Error.code === 'AccessDenied') {
+        console.error('S3 access denied - check AWS credentials and permissions');
+        return res.status(500).json({ error: 'Audio streaming service unavailable' });
+      }
+      // Other S3 errors
+      return res.status(500).json({ error: 'Failed to access audio file' });
+    }
+
     const fileSize = headData.ContentLength || 0;
     const contentType = headData.ContentType || 'audio/wav'; // Default to audio/mpeg if not specified
 
