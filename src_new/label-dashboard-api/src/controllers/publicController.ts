@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
 import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song } from '../models';
 import { PaymentService } from '../utils/paymentService';
-import { sendBrandedEmail } from '../utils/emailService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
-import { getBrandFrontendUrl, getBrandIdFromDomain } from '../utils/brandUtils';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
-import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
