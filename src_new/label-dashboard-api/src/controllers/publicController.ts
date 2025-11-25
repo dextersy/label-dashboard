@@ -2072,11 +2072,6 @@ export const getArtistEPK = async (req: Request, res: Response) => {
           model: Song,
           as: 'songs',
           attributes: ['id', 'title', 'track_number', 'audio_file'],
-          where: {
-            audio_file: {
-              [Op.not]: null
-            }
-          },
           required: false // LEFT JOIN - include releases even without songs
         }
       ],
