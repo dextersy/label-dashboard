@@ -2067,7 +2067,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
           attributes: ['id', 'title', 'track_number', 'audio_file'],
           where: {
             audio_file: {
-              [require('sequelize').Op.not]: null
+              [Op.not]: null
             }
           },
           required: false, // LEFT JOIN - include releases even without songs
