@@ -2400,10 +2400,9 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
     const isOriginValid = artistBrandDomains.includes(originHostname);
 
-    // Set response headers for streaming (but don't expose filename to prevent easy downloads)
+    // Set base response headers for streaming (but don't expose filename to prevent easy downloads)
     res.set({
       'Content-Type': contentType,
-      'Content-Length': fileSize.toString(),
       'Accept-Ranges': 'bytes',
       'Cache-Control': 'no-store, must-revalidate',
       'Pragma': 'no-cache',
@@ -2412,25 +2411,54 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       ...(isOriginValid && {
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'GET',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type, Range'
       })
     });
 
-    // Stream the file - once piping starts, we can't send JSON errors
-    const fileStream = s3.getObject(params).createReadStream();
-    
-    fileStream.on('error', (error: any) => {
-      console.error('S3 streaming error:', error);
-      // If headers already sent, we can only end the response
-      // Client will see incomplete stream
-      if (!res.headersSent) {
-        res.status(500).end();
-      } else {
-        res.end();
-      }
-    });
+    // Handle range requests for seeking and resuming interrupted downloads
+    const range = req.headers.range;
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = (end - start) + 1;
 
-    fileStream.pipe(res);
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Content-Length', chunkSize);
+
+      const fileStream = s3.getObject({
+        ...params,
+        Range: `bytes=${start}-${end}`
+      }).createReadStream();
+
+      fileStream.on('error', (error: any) => {
+        console.error('S3 streaming error:', error);
+        if (!res.headersSent) {
+          res.status(500).end();
+        } else {
+          res.end();
+        }
+      });
+
+      fileStream.pipe(res);
+    } else {
+      // Stream entire file
+      res.setHeader('Content-Length', fileSize.toString());
+
+      const fileStream = s3.getObject(params).createReadStream();
+      
+      fileStream.on('error', (error: any) => {
+        console.error('S3 streaming error:', error);
+        if (!res.headersSent) {
+          res.status(500).end();
+        } else {
+          res.end();
+        }
+      });
+
+      fileStream.pipe(res);
+    }
   } catch (error) {
     console.error('Stream public audio error:', error);
     // Only send JSON error if headers haven't been sent yet
