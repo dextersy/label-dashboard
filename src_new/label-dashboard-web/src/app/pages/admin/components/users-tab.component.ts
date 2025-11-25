@@ -13,7 +13,6 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
 })
 export class UsersTabComponent implements OnInit {
   // Users
-  users: User[] = [];
   displayUsers: any[] = []; // Transformed users for display
   usersPagination: PaginationInfo | null = null;
   usersLoading: boolean = false;
@@ -80,7 +79,6 @@ export class UsersTabComponent implements OnInit {
     
     this.adminService.getUsers(page, 15, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
-        this.users = response.data;
         this.displayUsers = this.transformUsersForDisplay(response.data);
         this.usersPagination = response.pagination;
         this.usersLoading = false;

@@ -307,8 +307,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     const sortBy = req.query.sortBy as string;
     const sortDirection = (req.query.sortDirection as string) || 'ASC';
 
-    // Build base where condition
-    // Include users with usernames OR users with pending invites (reset_hash set, regardless of admin status)
+    // Build base where condition - include both regular users and pending invites
     const whereCondition: any = {
       brand_id: req.user.brand_id,
       [Op.or]: [
@@ -320,7 +319,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           }
         },
         {
-          // Pending invites (could be admin or had admin removed)
+          // Pending invites
           username: {
             [Op.or]: ['', null]
           },
@@ -332,15 +331,31 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     };
 
     // Add filters (removed last_logged_in as it's not filterable)
-    // Note: username filter is handled specially to integrate with the base Op.or condition
+    // Filters will naturally exclude pending invites that don't match (e.g., searching for username won't match empty usernames)
     const filterableFields = ['first_name', 'last_name', 'email_address', 'is_admin'];
     const usernameFilter = req.query.username as string;
-    let hasAnyFilter = false;
     
+    // Apply username filter if present
+    if (usernameFilter && usernameFilter.trim() !== '') {
+      // Username filter: only search regular users with matching usernames
+      // Remove the pending invites branch since they have no usernames to match
+      whereCondition[Op.or] = [
+        {
+          username: {
+            [Op.and]: [
+              { [Op.ne]: '' },
+              { [Op.not]: null },
+              { [Op.like]: `%${usernameFilter}%` }
+            ]
+          }
+        }
+      ];
+    }
+    
+    // Apply other filters
     filterableFields.forEach(field => {
       const filterValue = req.query[field] as string;
       if (filterValue && filterValue.trim() !== '') {
-        hasAnyFilter = true;
         if (field === 'is_admin') {
           // Handle boolean filter
           whereCondition[field] = filterValue.toLowerCase() === 'true';
@@ -352,36 +367,6 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         }
       }
     });
-
-    // Special handling for username filter to integrate with base Op.or condition
-    // When ANY filter is applied (username or other fields), exclude pending invites
-    if (usernameFilter && usernameFilter.trim() !== '') {
-      hasAnyFilter = true;
-      // When username filter is applied, exclude pending invites (only search actual usernames)
-      whereCondition[Op.or] = [
-        {
-          // Regular users with usernames matching the filter
-          username: {
-            [Op.and]: [
-              { [Op.ne]: '' },
-              { [Op.not]: null },
-              { [Op.like]: `%${usernameFilter}%` }
-            ]
-          }
-        }
-      ];
-    } else if (hasAnyFilter) {
-      // When other filters are applied, exclude pending invites (only search regular users)
-      whereCondition[Op.or] = [
-        {
-          // Regular users with usernames only
-          username: {
-            [Op.ne]: '',
-            [Op.not]: null
-          }
-        }
-      ];
-    }
 
     // Special handling for last_logged_in sorting - we need to use raw SQL for this
     if (sortBy === 'last_logged_in') {
@@ -449,37 +434,23 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
       const additionalFilters = filterConditions.join(' ');
 
-      // Build WHERE clause based on filter state to match ORM path logic
-      // When ANY filter is applied, exclude pending invites
-      let whereClause = '';
-      if (hasAnyFilter) {
-        // When filters are applied, only show regular users (exclude pending invites)
-        // Apply username filter if present
-        let usernameFilterCondition = '';
-        if (usernameFilter && usernameFilter.trim() !== '') {
-          usernameFilterCondition = 'AND u.username LIKE ?';
-          filterReplacements.push(`%${usernameFilter}%`);
-        }
-        
-        whereClause = `
-          WHERE u.brand_id = ?
-            AND u.username != '' 
-            AND u.username IS NOT NULL
-            ${usernameFilterCondition}
-            ${additionalFilters}
-        `;
-      } else {
-        // When no filters, show both regular users and pending invites
-        // No username filter needed here since hasAnyFilter would be true if it existed
-        whereClause = `
-          WHERE u.brand_id = ?
-            AND (
-              (u.username != '' AND u.username IS NOT NULL)
-              OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
-            )
-            ${additionalFilters}
-        `;
+      // Build username filter condition for SQL
+      let usernameFilterCondition = '';
+      if (usernameFilter && usernameFilter.trim() !== '') {
+        usernameFilterCondition = 'AND u.username LIKE ?';
+        filterReplacements.push(`%${usernameFilter}%`);
       }
+
+      // Build WHERE clause - always include both regular users and pending invites
+      // Filters will naturally exclude non-matching records (e.g., username filter won't match empty usernames)
+      const whereClause = `
+        WHERE u.brand_id = ?
+          AND (
+            (u.username != '' AND u.username IS NOT NULL ${usernameFilterCondition})
+            OR ((u.username = '' OR u.username IS NULL) AND u.reset_hash IS NOT NULL)
+          )
+          ${additionalFilters}
+      `;
 
       // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
