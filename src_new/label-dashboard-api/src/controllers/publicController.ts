@@ -2305,7 +2305,11 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid parameters' });
     }
 
+    // Extract domain from request for multibrand validation
+    const requestDomain = getRequestDomain(req);
+
     // Find song and verify it belongs to a release associated with the specified artist
+    // Also get the artist's brand and domains for CORS validation
     const song = await Song.findOne({
       where: { id: songId },
       include: [
@@ -2319,7 +2323,21 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
               as: 'artists',
               where: { id: artistId },
               attributes: ['id', 'name'],
-              through: { attributes: [] }
+              through: { attributes: [] },
+              include: [
+                {
+                  model: Brand,
+                  as: 'brand',
+                  attributes: ['id'],
+                  include: [
+                    {
+                      model: Domain,
+                      as: 'domains',
+                      attributes: ['domain_name']
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -2332,6 +2350,20 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
 
     if (!song.audio_file) {
       return res.status(404).json({ error: 'No audio file available for this song' });
+    }
+
+    // Validate request domain against artist's brand domains
+    const artist = (song as any).release?.artists?.[0];
+    if (artist?.brand?.domains && requestDomain) {
+      const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = artistBrandDomains.includes(requestDomain);
+      
+      if (!isDomainValid) {
+        return res.status(403).json({ error: 'Access denied from this domain' });
+      }
+    } else {
+      // Fail securely: if we cannot validate brand/domain, deny access
+      return res.status(403).json({ error: 'Access denied' });
     }
 
     // Get audio file from S3
@@ -2352,6 +2384,8 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     const fileSize = headData.ContentLength || 0;
 
     // Set response headers for streaming (but don't expose filename to prevent easy downloads)
+    // Use validated origin for CORS instead of wildcard to prevent bandwidth theft
+    const origin = req.get('origin') || '';
     res.set({
       'Content-Type': 'audio/wav',
       'Content-Length': fileSize.toString(),
@@ -2359,7 +2393,7 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       'Cache-Control': 'no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET',
       'Access-Control-Allow-Headers': 'Content-Type'
     });
