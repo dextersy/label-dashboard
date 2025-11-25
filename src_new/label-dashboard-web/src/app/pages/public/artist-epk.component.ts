@@ -487,6 +487,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
         return;
       }
       
+      // Clean up any partially created resources (blob URL, event listeners, etc.)
+      this.cleanupAudio();
+      
       console.error('Error playing audio:', error);
       this.playingReleaseId = null;
       this.isLoadingAudio = false;
@@ -565,6 +568,8 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
 
   private onAudioError(): void {
     console.error('Audio playback error');
+    // Clean up resources to prevent memory leaks
+    this.cleanupAudio();
     this.playingReleaseId = null;
     this.isLoadingAudio = false; // Reset loading flag to allow retry
   }
