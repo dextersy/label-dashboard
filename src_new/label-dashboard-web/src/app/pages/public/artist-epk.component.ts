@@ -541,14 +541,27 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Store the release ID to check if playback was cancelled during async operations
+    const currentReleaseId = currentRelease.id;
+
     // Find next song with audio
     let nextIndex = this.playingSongIndex + 1;
     while (nextIndex < currentRelease.songs.length) {
+      // Check if playback was stopped/cancelled while we were in the loop
+      if (this.playingReleaseId !== currentReleaseId) {
+        return;
+      }
+
       const nextSong = currentRelease.songs[nextIndex];
       if (nextSong.has_audio) {
         this.playingSongIndex = nextIndex;
         try {
           await this.playAudio(nextSong);
+          
+          // Check again after async playAudio completes
+          if (this.playingReleaseId !== currentReleaseId) {
+            return;
+          }
         } catch (error) {
           console.error('Error auto-playing next track:', error);
           // playAudio already resets isLoadingAudio on error, just stop playback
