@@ -22,6 +22,7 @@ export interface ArtistRelease {
   description?: string;
   liner_notes?: string;
   UPC?: string;
+  exclude_from_epk: boolean;
   songs?: Song[];
   artists?: Array<{
     id: number;
@@ -333,6 +334,27 @@ export class ArtistReleasesTabComponent {
         this.alertMessage.emit({
           type: 'error',
           message: errorMessage
+        });
+      }
+    });
+  }
+
+  toggleExcludeFromEPK(release: ArtistRelease): void {
+    this.releaseService.toggleExcludeFromEPK(release.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          release.exclude_from_epk = response.exclude_from_epk;
+          this.alertMessage.emit({
+            type: 'success',
+            message: response.message
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error toggling EPK visibility:', error);
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'Failed to update EPK visibility.'
         });
       }
     });

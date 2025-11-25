@@ -5,6 +5,7 @@ import {
   getRelease,
   createRelease,
   updateRelease,
+  toggleReleaseExcludeFromEPK,
   deleteRelease,
   getReleaseEarnings,
   getReleaseExpenses,
@@ -44,6 +45,7 @@ router.get('/', getReleases);
 router.get('/:id', getRelease);
 router.post('/', upload.single('cover_art'), createRelease);
 router.put('/:id', upload.single('cover_art'), updateRelease);
+router.patch('/:id/exclude-from-epk', toggleReleaseExcludeFromEPK);
 router.delete('/:id', requireAdmin, deleteRelease);
 
 // Release-specific data

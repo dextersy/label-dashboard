@@ -97,7 +97,7 @@
                           title="Manage Track List">
                     <i class="fa fa-music"></i>
                   </button>
-                  <button class="btn btn-link btn-sm p-0"
+                  <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onDownloadMasters(release)"
                           [disabled]="downloadingMastersId === release.id || !hasMasters(release)"
                           [title]="hasMasters(release) ? 'Download Masters' : 'No masters available'">
@@ -105,6 +105,12 @@
                        [class.fa-spinner]="downloadingMastersId === release.id"
                        [class.fa-spin]="downloadingMastersId === release.id"
                        [class.fa-download]="downloadingMastersId !== release.id"></i>
+                  </button>
+                  <button class="btn btn-link btn-sm p-0"
+                          (click)="toggleExcludeFromEPK(release)"
+                          [ngClass]="release.exclude_from_epk ? 'text-warning' : 'text-info'"
+                          [title]="release.exclude_from_epk ? 'Excluded from EPK - Click to include' : 'Included in EPK - Click to exclude'">
+                    <i class="fa" [ngClass]="release.exclude_from_epk ? 'fa-eye-slash' : 'fa-globe'"></i>
                   </button>
                 </td>
               </tr>

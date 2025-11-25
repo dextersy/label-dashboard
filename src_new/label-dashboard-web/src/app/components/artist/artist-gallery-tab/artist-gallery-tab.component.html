@@ -89,6 +89,12 @@
                         title="Set as profile photo">
                   <i class="fa fa-user"></i>
                 </button>
+                <button class="btn btn-sm btn-icon-only" 
+                        [ngClass]="photo.exclude_from_epk ? 'btn-warning' : 'btn-info'"
+                        (click)="toggleExcludeFromEPK(photo)"
+                        [title]="photo.exclude_from_epk ? 'Excluded from EPK (click to include)' : 'Included in EPK (click to exclude)'">
+                  <i class="fa" [ngClass]="photo.exclude_from_epk ? 'fa-eye-slash' : 'fa-globe'"></i>
+                </button>
                 <button class="btn btn-sm btn-info btn-icon-only" 
                         (click)="startEditingCaption(photo)"
                         *ngIf="!editingCaptions[photo.id]"

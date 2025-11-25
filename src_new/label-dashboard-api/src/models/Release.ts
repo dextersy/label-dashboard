@@ -17,9 +17,10 @@ interface ReleaseAttributes {
   description?: string;
   liner_notes?: string;
   brand_id: number;
+  exclude_from_epk: boolean;
 }
 
-interface ReleaseCreationAttributes extends Optional<ReleaseAttributes, 'id' | 'status'> {}
+interface ReleaseCreationAttributes extends Optional<ReleaseAttributes, 'id' | 'status' | 'exclude_from_epk'> {}
 
 class Release extends Model<ReleaseAttributes, ReleaseCreationAttributes> implements ReleaseAttributes {
   public id!: number;
@@ -35,6 +36,7 @@ class Release extends Model<ReleaseAttributes, ReleaseCreationAttributes> implem
   public description?: string;
   public liner_notes?: string;
   public brand_id!: number;
+  public exclude_from_epk!: boolean;
 
   // Association properties
   public releaseArtists?: any[];
@@ -116,6 +118,11 @@ Release.init(
     brand_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    exclude_from_epk: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

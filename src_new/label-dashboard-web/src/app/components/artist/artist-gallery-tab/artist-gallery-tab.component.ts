@@ -13,6 +13,7 @@ export interface ArtistPhoto {
   caption: string;
   upload_date: string;
   url: string;
+  exclude_from_epk: boolean;
 }
 
 @Component({
@@ -73,7 +74,11 @@ export class ArtistGalleryTabComponent {
       headers: this.getAuthHeaders()
     }).subscribe({
       next: (data) => {
-        this.photos = data.photos;
+        // Ensure exclude_from_epk is properly converted to boolean
+        this.photos = data.photos.map(photo => ({
+          ...photo,
+          exclude_from_epk: Boolean(photo.exclude_from_epk)
+        }));
         this.loading = false;
       },
       error: (error) => {
@@ -262,6 +267,39 @@ export class ArtistGalleryTabComponent {
         this.alertMessage.emit({
           type: 'error',
           message: 'An error occurred while deleting the photo.'
+        });
+      }
+    });
+  }
+
+  toggleExcludeFromEPK(photo: ArtistPhoto): void {
+    if (!this.artist) return;
+
+    this.http.patch<{success: boolean, exclude_from_epk: boolean, message: string}>(
+      `${environment.apiUrl}/artists/${this.artist.id}/photos/${photo.id}/exclude-from-epk`,
+      {},
+      { headers: this.getAuthHeaders() }
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Convert to boolean in case backend returns 0/1
+          photo.exclude_from_epk = Boolean(response.exclude_from_epk);
+          this.alertMessage.emit({
+            type: 'success',
+            message: response.message
+          });
+        } else {
+          this.alertMessage.emit({
+            type: 'error',
+            message: 'Failed to update photo EPK visibility.'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error toggling EPK visibility:', error);
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'An error occurred while updating photo EPK visibility.'
         });
       }
     });

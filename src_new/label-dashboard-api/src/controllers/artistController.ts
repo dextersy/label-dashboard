@@ -780,7 +780,7 @@ export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
     const photos = await ArtistImage.findAll({
       where: { artist_id: artistId },
       order: [['date_uploaded', 'DESC']],
-      attributes: ['id', 'path', 'credits', 'date_uploaded']
+      attributes: ['id', 'path', 'credits', 'date_uploaded', 'exclude_from_epk']
     });
 
     // Transform the response to match frontend expectations
@@ -805,7 +805,8 @@ export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
         filename: filename,
         caption: photo.credits || '',
         upload_date: photo.date_uploaded,
-        url: photoUrl
+        url: photoUrl,
+        exclude_from_epk: photo.exclude_from_epk
       };
     });
 
@@ -937,6 +938,52 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Update photo caption error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Toggle photo exclude from EPK
+export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, photoId } = req.params;
+    const artistId = parseInt(id, 10);
+    const photoIdNum = parseInt(photoId, 10);
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: { 
+        id: artistId,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Find and update the photo
+    const photo = await ArtistImage.findOne({
+      where: { 
+        id: photoIdNum,
+        artist_id: artistId 
+      }
+    });
+
+    if (!photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    await photo.update({ 
+      exclude_from_epk: !photo.exclude_from_epk 
+    });
+
+    res.json({
+      success: true,
+      exclude_from_epk: photo.exclude_from_epk,
+      message: photo.exclude_from_epk ? 'Photo excluded from EPK' : 'Photo included in EPK'
+    });
+  } catch (error) {
+    console.error('Toggle photo exclude from EPK error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -1162,6 +1209,7 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
         description: release.description || '',
         liner_notes: release.liner_notes || '',
         catalog_no: release.catalog_no,
+        exclude_from_epk: release.exclude_from_epk,
         sync_royalty_percentage: releaseArtist.sync_royalty_percentage,
         sync_royalty_type: releaseArtist.sync_royalty_type,
         streaming_royalty_percentage: releaseArtist.streaming_royalty_percentage,

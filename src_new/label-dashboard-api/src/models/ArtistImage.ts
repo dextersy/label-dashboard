@@ -7,9 +7,10 @@ interface ArtistImageAttributes {
   credits?: string;
   artist_id: number;
   date_uploaded: Date;
+  exclude_from_epk: boolean;
 }
 
-interface ArtistImageCreationAttributes extends Optional<ArtistImageAttributes, 'id'> {}
+interface ArtistImageCreationAttributes extends Optional<ArtistImageAttributes, 'id' | 'exclude_from_epk'> {}
 
 class ArtistImage extends Model<ArtistImageAttributes, ArtistImageCreationAttributes> implements ArtistImageAttributes {
   public id!: number;
@@ -17,6 +18,7 @@ class ArtistImage extends Model<ArtistImageAttributes, ArtistImageCreationAttrib
   public credits?: string;
   public artist_id!: number;
   public date_uploaded!: Date;
+  public exclude_from_epk!: boolean;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -44,6 +46,11 @@ ArtistImage.init(
     date_uploaded: {
       type: DataTypes.DATEONLY,
       allowNull: false,
+    },
+    exclude_from_epk: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

@@ -281,7 +281,8 @@ export class TrackListDialogComponent implements OnChanges {
       status: this.releaseStatus as any,
       catalog_no: '',
       release_date: '',
-      cover_art: ''
+      cover_art: '',
+      exclude_from_epk: false
     };
 
     // Only validate songs, not release-level info (cover art, description, liner notes)
