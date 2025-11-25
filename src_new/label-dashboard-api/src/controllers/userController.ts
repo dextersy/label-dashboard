@@ -330,6 +330,11 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       ]
     };
 
+    // Helper function to escape LIKE wildcards to prevent pattern injection
+    const escapeLikeWildcards = (value: string): string => {
+      return value.replace(/[%_]/g, '\\$&');
+    };
+
     // Add filters (removed last_logged_in as it's not filterable)
     // Filters will naturally exclude pending invites that don't match (e.g., searching for username won't match empty usernames)
     const filterableFields = ['first_name', 'last_name', 'email_address', 'is_admin'];
@@ -337,6 +342,9 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     
     // Apply username filter if present
     if (usernameFilter && usernameFilter.trim() !== '') {
+      // SECURITY: Escape LIKE wildcards (% and _) to prevent pattern injection
+      const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
+      
       // Username filter: only search regular users with matching usernames
       // Remove the pending invites branch since they have no usernames to match
       whereCondition[Op.or] = [
@@ -345,7 +353,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
             [Op.and]: [
               { [Op.ne]: '' },
               { [Op.not]: null },
-              { [Op.like]: `%${usernameFilter}%` }
+              { [Op.like]: `%${escapedUsername}%` }
             ]
           }
         }
@@ -360,9 +368,11 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           // Handle boolean filter
           whereCondition[field] = filterValue.toLowerCase() === 'true';
         } else {
+          // SECURITY: Escape LIKE wildcards to prevent pattern injection
+          const escapedValue = escapeLikeWildcards(filterValue.trim());
           // Handle text filters with partial matching
           whereCondition[field] = {
-            [Op.like]: `%${filterValue}%`
+            [Op.like]: `%${escapedValue}%`
           };
         }
       }
@@ -425,9 +435,11 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
             filterConditions.push(`AND ${columnName} = ?`);
             filterReplacements.push(value ? 1 : 0);
           } else if (typeof value === 'object' && value[Op.like]) {
-            const likeValue = value[Op.like].replace(/%/g, '');
-            filterConditions.push(`AND ${columnName} LIKE ?`);
-            filterReplacements.push(`%${likeValue}%`);
+            // SECURITY: Extract the escaped value (already escaped by escapeLikeWildcards earlier)
+            // The value is already in format %escapedValue%, just use it directly
+            // Use ESCAPE clause to tell MySQL that backslash is our escape character
+            filterConditions.push(`AND ${columnName} LIKE ? ESCAPE '\\'`);
+            filterReplacements.push(value[Op.like]);
           }
         });
 
@@ -436,9 +448,13 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       // Build WHERE clause to match ORM path logic
       let whereClause = '';
       if (usernameFilter && usernameFilter.trim() !== '') {
+        // SECURITY: Use the escaped username value (already escaped by escapeLikeWildcards earlier)
+        const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
+        
         // When username filter is applied, exclude pending invites (only search actual usernames)
-        const usernameFilterCondition = 'AND u.username LIKE ?';
-        filterReplacements.push(`%${usernameFilter}%`);
+        // Use ESCAPE clause to tell MySQL that backslash is our escape character
+        const usernameFilterCondition = "AND u.username LIKE ? ESCAPE '\\\\'";
+        filterReplacements.push(`%${escapedUsername}%`);
         
         whereClause = `
           WHERE u.brand_id = ?
