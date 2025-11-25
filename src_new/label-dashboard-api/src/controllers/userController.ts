@@ -333,7 +333,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
     };
 
     // Add filters (removed last_logged_in as it's not filterable)
-    const filterableFields = ['username', 'first_name', 'last_name', 'email_address', 'is_admin'];
+    // Note: username filter is handled specially to integrate with the base Op.or condition
+    const filterableFields = ['first_name', 'last_name', 'email_address', 'is_admin'];
+    const usernameFilter = req.query.username as string;
+    
     filterableFields.forEach(field => {
       const filterValue = req.query[field] as string;
       if (filterValue && filterValue.trim() !== '') {
@@ -348,6 +351,18 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         }
       }
     });
+
+    // Special handling for username filter to integrate with base Op.or condition
+    if (usernameFilter && usernameFilter.trim() !== '') {
+      // Modify the Op.or condition to add username filter to the regular users branch
+      whereCondition[Op.or][0].username = {
+        [Op.and]: [
+          { [Op.ne]: '' },
+          { [Op.not]: null },
+          { [Op.like]: `%${usernameFilter}%` }
+        ]
+      };
+    }
 
     // Special handling for last_logged_in sorting - we need to use raw SQL for this
     if (sortBy === 'last_logged_in') {
@@ -411,7 +426,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
       // Use raw query with LEFT JOIN to properly sort by last login
       const usersQuery = `
-        SELECT u.*, la_max.last_logged_in
+        SELECT u.id, u.username, u.email_address, u.first_name, u.last_name, u.is_admin, u.reset_hash, la_max.last_logged_in
         FROM user u
         LEFT JOIN (
           SELECT user_id, MAX(date_and_time) as last_logged_in
@@ -440,7 +455,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           ${additionalFilters}
       `;
 
-      const [users, countResult] = await Promise.all([
+      const [rawUsers, countResult] = await Promise.all([
         sequelize.query(usersQuery, {
           replacements: [req.user.brand_id, req.user.brand_id, ...filterReplacements, limit, offset],
           type: QueryTypes.SELECT
@@ -454,8 +469,20 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       const count = (countResult[0] as any).total;
       const totalPages = Math.ceil(count / limit);
 
+      // Format users to match ORM path response structure and exclude sensitive fields
+      const formattedUsers = (rawUsers as any[]).map(user => ({
+        id: user.id,
+        username: user.username,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        is_admin: user.is_admin,
+        last_logged_in: user.last_logged_in || null,
+        has_pending_invite: (!user.username || user.username === '') && !!user.reset_hash
+      }));
+
       res.json({
-        data: users,
+        data: formattedUsers,
         pagination: {
           current_page: page,
           total_pages: totalPages,

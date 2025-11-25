@@ -14,6 +14,7 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
 export class UsersTabComponent implements OnInit {
   // Users
   users: User[] = [];
+  displayUsers: any[] = []; // Transformed users for display
   usersPagination: PaginationInfo | null = null;
   usersLoading: boolean = false;
   usersFilters: any = {};
@@ -53,16 +54,6 @@ export class UsersTabComponent implements OnInit {
     { key: 'remote_ip', label: 'Remote IP', type: 'text', searchable: true, sortable: true }
   ];
 
-  // Getter for formatted users with pending invite labels
-  get displayUsers(): any[] {
-    return this.users.map(user => ({
-      ...user,
-      username: user.has_pending_invite ? '(Pending Invite)' : user.username,
-      first_name: user.has_pending_invite ? '-' : (user.first_name || ''),
-      last_name: user.has_pending_invite ? '-' : (user.last_name || '')
-    }));
-  }
-
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService,
@@ -74,12 +65,23 @@ export class UsersTabComponent implements OnInit {
     this.loadLoginAttempts(1, this.loginAttemptsFilters, this.loginAttemptsSort);
   }
 
+  // Transform users data for display (called once when data is loaded)
+  private transformUsersForDisplay(users: User[]): any[] {
+    return users.map(user => ({
+      ...user,
+      username: user.has_pending_invite ? '(Pending Invite)' : user.username,
+      first_name: user.has_pending_invite ? '-' : (user.first_name || ''),
+      last_name: user.has_pending_invite ? '-' : (user.last_name || '')
+    }));
+  }
+
   loadUsers(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.usersLoading = true;
     
     this.adminService.getUsers(page, 15, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
         this.users = response.data;
+        this.displayUsers = this.transformUsersForDisplay(response.data);
         this.usersPagination = response.pagination;
         this.usersLoading = false;
       },
