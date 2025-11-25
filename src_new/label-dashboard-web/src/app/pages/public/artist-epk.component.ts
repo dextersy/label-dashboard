@@ -85,6 +85,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   playingSongIndex: number = 0;
   private audioElement: HTMLAudioElement | null = null;
   private currentBlobUrl: string | null = null;
+  private isLoadingAudio: boolean = false;
+  private audioEndedHandler: (() => void) | null = null;
+  private audioErrorHandler: ((e: Event) => void) | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -384,25 +387,25 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       if (this.audioElement) {
         this.pauseAudio();
       }
-      // Start playing from first track
+      // Find first track with audio
+      const firstSongIndex = release.songs.findIndex((song: any) => song.has_audio);
+      if (firstSongIndex === -1) return; // Should not happen due to releaseHasAudio check
+      
       this.playingReleaseId = release.id;
-      this.playingSongIndex = 0;
-      this.playAudio(release.songs[0]);
+      this.playingSongIndex = firstSongIndex;
+      this.playAudio(release.songs[firstSongIndex]);
     }
   }
 
   private async playAudio(song: any): Promise<void> {
     if (!song || !song.has_audio || !this.epkData) return;
 
+    // Prevent concurrent loading attempts
+    if (this.isLoadingAudio) return;
+    this.isLoadingAudio = true;
+
     // Clean up previous audio
-    if (this.currentBlobUrl) {
-      URL.revokeObjectURL(this.currentBlobUrl);
-      this.currentBlobUrl = null;
-    }
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement = null;
-    }
+    this.cleanupAudio();
 
     try {
       // Fetch audio as blob to prevent direct downloads
@@ -429,19 +432,51 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
 
       // Create and play audio element
       this.audioElement = new Audio(this.currentBlobUrl);
-      this.audioElement.addEventListener('ended', () => this.onAudioEnded());
-      this.audioElement.addEventListener('error', (e) => {
+      
+      // Store event handlers for proper cleanup
+      this.audioEndedHandler = () => this.onAudioEnded();
+      this.audioErrorHandler = (e) => {
         console.error('Audio element error:', e);
         this.onAudioError();
-      });
+      };
+      
+      this.audioElement.addEventListener('ended', this.audioEndedHandler);
+      this.audioElement.addEventListener('error', this.audioErrorHandler);
       
       await this.audioElement.play().catch(err => {
         console.error('Play failed:', err);
         throw err;
       });
+
+      this.isLoadingAudio = false;
     } catch (error) {
       console.error('Error playing audio:', error);
       this.playingReleaseId = null;
+      this.isLoadingAudio = false;
+    }
+  }
+
+  private cleanupAudio(): void {
+    // Remove event listeners to prevent memory leaks
+    if (this.audioElement && this.audioEndedHandler) {
+      this.audioElement.removeEventListener('ended', this.audioEndedHandler);
+      this.audioEndedHandler = null;
+    }
+    if (this.audioElement && this.audioErrorHandler) {
+      this.audioElement.removeEventListener('error', this.audioErrorHandler);
+      this.audioErrorHandler = null;
+    }
+    
+    // Clean up blob URL
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
+    }
+    
+    // Clean up audio element
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
     }
   }
 
