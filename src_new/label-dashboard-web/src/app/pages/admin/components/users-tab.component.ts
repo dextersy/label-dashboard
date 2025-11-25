@@ -58,8 +58,8 @@ export class UsersTabComponent implements OnInit {
     return this.users.map(user => ({
       ...user,
       username: user.has_pending_invite ? '(Pending Invite)' : user.username,
-      first_name: user.has_pending_invite && !user.first_name ? '-' : user.first_name,
-      last_name: user.has_pending_invite && !user.last_name ? '-' : user.last_name
+      first_name: user.has_pending_invite ? '-' : (user.first_name || ''),
+      last_name: user.has_pending_invite ? '-' : (user.last_name || '')
     }));
   }
 

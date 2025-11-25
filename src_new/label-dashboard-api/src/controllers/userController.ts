@@ -321,12 +321,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         },
         {
           // Pending invites (could be admin or had admin removed)
-          username: {
-            [Op.or]: [
-              { [Op.eq]: '' },
-              { [Op.is]: null }
-            ]
-          },
+          [Op.or]: [
+            { username: { [Op.eq]: '' } },
+            { username: { [Op.is]: null } }
+          ],
           reset_hash: {
             [Op.not]: null
           }
@@ -526,7 +524,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         last_name: user.last_name,
         is_admin: user.is_admin,
         last_logged_in: loginMap.get(user.id) || null,
-        has_pending_invite: (!user.username || user.username === '') && user.reset_hash ? true : false
+        has_pending_invite: (!user.username || user.username === '') && !!user.reset_hash
       }));
 
       const totalPages = Math.ceil(count / limit);
