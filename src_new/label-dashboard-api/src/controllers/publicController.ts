@@ -10,7 +10,16 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import AWS from 'aws-sdk';
 
+// Configure AWS S3
+AWS.config.update({
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_KEY,
+  region: process.env.S3_REGION
+});
+
+const s3 = new AWS.S3();
 const paymentService = new PaymentService();
 
 // Helper function to extract domain from request
@@ -2369,13 +2378,6 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     }
 
     // Get audio file from S3
-    const AWS = require('aws-sdk');
-    const s3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.S3_REGION
-    });
-
     const params = {
       Bucket: process.env.S3_BUCKET_MASTERS!,
       Key: song.audio_file
