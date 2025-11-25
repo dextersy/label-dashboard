@@ -2070,8 +2070,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
               [Op.not]: null
             }
           },
-          required: false, // LEFT JOIN - include releases even without songs
-          order: [['track_number', 'ASC']]
+          required: false // LEFT JOIN - include releases even without songs
         }
       ],
       attributes: [
@@ -2084,7 +2083,10 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'apple_music_link',
         'youtube_link'
       ],
-      order: [['release_date', 'DESC']]
+      order: [
+        ['release_date', 'DESC'],
+        [{ model: Song, as: 'songs' }, 'track_number', 'ASC']
+      ]
     });
 
     // Format the response
