@@ -2321,12 +2321,13 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
           model: Release,
           as: 'release',
           required: true,
+          attributes: ['id', 'title', 'brand_id'], // Include brand_id for validation
           include: [
             {
               model: Artist,
               as: 'artists',
               where: { id: artistId },
-              attributes: ['id', 'name'],
+              attributes: ['id', 'name', 'brand_id'], // Include brand_id for validation
               through: { attributes: [] },
               include: [
                 {
@@ -2356,8 +2357,19 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No audio file available for this song' });
     }
 
-    // Validate request domain against artist's brand domains
+    // SECURITY: Verify the release belongs to the same brand as the artist
     const artist = (song as any).release?.artists?.[0];
+    const release = (song as any).release;
+    
+    if (!artist || !release) {
+      return res.status(404).json({ error: 'Song not found or does not belong to this artist' });
+    }
+    
+    if (artist.brand_id !== release.brand_id) {
+      return res.status(403).json({ error: 'Access denied - brand mismatch' });
+    }
+
+    // Validate request domain against artist's brand domains
     if (artist?.brand?.domains && requestDomain) {
       const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
       const isDomainValid = artistBrandDomains.includes(requestDomain);
