@@ -121,14 +121,8 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Clean up audio resources
-    if (this.currentBlobUrl) {
-      URL.revokeObjectURL(this.currentBlobUrl);
-    }
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement = null;
-    }
+    // Clean up audio resources properly (removes event listeners to prevent memory leaks)
+    this.cleanupAudio();
     
     this.destroy$.next();
     this.destroy$.complete();
