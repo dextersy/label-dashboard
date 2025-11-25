@@ -2393,9 +2393,14 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     const fileSize = headData.ContentLength || 0;
     const contentType = headData.ContentType || 'audio/wav'; // Default to audio/mpeg if not specified
 
-    // Set response headers for streaming (but don't expose filename to prevent easy downloads)
-    // Use validated origin for CORS instead of wildcard to prevent bandwidth theft
+    // SECURITY: Validate origin header against brand domains before setting CORS
+    // Only allow CORS from validated brand domains to prevent bandwidth theft
     const origin = req.get('origin') || '';
+    const originHostname = origin ? new URL(origin).hostname : '';
+    const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
+    const isOriginValid = artistBrandDomains.includes(originHostname);
+
+    // Set response headers for streaming (but don't expose filename to prevent easy downloads)
     res.set({
       'Content-Type': contentType,
       'Content-Length': fileSize.toString(),
@@ -2403,9 +2408,12 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       'Cache-Control': 'no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      // Only set CORS headers if origin is from a validated brand domain
+      ...(isOriginValid && {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      })
     });
 
     // Stream the file - once piping starts, we can't send JSON errors
