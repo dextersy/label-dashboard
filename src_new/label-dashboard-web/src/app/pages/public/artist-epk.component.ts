@@ -89,6 +89,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   private isPaused: boolean = false;
   private audioEndedHandler: (() => void) | null = null;
   private audioErrorHandler: ((e: Event) => void) | null = null;
+  private currentAbortController: AbortController | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -420,8 +421,12 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     if (this.isLoadingAudio) return;
     this.isLoadingAudio = true;
 
-    // Clean up previous audio
+    // Clean up previous audio (this will abort any in-flight requests)
     this.cleanupAudio();
+
+    // Create new abort controller for this request (after cleanup)
+    this.currentAbortController = new AbortController();
+    const signal = this.currentAbortController.signal;
 
     try {
       // Fetch audio as blob to prevent direct downloads
@@ -431,7 +436,8 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
           method: 'GET',
           headers: {
             'Accept': 'audio/wav, audio/*'
-          }
+          },
+          signal // Attach abort signal to request
         }
       );
       
@@ -443,6 +449,13 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
 
       const blob = await response.blob();
       console.log('Audio blob received:', blob.type, blob.size);
+      
+      // Check if request was aborted before continuing
+      if (signal.aborted) {
+        console.log('Audio load aborted');
+        this.isLoadingAudio = false;
+        return;
+      }
       
       this.currentBlobUrl = URL.createObjectURL(blob);
 
@@ -464,8 +477,16 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
         throw err;
       });
 
+      this.currentAbortController = null; // Clear controller after successful load
       this.isLoadingAudio = false;
     } catch (error) {
+      // Check if error is due to abort
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Audio fetch aborted by user');
+        this.isLoadingAudio = false;
+        return;
+      }
+      
       console.error('Error playing audio:', error);
       this.playingReleaseId = null;
       this.isLoadingAudio = false;
@@ -473,6 +494,12 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   private cleanupAudio(): void {
+    // Abort any in-flight fetch requests
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      this.currentAbortController = null;
+    }
+    
     // Remove event listeners to prevent memory leaks
     if (this.audioElement && this.audioEndedHandler) {
       this.audioElement.removeEventListener('ended', this.audioEndedHandler);
