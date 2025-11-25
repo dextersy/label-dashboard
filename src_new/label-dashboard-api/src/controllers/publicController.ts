@@ -2383,7 +2383,7 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       Key: song.audio_file
     };
 
-    // Get file metadata
+    // Get file metadata first (this validates the file exists before we commit to streaming)
     const headData = await s3.headObject(params).promise();
     const fileSize = headData.ContentLength || 0;
 
@@ -2402,20 +2402,29 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       'Access-Control-Allow-Headers': 'Content-Type'
     });
 
-    // Stream the file
+    // Stream the file - once piping starts, we can't send JSON errors
     const fileStream = s3.getObject(params).createReadStream();
+    
     fileStream.on('error', (error: any) => {
       console.error('S3 streaming error:', error);
+      // If headers already sent, we can only end the response
+      // Client will see incomplete stream
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Error streaming audio file' });
+        res.status(500).end();
+      } else {
+        res.end();
       }
     });
 
     fileStream.pipe(res);
   } catch (error) {
     console.error('Stream public audio error:', error);
+    // Only send JSON error if headers haven't been sent yet
     if (!res.headersSent) {
       res.status(500).json({ error: 'Internal server error' });
+    } else {
+      // Headers already sent, just end the response
+      res.end();
     }
   }
 };
