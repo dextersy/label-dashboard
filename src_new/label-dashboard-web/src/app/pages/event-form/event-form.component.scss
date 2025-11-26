@@ -147,6 +147,64 @@
       justify-content: center;
     }
   }
+
+  .payment-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+
+    .payment-method-card {
+      position: relative;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+      cursor: pointer;
+
+      &:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+      }
+
+      input[type="checkbox"] {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+
+        &:checked ~ label {
+          color: #007bff;
+          font-weight: 600;
+        }
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        cursor: pointer;
+        padding-right: 24px;
+
+        i {
+          font-size: 24px;
+          color: #6c757d;
+        }
+
+        span {
+          font-size: 14px;
+          text-align: center;
+        }
+      }
+
+      input:checked ~ label i {
+        color: #007bff;
+      }
+    }
+  }
 }
 
 /* Loading State */
@@ -285,6 +343,37 @@
 
   .event-form-container {
     border-radius: 0;
+  }
+}
+
+/* Ticket Types Section */
+.ticket-types-list {
+  .ticket-type-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: 13px;
+      color: #495057;
+      margin-bottom: 6px;
+    }
+
+    .btn-danger {
+      white-space: nowrap;
+    }
+  }
+
+  > .btn-outline-primary {
+    margin-top: 8px;
   }
 }
 

@@ -10,6 +10,15 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
 import { VenueAutocompleteComponent, VenueSelection } from '../../components/events/venue-autocomplete/venue-autocomplete.component';
 import { QuillModule } from 'ngx-quill';
 
+export interface TicketType {
+  id?: number;
+  name: string;
+  price: number;
+  max_tickets: number;
+  start_date?: string | null;
+  end_date?: string | null;
+}
+
 export type EventFormSection = 'general' | 'purchase' | 'ticket-types' | 'scanner';
 
 @Component({
@@ -47,12 +56,27 @@ export class EventFormComponent implements OnInit, OnDestroy {
     venue_longitude: null,
     venue_phone: '',
     venue_website: '',
-    venue_maps_url: ''
+    venue_maps_url: '',
+    // Ticket purchase settings
+    close_time: '',
+    countdown_display: 'days',
+    show_tickets_remaining: true,
+    supports_gcash: true,
+    supports_qrph: true,
+    supports_card: true,
+    supports_ubp: false,
+    supports_dob: false,
+    supports_maya: false,
+    supports_grabpay: false
   };
   
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   currentVenueSelection: VenueSelection | null = null;
+  ticketTypes: TicketType[] = [];
+  
+  // Expose Math for template
+  Math = Math;
   
   // Quill editor config
   quillConfig = {
@@ -142,7 +166,17 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue_longitude: null,
       venue_phone: '',
       venue_website: '',
-      venue_maps_url: ''
+      venue_maps_url: '',
+      close_time: '',
+      countdown_display: 'days',
+      show_tickets_remaining: true,
+      supports_gcash: true,
+      supports_qrph: true,
+      supports_card: true,
+      supports_ubp: false,
+      supports_dob: false,
+      supports_maya: false,
+      supports_grabpay: false
     };
   }
 
@@ -240,6 +274,75 @@ export class EventFormComponent implements OnInit, OnDestroy {
     if (this.isNewEvent && !this.eventData.slug) {
       this.generateSlug();
     }
+  }
+
+  setSuggestedCloseTime(interval: string): void {
+    if (!this.eventData.date_and_time) {
+      this.notificationService.showError('Please set the event date and time first');
+      return;
+    }
+
+    const eventDate = new Date(this.eventData.date_and_time);
+    let closeDate: Date;
+
+    switch (interval) {
+      case '1h':
+        closeDate = new Date(eventDate.getTime() - 60 * 60 * 1000);
+        break;
+      case '3h':
+        closeDate = new Date(eventDate.getTime() - 3 * 60 * 60 * 1000);
+        break;
+      case '1d':
+        closeDate = new Date(eventDate.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '3d':
+        closeDate = new Date(eventDate.getTime() - 3 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return;
+    }
+
+    // Format to datetime-local input format
+    const year = closeDate.getFullYear();
+    const month = String(closeDate.getMonth() + 1).padStart(2, '0');
+    const day = String(closeDate.getDate()).padStart(2, '0');
+    const hours = String(closeDate.getHours()).padStart(2, '0');
+    const minutes = String(closeDate.getMinutes()).padStart(2, '0');
+    
+    this.eventData.close_time = `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  addTicketType(): void {
+    this.ticketTypes.push({
+      name: '',
+      price: 0,
+      max_tickets: 0,
+      start_date: null,
+      end_date: null
+    });
+  }
+
+  removeTicketType(index: number): void {
+    this.ticketTypes.splice(index, 1);
+  }
+
+  toggleTicketTypeDateRange(ticket: TicketType): void {
+    if (ticket.start_date || ticket.end_date) {
+      ticket.start_date = null;
+      ticket.end_date = null;
+    }
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.notificationService.showSuccess('Copied to clipboard!');
+    }).catch(() => {
+      this.notificationService.showError('Failed to copy to clipboard');
+    });
+  }
+
+  generateVerificationPIN(): void {
+    this.eventData.verification_pin = Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   private updateBreadcrumbs(): void {

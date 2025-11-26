@@ -166,19 +166,302 @@
           <!-- Ticket Purchase Section -->
           <div class="form-section" *ngIf="activeSection === 'purchase'">
             <h3>Ticket Purchase</h3>
-            <p>TODO: Add ticket purchase configuration</p>
+            <p>Configure payment methods and ticket sales settings</p>
+
+            <div class="row">
+              <div class="col-12 mb-4">
+                <label class="form-label">Accepted Payment Methods</label>
+                <div class="payment-methods-grid">
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="gcash" 
+                      [(ngModel)]="eventData.supports_gcash">
+                    <label for="gcash">
+                      <i class="fa fa-mobile-alt"></i>
+                      <span>GCash</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="qrph" 
+                      [(ngModel)]="eventData.supports_qrph">
+                    <label for="qrph">
+                      <i class="fa fa-qrcode"></i>
+                      <span>QR Ph</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="card" 
+                      [(ngModel)]="eventData.supports_card">
+                    <label for="card">
+                      <i class="fa fa-credit-card"></i>
+                      <span>Credit/Debit Card</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="ubp" 
+                      [(ngModel)]="eventData.supports_ubp">
+                    <label for="ubp">
+                      <i class="fa fa-university"></i>
+                      <span>UnionBank</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="maya" 
+                      [(ngModel)]="eventData.supports_maya">
+                    <label for="maya">
+                      <i class="fa fa-wallet"></i>
+                      <span>Maya</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="grabpay" 
+                      [(ngModel)]="eventData.supports_grabpay">
+                    <label for="grabpay">
+                      <i class="fa fa-car"></i>
+                      <span>GrabPay</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="dob" 
+                      [(ngModel)]="eventData.supports_dob">
+                    <label for="dob">
+                      <i class="fa fa-landmark"></i>
+                      <span>Direct Online Banking</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Ticket Sales Close Time</label>
+                <input 
+                  type="datetime-local" 
+                  class="form-control" 
+                  [(ngModel)]="eventData.close_time"
+                  placeholder="Optional - leave empty to close at event time">
+                <small class="form-text text-muted d-flex align-items-center gap-2 mt-2">
+                  <i class="fa fa-clock"></i>
+                  Set suggested time:
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')">1h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')">3h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')">1 day before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')">3 days before</button>
+                </small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Countdown Display</label>
+                <select class="form-select" [(ngModel)]="eventData.countdown_display">
+                  <option value="days">Days</option>
+                  <option value="hours">Hours</option>
+                  <option value="minutes">Minutes</option>
+                  <option value="none">None</option>
+                </select>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> How to display the countdown on the ticket purchase page
+                </small>
+              </div>
+
+              <div class="col-12 mb-3">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input" 
+                    id="showTicketsRemaining"
+                    [(ngModel)]="eventData.show_tickets_remaining">
+                  <label class="form-check-label" for="showTicketsRemaining">
+                    Show tickets remaining on purchase page
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Ticket Types Section -->
           <div class="form-section" *ngIf="activeSection === 'ticket-types'">
             <h3>Ticket Types</h3>
-            <p>TODO: Add ticket types management</p>
+            <p>Configure ticket types, pricing, and availability</p>
+
+            <div class="ticket-types-list">
+              <div class="ticket-type-item" *ngFor="let ticket of ticketTypes; let i = index">
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label">Ticket Name *</label>
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      [(ngModel)]="ticket.name"
+                      placeholder="e.g., General Admission, VIP">
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label class="form-label">Price (₱) *</label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="ticket.price"
+                      min="0"
+                      step="0.01">
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label class="form-label">Max Tickets *</label>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="ticket.max_tickets"
+                      min="1">
+                  </div>
+                  <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button 
+                      type="button" 
+                      class="btn btn-danger w-100" 
+                      (click)="removeTicketType(i)">
+                      <i class="bi bi-trash"></i> Remove
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="row" *ngIf="ticket.start_date !== undefined">
+                  <div class="col-md-5 mb-3">
+                    <label class="form-label">Start Date (Optional)</label>
+                    <input 
+                      type="datetime-local" 
+                      class="form-control" 
+                      [(ngModel)]="ticket.start_date">
+                  </div>
+                  <div class="col-md-5 mb-3">
+                    <label class="form-label">End Date (Optional)</label>
+                    <input 
+                      type="datetime-local" 
+                      class="form-control" 
+                      [(ngModel)]="ticket.end_date">
+                  </div>
+                  <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button 
+                      type="button" 
+                      class="btn btn-outline-secondary w-100" 
+                      (click)="toggleTicketTypeDateRange(ticket)">
+                      Clear Dates
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                class="btn btn-outline-primary" 
+                (click)="addTicketType()">
+                <i class="bi bi-plus-circle"></i> Add Ticket Type
+              </button>
+
+              <div class="alert alert-info mt-3" *ngIf="ticketTypes.length === 0">
+                <i class="bi bi-info-circle"></i> No ticket types added yet. Click "Add Ticket Type" to create your first ticket type.
+              </div>
+            </div>
           </div>
 
           <!-- Scanner Section -->
           <div class="form-section" *ngIf="activeSection === 'scanner'">
-            <h3>Scanner</h3>
-            <p>TODO: Add scanner configuration</p>
+            <h3>Scanner & Verification</h3>
+            <p>Ticket scanning and verification settings</p>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Verification PIN</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="eventData.verification_pin"
+                    placeholder="6-digit PIN"
+                    maxlength="6"
+                    pattern="[0-9]{6}">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="generateVerificationPIN()"
+                    title="Generate random PIN">
+                    <i class="fas fa-sync"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> 6-digit PIN for ticket scanners to verify tickets
+                </small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Ticket Naming</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="eventData.ticket_naming"
+                  placeholder="e.g., General Admission, Entry Pass">
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> How tickets will be labeled (e.g., "General Admission")
+                </small>
+              </div>
+
+              <div class="col-12 mb-3" *ngIf="event && event.verification_link">
+                <label class="form-label">Verification Link</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [value]="event.verification_link"
+                    readonly>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="copyToClipboard(event.verification_link)"
+                    title="Copy to clipboard">
+                    <i class="fa fa-copy"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Share this link with ticket scanners
+                </small>
+              </div>
+
+              <div class="col-12 mb-3" *ngIf="event && event.buy_shortlink">
+                <label class="form-label">Ticket Purchase Link</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [value]="event.buy_shortlink"
+                    readonly>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="copyToClipboard(event.buy_shortlink)"
+                    title="Copy to clipboard">
+                    <i class="fa fa-copy"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
+                </small>
+              </div>
+
+              <div class="col-12" *ngIf="!event || (!event.verification_link && !event.buy_shortlink)">
+                <div class="alert alert-info">
+                  <i class="fa fa-info-circle me-2"></i>
+                  Verification and purchase links will be generated after publishing the event.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
