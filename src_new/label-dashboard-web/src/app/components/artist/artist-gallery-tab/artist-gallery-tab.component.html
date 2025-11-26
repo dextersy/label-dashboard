@@ -50,8 +50,24 @@
 
   <!-- Gallery Section -->
   <div class="card gallery-section">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Photo Gallery</h5>
+      <div class="filter-controls">
+        <div class="btn-group btn-group-sm" role="group">
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-outline-secondary" for="epkFilterAll">All</label>
+
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-outline-info" for="epkFilterVisible">
+            <i class="fa fa-globe"></i> Visible in EPK
+          </label>
+
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-outline-warning" for="epkFilterHidden">
+            <i class="fa fa-eye-slash"></i> Hidden from EPK
+          </label>
+        </div>
+      </div>
     </div>
     <div class="card-body">
       
@@ -68,9 +84,15 @@
         <p>No photos uploaded yet</p>
         <small>Upload your first photo to get started!</small>
       </div>
+
+      <div *ngIf="!loading && photos.length > 0 && filteredPhotos.length === 0" class="text-center text-muted empty-gallery">
+        <i class="fa fa-filter fa-3x"></i>
+        <p>No photos match the current filter</p>
+        <small>Try changing the EPK visibility filter above</small>
+      </div>
       
-      <div *ngIf="!loading && photos.length > 0" class="photo-grid">
-        <div class="photo-item" *ngFor="let photo of photos">
+      <div *ngIf="!loading && filteredPhotos.length > 0" class="photo-grid">
+        <div class="photo-item" *ngFor="let photo of filteredPhotos">
           <div class="photo-container">
             <img [src]="getPhotoUrl(photo)" 
                  [alt]="photo.caption || 'Artist photo'"

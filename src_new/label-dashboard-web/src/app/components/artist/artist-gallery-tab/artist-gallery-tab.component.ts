@@ -28,6 +28,7 @@ export class ArtistGalleryTabComponent {
   @Output() profilePhotoUpdated = new EventEmitter<Artist>();
 
   photos: ArtistPhoto[] = [];
+  epkFilter: 'all' | 'visible' | 'hidden' = 'all';
   loading = false;
   uploading = false;
   selectedFiles: FileList | null = null;
@@ -55,6 +56,16 @@ export class ArtistGalleryTabComponent {
   ngOnChanges(): void {
     if (this.artist) {
       this.loadPhotos();
+    }
+  }
+
+  get filteredPhotos(): ArtistPhoto[] {
+    if (this.epkFilter === 'all') {
+      return this.photos;
+    } else if (this.epkFilter === 'visible') {
+      return this.photos.filter(photo => !photo.exclude_from_epk);
+    } else { // 'hidden'
+      return this.photos.filter(photo => photo.exclude_from_epk);
     }
   }
 
