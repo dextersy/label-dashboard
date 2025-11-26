@@ -343,10 +343,16 @@ export class ArtistReleasesTabComponent {
     this.releaseService.toggleExcludeFromEPK(release.id).subscribe({
       next: (response) => {
         if (response.success) {
-          release.exclude_from_epk = response.exclude_from_epk;
+          // Convert to boolean in case backend returns 0/1
+          release.exclude_from_epk = Boolean(response.exclude_from_epk);
           this.alertMessage.emit({
             type: 'success',
             message: response.message
+          });
+        } else {
+          this.alertMessage.emit({
+            type: 'error',
+            message: response.message || 'Failed to update EPK visibility.'
           });
         }
       },

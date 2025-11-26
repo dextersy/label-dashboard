@@ -302,7 +302,7 @@ export class ArtistGalleryTabComponent {
         } else {
           this.alertMessage.emit({
             type: 'error',
-            message: 'Failed to update photo EPK visibility.'
+            message: response.message || 'Failed to update photo EPK visibility.'
           });
         }
       },
