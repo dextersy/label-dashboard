@@ -64,6 +64,23 @@
 
         <!-- Form Content -->
         <div *ngIf="!loading" class="event-form-content">
+          <!-- Draft Mode Info Box -->
+          <div class="alert alert-info d-flex align-items-center mb-4" *ngIf="!isEventPublished()">
+            <i class="fa fa-info-circle me-3 fs-5"></i>
+            <div>
+              <strong>Draft Mode</strong> - This event is not yet visible to the public. 
+              <span class="d-block small mt-1">
+                Complete the event details and click "Publish" to make it live and generate ticket purchase links.
+              </span>
+            </div>
+          </div>
+
+          <!-- Past Event Warning -->
+          <div class="alert alert-warning mb-4" *ngIf="isEventPast()">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
+          </div>
+
           <!-- General Information Section -->
           <div class="form-section" *ngIf="activeSection === 'general'">
             <h3>General Information</h3>
@@ -78,6 +95,7 @@
                   [(ngModel)]="eventData.title"
                   (input)="onTitleChange()"
                   placeholder="Enter event title"
+                  [disabled]="isEventPast()"
                   required>
               </div>
 
@@ -87,6 +105,7 @@
                   type="datetime-local" 
                   class="form-control" 
                   [(ngModel)]="eventData.date_and_time"
+                  [disabled]="isEventPast()"
                   required>
               </div>
 
@@ -96,6 +115,7 @@
                   placeholder="Search for venue or enter manually..."
                   [required]="true"
                   [hasError]="false"
+                  [disabled]="isEventPast()"
                   [ngModel]="currentVenueSelection"
                   (ngModelChange)="onVenueSelected($event)"
                   (venueSelected)="onVenueSelected($event)">
@@ -109,6 +129,7 @@
                   class="form-control" 
                   [(ngModel)]="eventData.rsvp_link"
                   placeholder="https://facebook.com/events/..."
+                  [disabled]="isEventPast()"
                   required>
                 <small class="form-text text-muted">
                   <i class="fa fa-info-circle"></i> Facebook event page link or preferred social media page
@@ -123,11 +144,13 @@
                     class="form-control" 
                     [(ngModel)]="eventData.slug"
                     (input)="onSlugChange()"
-                    placeholder="BuyMyAwesomeEvent">
+                    placeholder="BuyMyAwesomeEvent"
+                    [disabled]="isEventPast()">
                   <button 
                     type="button" 
                     class="btn btn-outline-secondary"
                     (click)="generateSlug()"
+                    [disabled]="isEventPast()"
                     title="Auto-generate from title">
                     <i class="fas fa-sync"></i>
                   </button>
@@ -226,7 +249,8 @@
                     <input 
                       type="checkbox" 
                       id="gcash" 
-                      [(ngModel)]="eventData.supports_gcash">
+                      [(ngModel)]="eventData.supports_gcash"
+                      [disabled]="isEventPast()">
                     <label for="gcash">
                       <i class="fa fa-mobile-alt"></i>
                       <span>GCash</span>
@@ -236,7 +260,8 @@
                     <input 
                       type="checkbox" 
                       id="qrph" 
-                      [(ngModel)]="eventData.supports_qrph">
+                      [(ngModel)]="eventData.supports_qrph"
+                      [disabled]="isEventPast()">
                     <label for="qrph">
                       <i class="fa fa-qrcode"></i>
                       <span>QR Ph</span>
@@ -246,7 +271,8 @@
                     <input 
                       type="checkbox" 
                       id="card" 
-                      [(ngModel)]="eventData.supports_card">
+                      [(ngModel)]="eventData.supports_card"
+                      [disabled]="isEventPast()">
                     <label for="card">
                       <i class="fa fa-credit-card"></i>
                       <span>Credit/Debit Card</span>
@@ -256,7 +282,8 @@
                     <input 
                       type="checkbox" 
                       id="ubp" 
-                      [(ngModel)]="eventData.supports_ubp">
+                      [(ngModel)]="eventData.supports_ubp"
+                      [disabled]="isEventPast()">
                     <label for="ubp">
                       <i class="fa fa-university"></i>
                       <span>UnionBank</span>
@@ -266,7 +293,8 @@
                     <input 
                       type="checkbox" 
                       id="maya" 
-                      [(ngModel)]="eventData.supports_maya">
+                      [(ngModel)]="eventData.supports_maya"
+                      [disabled]="isEventPast()">
                     <label for="maya">
                       <i class="fa fa-wallet"></i>
                       <span>Maya</span>
@@ -276,7 +304,8 @@
                     <input 
                       type="checkbox" 
                       id="grabpay" 
-                      [(ngModel)]="eventData.supports_grabpay">
+                      [(ngModel)]="eventData.supports_grabpay"
+                      [disabled]="isEventPast()">
                     <label for="grabpay">
                       <i class="fa fa-car"></i>
                       <span>GrabPay</span>
@@ -286,7 +315,8 @@
                     <input 
                       type="checkbox" 
                       id="dob" 
-                      [(ngModel)]="eventData.supports_dob">
+                      [(ngModel)]="eventData.supports_dob"
+                      [disabled]="isEventPast()">
                     <label for="dob">
                       <i class="fa fa-landmark"></i>
                       <span>Direct Online Banking</span>
@@ -301,20 +331,21 @@
                   type="datetime-local" 
                   class="form-control" 
                   [(ngModel)]="eventData.close_time"
+                  [disabled]="isEventPast()"
                   placeholder="Optional - leave empty to close at event time">
                 <small class="form-text text-muted d-flex align-items-center gap-2 mt-2">
                   <i class="fa fa-clock"></i>
                   Set suggested time:
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')">1h before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')">3h before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')">1 day before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')">3 days before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
                 </small>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Show Countdown on Ticket Page</label>
-                <select class="form-select" [(ngModel)]="eventData.countdown_display">
+                <select class="form-select" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
                   <option value="always">Always show</option>
                   <option value="1_week">1 week before</option>
                   <option value="3_days">3 days before</option>
@@ -332,7 +363,8 @@
                     type="checkbox" 
                     class="form-check-input" 
                     id="showTicketsRemaining"
-                    [(ngModel)]="eventData.show_tickets_remaining">
+                    [(ngModel)]="eventData.show_tickets_remaining"
+                    [disabled]="isEventPast()">
                   <label class="form-check-label" for="showTicketsRemaining">
                     Show tickets remaining on purchase page
                   </label>
@@ -413,7 +445,8 @@
               <button 
                 type="button" 
                 class="btn btn-outline-primary" 
-                (click)="addTicketType()">
+                (click)="addTicketType()"
+                [disabled]="isEventPast()">
                 <i class="bi bi-plus-circle"></i> Add Ticket Type
               </button>
 
@@ -516,7 +549,7 @@
       type="button" 
       class="btn btn-outline-primary"
       (click)="onSave()"
-      [disabled]="saving">
+      [disabled]="saving || isEventPast()">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
       <i class="fa fa-save" *ngIf="!saving"></i>
       <span *ngIf="!saving">Save as Draft</span>
@@ -526,7 +559,7 @@
       type="button" 
       class="btn btn-success"
       (click)="onPublish()"
-      [disabled]="saving">
+      [disabled]="saving || isEventPast()">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
       <i class="fa fa-rocket" *ngIf="!saving"></i>
       <span *ngIf="!saving">Publish</span>
@@ -540,7 +573,7 @@
       type="button" 
       class="btn btn-primary"
       (click)="onSave()"
-      [disabled]="saving || !isFormDirty()">
+      [disabled]="saving || !isFormDirty() || isEventPast()">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
       <i class="fa fa-save" *ngIf="!saving"></i>
       <span *ngIf="!saving">Save Changes</span>
@@ -550,7 +583,7 @@
       type="button" 
       class="btn btn-warning"
       (click)="onUnpublish()"
-      [disabled]="saving || hasConfirmedTickets()"
+      [disabled]="saving || hasConfirmedTickets() || isEventPast()"
       *ngIf="!hasConfirmedTickets()">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
       <i class="fa fa-eye-slash" *ngIf="!saving"></i>

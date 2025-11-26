@@ -84,6 +84,7 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
   @Input() placeholder = 'Search for a venue...';
   @Input() required = false;
   @Input() hasError = false;
+  @Input() disabled = false;
   @Output() venueSelected = new EventEmitter<VenueSelection>();
   
   @ViewChild('searchInput', { static: true }) searchInput!: ElementRef<HTMLInputElement>;

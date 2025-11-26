@@ -511,6 +511,16 @@ export class EventFormComponent implements OnInit, OnDestroy {
     return status === 'published';
   }
 
+  isEventPast(): boolean {
+    const dateAndTime = this.isNewEvent 
+      ? this.eventData.date_and_time 
+      : this.event?.date_and_time || this.eventData.date_and_time;
+    if (!dateAndTime) return false;
+    const eventDate = new Date(dateAndTime);
+    const now = new Date();
+    return eventDate < now;
+  }
+
   hasConfirmedTickets(): boolean {
     return (this.event?.tickets?.filter((ticket: any) => 
       ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.'
