@@ -7,7 +7,7 @@
  * - Adds exclude_from_epk column (TINYINT(1)) to artist_image table
  * - Adds exclude_from_epk column (TINYINT(1)) to release table
  * - Defaults to 0 (false) - items are included in EPK by default
- * - Adds indexes for filtering performance
+ * - No indexes added (tables at or near 64 index limit)
  *
  * Feature benefits:
  * - Allows selective hiding of photos/releases from public EPK pages
