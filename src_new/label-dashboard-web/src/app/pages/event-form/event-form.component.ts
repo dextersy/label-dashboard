@@ -7,6 +7,7 @@ import { EventService, Event } from '../../services/event.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
+import { EventPublishedService } from '../../services/event-published.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { VenueAutocompleteComponent, VenueSelection } from '../../components/events/venue-autocomplete/venue-autocomplete.component';
@@ -108,7 +109,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private eventService: EventService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private eventPublishedService: EventPublishedService
   ) {}
 
   ngOnInit(): void {
@@ -337,6 +339,14 @@ export class EventFormComponent implements OnInit, OnDestroy {
           if (this.isNewEvent) {
             this.isNewEvent = false;
             this.eventId = event.id;
+          }
+          
+          // Show the event published modal
+          if (event.buy_shortlink) {
+            this.eventPublishedService.show({
+              eventTitle: event.title,
+              buyLink: event.buy_shortlink
+            });
           }
         },
         error: (error) => {

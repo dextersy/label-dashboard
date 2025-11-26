@@ -1,0 +1,65 @@
+<div class="modal" [class.show]="isVisible" [style.display]="isVisible ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <!-- Body -->
+      <div class="modal-body text-center pt-5">
+        <div class="celebration-icon mb-1">
+          🎊
+        </div>
+        
+        <h2 class="mb-2 fw-bold">Your event is now live!</h2>
+        
+        <p class="mb-4">
+          Copy the link below and share it to start selling tickets.
+        </p>
+
+        <!-- Link Copy Box -->
+        <div class="input-group mb-2">
+          <input 
+            type="text" 
+            class="form-control link-input" 
+            [value]="data?.buyLink || ''" 
+            readonly
+            #linkInput>
+          <button 
+            class="btn btn-primary" 
+            type="button"
+            (click)="copyLink()">
+            <i class="fas" [ngClass]="copySuccess ? 'fa-check' : 'fa-copy'"></i>
+            {{ copySuccess ? 'Copied!' : 'Copy' }}
+          </button>
+        </div>
+        
+        <p class="text-muted small mb-4">
+          (Link can also be found in the "Ticket Purchase" tab)
+        </p>
+
+        <!-- Share Buttons -->
+        <div class="d-flex gap-2 justify-content-center mb-4">
+          <button 
+            class="btn btn-lg"
+            style="background-color: #1877f2; border-color: #1877f2; color: white;"
+            (click)="shareOnFacebook()">
+            <i class="fab fa-facebook me-2"></i>Share to Facebook
+          </button>
+          <button 
+            class="btn btn-lg"
+            style="background-color: #1da1f2; border-color: #1da1f2; color: white;"
+            (click)="shareOnTwitter()">
+            <i class="fab fa-twitter me-2"></i>Share to X
+          </button>
+        </div>
+
+        <!-- Close Button -->
+        <div class="text-end pb-3 pe-3">
+          <button type="button" class="btn btn-link text-muted" (click)="close()">
+            <i class="fas fa-times me-1"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade" [class.show]="isVisible" [style.display]="isVisible ? 'block' : 'none'"></div>
