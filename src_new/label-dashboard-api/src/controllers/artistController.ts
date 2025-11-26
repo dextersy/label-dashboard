@@ -949,6 +949,10 @@ export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response)
     const artistId = parseInt(id, 10);
     const photoIdNum = parseInt(photoId, 10);
 
+    if (isNaN(artistId) || isNaN(photoIdNum)) {
+      return res.status(400).json({ error: 'Invalid artist ID or photo ID' });
+    }
+
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
       where: { 
