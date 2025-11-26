@@ -465,6 +465,44 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Toggle release exclude from EPK
+export const toggleReleaseExcludeFromEPK = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const releaseId = parseInt(id, 10);
+
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
+
+    // Find release and verify brand access
+    const release = await Release.findOne({
+      where: { 
+        id: releaseId,
+        brand_id: req.user.brand_id 
+      }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Toggle the exclude_from_epk flag
+    await release.update({ 
+      exclude_from_epk: !release.exclude_from_epk 
+    });
+
+    res.json({
+      success: true,
+      exclude_from_epk: release.exclude_from_epk,
+      message: release.exclude_from_epk ? 'Release excluded from EPK' : 'Release included in EPK'
+    });
+  } catch (error) {
+    console.error('Toggle release exclude from EPK error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const deleteRelease = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user.is_admin) {

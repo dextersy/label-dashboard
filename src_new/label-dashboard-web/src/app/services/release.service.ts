@@ -152,4 +152,12 @@ export class ReleaseService {
       observe: 'response'
     });
   }
+
+  toggleExcludeFromEPK(releaseId: number): Observable<{ success: boolean; exclude_from_epk: boolean; message: string }> {
+    return this.http.patch<{ success: boolean; exclude_from_epk: boolean; message: string }>(
+      `${this.baseUrl}/releases/${releaseId}/exclude-from-epk`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

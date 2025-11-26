@@ -2052,14 +2052,22 @@ export const getArtistEPK = async (req: Request, res: Response) => {
     }
 
     // Get artist's media gallery using ArtistImage model
+    // Exclude images marked as exclude_from_epk
     const gallery = await ArtistImage.findAll({
-      where: { artist_id: artistId },
+      where: { 
+        artist_id: artistId,
+        exclude_from_epk: false
+      },
       attributes: ['id', 'path', 'credits', 'date_uploaded'],
       order: [['date_uploaded', 'DESC']]
     });
 
     // Get artist's releases using the proper many-to-many relationship
+    // Exclude releases marked as exclude_from_epk
     const releases = await Release.findAll({
+      where: {
+        exclude_from_epk: false
+      },
       include: [
         {
           model: Artist,

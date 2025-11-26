@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
@@ -22,6 +23,7 @@ export interface ArtistRelease {
   description?: string;
   liner_notes?: string;
   UPC?: string;
+  exclude_from_epk: boolean;
   songs?: Song[];
   artists?: Array<{
     id: number;
@@ -37,7 +39,7 @@ export interface ArtistRelease {
 
 @Component({
     selector: 'app-artist-releases-tab',
-    imports: [CommonModule, EditReleaseDialogComponent, TrackListDialogComponent],
+    imports: [CommonModule, FormsModule, EditReleaseDialogComponent, TrackListDialogComponent],
     templateUrl: './artist-releases-tab.component.html',
     styleUrl: './artist-releases-tab.component.scss'
 })
@@ -45,6 +47,7 @@ export class ArtistReleasesTabComponent {
   @Input() artist: Artist | null = null;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   releases: ArtistRelease[] = [];
+  epkFilter: 'all' | 'visible' | 'hidden' = 'all';
   loading = false;
   isAdmin = false;
   showEditDialog = false;
@@ -71,6 +74,16 @@ export class ArtistReleasesTabComponent {
   ngOnChanges(): void {
     if (this.artist) {
       this.loadReleases();
+    }
+  }
+
+  get filteredReleases(): ArtistRelease[] {
+    if (this.epkFilter === 'all') {
+      return this.releases;
+    } else if (this.epkFilter === 'visible') {
+      return this.releases.filter(release => !release.exclude_from_epk);
+    } else { // 'hidden'
+      return this.releases.filter(release => release.exclude_from_epk);
     }
   }
 
@@ -333,6 +346,33 @@ export class ArtistReleasesTabComponent {
         this.alertMessage.emit({
           type: 'error',
           message: errorMessage
+        });
+      }
+    });
+  }
+
+  toggleExcludeFromEPK(release: ArtistRelease): void {
+    this.releaseService.toggleExcludeFromEPK(release.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Convert to boolean in case backend returns 0/1
+          release.exclude_from_epk = Boolean(response.exclude_from_epk);
+          this.alertMessage.emit({
+            type: 'success',
+            message: response.message
+          });
+        } else {
+          this.alertMessage.emit({
+            type: 'error',
+            message: response.message || 'Failed to update EPK visibility.'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error toggling EPK visibility:', error);
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'Failed to update EPK visibility.'
         });
       }
     });
