@@ -555,6 +555,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
           this.event = event;
           this.eventService.setSelectedEvent(event);
           this.populateFormFromEvent(event);
+          this.notificationService.showSuccess('Event unpublished successfully');
         },
         error: (error) => {
           console.error('Error unpublishing event:', error);
