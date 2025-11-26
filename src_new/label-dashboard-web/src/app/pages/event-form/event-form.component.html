@@ -1,0 +1,211 @@
+<div class="event-form-page">
+  <app-breadcrumb></app-breadcrumb>
+
+  <div class="event-form-layout">
+    <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
+    <nav class="event-form-sidebar">
+      <div class="sidebar-items">
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'general'"
+          (click)="setActiveSection('general')">
+          <i class="fa fa-info-circle"></i>
+          <span>General Information</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'purchase'"
+          (click)="setActiveSection('purchase')">
+          <i class="fa fa-shopping-cart"></i>
+          <span>Ticket Purchase</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'ticket-types'"
+          (click)="setActiveSection('ticket-types')">
+          <i class="fa fa-ticket"></i>
+          <span>Ticket Types</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'scanner'"
+          (click)="setActiveSection('scanner')">
+          <i class="fa fa-qrcode"></i>
+          <span>Scanner</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="event-form-main">
+      <div class="event-form-container">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-container">
+          <div class="loading-dots">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+
+        <!-- Form Content -->
+        <div *ngIf="!loading" class="event-form-content">
+          <!-- General Information Section -->
+          <div class="form-section" *ngIf="activeSection === 'general'">
+            <h3>General Information</h3>
+            <p>Basic event details and description</p>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Event Title</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="eventData.title"
+                  (input)="onTitleChange()"
+                  placeholder="Enter event title"
+                  required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Event Date & Time <span class="text-muted">(GMT+8 PH)</span></label>
+                <input 
+                  type="datetime-local" 
+                  class="form-control" 
+                  [(ngModel)]="eventData.date_and_time"
+                  required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Venue</label>
+                <app-venue-autocomplete
+                  placeholder="Search for venue or enter manually..."
+                  [required]="true"
+                  [hasError]="false"
+                  [ngModel]="currentVenueSelection"
+                  (ngModelChange)="onVenueSelected($event)"
+                  (venueSelected)="onVenueSelected($event)">
+                </app-venue-autocomplete>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">RSVP or Social Media Link</label>
+                <input 
+                  type="url" 
+                  class="form-control" 
+                  [(ngModel)]="eventData.rsvp_link"
+                  placeholder="https://facebook.com/events/..."
+                  required>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Facebook event page link or preferred social media page
+                </small>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label class="form-label">URL Slug</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="eventData.slug"
+                    placeholder="BuyMyAwesomeEvent">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="generateSlug()"
+                    title="Auto-generate from title">
+                    <i class="fas fa-sync"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Custom URL path for shortened links. Auto-generated from title if left empty.
+                </small>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label class="form-label">Description</label>
+                <quill-editor 
+                  [(ngModel)]="eventData.description"
+                  [modules]="quillConfig"
+                  placeholder="Enter event description...">
+                </quill-editor>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label class="form-label">Event Poster</label>
+                <div *ngIf="!posterPreview && !eventData.poster_url" class="poster-upload-zone" (click)="posterInput.click()">
+                  <i class="fa fa-image fa-3x text-muted mb-2"></i>
+                  <p class="text-muted mb-0">Click to upload poster image</p>
+                  <small class="text-muted">JPG, PNG or GIF (max 10MB)</small>
+                </div>
+
+                <div *ngIf="posterPreview || eventData.poster_url" class="poster-preview">
+                  <img [src]="posterPreview || eventData.poster_url" alt="Event poster">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-danger poster-remove-btn"
+                    (click)="removePoster()">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+
+                <input 
+                  type="file" 
+                  #posterInput
+                  accept="image/*"
+                  (change)="onPosterSelected($event)"
+                  style="display: none;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Ticket Purchase Section -->
+          <div class="form-section" *ngIf="activeSection === 'purchase'">
+            <h3>Ticket Purchase</h3>
+            <p>TODO: Add ticket purchase configuration</p>
+          </div>
+
+          <!-- Ticket Types Section -->
+          <div class="form-section" *ngIf="activeSection === 'ticket-types'">
+            <h3>Ticket Types</h3>
+            <p>TODO: Add ticket types management</p>
+          </div>
+
+          <!-- Scanner Section -->
+          <div class="form-section" *ngIf="activeSection === 'scanner'">
+            <h3>Scanner</h3>
+            <p>TODO: Add scanner configuration</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Buttons (outside scrollable container) -->
+<div class="floating-actions">
+  <button 
+    type="button" 
+    class="btn btn-outline-secondary"
+    (click)="onCancel()">
+    Cancel
+  </button>
+  <button 
+    type="button" 
+    class="btn btn-outline-primary"
+    (click)="onSaveDraft()">
+    <i class="fa fa-save"></i>
+    Save as Draft
+  </button>
+  <button 
+    type="button" 
+    class="btn btn-primary"
+    (click)="onPublish()">
+    <i class="fa fa-check"></i>
+    Publish
+  </button>
+</div>
