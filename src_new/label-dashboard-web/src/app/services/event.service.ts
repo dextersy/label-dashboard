@@ -3,7 +3,34 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { map, catchError, switchMap } from 'rxjs/operators';
-import { CreateEventForm } from '../components/events/create-event-modal/create-event-modal.component';
+
+export interface TicketTypeForm {
+  name: string;
+  price: number;
+  isFree?: boolean;
+}
+
+export interface CreateEventForm {
+  title: string;
+  date_and_time: string;
+  venue: string;
+  description: string;
+  ticket_price: number; // Keep for backward compatibility with legacy code
+  ticketTypes: TicketTypeForm[];
+  close_time: string;
+  poster_url?: string;
+  poster_file?: File;
+  rsvp_link: string;
+  slug: string;
+  status: 'draft' | 'published';
+  google_place_id?: string;
+  venue_address?: string;
+  venue_latitude?: number;
+  venue_longitude?: number;
+  venue_phone?: string;
+  venue_website?: string;
+  venue_maps_url?: string;
+}
 
 export interface Event {
   id: number;
