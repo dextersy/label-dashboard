@@ -2,13 +2,31 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Artist Releases</h5>
-      <div *ngIf="artist">
-        <button class="btn btn-primary btn-sm"
-                [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
-                (click)="navigateToCreateRelease()">
-          <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
-          {{ isAdmin ? 'Create Release' : 'Submit Release' }}
-        </button>
+      <div class="d-flex gap-3 align-items-center">
+        <div class="filter-controls">
+          <div class="btn-group btn-group-sm" role="group">
+            <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="epkFilterAll">All</label>
+
+            <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
+            <label class="btn btn-outline-info" for="epkFilterVisible">
+              <i class="fa fa-globe"></i> Visible in EPK
+            </label>
+
+            <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
+            <label class="btn btn-outline-warning" for="epkFilterHidden">
+              <i class="fa fa-eye-slash"></i> Hidden from EPK
+            </label>
+          </div>
+        </div>
+        <div *ngIf="artist">
+          <button class="btn btn-primary btn-sm"
+                  [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
+                  (click)="navigateToCreateRelease()">
+            <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
+            {{ isAdmin ? 'Create Release' : 'Submit Release' }}
+          </button>
+        </div>
       </div>
     </div>
     <div class="card-body">
@@ -26,8 +44,14 @@
         <p>No releases found</p>
         <small>This artist hasn't released any music yet.</small>
       </div>
+
+      <div *ngIf="!loading && releases.length > 0 && filteredReleases.length === 0" class="text-center text-muted empty-releases">
+        <i class="fa fa-filter fa-3x"></i>
+        <p>No releases match the current filter</p>
+        <small>Try changing the EPK visibility filter above</small>
+      </div>
       
-      <div *ngIf="!loading && releases.length > 0" class="releases-table-container">
+      <div *ngIf="!loading && filteredReleases.length > 0" class="releases-table-container">
         <div class="table-responsive">
           <table class="table releases-table">
             <thead>
@@ -41,7 +65,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let release of releases">
+              <tr *ngFor="let release of filteredReleases">
                 <td class="cover-cell">
                   <img [src]="getCoverArtUrl(release.cover_art)" 
                        [alt]="release.title + ' cover'"
