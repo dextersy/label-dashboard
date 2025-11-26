@@ -136,16 +136,24 @@ export class EventsComponent implements OnInit, OnDestroy {
         next: (events) => {
           this.availableEvents = events;
           
-          // Check if we have a previously selected event that still exists
+          // Check if we have a previously selected event from localStorage
           const currentSelected = this.eventService.getSelectedEvent();
+          let eventToSelect: Event | null = null;
+          
           if (currentSelected && events.find(e => e.id === currentSelected.id)) {
-            this.selectedEvent = events.find(e => e.id === currentSelected.id) || null;
+            // Stored event still exists in the list
+            eventToSelect = events.find(e => e.id === currentSelected.id) || null;
           }
           
           // Auto-select first event if no valid selection exists
-          if (events.length > 0 && !this.selectedEvent) {
-            this.selectedEvent = events[0];
-            this.eventService.setSelectedEvent(events[0]);
+          if (events.length > 0 && !eventToSelect) {
+            eventToSelect = events[0];
+          }
+          
+          // Set the selected event
+          if (eventToSelect) {
+            this.selectedEvent = eventToSelect;
+            this.eventService.setSelectedEvent(eventToSelect);
           }
           
           this.loading = false;

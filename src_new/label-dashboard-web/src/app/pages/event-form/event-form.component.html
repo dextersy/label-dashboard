@@ -1,4 +1,14 @@
 <div class="event-form-page">
+  <!-- Event Selection (only in edit mode) -->
+  <app-event-selection
+    *ngIf="!isNewEvent"
+    [events]="availableEvents"
+    [selectedEvent]="event"
+    [loading]="loading"
+    [isAdmin]="isAdmin"
+    (eventSelected)="onEventSelection($event)">
+  </app-event-selection>
+
   <app-breadcrumb></app-breadcrumb>
 
   <div class="event-form-layout">
@@ -105,13 +115,14 @@
                 </small>
               </div>
 
-              <div class="col-12 mb-3">
+              <div class="col-12 mb-3" *ngIf="isEventDraft()">
                 <label class="form-label">URL Slug</label>
                 <div class="input-group">
                   <input 
                     type="text" 
                     class="form-control" 
                     [(ngModel)]="eventData.slug"
+                    (input)="onSlugChange()"
                     placeholder="BuyMyAwesomeEvent">
                   <button 
                     type="button" 
@@ -167,6 +178,45 @@
           <div class="form-section" *ngIf="activeSection === 'purchase'">
             <h3>Ticket Purchase</h3>
             <p>Configure payment methods and ticket sales settings</p>
+
+            <!-- Purchase Link -->
+            <div class="row mb-4" *ngIf="event && event.buy_shortlink">
+              <div class="col-12">
+                <div class="card bg-light border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fa fa-link text-primary me-2"></i>Ticket Purchase Link
+                    </h5>
+                    <div class="input-group input-group-lg">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        [value]="event.buy_shortlink"
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn btn-primary"
+                        (click)="copyToClipboard(event.buy_shortlink)"
+                        title="Copy to clipboard">
+                        <i class="fa fa-copy me-2"></i>Copy Link
+                      </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                      <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4" *ngIf="!event || !event.buy_shortlink">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <i class="fa fa-info-circle me-2"></i>
+                  The ticket purchase link will be generated after publishing the event.
+                </div>
+              </div>
+            </div>
 
             <div class="row">
               <div class="col-12 mb-4">
@@ -263,15 +313,16 @@
               </div>
 
               <div class="col-md-6 mb-3">
-                <label class="form-label">Countdown Display</label>
+                <label class="form-label">Show Countdown on Ticket Page</label>
                 <select class="form-select" [(ngModel)]="eventData.countdown_display">
-                  <option value="days">Days</option>
-                  <option value="hours">Hours</option>
-                  <option value="minutes">Minutes</option>
-                  <option value="none">None</option>
+                  <option value="always">Always show</option>
+                  <option value="1_week">1 week before</option>
+                  <option value="3_days">3 days before</option>
+                  <option value="1_day">1 day before</option>
+                  <option value="never">Never show</option>
                 </select>
                 <small class="form-text text-muted">
-                  <i class="fa fa-info-circle"></i> How to display the countdown on the ticket purchase page
+                  <i class="fa fa-info-circle"></i> Choose when to display a countdown timer on the ticket purchase page.
                 </small>
               </div>
 
@@ -377,6 +428,45 @@
             <h3>Scanner & Verification</h3>
             <p>Ticket scanning and verification settings</p>
 
+            <!-- Verification Link -->
+            <div class="row mb-4" *ngIf="event && event.verification_link">
+              <div class="col-12">
+                <div class="card bg-light border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fa fa-qrcode text-primary me-2"></i>Verification Link
+                    </h5>
+                    <div class="input-group input-group-lg">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        [value]="event.verification_link"
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn btn-primary"
+                        (click)="copyToClipboard(event.verification_link)"
+                        title="Copy to clipboard">
+                        <i class="fa fa-copy me-2"></i>Copy Link
+                      </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                      <i class="fa fa-info-circle"></i> Share this link with ticket scanners
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4" *ngIf="!event || !event.verification_link">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <i class="fa fa-info-circle me-2"></i>
+                  The verification link will be generated after publishing the event.
+                </div>
+              </div>
+            </div>
+
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Verification PIN</label>
@@ -400,67 +490,6 @@
                   <i class="fa fa-info-circle"></i> 6-digit PIN for ticket scanners to verify tickets
                 </small>
               </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Ticket Naming</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  [(ngModel)]="eventData.ticket_naming"
-                  placeholder="e.g., General Admission, Entry Pass">
-                <small class="form-text text-muted">
-                  <i class="fa fa-info-circle"></i> How tickets will be labeled (e.g., "General Admission")
-                </small>
-              </div>
-
-              <div class="col-12 mb-3" *ngIf="event && event.verification_link">
-                <label class="form-label">Verification Link</label>
-                <div class="input-group">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    [value]="event.verification_link"
-                    readonly>
-                  <button 
-                    type="button" 
-                    class="btn btn-outline-secondary"
-                    (click)="copyToClipboard(event.verification_link)"
-                    title="Copy to clipboard">
-                    <i class="fa fa-copy"></i>
-                  </button>
-                </div>
-                <small class="form-text text-muted">
-                  <i class="fa fa-info-circle"></i> Share this link with ticket scanners
-                </small>
-              </div>
-
-              <div class="col-12 mb-3" *ngIf="event && event.buy_shortlink">
-                <label class="form-label">Ticket Purchase Link</label>
-                <div class="input-group">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    [value]="event.buy_shortlink"
-                    readonly>
-                  <button 
-                    type="button" 
-                    class="btn btn-outline-secondary"
-                    (click)="copyToClipboard(event.buy_shortlink)"
-                    title="Copy to clipboard">
-                    <i class="fa fa-copy"></i>
-                  </button>
-                </div>
-                <small class="form-text text-muted">
-                  <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
-                </small>
-              </div>
-
-              <div class="col-12" *ngIf="!event || (!event.verification_link && !event.buy_shortlink)">
-                <div class="alert alert-info">
-                  <i class="fa fa-info-circle me-2"></i>
-                  Verification and purchase links will be generated after publishing the event.
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -471,24 +500,62 @@
 
 <!-- Floating Action Buttons (outside scrollable container) -->
 <div class="floating-actions">
+  <!-- Cancel button only shown when creating a new event -->
   <button 
     type="button" 
     class="btn btn-outline-secondary"
-    (click)="onCancel()">
+    (click)="onCancel()"
+    [disabled]="saving"
+    *ngIf="isNewEvent">
     Cancel
   </button>
-  <button 
-    type="button" 
-    class="btn btn-outline-primary"
-    (click)="onSaveDraft()">
-    <i class="fa fa-save"></i>
-    Save as Draft
-  </button>
-  <button 
-    type="button" 
-    class="btn btn-primary"
-    (click)="onPublish()">
-    <i class="fa fa-check"></i>
-    Publish
-  </button>
+
+  <!-- Draft Event Buttons -->
+  <ng-container *ngIf="isEventDraft()">
+    <button 
+      type="button" 
+      class="btn btn-outline-primary"
+      (click)="onSave()"
+      [disabled]="saving">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-save" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Save as Draft</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-success"
+      (click)="onPublish()"
+      [disabled]="saving">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-rocket" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Publish</span>
+      <span *ngIf="saving">Publishing...</span>
+    </button>
+  </ng-container>
+
+  <!-- Published Event Buttons -->
+  <ng-container *ngIf="isEventPublished()">
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="onSave()"
+      [disabled]="saving || !isFormDirty()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-save" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Save Changes</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-warning"
+      (click)="onUnpublish()"
+      [disabled]="saving || hasConfirmedTickets()"
+      *ngIf="!hasConfirmedTickets()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Unpublish</span>
+      <span *ngIf="saving">Unpublishing...</span>
+    </button>
+  </ng-container>
 </div>

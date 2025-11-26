@@ -4,9 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../services/event.service';
+import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
-import { BreadcrumbService } from '../../services/breadcrumb.service';
+import { ConfirmationService } from '../../services/confirmation.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { VenueAutocompleteComponent, VenueSelection } from '../../components/events/venue-autocomplete/venue-autocomplete.component';
 import { QuillModule } from 'ngx-quill';
 
@@ -28,6 +30,7 @@ export type EventFormSection = 'general' | 'purchase' | 'ticket-types' | 'scanne
     CommonModule,
     FormsModule,
     BreadcrumbComponent,
+    EventSelectionComponent,
     VenueAutocompleteComponent,
     QuillModule
   ],
@@ -38,8 +41,11 @@ export class EventFormComponent implements OnInit, OnDestroy {
   eventId: number | null = null;
   event: any = null;
   loading = false;
+  saving = false;
   isNewEvent = false;
+  isAdmin = false;
   activeSection: EventFormSection = 'general';
+  availableEvents: Event[] = [];
   
   // Form data
   eventData: any = {
@@ -59,21 +65,27 @@ export class EventFormComponent implements OnInit, OnDestroy {
     venue_maps_url: '',
     // Ticket purchase settings
     close_time: '',
-    countdown_display: 'days',
+    countdown_display: '1_week',
     show_tickets_remaining: true,
     supports_gcash: true,
     supports_qrph: true,
     supports_card: true,
-    supports_ubp: false,
-    supports_dob: false,
-    supports_maya: false,
-    supports_grabpay: false
+    supports_ubp: true,
+    supports_dob: true,
+    supports_maya: true,
+    supports_grabpay: true,
+    // Scanner settings
+    verification_pin: '',
+    ticket_naming: 'ticket',
+    status: 'draft'
   };
   
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   currentVenueSelection: VenueSelection | null = null;
   ticketTypes: TicketType[] = [];
+  originalEventData: any = null;
+  slugManuallyEdited = false;
   
   // Expose Math for template
   Math = Math;
@@ -93,26 +105,44 @@ export class EventFormComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private authService: AuthService,
     private eventService: EventService,
     private notificationService: NotificationService,
-    private breadcrumbService: BreadcrumbService
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
-    // Check if this is a new event or editing existing
+    // Subscribe to auth state
     this.subscriptions.add(
-      this.route.params.subscribe(params => {
-        if (params['id']) {
-          this.eventId = +params['id'];
-          this.isNewEvent = false;
-          this.loadEvent();
-        } else {
-          this.isNewEvent = true;
-          this.initializeNewEvent();
-        }
-        this.updateBreadcrumbs();
+      this.authService.currentUser.subscribe(user => {
+        this.isAdmin = user ? user.is_admin : false;
       })
     );
+
+    // Check if this is /events/new or /events/details
+    const currentPath = this.router.url.split('?')[0];
+    this.isNewEvent = currentPath.endsWith('/new');
+
+    if (this.isNewEvent) {
+      // New event mode
+      this.initializeNewEvent();
+    } else {
+      // Edit mode - get event from EventService
+      this.loadAvailableEvents();
+      this.subscriptions.add(
+        this.eventService.selectedEvent$.subscribe(event => {
+          if (event) {
+            this.event = event;
+            this.eventId = event.id;
+            this.loadEvent();
+          } else if (this.availableEvents.length > 0) {
+            // Auto-select first event if none selected
+            const firstEvent = this.availableEvents[0];
+            this.eventService.setSelectedEvent(firstEvent);
+          }
+        })
+      );
+    }
 
     // Check for section in query params
     this.subscriptions.add(
@@ -128,6 +158,29 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
+  private loadAvailableEvents(): void {
+    this.subscriptions.add(
+      this.eventService.getEvents().subscribe({
+        next: (events) => {
+          this.availableEvents = events;
+          // Check if there's a selected event from EventService
+          const selectedEvent = this.eventService.getSelectedEvent();
+          if (!selectedEvent && events.length > 0) {
+            this.eventService.setSelectedEvent(events[0]);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading events:', error);
+          this.notificationService.showError('Failed to load events');
+        }
+      })
+    );
+  }
+
+  onEventSelection(event: Event): void {
+    this.eventService.setSelectedEvent(event);
+  }
+
   private loadEvent(): void {
     if (!this.eventId) return;
 
@@ -136,8 +189,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       this.eventService.getEvent(this.eventId).subscribe({
         next: (event) => {
           this.event = event;
+          this.populateFormFromEvent(event);
           this.loading = false;
-          this.updateBreadcrumbs();
         },
         error: (error) => {
           console.error('Error loading event:', error);
@@ -168,16 +221,25 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue_website: '',
       venue_maps_url: '',
       close_time: '',
-      countdown_display: 'days',
+      countdown_display: '1_week',
       show_tickets_remaining: true,
       supports_gcash: true,
       supports_qrph: true,
       supports_card: true,
-      supports_ubp: false,
-      supports_dob: false,
-      supports_maya: false,
-      supports_grabpay: false
+      supports_ubp: true,
+      supports_dob: true,
+      supports_maya: true,
+      supports_grabpay: true,
+      verification_pin: '',
+      ticket_naming: 'ticket'
     };
+    
+    // Add default ticket type for new events
+    this.ticketTypes = [{
+      name: 'Regular',
+      price: 0,
+      max_tickets: 0
+    }];
   }
 
   setActiveSection(section: EventFormSection): void {
@@ -194,14 +256,96 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.router.navigate(['/events']);
   }
 
-  onSaveDraft(): void {
-    // TODO: Implement save as draft
-    this.notificationService.showSuccess('Event saved as draft');
+  onSave(): void {
+    if (!this.validateForm()) {
+      return;
+    }
+
+    this.saving = true;
+    // Use current status if event is already published, otherwise use 'draft'
+    const status = this.isEventPublished() ? 'published' : 'draft';
+    const formData = this.prepareFormData(status);
+
+    const saveObservable = this.isNewEvent
+      ? this.eventService.createEvent(formData)
+      : (this.selectedPosterFile
+          ? this.eventService.updateEventWithFile(this.eventId!, this.prepareFormDataForUpdate(status))
+          : this.eventService.updateEvent(this.eventId!, this.prepareEventData(status)));
+
+    this.subscriptions.add(
+      saveObservable.subscribe({
+        next: (event) => {
+          const message = this.isEventPublished() ? 'Event updated successfully' : 'Event saved as draft';
+          this.notificationService.showSuccess(message);
+          this.saving = false;
+          if (this.isNewEvent) {
+            // Set the newly created event as selected and navigate to details
+            this.eventService.setSelectedEvent(event);
+            this.router.navigate(['/events/details']);
+          } else {
+            // Update the event object and reset dirty tracking without repopulating form
+            this.event = event;
+            this.eventService.setSelectedEvent(event);
+            // Update originalEventData to match current form state (what was just saved)
+            this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+            // Clear the selected poster file since it's now uploaded
+            this.selectedPosterFile = null;
+          }
+        },
+        error: (error) => {
+          console.error('Error saving event:', error);
+          this.notificationService.showError('Failed to save event');
+          this.saving = false;
+        }
+      })
+    );
   }
 
-  onPublish(): void {
-    // TODO: Implement publish
-    this.notificationService.showSuccess('Event published successfully!');
+  async onPublish(): Promise<void> {
+    if (!this.validateForm(true)) {
+      return;
+    }
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Publish Event',
+      message: 'Are you sure you want to publish this event?\n\n' +
+        '⚠️ WARNING: Once published, the shortlinks can no longer be changed and the event will be visible to the public.\n\n' +
+        'Click OK to proceed with publishing.',
+      confirmText: 'OK',
+      cancelText: 'Cancel',
+      type: 'info'
+    });
+
+    if (!confirmed) return;
+
+    this.saving = true;
+    const formData = this.prepareFormData('published');
+
+    const saveObservable = this.isNewEvent
+      ? this.eventService.createEvent(formData)
+      : (this.selectedPosterFile
+          ? this.eventService.updateEventWithFile(this.eventId!, this.prepareFormDataForUpdate('published'))
+          : this.eventService.updateEvent(this.eventId!, this.prepareEventData('published')));
+
+    this.subscriptions.add(
+      saveObservable.subscribe({
+        next: (event) => {
+          this.saving = false;
+          this.event = event;
+          this.eventService.setSelectedEvent(event);
+          this.populateFormFromEvent(event);
+          if (this.isNewEvent) {
+            this.isNewEvent = false;
+            this.eventId = event.id;
+          }
+        },
+        error: (error) => {
+          console.error('Error publishing event:', error);
+          this.notificationService.showError('Failed to publish event');
+          this.saving = false;
+        }
+      })
+    );
   }
 
   onVenueSelected(venueSelection: VenueSelection | null): void {
@@ -262,16 +406,26 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
   generateSlug(): void {
     if (this.eventData.title) {
-      this.eventData.slug = this.eventData.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '')
-        .substring(0, 50);
+      // Convert to PascalCase: split by spaces/special chars, capitalize each word, then join
+      const pascalCase = this.eventData.title
+        .split(/[\s\W]+/) // Split by spaces and non-word characters
+        .filter((word: string) => word.length > 0) // Remove empty strings
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize first letter, lowercase rest
+        .join(''); // Join without spaces
+      
+      this.eventData.slug = pascalCase;
+      this.slugManuallyEdited = false; // Reset flag when auto-generating
     }
   }
 
+  onSlugChange(): void {
+    // Mark slug as manually edited when user types in the field
+    this.slugManuallyEdited = true;
+  }
+
   onTitleChange(): void {
-    // Auto-generate slug for new events if slug is empty
-    if (this.isNewEvent && !this.eventData.slug) {
+    // Auto-generate slug for draft events unless manually edited
+    if (this.isEventDraft() && !this.slugManuallyEdited) {
       this.generateSlug();
     }
   }
@@ -345,17 +499,326 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.eventData.verification_pin = Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  private updateBreadcrumbs(): void {
-    const breadcrumbs = [
-      { label: 'Events', url: '/events' }
-    ];
+  isEventDraft(): boolean {
+    if (this.isNewEvent) return true;
+    const status = (this.event as any)?.status || this.eventData?.status;
+    return status === 'draft' || !status;
+  }
 
-    if (this.isNewEvent) {
-      breadcrumbs.push({ label: 'New Event', url: '' });
-    } else if (this.event) {
-      breadcrumbs.push({ label: this.event.title, url: '' });
+  isEventPublished(): boolean {
+    if (this.isNewEvent) return false;
+    const status = (this.event as any)?.status || this.eventData?.status;
+    return status === 'published';
+  }
+
+  hasConfirmedTickets(): boolean {
+    return (this.event?.tickets?.filter((ticket: any) => 
+      ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.'
+    ).length || 0) > 0;
+  }
+
+  isFormDirty(): boolean {
+    if (!this.originalEventData) return false;
+    return JSON.stringify(this.eventData) !== JSON.stringify(this.originalEventData) ||
+           this.selectedPosterFile !== null;
+  }
+
+  async onUnpublish(): Promise<void> {
+    if (!this.eventId) return;
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Unpublish Event',
+      message: 'Are you sure you want to unpublish this event? It will no longer be visible to the public and ticket sales will stop.',
+      confirmText: 'Unpublish',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
+
+    if (!confirmed) return;
+
+    this.saving = true;
+
+    this.subscriptions.add(
+      this.eventService.unpublishEvent(this.eventId).subscribe({
+        next: (event) => {
+          this.saving = false;
+          this.event = event;
+          this.eventService.setSelectedEvent(event);
+          this.populateFormFromEvent(event);
+        },
+        error: (error) => {
+          console.error('Error unpublishing event:', error);
+          this.notificationService.showError('Failed to unpublish event');
+          this.saving = false;
+        }
+      })
+    );
+  }
+
+  private validateForm(isPublishing: boolean = false): boolean {
+    if (!this.eventData.title || !this.eventData.title.trim()) {
+      this.notificationService.showError('Event title is required');
+      this.setActiveSection('general');
+      return false;
     }
 
-    this.breadcrumbService.setBreadcrumbs(breadcrumbs);
+    if (!this.eventData.date_and_time) {
+      this.notificationService.showError('Event date and time is required');
+      this.setActiveSection('general');
+      return false;
+    }
+
+    if (!this.eventData.venue || !this.eventData.venue.trim()) {
+      this.notificationService.showError('Venue is required');
+      this.setActiveSection('general');
+      return false;
+    }
+
+    // Slug is only required for draft/new events, not for published events being updated
+    if (this.isEventDraft() && (!this.eventData.slug || !this.eventData.slug.trim())) {
+      this.notificationService.showError('Slug is required');
+      this.setActiveSection('general');
+      return false;
+    }
+
+    if (isPublishing) {
+      if (this.ticketTypes.length === 0) {
+        this.notificationService.showError('At least one ticket type is required to publish');
+        this.setActiveSection('ticket-types');
+        return false;
+      }
+
+      for (const ticketType of this.ticketTypes) {
+        if (!ticketType.name || !ticketType.name.trim()) {
+          this.notificationService.showError('All ticket types must have a name');
+          this.setActiveSection('ticket-types');
+          return false;
+        }
+        if (ticketType.price < 0) {
+          this.notificationService.showError('Ticket prices cannot be negative');
+          this.setActiveSection('ticket-types');
+          return false;
+        }
+        if (ticketType.max_tickets < 0) {
+          this.notificationService.showError('Max tickets cannot be negative');
+          this.setActiveSection('ticket-types');
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  private prepareFormData(status: 'draft' | 'published'): any {
+    const formData: any = {
+      title: this.eventData.title,
+      date_and_time: this.formatDateForAPI(this.eventData.date_and_time),
+      venue: this.eventData.venue,
+      description: this.eventData.description || '',
+      ticket_price: this.ticketTypes.length > 0 ? this.ticketTypes[0].price : 0,
+      close_time: this.eventData.close_time ? this.formatDateForAPI(this.eventData.close_time) : '',
+      rsvp_link: this.eventData.rsvp_link || '',
+      slug: this.eventData.slug,
+      status: status,
+      countdown_display: this.eventData.countdown_display,
+      show_tickets_remaining: this.eventData.show_tickets_remaining,
+      supports_gcash: this.eventData.supports_gcash,
+      supports_qrph: this.eventData.supports_qrph,
+      supports_card: this.eventData.supports_card,
+      supports_ubp: this.eventData.supports_ubp,
+      supports_dob: this.eventData.supports_dob,
+      supports_maya: this.eventData.supports_maya,
+      supports_grabpay: this.eventData.supports_grabpay,
+      verification_pin: this.eventData.verification_pin || '',
+      ticket_naming: this.eventData.ticket_naming || 'ticket',
+      ticketTypes: this.ticketTypes
+    };
+
+    if (this.currentVenueSelection) {
+      formData.google_place_id = this.currentVenueSelection.google_place_id;
+      formData.venue_address = this.currentVenueSelection.venue_address;
+      formData.venue_latitude = this.currentVenueSelection.venue_latitude;
+      formData.venue_longitude = this.currentVenueSelection.venue_longitude;
+      formData.venue_phone = this.currentVenueSelection.venue_phone;
+      formData.venue_website = this.currentVenueSelection.venue_website;
+      formData.venue_maps_url = this.currentVenueSelection.venue_maps_url;
+    }
+
+    if (this.selectedPosterFile) {
+      formData.poster_file = this.selectedPosterFile;
+    }
+
+    return formData;
+  }
+
+  private prepareFormDataForUpdate(status: 'draft' | 'published'): FormData {
+    const formData = new FormData();
+    const eventData = this.prepareEventData(status);
+
+    Object.keys(eventData).forEach(key => {
+      if (key === 'ticketTypes') {
+        formData.append(key, JSON.stringify(eventData[key]));
+      } else if (eventData[key] !== null && eventData[key] !== undefined) {
+        formData.append(key, eventData[key].toString());
+      }
+    });
+
+    if (this.selectedPosterFile) {
+      formData.append('poster', this.selectedPosterFile);
+    }
+
+    return formData;
+  }
+
+  private prepareEventData(status: 'draft' | 'published'): any {
+    const eventData: any = {
+      title: this.eventData.title,
+      date_and_time: this.formatDateForAPI(this.eventData.date_and_time),
+      venue: this.eventData.venue,
+      description: this.eventData.description || '',
+      ticket_price: this.ticketTypes.length > 0 ? this.ticketTypes[0].price : 0,
+      close_time: this.eventData.close_time ? this.formatDateForAPI(this.eventData.close_time) : '',
+      rsvp_link: this.eventData.rsvp_link || '',
+      slug: this.eventData.slug,
+      status: status,
+      countdown_display: this.eventData.countdown_display,
+      show_tickets_remaining: this.eventData.show_tickets_remaining,
+      supports_gcash: this.eventData.supports_gcash,
+      supports_qrph: this.eventData.supports_qrph,
+      supports_card: this.eventData.supports_card,
+      supports_ubp: this.eventData.supports_ubp,
+      supports_dob: this.eventData.supports_dob,
+      supports_maya: this.eventData.supports_maya,
+      supports_grabpay: this.eventData.supports_grabpay,
+      verification_pin: this.eventData.verification_pin || '',
+      ticket_naming: this.eventData.ticket_naming || 'ticket',
+      ticketTypes: this.ticketTypes
+    };
+
+    if (this.currentVenueSelection) {
+      eventData.google_place_id = this.currentVenueSelection.google_place_id;
+      eventData.venue_address = this.currentVenueSelection.venue_address;
+      eventData.venue_latitude = this.currentVenueSelection.venue_latitude;
+      eventData.venue_longitude = this.currentVenueSelection.venue_longitude;
+      eventData.venue_phone = this.currentVenueSelection.venue_phone;
+      eventData.venue_website = this.currentVenueSelection.venue_website;
+      eventData.venue_maps_url = this.currentVenueSelection.venue_maps_url;
+    }
+
+    return eventData;
+  }
+
+  private populateFormFromEvent(event: any): void {
+    this.eventData = {
+      title: event.title || '',
+      date_and_time: this.formatDateForInput(event.date_and_time),
+      venue: event.venue || '',
+      description: event.description || '',
+      rsvp_link: event.rsvp_link || '',
+      slug: event.slug || '',
+      poster_url: event.poster_url || '',
+      google_place_id: event.google_place_id || '',
+      venue_address: event.venue_address || '',
+      venue_latitude: event.venue_latitude || null,
+      venue_longitude: event.venue_longitude || null,
+      venue_phone: event.venue_phone || '',
+      venue_website: event.venue_website || '',
+      venue_maps_url: event.venue_maps_url || '',
+      close_time: event.close_time ? this.formatDateForInput(event.close_time) : '',
+      countdown_display: event.countdown_display || '1_week',
+      show_tickets_remaining: event.show_tickets_remaining,
+      supports_gcash: event.supports_gcash,
+      supports_qrph: event.supports_qrph,
+      supports_card: event.supports_card,
+      supports_ubp: event.supports_ubp,
+      supports_dob: event.supports_dob,
+      supports_maya: event.supports_maya,
+      supports_grabpay: event.supports_grabpay,
+      verification_pin: event.verification_pin || '',
+      ticket_naming: event.ticket_naming || 'ticket',
+      status: (event as any).status || 'draft'
+    };
+
+    if (event.google_place_id) {
+      this.currentVenueSelection = {
+        venue: event.venue,
+        google_place_id: event.google_place_id,
+        venue_address: event.venue_address,
+        venue_latitude: event.venue_latitude,
+        venue_longitude: event.venue_longitude,
+        venue_phone: event.venue_phone,
+        venue_website: event.venue_website,
+        venue_maps_url: event.venue_maps_url
+      };
+    }
+
+    if (this.eventId) {
+      this.loadTicketTypes();
+    }
+
+    if (event.poster_url) {
+      this.posterPreview = event.poster_url;
+    }
+
+    // Auto-generate slug for draft events if not set
+    if (this.isEventDraft() && !this.eventData.slug && this.eventData.title) {
+      this.generateSlug();
+    }
+
+    // Store original data for dirty checking
+    this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+  }
+
+  private loadTicketTypes(): void {
+    if (!this.eventId) return;
+
+    this.subscriptions.add(
+      this.eventService.getTicketTypes(this.eventId).subscribe({
+        next: (response) => {
+          this.ticketTypes = response.ticketTypes || [];
+        },
+        error: (error) => {
+          console.error('Error loading ticket types:', error);
+        }
+      })
+    );
+  }
+
+  private formatDateForAPI(dateString: string): string {
+    if (!dateString) return '';
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.error('Error formatting date for API:', dateString, error);
+      return '';
+    }
+  }
+
+  private formatDateForInput(isoString: string): string {
+    if (!isoString) return '';
+
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Error formatting date for input:', isoString, error);
+      return '';
+    }
   }
 }

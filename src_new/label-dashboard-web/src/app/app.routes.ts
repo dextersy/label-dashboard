@@ -85,8 +85,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'details', pathMatch: 'full' },
       { path: 'new', component: EventFormComponent },
-      { path: ':id/edit', component: EventFormComponent },
-      { path: 'details', component: EventsComponent, data: { tab: 'details' } },
+      { path: 'details', component: EventFormComponent },
       { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } },
