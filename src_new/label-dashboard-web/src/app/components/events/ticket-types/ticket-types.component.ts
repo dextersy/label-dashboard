@@ -14,6 +14,7 @@ export interface TicketType {
   end_date?: string | null;
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
+  isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
 }
 
 @Component({
@@ -29,14 +30,15 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   @Output() ticketTypesChanged = new EventEmitter<boolean>();
 
   ticketTypes: TicketType[] = [];
-  newTicketType: { name: string; price: number; max_tickets: number; start_date?: string | null; end_date?: string | null; showDateRange?: boolean; isFree?: boolean } = {
+  newTicketType: { name: string; price: number; max_tickets: number; start_date?: string | null; end_date?: string | null; showDateRange?: boolean; isFree?: boolean; isUnlimited?: boolean } = {
     name: '',
     price: 0,
     max_tickets: 0,
     start_date: null,
     end_date: null,
     showDateRange: false,
-    isFree: false
+    isFree: false,
+    isUnlimited: true
   };
   loading = false;
   creating = false;
@@ -70,7 +72,8 @@ export class TicketTypesComponent implements OnInit, OnChanges {
         this.ticketTypes = (response.ticketTypes || []).map(tt => ({
           ...tt,
           showDateRange: false, // Always start collapsed
-          isFree: tt.price === 0 // Set isFree based on price
+          isFree: tt.price === 0, // Set isFree based on price
+          isUnlimited: tt.max_tickets === 0 // Set isUnlimited based on max_tickets
         }));
         this.loading = false;
       },
@@ -97,7 +100,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       event_id: this.selectedEvent.id,
       name: this.newTicketType.name.trim(),
       price: this.newTicketType.isFree ? 0 : Number(this.newTicketType.price),
-      max_tickets: Number(this.newTicketType.max_tickets)
+      max_tickets: this.newTicketType.isUnlimited ? 0 : Number(this.newTicketType.max_tickets)
     };
 
     // Only include dates if they're set, format them for API
@@ -113,6 +116,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
         this.ticketTypes.push({
           ...response.ticketType,
           isFree: response.ticketType.price === 0, // Set isFree based on price
+          isUnlimited: response.ticketType.max_tickets === 0, // Set isUnlimited based on max_tickets
           showDateRange: false
         });
         this.newTicketType = {
@@ -122,7 +126,8 @@ export class TicketTypesComponent implements OnInit, OnChanges {
           start_date: null,
           end_date: null,
           showDateRange: false,
-          isFree: false
+          isFree: false,
+          isUnlimited: true
         };
         this.alertMessage.emit({
           type: 'success',
@@ -152,7 +157,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     const updateData: any = {
       name: ticketType.name.trim(),
       price: ticketType.isFree ? 0 : Number(ticketType.price),
-      max_tickets: Number(ticketType.max_tickets)
+      max_tickets: ticketType.isUnlimited ? 0 : Number(ticketType.max_tickets)
     };
 
     // Include dates in update, format them for API
@@ -167,6 +172,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
           this.ticketTypes[index] = {
             ...response.ticketType,
             isFree: response.ticketType.price === 0, // Preserve isFree state based on price
+            isUnlimited: response.ticketType.max_tickets === 0, // Preserve isUnlimited state based on max_tickets
             showDateRange: this.ticketTypes[index].showDateRange // Preserve UI state
           };
         }

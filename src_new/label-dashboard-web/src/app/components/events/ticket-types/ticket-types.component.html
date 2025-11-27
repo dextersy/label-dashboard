@@ -55,14 +55,26 @@
           <div class="col-md-3">
             <div class="mb-2">
               <label class="form-label small">Max Tickets</label>
-              <input
-                type="number"
-                class="form-control form-control-sm"
-                [(ngModel)]="ticketType.max_tickets"
-                [disabled]="!isAdmin"
-                min="0"
-                placeholder="0 = unlimited">
-              <small class="form-text text-muted">0 = unlimited</small>
+              <div class="d-flex align-items-center gap-2">
+                <div *ngIf="isAdmin" class="form-check form-switch mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [ngModel]="ticketType.isUnlimited"
+                    (ngModelChange)="ticketType.isUnlimited = $event; ticketType.max_tickets = $event ? 0 : ticketType.max_tickets"
+                    [id]="'unlimitedToggle' + i">
+                  <label class="form-check-label small" [for]="'unlimitedToggle' + i">Unlimited</label>
+                </div>
+                <input
+                  *ngIf="!ticketType.isUnlimited"
+                  type="number"
+                  class="form-control form-control-sm flex-grow-1"
+                  [(ngModel)]="ticketType.max_tickets"
+                  [disabled]="!isAdmin"
+                  min="1"
+                  placeholder="Enter max tickets">
+              </div>
             </div>
           </div>
           <div class="col-md-3">
@@ -201,13 +213,25 @@
           <div class="col-md-3">
             <div class="mb-2">
               <label class="form-label small">Max Tickets</label>
-              <input
-                type="number"
-                class="form-control form-control-sm"
-                [(ngModel)]="newTicketType.max_tickets"
-                min="0"
-                placeholder="0 = unlimited">
-              <small class="form-text text-muted">0 = unlimited</small>
+              <div class="d-flex align-items-center gap-2">
+                <div class="form-check form-switch mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [ngModel]="newTicketType.isUnlimited"
+                    (ngModelChange)="newTicketType.isUnlimited = $event; newTicketType.max_tickets = $event ? 0 : newTicketType.max_tickets"
+                    id="newUnlimitedToggle">
+                  <label class="form-check-label small" for="newUnlimitedToggle">Unlimited</label>
+                </div>
+                <input
+                  *ngIf="!newTicketType.isUnlimited"
+                  type="number"
+                  class="form-control form-control-sm flex-grow-1"
+                  [(ngModel)]="newTicketType.max_tickets"
+                  min="1"
+                  placeholder="Enter max tickets">
+              </div>
             </div>
           </div>
           <div class="col-md-3">

@@ -378,82 +378,11 @@
             <h3>Ticket Types</h3>
             <p>Configure ticket types, pricing, and availability</p>
 
-            <div class="ticket-types-list">
-              <div class="ticket-type-item" *ngFor="let ticket of ticketTypes; let i = index">
-                <div class="row">
-                  <div class="col-md-4 mb-3">
-                    <label class="form-label">Ticket Name *</label>
-                    <input 
-                      type="text" 
-                      class="form-control" 
-                      [(ngModel)]="ticket.name"
-                      placeholder="e.g., General Admission, VIP">
-                  </div>
-                  <div class="col-md-3 mb-3">
-                    <label class="form-label">Price (₱) *</label>
-                    <input 
-                      type="number" 
-                      class="form-control" 
-                      [(ngModel)]="ticket.price"
-                      min="0"
-                      step="0.01">
-                  </div>
-                  <div class="col-md-3 mb-3">
-                    <label class="form-label">Max Tickets *</label>
-                    <input 
-                      type="number" 
-                      class="form-control" 
-                      [(ngModel)]="ticket.max_tickets"
-                      min="1">
-                  </div>
-                  <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <button 
-                      type="button" 
-                      class="btn btn-danger w-100" 
-                      (click)="removeTicketType(i)">
-                      <i class="bi bi-trash"></i> Remove
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="row" *ngIf="ticket.start_date !== undefined">
-                  <div class="col-md-5 mb-3">
-                    <label class="form-label">Start Date (Optional)</label>
-                    <input 
-                      type="datetime-local" 
-                      class="form-control" 
-                      [(ngModel)]="ticket.start_date">
-                  </div>
-                  <div class="col-md-5 mb-3">
-                    <label class="form-label">End Date (Optional)</label>
-                    <input 
-                      type="datetime-local" 
-                      class="form-control" 
-                      [(ngModel)]="ticket.end_date">
-                  </div>
-                  <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <button 
-                      type="button" 
-                      class="btn btn-outline-secondary w-100" 
-                      (click)="toggleTicketTypeDateRange(ticket)">
-                      Clear Dates
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <button 
-                type="button" 
-                class="btn btn-outline-primary" 
-                (click)="addTicketType()"
-                [disabled]="isEventPast()">
-                <i class="bi bi-plus-circle"></i> Add Ticket Type
-              </button>
-
-              <div class="alert alert-info mt-3" *ngIf="ticketTypes.length === 0">
-                <i class="bi bi-info-circle"></i> No ticket types added yet. Click "Add Ticket Type" to create your first ticket type.
-              </div>
-            </div>
+            <app-ticket-types
+              [selectedEvent]="event"
+              [isAdmin]="isAdmin"
+              (ticketTypesChanged)="onTicketTypesChanged()">
+            </app-ticket-types>
           </div>
 
           <!-- Scanner Section -->

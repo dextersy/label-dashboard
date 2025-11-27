@@ -11,6 +11,7 @@ import { EventPublishedService } from '../../services/event-published.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { VenueAutocompleteComponent, VenueSelection } from '../../components/events/venue-autocomplete/venue-autocomplete.component';
+import { TicketTypesComponent } from '../../components/events/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
 
 export interface TicketType {
@@ -33,6 +34,7 @@ export type EventFormSection = 'general' | 'purchase' | 'ticket-types' | 'scanne
     BreadcrumbComponent,
     EventSelectionComponent,
     VenueAutocompleteComponent,
+    TicketTypesComponent,
     QuillModule
   ],
   templateUrl: './event-form.component.html',
@@ -476,24 +478,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.eventData.close_time = `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
-  addTicketType(): void {
-    this.ticketTypes.push({
-      name: '',
-      price: 0,
-      max_tickets: 0,
-      start_date: null,
-      end_date: null
-    });
-  }
-
-  removeTicketType(index: number): void {
-    this.ticketTypes.splice(index, 1);
-  }
-
-  toggleTicketTypeDateRange(ticket: TicketType): void {
-    if (ticket.start_date || ticket.end_date) {
-      ticket.start_date = null;
-      ticket.end_date = null;
+  onTicketTypesChanged(): void {
+    // Reload event data to get updated ticket types
+    if (this.eventId) {
+      this.loadEvent();
     }
   }
 
