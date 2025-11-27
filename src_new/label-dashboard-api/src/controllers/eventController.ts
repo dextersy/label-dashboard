@@ -620,7 +620,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue: venue || event.venue,
       description,
       ticket_price: ticket_price !== undefined ? ticket_price : event.ticket_price,
-      close_time: close_time ? new Date(close_time) : event.close_time,
+      close_time: close_time !== undefined ? (close_time === '' ? null : new Date(close_time)) : event.close_time,
       poster_url: finalPosterUrl,
       rsvp_link,
       verification_pin: verification_pin || event.verification_pin,

@@ -67,6 +67,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
     venue_website: '',
     venue_maps_url: '',
     // Ticket purchase settings
+    max_tickets: 0,
     close_time: '',
     countdown_display: '1_week',
     show_tickets_remaining: true,
@@ -89,6 +90,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
   ticketTypes: TicketType[] = [];
   originalEventData: any = null;
   slugManuallyEdited = false;
+  
+  // UI state
+  isMaxTicketsUnlimited = true;
+  closeAtEventStart = true;
   
   // Expose Math for template
   Math = Math;
@@ -476,6 +481,14 @@ export class EventFormComponent implements OnInit, OnDestroy {
     const minutes = String(closeDate.getMinutes()).padStart(2, '0');
     
     this.eventData.close_time = `${year}-${month}-${day}T${hours}:${minutes}`;
+    this.closeAtEventStart = false; // Turn off the switch when setting a specific time
+  }
+
+  onCloseAtEventStartChange(enabled: boolean): void {
+    if (enabled) {
+      // Clear the close time when enabling "End during show start"
+      this.eventData.close_time = '';
+    }
   }
 
   onTicketTypesChanged(): void {
@@ -626,7 +639,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue: this.eventData.venue,
       description: this.eventData.description || '',
       ticket_price: this.ticketTypes.length > 0 ? this.ticketTypes[0].price : 0,
-      close_time: this.eventData.close_time ? this.formatDateForAPI(this.eventData.close_time) : '',
+      max_tickets: this.isMaxTicketsUnlimited ? 0 : Number(this.eventData.max_tickets),
+      close_time: this.closeAtEventStart ? '' : (this.eventData.close_time ? this.formatDateForAPI(this.eventData.close_time) : ''),
       rsvp_link: this.eventData.rsvp_link || '',
       slug: this.eventData.slug,
       status: status,
@@ -687,7 +701,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue: this.eventData.venue,
       description: this.eventData.description || '',
       ticket_price: this.ticketTypes.length > 0 ? this.ticketTypes[0].price : 0,
-      close_time: this.eventData.close_time ? this.formatDateForAPI(this.eventData.close_time) : '',
+      max_tickets: this.isMaxTicketsUnlimited ? 0 : Number(this.eventData.max_tickets),
+      close_time: this.closeAtEventStart ? '' : (this.eventData.close_time ? this.formatDateForAPI(this.eventData.close_time) : ''),
       rsvp_link: this.eventData.rsvp_link || '',
       slug: this.eventData.slug,
       status: status,
@@ -734,6 +749,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue_phone: event.venue_phone || '',
       venue_website: event.venue_website || '',
       venue_maps_url: event.venue_maps_url || '',
+      max_tickets: event.max_tickets || 0,
       close_time: event.close_time ? this.formatDateForInput(event.close_time) : '',
       countdown_display: event.countdown_display || '1_week',
       show_tickets_remaining: event.show_tickets_remaining,
@@ -748,6 +764,12 @@ export class EventFormComponent implements OnInit, OnDestroy {
       ticket_naming: event.ticket_naming || 'ticket',
       status: (event as any).status || 'draft'
     };
+
+    // Set unlimited state based on max_tickets
+    this.isMaxTicketsUnlimited = !event.max_tickets || event.max_tickets === 0;
+    
+    // Set close at event start state based on close_time
+    this.closeAtEventStart = !event.close_time;
 
     if (event.google_place_id) {
       this.currentVenueSelection = {

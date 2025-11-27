@@ -241,6 +241,106 @@
               </div>
             </div>
 
+            <!-- Maximum Tickets and Show Remaining -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Maximum Tickets (Total)</label>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <div class="form-check form-switch mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      [(ngModel)]="isMaxTicketsUnlimited"
+                      (ngModelChange)="eventData.max_tickets = $event ? 0 : eventData.max_tickets"
+                      [disabled]="isEventPast()"
+                      id="unlimitedMaxTickets">
+                    <label class="form-check-label" for="unlimitedMaxTickets">Unlimited</label>
+                  </div>
+                  <input
+                    *ngIf="!isMaxTicketsUnlimited"
+                    type="number"
+                    class="form-control flex-grow-1"
+                    [(ngModel)]="eventData.max_tickets"
+                    [disabled]="isEventPast()"
+                    min="1"
+                    placeholder="Enter maximum tickets">
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Maximum number of tickets that can be sold for this event. Limits for specific ticket types will still apply.
+                </small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Show Tickets Remaining</label>
+                <div class="form-check form-switch">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input" 
+                    id="showTicketsRemaining"
+                    role="switch"
+                    [(ngModel)]="eventData.show_tickets_remaining"
+                    [disabled]="isEventPast()">
+                  <label class="form-check-label" for="showTicketsRemaining">
+                    Display remaining tickets on purchase page
+                  </label>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Shows customers how many tickets are still available
+                </small>
+              </div>
+            </div>
+
+            <!-- Ticket Sales Settings -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Ticket Sales Close Time</label>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <div class="form-check form-switch mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      [(ngModel)]="closeAtEventStart"
+                      (ngModelChange)="onCloseAtEventStartChange($event)"
+                      [disabled]="isEventPast()"
+                      id="closeAtEventStart">
+                    <label class="form-check-label" for="closeAtEventStart">End during show start</label>
+                  </div>
+                  <input
+                    *ngIf="!closeAtEventStart"
+                    type="datetime-local"
+                    class="form-control flex-grow-1"
+                    [(ngModel)]="eventData.close_time"
+                    [disabled]="isEventPast()"
+                    placeholder="Select close time">
+                </div>
+                <small class="form-text text-muted d-block" *ngIf="!closeAtEventStart">
+                  <i class="fa fa-clock"></i> Set suggested time:
+                </small>
+                <div class="d-flex flex-wrap gap-2 mt-2" *ngIf="!closeAtEventStart">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Show Countdown on Ticket Page</label>
+                <select class="form-select" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
+                  <option value="always">Always show</option>
+                  <option value="1_week">1 week before</option>
+                  <option value="3_days">3 days before</option>
+                  <option value="1_day">1 day before</option>
+                  <option value="never">Never show</option>
+                </select>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Choose when to display a countdown timer on the ticket purchase page.
+                </small>
+              </div>
+            </div>
+
             <div class="row">
               <div class="col-12 mb-4">
                 <label class="form-label">Accepted Payment Methods</label>
@@ -322,52 +422,6 @@
                       <span>Direct Online Banking</span>
                     </label>
                   </div>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Ticket Sales Close Time</label>
-                <input 
-                  type="datetime-local" 
-                  class="form-control" 
-                  [(ngModel)]="eventData.close_time"
-                  [disabled]="isEventPast()"
-                  placeholder="Optional - leave empty to close at event time">
-                <small class="form-text text-muted d-flex align-items-center gap-2 mt-2">
-                  <i class="fa fa-clock"></i>
-                  Set suggested time:
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
-                </small>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Show Countdown on Ticket Page</label>
-                <select class="form-select" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
-                  <option value="always">Always show</option>
-                  <option value="1_week">1 week before</option>
-                  <option value="3_days">3 days before</option>
-                  <option value="1_day">1 day before</option>
-                  <option value="never">Never show</option>
-                </select>
-                <small class="form-text text-muted">
-                  <i class="fa fa-info-circle"></i> Choose when to display a countdown timer on the ticket purchase page.
-                </small>
-              </div>
-
-              <div class="col-12 mb-3">
-                <div class="form-check">
-                  <input 
-                    type="checkbox" 
-                    class="form-check-input" 
-                    id="showTicketsRemaining"
-                    [(ngModel)]="eventData.show_tickets_remaining"
-                    [disabled]="isEventPast()">
-                  <label class="form-check-label" for="showTicketsRemaining">
-                    Show tickets remaining on purchase page
-                  </label>
                 </div>
               </div>
             </div>
