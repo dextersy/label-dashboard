@@ -1,4 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+
+// (removed duplicate/erroneous code)
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventService, Event } from '../../../services/event.service';
@@ -37,6 +39,7 @@ function createNewTicketTypeForm() {
     templateUrl: './ticket-types.component.html',
     styleUrls: ['./ticket-types.component.scss']
 })
+
 export class TicketTypesComponent implements OnInit, OnChanges {
   @Input() ticketTypes: TicketType[] = [];
   @Input() isAdmin: boolean = false;
@@ -44,29 +47,170 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
   newTicketType = createNewTicketTypeForm();
+  originalTicketTypes: TicketType[] = [];
+  showNewForm = false;
+  private hasAutoStartedEditing = false; // Track if auto-editing has been done
+  // Show new ticket form
+  startAddNew(): void {
+    this.showNewForm = true;
+    this.editingIndex = null;
+    this.newTicketType = createNewTicketTypeForm();
+  }
 
-  constructor() {}
+  // Save new ticket type
+  saveNewTicketType(): void {
+    this.addTicketType();
+    this.showNewForm = false;
+  }
+
+  // Cancel new ticket type
+  cancelNewTicketType(): void {
+    this.showNewForm = false;
+    this.newTicketType = createNewTicketTypeForm();
+  }
+
+  // Track which ticket is being edited (by index), or null if none
+  editingIndex: number | null = null;
+
+  constructor(public confirmationService: ConfirmationService, private cdr: ChangeDetectorRef) {}
+  // Wrapper for delete confirmation to be used in template
+  confirmDelete(ticketType: TicketType, index: number): void {
+    this.confirmationService.confirm({
+      title: 'Delete Ticket Type',
+      message: 'Are you sure you want to delete this ticket type?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.deleteTicketType(ticketType, index);
+      }
+    });
+  }
 
   ngOnInit(): void {
-    // Initialize UI states for existing ticket types
     this.initializeTicketTypes();
+    this.saveOriginalTicketTypes();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['ticketTypes']) {
       this.initializeTicketTypes();
+      this.saveOriginalTicketTypes();
     }
+  }
+  saveOriginalTicketTypes(): void {
+    this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+  }
+
+  isDirty(): boolean {
+    // Compare ticketTypes to originalTicketTypes, ignoring UI-only fields
+    const stripUiFields = (arr: TicketType[]) => arr.map(tt => {
+      const { showDateRange, isFree, isUnlimited, ...rest } = tt;
+      return rest;
+    });
+    return JSON.stringify(stripUiFields(this.ticketTypes)) !== JSON.stringify(stripUiFields(this.originalTicketTypes));
+  }
+
+  resetTicketTypes(): void {
+    this.ticketTypes = JSON.parse(JSON.stringify(this.originalTicketTypes));
+    this.ticketTypesChange.emit([...this.ticketTypes]);
+    this.editingIndex = null;
+    this.showNewForm = false;
   }
 
   private initializeTicketTypes(): void {
-    // Add UI state properties if they don't exist
     this.ticketTypes = this.ticketTypes.map(tt => ({
       ...tt,
-      showDateRange: tt.showDateRange ?? false,
+      showDateRange: tt.showDateRange ?? (tt.start_date != null || tt.end_date != null),
       isFree: tt.isFree ?? (tt.price === 0),
       isUnlimited: tt.isUnlimited ?? (tt.max_tickets === 0)
     }));
+
+    // For new events with default "Regular" ticket, start in edit mode (only once per component instance)
+    if (!this.hasAutoStartedEditing && this.ticketTypes.length === 1 && !this.ticketTypes[0].id ) {
+      this.startEdit(0);
+      this.hasAutoStartedEditing = true;
+    }
   }
+
+  startEdit(index: number): void {
+    this.editingIndex = Number(index); // ensure number
+    // Deep clone the ticket for editing, so cancel can revert
+    this._editBackup = JSON.parse(JSON.stringify(this.ticketTypes[index]));
+    
+    // Format dates for datetime-local input when editing
+    const ticketType = this.ticketTypes[index];
+    if (ticketType.start_date) {
+      ticketType.start_date = this.formatDateForInput(ticketType.start_date);
+    }
+    if (ticketType.end_date) {
+      ticketType.end_date = this.formatDateForInput(ticketType.end_date);
+    }
+    
+    this.cdr.markForCheck();
+  }
+
+  saveEdit(index: number): void {
+    const ticketType = this.ticketTypes[index];
+    
+    // Validate that ticket has a name
+    if (!ticketType.name || !ticketType.name.trim()) {
+      // Don't save if no name - stay in edit mode
+      return;
+    }
+    
+    // Clear dates if not scheduled
+    if (!ticketType.showDateRange) {
+      ticketType.start_date = null;
+      ticketType.end_date = null;
+    } else {
+      // Format dates back to API format before saving
+      if (ticketType.start_date) {
+        ticketType.start_date = this.formatDateForAPI(ticketType.start_date);
+      }
+      if (ticketType.end_date) {
+        ticketType.end_date = this.formatDateForAPI(ticketType.end_date);
+      }
+    }
+    
+    // Exit edit mode and save changes
+    this.editingIndex = null;
+    this._editBackup = null;
+    this.ticketTypesChange.emit([...this.ticketTypes]);
+    this.cdr.markForCheck();
+  }
+
+  cancelEdit(): void {
+    if (this.editingIndex !== null && this._editBackup) {
+      this.ticketTypes[this.editingIndex] = { ...this._editBackup };
+    }
+    this.editingIndex = null;
+    this._editBackup = null;
+  }
+
+  // Clear start date for edit form
+  clearEditTicketStartDate(ticketType: TicketType): void {
+    ticketType.start_date = null;
+  }
+
+  // Clear end date for edit form
+  clearEditTicketEndDate(ticketType: TicketType): void {
+    ticketType.end_date = null;
+  }
+
+  // Getter for scheduled state - returns true if either date is set
+  getScheduledState(ticketType: TicketType): boolean {
+    return !!(ticketType.start_date || ticketType.end_date);
+  }
+
+  // Setter for scheduled state - only controls visibility, dates are preserved
+  setScheduledState(ticketType: TicketType, scheduled: boolean): void {
+    ticketType.showDateRange = scheduled;
+  }
+
+  // Private backup for editing
+  private _editBackup: TicketType | null = null;
 
   addTicketType(): void {
     if (!this.newTicketType.name.trim() || (!this.newTicketType.isFree && this.newTicketType.price < 0)) {
@@ -79,9 +223,9 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       name: this.newTicketType.name.trim(),
       price: this.newTicketType.isFree ? 0 : Number(this.newTicketType.price),
       max_tickets: this.newTicketType.isUnlimited ? 0 : Number(this.newTicketType.max_tickets),
-      start_date: this.newTicketType.start_date ? this.formatDateForAPI(this.newTicketType.start_date) : null,
-      end_date: this.newTicketType.end_date ? this.formatDateForAPI(this.newTicketType.end_date) : null,
-      showDateRange: false,
+      start_date: this.newTicketType.showDateRange && this.newTicketType.start_date ? this.formatDateForAPI(this.newTicketType.start_date) : null,
+      end_date: this.newTicketType.showDateRange && this.newTicketType.end_date ? this.formatDateForAPI(this.newTicketType.end_date) : null,
+      showDateRange: this.newTicketType.showDateRange,
       isFree: this.newTicketType.isFree,
       isUnlimited: this.newTicketType.isUnlimited
     };
@@ -146,12 +290,6 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   // Toggle date range visibility for new ticket type
   toggleNewTicketDateRange(): void {
     this.newTicketType.showDateRange = !this.newTicketType.showDateRange;
-
-    // Clear dates when hiding
-    if (!this.newTicketType.showDateRange) {
-      this.newTicketType.start_date = null;
-      this.newTicketType.end_date = null;
-    }
   }
 
   // Get the display text for schedule availability link

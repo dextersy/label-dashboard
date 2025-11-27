@@ -1,307 +1,225 @@
 <div class="card">
-  <div class="card-header">
-    <h6 class="mb-0">
-      <i class="fas fa-ticket-alt me-2"></i>Ticket Types
-    </h6>
-  </div>
   <div class="card-body">
     <!-- Existing Ticket Types -->
-      <div *ngFor="let ticketType of ticketTypes; let i = index" class="ticket-type-item mb-2">
-        <div class="row align-items-start">
-          <div class="col-md-3">
-            <div class="mb-2">
-              <label class="form-label small">Name</label>
-              <input
-                type="text"
-                class="form-control form-control-sm"
-                [(ngModel)]="ticketType.name"
-                [disabled]="!isAdmin"
-                placeholder="Enter ticket type name">
+    <!-- Add New / Reset Buttons Row -->
+    <div class="d-flex justify-content-end mb-3" *ngIf="isAdmin && editingIndex === null && !showNewForm">
+      <button type="button" class="btn btn-outline-primary btn-sm me-2" (click)="startAddNew()">
+        <i class="fas fa-plus"></i> Add New
+      </button>
+      <button *ngIf="isDirty()" type="button" class="btn btn-outline-secondary btn-sm" (click)="resetTicketTypes()">
+        <i class="fas fa-undo"></i> Reset
+      </button>
+    </div>
+
+    <!-- Ticket Types Grid -->
+    <div class="row g-3">
+        <div *ngFor="let ticketType of ticketTypes; let i = index" class="col-md-6 col-lg-4">
+          <div class="card h-100 pt-2" [ngClass]="editingIndex === i ? 'border-primary' : 'ticket-type-card'">
+            <!-- Card Header for Static Cards -->
+            <div class="card-header bg-transparent border-0 pb-2" *ngIf="editingIndex !== i">
+              <h5 class="card-title mb-0 fw-bold text-center">{{ ticketType.name }}</h5>
             </div>
-          </div>
-          <div class="col-md-3">
-            <div class="mb-2">
-              <label class="form-label small">Price (₱)</label>
-              <div class="d-flex align-items-center gap-2">
-                <div *ngIf="isAdmin" class="form-check form-switch mb-0">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    [ngModel]="ticketType.isFree"
-                    (ngModelChange)="ticketType.isFree = $event; ticketType.price = $event ? 0 : ticketType.price"
-                    [id]="'freeToggle' + i">
-                  <label class="form-check-label small" [for]="'freeToggle' + i">Free</label>
+            <div class="card-body" [class.pt-0]="editingIndex !== i">
+              <ng-container *ngIf="editingIndex === i; else staticRow">
+                <!-- Editable Card -->
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold">Ticket Name</label>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="ticketType.name" placeholder="Enter ticket name">
                 </div>
-                <input
-                  *ngIf="!ticketType.isFree"
-                  type="number"
-                  class="form-control form-control-sm flex-grow-1"
-                  [(ngModel)]="ticketType.price"
-                  [disabled]="!isAdmin"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00">
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="mb-2">
-              <label class="form-label small">Max Tickets</label>
-              <div class="d-flex align-items-center gap-2">
-                <div *ngIf="isAdmin" class="form-check form-switch mb-0">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    [ngModel]="ticketType.isUnlimited"
-                    (ngModelChange)="ticketType.isUnlimited = $event; ticketType.max_tickets = $event ? 0 : ticketType.max_tickets"
-                    [id]="'unlimitedToggle' + i">
-                  <label class="form-check-label small" [for]="'unlimitedToggle' + i">Unlimited</label>
+
+                <div class="row mb-3">
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Price</label>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="ticketType.isFree" (ngModelChange)="ticketType.price = $event ? 0 : ticketType.price">
+                        <label class="form-check-label small">Free</label>
+                      </div>
+                    </div>
+                    <input *ngIf="!ticketType.isFree" type="number" class="form-control form-control-sm mt-1" [(ngModel)]="ticketType.price" min="0" step="0.01" placeholder="0.00">
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Capacity</label>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="ticketType.isUnlimited" (ngModelChange)="ticketType.max_tickets = $event ? 0 : ticketType.max_tickets">
+                        <label class="form-check-label small">Unlimited</label>
+                      </div>
+                    </div>
+                    <input *ngIf="!ticketType.isUnlimited" type="number" class="form-control form-control-sm mt-1" [(ngModel)]="ticketType.max_tickets" min="1" placeholder="Max tickets">
+                  </div>
                 </div>
-                <input
-                  *ngIf="!ticketType.isUnlimited"
-                  type="number"
-                  class="form-control form-control-sm flex-grow-1"
-                  [(ngModel)]="ticketType.max_tickets"
-                  [disabled]="!isAdmin"
-                  min="1"
-                  placeholder="Enter max tickets">
-              </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold">Scheduling</label>
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="ticketType.showDateRange" id="editScheduled{{i}}">
+                    <label class="form-check-label small" for="editScheduled{{i}}">Scheduled</label>
+                  </div>
+
+                  <div *ngIf="ticketType.showDateRange" class="row">
+                    <div class="col-6">
+                      <label class="form-label small">Start Date</label>
+                      <div class="input-group">
+                        <input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="ticketType.start_date">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!ticketType.start_date" (click)="clearEditTicketStartDate(ticketType)" title="Clear start date">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small">End Date</label>
+                      <div class="input-group">
+                        <input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="ticketType.end_date">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!ticketType.end_date" (click)="clearEditTicketEndDate(ticketType)" title="Clear end date">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <small class="form-text text-muted" *ngIf="ticketType.showDateRange">
+                    <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
+                  </small>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                  <button type="button" class="btn btn-success btn-sm" (click)="saveEdit(i)" title="Save changes">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="cancelEdit()" title="Cancel editing">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </ng-container>
             </div>
-          </div>
-          <div class="col-md-3">
-            <!-- Date Range Caption -->
-            <div *ngIf="isAdmin && getDateRangeCaption(ticketType) && !ticketType.showDateRange" class="mb-2">
+        <ng-template #staticRow>
+          <!-- Static Card Content -->
+          <div class="text-center">
+            <div class="mb-2">
+              <span class="badge bg-primary fs-6 px-3 py-2" *ngIf="ticketType.isFree">FREE</span>
+              <span class="badge bg-success fs-6 px-3 py-2" *ngIf="!ticketType.isFree">₱{{ ticketType.price | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="mb-1">
               <small class="text-muted">
-                {{ getDateRangeCaption(ticketType) }}
+                <i class="fas fa-users me-1"></i>
+                <span *ngIf="ticketType.isUnlimited">Unlimited capacity</span>
+                <span *ngIf="!ticketType.isUnlimited">{{ ticketType.max_tickets }} tickets max</span>
               </small>
             </div>
-            <div class="d-flex gap-2 justify-content-end">
-              <button
-                *ngIf="isAdmin && !ticketType.showDateRange"
-                type="button"
-                class="btn btn-link p-1 text-info d-md-inline d-flex align-items-center"
-                (click)="toggleDateRange(ticketType)"
-                title="Schedule"
-                style="text-decoration: none; font-size: 14px;">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="d-md-none ms-1">{{ getScheduleAvailabilityText(ticketType) }}</span>
+
+            <div class="mb-1">
+              <small class="text-muted d-block">
+                <i class="fas fa-calendar-alt me-1"></i>
+                <span *ngIf="ticketType.start_date && !ticketType.end_date">From {{ ticketType.start_date | date:'short' }}</span>
+                <span *ngIf="!ticketType.start_date && ticketType.end_date">Until {{ ticketType.end_date | date:'short' }}</span>
+                <span *ngIf="ticketType.start_date && ticketType.end_date">{{ ticketType.start_date | date:'short' }} - {{ ticketType.end_date | date:'short' }}</span>
+                <span *ngIf="!ticketType.start_date && !ticketType.end_date">Always available</span>
+              </small>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-center" *ngIf="isAdmin">
+              <button type="button" class="btn btn-outline-primary btn-sm" 
+                      [disabled]="editingIndex !== null || showNewForm" 
+                      (click)="startEdit(i)" title="Edit ticket type">
+                <i class="fas fa-edit"></i> Edit
               </button>
-              <button
-                *ngIf="isAdmin && ticketType.id"
-                type="button"
-                class="btn btn-link p-1 text-primary d-md-inline d-flex align-items-center"
-                (click)="updateTicketType(ticketType)"
-                title="Save changes"
-                style="text-decoration: none; font-size: 14px;">
-                <i class="fas fa-save"></i>
-                <span class="d-md-none ms-1">Save</span>
-              </button>
-              <button
-                *ngIf="isAdmin && ticketTypes.length > 1"
-                type="button"
-                class="btn btn-link p-1 text-danger d-md-inline d-flex align-items-center"
-                (click)="deleteTicketType(ticketType, i)"
-                title="Delete ticket type"
-                style="text-decoration: none; font-size: 14px;">
+              <button type="button" class="btn btn-outline-danger btn-sm" 
+                      [disabled]="editingIndex !== null || showNewForm" 
+                      (click)="confirmDelete(ticketType, i)" title="Delete ticket type">
                 <i class="fas fa-trash"></i>
-                <span class="d-md-none ms-1">Delete</span>
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- Collapsible Date Range Section -->
-        <div *ngIf="isAdmin && ticketType.showDateRange" class="mt-3 border-top pt-3">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-2">
-                <label class="form-label small">Start Date</label>
-                <div class="input-group">
-                  <input
-                    type="datetime-local"
-                    class="form-control form-control-sm"
-                    [(ngModel)]="ticketType.start_date"
-                    (ngModelChange)="onDateChange()"
-                    [disabled]="!isAdmin">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    [disabled]="!isAdmin || !ticketType.start_date"
-                    (click)="clearStartDate(ticketType)"
-                    title="Clear start date">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-2">
-                <label class="form-label small">End Date</label>
-                <div class="input-group">
-                  <input
-                    type="datetime-local"
-                    class="form-control form-control-sm"
-                    [(ngModel)]="ticketType.end_date"
-                    (ngModelChange)="onDateChange()"
-                    [disabled]="!isAdmin">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    [disabled]="!isAdmin || !ticketType.end_date"
-                    (click)="clearEndDate(ticketType)"
-                    title="Clear end date">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <small class="form-text text-muted">
-            <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
-          </small>
-        </div>
+        </ng-template>
       </div>
+    </div>
 
-      <!-- Add New Ticket Type -->
-      <div *ngIf="isAdmin" class="border-top pt-3 mt-3">
-        <h6>Add New Ticket Type</h6>
-        <div class="row align-items-start">
-          <div class="col-md-3">
-            <div class="mb-2">
-              <label class="form-label small">Name</label>
-              <input
-                type="text"
-                class="form-control form-control-sm"
-                [(ngModel)]="newTicketType.name"
-                placeholder="Enter ticket type name">
-            </div>
+    <!-- New Ticket Type Form as a card in the same grid -->
+    <div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4">
+      <div class="card h-100 border-success">
+        <div class="card-body">
+          <h6 class="card-title text-success mb-3">
+            <i class="fas fa-plus me-2"></i>Add New Ticket Type
+          </h6>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Ticket Name</label>
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="newTicketType.name" placeholder="Enter ticket type name">
           </div>
-          <div class="col-md-3">
-            <div class="mb-2">
-              <label class="form-label small">Price (₱)</label>
+
+          <div class="row mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Price</label>
               <div class="d-flex align-items-center gap-2">
                 <div class="form-check form-switch mb-0">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    [ngModel]="newTicketType.isFree"
-                    (ngModelChange)="newTicketType.isFree = $event; newTicketType.price = $event ? 0 : newTicketType.price"
-                    id="newFreeToggle">
+                  <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="newTicketType.isFree" (ngModelChange)="newTicketType.price = $event ? 0 : newTicketType.price" id="newFreeToggle">
                   <label class="form-check-label small" for="newFreeToggle">Free</label>
                 </div>
-                <input
-                  *ngIf="!newTicketType.isFree"
-                  type="number"
-                  class="form-control form-control-sm flex-grow-1"
-                  [(ngModel)]="newTicketType.price"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00">
               </div>
+              <input *ngIf="!newTicketType.isFree" type="number" class="form-control form-control-sm mt-1" [(ngModel)]="newTicketType.price" min="0" step="0.01" placeholder="0.00">
             </div>
-          </div>
-          <div class="col-md-3">
-            <div class="mb-2">
-              <label class="form-label small">Max Tickets</label>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Capacity</label>
               <div class="d-flex align-items-center gap-2">
                 <div class="form-check form-switch mb-0">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    [ngModel]="newTicketType.isUnlimited"
-                    (ngModelChange)="newTicketType.isUnlimited = $event; newTicketType.max_tickets = $event ? 0 : newTicketType.max_tickets"
-                    id="newUnlimitedToggle">
+                  <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="newTicketType.isUnlimited" (ngModelChange)="newTicketType.max_tickets = $event ? 0 : newTicketType.max_tickets" id="newUnlimitedToggle">
                   <label class="form-check-label small" for="newUnlimitedToggle">Unlimited</label>
                 </div>
-                <input
-                  *ngIf="!newTicketType.isUnlimited"
-                  type="number"
-                  class="form-control form-control-sm flex-grow-1"
-                  [(ngModel)]="newTicketType.max_tickets"
-                  min="1"
-                  placeholder="Enter max tickets">
               </div>
+              <input *ngIf="!newTicketType.isUnlimited" type="number" class="form-control form-control-sm mt-1" [(ngModel)]="newTicketType.max_tickets" min="1" placeholder="Max tickets">
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="d-flex gap-2 justify-content-end">
-              <button
-                type="button"
-                class="btn btn-link p-1 text-info d-md-inline d-flex align-items-center"
-                *ngIf="!newTicketType.showDateRange"
-                (click)="toggleNewTicketDateRange()"
-                title="Schedule"
-                style="text-decoration: none; font-size: 14px;">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="d-md-none ms-1">{{ getNewTicketScheduleText() }}</span>
-              </button>
-              <button
-                type="button"
-                class="btn btn-success btn-sm"
-                [disabled]="!newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)"
-                (click)="addTicketType()">
-                <i class="fas fa-plus me-1"></i>Add Type
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Collapsible Date Range Section for New Ticket -->
-        <div *ngIf="newTicketType.showDateRange" class="mt-3 border-top pt-3">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-2">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Scheduling</label>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="newTicketType.showDateRange" id="newScheduledToggle">
+              <label class="form-check-label small" for="newScheduledToggle">Scheduled</label>
+            </div>
+
+            <div *ngIf="newTicketType.showDateRange" class="row">
+              <div class="col-6">
                 <label class="form-label small">Start Date</label>
                 <div class="input-group">
-                  <input
-                    type="datetime-local"
-                    class="form-control form-control-sm"
-                    [(ngModel)]="newTicketType.start_date">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    [disabled]="!newTicketType.start_date"
-                    (click)="clearNewTicketStartDate()"
-                    title="Clear start date">
+                  <input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="newTicketType.start_date">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!newTicketType.start_date" (click)="clearNewTicketStartDate()" title="Clear start date">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
               </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-2">
+              <div class="col-6">
                 <label class="form-label small">End Date</label>
                 <div class="input-group">
-                  <input
-                    type="datetime-local"
-                    class="form-control form-control-sm"
-                    [(ngModel)]="newTicketType.end_date">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    [disabled]="!newTicketType.end_date"
-                    (click)="clearNewTicketEndDate()"
-                    title="Clear end date">
+                  <input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="newTicketType.end_date">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!newTicketType.end_date" (click)="clearNewTicketEndDate()" title="Clear end date">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
               </div>
             </div>
+            <small class="form-text text-muted" *ngIf="newTicketType.showDateRange">
+              <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
+            </small>
           </div>
-          <small class="form-text text-muted">
-            <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
-          </small>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-success btn-sm" [disabled]="!newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)" (click)="saveNewTicketType()" title="Save new ticket type">
+              <i class="fas fa-check"></i>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="cancelNewTicketType()" title="Cancel adding ticket type">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+    </div>
 
-      <!-- Warning about at least one ticket type -->
-      <div *ngIf="isAdmin && ticketTypes.length < 1" class="alert alert-warning mt-3">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>Important:</strong> Events must have at least one ticket type.
-      </div>
+    <!-- Warning about at least one ticket type -->
+    <div *ngIf="isAdmin && ticketTypes.length < 1" class="alert alert-warning mt-3">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong>Important:</strong> Events must have at least one ticket type.
+    </div>
   </div>
 </div>

@@ -1,3 +1,23 @@
+.ticket-type-item-editable {
+  background: #eaf2ff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 2px solid #007bff;
+  box-shadow: 0 2px 8px 0 rgba(0,123,255,0.08);
+  margin-bottom: 0.5rem;
+  transition: background 0.2s, border 0.2s;
+}
+
+.ticket-type-item-readonly {
+  background: none;
+  padding: 12px 15px;
+  border: 1px solid #dee2e6;
+  border-radius: 0;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s, border 0.2s;
+  font-size: 1rem;
+  line-height: 1.5;
+}
 .ticket-type-item {
   background-color: #f8f9fa;
   padding: 6px 10px;
@@ -9,8 +29,63 @@
   background-color: #e9ecef;
 }
 
+// Ticket card styling for more prominence
+.ticket-type-card {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.ticket-type-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
 .form-label.small {
   font-size: 0.875rem;
   font-weight: 500;
   color: #6c757d;
+}
+
+// Minimal button styles - only for save/cancel buttons
+.btn-success, .btn-secondary {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s !important;
+}
+
+.btn-success {
+  color: #28a745 !important;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.btn-secondary {
+  color: #6c757d !important;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: rgba(108, 117, 125, 0.1) !important;
+}
+
+// Colored buttons for edit/delete actions
+.btn-primary, .btn-danger {
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 4px !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s !important;
+}
+
+.btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }

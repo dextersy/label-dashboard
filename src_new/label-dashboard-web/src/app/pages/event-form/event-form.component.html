@@ -438,11 +438,6 @@
             <h3>Ticket Types</h3>
             <p>Configure ticket types, pricing, and availability</p>
 
-            <div class="alert alert-info mb-3">
-              <i class="fa fa-info-circle me-2"></i>
-              {{ isNewEvent ? 'Define ticket types for your event. These will be created when you save the event.' : 'Changes are saved when you click Save Changes.' }}
-            </div>
-
             <app-ticket-types
               [(ticketTypes)]="ticketTypes"
               [isAdmin]="isAdmin"

@@ -541,8 +541,20 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_phone,
       venue_website,
       venue_maps_url,
-      status
+      status,
+      ticketTypes
     } = req.body;
+
+    // Parse ticketTypes if it's a JSON string (from FormData)
+    let parsedTicketTypes = ticketTypes;
+    if (typeof ticketTypes === 'string') {
+      try {
+        parsedTicketTypes = JSON.parse(ticketTypes);
+      } catch (error) {
+        console.error('Failed to parse ticketTypes JSON:', error);
+        return res.status(400).json({ error: 'Invalid ticketTypes format' });
+      }
+    }
 
     const event = await Event.findOne({
       where: { 
@@ -655,8 +667,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     });
 
     // Update ticket types if provided in request
-    if (req.body.ticketTypes && Array.isArray(req.body.ticketTypes)) {
-      const requestedIds = req.body.ticketTypes.filter(tt => tt.id).map(tt => parseInt(tt.id, 10)).filter(Boolean);
+    if (parsedTicketTypes && Array.isArray(parsedTicketTypes)) {
+      const requestedIds = parsedTicketTypes.filter(tt => tt.id).map(tt => parseInt(tt.id, 10)).filter(Boolean);
       // Get all ticket types for this event
       const existingTicketTypes = await TicketType.findAll({ where: { event_id: event.id } });
       const existingIds = existingTicketTypes.map(tt => tt.id);
@@ -683,7 +695,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       }
 
       // Update or create ticket types
-      for (const ticketType of req.body.ticketTypes) {
+      for (const ticketType of parsedTicketTypes) {
         if (ticketType.id) {
           const updateFields = {
             name: ticketType.name?.trim(),
