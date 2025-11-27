@@ -245,13 +245,13 @@
   }
 }
 
-/* Floating Action Buttons - Use sticky positioning like artist profile */
+/* Floating Action Buttons */
 .floating-actions {
-  position: sticky !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -260,9 +260,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  z-index: 1050 !important;
-  transform: none !important;
-  contain: none !important;
+  z-index: 1050;
 
   button {
     min-width: 140px;

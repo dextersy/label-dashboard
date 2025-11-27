@@ -6,7 +6,7 @@ import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface TicketType {
   id?: number;
-  event_id: number;
+  event_id?: number;
   name: string;
   price: number;
   max_tickets: number;
@@ -17,20 +17,9 @@ export interface TicketType {
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
 }
 
-@Component({
-    selector: 'app-ticket-types',
-    imports: [CommonModule, FormsModule],
-    templateUrl: './ticket-types.component.html',
-    styleUrls: ['./ticket-types.component.scss']
-})
-export class TicketTypesComponent implements OnInit, OnChanges {
-  @Input() selectedEvent: Event | null = null;
-  @Input() isAdmin: boolean = false;
-  @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
-  @Output() ticketTypesChanged = new EventEmitter<boolean>();
-
-  ticketTypes: TicketType[] = [];
-  newTicketType: { name: string; price: number; max_tickets: number; start_date?: string | null; end_date?: string | null; showDateRange?: boolean; isFree?: boolean; isUnlimited?: boolean } = {
+// Factory function for creating new ticket type form state
+function createNewTicketTypeForm() {
+  return {
     name: '',
     price: 0,
     max_tickets: 0,
@@ -40,196 +29,94 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     isFree: false,
     isUnlimited: true
   };
-  loading = false;
-  creating = false;
-  updating = false;
-  deleting = false;
+}
 
-  constructor(
-    private eventService: EventService,
-    private confirmationService: ConfirmationService
-  ) {}
+@Component({
+    selector: 'app-ticket-types',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './ticket-types.component.html',
+    styleUrls: ['./ticket-types.component.scss']
+})
+export class TicketTypesComponent implements OnInit, OnChanges {
+  @Input() ticketTypes: TicketType[] = [];
+  @Input() isAdmin: boolean = false;
+  @Output() ticketTypesChange = new EventEmitter<TicketType[]>();
+  @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
+
+  newTicketType = createNewTicketTypeForm();
+
+  constructor() {}
 
   ngOnInit(): void {
-    this.loadTicketTypes();
+    // Initialize UI states for existing ticket types
+    this.initializeTicketTypes();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['selectedEvent'] && this.selectedEvent) {
-      this.loadTicketTypes();
+    if (changes['ticketTypes']) {
+      this.initializeTicketTypes();
     }
   }
 
-  private loadTicketTypes(): void {
-    if (!this.selectedEvent) {
-      this.ticketTypes = [];
-      return;
-    }
-
-    this.loading = true;
-    this.eventService.getTicketTypes(this.selectedEvent.id).subscribe({
-      next: (response) => {
-        this.ticketTypes = (response.ticketTypes || []).map(tt => ({
-          ...tt,
-          showDateRange: false, // Always start collapsed
-          isFree: tt.price === 0, // Set isFree based on price
-          isUnlimited: tt.max_tickets === 0 // Set isUnlimited based on max_tickets
-        }));
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load ticket types:', error);
-        this.alertMessage.emit({
-          type: 'error',
-          text: 'Failed to load ticket types'
-        });
-        this.loading = false;
-      }
-    });
+  private initializeTicketTypes(): void {
+    // Add UI state properties if they don't exist
+    this.ticketTypes = this.ticketTypes.map(tt => ({
+      ...tt,
+      showDateRange: tt.showDateRange ?? false,
+      isFree: tt.isFree ?? (tt.price === 0),
+      isUnlimited: tt.isUnlimited ?? (tt.max_tickets === 0)
+    }));
   }
 
-  createTicketType(): void {
-
-    if (!this.selectedEvent || !this.newTicketType.name.trim() || (!this.newTicketType.isFree && this.newTicketType.price < 0)) {
+  addTicketType(): void {
+    if (!this.newTicketType.name.trim() || (!this.newTicketType.isFree && this.newTicketType.price < 0)) {
       return;
     }
 
-    this.creating = true;
-
-    const ticketTypeData: any = {
-      event_id: this.selectedEvent.id,
+    const newType: TicketType = {
+      id: 0, // Will be assigned by backend when event is saved
+      event_id: 0, // Will be assigned by backend when event is saved
       name: this.newTicketType.name.trim(),
       price: this.newTicketType.isFree ? 0 : Number(this.newTicketType.price),
-      max_tickets: this.newTicketType.isUnlimited ? 0 : Number(this.newTicketType.max_tickets)
+      max_tickets: this.newTicketType.isUnlimited ? 0 : Number(this.newTicketType.max_tickets),
+      start_date: this.newTicketType.start_date ? this.formatDateForAPI(this.newTicketType.start_date) : null,
+      end_date: this.newTicketType.end_date ? this.formatDateForAPI(this.newTicketType.end_date) : null,
+      showDateRange: false,
+      isFree: this.newTicketType.isFree,
+      isUnlimited: this.newTicketType.isUnlimited
     };
 
-    // Only include dates if they're set, format them for API
-    if (this.newTicketType.start_date) {
-      ticketTypeData.start_date = this.formatDateForAPI(this.newTicketType.start_date);
-    }
-    if (this.newTicketType.end_date) {
-      ticketTypeData.end_date = this.formatDateForAPI(this.newTicketType.end_date);
-    }
+    this.ticketTypes = [...this.ticketTypes, newType];
+    this.ticketTypesChange.emit([...this.ticketTypes]);
 
-    this.eventService.createTicketType(ticketTypeData).subscribe({
-      next: (response) => {
-        this.ticketTypes.push({
-          ...response.ticketType,
-          isFree: response.ticketType.price === 0, // Set isFree based on price
-          isUnlimited: response.ticketType.max_tickets === 0, // Set isUnlimited based on max_tickets
-          showDateRange: false
-        });
-        this.newTicketType = {
-          name: '',
-          price: 0,
-          max_tickets: 0,
-          start_date: null,
-          end_date: null,
-          showDateRange: false,
-          isFree: false,
-          isUnlimited: true
-        };
-        this.alertMessage.emit({
-          type: 'success',
-          text: 'Ticket type created successfully!'
-        });
-        this.ticketTypesChanged.emit(true);
-        this.creating = false;
-      },
-      error: (error) => {
-        console.error('Failed to create ticket type:', error);
-        this.alertMessage.emit({
-          type: 'error',
-          text: error.message || 'Failed to create ticket type'
-        });
-        this.creating = false;
-      }
-    });
+    // Reset form
+    this.newTicketType = createNewTicketTypeForm();
   }
 
   updateTicketType(ticketType: TicketType): void {
-    if (!ticketType.id || !ticketType.name || (!ticketType.isFree && (ticketType.price ?? -1) < 0)) {
+    if (!ticketType.name || (!ticketType.isFree && (ticketType.price ?? -1) < 0)) {
       return;
     }
 
-    this.updating = true;
-
-    const updateData: any = {
-      name: ticketType.name.trim(),
-      price: ticketType.isFree ? 0 : Number(ticketType.price),
-      max_tickets: ticketType.isUnlimited ? 0 : Number(ticketType.max_tickets)
-    };
-
-    // Include dates in update, format them for API
-    updateData.start_date = ticketType.start_date ? this.formatDateForAPI(ticketType.start_date) : null;
-    updateData.end_date = ticketType.end_date ? this.formatDateForAPI(ticketType.end_date) : null;
-
-    this.eventService.updateTicketType(ticketType.id, updateData).subscribe({
-      next: (response) => {
-        // Update the ticket type in the list
-        const index = this.ticketTypes.findIndex(t => t.id === ticketType.id);
-        if (index !== -1) {
-          this.ticketTypes[index] = {
-            ...response.ticketType,
-            isFree: response.ticketType.price === 0, // Preserve isFree state based on price
-            isUnlimited: response.ticketType.max_tickets === 0, // Preserve isUnlimited state based on max_tickets
-            showDateRange: this.ticketTypes[index].showDateRange // Preserve UI state
-          };
-        }
-        this.alertMessage.emit({
-          type: 'success',
-          text: 'Ticket type updated successfully!'
-        });
-        this.ticketTypesChanged.emit(true);
-        this.updating = false;
-      },
-      error: (error) => {
-        console.error('Failed to update ticket type:', error);
-        this.alertMessage.emit({
-          type: 'error',
-          text: error.message || 'Failed to update ticket type'
-        });
-        this.updating = false;
-      }
-    });
+    // Update in local array
+    const index = this.ticketTypes.findIndex(tt => tt === ticketType);
+    if (index !== -1) {
+      this.ticketTypes[index] = {
+        ...ticketType,
+        name: ticketType.name.trim(),
+        price: ticketType.isFree ? 0 : Number(ticketType.price),
+        max_tickets: ticketType.isUnlimited ? 0 : Number(ticketType.max_tickets),
+        start_date: ticketType.start_date || null,
+        end_date: ticketType.end_date || null
+      };
+      this.ticketTypesChange.emit([...this.ticketTypes]);
+    }
   }
 
-  async deleteTicketType(ticketType: TicketType, index: number): Promise<void> {
-    if (!ticketType.id) {
-      return;
-    }
-
-    const confirmed = await this.confirmationService.confirm({
-      title: 'Delete Ticket Type',
-      message: `Are you sure you want to delete the "${ticketType.name}" ticket type?\n\nThis action cannot be undone and will fail if there are existing tickets of this type.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      type: 'danger'
-    });
-
-    if (!confirmed) return;
-
-    this.deleting = true;
-
-    this.eventService.deleteTicketType(ticketType.id).subscribe({
-      next: () => {
-        this.ticketTypes.splice(index, 1);
-        this.alertMessage.emit({
-          type: 'success',
-          text: 'Ticket type deleted successfully!'
-        });
-        this.ticketTypesChanged.emit(true);
-        this.deleting = false;
-      },
-      error: (error) => {
-        console.error('Failed to delete ticket type:', error);
-        this.alertMessage.emit({
-          type: 'error',
-          text: error.message || 'Failed to delete ticket type'
-        });
-        this.deleting = false;
-      }
-    });
+  deleteTicketType(ticketType: TicketType, index: number): void {
+    // Remove from local array
+    this.ticketTypes = this.ticketTypes.filter((_, i) => i !== index);
+    this.ticketTypesChange.emit([...this.ticketTypes]);
   }
 
   // Public method to get current ticket types (for parent components if needed)
@@ -251,6 +138,9 @@ export class TicketTypesComponent implements OnInit, OnChanges {
         ticketType.end_date = this.formatDateForInput(ticketType.end_date);
       }
     }
+    
+    // Emit changes to parent
+    this.ticketTypesChange.emit([...this.ticketTypes]);
   }
 
   // Toggle date range visibility for new ticket type
@@ -296,14 +186,21 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     return '';
   }
 
+  // Handle date change and emit to parent
+  onDateChange(): void {
+    this.ticketTypesChange.emit([...this.ticketTypes]);
+  }
+
   // Clear start date for a ticket type
   clearStartDate(ticketType: TicketType): void {
     ticketType.start_date = null;
+    this.ticketTypesChange.emit([...this.ticketTypes]);
   }
 
   // Clear end date for a ticket type
   clearEndDate(ticketType: TicketType): void {
     ticketType.end_date = null;
+    this.ticketTypesChange.emit([...this.ticketTypes]);
   }
 
   // Clear start date for new ticket type

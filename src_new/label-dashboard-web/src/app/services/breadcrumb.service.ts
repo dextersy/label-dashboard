@@ -44,7 +44,7 @@ export class BreadcrumbService {
     '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
     '/financial/earnings/new': { label: 'New Earning', parent: '/financial/earnings' },
     '/events': { label: 'Events', icon: 'fas fa-ticket-alt' },
-    '/events/new': { label: 'New', parent: '/events' },
+    '/events/new': { label: 'New Event', parent: '/events' },
     '/events/details': { label: 'Event Details', parent: '/events' },
     '/events/tickets': { label: 'Tickets', parent: '/events' },
     '/events/abandoned': { label: 'Pending Orders', parent: '/events' },

@@ -5,14 +5,7 @@
     </h6>
   </div>
   <div class="card-body">
-    <div *ngIf="loading" class="text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-    
-    <div *ngIf="!loading">
-      <!-- Existing Ticket Types -->
+    <!-- Existing Ticket Types -->
       <div *ngFor="let ticketType of ticketTypes; let i = index" class="ticket-type-item mb-2">
         <div class="row align-items-start">
           <div class="col-md-3">
@@ -99,7 +92,6 @@
                 *ngIf="isAdmin && ticketType.id"
                 type="button"
                 class="btn btn-link p-1 text-primary d-md-inline d-flex align-items-center"
-                [disabled]="updating"
                 (click)="updateTicketType(ticketType)"
                 title="Save changes"
                 style="text-decoration: none; font-size: 14px;">
@@ -110,7 +102,6 @@
                 *ngIf="isAdmin && ticketTypes.length > 1"
                 type="button"
                 class="btn btn-link p-1 text-danger d-md-inline d-flex align-items-center"
-                [disabled]="deleting"
                 (click)="deleteTicketType(ticketType, i)"
                 title="Delete ticket type"
                 style="text-decoration: none; font-size: 14px;">
@@ -132,6 +123,7 @@
                     type="datetime-local"
                     class="form-control form-control-sm"
                     [(ngModel)]="ticketType.start_date"
+                    (ngModelChange)="onDateChange()"
                     [disabled]="!isAdmin">
                   <button
                     type="button"
@@ -152,6 +144,7 @@
                     type="datetime-local"
                     class="form-control form-control-sm"
                     [(ngModel)]="ticketType.end_date"
+                    (ngModelChange)="onDateChange()"
                     [disabled]="!isAdmin">
                   <button
                     type="button"
@@ -249,8 +242,8 @@
               <button
                 type="button"
                 class="btn btn-success btn-sm"
-                [disabled]="creating || !newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)"
-                (click)="createTicketType()">
+                [disabled]="!newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)"
+                (click)="addTicketType()">
                 <i class="fas fa-plus me-1"></i>Add Type
               </button>
             </div>
@@ -310,6 +303,5 @@
         <i class="fas fa-exclamation-triangle me-2"></i>
         <strong>Important:</strong> Events must have at least one ticket type.
       </div>
-    </div>
   </div>
 </div>

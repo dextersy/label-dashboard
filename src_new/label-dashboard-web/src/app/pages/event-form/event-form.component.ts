@@ -16,11 +16,25 @@ import { QuillModule } from 'ngx-quill';
 
 export interface TicketType {
   id?: number;
+  event_id?: number;
   name: string;
   price: number;
   max_tickets: number;
   start_date?: string | null;
   end_date?: string | null;
+  showDateRange?: boolean; // UI state
+  isFree?: boolean; // UI state - whether ticket is free
+  isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
+}
+
+// Factory function for creating default ticket type
+export function createDefaultTicketType(): TicketType {
+  return {
+    name: 'Regular',
+    price: null as any, // blank by default
+    max_tickets: 0,
+    isFree: false
+  };
 }
 
 export type EventFormSection = 'general' | 'purchase' | 'ticket-types' | 'scanner';
@@ -89,6 +103,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   currentVenueSelection: VenueSelection | null = null;
   ticketTypes: TicketType[] = [];
   originalEventData: any = null;
+  originalTicketTypes: TicketType[] = [];
   slugManuallyEdited = false;
   
   // UI state
@@ -240,15 +255,12 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_maya: true,
       supports_grabpay: true,
       verification_pin: '',
-      ticket_naming: 'ticket'
+      ticket_naming: 'ticket',
+      status: 'draft'
     };
     
     // Add default ticket type for new events
-    this.ticketTypes = [{
-      name: 'Regular',
-      price: 0,
-      max_tickets: 0
-    }];
+    this.ticketTypes = [createDefaultTicketType()];
   }
 
   setActiveSection(section: EventFormSection): void {
@@ -266,13 +278,15 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   onSave(): void {
-    if (!this.validateForm()) {
+    // Always validate with publishing rules to ensure consistency
+    if (!this.validateForm(true)) {
       return;
     }
 
     this.saving = true;
     // Use current status if event is already published, otherwise use 'draft'
-    const status = this.isEventPublished() ? 'published' : 'draft';
+    const isPublished = this.isEventPublished();
+    const status = isPublished ? 'published' : 'draft';
     const formData = this.prepareFormData(status);
 
     const saveObservable = this.isNewEvent
@@ -297,6 +311,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
             this.eventService.setSelectedEvent(event);
             // Update originalEventData to match current form state (what was just saved)
             this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+            this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
             // Clear the selected poster file since it's now uploaded
             this.selectedPosterFile = null;
           }
@@ -305,6 +320,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
           console.error('Error saving event:', error);
           this.notificationService.showError('Failed to save event');
           this.saving = false;
+          // Refresh event data to restore form to last saved state
+          if (!this.isNewEvent && this.eventId) {
+            this.loadEvent();
+          }
         }
       })
     );
@@ -319,8 +338,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       title: 'Publish Event',
       message: 'Are you sure you want to publish this event?\n\n' +
         '⚠️ WARNING: Once published, the shortlinks can no longer be changed and the event will be visible to the public.\n\n' +
-        'Click OK to proceed with publishing.',
-      confirmText: 'OK',
+        'Click \'Publish\' to proceed with publishing.',
+      confirmText: 'Publish',
       cancelText: 'Cancel',
       type: 'info'
     });
@@ -342,11 +361,6 @@ export class EventFormComponent implements OnInit, OnDestroy {
           this.saving = false;
           this.event = event;
           this.eventService.setSelectedEvent(event);
-          this.populateFormFromEvent(event);
-          if (this.isNewEvent) {
-            this.isNewEvent = false;
-            this.eventId = event.id;
-          }
           
           // Show the event published modal
           if (event.buy_shortlink) {
@@ -354,6 +368,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
               eventTitle: event.title,
               buyLink: event.buy_shortlink
             });
+          }
+          
+          if (this.isNewEvent) {
+            // Navigate to details view for newly published events
+            this.router.navigate(['/events/details']);
+          } else {
+            this.populateFormFromEvent(event);
           }
         },
         error: (error) => {
@@ -491,11 +512,21 @@ export class EventFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onTicketTypesChanged(): void {
-    // Reload event data to get updated ticket types
-    if (this.eventId) {
-      this.loadEvent();
+  addTicketType(): void {
+    this.ticketTypes.push(createDefaultTicketType());
+  }
+
+  removeTicketType(index: number): void {
+    if (this.ticketTypes.length > 1) {
+      this.ticketTypes.splice(index, 1);
     }
+  }
+
+  onTicketTypesChanged(): void {
+    // Mark form as dirty when ticket types change
+    // (ticketTypes is already updated via two-way binding)
+    this.originalEventData = this.originalEventData || JSON.parse(JSON.stringify(this.eventData));
+    // No need to reload event from backend here; just update dirty state
   }
 
   copyToClipboard(text: string): void {
@@ -523,14 +554,15 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   isEventPast(): boolean {
-    const dateAndTime = this.isNewEvent 
-      ? this.eventData.date_and_time 
-      : this.event?.date_and_time || this.eventData.date_and_time;
+    // Always reflect the current form value (even if unsaved)
+    const dateAndTime = this.eventData?.date_and_time || this.event?.date_and_time;
     if (!dateAndTime) return false;
     const eventDate = new Date(dateAndTime);
     const now = new Date();
     return eventDate < now;
+
   }
+
 
   hasConfirmedTickets(): boolean {
     return (this.event?.tickets?.filter((ticket: any) => 
@@ -540,8 +572,15 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
   isFormDirty(): boolean {
     if (!this.originalEventData) return false;
-    return JSON.stringify(this.eventData) !== JSON.stringify(this.originalEventData) ||
-           this.selectedPosterFile !== null;
+    // Compare eventData
+    const eventDataChanged = JSON.stringify(this.eventData) !== JSON.stringify(this.originalEventData);
+    // Compare ticketTypes (deep compare, ignoring UI-only fields)
+    const stripUiFields = (arr: TicketType[]) => arr.map(tt => {
+      const { showDateRange, isFree, isUnlimited, ...rest } = tt;
+      return rest;
+    });
+    const ticketTypesChanged = JSON.stringify(stripUiFields(this.ticketTypes)) !== JSON.stringify(stripUiFields(this.originalTicketTypes));
+    return eventDataChanged || ticketTypesChanged || this.selectedPosterFile !== null;
   }
 
   async onUnpublish(): Promise<void> {
@@ -610,9 +649,29 @@ export class EventFormComponent implements OnInit, OnDestroy {
         return false;
       }
 
+      // Check if at least one payment method is enabled (accept any truthy value)
+      const hasPaymentMethod = !!this.eventData.supports_gcash ||
+                               !!this.eventData.supports_qrph ||
+                               !!this.eventData.supports_card ||
+                               !!this.eventData.supports_ubp ||
+                               !!this.eventData.supports_dob ||
+                               !!this.eventData.supports_maya ||
+                               !!this.eventData.supports_grabpay;
+
+      if (!hasPaymentMethod) {
+        this.notificationService.showError('At least one payment method must be enabled to publish');
+        this.setActiveSection('purchase');
+        return false;
+      }
+
       for (const ticketType of this.ticketTypes) {
         if (!ticketType.name || !ticketType.name.trim()) {
           this.notificationService.showError('All ticket types must have a name');
+          this.setActiveSection('ticket-types');
+          return false;
+        }
+        if (ticketType.price === null || ticketType.price === undefined || isNaN(ticketType.price)) {
+          this.notificationService.showError('All ticket types must have a valid ticket price');
           this.setActiveSection('ticket-types');
           return false;
         }
@@ -633,10 +692,17 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   private prepareFormData(status: 'draft' | 'published'): any {
+    // Convert ticketTypes date fields to ISO string for API
+    const ticketTypesForApi = this.ticketTypes.map(tt => ({
+      ...tt,
+      start_date: tt.start_date ? new Date(tt.start_date).toISOString() : null,
+      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null
+    }));
+
     const formData: any = {
       title: this.eventData.title,
       date_and_time: this.formatDateForAPI(this.eventData.date_and_time),
-      venue: this.eventData.venue,
+      venue: this.currentVenueSelection?.venue || this.eventData.venue,
       description: this.eventData.description || '',
       ticket_price: this.ticketTypes.length > 0 ? this.ticketTypes[0].price : 0,
       max_tickets: this.isMaxTicketsUnlimited ? 0 : Number(this.eventData.max_tickets),
@@ -655,7 +721,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_grabpay: this.eventData.supports_grabpay,
       verification_pin: this.eventData.verification_pin || '',
       ticket_naming: this.eventData.ticket_naming || 'ticket',
-      ticketTypes: this.ticketTypes
+      ticketTypes: ticketTypesForApi
     };
 
     if (this.currentVenueSelection) {
@@ -695,6 +761,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   private prepareEventData(status: 'draft' | 'published'): any {
+    // Convert ticketTypes date fields to ISO string for API
+    const ticketTypesForApi = this.ticketTypes.map(tt => ({
+      ...tt,
+      start_date: tt.start_date ? new Date(tt.start_date).toISOString() : null,
+      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null
+    }));
+
     const eventData: any = {
       title: this.eventData.title,
       date_and_time: this.formatDateForAPI(this.eventData.date_and_time),
@@ -717,7 +790,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_grabpay: this.eventData.supports_grabpay,
       verification_pin: this.eventData.verification_pin || '',
       ticket_naming: this.eventData.ticket_naming || 'ticket',
-      ticketTypes: this.ticketTypes
+      ticketTypes: ticketTypesForApi
     };
 
     if (this.currentVenueSelection) {
@@ -808,9 +881,11 @@ export class EventFormComponent implements OnInit, OnDestroy {
       this.eventService.getTicketTypes(this.eventId).subscribe({
         next: (response) => {
           this.ticketTypes = response.ticketTypes || [];
+          this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
         },
         error: (error) => {
           console.error('Error loading ticket types:', error);
+          this.notificationService.showError('Failed to load ticket types');
         }
       })
     );
