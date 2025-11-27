@@ -1,9 +1,6 @@
-
-// (removed duplicate/erroneous code)
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EventService, Event } from '../../../services/event.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 
 export interface TicketType {
