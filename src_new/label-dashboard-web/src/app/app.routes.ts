@@ -5,6 +5,7 @@ import { ArtistComponent } from './pages/artist/artist.component';
 import { AddNewArtistComponent } from './components/artist/add-new-artist/add-new-artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
+import { EventFormComponent } from './pages/event-form/event-form.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-found.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
@@ -83,7 +84,8 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     children: [
       { path: '', redirectTo: 'details', pathMatch: 'full' },
-      { path: 'details', component: EventsComponent, data: { tab: 'details' } },
+      { path: 'new', component: EventFormComponent },
+      { path: 'details', component: EventFormComponent },
       { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } },

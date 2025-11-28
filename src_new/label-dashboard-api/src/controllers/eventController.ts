@@ -464,12 +464,15 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
 
     // Create ticket types
     if (parsedTicketTypes && Array.isArray(parsedTicketTypes) && parsedTicketTypes.length > 0) {
-      // Create provided ticket types
+      // Create provided ticket types, including start_date and end_date
       for (const ticketType of parsedTicketTypes) {
         await TicketType.create({
           event_id: event.id,
           name: ticketType.name.trim(),
-          price: parseFloat(ticketType.price)
+          price: parseFloat(ticketType.price),
+          max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : 0,
+          start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
+          end_date: ticketType.end_date ? new Date(ticketType.end_date) : null
         });
       }
     } else {
@@ -477,7 +480,10 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       await TicketType.create({
         event_id: event.id,
         name: ticket_naming || 'Regular',
-        price: parseFloat(ticket_price)
+        price: parseFloat(ticket_price),
+        max_tickets: 0,
+        start_date: null,
+        end_date: null
       });
     }
 
@@ -535,8 +541,20 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_phone,
       venue_website,
       venue_maps_url,
-      status
+      status,
+      ticketTypes
     } = req.body;
+
+    // Parse ticketTypes if it's a JSON string (from FormData)
+    let parsedTicketTypes = ticketTypes;
+    if (typeof ticketTypes === 'string') {
+      try {
+        parsedTicketTypes = JSON.parse(ticketTypes);
+      } catch (error) {
+        console.error('Failed to parse ticketTypes JSON:', error);
+        return res.status(400).json({ error: 'Invalid ticketTypes format' });
+      }
+    }
 
     const event = await Event.findOne({
       where: { 
@@ -614,13 +632,14 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
+
     await event.update({
       title: title || event.title,
       date_and_time: date_and_time ? new Date(date_and_time) : event.date_and_time,
       venue: venue || event.venue,
       description,
       ticket_price: ticket_price !== undefined ? ticket_price : event.ticket_price,
-      close_time: close_time ? new Date(close_time) : event.close_time,
+      close_time: close_time !== undefined ? (close_time === '' ? null : new Date(close_time)) : event.close_time,
       poster_url: finalPosterUrl,
       rsvp_link,
       verification_pin: verification_pin || event.verification_pin,
@@ -646,6 +665,67 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url,
       status: status !== undefined ? status : event.status
     });
+
+    // Update ticket types if provided in request
+    if (parsedTicketTypes && Array.isArray(parsedTicketTypes)) {
+      const requestedIds = parsedTicketTypes.filter(tt => tt.id).map(tt => parseInt(tt.id, 10)).filter(Boolean);
+      // Get all ticket types for this event
+      const existingTicketTypes = await TicketType.findAll({ where: { event_id: event.id } });
+      const existingIds = existingTicketTypes.map(tt => tt.id);
+
+      // Find ticket types to delete (in DB but not in request)
+      const idsToDelete = existingIds.filter(id => !requestedIds.includes(id));
+
+      // Only allow deletion if not last ticket type and no tickets exist for that type
+      for (const id of idsToDelete) {
+        // Check if this is the last ticket type
+        if (existingIds.length <= 1) {
+          return res.status(400).json({ error: 'Cannot delete the last ticket type. Events must have at least one ticket type.' });
+        }
+        // Check if tickets exist for this type
+        const ticketsCount = await require('../models').Ticket.count({ where: { ticket_type_id: id } });
+        if (ticketsCount > 0) {
+          return res.status(400).json({ error: 'Cannot delete ticket type as there are tickets associated with it' });
+        }
+        // Delete ticket type
+        const deleted = await TicketType.destroy({ where: { id, event_id: event.id } });
+        if (!deleted) {
+          return res.status(500).json({ error: `Failed to delete ticket type with id ${id}` });
+        }
+      }
+
+      // Update or create ticket types
+      for (const ticketType of parsedTicketTypes) {
+        if (ticketType.id) {
+          const updateFields = {
+            name: ticketType.name?.trim(),
+            price: ticketType.price !== undefined ? parseFloat(ticketType.price) : undefined,
+            max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : undefined,
+            start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
+            end_date: ticketType.end_date ? new Date(ticketType.end_date) : null
+          };
+          // Remove undefined fields
+          Object.keys(updateFields).forEach(key => updateFields[key] === undefined && delete updateFields[key]);
+          const [updatedCount] = await TicketType.update(updateFields, { where: { id: ticketType.id, event_id: event.id } });
+          if (updatedCount === 0) {
+            return res.status(500).json({ error: `Failed to update ticket type with id ${ticketType.id}` });
+          }
+        } else {
+          // Create new ticket type
+          const created = await TicketType.create({
+            event_id: event.id,
+            name: ticketType.name?.trim() || '',
+            price: ticketType.price !== undefined ? parseFloat(ticketType.price) : 0,
+            max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : 0,
+            start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
+            end_date: ticketType.end_date ? new Date(ticketType.end_date) : null
+          });
+          if (!created) {
+            return res.status(500).json({ error: 'Failed to create new ticket type' });
+          }
+        }
+      }
+    }
 
     // Reload the event with tickets to return complete data
     const updatedEventWithTickets = await Event.findByPk(event.id, {

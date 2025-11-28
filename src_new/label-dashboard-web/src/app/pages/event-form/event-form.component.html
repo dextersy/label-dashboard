@@ -1,0 +1,618 @@
+<div class="event-form-page">
+  <!-- Event Selection (only in edit mode) -->
+  <app-event-selection
+    *ngIf="!isNewEvent"
+    [events]="availableEvents"
+    [selectedEvent]="event"
+    [loading]="loading"
+    [isAdmin]="isAdmin"
+    (eventSelected)="onEventSelection($event)">
+  </app-event-selection>
+
+  <app-breadcrumb></app-breadcrumb>
+
+  <div class="event-form-layout">
+    <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
+    <nav class="event-form-sidebar mt-3">
+      <div class="sidebar-items">
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'details'"
+          (click)="setActiveSection('details')">
+          <i class="fa fa-info-circle"></i>
+          <span>Details</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'pricing'"
+          (click)="setActiveSection('pricing')">
+          <i class="fa fa-ticket"></i>
+          <span>Pricing</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'purchase'"
+          (click)="setActiveSection('purchase')">
+          <i class="fa fa-shopping-cart"></i>
+          <span>Buy Page</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'scanner'"
+          (click)="setActiveSection('scanner')"
+          *ngIf="!isEventDraft()">
+          <i class="fa fa-qrcode"></i>
+          <span>Scanner</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="event-form-main">
+      <div class="event-form-container">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-container">
+          <div class="loading-dots">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+
+        <!-- Form Content -->
+        <div *ngIf="!loading" class="event-form-content">
+          <!-- Draft Mode Info Box -->
+          <div class="alert alert-info d-flex align-items-center mb-4" *ngIf="!isEventPublished()">
+            <i class="fa fa-info-circle me-3 fs-5"></i>
+            <div>
+              <strong>Draft Mode</strong> - This event is not yet visible to the public. 
+              <span class="d-block small mt-1">
+                Complete the event details and click "Publish" to make it live and generate ticket purchase links.
+              </span>
+            </div>
+          </div>
+
+          <!-- Past Event Warning -->
+          <div class="alert alert-warning mb-4" *ngIf="isEventPast()">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
+          </div>
+
+          <!-- Details Section -->
+          <div class="form-section" *ngIf="activeSection === 'details'">
+            <h3>Details</h3>
+            <p>Basic event details and description</p>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="eventTitle" class="form-label required">Event Title</label>
+                <input 
+                  type="text" 
+                  id="eventTitle"
+                  class="form-control" 
+                  [(ngModel)]="eventData.title"
+                  (input)="onTitleChange()"
+                  placeholder="Enter event title"
+                  [disabled]="isEventPast()"
+                  required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="eventDateTime" class="form-label required">Event Date & Time <span class="text-muted">(GMT+8 PH)</span></label>
+                <input 
+                  type="datetime-local" 
+                  id="eventDateTime"
+                  class="form-control" 
+                  [(ngModel)]="eventData.date_and_time"
+                  [disabled]="false"
+                  required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label required">Venue</label>
+                <app-venue-autocomplete
+                  placeholder="Search for venue or enter manually..."
+                  [required]="true"
+                  [hasError]="false"
+                  [disabled]="isEventPast()"
+                  [ngModel]="currentVenueSelection"
+                  (ngModelChange)="onVenueSelected($event)"
+                  (venueSelected)="onVenueSelected($event)">
+                </app-venue-autocomplete>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="rsvpLink" class="form-label">RSVP or Social Media Link</label>
+                <input 
+                  type="url" 
+                  id="rsvpLink"
+                  class="form-control" 
+                  [(ngModel)]="eventData.rsvp_link"
+                  placeholder="https://facebook.com/events/..."
+                  [disabled]="isEventPast()">
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Facebook event page link or preferred social media page
+                </small>
+              </div>
+
+              <div class="col-12 mb-3" *ngIf="isEventDraft()">
+                <label for="urlSlug" class="form-label">URL Slug</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    id="urlSlug"
+                    class="form-control" 
+                    [(ngModel)]="eventData.slug"
+                    (input)="onSlugChange()"
+                    placeholder="BuyMyAwesomeEvent"
+                    [disabled]="isEventPast()">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="generateSlug()"
+                    [disabled]="isEventPast()"
+                    title="Auto-generate from title">
+                    <i class="fas fa-sync"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Custom URL path for shortened links. Auto-generated from title if left empty.
+                </small>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label for="eventDescription" class="form-label">Description</label>
+                <quill-editor 
+                  id="eventDescription"
+                  [(ngModel)]="eventData.description"
+                  [modules]="quillConfig"
+                  placeholder="Enter event description...">
+                </quill-editor>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label class="form-label">Event Poster</label>
+                <div *ngIf="!posterPreview && !eventData.poster_url" 
+                     class="poster-upload-zone" 
+                     role="button"
+                     tabindex="0"
+                     (click)="posterInput.click()"
+                     (keydown)="onPosterUploadKeydown($event)"
+                     aria-label="Upload event poster image">
+                  <i class="fa fa-image fa-3x text-muted mb-2"></i>
+                  <p class="text-muted mb-0">Click to upload poster image</p>
+                  <small class="text-muted">JPG, PNG or GIF (max 10MB)</small>
+                </div>
+
+                <div *ngIf="posterPreview || eventData.poster_url" class="poster-preview">
+                  <img [src]="posterPreview || eventData.poster_url" alt="Event poster">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-danger poster-remove-btn"
+                    (click)="removePoster()">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+
+                <input 
+                  type="file" 
+                  #posterInput
+                  accept="image/*"
+                  (change)="onPosterSelected($event)"
+                  aria-label="Event poster image file"
+                  style="display: none;">
+              </div>
+            </div>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary" (click)="goToNextTab()">
+                Next: Pricing <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Buy Page Section -->
+          <div class="form-section" *ngIf="activeSection === 'purchase'">
+            <h3>Buy Page</h3>
+            <p>Configure payment methods and ticket sales settings</p>
+
+            <!-- Purchase Link -->
+            <div class="row mb-4" *ngIf="event && event.buy_shortlink">
+              <div class="col-12">
+                <div class="card bg-light border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fa fa-link text-primary me-2"></i>Ticket Purchase Link
+                    </h5>
+                    <div class="input-group input-group-lg">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        [value]="event.buy_shortlink"
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn btn-primary"
+                        (click)="copyToClipboard(event.buy_shortlink)"
+                        title="Copy to clipboard">
+                        <i class="fa fa-copy me-2"></i>Copy Link
+                      </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                      <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4" *ngIf="!event || !event.buy_shortlink">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <i class="fa fa-info-circle me-2"></i>
+                  The ticket purchase link will be generated after publishing the event.
+                </div>
+              </div>
+            </div>
+
+            <!-- Maximum Tickets and Show Remaining -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label for="maxTickets" class="form-label">Maximum Tickets (Total)</label>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <div class="form-check form-switch mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      [(ngModel)]="isMaxTicketsUnlimited"
+                      (ngModelChange)="eventData.max_tickets = $event ? 0 : eventData.max_tickets"
+                      [disabled]="isEventPast()"
+                      id="unlimitedMaxTickets">
+                    <label class="form-check-label" for="unlimitedMaxTickets">Unlimited</label>
+                  </div>
+                  <input
+                    *ngIf="!isMaxTicketsUnlimited"
+                    type="number"
+                    id="maxTickets"
+                    class="form-control flex-grow-1"
+                    [(ngModel)]="eventData.max_tickets"
+                    [disabled]="isEventPast()"
+                    min="1"
+                    placeholder="Enter maximum tickets">
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Maximum number of tickets that can be sold for this event. Limits for specific ticket types will still apply.
+                </small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Show Tickets Remaining</label>
+                <div class="form-check form-switch">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input" 
+                    id="showTicketsRemaining"
+                    role="switch"
+                    [(ngModel)]="eventData.show_tickets_remaining"
+                    [disabled]="isEventPast()">
+                  <label class="form-check-label" for="showTicketsRemaining">
+                    Display remaining tickets on purchase page
+                  </label>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Shows customers how many tickets are still available
+                </small>
+              </div>
+            </div>
+
+            <!-- Ticket Sales Settings -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label for="closeTime" class="form-label">Ticket Sales Close Time</label>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <div class="form-check form-switch mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      [(ngModel)]="closeAtEventStart"
+                      (ngModelChange)="onCloseAtEventStartChange($event)"
+                      [disabled]="isEventPast()"
+                      id="closeAtEventStart">
+                    <label class="form-check-label" for="closeAtEventStart">End during show start</label>
+                  </div>
+                  <input
+                    *ngIf="!closeAtEventStart"
+                    type="datetime-local"
+                    id="closeTime"
+                    class="form-control flex-grow-1"
+                    [(ngModel)]="eventData.close_time"
+                    [disabled]="isEventPast()"
+                    placeholder="Select close time">
+                </div>
+                <small class="form-text text-muted d-block" *ngIf="!closeAtEventStart">
+                  <i class="fa fa-clock"></i> Set suggested time:
+                </small>
+                <div class="d-flex flex-wrap gap-2 mt-2" *ngIf="!closeAtEventStart">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="countdownDisplay" class="form-label">Show Countdown on Ticket Page</label>
+                <select id="countdownDisplay" class="form-select" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
+                  <option value="always">Always show</option>
+                  <option value="1_week">1 week before</option>
+                  <option value="3_days">3 days before</option>
+                  <option value="1_day">1 day before</option>
+                  <option value="never">Never show</option>
+                </select>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> Choose when to display a countdown timer on the ticket purchase page.
+                </small>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-12 mb-4">
+                <label class="form-label">Accepted Payment Methods</label>
+                <div class="payment-methods-grid">
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="gcash" 
+                      [(ngModel)]="eventData.supports_gcash"
+                      [disabled]="isEventPast()">
+                    <label for="gcash">
+                      <i class="fa fa-mobile-alt"></i>
+                      <span>GCash</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="qrph" 
+                      [(ngModel)]="eventData.supports_qrph"
+                      [disabled]="isEventPast()">
+                    <label for="qrph">
+                      <i class="fa fa-qrcode"></i>
+                      <span>QR Ph</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="card" 
+                      [(ngModel)]="eventData.supports_card"
+                      [disabled]="isEventPast()">
+                    <label for="card">
+                      <i class="fa fa-credit-card"></i>
+                      <span>Credit/Debit Card</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="ubp" 
+                      [(ngModel)]="eventData.supports_ubp"
+                      [disabled]="isEventPast()">
+                    <label for="ubp">
+                      <i class="fa fa-university"></i>
+                      <span>UnionBank</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="maya" 
+                      [(ngModel)]="eventData.supports_maya"
+                      [disabled]="isEventPast()">
+                    <label for="maya">
+                      <i class="fa fa-wallet"></i>
+                      <span>Maya</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="grabpay" 
+                      [(ngModel)]="eventData.supports_grabpay"
+                      [disabled]="isEventPast()">
+                    <label for="grabpay">
+                      <i class="fa fa-car"></i>
+                      <span>GrabPay</span>
+                    </label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input 
+                      type="checkbox" 
+                      id="dob" 
+                      [(ngModel)]="eventData.supports_dob"
+                      [disabled]="isEventPast()">
+                    <label for="dob">
+                      <i class="fa fa-landmark"></i>
+                      <span>Direct Online Banking</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary" (click)="goToNextTab()" *ngIf="!isEventDraft()">
+                Next: Scanner <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pricing Section -->
+          <div class="form-section" *ngIf="activeSection === 'pricing'">
+            <h3>Pricing</h3>
+            <p>Configure ticket types, pricing, and availability</p>
+
+            <app-ticket-types
+              [(ticketTypes)]="ticketTypes"
+              [isAdmin]="isAdmin"
+              (ticketTypesChange)="onTicketTypesChanged()">
+            </app-ticket-types>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary" (click)="goToNextTab()">
+                Next: Buy Page <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Scanner Section -->
+          <div class="form-section" *ngIf="activeSection === 'scanner' && !isEventDraft()">
+            <h3>Scanner & Verification</h3>
+            <p>Ticket scanning and verification settings</p>
+
+            <!-- Verification Link -->
+            <div class="row mb-4" *ngIf="event && event.verification_link">
+              <div class="col-12">
+                <div class="card bg-light border-primary">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <i class="fa fa-qrcode text-primary me-2"></i>Verification Link
+                    </h5>
+                    <div class="input-group input-group-lg">
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        [value]="event.verification_link"
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn btn-primary"
+                        (click)="copyToClipboard(event.verification_link)"
+                        title="Copy to clipboard">
+                        <i class="fa fa-copy me-2"></i>Copy Link
+                      </button>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                      <i class="fa fa-info-circle"></i> Share this link with ticket scanners
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-4" *ngIf="!event || !event.verification_link">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <i class="fa fa-info-circle me-2"></i>
+                  The verification link will be generated after publishing the event.
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="verificationPin" class="form-label">Verification PIN</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    id="verificationPin"
+                    class="form-control" 
+                    [(ngModel)]="eventData.verification_pin"
+                    placeholder="6-digit PIN"
+                    maxlength="6"
+                    pattern="[0-9]{6}">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="copyVerificationPIN()"
+                    title="Copy PIN"
+                    [disabled]="!eventData.verification_pin">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="generateVerificationPIN()"
+                    title="Generate random PIN">
+                    <i class="fas fa-sync"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  <i class="fa fa-info-circle"></i> 6-digit PIN for ticket scanners to verify tickets
+                </small>
+                <small class="form-text text-warning" *ngIf="pinRefreshed">
+                  <i class="fa fa-exclamation-triangle"></i> Save Changes to apply new PIN code
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Buttons (outside scrollable container) -->
+<div class="floating-actions">
+  <!-- Cancel button only shown when creating a new event -->
+  <button 
+    type="button" 
+    class="btn btn-outline-secondary"
+    (click)="onCancel()"
+    [disabled]="saving"
+    *ngIf="isNewEvent">
+    Cancel
+  </button>
+
+  <!-- Draft Event Buttons -->
+  <ng-container *ngIf="isEventDraft()">
+    <button 
+      type="button" 
+      class="btn btn-outline-primary"
+      (click)="onSave()"
+      [disabled]="saving || isEventPast()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-save" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Save as Draft</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-success"
+      (click)="onPublish()"
+      [disabled]="saving || isEventPast()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-rocket" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Publish</span>
+      <span *ngIf="saving">Publishing...</span>
+    </button>
+  </ng-container>
+
+  <!-- Published Event Buttons -->
+  <ng-container *ngIf="isEventPublished()">
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="onSave()"
+      [disabled]="saving || !isFormDirty() || isEventPast()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-save" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Save Changes</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-warning"
+      (click)="onUnpublish()"
+      [disabled]="saving || hasConfirmedTickets() || isEventPast()"
+      *ngIf="!hasConfirmedTickets()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Unpublish</span>
+      <span *ngIf="saving">Unpublishing...</span>
+    </button>
+  </ng-container>
+</div>

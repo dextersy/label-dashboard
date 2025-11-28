@@ -9,16 +9,14 @@ import { EventService, Event } from '../../services/event.service';
 import { environment } from '../../../environments/environment';
 
 // Import tab components
-import { EventDetailsTabComponent } from '../../components/events/event-details-tab/event-details-tab.component';
 import { EventTicketsTabComponent } from '../../components/events/event-tickets-tab/event-tickets-tab.component';
 import { EventAbandonedOrdersTabComponent } from '../../components/events/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
 import { EventReferralsTabComponent } from '../../components/events/event-referrals-tab/event-referrals-tab.component';
 import { EventEmailTabComponent } from '../../components/events/event-email-tab/event-email-tab.component';
-import { CreateEventModalComponent, CreateEventForm } from '../../components/events/create-event-modal/create-event-modal.component';
 import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
-export type EventsTabType = 'details' | 'tickets' | 'abandoned' | 'referrals' | 'email';
+export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -35,12 +33,10 @@ export type EventSelection = Event;
     imports: [
         CommonModule,
         FormsModule,
-        EventDetailsTabComponent,
         EventTicketsTabComponent,
         EventAbandonedOrdersTabComponent,
         EventReferralsTabComponent,
         EventEmailTabComponent,
-        CreateEventModalComponent,
         EventSelectionComponent,
         BreadcrumbComponent
     ],
@@ -48,16 +44,12 @@ export type EventSelection = Event;
     styleUrl: './events.component.scss'
 })
 export class EventsComponent implements OnInit, OnDestroy {
-  @ViewChild(CreateEventModalComponent) createEventModal!: CreateEventModalComponent;
-  
   selectedEvent: EventSelection | null = null;
-  activeTab: EventsTabType = 'details';
+  activeTab: EventsTabType = 'tickets';
   isAdmin = false;
   loading = false;
   retryCount = 0;
   maxRetries = 3;
-  showCreateModal = false;
-  creatingEvent = false;
   
   // Subscriptions for cleanup
   private subscriptions = new Subscription();
@@ -68,7 +60,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   availableEvents: EventSelection[] = [];
 
   tabs = [
-    { id: 'details' as EventsTabType, label: 'Details', icon: 'fa-solid fa-info-circle' },
     { id: 'tickets' as EventsTabType, label: 'Tickets', icon: 'fas fa-ticket-alt' },
     { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'fa-solid fa-shopping-cart' },
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'fa-solid fa-user-plus' },
@@ -136,16 +127,24 @@ export class EventsComponent implements OnInit, OnDestroy {
         next: (events) => {
           this.availableEvents = events;
           
-          // Check if we have a previously selected event that still exists
+          // Check if we have a previously selected event from localStorage
           const currentSelected = this.eventService.getSelectedEvent();
+          let eventToSelect: Event | null = null;
+          
           if (currentSelected && events.find(e => e.id === currentSelected.id)) {
-            this.selectedEvent = events.find(e => e.id === currentSelected.id) || null;
+            // Stored event still exists in the list
+            eventToSelect = events.find(e => e.id === currentSelected.id) || null;
           }
           
           // Auto-select first event if no valid selection exists
-          if (events.length > 0 && !this.selectedEvent) {
-            this.selectedEvent = events[0];
-            this.eventService.setSelectedEvent(events[0]);
+          if (events.length > 0 && !eventToSelect) {
+            eventToSelect = events[0];
+          }
+          
+          // Set the selected event
+          if (eventToSelect) {
+            this.selectedEvent = eventToSelect;
+            this.eventService.setSelectedEvent(eventToSelect);
           }
           
           this.loading = false;
@@ -251,52 +250,10 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Open create event modal
+   * Navigate to create new event page
    */
   openCreateEventModal(): void {
-    this.showCreateModal = true;
-  }
-  
-  /**
-   * Close create event modal
-   */
-  closeCreateEventModal(): void {
-    this.showCreateModal = false;
-    this.creatingEvent = false;
-  }
-  
-  /**
-   * Handle event creation
-   */
-  onCreateEvent(eventData: CreateEventForm): void {
-    this.creatingEvent = true;
-    
-    this.subscriptions.add(
-      this.eventService.createEvent(eventData).subscribe({
-        next: (newEvent) => {
-          this.onAlertMessage({ type: 'success', text: 'Event created successfully!' });
-          
-          // Reset the form in the modal before closing
-          if (this.createEventModal) {
-            this.createEventModal.reset();
-          }
-          
-          this.closeCreateEventModal();
-          
-          // Add new event to the list and select it
-          this.availableEvents.unshift(newEvent);
-          this.selectedEvent = newEvent;
-          this.eventService.setSelectedEvent(newEvent);
-          // Auto-refresh data when new event is created
-          this.refreshCurrentTabData();
-        },
-        error: (error) => {
-          console.error('Failed to create event:', error);
-          this.onAlertMessage({ type: 'error', text: error.message || 'Failed to create event' });
-          this.creatingEvent = false;
-        }
-      })
-    );
+    this.router.navigate(['/events/new']);
   }
   
   

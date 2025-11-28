@@ -1,0 +1,445 @@
+.event-form-page {
+  padding: 20px;
+  padding-bottom: 120px; /* Space for floating buttons */
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: calc(100vh - 60px); /* Ensure page takes full height minus nav */
+}
+
+/* Two-column layout: Sidebar + Main Content */
+.event-form-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Sidebar Navigation (Desktop) */
+.event-form-sidebar {
+  flex: 0 0 240px;
+  position: sticky;
+  top: 20px;
+  
+  .sidebar-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #6c757d;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+
+    i {
+      font-size: 18px;
+      width: 20px;
+      text-align: center;
+    }
+
+    span {
+      flex: 1;
+    }
+
+    &:hover {
+      color: #495057;
+    }
+
+    &.active {
+      color: #007bff;
+      border-left-color: #007bff;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+  }
+}
+
+/* Main Content Area */
+.event-form-main {
+  flex: 1;
+  min-width: 0; /* Prevent flex item from overflowing */
+}
+
+.event-form-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Form Content */
+.event-form-content {
+  padding: 32px;
+
+  .form-section {
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    p {
+      color: #6c757d;
+      margin-bottom: 24px;
+    }
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+
+    &.required::after {
+      content: ' *';
+      color: #dc3545;
+    }
+  }
+
+  .poster-upload-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #007bff;
+      background: #f8f9fa;
+    }
+  }
+
+  .poster-preview {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+
+    img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .poster-remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .payment-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+
+    // Desktop: 4 per row
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .payment-method-card {
+      position: relative;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+      cursor: pointer;
+
+      &:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+      }
+
+      input[type="checkbox"] {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+
+        &:checked ~ label {
+          color: #007bff;
+          font-weight: 600;
+        }
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        cursor: pointer;
+        padding-right: 24px;
+
+        i {
+          font-size: 24px;
+          color: #6c757d;
+        }
+
+        span {
+          font-size: 14px;
+          text-align: center;
+        }
+      }
+
+      input:checked ~ label i {
+        color: #007bff;
+      }
+    }
+  }
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 32px;
+
+  .loading-dots {
+    display: flex;
+    gap: 8px;
+
+    div {
+      width: 12px;
+      height: 12px;
+      background: #007bff;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+
+      &:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+
+      &:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+    }
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Floating Action Buttons */
+.floating-actions {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  z-index: 1050;
+
+  button {
+    min-width: 140px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+/* Tablet - Switch to horizontal layout */
+@media (max-width: 1024px) {
+  .event-form-layout {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .event-form-sidebar {
+    flex: none;
+    position: static;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 transparent;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 4px;
+    }
+
+    .sidebar-items {
+      flex-direction: row;
+      min-width: min-content;
+      padding: 0 20px;
+    }
+
+    .sidebar-item {
+      padding: 14px 16px;
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+
+      &.active {
+        border-left-color: transparent;
+        border-bottom-color: #007bff;
+      }
+    }
+  }
+
+  .event-form-main {
+    border-radius: 0 0 8px 8px;
+  }
+
+  .event-form-container {
+    border-radius: 0;
+  }
+}
+
+/* Ticket Types Section */
+.ticket-types-list {
+  .ticket-type-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: 13px;
+      color: #495057;
+      margin-bottom: 6px;
+    }
+
+    .btn-danger {
+      white-space: nowrap;
+    }
+  }
+
+  > .btn-outline-primary {
+    margin-top: 8px;
+  }
+}
+
+/* Mobile - Icon-only navigation */
+@media (max-width: 768px) {
+  .event-form-page {
+    padding: 12px;
+    padding-bottom: 100px; /* Space for floating buttons on mobile */
+  }
+
+  .event-form-sidebar {
+    .sidebar-items {
+      padding: 0 12px;
+      gap: 0;
+    }
+
+    .sidebar-item {
+      padding: 14px 12px;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+
+      i {
+        font-size: 20px;
+        width: auto;
+      }
+
+      span {
+        display: none;
+      }
+
+      /* Show text on active item */
+      &.active span {
+        display: block;
+      }
+    }
+  }
+
+  .event-form-content {
+    padding: 20px;
+
+    .form-section {
+      h3 {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .floating-actions {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+
+    button {
+      min-width: auto;
+      font-size: 14px;
+
+      &:first-child {
+        flex: 0 0 auto;
+      }
+
+      &:not(:first-child) {
+        flex: 1;
+      }
+    }
+  }
+}

@@ -26,17 +26,6 @@
     <div class="row" *ngIf="selectedEvent">
       <div class="col-12">
         
-        <!-- Tab Content (no navigation needed, handled by sidebar) -->
-        <!-- Event Details Tab -->
-        <div *ngIf="activeTab === 'details'">
-          <app-event-details-tab
-            [selectedEvent]="selectedEvent"
-            [isAdmin]="isAdmin"
-            (eventUpdated)="onEventUpdated($event)"
-            (alertMessage)="onAlertMessage($event)">
-          </app-event-details-tab>
-        </div>
-        
         <!-- Event Tickets Tab -->
         <div *ngIf="activeTab === 'tickets'">
           <app-event-tickets-tab
@@ -106,14 +95,6 @@
         </div>
       </div>
     </div>
-    
-    <!-- Create Event Modal -->
-    <app-create-event-modal
-      [isOpen]="showCreateModal"
-      [loading]="creatingEvent"
-      (eventCreate)="onCreateEvent($event)"
-      (modalClose)="closeCreateEventModal()">
-    </app-create-event-modal>
     
   </div>
 </div>

@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Event } from '../../../services/event.service';
 
 @Component({
@@ -20,6 +21,8 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
 
   isDropdownOpen = false;
   searchTerm = '';
+
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
     // Auto-focus search input when dropdown opens if there are many events
@@ -53,7 +56,7 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   }
 
   createEvent(): void {
-    this.createEventRequested.emit();
+    this.router.navigate(['/events/new']);
     this.isDropdownOpen = false;
   }
 
