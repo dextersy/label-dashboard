@@ -11,6 +11,7 @@ export interface TicketType {
   max_tickets: number;
   start_date?: string | null;
   end_date?: string | null;
+  disabled?: boolean;
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
@@ -24,6 +25,7 @@ function createNewTicketTypeForm() {
     max_tickets: 0,
     start_date: null,
     end_date: null,
+    disabled: false,
     showDateRange: false,
     isFree: false,
     isUnlimited: true
@@ -222,6 +224,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       max_tickets: this.newTicketType.isUnlimited ? 0 : Number(this.newTicketType.max_tickets),
       start_date: this.newTicketType.showDateRange && this.newTicketType.start_date ? this.formatDateForAPI(this.newTicketType.start_date) : null,
       end_date: this.newTicketType.showDateRange && this.newTicketType.end_date ? this.formatDateForAPI(this.newTicketType.end_date) : null,
+      disabled: this.newTicketType.disabled,
       showDateRange: this.newTicketType.showDateRange,
       isFree: this.newTicketType.isFree,
       isUnlimited: this.newTicketType.isUnlimited
@@ -248,7 +251,8 @@ export class TicketTypesComponent implements OnInit, OnChanges {
         price: ticketType.isFree ? 0 : Number(ticketType.price),
         max_tickets: ticketType.isUnlimited ? 0 : Number(ticketType.max_tickets),
         start_date: ticketType.start_date || null,
-        end_date: ticketType.end_date || null
+        end_date: ticketType.end_date || null,
+        disabled: ticketType.disabled
       };
       this.ticketTypesChange.emit([...this.ticketTypes]);
     }
@@ -258,6 +262,29 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     // Remove from local array
     this.ticketTypes = this.ticketTypes.filter((_, i) => i !== index);
     this.ticketTypesChange.emit([...this.ticketTypes]);
+  }
+
+  // Toggle disabled state for a ticket type
+  toggleTicketTypeDisabled(ticketType: TicketType, index: number): void {
+    // Show confirmation when disabling (not when enabling)
+    if (!ticketType.disabled) {
+      this.confirmationService.confirm({
+        title: 'Disable Ticket Type',
+        message: 'Are you sure you want to disable this ticket type? It will not be selectable on the Buy page, but existing tickets will be retained.',
+        confirmText: 'Disable',
+        cancelText: 'Cancel',
+        type: 'warning'
+      }).then(confirmed => {
+        if (confirmed) {
+          ticketType.disabled = true;
+          this.ticketTypesChange.emit([...this.ticketTypes]);
+        }
+      });
+    } else {
+      // Enable without confirmation
+      ticketType.disabled = false;
+      this.ticketTypesChange.emit([...this.ticketTypes]);
+    }
   }
 
   // Public method to get current ticket types (for parent components if needed)
