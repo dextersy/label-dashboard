@@ -252,12 +252,16 @@ export class SongFormComponent implements OnChanges, OnInit {
   loadSongData(): void {
     if (this.song) {
       // Ensure releaseArtistIds is up to date
-      // Note: releaseArtists have 'artist_id' property, not 'id'
-      this.releaseArtistIds = this.releaseArtists.map(a => Number(a.artist_id));
+      // Note: releaseArtists have 'id' property, not 'artist_id'
+      this.releaseArtistIds = this.releaseArtists.map(a => Number(a.id));
 
       // Filter out release artists from editable collaborators
       const editableCollaborators = this.song.collaborators
-        ? this.song.collaborators.filter(c => !this.releaseArtistIds.includes(Number(c.artist_id)))
+        ? this.song.collaborators.filter(c => {
+            const collabArtistId = Number(c.artist_id);
+            const shouldKeep = !this.releaseArtistIds.includes(collabArtistId);
+            return shouldKeep;
+          })
         : [];
 
       this.songForm = {

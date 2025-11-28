@@ -1,0 +1,129 @@
+<div class="submission-section">
+  <div class="row">
+    <div class="col-md-8">
+      <h4>Release Summary</h4>
+
+      <!-- Release Information Summary -->
+      <div class="card mb-4" *ngIf="releaseInfoData">
+        <div class="card-header">
+          <h5 class="mb-0">Release Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Title:</strong> {{ releaseInfoData.title || 'Not specified' }}</p>
+              <p><strong>Catalog Number:</strong> {{ releaseInfoData.catalog_no || 'Not specified' }}</p>
+              <p><strong>UPC:</strong> {{ releaseInfoData.UPC || 'Not specified' }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Release Date:</strong> {{ formatDate(releaseInfoData.release_date) || 'Not specified' }}</p>
+              <p><strong>Status:</strong>
+                <span class="badge ms-2" [class]="getStatusBadgeClass(releaseInfoData.status)">
+                  {{ releaseInfoData.status || 'Draft' }}
+                </span>
+              </p>
+              <p><strong>Cover Art:</strong>
+                <span *ngIf="releaseInfoData.cover_art_preview || releaseInfoData.cover_art"> ✓ Uploaded</span>
+                <span *ngIf="!releaseInfoData.cover_art_preview && !releaseInfoData.cover_art" class="text-warning"> Not uploaded</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-3" *ngIf="releaseInfoData.description">
+            <strong>Description:</strong>
+            <div class="mt-1" [innerHTML]="releaseInfoData.description"></div>
+          </div>
+
+          <div class="mt-3" *ngIf="releaseInfoData.liner_notes">
+            <strong>Liner Notes:</strong>
+            <div class="mt-1" [innerHTML]="releaseInfoData.liner_notes"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Track List Summary -->
+      <div class="card mb-4" *ngIf="trackListData">
+        <div class="card-header">
+          <h5 class="mb-0">Track List ({{ trackListData.songs?.length || 0 }} tracks)</h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="trackListData.songs && trackListData.songs.length > 0">
+            <div class="track-summary" *ngFor="let song of trackListData.songs; let i = index">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ i + 1 }}. {{ song.title || 'Untitled' }}</strong>
+                  <span class="text-muted ms-2" *ngIf="song.duration">({{ Math.floor(song.duration / 60) }}:{{ (song.duration % 60).toString().padStart(2, '0') }})</span>
+                </div>
+                <div>
+                  <span class="badge" [class]="song.audio_file ? 'badge-success' : 'badge-warning'">
+                    <i class="fa" [class]="song.audio_file ? 'fa-check' : 'fa-exclamation-triangle'"></i>
+                    {{ song.audio_file ? 'Audio uploaded' : 'No audio' }}
+                  </span>
+                </div>
+              </div>
+              <div class="text-muted small mt-1" *ngIf="song.collaborators && song.collaborators.length > 0">
+                Featuring: {{ getCollaboratorNames(song) }}
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!trackListData.songs || trackListData.songs.length === 0" class="text-center text-muted py-3">
+            <i class="fa fa-music fa-2x mb-2"></i>
+            <p>No tracks added yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <!-- Validation Summary -->
+      <div class="card mb-4" *ngIf="trackListData?.validation">
+        <div class="card-header">
+          <h5 class="mb-0">Validation Status</h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="trackListData?.validation?.hasErrors" class="alert alert-danger mb-0">
+            <i class="fa fa-exclamation-circle me-2"></i>
+            <strong>{{ trackListData?.validation?.errors?.length || 0 }} error{{ (trackListData?.validation?.errors?.length || 0) !== 1 ? 's' : '' }}</strong>
+            <div class="small mt-1">Please fix the errors before submitting</div>
+          </div>
+
+          <div *ngIf="!trackListData?.validation?.hasErrors && trackListData?.validation?.hasWarnings" class="alert alert-warning mb-0">
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            <strong>{{ trackListData?.validation?.warnings?.length || 0 }} warning{{ (trackListData?.validation?.warnings?.length || 0) !== 1 ? 's' : '' }}</strong>
+            <div class="small mt-1">Consider addressing these before submitting</div>
+          </div>
+
+          <div *ngIf="!trackListData?.validation?.hasErrors && !trackListData?.validation?.hasWarnings" class="alert alert-success mb-0">
+            <i class="fa fa-check-circle me-2"></i>
+            <strong>All validations passed!</strong>
+            <div class="small mt-1">Ready for submission</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submission Warning -->
+      <div class="alert alert-warning">
+        <i class="fa fa-exclamation-triangle me-2"></i>
+        <strong>Important:</strong> Once submitted, this release will be sent for processing and distribution.
+        Make sure all information is correct and complete.
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="button"
+        class="btn btn-primary btn-lg btn-block"
+        [disabled]="!isFormValid || isSubmitting"
+        (click)="onSubmit()">
+        <i class="fa me-2" [class]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+        {{ isSubmitting ? 'Submitting...' : 'Submit Release' }}
+      </button>
+
+      <div *ngIf="!isFormValid" class="text-center mt-2">
+        <small class="text-muted">
+          Complete all required fields and fix validation errors to enable submission
+        </small>
+      </div>
+    </div>
+  </div>
+</div>

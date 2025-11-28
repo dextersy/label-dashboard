@@ -1,0 +1,136 @@
+<div class="release-submission-page">
+  <app-breadcrumb></app-breadcrumb>
+  <div class="release-form-layout">
+    <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
+    <nav class="release-form-sidebar mt-3">
+      <div class="sidebar-items">
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'info'"
+          [class.completed]="isReleaseInfoCompleted"
+          (click)="setActiveSection('info')">
+          <i class="fa fa-info-circle"></i>
+          <span>Release Info</span>
+        </button>
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'tracks'"
+          [class.completed]="canProceedToSubmit"
+          [disabled]="!canProceedToTracks"
+          (click)="setActiveSection('tracks')">
+          <i class="fa fa-music"></i>
+          <span>Track List</span>
+        </button>
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'submit'"
+          [disabled]="!canProceedToSubmit"
+          *ngIf="isDraftStatus"
+          (click)="setActiveSection('submit')">
+          <i class="fa fa-paper-plane"></i>
+          <span>Submit</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="release-form-main">
+      <div class="release-form-container">
+      <!-- Release Info Section -->
+      <div class="form-section" *ngIf="activeSection === 'info'">
+        <h3>Release Information</h3>
+        <p>Enter the basic details for your release</p>
+
+        <app-release-info-section
+          [artist]="artist"
+          [editingRelease]="editingRelease"
+          [showStatus]="true"
+          [generateCatalogNumber]="true"
+          (formDataChange)="onReleaseInfoDataChange($event)"
+          (validityChange)="onReleaseInfoValidityChange($event)"
+          (alertMessage)="onAlertMessage($event)"
+          (releaseSaved)="onReleaseSaved($event)">
+        </app-release-info-section>
+
+        <!-- Show Next button only after release is saved -->
+        <div class="section-actions mt-4" *ngIf="releaseId">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="setActiveSection('tracks')">
+            Next: Track List
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Track List Section -->
+      <div class="form-section" *ngIf="activeSection === 'tracks'">
+        <h3>Track List</h3>
+        <p>Manage the songs for this release</p>
+
+        <app-track-list-section
+          [releaseId]="releaseId"
+          [releaseTitle]="releaseInfoData?.title || ''"
+          [releaseCatalogNo]="releaseInfoData?.catalog_no || ''"
+          [releaseStatus]="releaseInfoData?.status || 'Draft'"
+          [releaseArtists]="releaseInfoData?.artists || []"
+          (trackListDataChange)="onTrackListDataChange($event)"
+          (alertMessage)="onAlertMessage($event)">
+        </app-track-list-section>
+
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="setActiveSection('info')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Release Info
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canProceedToSubmit"
+            *ngIf="isDraftStatus"
+            (click)="setActiveSection('submit')">
+            Next: Submit
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submission Section -->
+      <div class="form-section" *ngIf="activeSection === 'submit' && isDraftStatus">
+        <h3>Review & Submit</h3>
+        <p>Review your release information and submit for processing</p>
+
+        <app-submission-section
+          [releaseInfoData]="releaseInfoData"
+          [trackListData]="trackListData"
+          [isSubmitting]="isSubmitting"
+          (submit)="onSubmit()">
+        </app-submission-section>
+
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="setActiveSection('tracks')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Track List
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onCancel()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

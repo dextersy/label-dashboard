@@ -1,0 +1,158 @@
+<div class="release-info-section">
+  <form [formGroup]="releaseForm">
+    <!-- Basic Release Information -->
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="title">Title <span class="text-danger">*</span></label>
+          <input type="text"
+                 class="form-control"
+                 id="title"
+                 formControlName="title"
+                 [class.is-invalid]="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched"
+                 [readonly]="isRestrictedMode()"
+                 placeholder="Enter release title">
+          <div *ngIf="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched" class="invalid-feedback">
+            Title is required
+          </div>
+        </div>
+      </div>
+    <div class="col-md-6" *ngIf="isAdmin">
+      <div class="form-group">
+        <label for="catalogNo">Catalog Number <span class="text-danger">*</span></label>
+        <input type="text"
+               class="form-control"
+               id="catalogNo"
+               formControlName="catalog_no"
+               [class.is-invalid]="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched"
+               placeholder="e.g. MELT001">
+        <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text text-muted">
+          Default is auto-generated
+        </small>
+        <div *ngIf="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched" class="invalid-feedback">
+          Catalog number is required
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6" *ngIf="isAdmin">
+      <div class="form-group">
+        <label for="upc">UPC Code</label>
+        <input type="text"
+               class="form-control"
+               id="upc"
+               formControlName="UPC"
+               placeholder="Universal Product Code">
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="releaseDate">Release Date <span class="text-danger">*</span></label>
+        <input type="date"
+               class="form-control"
+               id="releaseDate"
+               formControlName="release_date"
+               [class.is-invalid]="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched"
+               [readonly]="isRestrictedMode()">
+        <div *ngIf="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched" class="invalid-feedback">
+          Release date is required
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="isAdmin && showStatus">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select class="form-control" id="status" formControlName="status">
+          <option value="Draft">Draft</option>
+          <option value="For Submission">For Submission</option>
+          <option value="Pending">Pending</option>
+          <option value="Live">Live</option>
+          <option value="Taken Down">Taken Down</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cover Art -->
+  <div class="form-group">
+    <label for="coverArt">Cover Art</label>
+    <div class="row">
+      <div class="col-md-6">
+        <input type="file"
+               class="form-control-file"
+               id="coverArt"
+               accept="image/*"
+               (change)="onCoverArtSelected($event)"
+               (click)="$event.stopPropagation()"
+               (cancel)="$event.stopPropagation()"
+               [disabled]="isRestrictedMode()">
+        <small class="form-text text-muted">
+          JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
+        </small>
+      </div>
+      <div class="col-md-6" *ngIf="coverArtPreview">
+        <div class="cover-art-preview">
+          <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
+          <button type="button"
+                  class="btn btn-sm btn-outline-danger mt-2"
+                  (click)="removeCoverArt()"
+                  [disabled]="isRestrictedMode()">
+            <i class="fa fa-trash"></i> Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Description and Liner Notes -->
+  <div class="form-group">
+    <label for="description">Tell us about this release</label>
+    <small class="form-text text-muted mb-2">
+      Give us a quick statement about the release, indicating what the song is about, the musical approach,
+      production stories, and any future plans related to the song. We will use this to craft our pitch to
+      playlists as well as for our press releases. Feel free to give us a bullet list or just a rough statement.
+    </small>
+    <quill-editor
+      id="description"
+      formControlName="description"
+      [modules]="quillConfig"
+      placeholder="Description of the release, musical approach, stories..."
+      [style.height.px]="120">
+    </quill-editor>
+  </div>
+
+  <div class="form-group">
+    <label for="linerNotes">Liner Notes</label>
+    <small class="form-text text-muted mb-2">
+      Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
+      It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
+      <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
+    </small>
+    <quill-editor
+      id="linerNotes"
+      formControlName="liner_notes"
+      [modules]="quillConfig"
+      placeholder="Liner notes, acknowledgments, credits..."
+      [style.height.px]="150">
+    </quill-editor>
+  </div>
+
+  <!-- Save Information Button -->
+  <div class="form-group mt-4">
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="savingRelease"
+      (click)="saveRelease()">
+      <i class="fa fa-save me-2" *ngIf="!savingRelease"></i>
+      <i class="fa fa-spinner fa-spin me-2" *ngIf="savingRelease"></i>
+      {{ savingRelease ? 'Saving...' : 'Save Information' }}
+    </button>
+  </div>
+  </form>
+</div>
