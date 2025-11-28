@@ -140,11 +140,6 @@ export const getEventForPublic = async (req: Request, res: Response) => {
             as: 'domains',
             attributes: ['domain_name']
           }]
-        },
-        {
-          model: TicketType,
-          as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
         }
       ]
     });
@@ -167,20 +162,44 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Can\'t validate domain : ' + requestDomain });
     }
 
+    // Get ticket types with availability information
+    const ticketTypes = await TicketType.findAll({
+      where: { event_id: eventId, disabled: false },
+      include: [{
+        model: Ticket,
+        as: 'tickets',
+        required: false,
+        attributes: ['id']
+      }],
+      order: [['id', 'ASC']]
+    });
+
+    const processedTicketTypes = [];
+    for (const ticketType of ticketTypes) {
+      const isAvailable = ticketType.isAvailable();
+      const isSoldOut = await ticketType.isSoldOut();
+      const remainingTickets = await ticketType.getRemainingTickets();
+      const soldCount = await ticketType.getSoldCount();
+
+      // For public event details, include all enabled tickets with availability status
+      processedTicketTypes.push({
+        id: ticketType.id,
+        name: ticketType.name,
+        price: ticketType.price,
+        is_available: isAvailable,
+        is_sold_out: isSoldOut,
+        remaining_tickets: remainingTickets,
+        sold_count: soldCount
+      });
+    }
+
     // Check if event is closed due to time
     const isClosedByTime = event.close_time && new Date() > event.close_time;
 
     // Check if event is closed due to no available ticket types
-    const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventId }
-    });
-
     let hasAvailableTicketTypes = false;
-    for (const ticketType of ticketTypes) {
-      const isAvailable = ticketType.isAvailable();
-      const isSoldOut = await ticketType.isSoldOut();
-
-      if (isAvailable && !isSoldOut) {
+    for (const ticketType of processedTicketTypes) {
+      if (ticketType.is_available && !ticketType.is_sold_out) {
         hasAvailableTicketTypes = true;
         break;
       }
@@ -237,7 +256,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
           color: event.brand.brand_color,
           logo_url: event.brand.logo_url
         } : null,
-        ticketTypes: (event as any).ticketTypes || []
+        ticketTypes: processedTicketTypes
       }
     });
   } catch (error) {
@@ -263,7 +282,7 @@ export const getAvailableTicketTypesPublic = async (req: Request, res: Response)
 
     // Get all ticket types for the event
     const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventIdNum },
+      where: { event_id: eventIdNum, disabled: false },
       include: [{
         model: Ticket,
         as: 'tickets',
@@ -536,7 +555,8 @@ export const buyTicket = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ]
     });
@@ -1353,7 +1373,8 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ]
     });
@@ -1658,7 +1679,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ],
       order: [['date_and_time', 'ASC']]
@@ -1751,7 +1773,8 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ],
       order: [['date_and_time', 'ASC']],

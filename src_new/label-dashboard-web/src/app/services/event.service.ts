@@ -8,6 +8,7 @@ export interface TicketTypeForm {
   name: string;
   price: number;
   isFree?: boolean;
+  disabled?: boolean;
 }
 
 export interface CreateEventForm {
@@ -821,7 +822,7 @@ export class EventService {
   /**
    * Create a new ticket type for an event
    */
-  createTicketType(ticketTypeData: { event_id: number; name: string; price: number }): Observable<{ ticketType: any }> {
+  createTicketType(ticketTypeData: { event_id: number; name: string; price: number; disabled?: boolean }): Observable<{ ticketType: any }> {
     return this.http.post<{ ticketType: any }>(`${environment.apiUrl}/events/ticket-types`, ticketTypeData, {
       headers: this.getAuthHeaders()
     }).pipe(
@@ -832,7 +833,7 @@ export class EventService {
   /**
    * Update a ticket type
    */
-  updateTicketType(ticketTypeId: number, updateData: { name: string; price: number }): Observable<{ ticketType: any }> {
+  updateTicketType(ticketTypeId: number, updateData: { name: string; price: number; disabled?: boolean }): Observable<{ ticketType: any }> {
     if (!ticketTypeId || isNaN(ticketTypeId) || ticketTypeId <= 0) {
       return throwError(() => new Error('Invalid ticket type ID provided'));
     }

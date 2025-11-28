@@ -11,7 +11,7 @@
 <!-- Ticket Types Grid -->
 <div class="row g-3">
     <div *ngFor="let ticketType of ticketTypes; let i = index" class="col-md-6 col-lg-4">
-      <div class="card h-100 pt-2" [ngClass]="editingIndex === i ? 'border-primary' : 'ticket-type-card'">
+      <div class="card h-100 pt-2 position-relative" [ngClass]="editingIndex === i ? 'border-primary' : 'ticket-type-card'">
         <!-- Card Header for Static Cards -->
         <div class="card-header bg-transparent border-0 pb-2" *ngIf="editingIndex !== i">
           <h5 class="card-title mb-0 fw-bold text-center">{{ ticketType.name }}</h5>
@@ -115,16 +115,35 @@
           </small>
         </div>
 
-        <div class="d-flex gap-2 justify-content-center" *ngIf="isAdmin">
-          <button type="button" class="btn btn-outline-primary btn-sm" 
-                  [disabled]="editingIndex !== null || showNewForm" 
+        <div class="d-flex gap-2 justify-content-center" *ngIf="isAdmin && !ticketType.disabled">
+          <button type="button" class="btn btn-outline-primary btn-sm"
+                  [disabled]="editingIndex !== null || showNewForm"
                   (click)="startEdit(i)" title="Edit ticket type">
             <i class="fas fa-edit"></i> Edit
           </button>
-          <button type="button" class="btn btn-outline-danger btn-sm" 
-                  [disabled]="editingIndex !== null || showNewForm" 
+          <button type="button" class="btn btn-outline-warning btn-sm"
+                  [disabled]="editingIndex !== null || showNewForm"
+                  (click)="toggleTicketTypeDisabled(ticketType, i)"
+                  [title]="ticketType.disabled ? 'Enable ticket type' : 'Disable ticket type'">
+            <i class="fas" [class.fa-eye-slash]="!ticketType.disabled" [class.fa-eye]="ticketType.disabled"></i>
+            {{ ticketType.disabled ? 'Enable' : 'Disable' }}
+          </button>
+          <button type="button" class="btn btn-outline-danger btn-sm"
+                  *ngIf="!ticketType.sold_tickets && !ticketType.pending_tickets"
+                  [disabled]="editingIndex !== null || showNewForm"
                   (click)="confirmDelete(ticketType, i)" title="Delete ticket type">
             <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Disabled Overlay -->
+      <div *ngIf="ticketType.disabled" class="disabled-overlay">
+        <div class="disabled-content">
+          <i class="fas fa-eye-slash disabled-icon"></i>
+          <br>
+          <button type="button" class="btn btn-warning btn-sm" (click)="toggleTicketTypeDisabled(ticketType, i)">
+            <i class="fas fa-eye me-1"></i>Enable
           </button>
         </div>
       </div>
@@ -219,4 +238,10 @@
 <div *ngIf="isAdmin && ticketTypes.length < 1" class="alert alert-warning mt-3">
   <i class="fas fa-exclamation-triangle me-2"></i>
   <strong>Important:</strong> Events must have at least one ticket type.
+</div>
+
+<!-- Warning about all ticket types being disabled -->
+<div *ngIf="isAdmin && allTicketTypesDisabled" class="alert alert-warning mt-3">
+  <i class="fas fa-exclamation-triangle me-2"></i>
+  <strong>Warning:</strong> The Buy Page will show that ticket sales are closed if there are no enabled ticket types.
 </div>

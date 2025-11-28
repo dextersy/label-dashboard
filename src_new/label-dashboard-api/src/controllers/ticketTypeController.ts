@@ -36,7 +36,22 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
       order: [['id', 'ASC']]
     });
 
-    res.json({ ticketTypes });
+    // Process ticket types to include statistics
+    const processedTicketTypes = [];
+    for (const ticketType of ticketTypes) {
+      const soldCount = await ticketType.getSoldCount();
+      const pendingCount = await ticketType.getPendingCount();
+      const remainingTickets = await ticketType.getRemainingTickets();
+      
+      processedTicketTypes.push({
+        ...ticketType.toJSON(),
+        sold_tickets: soldCount,
+        pending_tickets: pendingCount,
+        remaining_tickets: remainingTickets
+      });
+    }
+
+    res.json({ ticketTypes: processedTicketTypes });
   } catch (error) {
     console.error('Get ticket types error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -49,7 +64,7 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { event_id, name, price, max_tickets = 0, start_date, end_date } = req.body;
+    const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false } = req.body;
 
     if (!event_id || !name || price === undefined) {
       return res.status(400).json({ 
@@ -127,7 +142,8 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       price: priceNum,
       max_tickets: maxTicketsNum,
       start_date: startDate,
-      end_date: endDate
+      end_date: endDate,
+      disabled: disabled
     });
 
     res.status(201).json({
@@ -147,7 +163,7 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const { name, price, max_tickets, start_date, end_date } = req.body;
+    const { name, price, max_tickets, start_date, end_date, disabled } = req.body;
 
     const ticketTypeId = parseInt(id, 10);
 
@@ -256,6 +272,10 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
       updateData.end_date = endDate;
     }
 
+    if (disabled !== undefined) {
+      updateData.disabled = disabled;
+    }
+
     await ticketType.update(updateData);
 
     res.json({
@@ -282,9 +302,12 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    // Get all ticket types for the event
+    // Get all ticket types for the event (exclude disabled ones for public view)
     const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventIdNum },
+      where: { 
+        event_id: eventIdNum,
+        disabled: false
+      },
       include: [{
         model: require('../models').Ticket,
         as: 'tickets',
