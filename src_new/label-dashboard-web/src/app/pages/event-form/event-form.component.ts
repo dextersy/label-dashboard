@@ -459,6 +459,17 @@ export class EventFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  onPosterUploadKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      // Find the poster input element and trigger click
+      const posterInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+      if (posterInput) {
+        posterInput.click();
+      }
+    }
+  }
+
   removePoster(): void {
     this.selectedPosterFile = null;
     this.posterPreview = null;

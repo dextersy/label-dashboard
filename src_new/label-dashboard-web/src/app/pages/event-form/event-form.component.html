@@ -176,7 +176,13 @@
 
               <div class="col-12 mb-3">
                 <label class="form-label">Event Poster</label>
-                <div *ngIf="!posterPreview && !eventData.poster_url" class="poster-upload-zone" (click)="posterInput.click()">
+                <div *ngIf="!posterPreview && !eventData.poster_url" 
+                     class="poster-upload-zone" 
+                     role="button"
+                     tabindex="0"
+                     (click)="posterInput.click()"
+                     (keydown)="onPosterUploadKeydown($event)"
+                     aria-label="Upload event poster image">
                   <i class="fa fa-image fa-3x text-muted mb-2"></i>
                   <p class="text-muted mb-0">Click to upload poster image</p>
                   <small class="text-muted">JPG, PNG or GIF (max 10MB)</small>
@@ -197,6 +203,7 @@
                   #posterInput
                   accept="image/*"
                   (change)="onPosterSelected($event)"
+                  aria-label="Event poster image file"
                   style="display: none;">
               </div>
             </div>

@@ -4,7 +4,7 @@
       <!-- Body -->
       <div class="modal-body text-center pt-5">
         <div class="celebration-icon mb-1">
-          🎊
+          <span role="img" aria-label="Celebration">🎊</span>
         </div>
         
         <h2 class="mb-2 fw-bold">Your event is now live!</h2>
@@ -20,6 +20,7 @@
             class="form-control link-input" 
             [value]="data?.buyLink || ''" 
             readonly
+            aria-label="Event ticket purchase link"
             #linkInput>
           <button 
             class="btn btn-primary" 
