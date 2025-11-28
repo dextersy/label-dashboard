@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
-import { EditReleaseDialogComponent } from '../edit-release-dialog/edit-release-dialog.component';
 import { TrackListDialogComponent } from '../track-list-dialog/track-list-dialog.component';
 import { environment } from 'environments/environment';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
@@ -39,7 +38,7 @@ export interface ArtistRelease {
 
 @Component({
     selector: 'app-artist-releases-tab',
-    imports: [CommonModule, FormsModule, EditReleaseDialogComponent, TrackListDialogComponent],
+    imports: [CommonModule, FormsModule, TrackListDialogComponent],
     templateUrl: './artist-releases-tab.component.html',
     styleUrl: './artist-releases-tab.component.scss'
 })
@@ -50,10 +49,8 @@ export class ArtistReleasesTabComponent {
   epkFilter: 'all' | 'visible' | 'hidden' = 'all';
   loading = false;
   isAdmin = false;
-  showEditDialog = false;
   showTrackListDialog = false;
   selectedRelease: ArtistRelease | null = null;
-  loadingReleaseDetails = false;
   submittingReleaseId: number | null = null;
   downloadingMastersId: number | null = null;
 
@@ -119,43 +116,8 @@ export class ArtistReleasesTabComponent {
   }
 
   onEditRelease(release: ArtistRelease): void {
-    // Always load full release details to ensure we have the artist data
-    this.loadReleaseDetails(release);
-  }
-
-  private loadReleaseDetails(release: ArtistRelease): void {
-    this.loadingReleaseDetails = true;
-    
-    this.http.get<{release: ArtistRelease}>(`${environment.apiUrl}/releases/${release.id}`, {
-      headers: this.getAuthHeaders()
-    }).subscribe({
-      next: (data) => {
-        this.selectedRelease = data.release;
-        this.loadingReleaseDetails = false;
-        this.showEditDialog = true;
-      },
-      error: (error) => {
-        console.error('Error loading release details:', error);
-        this.loadingReleaseDetails = false;
-        // Fall back to using the basic release data
-        this.selectedRelease = release;
-        this.showEditDialog = true;
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'Could not load full release details. Some information may be missing.'
-        });
-      }
-    });
-  }
-
-  onEditDialogClose(): void {
-    this.showEditDialog = false;
-    this.selectedRelease = null;
-  }
-
-  onReleaseUpdated(updatedRelease: any): void {
-    this.loadReleases();
-    this.onEditDialogClose();
+    // Navigate to the edit route instead of opening a dialog
+    this.router.navigate(['/artist/releases/edit', release.id]);
   }
 
   onManageTrackList(release: ArtistRelease): void {

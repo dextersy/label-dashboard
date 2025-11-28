@@ -8,7 +8,6 @@ import { ArtistProfileTabComponent, ArtistProfile } from '../../components/artis
 import { ArtistGalleryTabComponent } from '../../components/artist/artist-gallery-tab/artist-gallery-tab.component';
 import { ArtistReleasesTabComponent, ArtistRelease } from '../../components/artist/artist-releases-tab/artist-releases-tab.component';
 import { ArtistTeamTabComponent } from '../../components/artist/artist-team-tab/artist-team-tab.component';
-import { ArtistNewReleaseTabComponent } from '../../components/artist/artist-new-release-tab/artist-new-release-tab.component';
 import { ArtistManageEpkTabComponent } from '../../components/artist/artist-manage-epk-tab/artist-manage-epk-tab.component';
 import { NotificationService } from '../../services/notification.service';
 import { ArtistStateService } from '../../services/artist-state.service';
@@ -16,7 +15,7 @@ import { AuthService } from '../../services/auth.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from '../../../environments/environment';
 
-export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release' | 'manage-epk';
+export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'manage-epk';
 
 @Component({
     selector: 'app-artist',
@@ -26,7 +25,6 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'new-release
         ArtistGalleryTabComponent,
         ArtistReleasesTabComponent,
         ArtistTeamTabComponent,
-        ArtistNewReleaseTabComponent,
         ArtistManageEpkTabComponent,
         BreadcrumbComponent
     ],
@@ -80,8 +78,6 @@ export class ArtistComponent implements OnInit, OnDestroy {
             this.activeTab = 'releases';
           } else if (currentUrl.includes('/artist/team')) {
             this.activeTab = 'team';
-          } else if (currentUrl.includes('/artist/new-release')) {
-            this.activeTab = 'new-release';
           } else if (currentUrl.includes('/artist/epk')) {
             this.activeTab = 'manage-epk';
           }

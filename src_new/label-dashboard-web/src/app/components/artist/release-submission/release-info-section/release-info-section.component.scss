@@ -1,0 +1,54 @@
+.release-info-section {
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .form-control {
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+
+      &:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+
+      &.is-invalid {
+        border-color: #dc3545;
+      }
+    }
+
+    .invalid-feedback {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .form-text {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+
+    .cover-art-preview {
+      text-align: center;
+
+      img {
+        max-width: 200px;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  .text-danger {
+    color: #dc3545 !important;
+  }
+}

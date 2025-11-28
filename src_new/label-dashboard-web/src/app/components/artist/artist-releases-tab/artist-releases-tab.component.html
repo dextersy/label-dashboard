@@ -111,10 +111,8 @@
                   </button>
                   <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onEditRelease(release)"
-                          [disabled]="loadingReleaseDetails"
                           title="Edit Release Information">
-                    <i class="fa fa-spinner fa-spin" *ngIf="loadingReleaseDetails"></i>
-                    <i class="fa fa-edit" *ngIf="!loadingReleaseDetails"></i>
+                    <i class="fa fa-edit"></i>
                   </button>
                   <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onManageTrackList(release)"
@@ -145,16 +143,6 @@
       
     </div>
   </div>
-
-  <!-- Edit Release Dialog -->
-  <app-edit-release-dialog
-    [isVisible]="showEditDialog"
-    [artist]="artist"
-    [editingRelease]="selectedRelease"
-    (close)="onEditDialogClose()"
-    (releaseUpdated)="onReleaseUpdated($event)"
-    (alertMessage)="alertMessage.emit($event)">
-  </app-edit-release-dialog>
 
   <!-- Track List Dialog -->
   <app-track-list-dialog

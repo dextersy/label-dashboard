@@ -6,6 +6,7 @@ import { AddNewArtistComponent } from './components/artist/add-new-artist/add-ne
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
+import { ReleaseSubmissionComponent } from './components/artist/release-submission/release-submission.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-found.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
@@ -55,7 +56,8 @@ export const routes: Routes = [
       { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
       { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
       { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
-      { path: 'releases/new', component: ArtistComponent, data: { tab: 'new-release' } },
+      { path: 'releases/new', component: ReleaseSubmissionComponent },
+      { path: 'releases/edit/:id', component: ReleaseSubmissionComponent },
       { path: 'team', component: ArtistComponent, data: { tab: 'team' } },
       { path: 'epk', component: ArtistComponent, data: { tab: 'manage-epk' } },
       { path: 'new', component: AddNewArtistComponent, canActivate: [adminGuard] }

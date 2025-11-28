@@ -64,10 +64,17 @@
             *ngIf="song.audio_file"
             class="btn btn-link btn-sm p-0 me-2"
             [class.text-warning]="playingSongId === song.id"
-            [class.text-success]="playingSongId !== song.id"
+            [class.text-info]="pausedSongId === song.id"
+            [class.text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
+            [disabled]="loadingSongId === song.id"
             (click)="onPlayAudio(song)"
-            [title]="playingSongId === song.id ? 'Pause' : 'Play'">
-            <i class="fa" [class.fa-play]="playingSongId !== song.id" [class.fa-pause]="playingSongId === song.id"></i>
+            [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
+            <i class="fa"
+               [class.fa-play]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
+               [class.fa-pause]="playingSongId === song.id"
+               [class.fa-play-circle]="pausedSongId === song.id"
+               [class.fa-spinner]="loadingSongId === song.id"
+               [class.fa-spin]="loadingSongId === song.id"></i>
           </button>
           <button class="btn btn-link btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit" [disabled]="isUploading(song.id)">
             <i class="fa fa-edit"></i>

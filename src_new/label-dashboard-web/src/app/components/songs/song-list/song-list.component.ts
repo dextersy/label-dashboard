@@ -23,6 +23,8 @@ export class SongListComponent implements OnDestroy {
   playingSongId: number | null = null;
   private audioElement: HTMLAudioElement | null = null;
   private currentBlobUrl: string | null = null;
+  loadingSongId: number | null = null;
+  pausedSongId: number | null = null;
 
   // For non-admin users on non-draft releases, song list modifications are restricted
   // This includes: delete songs, reorder songs, upload audio
@@ -83,7 +85,16 @@ export class SongListComponent implements OnDestroy {
     // If clicking on the currently playing song, pause it
     if (this.playingSongId === song.id && this.audioElement && !this.audioElement.paused) {
       this.audioElement.pause();
+      this.pausedSongId = song.id;
       this.playingSongId = null;
+      return;
+    }
+
+    // If clicking on a paused song, resume it
+    if (this.pausedSongId === song.id && this.audioElement && this.audioElement.paused) {
+      this.audioElement.play();
+      this.playingSongId = song.id;
+      this.pausedSongId = null;
       return;
     }
 
@@ -98,6 +109,12 @@ export class SongListComponent implements OnDestroy {
       URL.revokeObjectURL(this.currentBlobUrl);
       this.currentBlobUrl = null;
     }
+
+    // Clear paused state for different song
+    this.pausedSongId = null;
+
+    // Set loading state
+    this.loadingSongId = song.id;
 
     // Create new audio element and play
     const token = localStorage.getItem('auth_token');
@@ -117,23 +134,29 @@ export class SongListComponent implements OnDestroy {
           this.currentBlobUrl = URL.createObjectURL(blob);
           this.audioElement.src = this.currentBlobUrl;
           this.playingSongId = song.id || null;
+          this.loadingSongId = null; // Clear loading state
           this.audioElement.play();
 
           // Reset playing state when audio ends
           this.audioElement.onended = () => {
             this.playingSongId = null;
+            this.pausedSongId = null;
           };
 
           // Handle errors
           this.audioElement.onerror = () => {
             console.error('Error playing audio');
             this.playingSongId = null;
+            this.pausedSongId = null;
+            this.loadingSongId = null; // Clear loading state on error
           };
         }
       })
       .catch(error => {
         console.error('Error loading audio:', error);
         this.playingSongId = null;
+        this.pausedSongId = null;
+        this.loadingSongId = null; // Clear loading state on error
       });
   }
 
@@ -149,5 +172,9 @@ export class SongListComponent implements OnDestroy {
       URL.revokeObjectURL(this.currentBlobUrl);
       this.currentBlobUrl = null;
     }
+
+    // Clear loading and paused states
+    this.loadingSongId = null;
+    this.pausedSongId = null;
   }
 }
