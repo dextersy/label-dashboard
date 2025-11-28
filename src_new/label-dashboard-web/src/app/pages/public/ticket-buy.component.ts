@@ -115,23 +115,19 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   loadEvent(eventId: string) {
     this.isLoading = true;
     
-    // Load both brand and event information simultaneously
+    // Load brand and event information (ticket types are already included in event)
     forkJoin({
       brand: this.brandService.loadBrandByDomain(),
-      event: this.publicService.getEvent(parseInt(eventId, 10)),
-      availableTicketTypes: this.publicService.getAvailableTicketTypes(parseInt(eventId, 10))
+      event: this.publicService.getEvent(parseInt(eventId, 10))
     }).pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ brand, event, availableTicketTypes }) => {
+        next: ({ brand, event }) => {
           this.currentBrand = brand;
           
           if (event.event) {
             this.event = event.event;
 
-            // Replace event ticket types with filtered available ones
-            if (availableTicketTypes && availableTicketTypes.ticketTypes) {
-              this.event.ticketTypes = availableTicketTypes.ticketTypes;
-            }
+            // Ticket types are already filtered (enabled only) in the event response
 
             // Additional frontend validation: check if event belongs to current brand
             if (this.event.brand?.id && this.currentBrand?.id && 
@@ -228,6 +224,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
     // Event is explicitly closed
     if (this.event.is_closed) return false;
+
+    // Check if there are no ticket types at all
+    if (!this.event.ticketTypes || this.event.ticketTypes.length === 0) {
+      return false;
+    }
 
     // Check remaining tickets (when max_tickets is set)
     const remainingTickets = this.event.remaining_tickets;

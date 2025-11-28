@@ -49,6 +49,11 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   originalTicketTypes: TicketType[] = [];
   showNewForm = false;
   private hasAutoStartedEditing = false; // Track if auto-editing has been done
+
+  // Warning state
+  get allTicketTypesDisabled(): boolean {
+    return this.ticketTypes.length > 0 && this.ticketTypes.every(tt => tt.disabled);
+  }
   // Show new ticket form
   startAddNew(): void {
     this.showNewForm = true;

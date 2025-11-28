@@ -238,3 +238,9 @@
   <i class="fas fa-exclamation-triangle me-2"></i>
   <strong>Important:</strong> Events must have at least one ticket type.
 </div>
+
+<!-- Warning about all ticket types being disabled -->
+<div *ngIf="isAdmin && allTicketTypesDisabled" class="alert alert-warning mt-3">
+  <i class="fas fa-exclamation-triangle me-2"></i>
+  <strong>Warning:</strong> The Buy Page will show that ticket sales are closed if there are no enabled ticket types.
+</div>
