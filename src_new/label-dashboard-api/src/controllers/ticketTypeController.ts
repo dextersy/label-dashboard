@@ -36,7 +36,22 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
       order: [['id', 'ASC']]
     });
 
-    res.json({ ticketTypes });
+    // Process ticket types to include statistics
+    const processedTicketTypes = [];
+    for (const ticketType of ticketTypes) {
+      const soldCount = await ticketType.getSoldCount();
+      const pendingCount = await ticketType.getPendingCount();
+      const remainingTickets = await ticketType.getRemainingTickets();
+      
+      processedTicketTypes.push({
+        ...ticketType.toJSON(),
+        sold_tickets: soldCount,
+        pending_tickets: pendingCount,
+        remaining_tickets: remainingTickets
+      });
+    }
+
+    res.json({ ticketTypes: processedTicketTypes });
   } catch (error) {
     console.error('Get ticket types error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -12,6 +12,9 @@ export interface TicketType {
   start_date?: string | null;
   end_date?: string | null;
   disabled?: boolean;
+  sold_tickets?: number;
+  pending_tickets?: number;
+  remaining_tickets?: number | null;
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity

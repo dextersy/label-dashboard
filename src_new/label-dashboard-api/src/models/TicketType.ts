@@ -84,6 +84,23 @@ class TicketType extends Model<TicketTypeAttributes, TicketTypeCreationAttribute
 
     return result || 0;
   }
+
+  public async getPendingCount(): Promise<number> {
+    const { Ticket } = require('./');
+    const { Op } = require('sequelize');
+
+    // Count pending tickets (not confirmed/paid)
+    const result = await Ticket.sum('number_of_entries', {
+      where: {
+        ticket_type_id: this.id,
+        status: {
+          [Op.notIn]: ['Payment Confirmed', 'Ticket sent.']
+        }
+      }
+    });
+
+    return result || 0;
+  }
 }
 
 TicketType.init(

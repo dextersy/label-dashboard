@@ -272,7 +272,30 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    res.json({ event });
+    // Process ticket types to include statistics
+    const processedTicketTypes = [];
+    if ((event as any).ticketTypes) {
+      for (const ticketType of (event as any).ticketTypes) {
+        const soldCount = await ticketType.getSoldCount();
+        const pendingCount = await ticketType.getPendingCount();
+        const remainingTickets = await ticketType.getRemainingTickets();
+        
+        processedTicketTypes.push({
+          ...ticketType.toJSON(),
+          sold_tickets: soldCount,
+          pending_tickets: pendingCount,
+          remaining_tickets: remainingTickets
+        });
+      }
+    }
+
+    // Return event with processed ticket types
+    const eventResponse = {
+      ...event.toJSON(),
+      ticketTypes: processedTicketTypes
+    };
+
+    res.json({ event: eventResponse });
   } catch (error) {
     console.error('Get event error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -684,10 +707,13 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
         if (existingIds.length <= 1) {
           return res.status(400).json({ error: 'Cannot delete the last ticket type. Events must have at least one ticket type.' });
         }
-        // Check if tickets exist for this type
-        const ticketsCount = await require('../models').Ticket.count({ where: { ticket_type_id: id } });
-        if (ticketsCount > 0) {
-          return res.status(400).json({ error: 'Cannot delete ticket type as there are tickets associated with it' });
+        // Check if confirmed/sold tickets exist for this type
+        const ticketTypeInstance = existingTicketTypes.find(tt => tt.id === id);
+        if (ticketTypeInstance) {
+          const soldCount = await ticketTypeInstance.getSoldCount();
+          if (soldCount > 0) {
+            return res.status(400).json({ error: 'Cannot delete ticket type as there are confirmed tickets associated with it' });
+          }
         }
         // Delete ticket type
         const deleted = await TicketType.destroy({ where: { id, event_id: event.id } });

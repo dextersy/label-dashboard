@@ -129,6 +129,7 @@
             {{ ticketType.disabled ? 'Enable' : 'Disable' }}
           </button>
           <button type="button" class="btn btn-outline-danger btn-sm"
+                  *ngIf="!ticketType.sold_tickets && !ticketType.pending_tickets"
                   [disabled]="editingIndex !== null || showNewForm"
                   (click)="confirmDelete(ticketType, i)" title="Delete ticket type">
             <i class="fas fa-trash"></i>
