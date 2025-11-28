@@ -144,7 +144,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ]
     });
@@ -172,7 +173,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
 
     // Check if event is closed due to no available ticket types
     const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventId }
+      where: { event_id: eventId, disabled: false }
     });
 
     let hasAvailableTicketTypes = false;
@@ -263,7 +264,7 @@ export const getAvailableTicketTypesPublic = async (req: Request, res: Response)
 
     // Get all ticket types for the event
     const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventIdNum },
+      where: { event_id: eventIdNum, disabled: false },
       include: [{
         model: Ticket,
         as: 'tickets',
@@ -536,7 +537,8 @@ export const buyTicket = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ]
     });
@@ -1353,7 +1355,8 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ]
     });
@@ -1658,7 +1661,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ],
       order: [['date_and_time', 'ASC']]
@@ -1751,7 +1755,8 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false }
         }
       ],
       order: [['date_and_time', 'ASC']],
