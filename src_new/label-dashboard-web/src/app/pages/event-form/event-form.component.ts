@@ -37,7 +37,7 @@ export function createDefaultTicketType(): TicketType {
   };
 }
 
-export type EventFormSection = 'general' | 'purchase' | 'ticket-types' | 'scanner';
+export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner';
 
 @Component({
   selector: 'app-event-form',
@@ -61,7 +61,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   saving = false;
   isNewEvent = false;
   isAdmin = false;
-  activeSection: EventFormSection = 'general';
+  activeSection: EventFormSection = 'details';
   availableEvents: Event[] = [];
   
   // Form data
@@ -172,7 +172,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.route.queryParams.subscribe(queryParams => {
         if (queryParams['section']) {
-          this.activeSection = queryParams['section'] as EventFormSection;
+          const requestedSection = queryParams['section'] as EventFormSection;
+          // Redirect from scanner section if event is draft
+          if (requestedSection === 'scanner' && this.isEventDraft()) {
+            this.setActiveSection('details');
+          } else {
+            this.activeSection = requestedSection;
+          }
         }
       })
     );
@@ -619,33 +625,33 @@ export class EventFormComponent implements OnInit, OnDestroy {
   private validateForm(isPublishing: boolean = false): boolean {
     if (!this.eventData.title || !this.eventData.title.trim()) {
       this.notificationService.showError('Event title is required');
-      this.setActiveSection('general');
+      this.setActiveSection('details');
       return false;
     }
 
     if (!this.eventData.date_and_time) {
       this.notificationService.showError('Event date and time is required');
-      this.setActiveSection('general');
+      this.setActiveSection('details');
       return false;
     }
 
     if (!this.eventData.venue || !this.eventData.venue.trim()) {
       this.notificationService.showError('Venue is required');
-      this.setActiveSection('general');
+      this.setActiveSection('details');
       return false;
     }
 
     // Slug is only required for draft/new events, not for published events being updated
     if (this.isEventDraft() && (!this.eventData.slug || !this.eventData.slug.trim())) {
       this.notificationService.showError('Slug is required');
-      this.setActiveSection('general');
+      this.setActiveSection('details');
       return false;
     }
 
     if (isPublishing) {
       if (this.ticketTypes.length === 0) {
         this.notificationService.showError('At least one ticket type is required to publish');
-        this.setActiveSection('ticket-types');
+        this.setActiveSection('pricing');
         return false;
       }
 
@@ -667,22 +673,22 @@ export class EventFormComponent implements OnInit, OnDestroy {
       for (const ticketType of this.ticketTypes) {
         if (!ticketType.name || !ticketType.name.trim()) {
           this.notificationService.showError('All ticket types must have a name');
-          this.setActiveSection('ticket-types');
+          this.setActiveSection('pricing');
           return false;
         }
         if (ticketType.price === null || ticketType.price === undefined || isNaN(ticketType.price)) {
           this.notificationService.showError('All ticket types must have a valid ticket price');
-          this.setActiveSection('ticket-types');
+          this.setActiveSection('pricing');
           return false;
         }
         if (ticketType.price < 0) {
           this.notificationService.showError('Ticket prices cannot be negative');
-          this.setActiveSection('ticket-types');
+          this.setActiveSection('pricing');
           return false;
         }
         if (ticketType.max_tickets < 0) {
           this.notificationService.showError('Max tickets cannot be negative');
-          this.setActiveSection('ticket-types');
+          this.setActiveSection('pricing');
           return false;
         }
       }

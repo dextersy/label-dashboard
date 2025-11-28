@@ -13,15 +13,23 @@
 
   <div class="event-form-layout">
     <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
-    <nav class="event-form-sidebar">
+    <nav class="event-form-sidebar mt-3">
       <div class="sidebar-items">
         <button 
           type="button"
           class="sidebar-item"
-          [class.active]="activeSection === 'general'"
-          (click)="setActiveSection('general')">
+          [class.active]="activeSection === 'details'"
+          (click)="setActiveSection('details')">
           <i class="fa fa-info-circle"></i>
-          <span>General Information</span>
+          <span>Details</span>
+        </button>
+        <button 
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'pricing'"
+          (click)="setActiveSection('pricing')">
+          <i class="fa fa-ticket"></i>
+          <span>Pricing</span>
         </button>
         <button 
           type="button"
@@ -29,21 +37,14 @@
           [class.active]="activeSection === 'purchase'"
           (click)="setActiveSection('purchase')">
           <i class="fa fa-shopping-cart"></i>
-          <span>Ticket Purchase</span>
-        </button>
-        <button 
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'ticket-types'"
-          (click)="setActiveSection('ticket-types')">
-          <i class="fa fa-ticket"></i>
-          <span>Ticket Types</span>
+          <span>Buy Page</span>
         </button>
         <button 
           type="button"
           class="sidebar-item"
           [class.active]="activeSection === 'scanner'"
-          (click)="setActiveSection('scanner')">
+          (click)="setActiveSection('scanner')"
+          *ngIf="!isEventDraft()">
           <i class="fa fa-qrcode"></i>
           <span>Scanner</span>
         </button>
@@ -81,9 +82,9 @@
             <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
           </div>
 
-          <!-- General Information Section -->
-          <div class="form-section" *ngIf="activeSection === 'general'">
-            <h3>General Information</h3>
+          <!-- Details Section -->
+          <div class="form-section" *ngIf="activeSection === 'details'">
+            <h3>Details</h3>
             <p>Basic event details and description</p>
 
             <div class="row">
@@ -201,9 +202,9 @@
             </div>
           </div>
 
-          <!-- Ticket Purchase Section -->
+          <!-- Buy Page Section -->
           <div class="form-section" *ngIf="activeSection === 'purchase'">
-            <h3>Ticket Purchase</h3>
+            <h3>Buy Page</h3>
             <p>Configure payment methods and ticket sales settings</p>
 
             <!-- Purchase Link -->
@@ -433,9 +434,9 @@
             </div>
           </div>
 
-          <!-- Ticket Types Section -->
-          <div class="form-section" *ngIf="activeSection === 'ticket-types'">
-            <h3>Ticket Types</h3>
+          <!-- Pricing Section -->
+          <div class="form-section" *ngIf="activeSection === 'pricing'">
+            <h3>Pricing</h3>
             <p>Configure ticket types, pricing, and availability</p>
 
             <app-ticket-types
@@ -446,7 +447,7 @@
           </div>
 
           <!-- Scanner Section -->
-          <div class="form-section" *ngIf="activeSection === 'scanner'">
+          <div class="form-section" *ngIf="activeSection === 'scanner' && !isEventDraft()">
             <h3>Scanner & Verification</h3>
             <p>Ticket scanning and verification settings</p>
 
