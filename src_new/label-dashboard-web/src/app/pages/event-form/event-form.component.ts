@@ -61,6 +61,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   saving = false;
   isNewEvent = false;
   isAdmin = false;
+  pinRefreshed = false;
   activeSection: EventFormSection = 'details';
   availableEvents: Event[] = [];
   
@@ -320,6 +321,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
             this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
             // Clear the selected poster file since it's now uploaded
             this.selectedPosterFile = null;
+            // Clear the PIN refreshed flag
+            this.pinRefreshed = false;
           }
         },
         error: (error) => {
@@ -545,6 +548,17 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
   generateVerificationPIN(): void {
     this.eventData.verification_pin = Math.floor(100000 + Math.random() * 900000).toString();
+    this.pinRefreshed = true;
+  }
+
+  copyVerificationPIN(): void {
+    if (this.eventData.verification_pin) {
+      navigator.clipboard.writeText(this.eventData.verification_pin).then(() => {
+        this.notificationService.showSuccess('PIN copied to clipboard');
+      }).catch(() => {
+        this.notificationService.showError('Failed to copy PIN');
+      });
+    }
   }
 
   isEventDraft(): boolean {

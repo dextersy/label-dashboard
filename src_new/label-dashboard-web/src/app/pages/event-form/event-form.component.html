@@ -505,6 +505,14 @@
                   <button 
                     type="button" 
                     class="btn btn-outline-secondary"
+                    (click)="copyVerificationPIN()"
+                    title="Copy PIN"
+                    [disabled]="!eventData.verification_pin">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
                     (click)="generateVerificationPIN()"
                     title="Generate random PIN">
                     <i class="fas fa-sync"></i>
@@ -512,6 +520,9 @@
                 </div>
                 <small class="form-text text-muted">
                   <i class="fa fa-info-circle"></i> 6-digit PIN for ticket scanners to verify tickets
+                </small>
+                <small class="form-text text-warning" *ngIf="pinRefreshed">
+                  <i class="fa fa-exclamation-triangle"></i> Save Changes to apply new PIN code
                 </small>
               </div>
             </div>
