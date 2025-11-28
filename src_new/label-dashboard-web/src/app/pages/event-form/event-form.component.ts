@@ -280,6 +280,20 @@ export class EventFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  goToNextTab(): void {
+    const tabOrder: EventFormSection[] = ['details', 'pricing', 'purchase', 'scanner'];
+    const currentIndex = tabOrder.indexOf(this.activeSection);
+    
+    if (currentIndex >= 0 && currentIndex < tabOrder.length - 1) {
+      const nextTab = tabOrder[currentIndex + 1];
+      // Skip scanner tab if event is draft
+      if (nextTab === 'scanner' && this.isEventDraft()) {
+        return; // Stay on current tab if scanner is not available
+      }
+      this.setActiveSection(nextTab);
+    }
+  }
+
   onCancel(): void {
     this.router.navigate(['/events']);
   }

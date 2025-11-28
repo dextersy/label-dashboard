@@ -200,6 +200,11 @@
                   style="display: none;">
               </div>
             </div>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary" (click)="goToNextTab()">
+                Next: Pricing <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Buy Page Section -->
@@ -432,6 +437,11 @@
                 </div>
               </div>
             </div>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary" (click)="goToNextTab()" *ngIf="!isEventDraft()">
+                Next: Scanner <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Pricing Section -->
@@ -444,6 +454,11 @@
               [isAdmin]="isAdmin"
               (ticketTypesChange)="onTicketTypesChanged()">
             </app-ticket-types>
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary" (click)="goToNextTab()">
+                Next: Buy Page <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Scanner Section -->
