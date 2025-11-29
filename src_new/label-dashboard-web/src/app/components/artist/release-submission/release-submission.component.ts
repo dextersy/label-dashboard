@@ -336,6 +336,11 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   }
 
   async onSubmit(): Promise<void> {
+    if (!this.releaseId) {
+      this.notificationService.showError('Cannot submit release: No release ID found. Please save the release information first.');
+      return;
+    }
+
     if (!this.releaseInfoData || !this.trackListData) {
       this.notificationService.showError('Missing required data');
       return;
@@ -357,24 +362,10 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     this.isSubmitting = true;
 
     try {
-      // Create release data object
-      const releaseData: any = {
-        title: this.releaseInfoData.title,
-        catalog_no: this.releaseInfoData.catalog_no,
-        UPC: this.releaseInfoData.UPC || '',
-        release_date: this.releaseInfoData.release_date,
-        description: this.releaseInfoData.description || '',
-        liner_notes: this.albumCreditsData?.liner_notes || '',
-        status: this.releaseInfoData.status,
-        cover_art: this.releaseInfoData.cover_art
-      };
-
-      // Add artists if present
-      if (this.albumCreditsData?.artists && this.albumCreditsData.artists.length > 0) {
-        releaseData.artists = this.albumCreditsData.artists;
-      }
-
-      const response = await this.releaseService.createRelease(releaseData).toPromise();
+      // Update existing release status to "For Submission"
+      const response = await this.releaseService.updateRelease(this.releaseId, {
+        status: 'For Submission'
+      }).toPromise();
 
       this.isSubmitting = false;
 
@@ -416,7 +407,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   }
 
   get canProceedToSubmit(): boolean {
-    return this.canProceedToTracks && !!(this.trackListData?.songs?.length) && this.isDraftStatus;
+    return this.isEditing && this.canProceedToTracks && !!(this.trackListData?.songs?.length) && this.isDraftStatus;
   }
 
   get isDraftStatus(): boolean {
