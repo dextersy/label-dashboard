@@ -34,9 +34,9 @@
             <div class="mt-1" [innerHTML]="releaseInfoData.description"></div>
           </div>
 
-          <div class="mt-3" *ngIf="releaseInfoData.liner_notes">
+          <div class="mt-3" *ngIf="albumCreditsData?.liner_notes">
             <strong>Liner Notes:</strong>
-            <div class="mt-1" [innerHTML]="releaseInfoData.liner_notes"></div>
+            <div class="mt-1" [innerHTML]="albumCreditsData!.liner_notes"></div>
           </div>
         </div>
       </div>

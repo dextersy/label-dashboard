@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -11,9 +11,10 @@ import { ArtistStateService } from '../../../services/artist-state.service';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { ReleaseInfoSectionComponent, ReleaseInfoData } from './release-info-section/release-info-section.component';
 import { TrackListSectionComponent, TrackListData } from './track-list-section/track-list-section.component';
+import { AlbumCreditsSectionComponent, AlbumCreditsData } from './album-credits-section/album-credits-section.component';
 import { SubmissionSectionComponent } from './submission-section/submission-section.component';
 
-export type ReleaseSubmissionSection = 'info' | 'tracks' | 'submit';
+export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
 @Component({
     selector: 'app-release-submission',
@@ -21,6 +22,7 @@ export type ReleaseSubmissionSection = 'info' | 'tracks' | 'submit';
         CommonModule,
         BreadcrumbComponent,
         ReleaseInfoSectionComponent,
+        AlbumCreditsSectionComponent,
         TrackListSectionComponent,
         SubmissionSectionComponent
     ],
@@ -31,18 +33,30 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   artist: Artist | null = null;
   private subscriptions: Subscription = new Subscription();
 
-  activeSection: ReleaseSubmissionSection = 'info';
+  private _activeSection: ReleaseSubmissionSection = 'info';
+  private sectionFromQueryParam: ReleaseSubmissionSection | null = null;
+
+  get activeSection(): ReleaseSubmissionSection {
+    return this._activeSection;
+  }
+
+  set activeSection(value: ReleaseSubmissionSection) {
+    this._activeSection = value;
+    this.cdr.detectChanges();
+  }
   isSubmitting = false;
   isEditing = false; // Track if we're editing an existing release
 
   // Section data
   releaseInfoData: ReleaseInfoData | null = null;
+  albumCreditsData: AlbumCreditsData | null = null;
   trackListData: TrackListData | null = null;
   releaseId: number | null = null;
   editingRelease: any = null; // Store the full release data when editing
 
   // Validation states
   isReleaseInfoValid = false;
+  isAlbumCreditsValid = false;
 
   constructor(
     private releaseService: ReleaseService,
@@ -51,7 +65,8 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     private confirmationService: ConfirmationService,
     private artistStateService: ArtistStateService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -62,12 +77,37 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Check for section query parameter synchronously
+    const currentQueryParams = this.route.snapshot.queryParams;
+    const section = currentQueryParams['section'];
+    if (section && ['info', 'credits', 'tracks', 'submit'].includes(section)) {
+      this.activeSection = section as ReleaseSubmissionSection;
+      this.sectionFromQueryParam = section as ReleaseSubmissionSection;
+      this.cdr.detectChanges();
+    }
+
     // Check if we're editing an existing release
     this.subscriptions.add(
       this.route.params.subscribe(params => {
         const releaseId = params['id'];
         if (releaseId) {
           this.loadReleaseForEditing(+releaseId);
+        }
+      })
+    );
+
+    // Also subscribe to query param changes in case they change dynamically
+    this.subscriptions.add(
+      this.route.queryParams.subscribe(queryParams => {
+        const section = queryParams['section'];
+        if (section && ['info', 'credits', 'tracks', 'submit'].includes(section)) {
+          this.activeSection = section as ReleaseSubmissionSection;
+          this.sectionFromQueryParam = section as ReleaseSubmissionSection;
+          this.cdr.detectChanges();
+        } else if (!section && this.sectionFromQueryParam) {
+          // If query param is removed but we had one initially, keep the section
+          this.activeSection = this.sectionFromQueryParam;
+          this.cdr.detectChanges();
         }
       })
     );
@@ -94,18 +134,23 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
           UPC: response.release.UPC || '',
           release_date: response.release.release_date,
           description: response.release.description || '',
-          liner_notes: response.release.liner_notes || '',
           status: response.release.status,
           cover_art: null, // File not returned from API
           cover_art_preview: response.release.cover_art || null,
           artists: response.release.artists || []
         };
+
+        this.albumCreditsData = {
+          liner_notes: response.release.liner_notes || '',
+          artists: response.release.artists || []
+        };
         
         // Mark as valid since we're editing existing data
         this.isReleaseInfoValid = true;
+        this.isAlbumCreditsValid = true;
         
-        // Start with release info section for editing
-        this.activeSection = 'info';
+        // Start with the section from query params, or default to release info for editing
+        this.activeSection = this.sectionFromQueryParam || 'info';
       },
       error: (error) => {
         console.error('Error loading release for editing:', error);
@@ -122,7 +167,6 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
       UPC: '',
       release_date: '',
       description: '',
-      liner_notes: '',
       status: 'Draft',
       cover_art: null,
       cover_art_preview: null,
@@ -130,6 +174,17 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         id: this.artist.id,
         name: this.artist.name,
         role: 'Main Artist'
+      }] : []
+    };
+
+    this.albumCreditsData = {
+      liner_notes: '',
+      artists: this.artist ? [{
+        artist_id: this.artist.id,
+        streaming_royalty_percentage: 50,
+        sync_royalty_percentage: 50,
+        download_royalty_percentage: 50,
+        physical_royalty_percentage: 50
       }] : []
     };
 
@@ -145,6 +200,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   }
 
   setActiveSection(section: ReleaseSubmissionSection): void {
+    console.log('setActiveSection called with:', section);
     this.activeSection = section;
   }
 
@@ -154,6 +210,19 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
 
   onReleaseInfoValidityChange(isValid: boolean): void {
     this.isReleaseInfoValid = isValid;
+  }
+
+  onAlbumCreditsDataChange(data: AlbumCreditsData): void {
+    this.albumCreditsData = data;
+  }
+
+  onAlbumCreditsValidityChange(isValid: boolean): void {
+    this.isAlbumCreditsValid = isValid;
+  }
+
+  onAlbumCreditsSaved(data: AlbumCreditsData): void {
+    this.albumCreditsData = data;
+    // The notification is handled by the album-credits-section component
   }
 
   onReleaseSaved(data: {releaseId: number, releaseData: ReleaseInfoData}): void {
@@ -208,20 +277,14 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         UPC: this.releaseInfoData.UPC || '',
         release_date: this.releaseInfoData.release_date,
         description: this.releaseInfoData.description || '',
-        liner_notes: this.releaseInfoData.liner_notes || '',
+        liner_notes: this.albumCreditsData?.liner_notes || '',
         status: this.releaseInfoData.status,
         cover_art: this.releaseInfoData.cover_art
       };
 
       // Add artists if present
-      if (this.releaseInfoData.artists && this.releaseInfoData.artists.length > 0) {
-        releaseData.artists = this.releaseInfoData.artists.map(artist => ({
-          artist_id: artist.id,
-          streaming_royalty_percentage: 0,
-          sync_royalty_percentage: 0,
-          download_royalty_percentage: 0,
-          physical_royalty_percentage: 0
-        }));
+      if (this.albumCreditsData?.artists && this.albumCreditsData.artists.length > 0) {
+        releaseData.artists = this.albumCreditsData.artists;
       }
 
       const response = await this.releaseService.createRelease(releaseData).toPromise();
@@ -246,6 +309,12 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   onCancel(): void {
     // Navigate back to releases list
     this.router.navigate(['/artist/releases']);
+  }
+
+  get canProceedToCredits(): boolean {
+    // For editing existing releases, always allow proceeding to credits
+    // For new releases, only allow after release info has been saved
+    return this.isEditing || !!this.releaseId;
   }
 
   get canProceedToTracks(): boolean {

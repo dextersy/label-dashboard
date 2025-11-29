@@ -14,7 +14,6 @@ export interface ReleaseInfoData {
   UPC: string;
   release_date: string;
   description: string;
-  liner_notes: string;
   status: string;
   cover_art: File | null;
   cover_art_preview: string | null;
@@ -121,7 +120,6 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       UPC: [''],
       release_date: [today, Validators.required], // Default to today
       description: [''],
-      liner_notes: [''],
       status: ['Draft'],
       artists: this.fb.array([])
     });
@@ -134,7 +132,6 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       UPC: this.releaseForm.get('UPC')?.value || '',
       release_date: this.releaseForm.get('release_date')?.value || '',
       description: this.releaseForm.get('description')?.value || '',
-      liner_notes: this.releaseForm.get('liner_notes')?.value || '',
       status: this.releaseForm.get('status')?.value || 'Draft',
       cover_art: this.selectedCoverArt,
       cover_art_preview: this.coverArtPreview,
@@ -193,7 +190,6 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       UPC: this.editingRelease.UPC || '',
       release_date: this.editingRelease.release_date,
       description: this.editingRelease.description || '',
-      liner_notes: this.editingRelease.liner_notes || '',
       status: this.editingRelease.status
     });
 

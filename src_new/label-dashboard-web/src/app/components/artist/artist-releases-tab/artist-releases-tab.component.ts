@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
-import { TrackListDialogComponent } from '../track-list-dialog/track-list-dialog.component';
 import { environment } from 'environments/environment';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { Song } from '../../../services/song.service';
@@ -38,7 +37,7 @@ export interface ArtistRelease {
 
 @Component({
     selector: 'app-artist-releases-tab',
-    imports: [CommonModule, FormsModule, TrackListDialogComponent],
+    imports: [CommonModule, FormsModule],
     templateUrl: './artist-releases-tab.component.html',
     styleUrl: './artist-releases-tab.component.scss'
 })
@@ -49,8 +48,6 @@ export class ArtistReleasesTabComponent {
   epkFilter: 'all' | 'visible' | 'hidden' = 'all';
   loading = false;
   isAdmin = false;
-  showTrackListDialog = false;
-  selectedRelease: ArtistRelease | null = null;
   submittingReleaseId: number | null = null;
   downloadingMastersId: number | null = null;
 
@@ -121,15 +118,10 @@ export class ArtistReleasesTabComponent {
   }
 
   onManageTrackList(release: ArtistRelease): void {
-    this.selectedRelease = release;
-    this.showTrackListDialog = true;
-  }
-
-  onTrackListDialogClose(): void {
-    this.showTrackListDialog = false;
-    this.selectedRelease = null;
-    // Reload releases to update validation state with any song changes
-    this.loadReleases();
+    // Navigate to the edit form and select the tracks section
+    this.router.navigate(['/artist/releases/edit', release.id], {
+      queryParams: { section: 'tracks' }
+    });
   }
 
   getCoverArtUrl(coverArt: string): string {

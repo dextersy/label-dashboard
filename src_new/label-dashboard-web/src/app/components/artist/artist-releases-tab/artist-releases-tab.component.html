@@ -143,16 +143,4 @@
       
     </div>
   </div>
-
-  <!-- Track List Dialog -->
-  <app-track-list-dialog
-    [isVisible]="showTrackListDialog"
-    [releaseId]="selectedRelease?.id || null"
-    [releaseTitle]="selectedRelease?.title || ''"
-    [releaseCatalogNo]="selectedRelease?.catalog_no || ''"
-    [releaseStatus]="selectedRelease?.status || ''"
-    [releaseArtists]="selectedRelease?.artists || []"
-    (close)="onTrackListDialogClose()"
-    (alertMessage)="alertMessage.emit($event)">
-  </app-track-list-dialog>
 </div>

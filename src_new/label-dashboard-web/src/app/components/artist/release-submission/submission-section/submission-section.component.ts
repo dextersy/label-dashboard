@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReleaseInfoData } from '../release-info-section/release-info-section.component';
+import { AlbumCreditsData } from '../album-credits-section/album-credits-section.component';
 import { TrackListData } from '../track-list-section/track-list-section.component';
 
 @Component({
@@ -11,6 +12,7 @@ import { TrackListData } from '../track-list-section/track-list-section.componen
 })
 export class SubmissionSectionComponent implements OnChanges {
   @Input() releaseInfoData: ReleaseInfoData | null = null;
+  @Input() albumCreditsData: AlbumCreditsData | null = null;
   @Input() trackListData: TrackListData | null = null;
   @Input() isSubmitting = false;
 

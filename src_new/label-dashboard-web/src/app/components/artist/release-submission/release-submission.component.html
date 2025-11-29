@@ -16,6 +16,16 @@
         <button
           type="button"
           class="sidebar-item"
+          [class.active]="activeSection === 'credits'"
+          [class.completed]="canProceedToCredits"
+          [disabled]="!canProceedToCredits"
+          (click)="setActiveSection('credits')">
+          <i class="fa fa-users"></i>
+          <span>Album Credits</span>
+        </button>
+        <button
+          type="button"
+          class="sidebar-item"
           [class.active]="activeSection === 'tracks'"
           [class.completed]="canProceedToSubmit"
           [disabled]="!canProceedToTracks"
@@ -60,6 +70,38 @@
           <button
             type="button"
             class="btn btn-primary"
+            (click)="setActiveSection('credits')">
+            Next: Album Credits
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Album Credits Section -->
+      <div class="form-section" *ngIf="activeSection === 'credits'">
+        <h3>Album Credits</h3>
+        <p>Manage artists and royalty splits for this release</p>
+
+        <app-album-credits-section
+          [artist]="artist"
+          [editingRelease]="editingRelease"
+          (formDataChange)="onAlbumCreditsDataChange($event)"
+          (validityChange)="onAlbumCreditsValidityChange($event)"
+          (alertMessage)="onAlertMessage($event)"
+          (creditsSaved)="onAlbumCreditsSaved($event)">
+        </app-album-credits-section>
+
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="setActiveSection('info')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Release Info
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
             (click)="setActiveSection('tracks')">
             Next: Track List
             <i class="fa fa-arrow-right ms-2"></i>
@@ -86,9 +128,9 @@
           <button
             type="button"
             class="btn btn-secondary me-2"
-            (click)="setActiveSection('info')">
+            (click)="setActiveSection('credits')">
             <i class="fa fa-arrow-left me-2"></i>
-            Back: Release Info
+            Back: Album Credits
           </button>
           <button
             type="button"
@@ -109,6 +151,7 @@
 
         <app-submission-section
           [releaseInfoData]="releaseInfoData"
+          [albumCreditsData]="albumCreditsData"
           [trackListData]="trackListData"
           [isSubmitting]="isSubmitting"
           (submit)="onSubmit()">

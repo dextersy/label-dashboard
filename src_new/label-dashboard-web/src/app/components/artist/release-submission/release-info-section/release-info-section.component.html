@@ -110,7 +110,7 @@
   </div>
 
   <!-- Description and Liner Notes -->
-  <div class="form-group">
+  <div class="form-group description-form-group">
     <label for="description">Tell us about this release</label>
     <small class="form-text text-muted mb-2">
       Give us a quick statement about the release, indicating what the song is about, the musical approach,
@@ -122,31 +122,15 @@
       formControlName="description"
       [modules]="quillConfig"
       placeholder="Description of the release, musical approach, stories..."
-      [style.height.px]="120">
-    </quill-editor>
-  </div>
-
-  <div class="form-group">
-    <label for="linerNotes">Liner Notes</label>
-    <small class="form-text text-muted mb-2">
-      Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
-      It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
-      <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
-    </small>
-    <quill-editor
-      id="linerNotes"
-      formControlName="liner_notes"
-      [modules]="quillConfig"
-      placeholder="Liner notes, acknowledgments, credits..."
-      [style.height.px]="150">
+      [style.height.px]="100">
     </quill-editor>
   </div>
 
   <!-- Save Information Button -->
-  <div class="form-group mt-4">
+  <div class="save-info-section mt-5">
     <button
       type="button"
-      class="btn btn-primary"
+      class="btn btn-primary save-info-btn"
       [disabled]="savingRelease"
       (click)="saveRelease()">
       <i class="fa fa-save me-2" *ngIf="!savingRelease"></i>
