@@ -181,18 +181,30 @@ export class ArtistReleasesTabComponent {
   }
 
   getValidationTooltip(release: ArtistRelease): string {
-    const validation = this.validationService.validateRelease(release, release.songs);
-    return this.validationService.getTooltipMessage(validation);
+    const releaseValidation = this.validationService.validateRelease(release, true);
+    const songsValidation = release.songs ? this.validationService.validateSongs(release.songs) : { errors: [], warnings: [], hasErrors: false, hasWarnings: false };
+
+    // Combine validations
+    const combinedValidation = {
+      errors: [...releaseValidation.errors, ...songsValidation.errors],
+      warnings: [...releaseValidation.warnings, ...songsValidation.warnings],
+      hasErrors: releaseValidation.hasErrors || songsValidation.hasErrors,
+      hasWarnings: releaseValidation.hasWarnings || songsValidation.hasWarnings
+    };
+
+    return this.validationService.getTooltipMessage(combinedValidation);
   }
 
   hasValidationIssues(release: ArtistRelease): boolean {
-    const validation = this.validationService.validateRelease(release, release.songs);
-    return validation.hasErrors || validation.hasWarnings;
+    const releaseValidation = this.validationService.validateRelease(release, true);
+    const songsValidation = release.songs ? this.validationService.validateSongs(release.songs) : { errors: [], warnings: [], hasErrors: false, hasWarnings: false };
+    return releaseValidation.hasErrors || releaseValidation.hasWarnings || songsValidation.hasErrors || songsValidation.hasWarnings;
   }
 
   hasValidationErrors(release: ArtistRelease): boolean {
-    const validation = this.validationService.validateRelease(release, release.songs);
-    return validation.hasErrors;
+    const releaseValidation = this.validationService.validateRelease(release, true);
+    const songsValidation = release.songs ? this.validationService.validateSongs(release.songs) : { errors: [], warnings: [], hasErrors: false, hasWarnings: false };
+    return releaseValidation.hasErrors || songsValidation.hasErrors;
   }
 
   canSubmitForReview(release: ArtistRelease): boolean {

@@ -8,30 +8,42 @@
           type="button"
           class="sidebar-item"
           [class.active]="activeSection === 'info'"
-          [class.completed]="isReleaseInfoCompleted"
+          [matTooltip]="releaseInfoTooltip"
+          matTooltipPosition="right"
           (click)="setActiveSection('info')">
           <i class="fa fa-info-circle"></i>
           <span>Release Info</span>
+          <i *ngIf="releaseInfoStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
+          <i *ngIf="releaseInfoStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
+          <i *ngIf="releaseInfoStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
         </button>
         <button
           type="button"
           class="sidebar-item"
           [class.active]="activeSection === 'credits'"
-          [class.completed]="canProceedToCredits"
           [disabled]="!canProceedToCredits"
+          [matTooltip]="albumCreditsTooltip"
+          matTooltipPosition="right"
           (click)="setActiveSection('credits')">
           <i class="fa fa-users"></i>
           <span>Album Credits</span>
+          <i *ngIf="albumCreditsStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
+          <i *ngIf="albumCreditsStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
+          <i *ngIf="albumCreditsStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
         </button>
         <button
           type="button"
           class="sidebar-item"
           [class.active]="activeSection === 'tracks'"
-          [class.completed]="canProceedToSubmit"
           [disabled]="!canProceedToTracks"
+          [matTooltip]="trackListTooltip"
+          matTooltipPosition="right"
           (click)="setActiveSection('tracks')">
           <i class="fa fa-music"></i>
           <span>Track List</span>
+          <i *ngIf="trackListStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
+          <i *ngIf="trackListStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
+          <i *ngIf="trackListStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
         </button>
         <button
           type="button"
@@ -61,6 +73,7 @@
           [generateCatalogNumber]="true"
           (formDataChange)="onReleaseInfoDataChange($event)"
           (validityChange)="onReleaseInfoValidityChange($event)"
+          (validationChange)="onReleaseInfoValidationChange($event)"
           (alertMessage)="onAlertMessage($event)"
           (releaseSaved)="onReleaseSaved($event)">
         </app-release-info-section>
@@ -87,6 +100,7 @@
           [editingRelease]="editingRelease"
           (formDataChange)="onAlbumCreditsDataChange($event)"
           (validityChange)="onAlbumCreditsValidityChange($event)"
+          (validationChange)="onAlbumCreditsValidationChange($event)"
           (alertMessage)="onAlertMessage($event)"
           (creditsSaved)="onAlbumCreditsSaved($event)">
         </app-album-credits-section>
@@ -121,6 +135,7 @@
           [releaseStatus]="releaseInfoData?.status || 'Draft'"
           [releaseArtists]="releaseInfoData?.artists || []"
           (trackListDataChange)="onTrackListDataChange($event)"
+          (validationChange)="onTrackListValidationChange($event)"
           (alertMessage)="onAlertMessage($event)">
         </app-track-list-section>
 

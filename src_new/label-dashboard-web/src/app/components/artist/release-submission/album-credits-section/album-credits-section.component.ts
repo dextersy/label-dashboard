@@ -6,6 +6,7 @@ import { ArtistRelease } from '../../../artist/artist-releases-tab/artist-releas
 import { ReleaseService } from '../../../../services/release.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
+import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
 import { QuillModule } from 'ngx-quill';
 
 export interface AlbumCreditsData {
@@ -25,6 +26,7 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
 
   @Output() formDataChange = new EventEmitter<AlbumCreditsData>();
   @Output() validityChange = new EventEmitter<boolean>();
+  @Output() validationChange = new EventEmitter<ValidationResult>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() creditsSaved = new EventEmitter<AlbumCreditsData>();
 
@@ -33,6 +35,7 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
   allArtists: Artist[] = [];
   loadingArtists = false;
   savingCredits = false;
+  isInitialized = false;
 
   quillConfig = {
     toolbar: [
@@ -46,7 +49,8 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private apiService: ApiService,
     private releaseService: ReleaseService,
-    private authService: AuthService
+    private authService: AuthService,
+    private validationService: ReleaseValidationService
   ) {
     this.isAdmin = this.authService.isAdmin();
     this.creditsForm = this.createForm();
@@ -55,6 +59,13 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.loadAllArtists();
     this.setupFormSubscriptions();
+    
+    // Only emit initial data if not editing (for new releases)
+    if (!this.editingRelease) {
+      this.isInitialized = true;
+      this.emitFormData();
+      this.emitValidity();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -83,13 +94,23 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
       liner_notes: formValue.liner_notes || '',
       artists: formValue.royaltyArtists?.map((artist: any) => ({
         ...artist,
-        streaming_royalty_percentage: (artist.streaming_royalty_percentage || 0) / 100,
-        sync_royalty_percentage: (artist.sync_royalty_percentage || 0) / 100,
-        download_royalty_percentage: (artist.download_royalty_percentage || 0) / 100,
-        physical_royalty_percentage: (artist.physical_royalty_percentage || 0) / 100
+        streaming_royalty_percentage: artist.streaming_royalty_percentage || 0,
+        sync_royalty_percentage: artist.sync_royalty_percentage || 0,
+        download_royalty_percentage: artist.download_royalty_percentage || 0,
+        physical_royalty_percentage: artist.physical_royalty_percentage || 0
       })) || []
     };
     this.formDataChange.emit(formData);
+    this.emitValidation(formData);
+  }
+
+  private emitValidation(formData: AlbumCreditsData): void {
+    // Only emit validation if component is initialized
+    if (!this.isInitialized) return;
+    
+    // Use the specific album credits validation
+    const validation = this.validationService.validateAlbumCredits(formData);
+    this.validationChange.emit(validation);
   }
 
   private emitValidity(): void {
@@ -133,6 +154,13 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
         this.addRoyaltyArtist(artist as unknown as Artist, artist.ReleaseArtist);
       });
     }
+
+    // Emit validation after populating form
+    this.emitFormData();
+    this.emitValidity();
+    
+    // Mark as initialized after populating editing data
+    this.isInitialized = true;
   }
 
   private addRoyaltyArtist(artist: any, royaltyData?: any): void {

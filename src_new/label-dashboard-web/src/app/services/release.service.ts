@@ -40,6 +40,7 @@ export interface Release {
   liner_notes?: string;
   brand_id: number;
   artists?: any[];
+  songs?: any[];
   earnings?: any[];
   expenses?: any[];
 }

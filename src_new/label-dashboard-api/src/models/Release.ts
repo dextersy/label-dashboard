@@ -41,7 +41,9 @@ class Release extends Model<ReleaseAttributes, ReleaseCreationAttributes> implem
   // Association properties
   public releaseArtists?: any[];
   public earnings?: any[];
+  public expenses?: any[];
   public artists?: any[];
+  public songs?: any[];
   public brand?: any;
 
   public readonly createdAt!: Date;

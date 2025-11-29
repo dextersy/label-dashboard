@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
 import archiver from 'archiver';
@@ -79,6 +79,28 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
               'physical_royalty_type'
             ] 
           }
+        },
+        { 
+          model: Song, 
+          as: 'songs',
+          include: [
+            {
+              model: SongCollaborator,
+              as: 'collaborators',
+              include: [{ model: Artist, as: 'artist' }]
+            },
+            {
+              model: SongAuthor,
+              as: 'authors',
+              include: [{ model: Songwriter, as: 'songwriter' }]
+            },
+            {
+              model: SongComposer,
+              as: 'composers',
+              include: [{ model: Songwriter, as: 'songwriter' }]
+            }
+          ],
+          order: [['track_number', 'ASC']]
         },
         { model: Earning, as: 'earnings' },
         { model: RecuperableExpense, as: 'expenses' }

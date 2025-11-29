@@ -6,6 +6,7 @@ import { ArtistRelease } from '../../../artist/artist-releases-tab/artist-releas
 import { ReleaseService, ReleaseFormData } from '../../../../services/release.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
+import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
 import { QuillModule } from 'ngx-quill';
 
 export interface ReleaseInfoData {
@@ -34,6 +35,7 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
 
   @Output() formDataChange = new EventEmitter<ReleaseInfoData>();
   @Output() validityChange = new EventEmitter<boolean>();
+  @Output() validationChange = new EventEmitter<ValidationResult>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() releaseSaved = new EventEmitter<{releaseId: number, releaseData: ReleaseInfoData}>();
 
@@ -58,7 +60,8 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private releaseService: ReleaseService,
     private authService: AuthService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private validationService: ReleaseValidationService
   ) {
     this.releaseForm = this.createForm();
   }
@@ -138,10 +141,35 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       artists: this.releaseForm.get('artists')?.value || []
     };
     this.formDataChange.emit(formData);
+    this.emitValidation();
+  }
+
+  private emitValidation(): void {
+    // Create a partial ArtistRelease object for validation
+    const partialRelease: Partial<ArtistRelease> = {
+      title: this.releaseForm.get('title')?.value || '',
+      catalog_no: this.releaseForm.get('catalog_no')?.value || '',
+      UPC: this.releaseForm.get('UPC')?.value || '',
+      release_date: this.releaseForm.get('release_date')?.value || '',
+      description: this.releaseForm.get('description')?.value || '',
+      status: this.releaseForm.get('status')?.value || 'Draft',
+      cover_art: this.coverArtPreview || (this.selectedCoverArt ? 'temp' : undefined), // Use preview or indicate file selected
+      artists: this.releaseForm.get('artists')?.value || []
+    };
+
+    const validation = this.validationService.validateRelease(partialRelease as ArtistRelease, true);
+    this.validationChange.emit(validation);
   }
 
   private emitValidity(): void {
-    this.validityChange.emit(this.releaseForm.valid);
+    // Check both form validity and cover art requirement
+    const hasCoverArt = this.selectedCoverArt !== null || (this.coverArtPreview !== null && this.coverArtPreview !== '');
+    const isValid = this.releaseForm.valid && hasCoverArt;
+    this.validityChange.emit(isValid);
+  }
+
+  hasCoverArt(): boolean {
+    return this.selectedCoverArt !== null || (this.coverArtPreview !== null && this.coverArtPreview !== '');
   }
 
   private loadAllArtists(): void {
@@ -210,6 +238,9 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
     if (this.editingRelease.cover_art) {
       this.coverArtPreview = this.editingRelease.cover_art;
     }
+
+    // Emit validation after populating form
+    this.emitValidation();
   }
 
   private addArtistToForm(artist: any): void {
@@ -254,6 +285,7 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       reader.onload = (e) => {
         this.coverArtPreview = e.target?.result as string;
         this.emitFormData();
+        this.emitValidity();
       };
       reader.readAsDataURL(file);
     }
@@ -263,6 +295,7 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
     this.selectedCoverArt = null;
     this.coverArtPreview = null;
     this.emitFormData();
+    this.emitValidity();
   }
 
   addArtist(): void {

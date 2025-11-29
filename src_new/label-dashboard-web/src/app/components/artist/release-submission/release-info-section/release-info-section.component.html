@@ -80,7 +80,7 @@
 
   <!-- Cover Art -->
   <div class="form-group">
-    <label for="coverArt">Cover Art</label>
+    <label for="coverArt">Cover Art <span class="text-danger">*</span></label>
     <div class="row">
       <div class="col-md-6">
         <input type="file"
@@ -90,10 +90,14 @@
                (change)="onCoverArtSelected($event)"
                (click)="$event.stopPropagation()"
                (cancel)="$event.stopPropagation()"
-               [disabled]="isRestrictedMode()">
+               [disabled]="isRestrictedMode()"
+               [class.is-invalid]="!hasCoverArt()">
         <small class="form-text text-muted">
           JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
         </small>
+        <div *ngIf="!hasCoverArt()" class="invalid-feedback d-block">
+          Cover art is required
+        </div>
       </div>
       <div class="col-md-6" *ngIf="coverArtPreview">
         <div class="cover-art-preview">

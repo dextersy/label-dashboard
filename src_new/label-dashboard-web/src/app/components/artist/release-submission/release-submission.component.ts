@@ -2,9 +2,11 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Artist } from '../../artist/artist-selection/artist-selection.component';
 import { ReleaseService } from '../../../services/release.service';
 import { AuthService } from '../../../services/auth.service';
+import { SongService } from '../../../services/song.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { ArtistStateService } from '../../../services/artist-state.service';
@@ -13,6 +15,8 @@ import { ReleaseInfoSectionComponent, ReleaseInfoData } from './release-info-sec
 import { TrackListSectionComponent, TrackListData } from './track-list-section/track-list-section.component';
 import { AlbumCreditsSectionComponent, AlbumCreditsData } from './album-credits-section/album-credits-section.component';
 import { SubmissionSectionComponent } from './submission-section/submission-section.component';
+import { ValidationResult } from '../../../services/release-validation.service';
+import { ReleaseValidationService } from '../../../services/release-validation.service';
 
 export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
@@ -20,6 +24,7 @@ export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
     selector: 'app-release-submission',
     imports: [
         CommonModule,
+        MatTooltipModule,
         BreadcrumbComponent,
         ReleaseInfoSectionComponent,
         AlbumCreditsSectionComponent,
@@ -57,13 +62,18 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   // Validation states
   isReleaseInfoValid = false;
   isAlbumCreditsValid = false;
+  releaseInfoValidation: ValidationResult | null = null;
+  albumCreditsValidation: ValidationResult | null = null;
+  trackListValidation: ValidationResult | null = null;
 
   constructor(
     private releaseService: ReleaseService,
     private authService: AuthService,
+    private songService: SongService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
     private artistStateService: ArtistStateService,
+    private validationService: ReleaseValidationService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
@@ -151,6 +161,9 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         
         // Start with the section from query params, or default to release info for editing
         this.activeSection = this.sectionFromQueryParam || 'info';
+
+        // Perform initial validation with complete data from single API call
+        this.performInitialValidation(response.release, response.release.songs || []);
       },
       error: (error) => {
         console.error('Error loading release for editing:', error);
@@ -158,6 +171,47 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         this.router.navigate(['/artist/releases']);
       }
     });
+  }
+
+
+
+  private performInitialValidation(release: any, songs: any[] = []): void {
+    // Validate release info (cover art, description)
+    // Note: liner notes validation is handled by album credits validation
+    const releaseInfoRelease = { ...release };
+    delete releaseInfoRelease.liner_notes; // Remove liner notes so they're not validated here
+    this.releaseInfoValidation = this.validationService.validateRelease(releaseInfoRelease, true);
+
+    // Validate album credits (liner notes, royalty percentages)
+    // Normalize royalty data from API decimals to percentages for validation
+    const normalizedAlbumCreditsData = {
+      liner_notes: this.albumCreditsData?.liner_notes || '',
+      artists: this.albumCreditsData?.artists?.map((artist: any) => ({
+        ...artist,
+        streaming_royalty_percentage: (artist.streaming_royalty_percentage || artist.ReleaseArtist?.streaming_royalty_percentage || 0) * 100,
+        sync_royalty_percentage: (artist.sync_royalty_percentage || artist.ReleaseArtist?.sync_royalty_percentage || 0) * 100,
+        download_royalty_percentage: (artist.download_royalty_percentage || artist.ReleaseArtist?.download_royalty_percentage || 0) * 100,
+        physical_royalty_percentage: (artist.physical_royalty_percentage || artist.ReleaseArtist?.physical_royalty_percentage || 0) * 100
+      })) || []
+    };
+    this.albumCreditsValidation = this.validationService.validateAlbumCredits(normalizedAlbumCreditsData);
+
+    // Initialize track list data with loaded songs
+    this.trackListData = {
+      songs: songs,
+      validation: {
+        hasErrors: false,
+        hasWarnings: false,
+        errors: [],
+        warnings: []
+      }
+    };
+
+    // Validate track list with the loaded songs
+    this.trackListValidation = this.validationService.validateSongs(songs);
+
+    // Trigger change detection to update the UI
+    this.cdr.detectChanges();
   }
 
   private initializeDefaultData(): void {
@@ -212,6 +266,18 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     this.isReleaseInfoValid = isValid;
   }
 
+  onReleaseInfoValidationChange(validation: ValidationResult): void {
+    this.releaseInfoValidation = validation;
+  }
+
+  onAlbumCreditsValidationChange(validation: ValidationResult): void {
+    this.albumCreditsValidation = validation;
+  }
+
+  onTrackListValidationChange(validation: ValidationResult): void {
+    this.trackListValidation = validation;
+  }
+
   onAlbumCreditsDataChange(data: AlbumCreditsData): void {
     this.albumCreditsData = data;
   }
@@ -222,6 +288,12 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
 
   onAlbumCreditsSaved(data: AlbumCreditsData): void {
     this.albumCreditsData = data;
+    
+    // Update editingRelease with the saved liner notes
+    if (this.editingRelease) {
+      this.editingRelease.liner_notes = data.liner_notes;
+    }
+    
     // The notification is handled by the album-credits-section component
   }
 
@@ -229,6 +301,21 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     this.releaseId = data.releaseId;
     this.releaseInfoData = data.releaseData;
     this.isReleaseInfoValid = true; // Mark as valid since it was successfully saved
+    
+    // Update editingRelease with the saved data so form repopulates correctly when switching sections
+    if (this.editingRelease) {
+      this.editingRelease = {
+        ...this.editingRelease,
+        title: data.releaseData.title,
+        catalog_no: data.releaseData.catalog_no,
+        UPC: data.releaseData.UPC,
+        release_date: data.releaseData.release_date,
+        description: data.releaseData.description,
+        status: data.releaseData.status,
+        cover_art: data.releaseData.cover_art_preview || this.editingRelease.cover_art,
+        artists: data.releaseData.artists
+      };
+    }
     
     // For new releases, redirect to the edit route to unify the flow
     if (!this.isEditing) {
@@ -334,5 +421,59 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
 
   get isDraftStatus(): boolean {
     return this.releaseInfoData?.status === 'Draft';
+  }
+
+  // Section status getters for icons
+  get releaseInfoStatus(): 'completed' | 'error' | 'warning' | 'none' {
+    if (!this.releaseInfoValidation) return 'none';
+    if (this.releaseInfoValidation.hasErrors) return 'error';
+    if (this.releaseInfoValidation.hasWarnings) return 'warning';
+    return 'completed';
+  }
+
+  get albumCreditsStatus(): 'completed' | 'warning' | 'error' | 'none' {
+    if (!this.albumCreditsValidation) return 'none';
+    if (this.albumCreditsValidation.hasErrors) return 'error';
+    if (this.albumCreditsValidation.hasWarnings) return 'warning';
+    return 'completed';
+  }
+
+  get trackListStatus(): 'completed' | 'warning' | 'error' | 'none' {
+    if (!this.trackListValidation) return 'none';
+    if (this.trackListValidation.hasErrors) return 'error';
+    if (this.trackListValidation.hasWarnings) return 'warning';
+    return 'completed';
+  }
+  get releaseInfoTooltip(): string {
+    if (!this.releaseInfoValidation || (!this.releaseInfoValidation.hasErrors && !this.releaseInfoValidation.hasWarnings)) {
+      return '';
+    }
+
+    const messages: string[] = [];
+    this.releaseInfoValidation.errors.forEach(error => messages.push(`❌ ${error.message}`));
+    this.releaseInfoValidation.warnings.forEach(warning => messages.push(`⚠️ ${warning.message}`));
+    return messages.join('\n');
+  }
+
+  get albumCreditsTooltip(): string {
+    if (!this.albumCreditsValidation || (!this.albumCreditsValidation.hasErrors && !this.albumCreditsValidation.hasWarnings)) {
+      return '';
+    }
+
+    const messages: string[] = [];
+    this.albumCreditsValidation.errors.forEach(error => messages.push(`❌ ${error.message}`));
+    this.albumCreditsValidation.warnings.forEach(warning => messages.push(`⚠️ ${warning.message}`));
+    return messages.join('\n');
+  }
+
+  get trackListTooltip(): string {
+    if (!this.trackListValidation || (!this.trackListValidation.hasErrors && !this.trackListValidation.hasWarnings)) {
+      return '';
+    }
+
+    const messages: string[] = [];
+    this.trackListValidation.errors.forEach(error => messages.push(`❌ ${error.message}`));
+    this.trackListValidation.warnings.forEach(warning => messages.push(`⚠️ ${warning.message}`));
+    return messages.join('\n');
   }
 }

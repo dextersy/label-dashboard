@@ -28,6 +28,7 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
   @Input() releaseArtists: any[] = [];
 
   @Output() trackListDataChange = new EventEmitter<TrackListData>();
+  @Output() validationChange = new EventEmitter<ValidationResult>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
   songs: Song[] = [];
@@ -319,22 +320,12 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
       validation: this.validation
     };
     this.trackListDataChange.emit(trackListData);
+    this.validationChange.emit(this.validation);
   }
 
   get validation(): ValidationResult {
-    // Create a minimal release object for validation
-    const release: any = {
-      id: this.releaseId || 0,
-      title: this.releaseTitle,
-      status: this.releaseStatus as any,
-      catalog_no: this.releaseCatalogNo,
-      release_date: '',
-      cover_art: '',
-      exclude_from_epk: false
-    };
-
-    // Only validate songs, not release-level info (cover art, description, liner notes)
-    return this.validationService.validateRelease(release, this.songs, false);
+    // Only validate songs
+    return this.validationService.validateSongs(this.songs);
   }
 
   get validationErrors() {
