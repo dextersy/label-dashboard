@@ -351,7 +351,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     // Final confirmation
     const confirmed = await this.confirmationService.confirm({
       title: 'Submit Release',
-      message: 'Are you sure you want to submit this release? Once submitted, it will be processed for distribution.',
+      message: 'Are you sure you want to submit this release?\n\nOnce submitted, it will be processed for distribution.\n\n⚠️ You won\'t be able to make any changes after this point. You may still contact your label representative if you need to make any changes.',
       confirmText: 'Submit',
       cancelText: 'Cancel',
       type: 'info'
