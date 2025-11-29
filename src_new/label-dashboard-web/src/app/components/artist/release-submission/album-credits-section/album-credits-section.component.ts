@@ -60,10 +60,9 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     this.loadAllArtists();
     this.setupFormSubscriptions();
     
-    // Only emit initial data if not editing (for new releases)
+    // Only emit initial validity if not editing (for new releases)
     if (!this.editingRelease) {
       this.isInitialized = true;
-      this.emitFormData();
       this.emitValidity();
     }
   }
@@ -83,7 +82,6 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
 
   private setupFormSubscriptions(): void {
     this.creditsForm.valueChanges.subscribe(() => {
-      this.emitFormData();
       this.emitValidity();
     });
   }
@@ -298,6 +296,9 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
 
       // Emit the saved data
       this.creditsSaved.emit(updateData);
+
+      // Emit the current form data after successful save
+      this.emitFormData();
 
     } catch (error: any) {
       console.error('Error saving album credits:', error);

@@ -90,14 +90,12 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       this.populateFormForEditing();
     }
 
-    // Subscribe to form changes
+    // Subscribe to form changes for validation only (don't emit form data)
     this.releaseForm.valueChanges.subscribe(() => {
-      this.emitFormData();
       this.emitValidity();
     });
 
-    // Initial emit
-    this.emitFormData();
+    // Initial validity emit
     this.emitValidity();
   }
 
@@ -443,6 +441,9 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
           releaseId: response.release.id,
           releaseData: savedReleaseData
         });
+
+        // Emit the current form data after successful save
+        this.formDataChange.emit(formData);
       }
     } catch (error: any) {
       console.error('Error saving release:', error);
