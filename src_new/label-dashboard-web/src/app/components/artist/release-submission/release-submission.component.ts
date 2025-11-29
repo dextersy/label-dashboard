@@ -17,6 +17,7 @@ import { AlbumCreditsSectionComponent, AlbumCreditsData } from './album-credits-
 import { SubmissionSectionComponent } from './submission-section/submission-section.component';
 import { ValidationResult } from '../../../services/release-validation.service';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
+import { ReleaseSubmittedService } from '../../../services/release-submitted.service';
 
 export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
@@ -74,6 +75,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     private confirmationService: ConfirmationService,
     private artistStateService: ArtistStateService,
     private validationService: ReleaseValidationService,
+    private releaseSubmittedService: ReleaseSubmittedService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
@@ -370,9 +372,16 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
       this.isSubmitting = false;
 
       if (response) {
-        this.notificationService.showSuccess('Release submitted successfully!');
-        // Navigate back to releases list
-        this.router.navigate(['/artist/releases']);
+        // Show the release submitted modal
+        this.releaseSubmittedService.show({
+          releaseTitle: this.releaseInfoData?.title || 'Release',
+          message: 'The release will be processed within the next few days and your label representative might reach out to you if there are any concerns.'
+        });
+        
+        // Navigate back to releases list after a short delay
+        setTimeout(() => {
+          this.router.navigate(['/artist/releases']);
+        }, 3000);
       } else {
         throw new Error('No response received');
       }
