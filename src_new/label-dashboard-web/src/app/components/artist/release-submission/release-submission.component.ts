@@ -416,7 +416,8 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   }
 
   get canProceedToSubmit(): boolean {
-    return this.isEditing && this.canProceedToTracks && !!(this.trackListData?.songs?.length) && this.isDraftStatus;
+    // Allow access to submit tab for draft releases, even with validation errors
+    return this.isEditing && this.isDraftStatus;
   }
 
   get isDraftStatus(): boolean {

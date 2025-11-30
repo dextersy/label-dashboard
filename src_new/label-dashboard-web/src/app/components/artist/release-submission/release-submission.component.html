@@ -168,8 +168,12 @@
           [releaseInfoData]="releaseInfoData"
           [albumCreditsData]="albumCreditsData"
           [trackListData]="trackListData"
+          [releaseInfoValidation]="releaseInfoValidation"
+          [albumCreditsValidation]="albumCreditsValidation"
+          [trackListValidation]="trackListValidation"
           [isSubmitting]="isSubmitting"
-          (submit)="onSubmit()">
+          (submit)="onSubmit()"
+          (navigateToSection)="setActiveSection($event)">
         </app-submission-section>
 
         <div class="section-actions mt-4">

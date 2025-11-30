@@ -48,7 +48,6 @@ export class ArtistReleasesTabComponent {
   epkFilter: 'all' | 'visible' | 'hidden' = 'all';
   loading = false;
   isAdmin = false;
-  submittingReleaseId: number | null = null;
   downloadingMastersId: number | null = null;
 
   constructor(
@@ -212,43 +211,13 @@ export class ArtistReleasesTabComponent {
   }
 
   async onSubmitForReview(release: ArtistRelease): Promise<void> {
-    if (!this.canSubmitForReview(release) || this.submittingReleaseId) {
+    if (!this.canSubmitForReview(release)) {
       return;
     }
 
-    // Show confirmation dialog
-    const confirmed = await this.confirmationService.confirm({
-      title: 'Submit for Review',
-      message: 'Once you submit for review, certain fields will be locked and no longer editable. ' +
-        'You can still contact your label admin for changes.\n\n' +
-        'Do you want to proceed with submission?',
-      confirmText: 'Submit',
-      cancelText: 'Cancel',
-      type: 'warning'
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.submittingReleaseId = release.id;
-    this.releaseService.updateRelease(release.id, { status: 'For Submission' }).subscribe({
-      next: () => {
-        this.submittingReleaseId = null;
-        this.alertMessage.emit({
-          type: 'success',
-          message: 'Release submitted for review successfully!'
-        });
-        this.loadReleases();
-      },
-      error: (error) => {
-        console.error('Error submitting release:', error);
-        this.submittingReleaseId = null;
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'Failed to submit release for review. Please try again.'
-        });
-      }
+    // Navigate to the submit section of the edit form
+    this.router.navigate(['/artist/releases/edit', release.id], {
+      queryParams: { section: 'submit' }
     });
   }
 

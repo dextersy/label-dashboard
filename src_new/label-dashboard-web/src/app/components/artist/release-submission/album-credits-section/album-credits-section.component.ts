@@ -91,7 +91,8 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     const formData: AlbumCreditsData = {
       liner_notes: formValue.liner_notes || '',
       artists: formValue.royaltyArtists?.map((artist: any) => ({
-        ...artist,
+        artist_id: artist.artist_id,
+        artist_name: this.getArtistName(artist.artist_id),
         streaming_royalty_percentage: artist.streaming_royalty_percentage || 0,
         sync_royalty_percentage: artist.sync_royalty_percentage || 0,
         download_royalty_percentage: artist.download_royalty_percentage || 0,
