@@ -125,44 +125,25 @@
         </button>
       </div>
 
-        <div class="section-actions mt-4">
-          <button
-            type="button"
-            class="btn btn-secondary me-2"
-            (click)="setActiveSection('info')">
-            <i class="fa fa-arrow-left me-2"></i>
-            Back: Release Info
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            (click)="setActiveSection('tracks')">
-            Next: Track List
-            <i class="fa fa-arrow-right ms-2"></i>
-          </button>
-        </div>
-      </div>
-
       <!-- Track List Section -->
       <div class="form-section" *ngIf="activeSection === 'tracks'">
         <h3>Track List</h3>
         <p>Manage the songs for this release</p>
-      </div>
 
-      <!-- Track List Component (always rendered for data processing) -->
-      <app-track-list-section
-        [style.display]="activeSection === 'tracks' ? 'block' : 'none'"
-        [releaseId]="releaseId"
-        [releaseTitle]="releaseInfoData?.title || ''"
-        [releaseCatalogNo]="releaseInfoData?.catalog_no || ''"
-        [releaseStatus]="releaseInfoData?.status || 'Draft'"
-        [releaseArtists]="releaseInfoData?.artists || []"
-        (trackListDataChange)="onTrackListDataChange($event)"
-        (validationChange)="onTrackListValidationChange($event)"
-        (alertMessage)="onAlertMessage($event)">
-      </app-track-list-section>
+        <!-- Track List Component (always rendered for data processing) -->
+        <app-track-list-section
+          [style.display]="activeSection === 'tracks' ? 'block' : 'none'"
+          [releaseId]="releaseId"
+          [releaseTitle]="releaseInfoData?.title || ''"
+          [releaseCatalogNo]="releaseInfoData?.catalog_no || ''"
+          [releaseStatus]="releaseInfoData?.status || 'Draft'"
+          [releaseArtists]="releaseInfoData?.artists || []"
+          (trackListDataChange)="onTrackListDataChange($event)"
+          (validationChange)="onTrackListValidationChange($event)"
+          (alertMessage)="onAlertMessage($event)">
+        </app-track-list-section>
 
-      <div class="section-actions mt-4" *ngIf="activeSection === 'tracks'">
+        <div class="section-actions mt-4">
           <button
             type="button"
             class="btn btn-secondary me-2"
