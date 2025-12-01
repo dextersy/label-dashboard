@@ -152,10 +152,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
           artists: response.release.artists || []
         };
 
-        this.albumCreditsData = {
-          liner_notes: response.release.liner_notes || '',
-          artists: response.release.artists || []
-        };
+        // Don't set albumCreditsData here - let the album-credits-section component process and emit it
         
         // Mark as valid since we're editing existing data
         this.isReleaseInfoValid = true;

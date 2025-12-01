@@ -59,10 +59,10 @@
             <tbody>
               <tr *ngFor="let artist of albumCreditsData.artists">
                 <td>{{ artist.name || 'Unknown Artist' }}</td>
-                <td>{{ artist.streaming_royalty_percentage || 0 }}%</td>
-                <td>{{ artist.download_royalty_percentage || 0 }}%</td>
-                <td>{{ artist.physical_royalty_percentage || 0 }}%</td>
-                <td>{{ artist.sync_royalty_percentage || 0 }}%</td>
+                <td>{{ ((artist.streaming_royalty_percentage ?? artist.ReleaseArtist?.streaming_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
+                <td>{{ ((artist.download_royalty_percentage ?? artist.ReleaseArtist?.download_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
+                <td>{{ ((artist.physical_royalty_percentage ?? artist.ReleaseArtist?.physical_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
+                <td>{{ ((artist.sync_royalty_percentage ?? artist.ReleaseArtist?.sync_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
               </tr>
             </tbody>
           </table>
