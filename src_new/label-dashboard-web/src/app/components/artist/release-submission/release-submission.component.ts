@@ -184,17 +184,18 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     // Validate album credits (liner notes, royalty percentages)
     // For non-admin users, normalize to 50% split since that's what the form enforces
     const isAdmin = this.authService.isAdmin();
+    // Values from API are in decimal format (0-1), keep them as-is for validation
     let normalizedArtists = this.albumCreditsData?.artists?.map((artist: any) => ({
       ...artist,
-      streaming_royalty_percentage: (artist.streaming_royalty_percentage || artist.ReleaseArtist?.streaming_royalty_percentage || 0) * 100,
-      sync_royalty_percentage: (artist.sync_royalty_percentage || artist.ReleaseArtist?.sync_royalty_percentage || 0) * 100,
-      download_royalty_percentage: (artist.download_royalty_percentage || artist.ReleaseArtist?.download_royalty_percentage || 0) * 100,
-      physical_royalty_percentage: (artist.physical_royalty_percentage || artist.ReleaseArtist?.physical_royalty_percentage || 0) * 100
+      streaming_royalty_percentage: artist.streaming_royalty_percentage || artist.ReleaseArtist?.streaming_royalty_percentage || 0,
+      sync_royalty_percentage: artist.sync_royalty_percentage || artist.ReleaseArtist?.sync_royalty_percentage || 0,
+      download_royalty_percentage: artist.download_royalty_percentage || artist.ReleaseArtist?.download_royalty_percentage || 0,
+      physical_royalty_percentage: artist.physical_royalty_percentage || artist.ReleaseArtist?.physical_royalty_percentage || 0
     })) || [];
 
-    // For non-admin users, override with 50% split calculation
+    // For non-admin users, override with 50% split calculation (0.5 decimal = 50%)
     if (!isAdmin && normalizedArtists.length > 0) {
-      const percentagePerArtist = 50 / normalizedArtists.length; // 50% total divided by number of artists
+      const percentagePerArtist = 0.5 / normalizedArtists.length; // 0.5 (50%) total divided by number of artists
       normalizedArtists = normalizedArtists.map(artist => ({
         ...artist,
         streaming_royalty_percentage: percentagePerArtist,

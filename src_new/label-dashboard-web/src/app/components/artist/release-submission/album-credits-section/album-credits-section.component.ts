@@ -93,10 +93,11 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
       artists: formValue.royaltyArtists?.map((artist: any) => ({
         artist_id: artist.artist_id,
         artist_name: this.getArtistName(artist.artist_id),
-        streaming_royalty_percentage: artist.streaming_royalty_percentage || 0,
-        sync_royalty_percentage: artist.sync_royalty_percentage || 0,
-        download_royalty_percentage: artist.download_royalty_percentage || 0,
-        physical_royalty_percentage: artist.physical_royalty_percentage || 0
+        // Convert from display percentage (0-100) to decimal (0-1) for storage/API
+        streaming_royalty_percentage: (artist.streaming_royalty_percentage || 0) / 100,
+        sync_royalty_percentage: (artist.sync_royalty_percentage || 0) / 100,
+        download_royalty_percentage: (artist.download_royalty_percentage || 0) / 100,
+        physical_royalty_percentage: (artist.physical_royalty_percentage || 0) / 100
       })) || []
     };
     this.formDataChange.emit(formData);

@@ -142,14 +142,14 @@ export class ReleaseValidationService {
       ];
 
       artists.forEach((artist: any, index: number) => {
-        const artistName = artist.name || `Artist ${index + 1}`;
+        const artistName = artist.name || artist.artist_name || `Artist ${index + 1}`;
 
-        // Check each royalty percentage is valid (0-100)
+        // Check each royalty percentage is valid (0-1 in decimal format)
         royaltyTypes.forEach(royaltyType => {
           const percentage = artist[royaltyType.key];
-          if (percentage < 0 || percentage > 100) {
+          if (percentage < 0 || percentage > 1) {
             errors.push({
-              message: `Invalid ${royaltyType.name} royalty percentage for ${artistName}: ${percentage}% (must be between 0% and 100%)`
+              message: `Invalid ${royaltyType.name} royalty percentage for ${artistName}: ${(percentage * 100).toFixed(0)}% (must be between 0% and 100%)`
             });
           }
         });
@@ -165,12 +165,13 @@ export class ReleaseValidationService {
       });
 
       // Check if total royalties add up to 100% (optional warning)
+      // Values are in decimal format (0-1), so we check if total exceeds 1
       royaltyTypes.forEach(royaltyType => {
         const totalForType = artists.reduce((sum: number, artist: any) => sum + (artist[royaltyType.key] || 0), 0);
-        if (totalForType > 100) {
+        if (totalForType > 1) {
           warnings.push({
             message: `${royaltyType.name} royalties exceed 100%`,
-            description: `Total ${royaltyType.name.toLowerCase()} royalties across all artists is ${totalForType}%. Consider adjusting the splits.`
+            description: `Total ${royaltyType.name.toLowerCase()} royalties across all artists is ${(totalForType * 100).toFixed(0)}%. Consider adjusting the splits.`
           });
         }
       });
