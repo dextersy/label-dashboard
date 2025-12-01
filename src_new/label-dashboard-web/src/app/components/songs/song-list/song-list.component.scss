@@ -10,12 +10,31 @@
 }
 
 // Drag and drop styles
+.drag-handle-cell {
+  padding: 0 !important;
+  vertical-align: middle;
+  width: 40px;
+}
+
 .drag-handle {
   cursor: grab;
   user-select: none;
+  // Enable touch events only on the drag handle for mobile
+  touch-action: none;
+  // Make the handle area larger for easier touch targeting
+  padding: 1rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:active {
     cursor: grabbing;
+  }
+
+  i {
+    // Ensure the icon doesn't block touch events
+    pointer-events: none;
+    font-size: 1.1rem;
   }
 }
 
