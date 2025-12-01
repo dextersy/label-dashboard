@@ -339,7 +339,7 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
           physical_royalty_percentage: (artist.physical_royalty_percentage || 0) / 100
         }))
       };
-      const response = await this.releaseService.updateRelease(this.editingRelease.id, updateData).toPromise();
+      await this.releaseService.updateRelease(this.editingRelease.id, updateData).toPromise();
 
       this.alertMessage.emit({
         type: 'success',

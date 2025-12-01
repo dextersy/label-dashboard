@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Artist } from '../../../artist/artist-selection/artist-selection.component';
 import { ArtistRelease } from '../../../artist/artist-releases-tab/artist-releases-tab.component';
-import { ReleaseService, ReleaseFormData } from '../../../../services/release.service';
+import { ReleaseService } from '../../../../services/release.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
 import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
@@ -338,12 +338,10 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       if (!formData.artists || formData.artists.length === 0) {
         if (this.artist) {
           // Add the current artist if not already added
-          const artistsArray = this.releaseForm.get('artists') as FormArray;
           this.addArtistToForm(this.artist);
           formData.artists = this.releaseForm.get('artists')?.value || [];
         } else if (this.allArtists.length > 0) {
           // Add the first available artist as fallback
-          const artistsArray = this.releaseForm.get('artists') as FormArray;
           this.addArtistToForm(this.allArtists[0]);
           formData.artists = this.releaseForm.get('artists')?.value || [];
         } else {
@@ -371,7 +369,7 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       
       const transformedArtists = uniqueArtists.map((artist: any) => ({
         artist_id: artist.id,
-        streaming_royalty_percentage: .5, // Default to 100% for main artist
+        streaming_royalty_percentage: .5, // Default to 50% for main artist
         sync_royalty_percentage: .5,
         download_royalty_percentage: .5,
         physical_royalty_percentage: .5
