@@ -41,6 +41,13 @@ export class AuthInterceptor implements HttpInterceptor {
         }
       }),
       catchError((error: HttpErrorResponse) => {
+        // Handle rate limit errors (429 Too Many Requests)
+        if (error.status === 429) {
+          this.notificationService.showError('Too many requests. Please try again later.');
+          // Don't trigger connection error handling for rate limits
+          return throwError(() => error);
+        }
+
         // Check if this is a connection/timeout error (skip health check requests)
         if (!req.url.includes('/health') && this.connectionMonitor.isConnectionError(error)) {
           this.connectionMonitor.handleConnectionError();

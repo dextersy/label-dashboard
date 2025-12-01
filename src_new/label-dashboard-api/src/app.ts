@@ -65,8 +65,8 @@ const configureCors = () => {
 app.use(helmet());
 app.use(morgan('combined'));
 
-// Apply global rate limiting to all requests
-app.use(globalRateLimit);
+// NOTE: Global rate limiting is applied AFTER CORS middleware inside startServer()
+// This ensures 429 responses include CORS headers so browsers can read them
 
 // Initialize database and start server
 const startServer = async () => {
@@ -90,6 +90,11 @@ const startServer = async () => {
     const corsMiddleware = configureCors();
     app.use(corsMiddleware);
     console.log('🔒 CORS: Configured with pre-warmed cache and background refresh');
+
+    // SECURITY: Apply global rate limiting AFTER CORS so 429 responses include CORS headers
+    // This allows the browser to properly read rate limit errors instead of treating them as network errors
+    app.use(globalRateLimit);
+    console.log('🔒 Rate limiting: Applied after CORS middleware');
 
     // SECURITY: Apply CSRF protection to all state-changing operations
     app.use(csrfProtection);
