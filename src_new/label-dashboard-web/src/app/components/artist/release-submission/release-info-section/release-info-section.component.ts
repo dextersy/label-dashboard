@@ -381,7 +381,6 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
         UPC: formData.UPC || '',
         release_date: formData.release_date,
         description: formData.description || '',
-        liner_notes: formData.liner_notes || '',
         status: formData.status || 'Draft',
         cover_art: this.selectedCoverArt || undefined,
         artists: transformedArtists
