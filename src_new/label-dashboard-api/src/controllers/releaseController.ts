@@ -384,7 +384,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     await release.update(updateData);
 
-    // Update artist royalty splits if provided (admin only)
+    // Update artist royalty splits if provided
     let parsedArtists = artists;
     if (typeof artists === 'string') {
       try {
@@ -394,7 +394,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    if (req.user.is_admin && parsedArtists && Array.isArray(parsedArtists)) {
+    if (parsedArtists && Array.isArray(parsedArtists)) {
       // Validate that royalty percentages add up correctly
       const totalStreamingRoyalty = parsedArtists.reduce((sum, artist) => 
         sum + (artist.streaming_royalty_percentage || 0), 0);

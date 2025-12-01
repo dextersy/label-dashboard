@@ -170,18 +170,35 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
 
     const artistsArray = this.creditsForm.get('royaltyArtists') as FormArray;
 
+    // Calculate default percentage for non-admins (50% divided by number of artists)
+    const defaultPercentage = this.isAdmin ? 0.5 : (0.5 / (artistsArray.length + 1));
+
     const artistGroup = this.fb.group({
       artist_id: [artist.id, Validators.required],
-      streaming_royalty_percentage: [(royaltyData?.streaming_royalty_percentage || 0.5) * 100, [Validators.min(0), Validators.max(100)]],
-      sync_royalty_percentage: [(royaltyData?.sync_royalty_percentage || 0.5) * 100, [Validators.min(0), Validators.max(100)]],
-      download_royalty_percentage: [(royaltyData?.download_royalty_percentage || 0.5) * 100, [Validators.min(0), Validators.max(100)]],
-      physical_royalty_percentage: [(royaltyData?.physical_royalty_percentage || 0.5) * 100, [Validators.min(0), Validators.max(100)]]
+      streaming_royalty_percentage: [(royaltyData?.streaming_royalty_percentage || defaultPercentage) * 100, [Validators.min(0), Validators.max(100)]],
+      sync_royalty_percentage: [(royaltyData?.sync_royalty_percentage || defaultPercentage) * 100, [Validators.min(0), Validators.max(100)]],
+      download_royalty_percentage: [(royaltyData?.download_royalty_percentage || defaultPercentage) * 100, [Validators.min(0), Validators.max(100)]],
+      physical_royalty_percentage: [(royaltyData?.physical_royalty_percentage || defaultPercentage) * 100, [Validators.min(0), Validators.max(100)]]
     });
+
+    // Disable percentage controls for non-admins
+    if (!this.isAdmin) {
+      artistGroup.get('streaming_royalty_percentage')?.disable();
+      artistGroup.get('sync_royalty_percentage')?.disable();
+      artistGroup.get('download_royalty_percentage')?.disable();
+      artistGroup.get('physical_royalty_percentage')?.disable();
+    }
 
     // Disable artist selection for all artists (read-only)
     artistGroup.get('artist_id')?.disable();
 
     artistsArray.push(artistGroup);
+
+    // Recalculate percentages for non-admins after adding, but only if no royalty data was provided
+    // (royalty data means this is from saved data, so don't recalculate)
+    if (!this.isAdmin && !royaltyData) {
+      this.recalculateNonAdminPercentages();
+    }
   }
 
   get royaltyArtists(): FormArray {
@@ -207,6 +224,21 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     return 'Unknown Artist';
   }
 
+  private recalculateNonAdminPercentages(): void {
+    if (this.isAdmin) return;
+
+    const artistsArray = this.creditsForm.get('royaltyArtists') as FormArray;
+    const numArtists = artistsArray.length;
+    const percentagePerArtist = 50 / numArtists; // 50% total divided by number of artists
+
+    artistsArray.controls.forEach((control) => {
+      control.get('streaming_royalty_percentage')?.setValue(percentagePerArtist);
+      control.get('sync_royalty_percentage')?.setValue(percentagePerArtist);
+      control.get('download_royalty_percentage')?.setValue(percentagePerArtist);
+      control.get('physical_royalty_percentage')?.setValue(percentagePerArtist);
+    });
+  }
+
   addRoyaltyArtistFromUI(): void {
     // Add an empty artist entry
     const artistsArray = this.creditsForm.get('royaltyArtists') as FormArray;
@@ -218,13 +250,33 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
       physical_royalty_percentage: [50, [Validators.min(0), Validators.max(100)]]
     });
 
+    // Disable percentage controls for non-admins
+    if (!this.isAdmin) {
+      newArtistGroup.get('streaming_royalty_percentage')?.disable();
+      newArtistGroup.get('sync_royalty_percentage')?.disable();
+      newArtistGroup.get('download_royalty_percentage')?.disable();
+      newArtistGroup.get('physical_royalty_percentage')?.disable();
+    }
+
+    // Artist selection is enabled initially for new artists, disabled for existing ones
+    // newArtistGroup.get('artist_id')?.disable();
+
     artistsArray.push(newArtistGroup);
+
+    // Recalculate percentages for non-admins after adding
+    if (!this.isAdmin) {
+      this.recalculateNonAdminPercentages();
+    }
   }
 
   removeRoyaltyArtist(index: number): void {
     const artistsArray = this.creditsForm.get('royaltyArtists') as FormArray;
     if (artistsArray.length > 1) {
       artistsArray.removeAt(index);
+      // Recalculate percentages for non-admins after removing
+      if (!this.isAdmin) {
+        this.recalculateNonAdminPercentages();
+      }
     }
   }
 
@@ -287,7 +339,6 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
           physical_royalty_percentage: (artist.physical_royalty_percentage || 0) / 100
         }))
       };
-
       const response = await this.releaseService.updateRelease(this.editingRelease.id, updateData).toPromise();
 
       this.alertMessage.emit({
@@ -295,11 +346,22 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
         message: 'Album credits saved successfully!'
       });
 
-      // Emit the saved data
-      this.creditsSaved.emit(updateData);
+      // Emit the saved data in the same format as form data (with artist names)
+      const savedData: AlbumCreditsData = {
+        liner_notes: formData.liner_notes || '',
+        artists: validArtists.map((artist: any) => ({
+          artist_id: artist.artist_id,
+          artist_name: this.getArtistName(artist.artist_id),
+          streaming_royalty_percentage: (artist.streaming_royalty_percentage || 0) / 100,
+          sync_royalty_percentage: (artist.sync_royalty_percentage || 0) / 100,
+          download_royalty_percentage: (artist.download_royalty_percentage || 0) / 100,
+          physical_royalty_percentage: (artist.physical_royalty_percentage || 0) / 100
+        }))
+      };
+      this.creditsSaved.emit(savedData);
 
-      // Emit the current form data after successful save
-      this.emitFormData();
+      // Note: emitFormData() is not called here to avoid repopulating with stale editingRelease data
+      // The parent component will reload the data and update accordingly
 
     } catch (error: any) {
       console.error('Error saving album credits:', error);

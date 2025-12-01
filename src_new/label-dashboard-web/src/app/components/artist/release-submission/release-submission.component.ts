@@ -185,16 +185,31 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     this.releaseInfoValidation = this.validationService.validateRelease(releaseInfoRelease, true);
 
     // Validate album credits (liner notes, royalty percentages)
-    // Normalize royalty data from API decimals to percentages for validation
+    // For non-admin users, normalize to 50% split since that's what the form enforces
+    const isAdmin = this.authService.isAdmin();
+    let normalizedArtists = this.albumCreditsData?.artists?.map((artist: any) => ({
+      ...artist,
+      streaming_royalty_percentage: (artist.streaming_royalty_percentage || artist.ReleaseArtist?.streaming_royalty_percentage || 0) * 100,
+      sync_royalty_percentage: (artist.sync_royalty_percentage || artist.ReleaseArtist?.sync_royalty_percentage || 0) * 100,
+      download_royalty_percentage: (artist.download_royalty_percentage || artist.ReleaseArtist?.download_royalty_percentage || 0) * 100,
+      physical_royalty_percentage: (artist.physical_royalty_percentage || artist.ReleaseArtist?.physical_royalty_percentage || 0) * 100
+    })) || [];
+
+    // For non-admin users, override with 50% split calculation
+    if (!isAdmin && normalizedArtists.length > 0) {
+      const percentagePerArtist = 50 / normalizedArtists.length; // 50% total divided by number of artists
+      normalizedArtists = normalizedArtists.map(artist => ({
+        ...artist,
+        streaming_royalty_percentage: percentagePerArtist,
+        sync_royalty_percentage: percentagePerArtist,
+        download_royalty_percentage: percentagePerArtist,
+        physical_royalty_percentage: percentagePerArtist
+      }));
+    }
+
     const normalizedAlbumCreditsData = {
       liner_notes: this.albumCreditsData?.liner_notes || '',
-      artists: this.albumCreditsData?.artists?.map((artist: any) => ({
-        ...artist,
-        streaming_royalty_percentage: (artist.streaming_royalty_percentage || artist.ReleaseArtist?.streaming_royalty_percentage || 0) * 100,
-        sync_royalty_percentage: (artist.sync_royalty_percentage || artist.ReleaseArtist?.sync_royalty_percentage || 0) * 100,
-        download_royalty_percentage: (artist.download_royalty_percentage || artist.ReleaseArtist?.download_royalty_percentage || 0) * 100,
-        physical_royalty_percentage: (artist.physical_royalty_percentage || artist.ReleaseArtist?.physical_royalty_percentage || 0) * 100
-      })) || []
+      artists: normalizedArtists
     };
     this.albumCreditsValidation = this.validationService.validateAlbumCredits(normalizedAlbumCreditsData);
 
@@ -290,15 +305,29 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
 
   onAlbumCreditsSaved(data: AlbumCreditsData): void {
     this.albumCreditsData = data;
-    
-    // Update editingRelease with the saved liner notes
-    if (this.editingRelease) {
-      this.editingRelease.liner_notes = data.liner_notes;
-    }
-    
-    // The notification is handled by the album-credits-section component
-  }
 
+    // Update editingRelease with the saved liner notes and artists
+    if (this.editingRelease) {
+      // Create a new editingRelease object to trigger ngOnChanges
+      this.editingRelease = {
+        ...this.editingRelease,
+        liner_notes: data.liner_notes,
+        artists: data.artists.map(savedArtist => ({
+          id: savedArtist.artist_id,
+          name: savedArtist.artist_name,
+          ReleaseArtist: {
+            streaming_royalty_percentage: savedArtist.streaming_royalty_percentage,
+            sync_royalty_percentage: savedArtist.sync_royalty_percentage,
+            download_royalty_percentage: savedArtist.download_royalty_percentage,
+            physical_royalty_percentage: savedArtist.physical_royalty_percentage
+          }
+        }))
+      };
+    }
+
+    // The notification is handled by the album-credits-section component
+  }  
+  
   onReleaseSaved(data: {releaseId: number, releaseData: ReleaseInfoData}): void {
     this.releaseId = data.releaseId;
     this.releaseInfoData = data.releaseData;

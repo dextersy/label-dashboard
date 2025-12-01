@@ -26,7 +26,7 @@
              [formGroupName]="i">
           <div class="card-body">
             <div class="row align-items-center">
-              <div class="col-md-3">
+              <div [class]="isAdmin ? 'col-md-3' : 'col-md-10'">
                 <div class="form-group mb-0">
                   <label class="small font-weight-bold">Artist</label>
                   <select class="form-control form-control-sm"
@@ -46,7 +46,7 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-2">
+              <div class="col-md-2" *ngIf="isAdmin">
                 <div class="form-group mb-0">
                   <label class="small font-weight-bold">Streaming %</label>
                   <input type="number"
@@ -55,7 +55,7 @@
                          min="0" max="100" step="1">
                 </div>
               </div>
-              <div class="col-md-2">
+              <div class="col-md-2" *ngIf="isAdmin">
                 <div class="form-group mb-0">
                   <label class="small font-weight-bold">Sync %</label>
                   <input type="number"
@@ -64,7 +64,7 @@
                          min="0" max="100" step="1">
                 </div>
               </div>
-              <div class="col-md-2">
+              <div class="col-md-2" *ngIf="isAdmin">
                 <div class="form-group mb-0">
                   <label class="small font-weight-bold">Download %</label>
                   <input type="number"
@@ -73,7 +73,7 @@
                          min="0" max="100" step="1">
                 </div>
               </div>
-              <div class="col-md-2">
+              <div class="col-md-2" *ngIf="isAdmin">
                 <div class="form-group mb-0">
                   <label class="small font-weight-bold">Physical %</label>
                   <input type="number"
@@ -96,7 +96,7 @@
         </div>
 
         <!-- Royalty Totals -->
-        <div class="card bg-light">
+        <div class="card bg-light" *ngIf="isAdmin">
           <div class="card-body py-2">
             <div class="row text-center">
               <div class="col-md-3">

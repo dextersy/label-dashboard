@@ -48,7 +48,9 @@
     <div class="card-body">
       <div *ngIf="albumCreditsData.artists && albumCreditsData.artists.length > 0">
         <h6>Artists & Royalties</h6>
-        <div class="table-responsive">
+
+        <!-- Admin view: detailed table with percentages -->
+        <div *ngIf="isAdmin" class="table-responsive">
           <table class="table table-sm">
             <thead>
               <tr>
@@ -61,7 +63,7 @@
             </thead>
             <tbody>
               <tr *ngFor="let artist of albumCreditsData.artists">
-                <td>{{ artist.artist_name || 'Unknown Artist' }}</td>
+                <td>{{ artist.name || 'Unknown Artist' }}</td>
                 <td>{{ artist.streaming_royalty_percentage || 0 }}%</td>
                 <td>{{ artist.download_royalty_percentage || 0 }}%</td>
                 <td>{{ artist.physical_royalty_percentage || 0 }}%</td>
@@ -69,6 +71,20 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Non-admin view: simple list -->
+        <div *ngIf="!isAdmin">
+          <div class="row">
+            <div class="col-md-12">
+              <p class="mb-2"><strong>Artists:</strong></p>
+              <ul class="list-unstyled">
+                <li *ngFor="let artist of albumCreditsData.artists" class="mb-1">
+                  <i class="fa fa-user me-2"></i>{{ artist.artist_name || artist.name || 'Unknown Artist' }}
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 

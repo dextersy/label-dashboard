@@ -5,6 +5,7 @@ import { ReleaseInfoData } from '../release-info-section/release-info-section.co
 import { AlbumCreditsData } from '../album-credits-section/album-credits-section.component';
 import { TrackListData } from '../track-list-section/track-list-section.component';
 import { ValidationResult } from '../../../../services/release-validation.service';
+import { AuthService } from '../../../../services/auth.service';
 
 export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
@@ -30,9 +31,14 @@ export class SubmissionSectionComponent implements OnChanges {
   allErrors: string[] = [];
   allWarnings: string[] = [];
   hasAcknowledged = false;
+  isAdmin = false;
 
   // Expose Math for template
   Math = Math;
+
+  constructor(private authService: AuthService) {
+    this.isAdmin = this.authService.isAdmin();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     this.checkFormValidity();
