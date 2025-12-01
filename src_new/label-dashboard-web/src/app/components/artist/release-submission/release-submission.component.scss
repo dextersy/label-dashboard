@@ -39,6 +39,7 @@
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: left;
+    position: relative; /* For positioning status icons on mobile */
 
     i {
       font-size: 18px;
@@ -133,35 +134,106 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+
+/* Tablet - Switch to horizontal layout */
+@media (max-width: 1024px) {
   .release-form-layout {
     flex-direction: column;
+    gap: 0;
   }
 
   .release-form-sidebar {
-    position: static;
     flex: none;
+    position: static;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 transparent;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 4px;
+    }
 
     .sidebar-items {
       flex-direction: row;
-      overflow-x: auto;
-      gap: 8px;
-      padding-bottom: 8px;
+      min-width: min-content;
+      padding: 0 20px;
     }
 
     .sidebar-item {
-      flex: 0 0 auto;
-      min-width: 120px;
-      padding: 10px 12px;
-      font-size: 14px;
+      padding: 14px 16px;
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+
+      &.active {
+        border-left-color: transparent;
+        border-bottom-color: #007bff;
+      }
+    }
+  }
+
+  .release-form-main {
+    .release-form-container {
+      border-radius: 0;
+    }
+  }
+}
+
+/* Mobile - Icon-only navigation */
+@media (max-width: 768px) {
+  .release-submission-page {
+    padding: 12px;
+    padding-bottom: 100px; /* Space for floating buttons on mobile */
+  }
+
+  .release-form-sidebar {
+    .sidebar-items {
+      padding: 0 12px;
+      gap: 0;
+    }
+
+    .sidebar-item {
+      padding: 14px 12px;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
 
       i {
-        font-size: 16px;
-        width: 18px;
+        font-size: 20px;
+        width: auto;
       }
 
       span {
-        white-space: nowrap;
+        display: none;
+      }
+
+      /* Show text on active item */
+      &.active span {
+        display: block;
+      }
+
+      .status-icon {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 12px;
       }
     }
   }
@@ -169,7 +241,11 @@
   .release-form-main {
     .release-form-container {
       .form-section {
-        padding: 16px;
+        padding: 20px;
+
+        h3 {
+          font-size: 18px;
+        }
       }
 
       .section-actions {
