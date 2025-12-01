@@ -39,7 +39,17 @@ export interface Release {
   description?: string;
   liner_notes?: string;
   brand_id: number;
-  artists?: any[];
+  artists?: Array<{
+    id: number;
+    name: string;
+    ReleaseArtist?: {
+      streaming_royalty_percentage: number;
+      sync_royalty_percentage: number;
+      download_royalty_percentage: number;
+      physical_royalty_percentage: number;
+    };
+  }>;
+  songs?: any[];
   earnings?: any[];
   expenses?: any[];
 }

@@ -1,0 +1,145 @@
+.release-info-section {
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .form-control {
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+
+      &:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+
+      &.is-invalid {
+        border-color: #dc3545;
+      }
+    }
+
+    .invalid-feedback {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .form-text {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+
+    .cover-art-preview {
+      text-align: center;
+
+      img {
+        max-width: 200px;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  .text-danger {
+    color: #dc3545 !important;
+  }
+
+  // Specific styling for description form group
+  .description-form-group {
+    width: 100% !important;
+
+    ::ng-deep quill-editor {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+
+      .ql-container {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      .ql-editor {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        min-height: 100px;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+
+      .ql-toolbar {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+    }
+
+    quill-editor {
+      width: 100% !important;
+      display: block !important;
+    }
+  }
+
+  .form-group {
+    &.mt-4 {
+      button {
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        min-width: 180px;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    &.mt-5 {
+      margin-top: 4rem !important; // Extra spacing for save button to prevent overlap
+
+      button {
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        min-width: 180px;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+
+  // Centered save button section
+  .save-info-section {
+    text-align: center;
+
+    &.mt-5 {
+      margin-top: 4rem !important; // Extra spacing for save button to prevent overlap
+
+      .save-info-btn {
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        min-width: 180px;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}

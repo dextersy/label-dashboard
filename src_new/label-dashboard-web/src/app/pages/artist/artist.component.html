@@ -38,22 +38,12 @@
         
         <!-- Team Tab -->
         <div *ngIf="activeTab === 'team'">
-          <app-artist-team-tab 
+          <app-artist-team-tab
             [artist]="selectedArtist"
             (alertMessage)="onAlertMessage($event)">
           </app-artist-team-tab>
         </div>
-        
-        <!-- New Release Tab -->
-        <div *ngIf="activeTab === 'new-release'">
-          <app-artist-new-release-tab
-            [artist]="selectedArtist"
-            (alertMessage)="onAlertMessage($event)"
-            (releaseCreated)="onReleaseCreated($event)"
-            (cancelled)="onReleaseFormCancelled()">
-          </app-artist-new-release-tab>
-        </div>
-        
+
         <!-- Manage EPK Tab -->
         <div *ngIf="activeTab === 'manage-epk'">
           <app-artist-manage-epk-tab

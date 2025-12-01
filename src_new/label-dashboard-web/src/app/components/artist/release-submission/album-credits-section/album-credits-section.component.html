@@ -1,0 +1,187 @@
+<div class="album-credits-section">
+  <form [formGroup]="creditsForm">
+    <!-- Artists & Royalty Splits -->
+    <div class="artists-section" formArrayName="royaltyArtists">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Artists & Royalty Splits</h5>
+        <button type="button"
+                class="btn btn-sm btn-outline-primary"
+                (click)="addRoyaltyArtistFromUI()"
+                [disabled]="loadingArtists || !canModifyArtists">
+          <i class="fa fa-plus"></i> Add Artist
+        </button>
+      </div>
+
+      <div *ngIf="!canModifyArtists" class="alert alert-info py-2 mb-3">
+        <small><i class="fa fa-info-circle"></i> Artist modifications are restricted for non-draft releases. Only administrators can modify artists on releases with status: {{ editingRelease?.status }}</small>
+      </div>
+
+      <div *ngIf="loadingArtists" class="text-center py-3">
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+
+      <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">
+        <div *ngFor="let artistControl of royaltyArtists.controls; let i = index"
+             class="card mb-3"
+             [formGroupName]="i">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div [class]="isAdmin ? 'col-md-3' : 'col-md-10'">
+                <div class="form-group mb-0">
+                  <label class="small font-weight-bold">Artist</label>
+                  <select class="form-control form-control-sm"
+                          formControlName="artist_id"
+                          [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched"
+                          [disabled]="!canModifyArtists">
+                    <option value="">Select Artist</option>
+                    <ng-container *ngIf="artistControl.get('artist_id')?.value">
+                      <option [value]="artistControl.get('artist_id')?.value"
+                              selected>
+                        {{ getArtistName(artistControl.get('artist_id')?.value) }}
+                      </option>
+                    </ng-container>
+                    <option *ngFor="let artist of getAvailableArtists(i)"
+                            [value]="artist.id">
+                      {{ artist.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-2" *ngIf="isAdmin">
+                <div class="form-group mb-0">
+                  <label class="small font-weight-bold">Streaming %</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         formControlName="streaming_royalty_percentage"
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
+                </div>
+              </div>
+              <div class="col-md-2" *ngIf="isAdmin">
+                <div class="form-group mb-0">
+                  <label class="small font-weight-bold">Sync %</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         formControlName="sync_royalty_percentage"
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
+                </div>
+              </div>
+              <div class="col-md-2" *ngIf="isAdmin">
+                <div class="form-group mb-0">
+                  <label class="small font-weight-bold">Download %</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         formControlName="download_royalty_percentage"
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
+                </div>
+              </div>
+              <div class="col-md-2" *ngIf="isAdmin">
+                <div class="form-group mb-0">
+                  <label class="small font-weight-bold">Physical %</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         formControlName="physical_royalty_percentage"
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
+                </div>
+              </div>
+              <div class="col-md-1">
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="removeRoyaltyArtist(i)"
+                        [disabled]="royaltyArtists.length <= 1 || !canModifyArtists"
+                        title="Remove Artist">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Royalty Totals -->
+        <div class="card bg-light" *ngIf="isAdmin">
+          <div class="card-body py-2">
+            <div class="row text-center">
+              <div class="col-md-3">
+                <strong>Label Royalty:</strong>
+              </div>
+              <div class="col-md-2">
+                <span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
+                  {{ getLabelRoyalty('streaming') }}%
+                </span>
+              </div>
+              <div class="col-md-2">
+                <span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
+                  {{ getLabelRoyalty('sync') }}%
+                </span>
+              </div>
+              <div class="col-md-2">
+                <span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
+                  {{ getLabelRoyalty('download') }}%
+                </span>
+              </div>
+              <div class="col-md-2">
+                <span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
+                  {{ getLabelRoyalty('physical') }}%
+                </span>
+              </div>
+              <div class="col-md-1"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Royalty Split Notes -->
+        <div class="mt-3">
+          <small class="text-muted">
+            <i class="fa fa-info-circle"></i>
+            <strong>Note:</strong> Artist percentages for each royalty type should not exceed 100%.
+            The label row shows the remaining percentage (100% - total artist percentages).
+          </small>
+        </div>
+      </div>
+
+      <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="text-center text-muted py-3">
+        <i class="fa fa-info-circle"></i>
+        No artists added yet. Click "Add Artist" to get started.
+      </div>
+    </div>
+
+    <!-- Liner Notes -->
+    <div class="liner-notes-section mt-4">
+      <div class="form-group">
+        <label for="linerNotes">Liner Notes</label>
+        <small class="form-text text-muted mb-2">
+          Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
+          It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
+          <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
+        </small>
+        <quill-editor
+          id="linerNotes"
+          formControlName="liner_notes"
+          [modules]="quillConfig"
+          placeholder="Liner notes, acknowledgments, credits..."
+          [style.height.px]="150">
+        </quill-editor>
+      </div>
+    </div>
+
+    <!-- Save Changes Button -->
+    <div class="save-credits-section mt-5" *ngIf="editingRelease">
+      <button
+        type="button"
+        class="btn btn-primary save-changes-btn"
+        [disabled]="savingCredits || !creditsForm.valid"
+        (click)="saveCredits()">
+        <i class="fa fa-save me-2" *ngIf="!savingCredits"></i>
+        <i class="fa fa-spinner fa-spin me-2" *ngIf="savingCredits"></i>
+        {{ savingCredits ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>

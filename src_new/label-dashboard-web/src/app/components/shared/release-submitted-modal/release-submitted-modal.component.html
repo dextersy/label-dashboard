@@ -1,0 +1,28 @@
+<div class="modal" [class.show]="isVisible" [style.display]="isVisible ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <!-- Body -->
+      <div class="modal-body text-center pt-5">
+        <div class="celebration-icon mb-1">
+          <span role="img" aria-label="Celebration">🎊</span>
+        </div>
+
+        <h2 class="mb-2 fw-bold">{{ data?.releaseTitle }} Submitted!</h2>
+
+        <p class="mb-4">
+          {{ data?.message }}
+        </p>
+
+        <!-- Close Button -->
+        <div class="text-end pb-3 pe-3">
+          <button type="button" class="btn btn-link text-muted" (click)="close()">
+            <i class="fas fa-times me-1"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade" [class.show]="isVisible" [style.display]="isVisible ? 'block' : 'none'"></div>

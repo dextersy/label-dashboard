@@ -1,0 +1,29 @@
+.track-list-section {
+  .alert {
+    border-radius: 6px;
+
+    &.alert-info {
+      background-color: #d1ecf1;
+      border-color: #bee5eb;
+      color: #0c5460;
+    }
+  }
+
+  .d-flex {
+    .btn {
+      white-space: nowrap;
+
+      &.btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .text-center {
+    .spinner-border {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+}

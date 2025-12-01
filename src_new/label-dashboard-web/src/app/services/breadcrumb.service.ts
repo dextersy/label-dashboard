@@ -32,6 +32,7 @@ export class BreadcrumbService {
     '/artist/team': { label: 'Manage Team', parent: '/artist' },
     '/artist/epk': { label: 'Manage EPK', parent: '/artist' },
     '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
+    '/artist/releases/edit/:id': { label: 'Edit Release', parent: '/artist/releases' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
     '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },
     '/financial/summary': { label: 'Summary', parent: '/financial' },
@@ -75,7 +76,18 @@ export class BreadcrumbService {
     const currentUrl = this.router.url.split('?')[0]; // Remove query params
     const breadcrumbs: BreadcrumbItem[] = [];
 
-    const menuItem = this.menuStructure[currentUrl];
+    // First try exact match
+    let menuItem = this.menuStructure[currentUrl];
+    
+    // If no exact match, try to match parameterized routes
+    if (!menuItem) {
+      for (const routePattern of Object.keys(this.menuStructure)) {
+        if (this.matchesRoutePattern(currentUrl, routePattern)) {
+          menuItem = this.menuStructure[routePattern];
+          break;
+        }
+      }
+    }
     
     if (menuItem) {
       // Recursively build the full hierarchy
@@ -85,8 +97,27 @@ export class BreadcrumbService {
     return breadcrumbs;
   }
 
+  private matchesRoutePattern(url: string, pattern: string): boolean {
+    // Convert route pattern to regex
+    // Replace :param with [^/]+ (one or more characters that are not /)
+    const regexPattern = pattern.replace(/:[^/]+/g, '[^/]+');
+    const regex = new RegExp(`^${regexPattern}$`);
+    return regex.test(url);
+  }
+
   private buildBreadcrumbHierarchy(url: string, breadcrumbs: BreadcrumbItem[]): void {
-    const menuItem = this.menuStructure[url];
+    // First try exact match for the URL
+    let menuItem = this.menuStructure[url];
+    
+    // If no exact match, try to match parameterized routes
+    if (!menuItem) {
+      for (const routePattern of Object.keys(this.menuStructure)) {
+        if (this.matchesRoutePattern(url, routePattern)) {
+          menuItem = this.menuStructure[routePattern];
+          break;
+        }
+      }
+    }
     
     if (menuItem) {
       // If this item has a parent, recursively add the parent hierarchy first

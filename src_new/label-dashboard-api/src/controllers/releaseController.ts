@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
 import archiver from 'archiver';
@@ -79,6 +79,28 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
               'physical_royalty_type'
             ] 
           }
+        },
+        { 
+          model: Song, 
+          as: 'songs',
+          include: [
+            {
+              model: SongCollaborator,
+              as: 'collaborators',
+              include: [{ model: Artist, as: 'artist' }]
+            },
+            {
+              model: SongAuthor,
+              as: 'authors',
+              include: [{ model: Songwriter, as: 'songwriter' }]
+            },
+            {
+              model: SongComposer,
+              as: 'composers',
+              include: [{ model: Songwriter, as: 'songwriter' }]
+            }
+          ],
+          order: [['track_number', 'ASC']]
         },
         { model: Earning, as: 'earnings' },
         { model: RecuperableExpense, as: 'expenses' }
@@ -362,7 +384,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     await release.update(updateData);
 
-    // Update artist royalty splits if provided (admin only)
+    // Update artist royalty splits if provided
     let parsedArtists = artists;
     if (typeof artists === 'string') {
       try {
@@ -372,7 +394,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    if (req.user.is_admin && parsedArtists && Array.isArray(parsedArtists)) {
+    if (parsedArtists && Array.isArray(parsedArtists)) {
       // Validate that royalty percentages add up correctly
       const totalStreamingRoyalty = parsedArtists.reduce((sum, artist) => 
         sum + (artist.streaming_royalty_percentage || 0), 0);

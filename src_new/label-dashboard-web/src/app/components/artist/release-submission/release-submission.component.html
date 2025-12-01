@@ -1,0 +1,198 @@
+<div class="release-submission-page">
+  <app-breadcrumb></app-breadcrumb>
+  <div class="release-form-layout">
+    <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
+    <nav class="release-form-sidebar mt-3">
+      <div class="sidebar-items">
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'info'"
+          [matTooltip]="releaseInfoTooltip"
+          matTooltipPosition="right"
+          (click)="setActiveSection('info')">
+          <i class="fa fa-info-circle"></i>
+          <span>Release Info</span>
+          <i *ngIf="releaseInfoStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
+          <i *ngIf="releaseInfoStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
+          <i *ngIf="releaseInfoStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
+        </button>
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'credits'"
+          [disabled]="!canProceedToCredits"
+          [matTooltip]="albumCreditsTooltip"
+          matTooltipPosition="right"
+          (click)="setActiveSection('credits')">
+          <i class="fa fa-users"></i>
+          <span>Album Credits</span>
+          <i *ngIf="albumCreditsStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
+          <i *ngIf="albumCreditsStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
+          <i *ngIf="albumCreditsStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
+        </button>
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'tracks'"
+          [disabled]="!canProceedToTracks"
+          [matTooltip]="trackListTooltip"
+          matTooltipPosition="right"
+          (click)="setActiveSection('tracks')">
+          <i class="fa fa-music"></i>
+          <span>Track List</span>
+          <i *ngIf="trackListStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
+          <i *ngIf="trackListStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
+          <i *ngIf="trackListStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
+        </button>
+        <button
+          type="button"
+          class="sidebar-item"
+          [class.active]="activeSection === 'submit'"
+          [disabled]="!canProceedToSubmit"
+          *ngIf="isDraftStatus"
+          (click)="setActiveSection('submit')">
+          <i class="fa fa-paper-plane"></i>
+          <span>Submit</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="release-form-main">
+      <div class="release-form-container">
+      <!-- Release Info Section -->
+      <div class="form-section" *ngIf="activeSection === 'info'">
+        <h3>Release Information</h3>
+        <p>Enter the basic details for your release</p>
+
+        <app-release-info-section
+          [artist]="artist"
+          [editingRelease]="editingRelease"
+          [showStatus]="true"
+          [generateCatalogNumber]="true"
+          (formDataChange)="onReleaseInfoDataChange($event)"
+          (validityChange)="onReleaseInfoValidityChange($event)"
+          (validationChange)="onReleaseInfoValidationChange($event)"
+          (alertMessage)="onAlertMessage($event)"
+          (releaseSaved)="onReleaseSaved($event)">
+        </app-release-info-section>
+
+        <!-- Show Next button only after release is saved -->
+        <div class="section-actions mt-4" *ngIf="releaseId">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="setActiveSection('credits')">
+            Next: Album Credits
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Album Credits Section -->
+      <div class="form-section" *ngIf="activeSection === 'credits'">
+        <h3>Album Credits</h3>
+        <p>Manage artists and royalty splits for this release</p>
+
+        <app-album-credits-section
+          [artist]="artist"
+          [editingRelease]="editingRelease"
+          (formDataChange)="onAlbumCreditsDataChange($event)"
+          (validityChange)="onAlbumCreditsValidityChange($event)"
+          (validationChange)="onAlbumCreditsValidationChange($event)"
+          (alertMessage)="onAlertMessage($event)"
+          (creditsSaved)="onAlbumCreditsSaved($event)">
+        </app-album-credits-section>
+
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="setActiveSection('info')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Release Info
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="setActiveSection('tracks')">
+            Next: Track List
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Track List Section -->
+      <div class="form-section" *ngIf="activeSection === 'tracks'">
+        <h3>Track List</h3>
+        <p>Manage the songs for this release</p>
+
+        <app-track-list-section
+          [releaseId]="releaseId"
+          [releaseTitle]="releaseInfoData?.title || ''"
+          [releaseCatalogNo]="releaseInfoData?.catalog_no || ''"
+          [releaseStatus]="releaseInfoData?.status || 'Draft'"
+          [releaseArtists]="releaseInfoData?.artists || []"
+          (trackListDataChange)="onTrackListDataChange($event)"
+          (validationChange)="onTrackListValidationChange($event)"
+          (alertMessage)="onAlertMessage($event)">
+        </app-track-list-section>
+
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="setActiveSection('credits')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Album Credits
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canProceedToSubmit"
+            *ngIf="isDraftStatus"
+            (click)="setActiveSection('submit')">
+            Next: Submit
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submission Section -->
+      <div class="form-section" *ngIf="activeSection === 'submit' && isEditing && isDraftStatus">
+        <h3>Review & Submit</h3>
+        <p>Review your release information and submit for processing</p>
+
+        <app-submission-section
+          [releaseInfoData]="releaseInfoData"
+          [albumCreditsData]="albumCreditsData"
+          [trackListData]="trackListData"
+          [releaseInfoValidation]="releaseInfoValidation"
+          [albumCreditsValidation]="albumCreditsValidation"
+          [trackListValidation]="trackListValidation"
+          [isSubmitting]="isSubmitting"
+          (submit)="onSubmit()"
+          (navigateToSection)="setActiveSection($event)">
+        </app-submission-section>
+
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="setActiveSection('tracks')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Track List
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onCancel()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
