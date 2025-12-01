@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ReleaseInfoData } from '../release-info-section/release-info-section.component';
 import { AlbumCreditsData } from '../album-credits-section/album-credits-section.component';
 import { TrackListData } from '../track-list-section/track-list-section.component';
@@ -36,8 +37,12 @@ export class SubmissionSectionComponent implements OnChanges {
   // Expose Math for template
   Math = Math;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private sanitizer: DomSanitizer) {
     this.isAdmin = this.authService.isAdmin();
+  }
+
+  getSafeHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html || '');
   }
 
   ngOnChanges(changes: SimpleChanges): void {

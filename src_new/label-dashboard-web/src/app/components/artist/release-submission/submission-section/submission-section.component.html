@@ -27,12 +27,7 @@
 
       <div class="mt-3" *ngIf="releaseInfoData.description">
         <strong>Description:</strong>
-        <div class="mt-1" [innerHTML]="releaseInfoData.description"></div>
-      </div>
-
-      <div class="mt-3" *ngIf="albumCreditsData?.liner_notes">
-        <strong>Liner Notes:</strong>
-        <div class="mt-1" [innerHTML]="albumCreditsData!.liner_notes"></div>
+        <div class="mt-1" [innerHTML]="getSafeHtml(releaseInfoData.description)"></div>
       </div>
     </div>
   </div>
@@ -90,7 +85,7 @@
 
       <div class="mt-3" *ngIf="albumCreditsData.liner_notes">
         <strong>Liner Notes:</strong>
-        <div class="mt-1" [innerHTML]="albumCreditsData.liner_notes"></div>
+        <div class="mt-1" [innerHTML]="getSafeHtml(albumCreditsData.liner_notes)"></div>
       </div>
 
       <div *ngIf="!albumCreditsData.artists || albumCreditsData.artists.length === 0" class="text-center text-muted py-3">
