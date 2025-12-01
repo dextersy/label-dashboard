@@ -7,9 +7,13 @@
         <button type="button"
                 class="btn btn-sm btn-outline-primary"
                 (click)="addRoyaltyArtistFromUI()"
-                [disabled]="loadingArtists">
+                [disabled]="loadingArtists || !canModifyArtists">
           <i class="fa fa-plus"></i> Add Artist
         </button>
+      </div>
+
+      <div *ngIf="!canModifyArtists" class="alert alert-info py-2 mb-3">
+        <small><i class="fa fa-info-circle"></i> Artist modifications are restricted for non-draft releases. Only administrators can modify artists on releases with status: {{ editingRelease?.status }}</small>
       </div>
 
       <div *ngIf="loadingArtists" class="text-center py-3">
@@ -31,7 +35,8 @@
                   <label class="small font-weight-bold">Artist</label>
                   <select class="form-control form-control-sm"
                           formControlName="artist_id"
-                          [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched">
+                          [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched"
+                          [disabled]="!canModifyArtists">
                     <option value="">Select Artist</option>
                     <ng-container *ngIf="artistControl.get('artist_id')?.value">
                       <option [value]="artistControl.get('artist_id')?.value"
@@ -52,7 +57,8 @@
                   <input type="number"
                          class="form-control form-control-sm"
                          formControlName="streaming_royalty_percentage"
-                         min="0" max="100" step="1">
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
@@ -61,7 +67,8 @@
                   <input type="number"
                          class="form-control form-control-sm"
                          formControlName="sync_royalty_percentage"
-                         min="0" max="100" step="1">
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
@@ -70,7 +77,8 @@
                   <input type="number"
                          class="form-control form-control-sm"
                          formControlName="download_royalty_percentage"
-                         min="0" max="100" step="1">
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
@@ -79,14 +87,15 @@
                   <input type="number"
                          class="form-control form-control-sm"
                          formControlName="physical_royalty_percentage"
-                         min="0" max="100" step="1">
+                         min="0" max="100" step="1"
+                         [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-1">
                 <button type="button"
                         class="btn btn-sm btn-outline-danger"
                         (click)="removeRoyaltyArtist(i)"
-                        [disabled]="royaltyArtists.length <= 1"
+                        [disabled]="royaltyArtists.length <= 1 || !canModifyArtists"
                         title="Remove Artist">
                   <i class="fa fa-trash"></i>
                 </button>

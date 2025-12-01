@@ -205,6 +205,10 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     return this.creditsForm.get('royaltyArtists') as FormArray;
   }
 
+  get canModifyArtists(): boolean {
+    return this.isAdmin || this.editingRelease?.status === 'Draft';
+  }
+
   getArtistName(artistId: any): string {
     if (!artistId) return '';
 
