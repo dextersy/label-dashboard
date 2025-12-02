@@ -666,6 +666,93 @@ export const sendPaymentNotification = async (
   }
 };
 
+// Send sublabel payment notification email to sublabel admins
+export const sendSublabelPaymentNotification = async (
+  sublabelBrandId: number,
+  sublabelName: string,
+  payment: {
+    amount: number;
+    description?: string;
+    payment_processing_fee?: number;
+    paid_thru_type?: string;
+    paid_thru_account_name?: string;
+    paid_thru_account_number?: string;
+    paymentMethod?: {
+      type: string;
+      account_name: string;
+      account_number_or_email: string;
+    } | null;
+  },
+  parentBrand: {
+    name?: string;
+    brand_color?: string;
+    logo_url?: string;
+    id: number;
+  }
+): Promise<boolean> => {
+  try {
+    // Get sublabel administrators
+    const recipients = await getBrandAdministrators(sublabelBrandId);
+    
+    if (recipients.length === 0) {
+      console.log('No administrators found for sublabel, skipping payment notification');
+      return false;
+    }
+
+    // Use the same template as artist payments
+    const templatePath = path.join(__dirname, '../assets/templates/payment_notification_email.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Calculate net amount
+    const processingFee = payment.payment_processing_fee || 0;
+    const netAmount = payment.amount - processingFee;
+
+    // Format payment method as "Bank name - Account name - Account number"
+    let formattedMethod = 'Non-cash / adjustment';
+    
+    if (payment.paymentMethod) {
+      const { type, account_name, account_number_or_email } = payment.paymentMethod;
+      if (type && account_name && account_number_or_email) {
+        formattedMethod = `${type} - ${account_name} - ${account_number_or_email}`;
+      } else if (type && account_name) {
+        formattedMethod = `${type} - ${account_name}`;
+      } else if (type) {
+        formattedMethod = type;
+      }
+    } else {
+      if (payment.paid_thru_type && payment.paid_thru_account_name && payment.paid_thru_account_number) {
+        formattedMethod = `${payment.paid_thru_type} - ${payment.paid_thru_account_name} - ${payment.paid_thru_account_number}`;
+      } else if (payment.paid_thru_type && payment.paid_thru_account_name) {
+        formattedMethod = `${payment.paid_thru_type} - ${payment.paid_thru_account_name}`;
+      } else if (payment.paid_thru_type) {
+        formattedMethod = payment.paid_thru_type;
+      }
+    }
+
+    // Get sublabel's frontend URL for the dashboard link
+    const dashboardUrl = `${await getBrandFrontendUrl(sublabelBrandId)}/admin#label-finance`;
+
+    // Replace template variables - using sublabel name instead of artist name
+    template = template.replace(/%LOGO%/g, parentBrand.logo_url || '');
+    template = template.replace(/%BRAND_NAME%/g, parentBrand.name || '');
+    template = template.replace(/%BRAND_COLOR%/g, parentBrand.brand_color || '#1595e7');
+    template = template.replace(/%ARTIST%/g, sublabelName); // Sublabel name in place of artist
+    template = template.replace(/%AMOUNT%/g, `₱ ${payment.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%PROCESSING_FEE%/g, `₱ ${processingFee.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%NET_AMOUNT%/g, `₱ ${netAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+    template = template.replace(/%DESCRIPTION%/g, payment.description || '');
+    template = template.replace(/%METHOD%/g, formattedMethod);
+    template = template.replace(/%URL%/g, dashboardUrl);
+
+    const subject = `Payment made to ${sublabelName}!`;
+
+    return await sendEmail(recipients, subject, template, sublabelBrandId);
+  } catch (error) {
+    console.error('Error sending sublabel payment notification:', error);
+    return false;
+  }
+};
+
 // Send release submission notification to admins
 export const sendReleaseSubmissionNotification = async (
   releaseData: {

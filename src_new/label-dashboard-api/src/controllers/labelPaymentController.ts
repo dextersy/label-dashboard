@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { LabelPaymentMethod, LabelPayment, Brand } from '../models';
 import { PaymentService } from '../utils/paymentService';
+import { sendSublabelPaymentNotification } from '../utils/emailService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -303,6 +304,48 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
     }
 
     const payment = await LabelPayment.create(paymentData);
+
+    // Send payment notification email to sublabel admins
+    try {
+      // Get parent brand info for email formatting
+      const parentBrand = await Brand.findByPk(req.user.brand_id);
+      
+      // Load payment method data if payment_method_id is set
+      let paymentMethodData = null;
+      if (payment.payment_method_id) {
+        const paymentMethod = await LabelPaymentMethod.findByPk(payment.payment_method_id);
+        if (paymentMethod) {
+          paymentMethodData = {
+            type: paymentMethod.type,
+            account_name: paymentMethod.account_name,
+            account_number_or_email: paymentMethod.account_number_or_email
+          };
+        }
+      }
+
+      await sendSublabelPaymentNotification(
+        targetBrandId,
+        targetBrand.brand_name,
+        {
+          amount: parseFloat(finalAmount.toFixed(2)),
+          description: description || '',
+          payment_processing_fee: finalProcessingFee,
+          paid_thru_type: paid_thru_type || '',
+          paid_thru_account_name: paid_thru_account_name || '',
+          paid_thru_account_number: paid_thru_account_number || '',
+          paymentMethod: paymentMethodData
+        },
+        {
+          name: parentBrand?.brand_name,
+          brand_color: parentBrand?.brand_color,
+          logo_url: parentBrand?.logo_url,
+          id: parentBrand?.id || req.user.brand_id
+        }
+      );
+    } catch (emailError) {
+      console.error('Failed to send sublabel payment notification:', emailError);
+      // Continue with the response even if email fails
+    }
 
     res.status(201).json({
       message: 'Label payment added successfully',
