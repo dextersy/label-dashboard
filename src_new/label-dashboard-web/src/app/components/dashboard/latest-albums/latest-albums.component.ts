@@ -9,6 +9,7 @@ export interface LatestRelease {
   artist_name: string;
   release_date: string;
   cover_art: string;
+  status: string;
 }
 
 @Component({
@@ -24,6 +25,27 @@ export class LatestAlbumsComponent {
 
   goToReleases(): void {
     this.router.navigate(['/artist/releases']);
+  }
+
+  goToRelease(releaseId: number): void {
+    this.router.navigate(['/artist/releases/edit', releaseId]);
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'Live':
+        return 'badge-success';
+      case 'For Submission':
+        return 'badge-info';
+      case 'Pending':
+        return 'badge-warning';
+      case 'Draft':
+        return 'badge-secondary';
+      case 'Taken Down':
+        return 'badge-danger';
+      default:
+        return 'badge-secondary';
+    }
   }
 
   getImageSrc(coverArt: string): string {

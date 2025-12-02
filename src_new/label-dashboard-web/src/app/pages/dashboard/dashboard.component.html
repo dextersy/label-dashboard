@@ -105,24 +105,28 @@
     </div>
 
     <!-- Dashboard widgets -->
-    <div class="row">
+    <!-- Row 1: Latest releases and Top earning releases -->
+    <div class="row mb-4">
       <!-- Latest releases -->
-      <div class="col-md-4">
+      <div class="col-lg-6 mb-4 mb-lg-0">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
 
       <!-- Top earning releases -->
-      <div class="col-md-4">
+      <div class="col-lg-6">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
+    </div>
 
+    <!-- Row 2: Balance summary and Event sales -->
+    <div class="row">
       <!-- Balance summary -->
-      <div class="col-md-4">
+      <div class="col-lg-6 mb-4 mb-lg-0">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>
 
       <!-- Event sales (admin only) -->
-      <div *ngIf="isAdmin && dashboardData.eventSales" class="col-md-6">
+      <div *ngIf="isAdmin && dashboardData.eventSales" class="col-lg-6">
         <app-event-sales-chart [eventSales]="dashboardData.eventSales"></app-event-sales-chart>
       </div>
     </div>

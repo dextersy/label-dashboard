@@ -352,6 +352,7 @@ async function getLatestReleasesData(req: AuthRequest) {
     title: release.title,
     release_date: release.release_date,
     cover_art: release.cover_art,
+    status: release.status,
     artist_name: release.releaseArtists && release.releaseArtists.length > 0 
       ? release.releaseArtists[0].artist?.name 
       : 'Unknown Artist'

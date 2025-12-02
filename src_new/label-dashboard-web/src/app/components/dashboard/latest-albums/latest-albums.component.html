@@ -11,11 +11,12 @@
             <th>Catalog Number</th>
             <th>Artist</th>
             <th>Title</th>
+            <th>Status</th>
             <th>Release Date</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let release of releases">
+          <tr *ngFor="let release of releases" (click)="goToRelease(release.id)" class="clickable-row">
             <td class="cover-cell">
               <img 
                 [src]="getImageSrc(release.cover_art)" 
@@ -29,10 +30,13 @@
             <td class="title-cell">
               <div class="release-title">{{ release.title }}</div>
             </td>
+            <td>
+              <span class="badge" [ngClass]="getStatusClass(release.status)">{{ release.status }}</span>
+            </td>
             <td>{{ release.release_date | date:'shortDate' }}</td>
           </tr>
           <tr *ngIf="releases.length === 0">
-            <td colspan="5" class="text-center text-muted">No releases found</td>
+            <td colspan="6" class="text-center text-muted">No releases found</td>
           </tr>
         </tbody>
       </table>
