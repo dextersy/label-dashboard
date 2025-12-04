@@ -79,10 +79,10 @@
         </app-release-info-section>
 
         <!-- Show Next button only after release is saved -->
-        <div class="section-actions mt-4" *ngIf="releaseId">
+        <div class="section-actions section-actions--next-only mt-4" *ngIf="releaseId">
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-secondary"
             (click)="setActiveSection('credits')">
             Next: Album Credits
             <i class="fa fa-arrow-right ms-2"></i>
@@ -94,35 +94,34 @@
       <div class="form-section" *ngIf="activeSection === 'credits'">
         <h3>Album Credits</h3>
         <p>Manage artists and royalty splits for this release</p>
-      </div>
 
-      <!-- Album Credits Component (always rendered for data processing) -->
-      <app-album-credits-section
-        [style.display]="activeSection === 'credits' ? 'block' : 'none'"
-        [artist]="artist"
-        [editingRelease]="editingRelease"
-        (formDataChange)="onAlbumCreditsDataChange($event)"
-        (validityChange)="onAlbumCreditsValidityChange($event)"
-        (validationChange)="onAlbumCreditsValidationChange($event)"
-        (alertMessage)="onAlertMessage($event)"
-        (creditsSaved)="onAlbumCreditsSaved($event)">
-      </app-album-credits-section>
+        <!-- Album Credits Component -->
+        <app-album-credits-section
+          [artist]="artist"
+          [editingRelease]="editingRelease"
+          (formDataChange)="onAlbumCreditsDataChange($event)"
+          (validityChange)="onAlbumCreditsValidityChange($event)"
+          (validationChange)="onAlbumCreditsValidationChange($event)"
+          (alertMessage)="onAlertMessage($event)"
+          (creditsSaved)="onAlbumCreditsSaved($event)">
+        </app-album-credits-section>
 
-      <div class="section-actions mt-4" *ngIf="activeSection === 'credits'">
-        <button
-          type="button"
-          class="btn btn-secondary me-2"
-          (click)="setActiveSection('info')">
-          <i class="fa fa-arrow-left me-2"></i>
-          Back: Release Info
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="setActiveSection('tracks')">
-          Next: Track List
-          <i class="fa fa-arrow-right ms-2"></i>
-        </button>
+        <div class="section-actions mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="setActiveSection('info')">
+            <i class="fa fa-arrow-left me-2"></i>
+            Back: Release Info
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="setActiveSection('tracks')">
+            Next: Track List
+            <i class="fa fa-arrow-right ms-2"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Track List Section -->
@@ -146,14 +145,14 @@
         <div class="section-actions mt-4">
           <button
             type="button"
-            class="btn btn-secondary me-2"
+            class="btn btn-secondary"
             (click)="setActiveSection('credits')">
             <i class="fa fa-arrow-left me-2"></i>
             Back: Album Credits
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-secondary"
             [disabled]="!canProceedToSubmit"
             *ngIf="isDraftStatus"
             (click)="setActiveSection('submit')">
@@ -183,7 +182,7 @@
         <div class="section-actions mt-4">
           <button
             type="button"
-            class="btn btn-secondary me-2"
+            class="btn btn-secondary"
             (click)="setActiveSection('tracks')">
             <i class="fa fa-arrow-left me-2"></i>
             Back: Track List

@@ -125,10 +125,23 @@
 
     .section-actions {
       display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
+      justify-content: space-between;
       padding-top: 2rem;
       border-top: 1px solid #dee2e6;
+
+      // Navigation buttons - remove box shadow on focus
+      .btn {
+        box-shadow: none !important;
+        
+        &:focus {
+          box-shadow: none !important;
+        }
+      }
+
+      // First section only has Next button - align it to the right
+      &--next-only {
+        justify-content: flex-end;
+      }
     }
   }
 }
