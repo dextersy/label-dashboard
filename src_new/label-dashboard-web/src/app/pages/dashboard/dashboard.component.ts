@@ -55,6 +55,7 @@ export class DashboardComponent implements OnInit {
   boxShadow: string = '0 10px 30px rgba(102, 126, 234, 0.3)';
   textColor: string = '#ffffff';
   iconColor: string = 'rgba(255, 255, 255, 0.9)';
+  today: Date = new Date();
 
   constructor(
     private http: HttpClient,
@@ -90,6 +91,13 @@ export class DashboardComponent implements OnInit {
 
   get userFirstName(): string {
     return this.dashboardData?.user?.firstName || 'User';
+  }
+
+  getTimeOfDay(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 17) return 'afternoon';
+    return 'evening';
   }
 
   private loadBrandSettings(): void {
