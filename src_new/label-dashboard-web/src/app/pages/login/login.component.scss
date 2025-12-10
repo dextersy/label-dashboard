@@ -105,6 +105,7 @@
       border-radius: 0 5px 5px 0 !important;
       border-left: none !important;
       margin-top: 0 !important; // Override external CSS margin since container handles it
+      padding-right: 45px !important; // Match password field padding for alignment
     }
   }
   
