@@ -1090,6 +1090,14 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
     // Delete from database
     await photo.destroy();
 
+    // If this photo was set as the profile photo, clear both profile_photo and profile_photo_id
+    if (artist.profile_photo_id === photoIdNum) {
+      await artist.update({ 
+        profile_photo: null,
+        profile_photo_id: null 
+      });
+    }
+
     res.json({
       success: true,
       message: 'Photo deleted successfully'

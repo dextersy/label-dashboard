@@ -262,6 +262,18 @@ export class ArtistGalleryTabComponent {
       next: (response) => {
         if (response.success) {
           this.photos = this.photos.filter(p => p.id !== photo.id);
+          
+          // If the deleted photo was the profile photo, update the artist state
+          if (this.artist?.profile_photo_id === photo.id) {
+            const updatedArtist: Artist = {
+              ...this.artist!,
+              profile_photo: '',
+              profile_photo_id: undefined,
+              profilePhotoImage: undefined
+            };
+            this.profilePhotoUpdated.emit(updatedArtist);
+          }
+          
           this.alertMessage.emit({
             type: 'success',
             message: 'Photo deleted successfully!'
