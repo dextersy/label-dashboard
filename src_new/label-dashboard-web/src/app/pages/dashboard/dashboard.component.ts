@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { LatestAlbumsComponent, LatestRelease } from '../../components/dashboard/latest-albums/latest-albums.component';
 import { TopAlbumsComponent, TopEarningRelease } from '../../components/dashboard/top-albums/top-albums.component';
@@ -11,6 +12,7 @@ import { environment } from 'environments/environment';
 
 interface DashboardStats {
   latestRelease: {
+    id: number;
     catalog_no: string;
     title: string;
     artist_name: string;
@@ -35,6 +37,7 @@ interface DashboardData {
     selector: 'app-dashboard',
     imports: [
         CommonModule,
+        RouterModule,
         LatestAlbumsComponent,
         TopAlbumsComponent,
         BalanceTableComponent,

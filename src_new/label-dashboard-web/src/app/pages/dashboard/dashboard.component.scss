@@ -47,6 +47,15 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
   
+  &.stat-card-clickable {
+    cursor: pointer;
+    
+    &:hover {
+      border-color: #ccc;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+  }
+  
   .stat-icon {
     width: 48px;
     height: 48px;

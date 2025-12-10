@@ -597,6 +597,7 @@ async function getDashboardStatsData(req: AuthRequest) {
   let latestRelease = null;
   if (latestReleaseResult) {
     latestRelease = {
+      id: latestReleaseResult.id,
       catalog_no: latestReleaseResult.catalog_no,
       title: latestReleaseResult.title,
       artist_name: latestReleaseResult.releaseArtists && latestReleaseResult.releaseArtists.length > 0 
