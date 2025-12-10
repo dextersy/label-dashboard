@@ -56,7 +56,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="stat-card stat-card-clickable" *ngIf="dashboardData.stats?.latestRelease" [routerLink]="['/artist/releases/edit', dashboardData.stats?.latestRelease?.id]">
+        <div class="stat-card stat-card-clickable" *ngIf="dashboardData.stats?.latestRelease" (click)="goToLatestRelease()">
           <div class="stat-icon">
             <i class="fas fa-music"></i>
           </div>

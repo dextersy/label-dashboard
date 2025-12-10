@@ -16,7 +16,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let release of releases" (click)="goToRelease(release.id)" class="clickable-row">
+          <tr *ngFor="let release of releases" (click)="goToRelease(release)" class="clickable-row">
             <td class="cover-cell">
               <img 
                 [src]="getImageSrc(release.cover_art)" 

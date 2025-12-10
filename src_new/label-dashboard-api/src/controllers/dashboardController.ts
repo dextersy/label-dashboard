@@ -346,17 +346,21 @@ async function getLatestReleasesData(req: AuthRequest) {
 
   const releases = await Release.findAll(releaseQuery);
 
-  return releases.map(release => ({
-    id: release.id,
-    catalog_no: release.catalog_no,
-    title: release.title,
-    release_date: release.release_date,
-    cover_art: release.cover_art,
-    status: release.status,
-    artist_name: release.releaseArtists && release.releaseArtists.length > 0 
-      ? release.releaseArtists[0].artist?.name 
-      : 'Unknown Artist'
-  }));
+  return releases.map(release => {
+    const primaryArtist = release.releaseArtists && release.releaseArtists.length > 0 
+      ? release.releaseArtists[0].artist 
+      : null;
+    return {
+      id: release.id,
+      catalog_no: release.catalog_no,
+      title: release.title,
+      release_date: release.release_date,
+      cover_art: release.cover_art,
+      status: release.status,
+      artist_id: primaryArtist?.id || null,
+      artist_name: primaryArtist?.name || 'Unknown Artist'
+    };
+  });
 }
 
 async function getTopEarningReleasesData(req: AuthRequest) {
@@ -596,13 +600,15 @@ async function getDashboardStatsData(req: AuthRequest) {
 
   let latestRelease = null;
   if (latestReleaseResult) {
+    const primaryArtist = latestReleaseResult.releaseArtists && latestReleaseResult.releaseArtists.length > 0 
+      ? latestReleaseResult.releaseArtists[0].artist 
+      : null;
     latestRelease = {
       id: latestReleaseResult.id,
       catalog_no: latestReleaseResult.catalog_no,
       title: latestReleaseResult.title,
-      artist_name: latestReleaseResult.releaseArtists && latestReleaseResult.releaseArtists.length > 0 
-        ? latestReleaseResult.releaseArtists[0].artist?.name 
-        : 'Unknown Artist'
+      artist_id: primaryArtist?.id || null,
+      artist_name: primaryArtist?.name || 'Unknown Artist'
     };
   }
 

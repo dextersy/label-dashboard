@@ -6,6 +6,7 @@ export interface LatestRelease {
   id: number;
   catalog_no: string;
   title: string;
+  artist_id: number | null;
   artist_name: string;
   release_date: string;
   cover_art: string;
@@ -27,8 +28,12 @@ export class LatestAlbumsComponent {
     this.router.navigate(['/artist/releases']);
   }
 
-  goToRelease(releaseId: number): void {
-    this.router.navigate(['/artist/releases/edit', releaseId]);
+  goToRelease(release: LatestRelease): void {
+    // Set the artist for this release as the current artist
+    if (release.artist_id) {
+      localStorage.setItem('selected_artist_id', release.artist_id.toString());
+    }
+    this.router.navigate(['/artist/releases/edit', release.id]);
   }
 
   getStatusClass(status: string): string {

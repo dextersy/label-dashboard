@@ -16,6 +16,7 @@ interface DashboardStats {
     id: number;
     catalog_no: string;
     title: string;
+    artist_id: number | null;
     artist_name: string;
   } | null;
   totalArtists: number;
@@ -225,5 +226,19 @@ export class DashboardComponent implements OnInit {
     
     // Navigate to the artist selection page
     this.router.navigate(['/artist']);
+  }
+
+  goToLatestRelease(): void {
+    const latestRelease = this.dashboardData?.stats?.latestRelease;
+    if (!latestRelease) return;
+
+    // Set the artist for this release as the current artist
+    if (latestRelease.artist_id) {
+      localStorage.setItem('selected_artist_id', latestRelease.artist_id.toString());
+      // We only have partial artist info, so just set the ID - the artist component will fetch full details
+    }
+
+    // Navigate to the release edit page
+    this.router.navigate(['/artist/releases/edit', latestRelease.id]);
   }
 }
