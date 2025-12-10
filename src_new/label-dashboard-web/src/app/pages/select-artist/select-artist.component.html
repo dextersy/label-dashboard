@@ -1,0 +1,95 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="page-header mb-3">
+    <app-breadcrumb></app-breadcrumb>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="loading-dots">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fa fa-exclamation-triangle"></i> {{ error }}
+    <button class="btn btn-sm btn-outline-danger ml-2" (click)="loadArtists()">
+      <i class="fas fa-sync"></i> Retry
+    </button>
+  </div>
+
+  <!-- Artist Selection Content -->
+  <div *ngIf="!loading && !error" class="select-artist-content">
+    <!-- Header -->
+    <div class="select-artist-header text-center mb-5">
+      <h1 class="select-title">Select an Artist</h1>
+      <p class="select-subtitle">Choose an artist to view and manage their profile</p>
+    </div>
+
+    <!-- No Artists State -->
+    <div *ngIf="artists.length === 0" class="no-artists text-center py-5">
+      <div class="no-artists-icon mb-4">
+        <i class="fas fa-users"></i>
+      </div>
+      <h3>No Artists Found</h3>
+      <p class="text-muted">You don't have any artists yet.</p>
+      <button *ngIf="isAdmin" class="btn btn-primary mt-3" (click)="addNewArtist()">
+        <i class="fas fa-plus me-2"></i>Add New Artist
+      </button>
+    </div>
+
+    <!-- Artist Grid -->
+    <div *ngIf="artists.length > 0" class="artist-grid">
+      <div 
+        *ngFor="let artist of artists" 
+        class="artist-card"
+        (click)="selectArtist(artist)"
+        tabindex="0"
+        (keydown.enter)="selectArtist(artist)"
+        (keydown.space)="selectArtist(artist); $event.preventDefault()">
+        <div class="artist-photo-container">
+          <img 
+            *ngIf="getArtistPhotoUrl(artist)" 
+            [src]="getArtistPhotoUrl(artist)" 
+            [alt]="artist.name"
+            class="artist-photo">
+          <div *ngIf="!getArtistPhotoUrl(artist)" class="artist-photo-placeholder">
+            {{ getArtistInitials(artist) }}
+          </div>
+        </div>
+        <div class="artist-info">
+          <h3 class="artist-name">{{ artist.name }}</h3>
+          <p *ngIf="artist.band_members" class="artist-members">{{ artist.band_members }}</p>
+        </div>
+        <div class="artist-select-indicator">
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+
+      <!-- Add New Artist Card (Admin Only) -->
+      <div 
+        *ngIf="isAdmin" 
+        class="artist-card add-artist-card"
+        (click)="addNewArtist()"
+        tabindex="0"
+        (keydown.enter)="addNewArtist()"
+        (keydown.space)="addNewArtist(); $event.preventDefault()">
+        <div class="artist-photo-container">
+          <div class="artist-photo-placeholder add-icon">
+            <i class="fas fa-plus"></i>
+          </div>
+        </div>
+        <div class="artist-info">
+          <h3 class="artist-name">Add New Artist</h3>
+          <p class="artist-members">Create a new artist profile</p>
+        </div>
+        <div class="artist-select-indicator">
+          <i class="fas fa-chevron-right"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

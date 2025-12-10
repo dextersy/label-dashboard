@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ArtistComponent } from './pages/artist/artist.component';
+import { SelectArtistComponent } from './pages/select-artist/select-artist.component';
 import { AddNewArtistComponent } from './components/artist/add-new-artist/add-new-artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
@@ -24,6 +25,7 @@ import { PublicEventsComponent } from './pages/public/public-events.component';
 import { ArtistEPKComponent } from './pages/public/artist-epk.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { artistSelectedGuard } from './guards/artist-selected.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -48,11 +50,11 @@ export const routes: Routes = [
   
   // Protected Routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'artist', component: SelectArtistComponent, canActivate: [authGuard] },
   { 
     path: 'artist', 
-    canActivate: [authGuard],
+    canActivate: [authGuard, artistSelectedGuard],
     children: [
-      { path: '', redirectTo: 'profile', pathMatch: 'full' },
       { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
       { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
       { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },

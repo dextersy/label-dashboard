@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { LatestAlbumsComponent, LatestRelease } from '../../components/dashboard/latest-albums/latest-albums.component';
 import { TopAlbumsComponent, TopEarningRelease } from '../../components/dashboard/top-albums/top-albums.component';
@@ -8,6 +8,7 @@ import { BalanceTableComponent, ArtistBalance } from '../../components/dashboard
 import { EventSalesChartComponent, EventSales } from '../../components/dashboard/event-sales-chart/event-sales-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
+import { ArtistStateService } from '../../services/artist-state.service';
 import { environment } from 'environments/environment';
 
 interface DashboardStats {
@@ -62,7 +63,9 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private brandService: BrandService
+    private router: Router,
+    private brandService: BrandService,
+    private artistStateService: ArtistStateService
   ) {}
 
   ngOnInit(): void {
@@ -213,5 +216,14 @@ export class DashboardComponent implements OnInit {
     
     // Return true if the color is light (luminance > 0.5)
     return luminance > 0.5;
+  }
+
+  goToArtistSelection(): void {
+    // Clear the current artist selection
+    this.artistStateService.setSelectedArtist(null);
+    localStorage.removeItem('selected_artist_id');
+    
+    // Navigate to the artist selection page
+    this.router.navigate(['/artist']);
   }
 }
