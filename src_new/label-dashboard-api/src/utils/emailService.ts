@@ -869,7 +869,7 @@ export const sendReleasePendingNotification = async (
       .replace(/%TRACK_COUNT%/g, releaseData.track_count.toString())
       .replace(/%RELEASE_URL%/g, releaseUrl);
 
-    const subject = `Release Submitted for Distribution: ${releaseData.title}`;
+    const subject = `🚀 Your release "${releaseData.title}" is on its way!`;
 
     return await sendEmail(teamEmails, subject, template, brand.id);
   } catch (error) {
