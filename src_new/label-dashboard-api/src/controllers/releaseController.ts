@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
 import archiver from 'archiver';
-import { sendReleaseSubmissionNotification } from '../utils/emailService';
+import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
 
 // Configure AWS S3
 AWS.config.update({
@@ -473,6 +473,55 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
         );
       } catch (emailError) {
         console.error('Error sending release submission notification:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
+    // Send email notification to artist team members if release status changed to Pending
+    if (originalStatus !== 'Pending' && updateData.status === 'Pending') {
+      try {
+        // Get track count for the notification
+        const trackCount = await Song.count({
+          where: { release_id: release.id }
+        });
+
+        // Get artist names from the updated release
+        const artistNames = updatedRelease?.artists?.map((a: any) => a.name).join(', ') || 'Unknown Artist';
+
+        // Get all artist IDs associated with this release
+        const artistIds = updatedRelease?.artists?.map((a: any) => a.id) || [];
+
+        // Get all team members for all artists on this release
+        const artistAccessRecords = await ArtistAccess.findAll({
+          where: {
+            artist_id: artistIds,
+            status: 'Accepted'
+          },
+          include: [{ model: User, as: 'user' }]
+        });
+
+        // Get unique team member emails
+        const teamEmails = [...new Set(
+          artistAccessRecords
+            .filter(access => (access as any).user?.email_address)
+            .map(access => (access as any).user!.email_address)
+        )];
+
+        // Send notification to team members
+        await sendReleasePendingNotification(
+          {
+            id: updatedRelease!.id,
+            title: updatedRelease!.title,
+            catalog_no: updatedRelease!.catalog_no,
+            release_date: updatedRelease!.release_date.toString(),
+            track_count: trackCount
+          },
+          artistNames,
+          teamEmails,
+          req.user.brand_id
+        );
+      } catch (emailError) {
+        console.error('Error sending release pending notification:', emailError);
         // Don't fail the request if email fails
       }
     }

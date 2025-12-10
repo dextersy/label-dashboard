@@ -815,6 +815,69 @@ export const sendReleaseSubmissionNotification = async (
   }
 };
 
+// Send release pending notification to artist team members
+// This is sent when a release status changes to "Pending" (submitted for distribution)
+export const sendReleasePendingNotification = async (
+  releaseData: {
+    id: number;
+    title: string;
+    catalog_no: string;
+    release_date: string;
+    track_count: number;
+  },
+  artistName: string,
+  teamEmails: string[],
+  brandId: number
+): Promise<boolean> => {
+  try {
+    if (teamEmails.length === 0) {
+      console.log('No team members found for release pending notification');
+      return false;
+    }
+
+    // Fetch brand information
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) {
+      console.error('Brand not found for release pending notification');
+      return false;
+    }
+
+    // Get brand frontend URL for release link
+    const frontendUrl = await getBrandFrontendUrl(brandId);
+    const releaseUrl = `${frontendUrl}/releases/edit/${releaseData.id}`;
+
+    // Load email template
+    const templatePath = path.join(__dirname, '../assets/templates/release_pending_notification.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    // Format release date
+    const formattedDate = new Date(releaseData.release_date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Replace placeholders
+    template = template
+      .replace(/%BRAND_NAME%/g, brand.brand_name || 'Dashboard')
+      .replace(/%BRAND_COLOR%/g, brand.brand_color || '#1595e7')
+      .replace(/%LOGO%/g, brand.logo_url || '')
+      .replace(/%ARTIST_NAME%/g, artistName)
+      .replace(/%RELEASE_TITLE%/g, releaseData.title)
+      .replace(/%CATALOG_NO%/g, releaseData.catalog_no)
+      .replace(/%RELEASE_DATE%/g, formattedDate)
+      .replace(/%TRACK_COUNT%/g, releaseData.track_count.toString())
+      .replace(/%RELEASE_URL%/g, releaseUrl);
+
+    const subject = `Release Submitted for Distribution: ${releaseData.title}`;
+
+    return await sendEmail(teamEmails, subject, template, brand.id);
+  } catch (error) {
+    console.error('Error sending release pending notification:', error);
+    return false;
+  }
+};
+
 // Process base64 images and convert them to inline attachments for email
 const processInlineImages = (htmlContent: string): { html: string, attachments: any[] } => {
   const base64ImageRegex = /<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/gi;
