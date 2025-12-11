@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BrandService, BrandSettings } from '../../services/brand.service';
@@ -6,6 +6,14 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+
+interface MenuItem {
+  route: string;
+  icon?: string;
+  title: string;
+  adminOnly: boolean;
+  children?: MenuItem[];
+}
 
 @Component({
     selector: 'app-sidebar',
@@ -16,15 +24,22 @@ import { filter } from 'rxjs/operators';
 export class SidebarComponent implements OnInit, OnDestroy {
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandWebsite: string = '#';
-  brandColor: string = '#667eea'; // Use actual hex color instead of mapped color
-  textColor: string = '#ffffff'; // Dynamic text color based on brand color brightness
-  iconColor: string = '#a9afbb'; // Dynamic icon color for inactive items
-  activeColor: string = '#ffffff'; // Dynamic active item color that contrasts with brand background
+  brandColor: string = '#667eea';
+  textColor: string = '#ffffff';
+  iconColor: string = '#a9afbb';
+  activeColor: string = '#ffffff';
   isAdmin: boolean = false;
   currentRoute: string = '';
   isOpen: boolean = false;
+  isCollapsed: boolean = false; // Start expanded on desktop
+  isMobileView: boolean = false; // New: track if we're on mobile
   expandedMenus: Set<string> = new Set();
   collapsedMenus: Set<string> = new Set();
+  
+  // Flyout menu state
+  flyoutMenu: MenuItem | null = null;
+  flyoutTop: number = 0;
+  
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
@@ -99,6 +114,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadBrandSettings();
     this.currentRoute = this.router.url;
+    this.checkMobileView();
     
     this.router.events.subscribe(() => {
       this.currentRoute = this.router.url;
@@ -110,6 +126,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarSubscription.add(
       this.sidebarService.isOpen$.subscribe(isOpen => {
         this.isOpen = isOpen;
+        // On desktop, toggle collapsed state; on mobile, toggle visibility
+        if (!this.isMobileView) {
+          this.isCollapsed = !isOpen;
+        }
       })
     );
 
@@ -119,6 +139,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.isAdmin = user ? user.is_admin : false;
       })
     );
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkMobileView();
+  }
+
+  private checkMobileView(): void {
+    this.isMobileView = typeof window !== 'undefined' && window.innerWidth <= 991;
+    if (this.isMobileView) {
+      this.closeFlyout();
+    }
   }
 
   ngOnDestroy(): void {
@@ -246,7 +278,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActiveParentRoute(parentRoute: string): boolean {
-    return this.currentRoute.startsWith(parentRoute + '/');
+    // Match if current route starts with parent route (for child pages)
+    // or if current route is exactly the parent route (for select artist page)
+    return this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute;
   }
 
   toggleSubmenu(route: string): void {
@@ -267,6 +301,27 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.expandedMenus.add(route);
       this.collapsedMenus.delete(route); // Remove from collapsed list
     }
+  }
+
+  onParentMenuClick(event: MouseEvent, item: MenuItem): void {
+    if (this.isCollapsed && !this.isMobileView) {
+      // In collapsed mode on desktop, show flyout
+      this.showFlyout(event, item);
+    } else {
+      // In expanded mode or mobile, toggle submenu
+      this.toggleSubmenu(item.route);
+    }
+  }
+
+  showFlyout(event: MouseEvent, item: MenuItem): void {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    this.flyoutTop = rect.top;
+    this.flyoutMenu = item;
+  }
+
+  closeFlyout(): void {
+    this.flyoutMenu = null;
   }
 
   isSubmenuExpanded(route: string): boolean {

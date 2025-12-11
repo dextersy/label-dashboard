@@ -1,8 +1,11 @@
-<div class="sidebar" [class.open]="isOpen" [style.background]="brandColor">
+<div class="sidebar" 
+     [class.open]="isOpen" 
+     [class.collapsed]="isCollapsed && !isMobileView"
+     [style.background]="brandColor">
   <div class="sidebar-wrapper">
     <div class="logo">
       <a [href]="brandWebsite" class="simple-text" [style.color]="textColor">
-        <img [src]="brandLogo" width="100" alt="Brand Logo">
+        <img [src]="brandLogo" [class.logo-collapsed]="isCollapsed && !isMobileView" alt="Brand Logo">
       </a>
     </div>
 
@@ -15,7 +18,8 @@
            [routerLink]="item.route" 
            (click)="onMenuItemClick(item)" 
            [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
-           [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'">
+           [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'"
+           [title]="isCollapsed && !isMobileView ? item.title : ''">
           <i [class]="item.icon" 
              [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
           <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
@@ -27,12 +31,13 @@
         </a>
         
         <!-- Menu item with children (collapsible) -->
-        <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)">
-          <a (click)="toggleSubmenu(item.route)" 
+        <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)" class="menu-with-children">
+          <a (click)="onParentMenuClick($event, item)" 
              style="cursor: pointer;"
              [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor"
              [style.opacity]="isActiveParentRoute(item.route) ? '1' : '0.7'"
-             class="parent-menu-item">
+             class="parent-menu-item"
+             [title]="isCollapsed && !isMobileView ? item.title : ''">
             <i [class]="item.icon" 
                [style.color]="isActiveParentRoute(item.route) ? activeColor : iconColor"></i>
             <p [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor">{{ item.title }}</p>
@@ -41,8 +46,8 @@
                [style.color]="iconColor"></i>
           </a>
           
-          <!-- Submenu items -->
-          <ul class="submenu" [class.expanded]="isSubmenuExpanded(item.route)">
+          <!-- Inline submenu items (for expanded sidebar) -->
+          <ul class="submenu" [class.expanded]="isSubmenuExpanded(item.route) && (!isCollapsed || isMobileView)">
             <li *ngFor="let child of item.children">
               <a *ngIf="shouldShowMenuItem(child)" 
                  [routerLink]="child.route" 
@@ -79,4 +84,34 @@
       </li>
     </ul>
   </div>
+</div>
+
+<!-- Flyout submenu panel (for collapsed desktop sidebar) -->
+<div class="flyout-panel" 
+     *ngIf="isCollapsed && !isMobileView && flyoutMenu"
+     [style.background]="brandColor"
+     [style.top.px]="flyoutTop">
+  <div class="flyout-header" [style.color]="textColor">
+    {{ flyoutMenu.title }}
+  </div>
+  <ul class="flyout-menu">
+    <li *ngFor="let child of flyoutMenu.children">
+      <a *ngIf="shouldShowMenuItem(child)" 
+         [routerLink]="child.route" 
+         (click)="closeFlyout(); onMenuItemClick(child)"
+         [style.color]="isActiveRoute(child.route) ? activeColor : textColor"
+         [class.active]="isActiveRoute(child.route)">
+        {{ child.title }}
+        <i *ngIf="child.adminOnly" class="fas fa-shield-alt admin-icon" 
+           [style.color]="iconColor" 
+           title="Admin Only"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<!-- Flyout backdrop (for closing flyout when clicking outside) -->
+<div class="flyout-backdrop" 
+     *ngIf="isCollapsed && !isMobileView && flyoutMenu"
+     (click)="closeFlyout()">
 </div>

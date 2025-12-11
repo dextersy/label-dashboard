@@ -36,10 +36,8 @@ export class SidebarService {
     if (this.isMobile()) {
       // Close sidebar when switching to mobile view
       this.closeSidebar();
-    } else {
-      // Open sidebar when switching to desktop view
-      this.openSidebar();
     }
+    // On desktop, maintain current state (collapsed or expanded)
   }
 
   private isMobile(): boolean {

@@ -85,13 +85,14 @@
 
 // Desktop layout - use direct class binding approach
 @media (min-width: 992px) {
-  // Default state: sidebar collapsed (no margin)
+  // Default state: sidebar collapsed (70px width)
   .wrapper {
-    margin-left: 0 !important;
-    width: 100% !important;
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+    transition: margin-left 0.3s ease, width 0.3s ease;
   }
   
-  // When sidebar is open: add margin and constrain width
+  // When sidebar is open/expanded: add full margin and constrain width
   .wrapper.sidebar-open {
     margin-left: 260px !important;
     width: calc(100% - 260px) !important;
