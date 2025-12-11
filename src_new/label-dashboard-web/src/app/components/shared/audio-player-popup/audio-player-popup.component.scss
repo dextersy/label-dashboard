@@ -139,6 +139,27 @@
   align-items: center;
   cursor: pointer;
   padding: 8px 0;
+  border-radius: 4px;
+  
+  // Focus state for keyboard navigation
+  &:focus {
+    outline: none;
+    
+    .progress-bar-bg {
+      box-shadow: 0 0 0 2px rgba(29, 199, 234, 0.5);
+    }
+    
+    .progress-bar-handle {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-50%) scale(1);
+    }
+  }
+  
+  &:focus-visible {
+    .progress-bar-bg {
+      box-shadow: 0 0 0 2px rgba(29, 199, 234, 0.8);
+    }
+  }
 }
 
 .progress-bar-bg {

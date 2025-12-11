@@ -95,6 +95,51 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
     document.addEventListener('mouseup', this.mouseUpHandler);
   }
 
+  /**
+   * Handle keyboard navigation for the progress bar slider.
+   * Supports: ArrowLeft/ArrowRight (±5%), ArrowUp/ArrowDown (±10%), Home (0%), End (100%)
+   */
+  onProgressBarKeyDown(event: KeyboardEvent): void {
+    const currentProgress = this.state?.progress || 0;
+    let newProgress: number | null = null;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        // Decrease by 5%
+        newProgress = Math.max(0, currentProgress - 5);
+        break;
+      case 'ArrowRight':
+      case 'ArrowUp':
+        // Increase by 5%
+        newProgress = Math.min(100, currentProgress + 5);
+        break;
+      case 'Home':
+        // Jump to start
+        newProgress = 0;
+        break;
+      case 'End':
+        // Jump to end
+        newProgress = 100;
+        break;
+      case 'PageDown':
+        // Decrease by 10%
+        newProgress = Math.max(0, currentProgress - 10);
+        break;
+      case 'PageUp':
+        // Increase by 10%
+        newProgress = Math.min(100, currentProgress + 10);
+        break;
+      default:
+        return; // Don't prevent default for other keys
+    }
+
+    if (newProgress !== null) {
+      event.preventDefault();
+      this.audioPlayerService.seek(newProgress);
+    }
+  }
+
   formatTime(seconds: number): string {
     return this.audioPlayerService.formatTime(seconds);
   }

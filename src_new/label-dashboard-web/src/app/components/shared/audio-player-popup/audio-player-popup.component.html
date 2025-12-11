@@ -22,8 +22,16 @@
       
       <div class="progress-bar-container" 
            #progressBar
+           role="slider"
+           tabindex="0"
+           [attr.aria-label]="'Audio seek slider for ' + trackTitle"
+           [attr.aria-valuemin]="0"
+           [attr.aria-valuemax]="100"
+           [attr.aria-valuenow]="state?.progress || 0"
+           [attr.aria-valuetext]="formatTime(state?.currentTime || 0) + ' of ' + formatTime(state?.duration || 0)"
            (mousedown)="onProgressBarMouseDown($event)"
-           (click)="onProgressBarClick($event)">
+           (click)="onProgressBarClick($event)"
+           (keydown)="onProgressBarKeyDown($event)">
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" [style.width.%]="state?.progress || 0"></div>
           <div class="progress-bar-handle" [style.left.%]="state?.progress || 0"></div>
