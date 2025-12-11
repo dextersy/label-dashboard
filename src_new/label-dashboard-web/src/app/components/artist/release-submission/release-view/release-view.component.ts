@@ -38,7 +38,8 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    this.audioPlayerService.stop();
+    // Note: Don't stop audio here - the AudioPlayerService is a singleton
+    // and the global popup player manages playback lifecycle
   }
 
   onEditClick(): void {

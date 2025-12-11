@@ -138,7 +138,7 @@ export class AudioPlayerService implements OnDestroy {
       const url = audioUrl || `${environment.apiUrl}/songs/${song.id}/audio`;
       
       const headers: Record<string, string> = {};
-      if (useAuth) {
+      if (useAuth && typeof localStorage !== 'undefined') {
         const token = localStorage.getItem('auth_token');
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
@@ -240,7 +240,9 @@ export class AudioPlayerService implements OnDestroy {
    */
   resume(): void {
     if (this.audioElement && this._pausedSongId !== null) {
-      this.audioElement.play();
+      this.audioElement.play().catch((err) => {
+        console.error('Audio playback failed to resume:', err);
+      });
       this._playingSongId = this._pausedSongId;
       this._pausedSongId = null;
       this.emitState();
@@ -256,14 +258,22 @@ export class AudioPlayerService implements OnDestroy {
   }
 
   /**
-   * Set callback for when audio ends
+   * Set callback for when audio ends.
+   * The callback is invoked when the current track finishes playing.
+   * Note: This callback persists until explicitly cleared via clearCallbacks().
+   * Multiple calls will override the previous callback (not add to a list).
+   * Ensure you call clearCallbacks() in ngOnDestroy to prevent stale closures.
    */
   onEnded(callback: () => void): void {
     this.onEndedCallback = callback;
   }
 
   /**
-   * Set callback for when an error occurs
+   * Set callback for when an error occurs during audio playback.
+   * The callback is invoked when audio fetching or playback fails.
+   * Note: This callback persists until explicitly cleared via clearCallbacks().
+   * Multiple calls will override the previous callback (not add to a list).
+   * Ensure you call clearCallbacks() in ngOnDestroy to prevent stale closures.
    */
   onError(callback: (error: any) => void): void {
     this.onErrorCallback = callback;

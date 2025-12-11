@@ -105,7 +105,7 @@ export class SongListComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    // Stop audio when component is destroyed
-    this.audioPlayerService.stop();
+    // Note: Don't stop audio here - the AudioPlayerService is a singleton
+    // and the global popup player manages playback lifecycle
   }
 }

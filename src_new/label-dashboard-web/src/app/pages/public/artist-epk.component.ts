@@ -98,6 +98,9 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       this.audioState = state;
     });
 
+    // Clear any existing callbacks before setting new ones to avoid stale closures
+    this.audioPlayerService.clearCallbacks();
+    
     // Set up callback for when audio ends (auto-advance to next track)
     this.audioPlayerService.onEnded(() => this.onAudioEnded());
     this.audioPlayerService.onError(() => this.onAudioError());

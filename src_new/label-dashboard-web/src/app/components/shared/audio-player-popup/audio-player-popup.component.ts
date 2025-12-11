@@ -18,6 +18,9 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
   isDragging: boolean = false;
 
   private subscription: Subscription | null = null;
+  // Store references for cleanup to prevent memory leaks
+  private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+  private mouseUpHandler: (() => void) | null = null;
 
   constructor(public audioPlayerService: AudioPlayerService) {}
 
@@ -33,6 +36,20 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
+    // Clean up any active drag event listeners to prevent memory leaks
+    this.cleanupDragListeners();
+  }
+
+  private cleanupDragListeners(): void {
+    if (this.mouseMoveHandler) {
+      document.removeEventListener('mousemove', this.mouseMoveHandler);
+      this.mouseMoveHandler = null;
+    }
+    if (this.mouseUpHandler) {
+      document.removeEventListener('mouseup', this.mouseUpHandler);
+      this.mouseUpHandler = null;
+    }
+    this.isDragging = false;
   }
 
   togglePlayPause(): void {
@@ -56,10 +73,13 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
   }
 
   onProgressBarMouseDown(event: MouseEvent): void {
+    // Clean up any existing listeners first
+    this.cleanupDragListeners();
+    
     this.isDragging = true;
     this.onProgressBarClick(event);
 
-    const mouseMoveHandler = (e: MouseEvent) => {
+    this.mouseMoveHandler = (e: MouseEvent) => {
       if (this.isDragging && this.progressBar) {
         const rect = this.progressBar.nativeElement.getBoundingClientRect();
         const percentage = ((e.clientX - rect.left) / rect.width) * 100;
@@ -67,14 +87,12 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
       }
     };
 
-    const mouseUpHandler = () => {
-      this.isDragging = false;
-      document.removeEventListener('mousemove', mouseMoveHandler);
-      document.removeEventListener('mouseup', mouseUpHandler);
+    this.mouseUpHandler = () => {
+      this.cleanupDragListeners();
     };
 
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
+    document.addEventListener('mousemove', this.mouseMoveHandler);
+    document.addEventListener('mouseup', this.mouseUpHandler);
   }
 
   formatTime(seconds: number): string {
