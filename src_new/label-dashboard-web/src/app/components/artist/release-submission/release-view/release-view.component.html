@@ -1,0 +1,151 @@
+<div class="release-view" *ngIf="release">
+  <!-- Header with Edit Button -->
+  <div class="release-view-header">
+    <div class="header-content">
+      <h2 class="release-title">{{ release.title }}</h2>
+      <span class="badge" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
+    </div>
+    <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
+      <i class="fas fa-edit"></i>
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="release-view-content">
+    <!-- Release Information Section -->
+    <section class="view-section">
+      <h3 class="section-title">
+        <i class="fas fa-info-circle me-2"></i>Release Information
+      </h3>
+      
+      <div class="info-grid">
+        <!-- Cover Art -->
+        <div class="cover-art-container">
+          <img 
+            *ngIf="release.cover_art" 
+            [src]="release.cover_art" 
+            [alt]="release.title"
+            class="cover-art">
+          <div *ngIf="!release.cover_art" class="cover-art-placeholder">
+            <i class="fas fa-compact-disc"></i>
+          </div>
+        </div>
+
+        <!-- Release Details -->
+        <div class="release-details">
+          <div class="detail-row">
+            <span class="detail-label">Catalog Number</span>
+            <span class="detail-value">{{ release.catalog_no || '—' }}</span>
+          </div>
+          <div class="detail-row" *ngIf="release.UPC">
+            <span class="detail-label">UPC</span>
+            <span class="detail-value">{{ release.UPC }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Release Date</span>
+            <span class="detail-value">{{ formatDate(release.release_date) }}</span>
+          </div>
+          <div class="detail-row" *ngIf="release.description">
+            <span class="detail-label">Description</span>
+            <span class="detail-value description" [innerHTML]="release.description"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Streaming Links -->
+      <div class="streaming-links" *ngIf="hasStreamingLinks()">
+        <h4 class="subsection-title">Streaming Links</h4>
+        <div class="links-row">
+          <a *ngIf="release.spotify_link" [href]="release.spotify_link" target="_blank" class="streaming-link spotify">
+            <i class="fab fa-spotify"></i> Spotify
+          </a>
+          <a *ngIf="release.apple_music_link" [href]="release.apple_music_link" target="_blank" class="streaming-link apple">
+            <i class="fab fa-apple"></i> Apple Music
+          </a>
+          <a *ngIf="release.youtube_link" [href]="release.youtube_link" target="_blank" class="streaming-link youtube">
+            <i class="fab fa-youtube"></i> YouTube
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Artists & Collaborators Section -->
+    <section class="view-section">
+      <h3 class="section-title">
+        <i class="fas fa-users me-2"></i>Artists & Royalties
+      </h3>
+      
+      <div class="artists-grid" *ngIf="release.artists?.length; else noArtists">
+        <div class="artist-tile" *ngFor="let artist of release.artists">
+          <div class="artist-details">
+            <span class="artist-name">{{ artist.name }}</span>
+            <div class="royalty-badge">
+              <span class="royalty-label">Royalty</span>
+              <span class="royalty-value">{{ getRoyaltyDisplay(artist) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #noArtists>
+        <p class="no-data">No artists assigned to this release.</p>
+      </ng-template>
+
+      <!-- Liner Notes -->
+      <div class="liner-notes" *ngIf="release.liner_notes">
+        <h4 class="subsection-title">Liner Notes</h4>
+        <div class="liner-notes-text" [innerHTML]="release.liner_notes"></div>
+      </div>
+    </section>
+
+    <!-- Track List Section -->
+    <section class="view-section">
+      <h3 class="section-title">
+        <i class="fas fa-music me-2"></i>Track List
+      </h3>
+      
+      <div class="track-list" *ngIf="release.songs?.length; else noTracks">
+        <div class="track-header">
+          <span class="track-num">#</span>
+          <span class="track-play"></span>
+          <span class="track-title">Title</span>
+          <span class="track-collaborators">Collaborators</span>
+          <span class="track-duration">Duration</span>
+        </div>
+        
+        <div class="track-row" *ngFor="let song of release.songs; let i = index">
+          <span class="track-num">{{ song.track_number || (i + 1) }}</span>
+          <span class="track-play">
+            <button 
+              *ngIf="song.audio_file"
+              class="btn btn-link btn-sm p-0" 
+              [class.text-warning]="isPlaying(song.id)"
+              [class.text-info]="isPaused(song.id)"
+              [class.text-success]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"
+              [disabled]="isLoading(song.id)"
+              (click)="togglePlay(song)"
+              [title]="isPlaying(song.id) ? 'Pause' : isPaused(song.id) ? 'Resume' : isLoading(song.id) ? 'Loading...' : 'Play'">
+              <i class="fa"
+                 [class.fa-play]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"
+                 [class.fa-pause]="isPlaying(song.id)"
+                 [class.fa-play-circle]="isPaused(song.id)"
+                 [class.fa-spinner]="isLoading(song.id)"
+                 [class.fa-spin]="isLoading(song.id)"></i>
+            </button>
+            <span *ngIf="!song.audio_file" class="text-muted">
+              <i class="fa fa-ban" title="No audio file"></i>
+            </span>
+          </span>
+          <span class="track-title">
+            <span class="song-name">{{ song.title }}</span>
+            <span class="song-isrc" *ngIf="song.isrc">{{ song.isrc }}</span>
+          </span>
+          <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
+          <span class="track-duration">{{ formatDuration(song.duration) }}</span>
+        </div>
+      </div>
+      <ng-template #noTracks>
+        <p class="no-data">No tracks added to this release.</p>
+      </ng-template>
+    </section>
+  </div>
+</div>

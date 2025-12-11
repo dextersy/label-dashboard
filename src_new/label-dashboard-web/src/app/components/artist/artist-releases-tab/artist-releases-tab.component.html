@@ -109,8 +109,8 @@
                   </button>
                   <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onEditRelease(release)"
-                          title="Edit Release Information">
-                    <i class="fa fa-edit"></i>
+                          [title]="release.status === 'Draft' ? 'Edit Release Information' : 'View Release'">
+                    <i class="fa" [ngClass]="release.status === 'Draft' ? 'fa-edit' : 'fa-eye'"></i>
                   </button>
                   <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onManageTrackList(release)"

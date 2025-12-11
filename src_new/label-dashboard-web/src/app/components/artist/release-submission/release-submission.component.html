@@ -1,6 +1,17 @@
 <div class="release-submission-page">
   <app-breadcrumb></app-breadcrumb>
-  <div class="release-form-layout">
+  
+  <!-- Read-Only View for non-Draft releases -->
+  <ng-container *ngIf="showReadOnlyView && releaseForView">
+    <app-release-view
+      [release]="releaseForView"
+      [isAdmin]="isUserAdmin"
+      (editClicked)="onEnableEditMode()">
+    </app-release-view>
+  </ng-container>
+  
+  <!-- Edit Form for Draft releases or admin edit mode -->
+  <div class="release-form-layout" *ngIf="!showReadOnlyView">
     <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
     <nav class="release-form-sidebar mt-3">
       <div class="sidebar-items">

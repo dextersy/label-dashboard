@@ -4,7 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Artist } from '../../artist/artist-selection/artist-selection.component';
-import { ReleaseService } from '../../../services/release.service';
+import { ReleaseService, Release } from '../../../services/release.service';
 import { AuthService } from '../../../services/auth.service';
 import { SongService } from '../../../services/song.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -15,6 +15,7 @@ import { ReleaseInfoSectionComponent, ReleaseInfoData } from './release-info-sec
 import { TrackListSectionComponent, TrackListData } from './track-list-section/track-list-section.component';
 import { AlbumCreditsSectionComponent, AlbumCreditsData } from './album-credits-section/album-credits-section.component';
 import { SubmissionSectionComponent } from './submission-section/submission-section.component';
+import { ReleaseViewComponent } from './release-view/release-view.component';
 import { ValidationResult } from '../../../services/release-validation.service';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { ReleaseSubmittedService } from '../../../services/release-submitted.service';
@@ -30,7 +31,8 @@ export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
         ReleaseInfoSectionComponent,
         AlbumCreditsSectionComponent,
         TrackListSectionComponent,
-        SubmissionSectionComponent
+        SubmissionSectionComponent,
+        ReleaseViewComponent
     ],
     templateUrl: './release-submission.component.html',
     styleUrl: './release-submission.component.scss'
@@ -52,6 +54,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   }
   isSubmitting = false;
   isEditing = false; // Track if we're editing an existing release
+  showReadOnlyView = false; // Track if we should show read-only view for non-draft releases
 
   // Section data
   releaseInfoData: ReleaseInfoData | null = null;
@@ -59,6 +62,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   trackListData: TrackListData | null = null;
   releaseId: number | null = null;
   editingRelease: any = null; // Store the full release data when editing
+  releaseForView: Release | null = null; // Release data formatted for the view component
 
   // Validation states
   isReleaseInfoValid = false;
@@ -138,6 +142,13 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         
         // Set the release data for editing
         this.releaseId = releaseId;
+        
+        // Check if this is a non-draft release - show read-only view
+        if (response.release.status !== 'Draft') {
+          this.showReadOnlyView = true;
+          this.releaseForView = response.release;
+          return;
+        }
         
         // Initialize the form data from the loaded release
         this.releaseInfoData = {
@@ -503,5 +514,42 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     this.trackListValidation.errors.forEach(error => messages.push(`❌ ${error.message}`));
     this.trackListValidation.warnings.forEach(warning => messages.push(`⚠️ ${warning.message}`));
     return messages.join('\n');
+  }
+
+  // Check if current user is admin
+  get isUserAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  // Switch from read-only view to edit mode (admin only)
+  onEnableEditMode(): void {
+    if (!this.isUserAdmin) return;
+    
+    this.showReadOnlyView = false;
+    
+    // Initialize the form data from the loaded release
+    if (this.editingRelease) {
+      this.releaseInfoData = {
+        title: this.editingRelease.title,
+        catalog_no: this.editingRelease.catalog_no || '',
+        UPC: this.editingRelease.UPC || '',
+        release_date: this.editingRelease.release_date,
+        description: this.editingRelease.description || '',
+        status: this.editingRelease.status,
+        cover_art: null,
+        cover_art_preview: this.editingRelease.cover_art || null,
+        artists: this.editingRelease.artists || []
+      };
+      
+      // Mark as valid since we're editing existing data
+      this.isReleaseInfoValid = true;
+      this.isAlbumCreditsValid = true;
+      
+      // Start with release info section
+      this.activeSection = 'info';
+
+      // Perform initial validation
+      this.performInitialValidation(this.editingRelease, this.editingRelease.songs || []);
+    }
   }
 }
