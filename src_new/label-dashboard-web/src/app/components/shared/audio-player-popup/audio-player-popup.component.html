@@ -1,0 +1,41 @@
+<div class="audio-player-popup" *ngIf="isVisible" [class.loading]="state?.isLoading">
+  <!-- Track Info -->
+  <div class="track-info">
+    <div class="track-title">{{ trackTitle }}</div>
+    <div class="track-artist" *ngIf="trackArtist">{{ trackArtist }}</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="player-controls">
+    <!-- Play/Pause Button -->
+    <button class="control-btn play-pause-btn" (click)="togglePlayPause()" [disabled]="state?.isLoading">
+      <i class="fa" [ngClass]="{
+        'fa-spinner fa-spin': state?.isLoading,
+        'fa-pause': state?.isPlaying && !state?.isLoading,
+        'fa-play': state?.isPaused && !state?.isLoading
+      }"></i>
+    </button>
+
+    <!-- Progress Section -->
+    <div class="progress-section">
+      <span class="time current-time">{{ formatTime(state?.currentTime || 0) }}</span>
+      
+      <div class="progress-bar-container" 
+           #progressBar
+           (mousedown)="onProgressBarMouseDown($event)"
+           (click)="onProgressBarClick($event)">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" [style.width.%]="state?.progress || 0"></div>
+          <div class="progress-bar-handle" [style.left.%]="state?.progress || 0"></div>
+        </div>
+      </div>
+      
+      <span class="time duration">{{ formatTime(state?.duration || 0) }}</span>
+    </div>
+
+    <!-- Close Button -->
+    <button class="control-btn close-btn" (click)="stop()" title="Close">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+</div>

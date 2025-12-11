@@ -10,6 +10,7 @@ import { AppNotificationBannerComponent } from './components/shared/app-notifica
 import { ConfirmationDialogComponent } from './components/shared/confirmation-dialog/confirmation-dialog.component';
 import { EventPublishedModalComponent } from './components/shared/event-published-modal/event-published-modal.component';
 import { ReleaseSubmittedModalComponent } from './components/shared/release-submitted-modal/release-submitted-modal.component';
+import { AudioPlayerPopupComponent } from './components/shared/audio-player-popup/audio-player-popup.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
@@ -22,7 +23,7 @@ import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
-    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent, EventPublishedModalComponent, ReleaseSubmittedModalComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent, EventPublishedModalComponent, ReleaseSubmittedModalComponent, AudioPlayerPopupComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
