@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { AudioPlayerService, AudioPlayerState } from '../../../services/audio-player.service';
@@ -22,13 +22,18 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
   private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
   private mouseUpHandler: (() => void) | null = null;
 
-  constructor(public audioPlayerService: AudioPlayerService) {}
+  constructor(
+    public audioPlayerService: AudioPlayerService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.subscription = this.audioPlayerService.state$.subscribe(state => {
       this.state = state;
       // Show popup when playing or paused, hide when stopped
       this.isVisible = state.isPlaying || state.isPaused || state.isLoading;
+      // Force change detection as state changes come from outside Angular zone
+      this.cdr.detectChanges();
     });
   }
 
@@ -58,6 +63,24 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
     } else if (this.state?.isPaused && this.state.currentTrack) {
       this.audioPlayerService.resume();
     }
+  }
+
+  /**
+   * Close the player and perform extensive cleanup to avoid memory leaks.
+   * This stops audio playback, clears all callbacks, and cleans up event listeners.
+   */
+  close(): void {
+    // Clean up drag listeners first
+    this.cleanupDragListeners();
+    
+    // Stop audio playback and clean up all audio resources
+    this.audioPlayerService.stop();
+    
+    // Clear any registered callbacks to prevent stale closures
+    this.audioPlayerService.clearCallbacks();
+    
+    // Hide the player immediately
+    this.isVisible = false;
   }
 
   stop(): void {

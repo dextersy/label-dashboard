@@ -1,4 +1,9 @@
 <div class="audio-player-popup" *ngIf="isVisible" [class.loading]="state?.isLoading">
+  <!-- Close Button (upper right) -->
+  <button class="close-btn-corner" (click)="close()" title="Close player" aria-label="Close audio player">
+    <i class="fa fa-times"></i>
+  </button>
+
   <!-- Track Info -->
   <div class="track-info">
     <div class="track-title">{{ trackTitle }}</div>
@@ -40,10 +45,5 @@
       
       <span class="time duration">{{ formatTime(state?.duration || 0) }}</span>
     </div>
-
-    <!-- Close Button -->
-    <button class="control-btn close-btn" (click)="stop()" title="Close">
-      <i class="fa fa-times"></i>
-    </button>
   </div>
 </div>

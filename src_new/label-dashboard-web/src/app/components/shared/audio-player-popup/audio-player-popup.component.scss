@@ -6,6 +6,7 @@
   background: #ffffff;
   color: #333;
   padding: 14px 20px;
+  padding-top: 20px; // Extra space for corner close button
   display: flex;
   align-items: center;
   gap: 16px;
@@ -18,6 +19,35 @@
 
   &.loading {
     opacity: 0.95;
+  }
+}
+
+// Corner close button (upper right)
+.close-btn-corner {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #666;
+  }
+  
+  &:active {
+    background: rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -107,16 +137,7 @@
   }
 }
 
-.close-btn {
-  opacity: 0.6;
-  color: #888;
 
-  &:hover {
-    opacity: 1;
-    background: rgba(255, 74, 85, 0.1);
-    color: #FF4A55;
-  }
-}
 
 .progress-section {
   display: flex;

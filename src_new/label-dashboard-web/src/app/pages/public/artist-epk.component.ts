@@ -403,6 +403,13 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
       } else if (this.audioState?.isPlaying) {
         // Pause playback
         this.audioPlayerService.pause();
+      } else {
+        // Neither playing nor paused (stopped state) - restart the release
+        const firstSongIndex = release.songs.findIndex((song: any) => song.has_audio);
+        if (firstSongIndex === -1) return;
+        
+        this.playingSongIndex = firstSongIndex;
+        this.playAudio(release.songs[firstSongIndex]);
       }
     } else {
       // Stop current audio if playing different release
