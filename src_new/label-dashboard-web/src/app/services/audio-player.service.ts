@@ -316,12 +316,15 @@ export class AudioPlayerService implements OnDestroy {
   }
 
   /**
-   * Seek to a specific time in seconds
+   * Seek to a specific time in seconds.
+   * Value is clamped between 0 and the current duration.
    */
   seekToTime(seconds: number): void {
     if (this.audioElement) {
-      this.audioElement.currentTime = seconds;
-      this._currentTime = seconds;
+      // Clamp the value between 0 and duration to prevent unexpected behavior
+      const clampedSeconds = Math.max(0, Math.min(seconds, this._duration || 0));
+      this.audioElement.currentTime = clampedSeconds;
+      this._currentTime = clampedSeconds;
       this.emitState();
     }
   }
