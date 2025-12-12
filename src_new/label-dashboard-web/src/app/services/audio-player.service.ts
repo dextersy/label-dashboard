@@ -42,6 +42,7 @@ export class AudioPlayerService implements OnDestroy {
   private _currentTime: number = 0;
   private _duration: number = 0;
   private _currentTrack: PlayableTrack | null = null;
+  private _lastEmittedProgress: number = 0;
 
   // Observable state for components to subscribe to
   private stateSubject = new BehaviorSubject<AudioPlayerState>(this.getState());
@@ -239,12 +240,15 @@ export class AudioPlayerService implements OnDestroy {
    * Pause the currently playing audio
    */
   pause(): void {
-    if (this.audioElement && this._playingSongId !== null) {
-      this.audioElement.pause();
-      this._pausedSongId = this._playingSongId;
-      this._playingSongId = null;
+    if (!this.audioElement || this._playingSongId === null) {
+      // Emit state even on early return to ensure UI consistency
       this.emitState();
+      return;
     }
+    this.audioElement.pause();
+    this._pausedSongId = this._playingSongId;
+    this._playingSongId = null;
+    this.emitState();
   }
 
   /**
@@ -379,6 +383,10 @@ export class AudioPlayerService implements OnDestroy {
     this._currentTime = 0;
     this._duration = 0;
     this._currentTrack = null;
+    this._lastEmittedProgress = 0;
+
+    // Clear callbacks to prevent stale closures from being invoked
+    this.clearCallbacks();
   }
 
   private handleEnded(): void {
@@ -405,7 +413,14 @@ export class AudioPlayerService implements OnDestroy {
   private handleTimeUpdate(): void {
     if (this.audioElement) {
       this._currentTime = this.audioElement.currentTime;
-      this.emitState();
+      
+      // Throttle state emissions: only emit when progress changes by ≥1%
+      // This reduces change detection cycles from ~4x/sec to only when meaningful
+      const currentProgress = this._duration > 0 ? (this._currentTime / this._duration) * 100 : 0;
+      if (Math.abs(currentProgress - this._lastEmittedProgress) >= 1) {
+        this._lastEmittedProgress = currentProgress;
+        this.emitState();
+      }
     }
   }
 
