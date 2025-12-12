@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
+import { Subscription } from 'rxjs';
 import { Song } from '../../../services/song.service';
-import { environment } from 'environments/environment';
+import { AudioPlayerService } from '../../../services/audio-player.service';
 
 @Component({
     selector: 'app-song-list',
@@ -10,7 +11,7 @@ import { environment } from 'environments/environment';
     templateUrl: './song-list.component.html',
     styleUrl: './song-list.component.scss'
 })
-export class SongListComponent implements OnDestroy {
+export class SongListComponent implements OnInit, OnDestroy {
   @Input() songs: Song[] = [];
   @Input() isAdmin: boolean = false;
   @Input() releaseStatus: string = 'Draft';
@@ -21,10 +22,21 @@ export class SongListComponent implements OnDestroy {
   @Output() reorderSongs = new EventEmitter<Song[]>();
 
   playingSongId: number | null = null;
-  private audioElement: HTMLAudioElement | null = null;
-  private currentBlobUrl: string | null = null;
   loadingSongId: number | null = null;
   pausedSongId: number | null = null;
+
+  private subscription: Subscription | null = null;
+
+  constructor(private audioPlayerService: AudioPlayerService) {}
+
+  ngOnInit(): void {
+    // Subscribe to audio player state changes
+    this.subscription = this.audioPlayerService.state$.subscribe(state => {
+      this.playingSongId = state.playingSongId;
+      this.loadingSongId = state.loadingSongId;
+      this.pausedSongId = state.pausedSongId;
+    });
+  }
 
   // For non-admin users on non-draft releases, song list modifications are restricted
   // This includes: delete songs, reorder songs, upload audio
@@ -81,100 +93,19 @@ export class SongListComponent implements OnDestroy {
 
   onPlayAudio(song: Song): void {
     if (!song.id || !song.audio_file) return;
-
-    // If clicking on the currently playing song, pause it
-    if (this.playingSongId === song.id && this.audioElement && !this.audioElement.paused) {
-      this.audioElement.pause();
-      this.pausedSongId = song.id;
-      this.playingSongId = null;
-      return;
-    }
-
-    // If clicking on a paused song, resume it
-    if (this.pausedSongId === song.id && this.audioElement && this.audioElement.paused) {
-      this.audioElement.play();
-      this.playingSongId = song.id;
-      this.pausedSongId = null;
-      return;
-    }
-
-    // Stop any currently playing audio
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement = null;
-    }
-
-    // Revoke previous blob URL to prevent memory leak
-    if (this.currentBlobUrl) {
-      URL.revokeObjectURL(this.currentBlobUrl);
-      this.currentBlobUrl = null;
-    }
-
-    // Clear paused state for different song
-    this.pausedSongId = null;
-
-    // Set loading state
-    this.loadingSongId = song.id;
-
-    // Create new audio element and play
-    const token = localStorage.getItem('auth_token');
-    const audioUrl = `${environment.apiUrl}/songs/${song.id}/audio`;
-
-    this.audioElement = new Audio();
-
-    // Set authorization header by fetching with credentials
-    fetch(audioUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(response => response.blob())
-      .then(blob => {
-        if (this.audioElement) {
-          this.currentBlobUrl = URL.createObjectURL(blob);
-          this.audioElement.src = this.currentBlobUrl;
-          this.playingSongId = song.id || null;
-          this.loadingSongId = null; // Clear loading state
-          this.audioElement.play();
-
-          // Reset playing state when audio ends
-          this.audioElement.onended = () => {
-            this.playingSongId = null;
-            this.pausedSongId = null;
-          };
-
-          // Handle errors
-          this.audioElement.onerror = () => {
-            console.error('Error playing audio');
-            this.playingSongId = null;
-            this.pausedSongId = null;
-            this.loadingSongId = null; // Clear loading state on error
-          };
-        }
-      })
-      .catch(error => {
-        console.error('Error loading audio:', error);
-        this.playingSongId = null;
-        this.pausedSongId = null;
-        this.loadingSongId = null; // Clear loading state on error
-      });
+    this.audioPlayerService.togglePlay({ 
+      id: song.id, 
+      audio_file: song.audio_file,
+      title: song.title
+    });
   }
 
   ngOnDestroy(): void {
-    // Clean up audio element when component is destroyed
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement = null;
+    // Unsubscribe from audio player state
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
-
-    // Revoke blob URL to prevent memory leak
-    if (this.currentBlobUrl) {
-      URL.revokeObjectURL(this.currentBlobUrl);
-      this.currentBlobUrl = null;
-    }
-
-    // Clear loading and paused states
-    this.loadingSongId = null;
-    this.pausedSongId = null;
+    // Note: Don't stop audio here - the AudioPlayerService is a singleton
+    // and the global popup player manages playback lifecycle
   }
 }

@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, SecurityContext } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
 import { Release } from '../../../../services/release.service';
-import { environment } from '../../../../../environments/environment';
+import { AudioPlayerService } from '../../../../services/audio-player.service';
 
 @Component({
   selector: 'app-release-view',
@@ -16,19 +17,33 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   @Input() isAdmin: boolean = false;
   @Output() editClicked = new EventEmitter<void>();
 
-  // Audio player state
+  // Audio player state (synced from service)
   playingSongId: number | null = null;
   loadingSongId: number | null = null;
   pausedSongId: number | null = null;
-  private audioElement: HTMLAudioElement | null = null;
-  private currentBlobUrl: string | null = null;
+  
+  private subscription: Subscription | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private audioPlayerService: AudioPlayerService,
+    private sanitizer: DomSanitizer
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Subscribe to audio player state changes
+    this.subscription = this.audioPlayerService.state$.subscribe(state => {
+      this.playingSongId = state.playingSongId;
+      this.loadingSongId = state.loadingSongId;
+      this.pausedSongId = state.pausedSongId;
+    });
+  }
 
   ngOnDestroy(): void {
-    this.cleanupAudio();
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+    // Note: Don't stop audio here - the AudioPlayerService is a singleton
+    // and the global popup player manages playback lifecycle
   }
 
   onEditClick(): void {
@@ -69,6 +84,18 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Sanitize HTML content to prevent XSS attacks.
+   * Uses Angular's DomSanitizer.sanitize() to actually sanitize the content,
+   * stripping dangerous elements and attributes while preserving safe HTML.
+   */
+  sanitizeHtml(content: string | undefined): SafeHtml | string {
+    if (!content) return '';
+    // Use SecurityContext.HTML to properly sanitize the content
+    // This strips dangerous elements like <script> while preserving safe HTML
+    return this.sanitizer.sanitize(SecurityContext.HTML, content) || '';
+  }
+
   getRoyaltyDisplay(artist: any): string {
     const royalty = artist.ReleaseArtist;
     if (!royalty) return 'N/A';
@@ -82,98 +109,23 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
     return !!(this.release?.spotify_link || this.release?.apple_music_link || this.release?.youtube_link);
   }
 
+  // Get the primary artist name for the release
+  private getArtistName(): string {
+    if (this.release?.artists && this.release.artists.length > 0) {
+      return this.release.artists[0].name;
+    }
+    return '';
+  }
+
   // Audio player methods
-  async togglePlay(song: any): Promise<void> {
+  togglePlay(song: any): void {
     if (!song.audio_file) return;
-
-    // If this song is currently playing, pause it
-    if (this.playingSongId === song.id) {
-      this.pauseAudio();
-      return;
-    }
-
-    // If this song is paused, resume it
-    if (this.pausedSongId === song.id && this.audioElement) {
-      this.resumeAudio();
-      return;
-    }
-
-    // Otherwise, play this new song
-    await this.playSong(song);
-  }
-
-  private async playSong(song: any): Promise<void> {
-    // Stop any currently playing audio
-    this.cleanupAudio();
-
-    this.loadingSongId = song.id;
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`
-      });
-
-      const audioUrl = `${environment.apiUrl}/songs/${song.id}/audio`;
-      
-      const blob = await this.http.get(audioUrl, {
-        headers,
-        responseType: 'blob'
-      }).toPromise();
-
-      if (blob) {
-        this.currentBlobUrl = URL.createObjectURL(blob);
-        this.audioElement = new Audio(this.currentBlobUrl);
-        
-        this.audioElement.onended = () => {
-          this.playingSongId = null;
-          this.pausedSongId = null;
-        };
-
-        this.audioElement.onerror = () => {
-          console.error('Audio playback error');
-          this.cleanupAudio();
-        };
-
-        await this.audioElement.play();
-        this.playingSongId = song.id;
-        this.pausedSongId = null;
-      }
-    } catch (error) {
-      console.error('Error loading audio:', error);
-    } finally {
-      this.loadingSongId = null;
-    }
-  }
-
-  private pauseAudio(): void {
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.pausedSongId = this.playingSongId;
-      this.playingSongId = null;
-    }
-  }
-
-  private resumeAudio(): void {
-    if (this.audioElement) {
-      this.audioElement.play();
-      this.playingSongId = this.pausedSongId;
-      this.pausedSongId = null;
-    }
-  }
-
-  private cleanupAudio(): void {
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement = null;
-    }
-    if (this.currentBlobUrl) {
-      URL.revokeObjectURL(this.currentBlobUrl);
-      this.currentBlobUrl = null;
-    }
-    this.playingSongId = null;
-    this.pausedSongId = null;
-    this.loadingSongId = null;
+    this.audioPlayerService.togglePlay({ 
+      id: song.id, 
+      audio_file: song.audio_file,
+      title: song.title,
+      artist_name: this.getArtistName()
+    });
   }
 
   isPlaying(songId: number): boolean {

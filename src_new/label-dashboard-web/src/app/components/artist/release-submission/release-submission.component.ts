@@ -151,17 +151,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         }
         
         // Initialize the form data from the loaded release
-        this.releaseInfoData = {
-          title: response.release.title,
-          catalog_no: response.release.catalog_no || '',
-          UPC: response.release.UPC || '',
-          release_date: response.release.release_date,
-          description: response.release.description || '',
-          status: response.release.status,
-          cover_art: null, // File not returned from API
-          cover_art_preview: response.release.cover_art || null,
-          artists: response.release.artists || []
-        };
+        this.initReleaseInfoFromRelease(response.release);
 
         // Don't set albumCreditsData here - let the album-credits-section component process and emit it
         
@@ -529,17 +519,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     
     // Initialize the form data from the loaded release
     if (this.editingRelease) {
-      this.releaseInfoData = {
-        title: this.editingRelease.title,
-        catalog_no: this.editingRelease.catalog_no || '',
-        UPC: this.editingRelease.UPC || '',
-        release_date: this.editingRelease.release_date,
-        description: this.editingRelease.description || '',
-        status: this.editingRelease.status,
-        cover_art: null,
-        cover_art_preview: this.editingRelease.cover_art || null,
-        artists: this.editingRelease.artists || []
-      };
+      this.initReleaseInfoFromRelease(this.editingRelease);
       
       // Mark as valid since we're editing existing data
       this.isReleaseInfoValid = true;
@@ -551,5 +531,23 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
       // Perform initial validation
       this.performInitialValidation(this.editingRelease, this.editingRelease.songs || []);
     }
+  }
+
+  /**
+   * Initialize releaseInfoData from a Release object.
+   * Extracted to avoid code duplication between loadRelease() and onEnableEditMode().
+   */
+  private initReleaseInfoFromRelease(release: Release): void {
+    this.releaseInfoData = {
+      title: release.title,
+      catalog_no: release.catalog_no || '',
+      UPC: release.UPC || '',
+      release_date: release.release_date,
+      description: release.description || '',
+      status: release.status,
+      cover_art: null, // File not returned from API
+      cover_art_preview: release.cover_art || null,
+      artists: release.artists || []
+    };
   }
 }

@@ -1,0 +1,56 @@
+<div class="audio-player-popup" *ngIf="isVisible" [class.loading]="state?.isLoading">
+  <!-- Close Button (upper right) -->
+  <button class="close-btn-corner" (click)="close()" title="Close player" aria-label="Close audio player">
+    <i class="fa fa-times"></i>
+  </button>
+
+  <!-- Track Info -->
+  <div class="track-info">
+    <div class="track-title">{{ trackTitle }}</div>
+    <div class="track-artist" *ngIf="trackArtist">{{ trackArtist }}</div>
+    <!-- ARIA live region for screen reader track change announcements -->
+    <div class="sr-only" aria-live="polite" aria-atomic="true">
+      Now playing: {{ trackTitle }}<span *ngIf="trackArtist"> by {{ trackArtist }}</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="player-controls">
+    <!-- Play/Pause Button -->
+    <button class="control-btn play-pause-btn" 
+            (click)="togglePlayPause()" 
+            [disabled]="state?.isLoading"
+            [attr.aria-label]="state?.isLoading ? 'Loading' : state?.isPlaying ? 'Pause' : 'Play'">
+      <i class="fa" [ngClass]="{
+        'fa-spinner fa-spin': state?.isLoading,
+        'fa-pause': state?.isPlaying && !state?.isLoading,
+        'fa-play': state?.isPaused && !state?.isLoading
+      }"></i>
+    </button>
+
+    <!-- Progress Section -->
+    <div class="progress-section">
+      <span class="time current-time">{{ formatTime(state?.currentTime || 0) }}</span>
+      
+      <div class="progress-bar-container" 
+           #progressBar
+           role="slider"
+           tabindex="0"
+           [attr.aria-label]="'Audio seek slider for ' + trackTitle"
+           [attr.aria-valuemin]="0"
+           [attr.aria-valuemax]="state?.duration || 0"
+           [attr.aria-valuenow]="state?.currentTime || 0"
+           [attr.aria-valuetext]="formatTime(state?.currentTime || 0) + ' of ' + formatTime(state?.duration || 0)"
+           (mousedown)="onProgressBarMouseDown($event)"
+           (click)="onProgressBarClick($event)"
+           (keydown)="onProgressBarKeyDown($event)">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" [style.width.%]="state?.progress || 0"></div>
+          <div class="progress-bar-handle" [style.left.%]="state?.progress || 0"></div>
+        </div>
+      </div>
+      
+      <span class="time duration">{{ formatTime(state?.duration || 0) }}</span>
+    </div>
+  </div>
+</div>
