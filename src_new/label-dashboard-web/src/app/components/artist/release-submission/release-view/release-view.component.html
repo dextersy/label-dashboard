@@ -125,9 +125,8 @@
               (click)="togglePlay(song)"
               [title]="isPlaying(song.id) ? 'Pause' : isPaused(song.id) ? 'Resume' : isLoading(song.id) ? 'Loading...' : 'Play'">
               <i class="fa"
-                 [class.fa-play]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"
+                 [class.fa-play]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id) || isPaused(song.id)"
                  [class.fa-pause]="isPlaying(song.id)"
-                 [class.fa-play-circle]="isPaused(song.id)"
                  [class.fa-spinner]="isLoading(song.id)"
                  [class.fa-spin]="isLoading(song.id)"></i>
             </button>

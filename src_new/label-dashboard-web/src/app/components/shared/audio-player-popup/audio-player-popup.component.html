@@ -8,6 +8,10 @@
   <div class="track-info">
     <div class="track-title">{{ trackTitle }}</div>
     <div class="track-artist" *ngIf="trackArtist">{{ trackArtist }}</div>
+    <!-- ARIA live region for screen reader track change announcements -->
+    <div class="sr-only" aria-live="polite" aria-atomic="true">
+      Now playing: {{ trackTitle }}<span *ngIf="trackArtist"> by {{ trackArtist }}</span>
+    </div>
   </div>
 
   <!-- Controls -->
@@ -31,8 +35,8 @@
            tabindex="0"
            [attr.aria-label]="'Audio seek slider for ' + trackTitle"
            [attr.aria-valuemin]="0"
-           [attr.aria-valuemax]="100"
-           [attr.aria-valuenow]="state?.progress || 0"
+           [attr.aria-valuemax]="state?.duration || 0"
+           [attr.aria-valuenow]="state?.currentTime || 0"
            [attr.aria-valuetext]="formatTime(state?.currentTime || 0) + ' of ' + formatTime(state?.duration || 0)"
            (mousedown)="onProgressBarMouseDown($event)"
            (click)="onProgressBarClick($event)"
