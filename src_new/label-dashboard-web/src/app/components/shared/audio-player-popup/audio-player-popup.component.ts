@@ -120,7 +120,7 @@ export class AudioPlayerPopupComponent implements OnInit, OnDestroy {
 
   /**
    * Handle keyboard navigation for the progress bar slider.
-   * Supports: ArrowLeft/ArrowRight (±5%), ArrowUp/ArrowDown (±10%), Home (0%), End (100%)
+   * Supports: ArrowLeft/ArrowRight/ArrowUp/ArrowDown (±5%), PageUp/PageDown (±10%), Home (0%), End (100%)
    */
   onProgressBarKeyDown(event: KeyboardEvent): void {
     const currentProgress = this.state?.progress || 0;

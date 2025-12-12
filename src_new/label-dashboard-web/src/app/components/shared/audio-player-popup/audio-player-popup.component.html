@@ -17,7 +17,10 @@
   <!-- Controls -->
   <div class="player-controls">
     <!-- Play/Pause Button -->
-    <button class="control-btn play-pause-btn" (click)="togglePlayPause()" [disabled]="state?.isLoading">
+    <button class="control-btn play-pause-btn" 
+            (click)="togglePlayPause()" 
+            [disabled]="state?.isLoading"
+            [attr.aria-label]="state?.isLoading ? 'Loading' : state?.isPlaying ? 'Pause' : 'Play'">
       <i class="fa" [ngClass]="{
         'fa-spinner fa-spin': state?.isLoading,
         'fa-pause': state?.isPlaying && !state?.isLoading,

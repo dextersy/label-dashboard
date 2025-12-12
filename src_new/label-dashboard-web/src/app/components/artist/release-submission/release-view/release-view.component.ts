@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, SecurityContext } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
@@ -86,11 +86,14 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
 
   /**
    * Sanitize HTML content to prevent XSS attacks.
-   * Angular's DomSanitizer marks the content as trusted after sanitization.
+   * Uses Angular's DomSanitizer.sanitize() to actually sanitize the content,
+   * stripping dangerous elements and attributes while preserving safe HTML.
    */
-  sanitizeHtml(content: string | undefined): SafeHtml {
+  sanitizeHtml(content: string | undefined): SafeHtml | string {
     if (!content) return '';
-    return this.sanitizer.bypassSecurityTrustHtml(content);
+    // Use SecurityContext.HTML to properly sanitize the content
+    // This strips dangerous elements like <script> while preserving safe HTML
+    return this.sanitizer.sanitize(SecurityContext.HTML, content) || '';
   }
 
   getRoyaltyDisplay(artist: any): string {

@@ -373,6 +373,9 @@ export class AudioPlayerService implements OnDestroy {
     // Clean up audio element
     if (this.audioElement) {
       this.audioElement.pause();
+      // Clear src to ensure browser releases media resources and stops network activity
+      this.audioElement.src = '';
+      this.audioElement.load(); // Force the browser to release the resource
       this.audioElement = null;
     }
 
