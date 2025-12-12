@@ -84,6 +84,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   playingReleaseId: number | null = null;
   playingSongIndex: number = 0;
   audioState: AudioPlayerState | null = null;
+  private isAutoAdvancing: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -441,6 +442,11 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   private onAudioEnded(): void {
+    // Prevent concurrent execution if already auto-advancing
+    if (this.isAutoAdvancing) {
+      return;
+    }
+
     // Auto-play next track if available
     const currentRelease = this.epkData?.releases.find(r => r.id === this.playingReleaseId);
     if (!currentRelease || !currentRelease.songs) {
@@ -451,26 +457,34 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     // Store the release ID to check if playback was cancelled
     const currentReleaseId = currentRelease.id;
 
-    // Find next song with audio
-    let nextIndex = this.playingSongIndex + 1;
-    while (nextIndex < currentRelease.songs.length) {
-      // Check if playback was stopped/cancelled
-      if (this.playingReleaseId !== currentReleaseId) {
-        return;
+    // Set guard flag
+    this.isAutoAdvancing = true;
+
+    try {
+      // Find next song with audio
+      let nextIndex = this.playingSongIndex + 1;
+      while (nextIndex < currentRelease.songs.length) {
+        // Check if playback was stopped/cancelled
+        if (this.playingReleaseId !== currentReleaseId) {
+          return;
+        }
+
+        const nextSong = currentRelease.songs[nextIndex];
+        if (nextSong.has_audio) {
+          this.playingSongIndex = nextIndex;
+          this.playAudio(nextSong);
+          return;
+        }
+        nextIndex++;
       }
 
-      const nextSong = currentRelease.songs[nextIndex];
-      if (nextSong.has_audio) {
-        this.playingSongIndex = nextIndex;
-        this.playAudio(nextSong);
-        return;
-      }
-      nextIndex++;
+      // No more songs with audio - reset state
+      this.playingReleaseId = null;
+      this.playingSongIndex = 0;
+    } finally {
+      // Always clear the guard flag
+      this.isAutoAdvancing = false;
     }
-
-    // No more songs with audio - reset state
-    this.playingReleaseId = null;
-    this.playingSongIndex = 0;
   }
 
   private onAudioError(): void {

@@ -189,7 +189,19 @@ export class AudioPlayerService implements OnDestroy {
       this.audioElement.addEventListener('timeupdate', this.audioTimeUpdateHandler);
       this.audioElement.addEventListener('loadedmetadata', this.audioLoadedMetadataHandler);
 
-      await this.audioElement.play();
+      try {
+        await this.audioElement.play();
+      } catch (playError) {
+        // Handle play() rejection (e.g., autoplay policy, user interaction required)
+        console.error('Error starting playback:', playError);
+        this._loadingSongId = null;
+        this.cleanup();
+        this.emitState();
+        if (this.onErrorCallback) {
+          this.onErrorCallback(playError);
+        }
+        return;
+      }
 
       this._playingSongId = song.id;
       this._pausedSongId = null;

@@ -47,7 +47,7 @@
           </div>
           <div class="detail-row" *ngIf="release.description">
             <span class="detail-label">Description</span>
-            <span class="detail-value description" [innerHTML]="release.description"></span>
+            <span class="detail-value description" [innerHTML]="sanitizeHtml(release.description)"></span>
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@
       <!-- Liner Notes -->
       <div class="liner-notes" *ngIf="release.liner_notes">
         <h4 class="subsection-title">Liner Notes</h4>
-        <div class="liner-notes-text" [innerHTML]="release.liner_notes"></div>
+        <div class="liner-notes-text" [innerHTML]="sanitizeHtml(release.liner_notes)"></div>
       </div>
     </section>
 

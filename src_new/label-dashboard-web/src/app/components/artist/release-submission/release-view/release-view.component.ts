@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { Release } from '../../../../services/release.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
@@ -23,7 +24,10 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   
   private subscription: Subscription | null = null;
 
-  constructor(private audioPlayerService: AudioPlayerService) {}
+  constructor(
+    private audioPlayerService: AudioPlayerService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void {
     // Subscribe to audio player state changes
@@ -78,6 +82,15 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
       month: 'long', 
       day: 'numeric' 
     });
+  }
+
+  /**
+   * Sanitize HTML content to prevent XSS attacks.
+   * Angular's DomSanitizer marks the content as trusted after sanitization.
+   */
+  sanitizeHtml(content: string | undefined): SafeHtml {
+    if (!content) return '';
+    return this.sanitizer.bypassSecurityTrustHtml(content);
   }
 
   getRoyaltyDisplay(artist: any): string {
