@@ -168,11 +168,7 @@
         
         &.description {
           white-space: pre-wrap;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          word-break: break-word;
           line-height: 1.5;
-          max-width: 100%;
           overflow: hidden;
         }
       }
@@ -298,17 +294,12 @@
     
     .liner-notes-text {
       white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      word-break: break-word;
       line-height: 1.6;
       color: var(--text-color, #333);
       padding: 1rem;
       background: var(--bg-light, #f9f9f9);
       border-radius: 8px;
       margin: 0;
-      max-width: 100%;
-      overflow: hidden;
     }
   }
   

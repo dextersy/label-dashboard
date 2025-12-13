@@ -91,6 +91,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
    */
   sanitizeHtml(content: string | undefined): SafeHtml | string {
     if (!content) return '';
+    // Normalize non-breaking spaces (\u00A0) to regular spaces for proper text wrapping
+    // Quill editor inserts these Unicode characters which prevent word wrap
+    content = content.replace(/\u00A0/g, ' ');
     // Use SecurityContext.HTML to properly sanitize the content
     // This strips dangerous elements like <script> while preserving safe HTML
     return this.sanitizer.sanitize(SecurityContext.HTML, content) || '';

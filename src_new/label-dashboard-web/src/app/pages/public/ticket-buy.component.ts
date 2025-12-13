@@ -1,5 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, SecurityContext } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
@@ -53,7 +54,8 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     private router: Router,
     private publicService: PublicService,
     private brandService: BrandService,
-    private metaService: MetaService
+    private metaService: MetaService,
+    private sanitizer: DomSanitizer
   ) {
     this.ticketForm = this.fb.group({
       name: ['', Validators.required],
@@ -437,6 +439,18 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     } else {
       this.emailTypoResult = null;
     }
+  }
+
+  /**
+   * Sanitize HTML content and normalize non-breaking spaces for proper text wrapping.
+   * Quill editor inserts Unicode \u00A0 characters which prevent word wrap.
+   */
+  sanitizeHtml(content: string | undefined): SafeHtml | string {
+    if (!content) return '';
+    // Normalize non-breaking spaces (\u00A0) to regular spaces for proper text wrapping
+    content = content.replace(/\u00A0/g, ' ');
+    // Use SecurityContext.HTML to properly sanitize the content
+    return this.sanitizer.sanitize(SecurityContext.HTML, content) || '';
   }
 
 }
