@@ -18,42 +18,42 @@
           <li *ngIf="sectionIndex > 0 && shouldShowSection(sections[sectionIndex - 1])" class="separator"></li>
           
           <!-- Artist Indicator (if section has showArtistIndicator flag) -->
-          <li *ngIf="section.showArtistIndicator" class="artist-indicator">
-            <div class="artist-indicator-content" 
-                 (click)="goToArtistSelection()"
-                 [title]="isCollapsed && !isMobileView ? (selectedArtist ? selectedArtist.name : 'Select an artist') : ''">
-              <ng-container *ngIf="selectedArtist">
-                <img [src]="getArtistProfilePhoto()" 
-                     [alt]="selectedArtist.name" 
-                     class="artist-indicator-photo">
-                <span class="artist-indicator-name" [style.color]="textColor">{{ selectedArtist.name }}</span>
-              </ng-container>
-              <ng-container *ngIf="!selectedArtist">
-                <i class="fas fa-user-circle artist-indicator-placeholder" [style.color]="iconColor"></i>
-                <span class="artist-indicator-name" [style.color]="textColor">Select an artist</span>
-              </ng-container>
-              <i class="fas fa-chevron-right artist-indicator-caret" [style.color]="iconColor"></i>
-            </div>
-          </li>
-          
-          <!-- Event Indicator (if section has showEventIndicator flag) -->
-          <li *ngIf="section.showEventIndicator && isAdmin" class="event-indicator">
-            <div class="event-indicator-content" 
-                 (click)="goToEventSelection()"
-                 [title]="isCollapsed && !isMobileView ? (selectedEvent ? selectedEvent.title : 'Select an event') : ''">
-              <ng-container *ngIf="selectedEvent">
-                <img [src]="getEventPoster()" 
-                     [alt]="selectedEvent.title" 
-                     class="event-indicator-photo">
-                <span class="event-indicator-name" [style.color]="textColor">{{ selectedEvent.title }}</span>
-              </ng-container>
-              <ng-container *ngIf="!selectedEvent">
-                <i class="fas fa-calendar-alt event-indicator-placeholder" [style.color]="iconColor"></i>
-                <span class="event-indicator-name" [style.color]="textColor">Select an event</span>
-              </ng-container>
-              <i class="fas fa-chevron-right event-indicator-caret" [style.color]="iconColor"></i>
-            </div>
-          </li>
+        <li *ngIf="section.showArtistIndicator" class="context-indicator">
+          <div class="context-indicator-content" 
+               (click)="goToArtistSelection()"
+               [title]="isCollapsed && !isMobileView ? (selectedArtist ? selectedArtist.name : 'Select an artist') : ''">
+            <ng-container *ngIf="selectedArtist">
+              <img [src]="getArtistProfilePhoto()" 
+                   [alt]="selectedArtist.name" 
+                   class="context-indicator-photo artist-indicator-photo">
+              <span class="context-indicator-name" [style.color]="textColor">{{ selectedArtist.name }}</span>
+            </ng-container>
+            <ng-container *ngIf="!selectedArtist">
+              <i class="fas fa-user-circle context-indicator-placeholder artist-indicator-placeholder" [style.color]="iconColor"></i>
+              <span class="context-indicator-name" [style.color]="textColor">Select an artist</span>
+            </ng-container>
+            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
+          </div>
+        </li>
+        
+        <!-- Event Indicator (if section has showEventIndicator flag) -->
+        <li *ngIf="section.showEventIndicator && isAdmin" class="context-indicator">
+          <div class="context-indicator-content" 
+               (click)="goToEventSelection()"
+               [title]="isCollapsed && !isMobileView ? (selectedEvent ? selectedEvent.title : 'Select an event') : ''">
+            <ng-container *ngIf="selectedEvent">
+              <img [src]="getEventPoster()" 
+                   [alt]="selectedEvent.title" 
+                   class="context-indicator-photo event-indicator-photo">
+              <span class="context-indicator-name" [style.color]="textColor">{{ selectedEvent.title }}</span>
+            </ng-container>
+            <ng-container *ngIf="!selectedEvent">
+              <i class="fas fa-calendar-alt context-indicator-placeholder event-indicator-placeholder" [style.color]="iconColor"></i>
+              <span class="context-indicator-name" [style.color]="textColor">Select an event</span>
+            </ng-container>
+            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
+          </div>
+        </li>
 
           <!-- Section menu items -->
           <ng-container *ngFor="let item of section.items">

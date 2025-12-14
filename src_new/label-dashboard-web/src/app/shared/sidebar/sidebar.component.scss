@@ -179,12 +179,12 @@
   margin-top: 0 !important;
 }
 
-/* Artist Indicator */
-.artist-indicator {
+/* Context Indicator (unified for artist and event indicators) */
+.context-indicator {
   list-style: none;
   margin: 0 12px 8px 12px;
   
-  .artist-indicator-content {
+  .context-indicator-content {
     display: flex;
     align-items: center;
     padding: 10px 12px;
@@ -203,22 +203,21 @@
     }
   }
   
-  .artist-indicator-photo {
+  .context-indicator-photo {
     width: 32px;
     height: 32px;
-    border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
     border: 2px solid rgba(255, 255, 255, 0.3);
   }
   
-  .artist-indicator-placeholder {
+  .context-indicator-placeholder {
     font-size: 32px;
     flex-shrink: 0;
     opacity: 0.7;
   }
   
-  .artist-indicator-name {
+  .context-indicator-name {
     flex: 1;
     margin-left: 10px;
     font-size: 13px;
@@ -229,120 +228,46 @@
     letter-spacing: 0.3px;
   }
   
-  .artist-indicator-caret {
+  .context-indicator-caret {
     font-size: 12px;
     margin-left: 8px;
     opacity: 0.8;
     transition: transform 0.2s ease;
   }
   
-  .artist-indicator-content:hover .artist-indicator-caret {
+  .context-indicator-content:hover .context-indicator-caret {
     transform: translateX(2px);
   }
 }
 
-/* Hide artist indicator when sidebar is collapsed on desktop */
-.sidebar.collapsed .artist-indicator {
-  .artist-indicator-name,
-  .artist-indicator-caret {
+/* Artist-specific styles */
+.context-indicator .artist-indicator-photo {
+  border-radius: 50%;
+}
+
+/* Event-specific styles */
+.context-indicator .event-indicator-photo {
+  border-radius: 4px;
+}
+
+/* Hide context indicator when sidebar is collapsed on desktop */
+.sidebar.collapsed .context-indicator {
+  .context-indicator-name,
+  .context-indicator-caret {
     display: none;
   }
   
-  .artist-indicator-content {
+  .context-indicator-content {
     justify-content: center;
     padding: 8px;
   }
   
-  .artist-indicator-photo {
+  .context-indicator-photo {
     width: 28px;
     height: 28px;
   }
   
-  .artist-indicator-placeholder {
-    font-size: 28px;
-  }
-}
-
-/* Event Indicator */
-.event-indicator {
-  list-style: none;
-  margin: 0 12px 8px 12px;
-  
-  .event-indicator-content {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.22);
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-  }
-  
-  .event-indicator-photo {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    object-fit: cover;
-    flex-shrink: 0;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .event-indicator-placeholder {
-    font-size: 32px;
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
-  
-  .event-indicator-name {
-    flex: 1;
-    margin-left: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: 0.3px;
-  }
-  
-  .event-indicator-caret {
-    font-size: 12px;
-    margin-left: 8px;
-    opacity: 0.8;
-    transition: transform 0.2s ease;
-  }
-  
-  .event-indicator-content:hover .event-indicator-caret {
-    transform: translateX(2px);
-  }
-}
-
-/* Hide event indicator when sidebar is collapsed on desktop */
-.sidebar.collapsed .event-indicator {
-  .event-indicator-name,
-  .event-indicator-caret {
-    display: none;
-  }
-  
-  .event-indicator-content {
-    justify-content: center;
-    padding: 8px;
-  }
-  
-  .event-indicator-photo {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .event-indicator-placeholder {
+  .context-indicator-placeholder {
     font-size: 28px;
   }
 }
