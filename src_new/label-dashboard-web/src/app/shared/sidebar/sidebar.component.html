@@ -10,9 +10,30 @@
     </div>
 
     <ul class="nav">
-      <ng-container *ngFor="let item of menuItems">
+      <ng-container *ngFor="let item of menuItems; let i = index">
         <!-- Separator/Divider -->
         <li *ngIf="item.separator && shouldShowMenuItem(item)" class="separator"></li>
+        
+        <!-- Artist Indicator (after first separator, before Artist menu) -->
+        <li *ngIf="item.separator && i === 1" class="artist-indicator">
+          <div class="artist-indicator-content" 
+               (click)="goToArtistSelection()"
+               [title]="isCollapsed && !isMobileView ? (selectedArtist ? selectedArtist.name : 'Select an artist') : ''">
+            <!-- When artist is selected -->
+            <ng-container *ngIf="selectedArtist">
+              <img [src]="getArtistProfilePhoto()" 
+                   [alt]="selectedArtist.name" 
+                   class="artist-indicator-photo">
+              <span class="artist-indicator-name" [style.color]="textColor">{{ selectedArtist.name }}</span>
+            </ng-container>
+            <!-- When no artist is selected -->
+            <ng-container *ngIf="!selectedArtist">
+              <i class="fas fa-user-circle artist-indicator-placeholder" [style.color]="iconColor"></i>
+              <span class="artist-indicator-name" [style.color]="textColor">Select an artist</span>
+            </ng-container>
+            <i class="fas fa-chevron-right artist-indicator-caret" [style.color]="iconColor"></i>
+          </div>
+        </li>
         
         <li *ngIf="!item.separator" 
             [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">

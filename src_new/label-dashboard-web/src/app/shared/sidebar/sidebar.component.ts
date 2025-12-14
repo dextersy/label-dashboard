@@ -4,8 +4,11 @@ import { CommonModule } from '@angular/common';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
+import { ArtistStateService } from '../../services/artist-state.service';
+import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 interface MenuItem {
   route: string;
@@ -41,9 +44,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   flyoutMenu: MenuItem | null = null;
   flyoutTop: number = 0;
   
+  // Selected artist state
+  selectedArtist: Artist | null = null;
+  
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
+  private artistSubscription: Subscription = new Subscription();
 
   menuItems: MenuItem[] = [
     // Section 1: Dashboard
@@ -133,7 +140,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private router: Router,
     private brandService: BrandService,
     private sidebarService: SidebarService,
-    private authService: AuthService
+    private authService: AuthService,
+    private artistStateService: ArtistStateService
   ) {}
 
   ngOnInit(): void {
@@ -164,6 +172,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.isAdmin = user ? user.is_admin : false;
       })
     );
+
+    // Subscribe to selected artist changes
+    this.artistSubscription.add(
+      this.artistStateService.selectedArtist$.subscribe(artist => {
+        this.selectedArtist = artist;
+      })
+    );
   }
 
   @HostListener('window:resize')
@@ -182,6 +197,25 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.brandSubscription.unsubscribe();
     this.sidebarSubscription.unsubscribe();
     this.authSubscription.unsubscribe();
+    this.artistSubscription.unsubscribe();
+  }
+
+  // Get artist profile photo URL
+  getArtistProfilePhoto(): string {
+    if (this.selectedArtist?.profilePhotoImage?.path) {
+      return this.selectedArtist.profilePhotoImage.path;
+    }
+    if (this.selectedArtist?.profile_photo) {
+      return this.selectedArtist.profile_photo.startsWith('http') 
+        ? this.selectedArtist.profile_photo 
+        : `${environment.apiUrl}/uploads/artists/${this.selectedArtist.profile_photo}`;
+    }
+    return 'assets/img/placeholder.jpg';
+  }
+
+  // Navigate to artist selection page
+  goToArtistSelection(): void {
+    this.router.navigate(['/artist']);
   }
 
   loadBrandSettings(): void {
