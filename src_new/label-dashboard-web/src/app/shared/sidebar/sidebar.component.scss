@@ -96,7 +96,7 @@
 }
 
 .nav {
-  margin-top: 15px;
+  margin-top: 10px;
   list-style: none;
   padding: 0;
 }
@@ -110,20 +110,20 @@
 /* Remove background highlighting - will use font color instead */
 
 .nav li a {
-  margin: 6px 15px 0;
+  margin: 3px 12px 0;
   border-radius: 3px;
   // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  line-height: 26px;
+  line-height: 22px;
   opacity: 0.7;
   position: relative;
   display: block;
-  padding: 8px 12px;
+  padding: 6px 10px;
   text-decoration: none;
 }
 
@@ -132,20 +132,20 @@
 }
 
 .nav li a i {
-  font-size: 20px;
+  font-size: 18px;
   float: left;
-  margin-right: 12px;
-  line-height: 26px;
-  width: 26px;
+  margin-right: 10px;
+  line-height: 22px;
+  width: 22px;
   text-align: center;
   // Color is now set dynamically via [style.color] binding
 }
 
 .nav li a p {
   margin: 0;
-  line-height: 26px;
+  line-height: 22px;
   font-size: 11px;
-  height: 26px;
+  height: 22px;
   // Color is now set dynamically via [style.color] binding
 }
 
@@ -167,24 +167,28 @@
 
 /* Menu section dividers */
 .separator {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 15px 15px;
+  height: 2px;
+  background: transparent;
+  margin: 0 12px;
   border: none;
   list-style: none;
+  
+  + li {
+    margin-top: 0 !important;
+  }
 }
 
 /* Artist Indicator */
 .artist-indicator {
   list-style: none;
-  margin: 5px 15px 15px 15px;
+  margin: 0 12px 8px 12px;
   
   .artist-indicator-content {
     display: flex;
     align-items: center;
-    padding: 12px 14px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -199,8 +203,8 @@
   }
   
   .artist-indicator-photo {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
@@ -208,15 +212,15 @@
   }
   
   .artist-indicator-placeholder {
-    font-size: 38px;
+    font-size: 32px;
     flex-shrink: 0;
     opacity: 0.7;
   }
   
   .artist-indicator-name {
     flex: 1;
-    margin-left: 12px;
-    font-size: 14px;
+    margin-left: 10px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -225,8 +229,8 @@
   }
   
   .artist-indicator-caret {
-    font-size: 14px;
-    margin-left: 10px;
+    font-size: 12px;
+    margin-left: 8px;
     opacity: 0.8;
     transition: transform 0.2s ease;
   }
@@ -245,30 +249,30 @@
   
   .artist-indicator-content {
     justify-content: center;
-    padding: 10px;
+    padding: 8px;
   }
   
   .artist-indicator-photo {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
   
   .artist-indicator-placeholder {
-    font-size: 32px;
+    font-size: 28px;
   }
 }
 
 /* Event Indicator */
 .event-indicator {
   list-style: none;
-  margin: 5px 15px 15px 15px;
+  margin: 0 12px 8px 12px;
   
   .event-indicator-content {
     display: flex;
     align-items: center;
-    padding: 12px 14px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -283,24 +287,24 @@
   }
   
   .event-indicator-photo {
-    width: 38px;
-    height: 38px;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
     object-fit: cover;
     flex-shrink: 0;
     border: 2px solid rgba(255, 255, 255, 0.3);
   }
   
   .event-indicator-placeholder {
-    font-size: 38px;
+    font-size: 32px;
     flex-shrink: 0;
     opacity: 0.7;
   }
   
   .event-indicator-name {
     flex: 1;
-    margin-left: 12px;
-    font-size: 14px;
+    margin-left: 10px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -309,8 +313,8 @@
   }
   
   .event-indicator-caret {
-    font-size: 14px;
-    margin-left: 10px;
+    font-size: 12px;
+    margin-left: 8px;
     opacity: 0.8;
     transition: transform 0.2s ease;
   }
@@ -329,16 +333,16 @@
   
   .event-indicator-content {
     justify-content: center;
-    padding: 10px;
+    padding: 8px;
   }
   
   .event-indicator-photo {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
   
   .event-indicator-placeholder {
-    font-size: 32px;
+    font-size: 28px;
   }
 }
 
@@ -353,9 +357,9 @@
   }
   
   .separator.mobile-only {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.2);
-    margin: 15px 15px 10px 15px;
+    height: 14px;
+    background: transparent;
+    margin: 0 12px;
     display: block;
   }
 }
