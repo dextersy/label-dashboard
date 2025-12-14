@@ -65,82 +65,67 @@
   width: 100%;
 }
 
-/* Artist selection in navbar */
-.navbar-artist-selection {
+/* Workspace selector */
+.navbar-workspace-selector {
   margin-left: 15px;
   
-  // Override the artist selection styles to fit in navbar
-  ::ng-deep .artist-selection-container {
-    margin-bottom: 0;
+  .workspace-tabs {
+    display: flex;
+    gap: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
-  ::ng-deep .dropdown {
-    @media (min-width: 768px) {
-      width: 280px;
-      max-width: 280px;
-    }
-  }
-  
-  ::ng-deep .dropdown-menu {
-    @media (min-width: 768px) {
-      width: 280px;
-      min-width: 280px;
-    }
-  }
-  
-  // Make artist selection more compact on mobile
-  @media (max-width: 991px) {
-    max-width: 200px; // Set max width for the entire component
+  .workspace-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
     
-    ::ng-deep .artist-dropdown-btn {
-      min-height: 40px;
-      padding: 6px 8px;
-      overflow: hidden; // Ensure button content doesn't overflow
+    i {
+      font-size: 16px;
     }
     
-    ::ng-deep .artist-info {
-      overflow: hidden; // Enable truncation at the container level
-      max-width: 100%; // Ensure it respects parent width
+    .workspace-label {
+      @media (max-width: 768px) {
+        display: none; // Hide labels on mobile, show only icons
+      }
     }
     
-    ::ng-deep .artist-photo {
-      width: 32px;
-      height: 32px;
-      flex-shrink: 0; // Prevent photo from shrinking
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #333;
     }
     
-    ::ng-deep .artist-details {
-      overflow: hidden; // Enable text truncation
-      min-width: 0; // Allow flex item to shrink below content width
-      flex: 1; // Take up remaining space
+    &.active {
+      background-color: rgba(255, 255, 255, 0.3);
+      color: #333;
+      font-weight: 600;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #007bff;
+      }
     }
     
-    ::ng-deep .artist-name {
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%; // Ensure it takes full width of its container
-    }
-    
-    ::ng-deep .artist-members {
-      font-size: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%; // Ensure it takes full width of its container
-    }
-    
-    ::ng-deep .no-artist {
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    ::ng-deep .caret {
-      flex-shrink: 0; // Prevent caret from being compressed
-      margin-left: 6px;
+    &:not(:last-child) {
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
   }
 }

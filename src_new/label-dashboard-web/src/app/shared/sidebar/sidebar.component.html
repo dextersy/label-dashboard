@@ -9,32 +9,19 @@
       </a>
     </div>
 
-    <ul class="nav">
+    <ul class="nav" *ngIf="isInitialized">
       <!-- Iterate through sections -->
-      <ng-container *ngFor="let section of sections; let sectionIndex = index">
+      <ng-container *ngFor="let section of visibleSections; let sectionIndex = index">
         <!-- Only show section if it has visible content -->
         <ng-container *ngIf="shouldShowSection(section)">
-          <!-- Section separator (if there's a visible previous section) -->
-          <li *ngIf="sectionIndex > 0 && shouldShowSection(sections[sectionIndex - 1])" class="separator"></li>
           
-          <!-- Artist Indicator (if section has showArtistIndicator flag) -->
-        <li *ngIf="section.showArtistIndicator" class="context-indicator">
-          <div class="context-indicator-content" 
-               (click)="goToArtistSelection()"
-               [title]="isCollapsed && !isMobileView ? (selectedArtist ? selectedArtist.name : 'Select an artist') : ''">
-            <ng-container *ngIf="selectedArtist">
-              <img [src]="getArtistProfilePhoto()" 
-                   [alt]="selectedArtist.name" 
-                   class="context-indicator-photo artist-indicator-photo">
-              <span class="context-indicator-name" [style.color]="textColor">{{ selectedArtist.name }}</span>
-            </ng-container>
-            <ng-container *ngIf="!selectedArtist">
-              <i class="fas fa-user-circle context-indicator-placeholder artist-indicator-placeholder" [style.color]="iconColor"></i>
-              <span class="context-indicator-name" [style.color]="textColor">Select an artist</span>
-            </ng-container>
-            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
-          </div>
-        </li>
+          <!-- Artist Selection (if section has showArtistIndicator flag) -->
+          <li *ngIf="section.showArtistIndicator" class="artist-selection-container">
+            <app-artist-selection 
+              [currentArtist]="selectedArtist"
+              (artistSelected)="onArtistSelected($event)">
+            </app-artist-selection>
+          </li>
         
         <!-- Event Indicator (if section has showEventIndicator flag) -->
         <li *ngIf="section.showEventIndicator && isAdmin" class="context-indicator">

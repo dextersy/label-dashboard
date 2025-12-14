@@ -6,6 +6,8 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { EventService, Event } from '../../services/event.service';
+import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
+import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -29,7 +31,7 @@ interface MenuSection {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -57,12 +59,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   // Selected event state
   selectedEvent: Event | null = null;
+
+  // Current workspace
+  currentWorkspace: WorkspaceType = 'music';
+  visibleSections: MenuSection[] = [];
+  isInitialized = false;
   
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
   private artistSubscription: Subscription = new Subscription();
   private eventSubscription: Subscription = new Subscription();
+  private workspaceSubscription: Subscription = new Subscription();
 
   // Menu sections with nested items and indicator flags
   sections: MenuSection[] = [
@@ -162,13 +170,59 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return this.sections.flatMap(section => section.items);
   }
 
+  // Update visible sections based on current workspace
+  private updateVisibleSections(): void {
+    switch (this.currentWorkspace) {
+      case 'music':
+        // For music workspace, combine dashboard with artist/music/financial items
+        const musicSection = this.sections.find(section => section.id === 'artist-music-financial');
+        const dashboardItem = { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false };
+        if (musicSection) {
+          this.visibleSections = [{
+            ...musicSection,
+            items: [dashboardItem, ...musicSection.items]
+          }];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'events':
+        // For events workspace, show events submenu items as top-level items
+        const eventsSection = this.sections.find(section => section.id === 'events');
+        if (eventsSection && eventsSection.items.length > 0) {
+          const eventsItem = eventsSection.items[0];
+          this.visibleSections = [
+            { id: 'dashboard', items: [{ route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false }] },
+            {
+              id: 'events-top-level',
+              showEventIndicator: true,
+              items: eventsItem.children?.map(child => ({
+                ...child,
+                icon: 'fas fa-ticket-alt' // Use events icon for all
+              })) || []
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'admin':
+        this.visibleSections = this.sections.filter(section => section.id === 'dashboard' || section.id === 'admin');
+        break;
+      default:
+        this.visibleSections = this.sections;
+        break;
+    }
+  }
+
   constructor(
     private router: Router,
     private brandService: BrandService,
     private sidebarService: SidebarService,
     private authService: AuthService,
     private artistStateService: ArtistStateService,
-    private eventService: EventService
+    private eventService: EventService,
+    private workspaceService: WorkspaceService
   ) {}
 
   ngOnInit(): void {
@@ -213,6 +267,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.selectedEvent = event;
       })
     );
+
+    // Subscribe to workspace changes
+    this.workspaceSubscription.add(
+      this.workspaceService.currentWorkspace$.subscribe(workspace => {
+        this.currentWorkspace = workspace;
+        this.updateVisibleSections();
+      })
+    );
+
+    // Initialize visible sections
+    this.updateVisibleSections();
+    this.isInitialized = true;
   }
 
   @HostListener('window:resize')
@@ -233,6 +299,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.unsubscribe();
     this.artistSubscription.unsubscribe();
     this.eventSubscription.unsubscribe();
+    this.workspaceSubscription.unsubscribe();
   }
 
   // Get artist profile photo URL
@@ -483,6 +550,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  trackBySectionId(index: number, section: MenuSection): string {
+    return section.id;
+  }
+
+  onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
+    this.artistStateService.setSelectedArtist(event.artist);
+    
+    // Only redirect when user actually changes the selection, not during initialization
+    if (event.userInitiated) {
+      const currentRoute = this.router.url;
+      if (currentRoute.includes('/artist')) {
+        this.router.navigate(['/artist/profile']);
+      } else if (currentRoute.includes('/financial')) {
+        this.router.navigate(['/financial/summary']);
+      }
+    }
   }
 
   onMenuItemClick(item?: any): void {
