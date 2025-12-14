@@ -17,7 +17,14 @@ interface MenuItem {
   title: string;
   adminOnly: boolean;
   children?: MenuItem[];
-  separator?: boolean;
+}
+
+interface MenuSection {
+  id: string;
+  adminOnly?: boolean;
+  showArtistIndicator?: boolean;
+  showEventIndicator?: boolean;
+  items: MenuItem[];
 }
 
 @Component({
@@ -57,89 +64,103 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private artistSubscription: Subscription = new Subscription();
   private eventSubscription: Subscription = new Subscription();
 
-  menuItems: MenuItem[] = [
-    // Section 1: Dashboard
-    { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
-    
-    // Divider after Dashboard
-    { route: '', title: '', adminOnly: false, separator: true },
-    
-    // Section 2: Artist, Music, Financial
-    { 
-      route: '/artist', 
-      icon: 'fas fa-headphones', 
-      title: 'Artist', 
-      adminOnly: false,
-      children: [
-        { route: '/artist/profile', title: 'Profile', adminOnly: false },
-        { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
-        { route: '/artist/team', title: 'Team Management', adminOnly: false },
-        { route: '/artist/epk', title: 'EPK', adminOnly: false }
+  // Menu sections with nested items and indicator flags
+  sections: MenuSection[] = [
+    {
+      id: 'dashboard',
+      items: [
+        { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false }
       ]
     },
-    { 
-      route: '/music', 
-      icon: 'fas fa-music', 
-      title: 'Music', 
-      adminOnly: false,
-      children: [
-        { route: '/artist/releases', title: 'Releases', adminOnly: false }
+    {
+      id: 'artist-music-financial',
+      showArtistIndicator: true,
+      items: [
+        { 
+          route: '/artist', 
+          icon: 'fas fa-headphones', 
+          title: 'Artist', 
+          adminOnly: false,
+          children: [
+            { route: '/artist/profile', title: 'Profile', adminOnly: false },
+            { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
+            { route: '/artist/team', title: 'Team Management', adminOnly: false },
+            { route: '/artist/epk', title: 'EPK', adminOnly: false }
+          ]
+        },
+        { 
+          route: '/music', 
+          icon: 'fas fa-music', 
+          title: 'Music', 
+          adminOnly: false,
+          children: [
+            { route: '/artist/releases', title: 'Releases', adminOnly: false }
+          ]
+        },
+        { 
+          route: '/financial', 
+          icon: 'fas fa-dollar-sign', 
+          title: 'Financial', 
+          adminOnly: false,
+          children: [
+            { route: '/financial/summary', title: 'Summary', adminOnly: false },
+            { route: '/financial/documents', title: 'Documents', adminOnly: false },
+            { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
+            { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
+            { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
+            { route: '/financial/release', title: 'Release Information', adminOnly: false }
+          ]
+        }
       ]
     },
-    { 
-      route: '/financial', 
-      icon: 'fas fa-dollar-sign', 
-      title: 'Financial', 
-      adminOnly: false,
-      children: [
-        { route: '/financial/summary', title: 'Summary', adminOnly: false },
-        { route: '/financial/documents', title: 'Documents', adminOnly: false },
-        { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
-        { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
-        { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
-        { route: '/financial/release', title: 'Release Information', adminOnly: false }
-      ]
-    },
-    
-    // Divider after Financial
-    { route: '', title: '', adminOnly: true, separator: true },
-    
-    // Section 3: Events
-    { 
-      route: '/events', 
-      icon: 'fas fa-ticket-alt', 
-      title: 'Events', 
+    {
+      id: 'events',
       adminOnly: true,
-      children: [
-        { route: '/events/details', title: 'Manage events', adminOnly: true },
-        { route: '/events/tickets', title: 'Tickets', adminOnly: true },
-        { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
-        { route: '/events/referrals', title: 'Referrals', adminOnly: true },
-        { route: '/events/email', title: 'Send Email', adminOnly: true }
+      showEventIndicator: true,
+      items: [
+        { 
+          route: '/events', 
+          icon: 'fas fa-ticket-alt', 
+          title: 'Events', 
+          adminOnly: true,
+          children: [
+            { route: '/events/details', title: 'Manage events', adminOnly: true },
+            { route: '/events/tickets', title: 'Tickets', adminOnly: true },
+            { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
+            { route: '/events/referrals', title: 'Referrals', adminOnly: true },
+            { route: '/events/email', title: 'Send Email', adminOnly: true }
+          ]
+        }
       ]
     },
-    
-    // Divider after Events
-    { route: '', title: '', adminOnly: true, separator: true },
-    
-    // Section 4: Admin
-    { 
-      route: '/admin', 
-      icon: 'fas fa-cogs', 
-      title: 'Admin', 
+    {
+      id: 'admin',
       adminOnly: true,
-      children: [
-        { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
-        { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
-        { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
-        { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
-        { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
-        { route: '/admin/users', title: 'Users', adminOnly: true },
-        { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
-        { route: '/admin/tools', title: 'Tools', adminOnly: true }
+      items: [
+        { 
+          route: '/admin', 
+          icon: 'fas fa-cogs', 
+          title: 'Admin', 
+          adminOnly: true,
+          children: [
+            { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
+            { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
+            { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
+            { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
+            { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
+            { route: '/admin/users', title: 'Users', adminOnly: true },
+            { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
+            { route: '/admin/tools', title: 'Tools', adminOnly: true }
+          ]
+        }
       ]
     }
   ];
+
+  // Combined array for internal use (methods that need to search across all items)
+  get allMenuItems(): MenuItem[] {
+    return this.sections.flatMap(section => section.items);
+  }
 
   constructor(
     private router: Router,
@@ -371,9 +392,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     
     // Also check if any child route matches the current route
     // This handles cases like Music menu with /artist/releases as child
-    const menuItem = this.menuItems.find(item => item.route === parentRoute);
+    const menuItem = this.allMenuItems.find((item: MenuItem) => item.route === parentRoute);
     if (menuItem && menuItem.children) {
-      return menuItem.children.some(child => 
+      return menuItem.children.some((child: MenuItem) => 
         this.currentRoute === child.route || this.currentRoute.startsWith(child.route + '/')
       );
     }
@@ -388,7 +409,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     } else {
       // Close all other expanded menus first - mark them as explicitly collapsed
       // to override any auto-expansion from active routes
-      this.menuItems.forEach(item => {
+      this.allMenuItems.forEach((item: MenuItem) => {
         if (item.children && item.route !== route) {
           this.expandedMenus.delete(item.route);
           this.collapsedMenus.add(item.route);
@@ -437,6 +458,26 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   shouldShowMenuItem(item: any): boolean {
     return !item.adminOnly || this.isAdmin;
+  }
+
+  shouldShowSection(section: MenuSection): boolean {
+    // Don't show admin-only sections for non-admin users
+    if (section.adminOnly && !this.isAdmin) {
+      return false;
+    }
+    
+    // Show if section has artist indicator
+    if (section.showArtistIndicator) {
+      return true;
+    }
+    
+    // Show if section has event indicator and user is admin
+    if (section.showEventIndicator && this.isAdmin) {
+      return true;
+    }
+    
+    // Show if section has any visible menu items
+    return section.items.some(item => this.shouldShowMenuItem(item));
   }
 
   logout(): void {

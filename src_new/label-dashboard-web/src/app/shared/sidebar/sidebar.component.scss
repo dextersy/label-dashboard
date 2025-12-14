@@ -96,7 +96,7 @@
 }
 
 .nav {
-  margin-top: 10px;
+  margin-top: 0;
   list-style: none;
   padding: 0;
 }
@@ -167,15 +167,16 @@
 
 /* Menu section dividers */
 .separator {
-  height: 2px;
+  height: 8px;
   background: transparent;
-  margin: 0 12px;
+  margin: 0;
   border: none;
   list-style: none;
-  
-  + li {
-    margin-top: 0 !important;
-  }
+}
+
+/* Override the global CSS rule that adds 31px margin after separators */
+.separator + li {
+  margin-top: 0 !important;
 }
 
 /* Artist Indicator */
