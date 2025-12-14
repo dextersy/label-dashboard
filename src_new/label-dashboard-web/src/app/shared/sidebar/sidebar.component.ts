@@ -5,6 +5,7 @@ import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
+import { EventService, Event } from '../../services/event.service';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -47,10 +48,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
   // Selected artist state
   selectedArtist: Artist | null = null;
   
+  // Selected event state
+  selectedEvent: Event | null = null;
+  
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
   private artistSubscription: Subscription = new Subscription();
+  private eventSubscription: Subscription = new Subscription();
 
   menuItems: MenuItem[] = [
     // Section 1: Dashboard
@@ -141,7 +146,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private brandService: BrandService,
     private sidebarService: SidebarService,
     private authService: AuthService,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -179,6 +185,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.selectedArtist = artist;
       })
     );
+
+    // Subscribe to selected event changes
+    this.eventSubscription.add(
+      this.eventService.selectedEvent$.subscribe(event => {
+        this.selectedEvent = event;
+      })
+    );
   }
 
   @HostListener('window:resize')
@@ -198,6 +211,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarSubscription.unsubscribe();
     this.authSubscription.unsubscribe();
     this.artistSubscription.unsubscribe();
+    this.eventSubscription.unsubscribe();
   }
 
   // Get artist profile photo URL
@@ -216,6 +230,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
   // Navigate to artist selection page
   goToArtistSelection(): void {
     this.router.navigate(['/artist']);
+  }
+
+  // Get event poster URL
+  getEventPoster(): string {
+    if (this.selectedEvent?.poster_url) {
+      return this.selectedEvent.poster_url;
+    }
+    return 'assets/img/placeholder.jpg';
+  }
+
+  // Navigate to event selection/details page
+  goToEventSelection(): void {
+    this.router.navigate(['/events/details']);
   }
 
   loadBrandSettings(): void {
