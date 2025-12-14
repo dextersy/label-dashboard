@@ -13,6 +13,7 @@ interface MenuItem {
   title: string;
   adminOnly: boolean;
   children?: MenuItem[];
+  separator?: boolean;
 }
 
 @Component({
@@ -44,19 +45,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
 
-  menuItems = [
+  menuItems: MenuItem[] = [
+    // Section 1: Dashboard
     { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
+    
+    // Divider after Dashboard
+    { route: '', title: '', adminOnly: false, separator: true },
+    
+    // Section 2: Artist, Music, Financial
     { 
       route: '/artist', 
       icon: 'fas fa-headphones', 
       title: 'Artist', 
       adminOnly: false,
       children: [
-        { route: '/artist/profile', title: 'Manage Profile', adminOnly: false },
-        { route: '/artist/gallery', title: 'Upload Media', adminOnly: false },
-        { route: '/artist/releases', title: 'View Releases', adminOnly: false },
-        { route: '/artist/team', title: 'Manage Team', adminOnly: false },
-        { route: '/artist/epk', title: 'Manage EPK', adminOnly: false }
+        { route: '/artist/profile', title: 'Profile', adminOnly: false },
+        { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
+        { route: '/artist/team', title: 'Team Management', adminOnly: false },
+        { route: '/artist/epk', title: 'EPK', adminOnly: false }
+      ]
+    },
+    { 
+      route: '/music', 
+      icon: 'fas fa-music', 
+      title: 'Music', 
+      adminOnly: false,
+      children: [
+        { route: '/artist/releases', title: 'Releases', adminOnly: false }
       ]
     },
     { 
@@ -73,6 +88,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/financial/release', title: 'Release Information', adminOnly: false }
       ]
     },
+    
+    // Divider after Financial
+    { route: '', title: '', adminOnly: true, separator: true },
+    
+    // Section 3: Events
     { 
       route: '/events', 
       icon: 'fas fa-ticket-alt', 
@@ -83,9 +103,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/events/tickets', title: 'Tickets', adminOnly: true },
         { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
         { route: '/events/referrals', title: 'Referrals', adminOnly: true },
-        { route: '/events/email', title: 'SEnd Email', adminOnly: true }
+        { route: '/events/email', title: 'Send Email', adminOnly: true }
       ]
     },
+    
+    // Divider after Events
+    { route: '', title: '', adminOnly: true, separator: true },
+    
+    // Section 4: Admin
     { 
       route: '/admin', 
       icon: 'fas fa-cogs', 
@@ -278,9 +303,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActiveParentRoute(parentRoute: string): boolean {
-    // Match if current route starts with parent route (for child pages)
-    // or if current route is exactly the parent route (for select artist page)
-    return this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute;
+    // First check if current route starts with parent route (for child pages)
+    if (this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute) {
+      return true;
+    }
+    
+    // Also check if any child route matches the current route
+    // This handles cases like Music menu with /artist/releases as child
+    const menuItem = this.menuItems.find(item => item.route === parentRoute);
+    if (menuItem && menuItem.children) {
+      return menuItem.children.some(child => 
+        this.currentRoute === child.route || this.currentRoute.startsWith(child.route + '/')
+      );
+    }
+    
+    return false;
   }
 
   toggleSubmenu(route: string): void {

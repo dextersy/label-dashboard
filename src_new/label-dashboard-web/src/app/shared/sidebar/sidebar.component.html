@@ -10,28 +10,32 @@
     </div>
 
     <ul class="nav">
-      <li *ngFor="let item of menuItems" 
-          [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">
+      <ng-container *ngFor="let item of menuItems">
+        <!-- Separator/Divider -->
+        <li *ngIf="item.separator && shouldShowMenuItem(item)" class="separator"></li>
         
-        <!-- Menu item without children -->
-        <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)" 
-           [routerLink]="item.route" 
-           (click)="onMenuItemClick(item)" 
-           [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
-           [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'"
-           [title]="isCollapsed && !isMobileView ? item.title : ''">
-          <i [class]="item.icon" 
-             [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
-          <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
-            {{ item.title }}
-            <i *ngIf="item.adminOnly" class="fas fa-shield-alt admin-icon" 
-               [style.color]="iconColor" 
-               title="Admin Only"></i>
-          </p>
-        </a>
-        
-        <!-- Menu item with children (collapsible) -->
-        <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)" class="menu-with-children">
+        <li *ngIf="!item.separator" 
+            [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">
+          
+          <!-- Menu item without children -->
+          <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)" 
+             [routerLink]="item.route" 
+             (click)="onMenuItemClick(item)" 
+             [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
+             [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'"
+             [title]="isCollapsed && !isMobileView ? item.title : ''">
+            <i [class]="item.icon" 
+               [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
+            <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
+              {{ item.title }}
+              <i *ngIf="item.adminOnly" class="fas fa-shield-alt admin-icon" 
+                 [style.color]="iconColor" 
+                 title="Admin Only"></i>
+            </p>
+          </a>
+          
+          <!-- Menu item with children (collapsible) -->
+          <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)" class="menu-with-children">
           <a (click)="onParentMenuClick($event, item)" 
              style="cursor: pointer;"
              [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor"
@@ -66,7 +70,8 @@
             </li>
           </ul>
         </div>
-      </li>
+        </li>
+      </ng-container>
       
       <!-- Mobile-only profile/logout links -->
       <li class="separator mobile-only"></li>

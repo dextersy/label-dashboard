@@ -165,6 +165,15 @@
   }
 }
 
+/* Menu section dividers */
+.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 15px 15px;
+  border: none;
+  list-style: none;
+}
+
 /* Mobile-only sidebar items */
 .mobile-only {
   display: none;

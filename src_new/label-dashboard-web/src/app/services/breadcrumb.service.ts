@@ -25,15 +25,22 @@ export class BreadcrumbService {
   // Menu structure for breadcrumb generation
   private menuStructure: Record<string, MenuItemBase> = {
     '/dashboard': { label: 'Dashboard', icon: 'fas fa-chart-line' },
+    
+    // Artist section
     '/artist': { label: 'Artist', icon: 'fas fa-headphones' },
-    '/artist/profile': { label: 'Manage Profile', parent: '/artist' },
-    '/artist/gallery': { label: 'Upload Media', parent: '/artist' },
-    '/artist/releases': { label: 'View Releases', parent: '/artist' },
-    '/artist/team': { label: 'Manage Team', parent: '/artist' },
-    '/artist/epk': { label: 'Manage EPK', parent: '/artist' },
+    '/artist/profile': { label: 'Profile', parent: '/artist' },
+    '/artist/gallery': { label: 'Media Gallery', parent: '/artist' },
+    '/artist/team': { label: 'Team Management', parent: '/artist' },
+    '/artist/epk': { label: 'EPK', parent: '/artist' },
+    '/artist/new': { label: 'Add New Artist', parent: '/artist' },
+    
+    // Music section
+    '/music': { label: 'Music', icon: 'fas fa-music' },
+    '/artist/releases': { label: 'Releases', parent: '/music' },
     '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
     '/artist/releases/edit/:id': { label: 'Edit Release', parent: '/artist/releases' },
-    '/artist/new': { label: 'Add New Artist', parent: '/artist' },
+    
+    // Financial section
     '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },
     '/financial/summary': { label: 'Summary', parent: '/financial' },
     '/financial/documents': { label: 'Documents', parent: '/financial' },
@@ -44,23 +51,27 @@ export class BreadcrumbService {
     '/financial/royalties/new': { label: 'New Royalty', parent: '/financial/royalties' },
     '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
     '/financial/earnings/new': { label: 'New Earning', parent: '/financial/earnings' },
+    
+    // Events section
     '/events': { label: 'Events', icon: 'fas fa-ticket-alt' },
     '/events/new': { label: 'New Event', parent: '/events' },
-    '/events/details': { label: 'Event Details', parent: '/events' },
+    '/events/details': { label: 'Manage Events', parent: '/events' },
     '/events/tickets': { label: 'Tickets', parent: '/events' },
     '/events/abandoned': { label: 'Pending Orders', parent: '/events' },
     '/events/referrals': { label: 'Referrals', parent: '/events' },
     '/events/email': { label: 'Send Email', parent: '/events' },
     '/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/events' },
+    
+    // Admin section
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
     '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
+    '/admin/label-finance': { label: 'Label Finance', parent: '/admin' },
     '/admin/summary': { label: 'Music Earnings', parent: '/admin' },
     '/admin/balance': { label: 'Artist Finance', parent: '/admin' },
     '/admin/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin' },
     '/admin/users': { label: 'Users', parent: '/admin' },
     '/admin/child-brands': { label: 'Sublabels', parent: '/admin' },
     '/admin/tools': { label: 'Tools', parent: '/admin' },
-    '/admin/label-finance': { label: 'Label Finance', parent: '/admin' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {
