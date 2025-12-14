@@ -10,9 +10,77 @@
     </div>
 
     <ul class="nav">
-      <li *ngFor="let item of menuItems" 
-          [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">
+      <!-- Iterate through sections -->
+      <ng-container *ngFor="let section of sections; let sectionIndex = index">
+        <!-- Only show section if it has visible content -->
+        <ng-container *ngIf="shouldShowSection(section)">
+          <!-- Section separator (if there's a visible previous section) -->
+          <li *ngIf="sectionIndex > 0 && shouldShowSection(sections[sectionIndex - 1])" class="separator"></li>
+          
+          <!-- Artist Indicator (if section has showArtistIndicator flag) -->
+        <li *ngIf="section.showArtistIndicator" class="context-indicator">
+          <div class="context-indicator-content" 
+               (click)="goToArtistSelection()"
+               [title]="isCollapsed && !isMobileView ? (selectedArtist ? selectedArtist.name : 'Select an artist') : ''">
+            <ng-container *ngIf="selectedArtist">
+              <img [src]="getArtistProfilePhoto()" 
+                   [alt]="selectedArtist.name" 
+                   class="context-indicator-photo artist-indicator-photo">
+              <span class="context-indicator-name" [style.color]="textColor">{{ selectedArtist.name }}</span>
+            </ng-container>
+            <ng-container *ngIf="!selectedArtist">
+              <i class="fas fa-user-circle context-indicator-placeholder artist-indicator-placeholder" [style.color]="iconColor"></i>
+              <span class="context-indicator-name" [style.color]="textColor">Select an artist</span>
+            </ng-container>
+            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
+          </div>
+        </li>
         
+        <!-- Event Indicator (if section has showEventIndicator flag) -->
+        <li *ngIf="section.showEventIndicator && isAdmin" class="context-indicator">
+          <div class="context-indicator-content" 
+               (click)="goToEventSelection()"
+               [title]="isCollapsed && !isMobileView ? (selectedEvent ? selectedEvent.title : 'Select an event') : ''">
+            <ng-container *ngIf="selectedEvent">
+              <img [src]="getEventPoster()" 
+                   [alt]="selectedEvent.title" 
+                   class="context-indicator-photo event-indicator-photo">
+              <span class="context-indicator-name" [style.color]="textColor">{{ selectedEvent.title }}</span>
+            </ng-container>
+            <ng-container *ngIf="!selectedEvent">
+              <i class="fas fa-calendar-alt context-indicator-placeholder event-indicator-placeholder" [style.color]="iconColor"></i>
+              <span class="context-indicator-name" [style.color]="textColor">Select an event</span>
+            </ng-container>
+            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
+          </div>
+        </li>
+
+          <!-- Section menu items -->
+          <ng-container *ngFor="let item of section.items">
+            <ng-container *ngTemplateOutlet="menuItemTemplate; context: { item: item }"></ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+      
+      <!-- Mobile-only profile/logout links -->
+      <li class="separator mobile-only"></li>
+      <li class="mobile-only">
+        <a routerLink="/profile" (click)="onMenuItemClick()" [style.color]="textColor">
+          <i class="fa fa-edit" [style.color]="iconColor"></i>
+          <p [style.color]="textColor">Edit Profile</p>
+        </a>
+      </li>
+      <li class="mobile-only">
+        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;" [style.color]="textColor">
+          <i class="fas fa-sign-out-alt" [style.color]="iconColor"></i>
+          <p [style.color]="textColor">Log Out</p>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Reusable menu item template -->
+    <ng-template #menuItemTemplate let-item="item">
+      <li [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">
         <!-- Menu item without children -->
         <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)" 
            [routerLink]="item.route" 
@@ -67,22 +135,7 @@
           </ul>
         </div>
       </li>
-      
-      <!-- Mobile-only profile/logout links -->
-      <li class="separator mobile-only"></li>
-      <li class="mobile-only">
-        <a routerLink="/profile" (click)="onMenuItemClick()" [style.color]="textColor">
-          <i class="fa fa-edit" [style.color]="iconColor"></i>
-          <p [style.color]="textColor">Edit Profile</p>
-        </a>
-      </li>
-      <li class="mobile-only">
-        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;" [style.color]="textColor">
-          <i class="fas fa-sign-out-alt" [style.color]="iconColor"></i>
-          <p [style.color]="textColor">Log Out</p>
-        </a>
-      </li>
-    </ul>
+    </ng-template>
   </div>
 </div>
 

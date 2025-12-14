@@ -4,8 +4,12 @@ import { CommonModule } from '@angular/common';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
+import { ArtistStateService } from '../../services/artist-state.service';
+import { EventService, Event } from '../../services/event.service';
+import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 interface MenuItem {
   route: string;
@@ -13,6 +17,14 @@ interface MenuItem {
   title: string;
   adminOnly: boolean;
   children?: MenuItem[];
+}
+
+interface MenuSection {
+  id: string;
+  adminOnly?: boolean;
+  showArtistIndicator?: boolean;
+  showEventIndicator?: boolean;
+  items: MenuItem[];
 }
 
 @Component({
@@ -40,75 +52,123 @@ export class SidebarComponent implements OnInit, OnDestroy {
   flyoutMenu: MenuItem | null = null;
   flyoutTop: number = 0;
   
+  // Selected artist state
+  selectedArtist: Artist | null = null;
+  
+  // Selected event state
+  selectedEvent: Event | null = null;
+  
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
+  private artistSubscription: Subscription = new Subscription();
+  private eventSubscription: Subscription = new Subscription();
 
-  menuItems = [
-    { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
-    { 
-      route: '/artist', 
-      icon: 'fas fa-headphones', 
-      title: 'Artist', 
-      adminOnly: false,
-      children: [
-        { route: '/artist/profile', title: 'Manage Profile', adminOnly: false },
-        { route: '/artist/gallery', title: 'Upload Media', adminOnly: false },
-        { route: '/artist/releases', title: 'View Releases', adminOnly: false },
-        { route: '/artist/team', title: 'Manage Team', adminOnly: false },
-        { route: '/artist/epk', title: 'Manage EPK', adminOnly: false }
+  // Menu sections with nested items and indicator flags
+  sections: MenuSection[] = [
+    {
+      id: 'dashboard',
+      items: [
+        { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false }
       ]
     },
-    { 
-      route: '/financial', 
-      icon: 'fas fa-dollar-sign', 
-      title: 'Financial', 
-      adminOnly: false,
-      children: [
-        { route: '/financial/summary', title: 'Summary', adminOnly: false },
-        { route: '/financial/documents', title: 'Documents', adminOnly: false },
-        { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
-        { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
-        { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
-        { route: '/financial/release', title: 'Release Information', adminOnly: false }
+    {
+      id: 'artist-music-financial',
+      showArtistIndicator: true,
+      items: [
+        { 
+          route: '/artist', 
+          icon: 'fas fa-headphones', 
+          title: 'Artist', 
+          adminOnly: false,
+          children: [
+            { route: '/artist/profile', title: 'Profile', adminOnly: false },
+            { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
+            { route: '/artist/epk', title: 'Electronic Press Kit (EPK)', adminOnly: false },
+            { route: '/artist/team', title: 'Team Management', adminOnly: false }
+          ]
+        },
+        { 
+          route: '/music', 
+          icon: 'fas fa-music', 
+          title: 'Music', 
+          adminOnly: false,
+          children: [
+            { route: '/artist/releases', title: 'Releases', adminOnly: false }
+          ]
+        },
+        { 
+          route: '/financial', 
+          icon: 'fas fa-dollar-sign', 
+          title: 'Financial', 
+          adminOnly: false,
+          children: [
+            { route: '/financial/summary', title: 'Summary', adminOnly: false },
+            { route: '/financial/documents', title: 'Documents', adminOnly: false },
+            { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
+            { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
+            { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
+            { route: '/financial/release', title: 'Release Information', adminOnly: false }
+          ]
+        }
       ]
     },
-    { 
-      route: '/events', 
-      icon: 'fas fa-ticket-alt', 
-      title: 'Events', 
+    {
+      id: 'events',
       adminOnly: true,
-      children: [
-        { route: '/events/details', title: 'Manage events', adminOnly: true },
-        { route: '/events/tickets', title: 'Tickets', adminOnly: true },
-        { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
-        { route: '/events/referrals', title: 'Referrals', adminOnly: true },
-        { route: '/events/email', title: 'SEnd Email', adminOnly: true }
+      showEventIndicator: true,
+      items: [
+        { 
+          route: '/events', 
+          icon: 'fas fa-ticket-alt', 
+          title: 'Events', 
+          adminOnly: true,
+          children: [
+            { route: '/events/details', title: 'Manage events', adminOnly: true },
+            { route: '/events/tickets', title: 'Tickets', adminOnly: true },
+            { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
+            { route: '/events/referrals', title: 'Referrals', adminOnly: true },
+            { route: '/events/email', title: 'Send Email', adminOnly: true }
+          ]
+        }
       ]
     },
-    { 
-      route: '/admin', 
-      icon: 'fas fa-cogs', 
-      title: 'Admin', 
+    {
+      id: 'admin',
       adminOnly: true,
-      children: [
-        { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
-        { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
-        { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
-        { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
-        { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
-        { route: '/admin/users', title: 'Users', adminOnly: true },
-        { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
-        { route: '/admin/tools', title: 'Tools', adminOnly: true }
+      items: [
+        { 
+          route: '/admin', 
+          icon: 'fas fa-cogs', 
+          title: 'Admin', 
+          adminOnly: true,
+          children: [
+            { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
+            { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
+            { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
+            { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
+            { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
+            { route: '/admin/users', title: 'Users', adminOnly: true },
+            { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
+            { route: '/admin/tools', title: 'Tools', adminOnly: true }
+          ]
+        }
       ]
     }
   ];
+
+  // Combined array for internal use (methods that need to search across all items)
+  get allMenuItems(): MenuItem[] {
+    return this.sections.flatMap(section => section.items);
+  }
 
   constructor(
     private router: Router,
     private brandService: BrandService,
     private sidebarService: SidebarService,
-    private authService: AuthService
+    private authService: AuthService,
+    private artistStateService: ArtistStateService,
+    private eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -139,6 +199,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.isAdmin = user ? user.is_admin : false;
       })
     );
+
+    // Subscribe to selected artist changes
+    this.artistSubscription.add(
+      this.artistStateService.selectedArtist$.subscribe(artist => {
+        this.selectedArtist = artist;
+      })
+    );
+
+    // Subscribe to selected event changes
+    this.eventSubscription.add(
+      this.eventService.selectedEvent$.subscribe(event => {
+        this.selectedEvent = event;
+      })
+    );
   }
 
   @HostListener('window:resize')
@@ -157,6 +231,39 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.brandSubscription.unsubscribe();
     this.sidebarSubscription.unsubscribe();
     this.authSubscription.unsubscribe();
+    this.artistSubscription.unsubscribe();
+    this.eventSubscription.unsubscribe();
+  }
+
+  // Get artist profile photo URL
+  getArtistProfilePhoto(): string {
+    if (this.selectedArtist?.profilePhotoImage?.path) {
+      return this.selectedArtist.profilePhotoImage.path;
+    }
+    if (this.selectedArtist?.profile_photo) {
+      return this.selectedArtist.profile_photo.startsWith('http') 
+        ? this.selectedArtist.profile_photo 
+        : `${environment.apiUrl}/uploads/artists/${this.selectedArtist.profile_photo}`;
+    }
+    return 'assets/img/placeholder.jpg';
+  }
+
+  // Navigate to artist selection page
+  goToArtistSelection(): void {
+    this.router.navigate(['/artist']);
+  }
+
+  // Get event poster URL
+  getEventPoster(): string {
+    if (this.selectedEvent?.poster_url) {
+      return this.selectedEvent.poster_url;
+    }
+    return 'assets/img/placeholder.jpg';
+  }
+
+  // Navigate to event selection/details page
+  goToEventSelection(): void {
+    this.router.navigate(['/events/details']);
   }
 
   loadBrandSettings(): void {
@@ -278,9 +385,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActiveParentRoute(parentRoute: string): boolean {
-    // Match if current route starts with parent route (for child pages)
-    // or if current route is exactly the parent route (for select artist page)
-    return this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute;
+    // First check if current route starts with parent route (for child pages)
+    if (this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute) {
+      return true;
+    }
+    
+    // Also check if any child route matches the current route
+    // This handles cases like Music menu with /artist/releases as child
+    const menuItem = this.allMenuItems.find((item: MenuItem) => item.route === parentRoute);
+    if (menuItem && menuItem.children) {
+      return menuItem.children.some((child: MenuItem) => 
+        this.currentRoute === child.route || this.currentRoute.startsWith(child.route + '/')
+      );
+    }
+    
+    return false;
   }
 
   toggleSubmenu(route: string): void {
@@ -290,7 +409,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     } else {
       // Close all other expanded menus first - mark them as explicitly collapsed
       // to override any auto-expansion from active routes
-      this.menuItems.forEach(item => {
+      this.allMenuItems.forEach((item: MenuItem) => {
         if (item.children && item.route !== route) {
           this.expandedMenus.delete(item.route);
           this.collapsedMenus.add(item.route);
@@ -339,6 +458,26 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   shouldShowMenuItem(item: any): boolean {
     return !item.adminOnly || this.isAdmin;
+  }
+
+  shouldShowSection(section: MenuSection): boolean {
+    // Don't show admin-only sections for non-admin users
+    if (section.adminOnly && !this.isAdmin) {
+      return false;
+    }
+    
+    // Show if section has artist indicator
+    if (section.showArtistIndicator) {
+      return true;
+    }
+    
+    // Show if section has event indicator and user is admin
+    if (section.showEventIndicator && this.isAdmin) {
+      return true;
+    }
+    
+    // Show if section has any visible menu items
+    return section.items.some(item => this.shouldShowMenuItem(item));
   }
 
   logout(): void {

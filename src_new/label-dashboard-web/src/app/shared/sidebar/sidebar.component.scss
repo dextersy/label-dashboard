@@ -96,7 +96,7 @@
 }
 
 .nav {
-  margin-top: 15px;
+  margin-top: 0;
   list-style: none;
   padding: 0;
 }
@@ -110,20 +110,20 @@
 /* Remove background highlighting - will use font color instead */
 
 .nav li a {
-  margin: 10px 15px 0;
+  margin: 3px 12px 0;
   border-radius: 3px;
   // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
-  font-size: 13px;
+  font-size: 11px;
   text-transform: uppercase;
-  line-height: 30px;
+  line-height: 22px;
   opacity: 0.7;
   position: relative;
   display: block;
-  padding: 10px 15px;
+  padding: 6px 10px;
   text-decoration: none;
 }
 
@@ -132,20 +132,20 @@
 }
 
 .nav li a i {
-  font-size: 24px;
+  font-size: 18px;
   float: left;
-  margin-right: 15px;
-  line-height: 30px;
-  width: 30px;
+  margin-right: 10px;
+  line-height: 22px;
+  width: 22px;
   text-align: center;
   // Color is now set dynamically via [style.color] binding
 }
 
 .nav li a p {
   margin: 0;
-  line-height: 30px;
-  font-size: 12px;
-  height: 30px;
+  line-height: 22px;
+  font-size: 11px;
+  height: 22px;
   // Color is now set dynamically via [style.color] binding
 }
 
@@ -165,6 +165,113 @@
   }
 }
 
+/* Menu section dividers */
+.separator {
+  height: 8px;
+  background: transparent;
+  margin: 0;
+  border: none;
+  list-style: none;
+}
+
+/* Override the global CSS rule that adds 31px margin after separators */
+.separator + li {
+  margin-top: 0 !important;
+}
+
+/* Context Indicator (unified for artist and event indicators) */
+.context-indicator {
+  list-style: none;
+  margin: 0 12px 8px 12px;
+  
+  .context-indicator-content {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  .context-indicator-photo {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .context-indicator-placeholder {
+    font-size: 32px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+  
+  .context-indicator-name {
+    flex: 1;
+    margin-left: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.3px;
+  }
+  
+  .context-indicator-caret {
+    font-size: 12px;
+    margin-left: 8px;
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+  }
+  
+  .context-indicator-content:hover .context-indicator-caret {
+    transform: translateX(2px);
+  }
+}
+
+/* Artist-specific styles */
+.context-indicator .artist-indicator-photo {
+  border-radius: 50%;
+}
+
+/* Event-specific styles */
+.context-indicator .event-indicator-photo {
+  border-radius: 4px;
+}
+
+/* Hide context indicator when sidebar is collapsed on desktop */
+.sidebar.collapsed .context-indicator {
+  .context-indicator-name,
+  .context-indicator-caret {
+    display: none;
+  }
+  
+  .context-indicator-content {
+    justify-content: center;
+    padding: 8px;
+  }
+  
+  .context-indicator-photo {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .context-indicator-placeholder {
+    font-size: 28px;
+  }
+}
+
 /* Mobile-only sidebar items */
 .mobile-only {
   display: none;
@@ -176,9 +283,9 @@
   }
   
   .separator.mobile-only {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.2);
-    margin: 15px 15px 10px 15px;
+    height: 14px;
+    background: transparent;
+    margin: 0 12px;
     display: block;
   }
 }
