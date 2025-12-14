@@ -92,6 +92,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // Workspace methods
   selectWorkspace(workspace: WorkspaceType): void {
     this.workspaceService.setWorkspace(workspace);
+    
+    // Navigate to the default page for the selected workspace
+    switch (workspace) {
+      case 'music':
+        this.router.navigate(['/dashboard']);
+        break;
+      case 'events':
+        this.router.navigate(['/events/details']);
+        break;
+      case 'admin':
+        this.router.navigate(['/admin/brand']);
+        break;
+      default:
+        this.router.navigate(['/dashboard']);
+        break;
+    }
   }
 
   getWorkspaceLabel(workspace: WorkspaceType): string {
