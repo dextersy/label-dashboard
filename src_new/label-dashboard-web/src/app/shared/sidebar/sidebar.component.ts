@@ -84,8 +84,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
           children: [
             { route: '/artist/profile', title: 'Profile', adminOnly: false },
             { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
-            { route: '/artist/team', title: 'Team Management', adminOnly: false },
-            { route: '/artist/epk', title: 'EPK', adminOnly: false }
+            { route: '/artist/epk', title: 'Electronic Press Kit (EPK)', adminOnly: false },
+            { route: '/artist/team', title: 'Team Management', adminOnly: false }
           ]
         },
         { 

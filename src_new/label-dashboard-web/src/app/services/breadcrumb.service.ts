@@ -31,7 +31,7 @@ export class BreadcrumbService {
     '/artist/profile': { label: 'Profile', parent: '/artist' },
     '/artist/gallery': { label: 'Media Gallery', parent: '/artist' },
     '/artist/team': { label: 'Team Management', parent: '/artist' },
-    '/artist/epk': { label: 'EPK', parent: '/artist' },
+    '/artist/epk': { label: 'Electronic Press Kit (EPK)', parent: '/artist' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
     
     // Music section
