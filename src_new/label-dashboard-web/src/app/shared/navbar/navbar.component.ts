@@ -135,7 +135,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.selectedEvent?.poster_url) {
       return this.selectedEvent.poster_url;
     }
-    return '';
+    return 'assets/img/placeholder.jpg';
   }
 
   // Workspace methods
