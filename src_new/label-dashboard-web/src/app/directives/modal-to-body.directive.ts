@@ -34,9 +34,10 @@ export class ModalToBodyDirective implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Move back to original parent when destroyed
-    if (this.originalParent && this.element.parentElement === document.body) {
-      this.renderer.appendChild(this.originalParent, this.element);
+    // When destroyed (for example due to *ngIf turning false), remove the element
+    // from the body so it does not remain visible as an orphaned overlay.
+    if (this.element.parentElement === document.body) {
+      this.renderer.removeChild(document.body, this.element);
     }
   }
 }
