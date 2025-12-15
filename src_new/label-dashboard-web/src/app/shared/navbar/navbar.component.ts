@@ -153,8 +153,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   get availableWorkspaces(): WorkspaceType[] {
-    // Return all workspaces, but filter based on admin status for events
-    // Administration is now moved to the right-side menu
+    // Return all workspaces, filter based on admin status
     const workspaces: WorkspaceType[] = ['music'];
     if (this.isAdmin) {
       workspaces.push('events');

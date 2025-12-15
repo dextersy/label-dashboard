@@ -52,6 +52,9 @@
     
     <!-- Mobile icons (visible on mobile) -->
     <div class="navbar-mobile-icons">
+      <a class="mobile-icon-link" *ngIf="isAdmin" (click)="selectWorkspace('admin')" style="cursor: pointer;" title="Administration">
+        <i class="fa-solid fa-cogs"></i>
+      </a>
       <a class="mobile-icon-link" routerLink="/profile" title="Edit Profile">
         <i class="fa-solid fa-user"></i>
       </a>
