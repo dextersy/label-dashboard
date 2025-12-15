@@ -63,6 +63,11 @@ export class BreadcrumbService {
     '/events/referrals': { label: 'Referrals', parent: '/events' },
     '/events/email': { label: 'Send Email', parent: '/events' },
     '/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/events' },
+
+    // Labels workspace
+    '/labels': { label: 'Labels', icon: 'fas fa-tags' },
+    '/labels/earnings': { label: 'My Label Earnings', parent: '/labels', icon: 'fas fa-coins' },
+    '/labels/sublabels': { label: 'Sublabels', parent: '/labels', icon: 'fas fa-layer-group' },
     
     // Admin section
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
@@ -81,16 +86,21 @@ export class BreadcrumbService {
       filter(event => event instanceof NavigationEnd),
       map(() => this.createBreadcrumbs())
     ).subscribe(breadcrumbs => {
-      this.breadcrumbsSubject.next(breadcrumbs);
+      // Only overwrite stored breadcrumbs if we actually found breadcrumbs for the route
+      if (breadcrumbs && breadcrumbs.length > 0) {
+        this.breadcrumbsSubject.next(breadcrumbs);
+      }
     });
   }
 
   private createBreadcrumbs(): BreadcrumbItem[] {
     const currentUrl = this.router.url.split('?')[0]; // Remove query params
+    // createBreadcrumbs: generate breadcrumbs for current route
     const breadcrumbs: BreadcrumbItem[] = [];
 
     // First try exact match
     let menuItem = this.menuStructure[currentUrl];
+    // exact match check
     
     // If no exact match, try to match parameterized routes
     if (!menuItem) {
@@ -105,6 +115,17 @@ export class BreadcrumbService {
     if (menuItem) {
       // Recursively build the full hierarchy
       this.buildBreadcrumbHierarchy(currentUrl, breadcrumbs);
+      // built breadcrumbs
+    }
+
+    // Fallback: if no exact or parameterized match, try prefix matches (useful for nested paths)
+    if (!menuItem) {
+      for (const routePattern of Object.keys(this.menuStructure)) {
+        if (currentUrl === routePattern || currentUrl.startsWith(routePattern + '/')) {
+          this.buildBreadcrumbHierarchy(routePattern, breadcrumbs);
+          break;
+        }
+      }
     }
 
     return breadcrumbs;

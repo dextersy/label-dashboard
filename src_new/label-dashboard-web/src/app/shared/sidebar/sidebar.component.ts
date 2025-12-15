@@ -145,6 +145,22 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     {
+      id: 'labels',
+      adminOnly: true,
+      items: [
+        {
+          route: '/labels',
+          icon: 'fas fa-tags',
+          title: 'Labels',
+          adminOnly: true,
+          children: [
+            { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true, icon: 'fas fa-coins' },
+            { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true, icon: 'fas fa-layer-group' }
+          ]
+        }
+      ]
+    },
+    {
       id: 'admin',
       adminOnly: true,
       items: [
@@ -271,6 +287,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
                   icon: icon
                 };
               }) || []
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'labels':
+        const labelsSection = this.sections.find(section => section.id === 'labels');
+        if (labelsSection) {
+          // show the labels top-level children
+          const labelsItem = labelsSection.items[0];
+          this.visibleSections = [
+            {
+              id: 'labels-top-level',
+              items: labelsItem.children?.map(child => ({ ...child, icon: child.icon || 'fas fa-tags' })) || []
             }
           ];
         } else {

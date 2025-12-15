@@ -9,6 +9,9 @@ import { EventsComponent } from './pages/events/events.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
 import { ReleaseSubmissionComponent } from './components/artist/release-submission/release-submission.component';
 import { AdminComponent } from './pages/admin/admin.component';
+import { LabelFinanceTabComponent } from './pages/admin/components/label-finance-tab.component';
+import { LabelsEarningsPageComponent } from './pages/labels/labels-earnings.component';
+import { ChildBrandsTabComponent } from './pages/admin/components/child-brands-tab.component';
 import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-found.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
@@ -115,6 +118,15 @@ export const routes: Routes = [
       { path: 'tools/email-logs', component: AdminComponent, data: { tab: 'tools-email-logs' } },
       { path: 'tools/bulk-add-earnings', component: AdminComponent, data: { tab: 'tools-bulk-add-earnings' } },
       { path: 'users', component: AdminComponent, data: { tab: 'users' } }
+    ]
+  },
+  {
+    path: 'labels',
+    canActivate: [adminGuard],
+    children: [
+      { path: '', redirectTo: 'earnings', pathMatch: 'full' },
+      { path: 'earnings', component: LabelsEarningsPageComponent },
+      { path: 'sublabels', component: ChildBrandsTabComponent }
     ]
   },
   { path: 'domain-not-found', component: DomainNotFoundComponent },

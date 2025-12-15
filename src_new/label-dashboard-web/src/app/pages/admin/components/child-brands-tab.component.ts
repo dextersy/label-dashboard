@@ -7,6 +7,7 @@ import { AdminService, ChildBrand, CreateSublabelResponse, SublabelCreationState
 import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
+import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { AddSublabelModalComponent } from '../../../components/admin/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../../components/admin/fee-settings-modal/fee-settings-modal.component';
@@ -16,7 +17,7 @@ import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
     selector: 'app-child-brands-tab',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, BreadcrumbComponent],
     templateUrl: './child-brands-tab.component.html',
     styleUrls: ['./child-brands-tab.component.scss']
 })

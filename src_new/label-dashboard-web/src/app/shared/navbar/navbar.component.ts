@@ -150,6 +150,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
       case 'events':
         this.router.navigate(['/events/details']);
         break;
+      case 'labels':
+        this.router.navigate(['/labels/earnings']);
+        break;
       case 'admin':
         this.router.navigate(['/admin/settings']);
         break;
@@ -172,6 +175,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const workspaces: WorkspaceType[] = ['music'];
     if (this.isAdmin) {
       workspaces.push('events');
+      workspaces.push('labels');
     }
     return workspaces;
   }

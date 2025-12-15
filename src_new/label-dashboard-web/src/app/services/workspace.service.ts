@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-export type WorkspaceType = 'music' | 'events' | 'admin';
+export type WorkspaceType = 'music' | 'events' | 'admin' | 'labels';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +24,7 @@ export class WorkspaceService {
     switch (workspace) {
       case 'music': return 'Music';
       case 'events': return 'Events';
+      case 'labels': return 'Labels';
       case 'admin': return 'Administration';
       default: return 'Music';
     }
@@ -33,6 +34,7 @@ export class WorkspaceService {
     switch (workspace) {
       case 'music': return 'fas fa-music';
       case 'events': return 'fas fa-ticket-alt';
+      case 'labels': return 'fas fa-tags';
       case 'admin': return 'fas fa-cogs';
       default: return 'fas fa-music';
     }
