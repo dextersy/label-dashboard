@@ -34,13 +34,13 @@ export class BreadcrumbService {
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
 
     // Team Management (top-level)
-    '/artist/team': { label: 'Team Management', icon: 'fas fa-users' },
-    
+    '/team': { label: 'Team Management', icon: 'fas fa-users' },
+
     // Music section
     '/music': { label: 'Music', icon: 'fas fa-music' },
-    '/artist/releases': { label: 'Releases', parent: '/music' },
-    '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
-    '/artist/releases/edit/:id': { label: 'Edit Release', parent: '/artist/releases' },
+    '/music/releases': { label: 'Releases', parent: '/music' },
+    '/music/releases/new': { label: 'Create Release', parent: '/music/releases' },
+    '/music/releases/edit/:id': { label: 'Edit Release', parent: '/music/releases' },
     
     // Financial section
     '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },

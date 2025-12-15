@@ -104,7 +104,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Music',
           adminOnly: false,
           children: [
-            { route: '/artist/releases', title: 'Releases', adminOnly: false }
+            { route: '/music/releases', title: 'Releases', adminOnly: false }
           ]
         },
         {
@@ -121,7 +121,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
         },
-        { route: '/artist/team', icon: 'fas fa-users', title: 'Team Management', adminOnly: false }
+        { route: '/team', icon: 'fas fa-users', title: 'Team Management', adminOnly: false }
       ]
     },
     {
@@ -511,7 +511,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
 
     // Also check if any child route matches the current route
-    // This handles cases like Music menu with /artist/releases as child
+    // This handles cases like Music menu with /music/releases as child
     const menuItem = this.allMenuItems.find((item: MenuItem) => item.route === parentRoute);
     if (menuItem && menuItem.children) {
       return menuItem.children.some((child: MenuItem) =>

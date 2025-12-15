@@ -844,7 +844,7 @@ export const sendReleasePendingNotification = async (
 
     // Get brand frontend URL for release link
     const frontendUrl = await getBrandFrontendUrl(brandId);
-    const releaseUrl = `${frontendUrl}/releases/edit/${releaseData.id}`;
+    const releaseUrl = `${frontendUrl}/music/releases/edit/${releaseData.id}`;
 
     // Load email template
     const templatePath = path.join(__dirname, '../assets/templates/release_pending_notification.html');

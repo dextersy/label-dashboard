@@ -51,20 +51,27 @@ export const routes: Routes = [
   // Protected Routes
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'artist', component: SelectArtistComponent, canActivate: [authGuard] },
-  { 
-    path: 'artist', 
+  {
+    path: 'artist',
     canActivate: [authGuard, artistSelectedGuard],
     children: [
       { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
       { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
-      { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
-      { path: 'releases/new', component: ReleaseSubmissionComponent },
-      { path: 'releases/edit/:id', component: ReleaseSubmissionComponent },
-      { path: 'team', component: ArtistComponent, data: { tab: 'team' } },
       { path: 'epk', component: ArtistComponent, data: { tab: 'manage-epk' } },
       { path: 'new', component: AddNewArtistComponent, canActivate: [adminGuard] }
     ]
   },
+  {
+    path: 'music',
+    canActivate: [authGuard, artistSelectedGuard],
+    children: [
+      { path: '', redirectTo: 'releases', pathMatch: 'full' },
+      { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
+      { path: 'releases/new', component: ReleaseSubmissionComponent },
+      { path: 'releases/edit/:id', component: ReleaseSubmissionComponent }
+    ]
+  },
+  { path: 'team', component: ArtistComponent, canActivate: [authGuard, artistSelectedGuard], data: { tab: 'team' } },
   { 
     path: 'financial', 
     canActivate: [authGuard],

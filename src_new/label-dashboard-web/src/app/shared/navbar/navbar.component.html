@@ -10,7 +10,7 @@
 
       <!-- Context Icons (Artist/Event) - visible on mobile -->
       <div class="navbar-context-icons">
-        <!-- Artist icon - shown when on artist/releases/financial routes -->
+        <!-- Artist icon - shown when on artist/music/financial routes -->
         <div class="context-icon" *ngIf="shouldShowArtistSelection() && selectedArtist" (click)="toggleSidebar()">
           <img [src]="getArtistProfilePhoto()" [alt]="selectedArtist.name" class="context-avatar">
         </div>

@@ -239,6 +239,6 @@ export class DashboardComponent implements OnInit {
     }
 
     // Navigate to the release edit page
-    this.router.navigate(['/artist/releases/edit', latestRelease.id]);
+    this.router.navigate(['/music/releases/edit', latestRelease.id]);
   }
 }

@@ -74,9 +74,9 @@ export class ArtistComponent implements OnInit, OnDestroy {
             this.activeTab = 'profile';
           } else if (currentUrl.includes('/artist/gallery')) {
             this.activeTab = 'gallery';
-          } else if (currentUrl.includes('/artist/releases')) {
+          } else if (currentUrl.includes('/music/releases')) {
             this.activeTab = 'releases';
-          } else if (currentUrl.includes('/artist/team')) {
+          } else if (currentUrl.includes('/team')) {
             this.activeTab = 'team';
           } else if (currentUrl.includes('/artist/epk')) {
             this.activeTab = 'manage-epk';
@@ -113,12 +113,12 @@ export class ArtistComponent implements OnInit, OnDestroy {
 
   onReleaseCreated(release: any): void {
     // Navigate back to releases tab to show the updated list
-    this.router.navigate(['/artist/releases']);
+    this.router.navigate(['/music/releases']);
   }
 
   onReleaseFormCancelled(): void {
     // Navigate back to releases tab
-    this.router.navigate(['/artist/releases']);
+    this.router.navigate(['/music/releases']);
   }
 
   setActiveTab(tab: TabType): void {

@@ -168,7 +168,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error loading release for editing:', error);
         this.notificationService.showError('Failed to load release for editing');
-        this.router.navigate(['/artist/releases']);
+        this.router.navigate(['/music/releases']);
       }
     });
   }
@@ -349,7 +349,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     
     // For new releases, redirect to the edit route to unify the flow
     if (!this.isEditing) {
-      this.router.navigate(['/artist/releases/edit', data.releaseId]);
+      this.router.navigate(['/music/releases/edit', data.releaseId]);
     }
   }
 
@@ -408,7 +408,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         
         // Navigate back to releases list after a short delay
         setTimeout(() => {
-          this.router.navigate(['/artist/releases']);
+          this.router.navigate(['/music/releases']);
         }, 3000);
       } else {
         throw new Error('No response received');
@@ -423,7 +423,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     // Navigate back to releases list
-    this.router.navigate(['/artist/releases']);
+    this.router.navigate(['/music/releases']);
   }
 
   get canProceedToCredits(): boolean {

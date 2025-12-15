@@ -113,12 +113,12 @@ export class ArtistReleasesTabComponent {
 
   onEditRelease(release: ArtistRelease): void {
     // Navigate to the edit route instead of opening a dialog
-    this.router.navigate(['/artist/releases/edit', release.id]);
+    this.router.navigate(['/music/releases/edit', release.id]);
   }
 
   onManageTrackList(release: ArtistRelease): void {
     // Navigate to the edit form and select the tracks section
-    this.router.navigate(['/artist/releases/edit', release.id], {
+    this.router.navigate(['/music/releases/edit', release.id], {
       queryParams: { section: 'tracks' }
     });
   }
@@ -216,13 +216,13 @@ export class ArtistReleasesTabComponent {
     }
 
     // Navigate to the submit section of the edit form
-    this.router.navigate(['/artist/releases/edit', release.id], {
+    this.router.navigate(['/music/releases/edit', release.id], {
       queryParams: { section: 'submit' }
     });
   }
 
   navigateToCreateRelease(): void {
-    this.router.navigate(['/artist/releases/new']);
+    this.router.navigate(['/music/releases/new']);
   }
 
   stripHtmlTags(html: string): string {
