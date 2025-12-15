@@ -601,7 +601,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
     this.artistStateService.setSelectedArtist(event.artist);
-    
+
     // Only redirect when user actually changes the selection, not during initialization
     if (event.userInitiated) {
       const currentRoute = this.router.url;
@@ -610,6 +610,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
       } else if (currentRoute.includes('/financial')) {
         this.router.navigate(['/financial/summary']);
       }
+
+      // Close sidebar on mobile after selection
+      this.sidebarService.closeOnMobileNavigation();
     }
   }
 

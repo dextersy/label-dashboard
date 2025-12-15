@@ -27,6 +27,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private authSubscription: Subscription = new Subscription();
   private workspaceSubscription: Subscription = new Subscription();
   private eventSubscription: Subscription = new Subscription();
+  private isInitialized: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -70,14 +71,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
     // Subscribe to selected event changes
     this.eventSubscription.add(
       this.eventService.selectedEvent$.subscribe(event => {
+        const previousEvent = this.selectedEvent;
         this.selectedEvent = event;
+
+        // Close sidebar on mobile when event changes (user-initiated)
+        if (this.isInitialized && previousEvent?.id !== event?.id && event !== null) {
+          this.sidebarService.closeOnMobileNavigation();
+        }
       })
     );
+
+    // Mark as initialized after subscriptions are set up
+    setTimeout(() => {
+      this.isInitialized = true;
+    }, 100);
   }
 
   onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
     this.artistStateService.setSelectedArtist(event.artist);
-    
+
     // Only redirect when user actually changes the selection, not during initialization
     if (event.userInitiated) {
       const currentRoute = this.router.url;
@@ -86,6 +98,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
       } else if (currentRoute.includes('/financial')) {
         this.router.navigate(['/financial/summary']);
       }
+
+      // Close sidebar on mobile after selection
+      this.sidebarService.closeOnMobileNavigation();
     }
   }
 
