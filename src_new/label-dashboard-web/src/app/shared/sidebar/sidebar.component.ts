@@ -196,10 +196,31 @@ export class SidebarComponent implements OnInit, OnDestroy {
             {
               id: 'events-top-level',
               showEventIndicator: true,
-              items: eventsItem.children?.map(child => ({
-                ...child,
-                icon: 'fas fa-ticket-alt' // Use events icon for all
-              })) || []
+              items: eventsItem.children?.map(child => {
+                // Assign appropriate icons based on the route
+                let icon = 'fas fa-ticket-alt'; // default
+                switch (child.route) {
+                  case '/events/details':
+                    icon = 'fas fa-calendar-alt';
+                    break;
+                  case '/events/tickets':
+                    icon = 'fas fa-ticket-alt';
+                    break;
+                  case '/events/abandoned':
+                    icon = 'fas fa-clock';
+                    break;
+                  case '/events/referrals':
+                    icon = 'fas fa-users';
+                    break;
+                  case '/events/email':
+                    icon = 'fas fa-envelope';
+                    break;
+                }
+                return {
+                  ...child,
+                  icon: icon
+                };
+              }) || []
             }
           ];
         } else {
