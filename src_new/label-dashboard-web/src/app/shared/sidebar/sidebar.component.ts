@@ -8,6 +8,7 @@ import { ArtistStateService } from '../../services/artist-state.service';
 import { EventService, Event } from '../../services/event.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
+import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -31,7 +32,7 @@ interface MenuSection {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent, EventSelectionComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -59,6 +60,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   // Selected event state
   selectedEvent: Event | null = null;
+  events: Event[] = [];
+  loadingEvents = false;
 
   // Current workspace
   currentWorkspace: WorkspaceType = 'music';
@@ -316,6 +319,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+
+        // Load events when user becomes admin
+        if (this.isAdmin && this.events.length === 0) {
+          this.loadEvents();
+        }
       })
     );
 
@@ -367,36 +375,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.workspaceSubscription.unsubscribe();
   }
 
-  // Get artist profile photo URL
-  getArtistProfilePhoto(): string {
-    if (this.selectedArtist?.profilePhotoImage?.path) {
-      return this.selectedArtist.profilePhotoImage.path;
-    }
-    if (this.selectedArtist?.profile_photo) {
-      return this.selectedArtist.profile_photo.startsWith('http') 
-        ? this.selectedArtist.profile_photo 
-        : `${environment.apiUrl}/uploads/artists/${this.selectedArtist.profile_photo}`;
-    }
-    return 'assets/img/placeholder.jpg';
-  }
-
-  // Navigate to artist selection page
-  goToArtistSelection(): void {
-    this.router.navigate(['/artist']);
-  }
-
-  // Get event poster URL
-  getEventPoster(): string {
-    if (this.selectedEvent?.poster_url) {
-      return this.selectedEvent.poster_url;
-    }
-    return 'assets/img/placeholder.jpg';
-  }
-
-  // Navigate to event selection/details page
-  goToEventSelection(): void {
-    this.router.navigate(['/events/details']);
-  }
 
   loadBrandSettings(): void {
     // First try to get cached brand settings
@@ -638,5 +616,23 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onMenuItemClick(item?: any): void {
     // Close sidebar on mobile when menu item is clicked
     this.sidebarService.closeOnMobileNavigation();
+  }
+
+  loadEvents(): void {
+    this.loadingEvents = true;
+    this.eventService.getEvents().subscribe({
+      next: (events) => {
+        this.events = events;
+        this.loadingEvents = false;
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+        this.loadingEvents = false;
+      }
+    });
+  }
+
+  onEventSelected(event: Event): void {
+    this.eventService.setSelectedEvent(event);
   }
 }

@@ -1,14 +1,4 @@
 <div class="event-form-page">
-  <!-- Event Selection (only in edit mode) -->
-  <app-event-selection
-    *ngIf="!isNewEvent"
-    [events]="availableEvents"
-    [selectedEvent]="event"
-    [loading]="loading"
-    [isAdmin]="isAdmin"
-    (eventSelected)="onEventSelection($event)">
-  </app-event-selection>
-
   <app-breadcrumb></app-breadcrumb>
 
   <div class="event-form-layout">

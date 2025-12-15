@@ -275,20 +275,24 @@
 }
 
 /* Artist Selection Container */
-.artist-selection-container {
+.artist-selection-container,
+.event-selection-container {
   list-style: none;
   margin: 0 12px 8px 12px;
 
-  // Override artist selection component styles for sidebar
-  ::ng-deep .artist-selection-container {
+  // Override component styles for sidebar
+  ::ng-deep .artist-selection-container,
+  ::ng-deep .event-selection-container {
     margin-bottom: 0;
   }
 
   ::ng-deep .dropdown {
     width: 100%;
+    max-width: none;
   }
 
-  ::ng-deep .artist-dropdown-btn {
+  ::ng-deep .artist-dropdown-btn,
+  ::ng-deep .event-dropdown-btn {
     width: 100%;
     padding: 10px 12px;
     background: rgba(255, 255, 255, 0.9);
@@ -298,6 +302,7 @@
     text-align: left;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
+    min-height: auto;
 
     &:hover {
       background: rgba(255, 255, 255, 0.95);
@@ -311,47 +316,116 @@
     }
   }
   
-  ::ng-deep .artist-photo {
-    width: 32px;
-    height: 32px;
+  ::ng-deep .artist-photo,
+  ::ng-deep .event-image,
+  ::ng-deep .default-event-image {
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
     border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  ::ng-deep .artist-photo {
     border-radius: 50%;
   }
-  
-  ::ng-deep .artist-info {
-    flex: 1;
-    margin-left: 10px;
-    overflow: hidden;
+
+  ::ng-deep .event-image,
+  ::ng-deep .default-event-image {
+    border-radius: 4px;
+  }
+
+  // Make event icons smaller in sidebar
+  ::ng-deep .default-event-image i {
+    font-size: 14px;
   }
   
-  ::ng-deep .artist-name {
-    font-size: 13px;
+  ::ng-deep .artist-info,
+  ::ng-deep .event-info {
+    flex: 1;
+    margin-left: 0px;
+    overflow: hidden;
+  }
+
+  ::ng-deep .event-poster {
+    margin-right: 5px;
+    margin-left: 5;
+  }
+
+  ::ng-deep .event-details {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  ::ng-deep .artist-name,
+  ::ng-deep .event-title {
+    font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     letter-spacing: 0.3px;
+    margin-bottom: 2px !important;
+    line-height: 1.2 !important;
   }
-  
-  ::ng-deep .artist-members {
-    font-size: 11px;
+
+  ::ng-deep .artist-members,
+  ::ng-deep .event-meta,
+  ::ng-deep .event-status {
+    font-size: 12px;
     opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.1 !important;
+  }
+
+  ::ng-deep .event-meta {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 2px !important;
+  }
+
+  ::ng-deep .event-date,
+  ::ng-deep .event-venue {
+    font-size: 12px;
+    line-height: 1.1 !important;
+    margin-bottom: 0 !important;
+
+    i {
+      font-size: 10px;
+      margin-right: 3px !important;
+      line-height: 1 !important;
+    }
+  }
+
+  // Remove extra spacing on venue
+  ::ng-deep .event-venue {
+    margin-left: 0 !important;
+  }
+
+  ::ng-deep .event-status .badge {
+    font-size: 12px;
+    padding: 4px 7px;
   }
   
-  ::ng-deep .no-artist {
+  ::ng-deep .no-artist,
+  ::ng-deep .no-event {
     font-size: 13px;
     font-weight: 600;
     opacity: 0.7;
   }
-  
+
   ::ng-deep .caret {
     font-size: 12px;
     margin-left: 8px;
     opacity: 0.8;
+  }
+
+  // Hide event selection row wrapper in sidebar
+  ::ng-deep .event-selection-row {
+    display: block;
+    width: 100%;
   }
 
   // Override dropdown menu background for better contrast
@@ -360,6 +434,49 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  // Style dropdown items to match selected event
+  ::ng-deep .dropdown-event-image,
+  ::ng-deep .dropdown-default-event-image {
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid rgba(0, 0, 0, 0.1) !important;
+  }
+
+  ::ng-deep .dropdown-default-event-image i {
+    font-size: 14px !important;
+  }
+
+  ::ng-deep .dropdown-event-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    margin-bottom: 2px !important;
+  }
+
+  ::ng-deep .dropdown-event-meta {
+    margin-bottom: 2px !important;
+  }
+
+  ::ng-deep .dropdown-event-date,
+  ::ng-deep .dropdown-event-venue {
+    font-size: 12px !important;
+    line-height: 1 !important;
+    margin-bottom: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+
+    i {
+      font-size: 10px !important;
+      margin-right: 3px !important;
+      line-height: 1 !important;
+    }
+  }
+
+  ::ng-deep .dropdown-event-status .badge {
+    font-size: 12px !important;
+    padding: 4px 7px !important;
   }
 }
 
@@ -385,11 +502,13 @@
   }
 }
 
-/* Hide artist selection content when sidebar is collapsed on desktop */
-.sidebar.collapsed .artist-selection-container {
+/* Hide artist/event selection content when sidebar is collapsed on desktop */
+.sidebar.collapsed .artist-selection-container,
+.sidebar.collapsed .event-selection-container {
   margin: 0 10px 8px 10px;
 
-  ::ng-deep .artist-dropdown-btn {
+  ::ng-deep .artist-dropdown-btn,
+  ::ng-deep .event-dropdown-btn {
     padding: 10px;
     justify-content: center;
     align-items: center;
@@ -397,7 +516,8 @@
     display: flex;
   }
 
-  ::ng-deep .artist-info {
+  ::ng-deep .artist-info,
+  ::ng-deep .event-info {
     justify-content: center;
     align-items: center;
     margin: 0;
@@ -405,20 +525,36 @@
   }
 
   ::ng-deep .artist-details,
+  ::ng-deep .event-details,
   ::ng-deep .caret,
-  ::ng-deep .no-artist {
+  ::ng-deep .no-artist,
+  ::ng-deep .no-event {
     display: none;
   }
 
-  ::ng-deep .artist-photo {
+  // Show event poster but hide details
+  ::ng-deep .event-poster {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  ::ng-deep .artist-photo,
+  ::ng-deep .event-image,
+  ::ng-deep .default-event-image {
     width: 28px;
     height: 28px;
     margin: 0;
   }
+
+  // Make collapsed event icon smaller
+  ::ng-deep .default-event-image i {
+    font-size: 14px;
+  }
 }
 
-/* Artist selection dropdown positioning for collapsed sidebar */
-.sidebar.collapsed .artist-selection-container {
+/* Artist/Event selection dropdown positioning for collapsed sidebar */
+.sidebar.collapsed .artist-selection-container,
+.sidebar.collapsed .event-selection-container {
   ::ng-deep .dropdown-menu {
     position: fixed !important;
     top: auto !important;
@@ -438,9 +574,10 @@
   }
 }
 
-/* Artist selection dropdown positioning for mobile */
+/* Artist/Event selection dropdown positioning for mobile */
 @media (max-width: 991px) {
-  .artist-selection-container {
+  .artist-selection-container,
+  .event-selection-container {
     ::ng-deep .dropdown-menu {
       position: fixed !important;
       top: auto !important;
@@ -459,7 +596,7 @@
       border-radius: 4px !important;
       box-shadow: 0 6px 12px rgba(0,0,0,.175) !important;
     }
-    
+
     ::ng-deep .dropdown.open .dropdown-menu {
       transform: translateX(0) !important;
     }
@@ -498,7 +635,8 @@
     }
 
     // Expanded sidebar: dropdown should break out and overflow into main panel
-    &:not(.collapsed) .artist-selection-container {
+    &:not(.collapsed) .artist-selection-container,
+    &:not(.collapsed) .event-selection-container {
       ::ng-deep .dropdown-menu {
         position: fixed !important;
         left: 12px !important;

@@ -23,23 +23,15 @@
             </app-artist-selection>
           </li>
         
-        <!-- Event Indicator (if section has showEventIndicator flag) -->
-        <li *ngIf="section.showEventIndicator && isAdmin" class="context-indicator">
-          <div class="context-indicator-content" 
-               (click)="goToEventSelection()"
-               [title]="isCollapsed && !isMobileView ? (selectedEvent ? selectedEvent.title : 'Select an event') : ''">
-            <ng-container *ngIf="selectedEvent">
-              <img [src]="getEventPoster()" 
-                   [alt]="selectedEvent.title" 
-                   class="context-indicator-photo event-indicator-photo">
-              <span class="context-indicator-name" [style.color]="textColor">{{ selectedEvent.title }}</span>
-            </ng-container>
-            <ng-container *ngIf="!selectedEvent">
-              <i class="fas fa-calendar-alt context-indicator-placeholder event-indicator-placeholder" [style.color]="iconColor"></i>
-              <span class="context-indicator-name" [style.color]="textColor">Select an event</span>
-            </ng-container>
-            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
-          </div>
+        <!-- Event Selection (if section has showEventIndicator flag) -->
+        <li *ngIf="section.showEventIndicator && isAdmin" class="event-selection-container">
+          <app-event-selection
+            [events]="events"
+            [selectedEvent]="selectedEvent"
+            [loading]="loadingEvents"
+            [isAdmin]="isAdmin"
+            (eventSelected)="onEventSelected($event)">
+          </app-event-selection>
         </li>
 
           <!-- Section menu items -->
