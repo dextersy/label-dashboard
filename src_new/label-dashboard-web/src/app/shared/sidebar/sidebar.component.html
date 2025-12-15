@@ -75,13 +75,10 @@
            [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
            [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'"
            [title]="isCollapsed && !isMobileView ? item.title : ''">
-          <i [class]="item.icon" 
+          <i [class]="item.icon"
              [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
           <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
             {{ item.title }}
-            <i *ngIf="item.adminOnly" class="fas fa-shield-alt admin-icon" 
-               [style.color]="iconColor" 
-               title="Admin Only"></i>
           </p>
         </a>
         
@@ -113,9 +110,6 @@
                  class="submenu-item">
                 <span [style.color]="isActiveRoute(child.route) ? activeColor : textColor">
                   {{ child.title }}
-                  <i *ngIf="child.adminOnly" class="fas fa-shield-alt admin-icon" 
-                     [style.color]="iconColor" 
-                     title="Admin Only"></i>
                 </span>
               </a>
             </li>
@@ -142,9 +136,6 @@
          [style.color]="isActiveRoute(child.route) ? activeColor : textColor"
          [class.active]="isActiveRoute(child.route)">
         {{ child.title }}
-        <i *ngIf="child.adminOnly" class="fas fa-shield-alt admin-icon" 
-           [style.color]="iconColor" 
-           title="Admin Only"></i>
       </a>
     </li>
   </ul>
