@@ -91,11 +91,11 @@
     width: calc(100% - 70px) !important;
     transition: margin-left 0.3s ease, width 0.3s ease;
   }
-  
+
   // When sidebar is open/expanded: add full margin and constrain width
   .wrapper.sidebar-open {
-    margin-left: 260px !important;
-    width: calc(100% - 260px) !important;
+    margin-left: 300px !important;
+    width: calc(100% - 300px) !important;
   }
 }
 

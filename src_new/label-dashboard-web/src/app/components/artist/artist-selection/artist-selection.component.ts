@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, OnDestroy, Output, EventEmitter, Input, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -31,7 +31,8 @@ export interface Artist {
 export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentArtist: Artist | null = null;
   @Output() artistSelected = new EventEmitter<{artist: Artist, userInitiated: boolean}>();
-  
+  @ViewChild('dropdownMenu') dropdownMenu?: ElementRef;
+
   artists: Artist[] = [];
   filteredArtists: Artist[] = [];
   selectedArtist: Artist | null = null;
@@ -50,7 +51,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     this.loadArtists();
-    
+
     // Subscribe to refresh triggers
     this.refreshSubscription.add(
       this.artistStateService.refreshArtists$.subscribe((selectArtistId) => {
@@ -69,6 +70,18 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
         this.checkNewArtistMode();
       })
     );
+
+    // Listen to sidebar scroll events to reposition dropdown
+    setTimeout(() => {
+      const sidebar = document.querySelector('.sidebar') as HTMLElement;
+      if (sidebar) {
+        sidebar.addEventListener('scroll', () => {
+          if (this.isDropdownOpen) {
+            this.positionDropdown();
+          }
+        });
+      }
+    }, 500);
   }
 
   ngOnChanges(): void {
@@ -147,18 +160,46 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   toggleDropdown(): void {
-    this.isDropdownOpen = !this.isDropdownOpen;
-    if (this.isDropdownOpen) {
+    if (!this.isDropdownOpen) {
       // Clear search when opening dropdown
       this.searchTerm = '';
       this.filterArtists();
-      // Focus on search input after dropdown opens
-      setTimeout(() => {
-        const searchInput = document.querySelector('.artist-search-input') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
-      }, 100);
+
+      // Open dropdown first so Angular can render it
+      this.isDropdownOpen = true;
+
+      // Position dropdown immediately after Angular renders it
+      requestAnimationFrame(() => {
+        this.positionDropdown();
+
+        // Focus on search input
+        setTimeout(() => {
+          const searchInput = document.querySelector('.artist-search-input') as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+          }
+        }, 50);
+      });
+    } else {
+      this.isDropdownOpen = false;
+    }
+  }
+
+  @HostListener('window:resize')
+  @HostListener('window:scroll', ['$event'])
+  onWindowChange(): void {
+    if (this.isDropdownOpen) {
+      this.positionDropdown();
+    }
+  }
+
+  private positionDropdown(): void {
+    const dropdownButton = document.querySelector('.artist-dropdown-btn') as HTMLElement;
+    const dropdownMenu = document.querySelector('.artist-selection-container .dropdown-menu') as HTMLElement;
+
+    if (dropdownButton && dropdownMenu) {
+      const rect = dropdownButton.getBoundingClientRect();
+      dropdownMenu.style.top = `${rect.bottom + 2}px`;
     }
   }
 
