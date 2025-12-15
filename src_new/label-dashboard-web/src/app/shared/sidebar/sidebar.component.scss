@@ -370,19 +370,51 @@
   .context-indicator-caret {
     display: none;
   }
-  
+
   .context-indicator-content {
     justify-content: center;
     padding: 8px;
   }
-  
+
   .context-indicator-photo {
     width: 28px;
     height: 28px;
   }
-  
+
   .context-indicator-placeholder {
     font-size: 28px;
+  }
+}
+
+/* Hide artist selection content when sidebar is collapsed on desktop */
+.sidebar.collapsed .artist-selection-container {
+  margin: 0 10px 8px 10px;
+
+  ::ng-deep .artist-dropdown-btn {
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    min-height: auto;
+    display: flex;
+  }
+
+  ::ng-deep .artist-info {
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    flex: none;
+  }
+
+  ::ng-deep .artist-details,
+  ::ng-deep .caret,
+  ::ng-deep .no-artist {
+    display: none;
+  }
+
+  ::ng-deep .artist-photo {
+    width: 28px;
+    height: 28px;
+    margin: 0;
   }
 }
 
