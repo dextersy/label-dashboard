@@ -730,7 +730,7 @@ export const sendSublabelPaymentNotification = async (
     }
 
     // Get sublabel's frontend URL for the dashboard link
-    const dashboardUrl = `${await getBrandFrontendUrl(sublabelBrandId)}/admin#label-finance`;
+    const dashboardUrl = `${await getBrandFrontendUrl(sublabelBrandId)}/admin/reports/artist-balances`;
 
     // Replace template variables - using sublabel name instead of artist name
     template = template.replace(/%LOGO%/g, parentBrand.logo_url || '');

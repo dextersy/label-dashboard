@@ -66,14 +66,14 @@ export class BreadcrumbService {
     
     // Admin section
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
-    '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
-    '/admin/label-finance': { label: 'Label Finance', parent: '/admin' },
-    '/admin/summary': { label: 'Music Earnings', parent: '/admin' },
-    '/admin/balance': { label: 'Artist Finance', parent: '/admin' },
-    '/admin/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin' },
-    '/admin/users': { label: 'Users', parent: '/admin' },
-    '/admin/child-brands': { label: 'Sublabels', parent: '/admin' },
+    '/admin/settings': { label: 'Settings', parent: '/admin' },
+    '/admin/reports': { label: 'Reports', parent: '/admin' },
+    '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
+    '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
     '/admin/tools': { label: 'Tools', parent: '/admin' },
+    '/admin/tools/email-logs': { label: 'Email Logs', parent: '/admin/tools' },
+    '/admin/tools/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin/tools' },
+    '/admin/users': { label: 'Users', parent: '/admin' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

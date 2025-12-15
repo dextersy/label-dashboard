@@ -104,19 +104,17 @@ export const routes: Routes = [
       { path: 'custom-ticket', component: CustomTicketComponent }
     ]
   },
-  { 
-    path: 'admin', 
+  {
+    path: 'admin',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'brand', pathMatch: 'full' },
-      { path: 'brand', component: AdminComponent, data: { tab: 'brand' } },
-      { path: 'summary', component: AdminComponent, data: { tab: 'summary' } },
-      { path: 'balance', component: AdminComponent, data: { tab: 'balance' } },
-      { path: 'bulk-add-earnings', component: AdminComponent, data: { tab: 'bulk-add-earnings' } },
-      { path: 'users', component: AdminComponent, data: { tab: 'users' } },
-      { path: 'child-brands', component: AdminComponent, data: { tab: 'child-brands' } },
-      { path: 'label-finance', component: AdminComponent, data: { tab: 'label-finance' } },
-      { path: 'tools', component: AdminComponent, data: { tab: 'tools' } }
+      { path: '', redirectTo: 'settings', pathMatch: 'full' },
+      { path: 'settings', component: AdminComponent, data: { tab: 'settings' } },
+      { path: 'reports/music-earnings', component: AdminComponent, data: { tab: 'reports-music-earnings' } },
+      { path: 'reports/artist-balances', component: AdminComponent, data: { tab: 'reports-artist-balances' } },
+      { path: 'tools/email-logs', component: AdminComponent, data: { tab: 'tools-email-logs' } },
+      { path: 'tools/bulk-add-earnings', component: AdminComponent, data: { tab: 'tools-bulk-add-earnings' } },
+      { path: 'users', component: AdminComponent, data: { tab: 'users' } }
     ]
   },
   { path: 'domain-not-found', component: DomainNotFoundComponent },

@@ -7,9 +7,7 @@ import { SummaryViewTabComponent } from './components/summary-view-tab.component
 import { BalanceSummaryTabComponent } from './components/balance-summary-tab.component';
 import { BulkAddEarningsTabComponent } from './components/bulk-add-earnings-tab.component';
 import { UsersTabComponent } from './components/users-tab.component';
-import { ChildBrandsTabComponent } from './components/child-brands-tab.component';
 import { ToolsTabComponent } from './components/tools-tab.component';
-import { LabelFinanceTabComponent } from './components/label-finance-tab.component';
 
 @Component({
     selector: 'app-admin',
@@ -21,15 +19,13 @@ import { LabelFinanceTabComponent } from './components/label-finance-tab.compone
         BalanceSummaryTabComponent,
         BulkAddEarningsTabComponent,
         UsersTabComponent,
-        ChildBrandsTabComponent,
-        ToolsTabComponent,
-        LabelFinanceTabComponent
+        ToolsTabComponent
     ],
     templateUrl: './admin.component.html',
     styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit {
-  activeTab: string = 'brand';
+  activeTab: string = 'settings';
 
   constructor(private route: ActivatedRoute) {}
 

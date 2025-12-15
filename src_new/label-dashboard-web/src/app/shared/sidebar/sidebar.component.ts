@@ -148,20 +148,32 @@ export class SidebarComponent implements OnInit, OnDestroy {
       id: 'admin',
       adminOnly: true,
       items: [
-        { 
-          route: '/admin', 
-          icon: 'fas fa-cogs', 
-          title: 'Admin', 
+        {
+          route: '/admin',
+          icon: 'fas fa-cogs',
+          title: 'Admin',
           adminOnly: true,
           children: [
-            { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
-            { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
-            { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
-            { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
-            { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
-            { route: '/admin/users', title: 'Users', adminOnly: true },
-            { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
-            { route: '/admin/tools', title: 'Tools', adminOnly: true }
+            { route: '/admin/settings', title: 'Settings', adminOnly: true },
+            {
+              route: '/admin/reports',
+              title: 'Reports',
+              adminOnly: true,
+              children: [
+                { route: '/admin/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
+                { route: '/admin/reports/artist-balances', title: 'Artist Balances', adminOnly: true }
+              ]
+            },
+            {
+              route: '/admin/tools',
+              title: 'Tools',
+              adminOnly: true,
+              children: [
+                { route: '/admin/tools/email-logs', title: 'Email Logs', adminOnly: true },
+                { route: '/admin/tools/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true }
+              ]
+            },
+            { route: '/admin/users', title: 'Users', adminOnly: true }
           ]
         }
       ]
@@ -241,29 +253,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 // Assign appropriate icons based on the route
                 let icon = 'fas fa-cogs'; // default
                 switch (child.route) {
-                  case '/admin/brand':
+                  case '/admin/settings':
                     icon = 'fas fa-palette';
                     break;
-                  case '/admin/label-finance':
-                    icon = 'fas fa-dollar-sign';
-                    break;
-                  case '/admin/summary':
-                    icon = 'fas fa-chart-line';
-                    break;
-                  case '/admin/balance':
-                    icon = 'fas fa-balance-scale';
-                    break;
-                  case '/admin/bulk-add-earnings':
-                    icon = 'fas fa-plus-circle';
-                    break;
-                  case '/admin/users':
-                    icon = 'fas fa-users';
-                    break;
-                  case '/admin/child-brands':
-                    icon = 'fas fa-sitemap';
+                  case '/admin/reports':
+                    icon = 'fas fa-chart-bar';
                     break;
                   case '/admin/tools':
                     icon = 'fas fa-wrench';
+                    break;
+                  case '/admin/users':
+                    icon = 'fas fa-users';
                     break;
                 }
                 return {
