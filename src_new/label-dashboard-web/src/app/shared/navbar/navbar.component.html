@@ -1,17 +1,33 @@
 <nav class="navbar navbar-expand-lg navbar-light fixed">
   <div class="container-fluid">
-    <button class="navbar-toggle" type="button" (click)="toggleSidebar()" aria-label="Toggle navigation">
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-    </button>
-    
+    <!-- Burger and Context Icons Container -->
+    <div class="navbar-left-group">
+      <button class="navbar-toggle" type="button" (click)="toggleSidebar()" aria-label="Toggle navigation">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+
+      <!-- Context Icons (Artist/Event) - visible on mobile -->
+      <div class="navbar-context-icons">
+        <!-- Artist icon - shown when on artist/releases/financial routes -->
+        <div class="context-icon" *ngIf="shouldShowArtistSelection() && selectedArtist" (click)="toggleSidebar()">
+          <img [src]="getArtistProfilePhoto()" [alt]="selectedArtist.name" class="context-avatar">
+        </div>
+
+        <!-- Event icon - shown when on events routes and event is selected -->
+        <div class="context-icon" *ngIf="currentWorkspace === 'events' && selectedEvent" (click)="toggleSidebar()">
+          <img [src]="getEventPoster()" [alt]="selectedEvent.title" class="context-avatar">
+        </div>
+      </div>
+    </div>
+
     <!-- Workspace Selector -->
     <div class="navbar-workspace-selector">
       <div class="workspace-tabs">
-        <button 
+        <button
           *ngFor="let workspace of availableWorkspaces"
-          class="workspace-tab" 
+          class="workspace-tab"
           [class.active]="currentWorkspace === workspace"
           (click)="selectWorkspace(workspace)">
           <i [class]="getWorkspaceIcon(workspace)"></i>
@@ -19,10 +35,10 @@
         </button>
       </div>
     </div>
-    
+
     <!-- Spacer to push content to the right -->
     <div class="navbar-spacer"></div>
-    
+
     <!-- Welcome message and admin chip on the right -->
     <span class="navbar-welcome">
       <i class="fa-solid fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!

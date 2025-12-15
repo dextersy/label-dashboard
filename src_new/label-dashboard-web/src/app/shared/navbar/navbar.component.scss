@@ -65,6 +65,13 @@
   width: 100%;
 }
 
+/* Left group (burger + context icons) */
+.navbar-left-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* Workspace selector */
 .navbar-workspace-selector {
   margin-left: 15px;
@@ -145,6 +152,37 @@
   margin-right: 20px;
 }
 
+/* Context icons (Artist/Event) styling */
+.navbar-context-icons {
+  display: none;
+  align-items: center;
+
+  .context-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    .context-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
 /* Mobile icons styling */
 .navbar-mobile-icons {
   display: none;
@@ -152,7 +190,7 @@
   gap: 8px;
   margin-right: 8px;
   margin-left: 8px;
-  
+
   .mobile-icon-link {
     color: #333;
     font-size: 16px;
@@ -161,13 +199,13 @@
     transition: all 0.2s ease;
     min-width: 32px;
     text-align: center;
-    
+
     &:hover {
       color: #007bff;
       background-color: rgba(0, 123, 255, 0.1);
       text-decoration: none;
     }
-    
+
     i {
       font-size: 14px;
     }
@@ -176,31 +214,40 @@
 
 /* Adjust hamburger menu margins on mobile */
 @media (max-width: 991px) {
-  .navbar-toggle {
-    margin-right: 8px;
+  .navbar-left-group {
     margin-left: 8px;
   }
-  
+
+  .navbar-toggle {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
   .navbar-artist-selection {
     margin-left: 6px;
     margin-right: 6px;
     flex: 1;
     min-width: 0; // Allow flex item to shrink below content size
   }
-  
+
+  .navbar-context-icons {
+    display: flex; // Show context icons on mobile
+    flex-shrink: 0; // Prevent icons from shrinking
+  }
+
   .navbar-welcome {
     display: none; // Hide welcome message on mobile to save space
   }
-  
+
   .navbar-mobile-icons {
     display: flex; // Show mobile icons on mobile
     flex-shrink: 0; // Prevent icons from shrinking
   }
-  
+
   .navbar-collapse {
     display: none !important; // Hide regular menu items on mobile
   }
-  
+
   .navbar-spacer {
     display: none; // Hide spacer on mobile to save space
   }

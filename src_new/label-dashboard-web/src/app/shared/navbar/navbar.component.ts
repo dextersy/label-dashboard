@@ -4,10 +4,12 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { ArtistStateService } from '../../services/artist-state.service';
+import { EventService, Event } from '../../services/event.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-navbar',
@@ -20,15 +22,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   isSuperadmin: boolean = false;
   selectedArtist: Artist | null = null;
+  selectedEvent: Event | null = null;
   currentWorkspace: WorkspaceType = 'music';
   private authSubscription: Subscription = new Subscription();
   private workspaceSubscription: Subscription = new Subscription();
+  private eventSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private sidebarService: SidebarService,
     private artistStateService: ArtistStateService,
+    private eventService: EventService,
     private workspaceService: WorkspaceService
   ) {}
 
@@ -61,6 +66,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.currentWorkspace = workspace;
       })
     );
+
+    // Subscribe to selected event changes
+    this.eventSubscription.add(
+      this.eventService.selectedEvent$.subscribe(event => {
+        this.selectedEvent = event;
+      })
+    );
   }
 
   onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
@@ -87,6 +99,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.authSubscription.unsubscribe();
     this.workspaceSubscription.unsubscribe();
+    this.eventSubscription.unsubscribe();
+  }
+
+  // Get artist profile photo URL
+  getArtistProfilePhoto(): string {
+    if (this.selectedArtist?.profilePhotoImage?.path) {
+      return this.selectedArtist.profilePhotoImage.path;
+    }
+    if (this.selectedArtist?.profile_photo) {
+      return this.selectedArtist.profile_photo.startsWith('http')
+        ? this.selectedArtist.profile_photo
+        : `${environment.apiUrl}/uploads/artists/${this.selectedArtist.profile_photo}`;
+    }
+    return 'assets/img/placeholder.jpg';
+  }
+
+  // Get event poster URL
+  getEventPoster(): string {
+    if (this.selectedEvent?.poster_url) {
+      return this.selectedEvent.poster_url;
+    }
+    return '';
   }
 
   // Workspace methods
