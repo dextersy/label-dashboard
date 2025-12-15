@@ -192,7 +192,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
         if (eventsSection && eventsSection.items.length > 0) {
           const eventsItem = eventsSection.items[0];
           this.visibleSections = [
-            { id: 'dashboard', items: [{ route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false }] },
             {
               id: 'events-top-level',
               showEventIndicator: true,
@@ -228,7 +227,52 @@ export class SidebarComponent implements OnInit, OnDestroy {
         }
         break;
       case 'admin':
-        this.visibleSections = this.sections.filter(section => section.id === 'dashboard' || section.id === 'admin');
+        // For admin workspace, show admin submenu items as top-level items
+        const adminSection = this.sections.find(section => section.id === 'admin');
+        if (adminSection && adminSection.items.length > 0) {
+          const adminItem = adminSection.items[0];
+          this.visibleSections = [
+            {
+              id: 'admin-top-level',
+              items: adminItem.children?.map(child => {
+                // Assign appropriate icons based on the route
+                let icon = 'fas fa-cogs'; // default
+                switch (child.route) {
+                  case '/admin/brand':
+                    icon = 'fas fa-palette';
+                    break;
+                  case '/admin/label-finance':
+                    icon = 'fas fa-dollar-sign';
+                    break;
+                  case '/admin/summary':
+                    icon = 'fas fa-chart-line';
+                    break;
+                  case '/admin/balance':
+                    icon = 'fas fa-balance-scale';
+                    break;
+                  case '/admin/bulk-add-earnings':
+                    icon = 'fas fa-plus-circle';
+                    break;
+                  case '/admin/users':
+                    icon = 'fas fa-users';
+                    break;
+                  case '/admin/child-brands':
+                    icon = 'fas fa-sitemap';
+                    break;
+                  case '/admin/tools':
+                    icon = 'fas fa-wrench';
+                    break;
+                }
+                return {
+                  ...child,
+                  icon: icon
+                };
+              }) || []
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
         break;
       default:
         this.visibleSections = this.sections;
