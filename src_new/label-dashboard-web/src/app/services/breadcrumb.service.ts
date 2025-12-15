@@ -30,9 +30,11 @@ export class BreadcrumbService {
     '/artist': { label: 'Artist', icon: 'fas fa-headphones' },
     '/artist/profile': { label: 'Profile', parent: '/artist' },
     '/artist/gallery': { label: 'Media Gallery', parent: '/artist' },
-    '/artist/team': { label: 'Team Management', parent: '/artist' },
     '/artist/epk': { label: 'Electronic Press Kit (EPK)', parent: '/artist' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
+
+    // Team Management (top-level)
+    '/artist/team': { label: 'Team Management', icon: 'fas fa-users' },
     
     // Music section
     '/music': { label: 'Music', icon: 'fas fa-music' },

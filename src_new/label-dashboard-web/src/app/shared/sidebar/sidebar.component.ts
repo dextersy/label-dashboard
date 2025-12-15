@@ -87,31 +87,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
       id: 'artist-music-financial',
       showArtistIndicator: true,
       items: [
-        { 
-          route: '/artist', 
-          icon: 'fas fa-headphones', 
-          title: 'Artist', 
+        {
+          route: '/artist',
+          icon: 'fas fa-headphones',
+          title: 'Artist',
           adminOnly: false,
           children: [
             { route: '/artist/profile', title: 'Profile', adminOnly: false },
             { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
-            { route: '/artist/epk', title: 'Electronic Press Kit (EPK)', adminOnly: false },
-            { route: '/artist/team', title: 'Team Management', adminOnly: false }
+            { route: '/artist/epk', title: 'Electronic Press Kit (EPK)', adminOnly: false }
           ]
         },
-        { 
-          route: '/music', 
-          icon: 'fas fa-music', 
-          title: 'Music', 
+        {
+          route: '/music',
+          icon: 'fas fa-music',
+          title: 'Music',
           adminOnly: false,
           children: [
             { route: '/artist/releases', title: 'Releases', adminOnly: false }
           ]
         },
-        { 
-          route: '/financial', 
-          icon: 'fas fa-dollar-sign', 
-          title: 'Financial', 
+        {
+          route: '/financial',
+          icon: 'fas fa-dollar-sign',
+          title: 'Financial',
           adminOnly: false,
           children: [
             { route: '/financial/summary', title: 'Summary', adminOnly: false },
@@ -121,7 +120,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
-        }
+        },
+        { route: '/artist/team', icon: 'fas fa-users', title: 'Team Management', adminOnly: false }
       ]
     },
     {
@@ -495,20 +495,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActiveParentRoute(parentRoute: string): boolean {
+    // Check if current route is a top-level menu item (not a child of any parent)
+    const currentIsTopLevel = this.allMenuItems.some((item: MenuItem) =>
+      item.route === this.currentRoute && !item.children
+    );
+
+    // If current route is a top-level item, only highlight it if it exactly matches
+    if (currentIsTopLevel && this.currentRoute !== parentRoute) {
+      return false;
+    }
+
     // First check if current route starts with parent route (for child pages)
     if (this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute) {
       return true;
     }
-    
+
     // Also check if any child route matches the current route
     // This handles cases like Music menu with /artist/releases as child
     const menuItem = this.allMenuItems.find((item: MenuItem) => item.route === parentRoute);
     if (menuItem && menuItem.children) {
-      return menuItem.children.some((child: MenuItem) => 
+      return menuItem.children.some((child: MenuItem) =>
         this.currentRoute === child.route || this.currentRoute.startsWith(child.route + '/')
       );
     }
-    
+
     return false;
   }
 
