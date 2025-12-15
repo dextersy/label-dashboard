@@ -135,21 +135,20 @@
 /* Remove background highlighting - will use font color instead */
 
 .nav li a {
-  margin: 3px 12px 0;
-  border-radius: 3px;
+  margin: 5px 12px 0;
+  border-radius: 4px;
   // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
-  font-size: 11px;
+  font-size: 13px;
   text-transform: uppercase;
-  line-height: 22px;
+  line-height: 28px;
   opacity: 0.7;
   position: relative;
-  display: block;
-  padding: 6px 10px;
-  text-decoration: none;
+  padding: 10px 12px;
+  letter-spacing: 0.3px;
 }
 
 .nav li a:hover {
@@ -157,20 +156,20 @@
 }
 
 .nav li a i {
-  font-size: 18px;
+  font-size: 20px;
   float: left;
-  margin-right: 10px;
-  line-height: 22px;
-  width: 22px;
+  margin-right: 12px;
+  line-height: 28px;
+  width: 24px;
   text-align: center;
   // Color is now set dynamically via [style.color] binding
 }
 
 .nav li a p {
   margin: 0;
-  line-height: 22px;
-  font-size: 11px;
-  height: 22px;
+  line-height: 28px;
+  font-size: 13px;
+  height: 28px;
   // Color is now set dynamically via [style.color] binding
 }
 
@@ -192,7 +191,7 @@
 
 /* Menu section dividers */
 .separator {
-  height: 8px;
+  height: 12px;
   background: transparent;
   margin: 0;
   border: none;
@@ -639,26 +638,26 @@
   }
   
   .submenu-item {
-    margin: 0; // Reset margins completely
-    padding: 0px 10px 0px 60px !important; // Reduced left padding to 60px, minimal vertical spacing
-    border-radius: 2px;
+    margin: 0;
+    padding: 5px 12px 5px 52px !important;
+    border-radius: 3px;
     display: block;
     text-decoration: none;
     font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
-    font-weight: 300;
-    font-size: 10px; // Slightly smaller font
-    text-transform: none; // Don't uppercase submenu items
-    line-height: 14px; // Even smaller line height
-    opacity: 0.7; // More subtle when inactive
+    font-weight: 400;
+    font-size: 12px;
+    text-transform: none;
+    line-height: 20px;
+    opacity: 0.7;
     transition: all 0.2s ease;
-    
+
     &:hover {
       opacity: 1;
     }
-    
+
     span {
-      font-size: 10px;
-      line-height: 14px;
+      font-size: 12px;
+      line-height: 20px;
       margin: 0;
       height: auto;
     }
