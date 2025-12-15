@@ -6,6 +6,9 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { EventService, Event } from '../../services/event.service';
+import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
+import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
+import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -29,7 +32,7 @@ interface MenuSection {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent, EventSelectionComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -57,12 +60,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   // Selected event state
   selectedEvent: Event | null = null;
+  events: Event[] = [];
+  loadingEvents = false;
+
+  // Current workspace
+  currentWorkspace: WorkspaceType = 'music';
+  visibleSections: MenuSection[] = [];
+  isInitialized = false;
   
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
   private artistSubscription: Subscription = new Subscription();
   private eventSubscription: Subscription = new Subscription();
+  private workspaceSubscription: Subscription = new Subscription();
 
   // Menu sections with nested items and indicator flags
   sections: MenuSection[] = [
@@ -76,31 +87,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
       id: 'artist-music-financial',
       showArtistIndicator: true,
       items: [
-        { 
-          route: '/artist', 
-          icon: 'fas fa-headphones', 
-          title: 'Artist', 
+        {
+          route: '/artist',
+          icon: 'fas fa-headphones',
+          title: 'Artist',
           adminOnly: false,
           children: [
             { route: '/artist/profile', title: 'Profile', adminOnly: false },
             { route: '/artist/gallery', title: 'Media Gallery', adminOnly: false },
-            { route: '/artist/epk', title: 'Electronic Press Kit (EPK)', adminOnly: false },
-            { route: '/artist/team', title: 'Team Management', adminOnly: false }
+            { route: '/artist/epk', title: 'Electronic Press Kit (EPK)', adminOnly: false }
           ]
         },
-        { 
-          route: '/music', 
-          icon: 'fas fa-music', 
-          title: 'Music', 
+        {
+          route: '/music',
+          icon: 'fas fa-music',
+          title: 'Music',
           adminOnly: false,
           children: [
-            { route: '/artist/releases', title: 'Releases', adminOnly: false }
+            { route: '/music/releases', title: 'Releases', adminOnly: false }
           ]
         },
-        { 
-          route: '/financial', 
-          icon: 'fas fa-dollar-sign', 
-          title: 'Financial', 
+        {
+          route: '/financial',
+          icon: 'fas fa-dollar-sign',
+          title: 'Financial',
           adminOnly: false,
           children: [
             { route: '/financial/summary', title: 'Summary', adminOnly: false },
@@ -110,7 +120,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
-        }
+        },
+        { route: '/team', icon: 'fas fa-users', title: 'Team Management', adminOnly: false }
       ]
     },
     {
@@ -134,23 +145,51 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     {
+      id: 'labels',
+      adminOnly: true,
+      items: [
+        {
+          route: '/labels',
+          icon: 'fas fa-tags',
+          title: 'Labels',
+          adminOnly: true,
+          children: [
+            { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true, icon: 'fas fa-coins' },
+            { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true, icon: 'fas fa-layer-group' }
+          ]
+        }
+      ]
+    },
+    {
       id: 'admin',
       adminOnly: true,
       items: [
-        { 
-          route: '/admin', 
-          icon: 'fas fa-cogs', 
-          title: 'Admin', 
+        {
+          route: '/admin',
+          icon: 'fas fa-cogs',
+          title: 'Admin',
           adminOnly: true,
           children: [
-            { route: '/admin/brand', title: 'Brand Settings', adminOnly: true },
-            { route: '/admin/label-finance', title: 'Label Finance', adminOnly: true },
-            { route: '/admin/summary', title: 'Music Earnings', adminOnly: true },
-            { route: '/admin/balance', title: 'Artist Finance', adminOnly: true },
-            { route: '/admin/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true },
-            { route: '/admin/users', title: 'Users', adminOnly: true },
-            { route: '/admin/child-brands', title: 'Sublabels', adminOnly: true },
-            { route: '/admin/tools', title: 'Tools', adminOnly: true }
+            { route: '/admin/settings', title: 'Settings', adminOnly: true },
+            {
+              route: '/admin/reports',
+              title: 'Reports',
+              adminOnly: true,
+              children: [
+                { route: '/admin/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
+                { route: '/admin/reports/artist-balances', title: 'Artist Balances', adminOnly: true }
+              ]
+            },
+            {
+              route: '/admin/tools',
+              title: 'Tools',
+              adminOnly: true,
+              children: [
+                { route: '/admin/tools/email-logs', title: 'Email Logs', adminOnly: true },
+                { route: '/admin/tools/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true }
+              ]
+            },
+            { route: '/admin/users', title: 'Users', adminOnly: true }
           ]
         }
       ]
@@ -162,13 +201,127 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return this.sections.flatMap(section => section.items);
   }
 
+  // Update visible sections based on current workspace
+  private updateVisibleSections(): void {
+    switch (this.currentWorkspace) {
+      case 'music':
+        // For music workspace, combine dashboard with artist/music/financial items
+        const musicSection = this.sections.find(section => section.id === 'artist-music-financial');
+        const dashboardItem = { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false };
+        if (musicSection) {
+          this.visibleSections = [{
+            ...musicSection,
+            items: [dashboardItem, ...musicSection.items]
+          }];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'events':
+        // For events workspace, show events submenu items as top-level items
+        const eventsSection = this.sections.find(section => section.id === 'events');
+        if (eventsSection && eventsSection.items.length > 0) {
+          const eventsItem = eventsSection.items[0];
+          this.visibleSections = [
+            {
+              id: 'events-top-level',
+              showEventIndicator: true,
+              items: eventsItem.children?.map(child => {
+                // Assign appropriate icons based on the route
+                let icon = 'fas fa-ticket-alt'; // default
+                switch (child.route) {
+                  case '/events/details':
+                    icon = 'fas fa-calendar-alt';
+                    break;
+                  case '/events/tickets':
+                    icon = 'fas fa-ticket-alt';
+                    break;
+                  case '/events/abandoned':
+                    icon = 'fas fa-clock';
+                    break;
+                  case '/events/referrals':
+                    icon = 'fas fa-users';
+                    break;
+                  case '/events/email':
+                    icon = 'fas fa-envelope';
+                    break;
+                }
+                return {
+                  ...child,
+                  icon: icon
+                };
+              }) || []
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'admin':
+        // For admin workspace, show admin submenu items as top-level items
+        const adminSection = this.sections.find(section => section.id === 'admin');
+        if (adminSection && adminSection.items.length > 0) {
+          const adminItem = adminSection.items[0];
+          this.visibleSections = [
+            {
+              id: 'admin-top-level',
+              items: adminItem.children?.map(child => {
+                // Assign appropriate icons based on the route
+                let icon = 'fas fa-cogs'; // default
+                switch (child.route) {
+                  case '/admin/settings':
+                    icon = 'fas fa-palette';
+                    break;
+                  case '/admin/reports':
+                    icon = 'fas fa-chart-bar';
+                    break;
+                  case '/admin/tools':
+                    icon = 'fas fa-wrench';
+                    break;
+                  case '/admin/users':
+                    icon = 'fas fa-users';
+                    break;
+                }
+                return {
+                  ...child,
+                  icon: icon
+                };
+              }) || []
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'labels':
+        const labelsSection = this.sections.find(section => section.id === 'labels');
+        if (labelsSection) {
+          // show the labels top-level children
+          const labelsItem = labelsSection.items[0];
+          this.visibleSections = [
+            {
+              id: 'labels-top-level',
+              items: labelsItem.children?.map(child => ({ ...child, icon: child.icon || 'fas fa-tags' })) || []
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      default:
+        this.visibleSections = this.sections;
+        break;
+    }
+  }
+
   constructor(
     private router: Router,
     private brandService: BrandService,
     private sidebarService: SidebarService,
     private authService: AuthService,
     private artistStateService: ArtistStateService,
-    private eventService: EventService
+    private eventService: EventService,
+    private workspaceService: WorkspaceService
   ) {}
 
   ngOnInit(): void {
@@ -197,6 +350,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+
+        // Load events when user becomes admin
+        if (this.isAdmin && this.events.length === 0) {
+          this.loadEvents();
+        }
       })
     );
 
@@ -213,6 +371,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.selectedEvent = event;
       })
     );
+
+    // Subscribe to workspace changes
+    this.workspaceSubscription.add(
+      this.workspaceService.currentWorkspace$.subscribe(workspace => {
+        this.currentWorkspace = workspace;
+        this.updateVisibleSections();
+      })
+    );
+
+    // Initialize visible sections
+    this.updateVisibleSections();
+    this.isInitialized = true;
   }
 
   @HostListener('window:resize')
@@ -233,38 +403,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.unsubscribe();
     this.artistSubscription.unsubscribe();
     this.eventSubscription.unsubscribe();
+    this.workspaceSubscription.unsubscribe();
   }
 
-  // Get artist profile photo URL
-  getArtistProfilePhoto(): string {
-    if (this.selectedArtist?.profilePhotoImage?.path) {
-      return this.selectedArtist.profilePhotoImage.path;
-    }
-    if (this.selectedArtist?.profile_photo) {
-      return this.selectedArtist.profile_photo.startsWith('http') 
-        ? this.selectedArtist.profile_photo 
-        : `${environment.apiUrl}/uploads/artists/${this.selectedArtist.profile_photo}`;
-    }
-    return 'assets/img/placeholder.jpg';
-  }
-
-  // Navigate to artist selection page
-  goToArtistSelection(): void {
-    this.router.navigate(['/artist']);
-  }
-
-  // Get event poster URL
-  getEventPoster(): string {
-    if (this.selectedEvent?.poster_url) {
-      return this.selectedEvent.poster_url;
-    }
-    return 'assets/img/placeholder.jpg';
-  }
-
-  // Navigate to event selection/details page
-  goToEventSelection(): void {
-    this.router.navigate(['/events/details']);
-  }
 
   loadBrandSettings(): void {
     // First try to get cached brand settings
@@ -385,20 +526,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActiveParentRoute(parentRoute: string): boolean {
+    // Check if current route is a top-level menu item (not a child of any parent)
+    const currentIsTopLevel = this.allMenuItems.some((item: MenuItem) =>
+      item.route === this.currentRoute && !item.children
+    );
+
+    // If current route is a top-level item, only highlight it if it exactly matches
+    if (currentIsTopLevel && this.currentRoute !== parentRoute) {
+      return false;
+    }
+
     // First check if current route starts with parent route (for child pages)
     if (this.currentRoute.startsWith(parentRoute + '/') || this.currentRoute === parentRoute) {
       return true;
     }
-    
+
     // Also check if any child route matches the current route
-    // This handles cases like Music menu with /artist/releases as child
+    // This handles cases like Music menu with /music/releases as child
     const menuItem = this.allMenuItems.find((item: MenuItem) => item.route === parentRoute);
     if (menuItem && menuItem.children) {
-      return menuItem.children.some((child: MenuItem) => 
+      return menuItem.children.some((child: MenuItem) =>
         this.currentRoute === child.route || this.currentRoute.startsWith(child.route + '/')
       );
     }
-    
+
     return false;
   }
 
@@ -485,8 +636,47 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  trackBySectionId(index: number, section: MenuSection): string {
+    return section.id;
+  }
+
+  onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
+    this.artistStateService.setSelectedArtist(event.artist);
+
+    // Only redirect when user actually changes the selection, not during initialization
+    if (event.userInitiated) {
+      const currentRoute = this.router.url;
+      if (currentRoute.includes('/artist')) {
+        this.router.navigate(['/artist/profile']);
+      } else if (currentRoute.includes('/financial')) {
+        this.router.navigate(['/financial/summary']);
+      }
+
+      // Close sidebar on mobile after selection
+      this.sidebarService.closeOnMobileNavigation();
+    }
+  }
+
   onMenuItemClick(item?: any): void {
     // Close sidebar on mobile when menu item is clicked
     this.sidebarService.closeOnMobileNavigation();
+  }
+
+  loadEvents(): void {
+    this.loadingEvents = true;
+    this.eventService.getEvents().subscribe({
+      next: (events) => {
+        this.events = events;
+        this.loadingEvents = false;
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+        this.loadingEvents = false;
+      }
+    });
+  }
+
+  onEventSelected(event: Event): void {
+    this.eventService.setSelectedEvent(event);
   }
 }

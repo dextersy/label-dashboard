@@ -112,12 +112,12 @@ export class AppComponent implements OnInit, OnDestroy {
     const completionSubscription = this.adminService.sublabelCompletion$.subscribe(
       (event: SublabelCompletionEvent | null) => {
         if (event && this.authService.isLoggedIn()) {
-          // Show completion notification with clickable action to go to brand settings
+          // Show completion notification with clickable action to go to settings
           this.notificationService.showSuccess(
-            `Your new label "${event.sublabelName}" is ready! Click here to go to Brand Settings.`,
+            `Your new label "${event.sublabelName}" is ready! Click here to go to Settings.`,
             () => {
-              // Navigate to brand settings
-              this.router.navigate(['/admin/brand']);
+              // Navigate to settings
+              this.router.navigate(['/admin/settings']);
             }
           );
         }

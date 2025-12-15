@@ -25,7 +25,7 @@ export class LatestAlbumsComponent {
   constructor(private router: Router) {}
 
   goToReleases(): void {
-    this.router.navigate(['/artist/releases']);
+    this.router.navigate(['/music/releases']);
   }
 
   goToRelease(release: LatestRelease): void {
@@ -33,7 +33,7 @@ export class LatestAlbumsComponent {
     if (release.artist_id) {
       localStorage.setItem('selected_artist_id', release.artist_id.toString());
     }
-    this.router.navigate(['/artist/releases/edit', release.id]);
+    this.router.navigate(['/music/releases/edit', release.id]);
   }
 
   getStatusClass(status: string): string {

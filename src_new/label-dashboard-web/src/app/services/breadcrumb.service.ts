@@ -30,15 +30,17 @@ export class BreadcrumbService {
     '/artist': { label: 'Artist', icon: 'fas fa-headphones' },
     '/artist/profile': { label: 'Profile', parent: '/artist' },
     '/artist/gallery': { label: 'Media Gallery', parent: '/artist' },
-    '/artist/team': { label: 'Team Management', parent: '/artist' },
     '/artist/epk': { label: 'Electronic Press Kit (EPK)', parent: '/artist' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
-    
+
+    // Team Management (top-level)
+    '/team': { label: 'Team Management', icon: 'fas fa-users' },
+
     // Music section
     '/music': { label: 'Music', icon: 'fas fa-music' },
-    '/artist/releases': { label: 'Releases', parent: '/music' },
-    '/artist/releases/new': { label: 'Create Release', parent: '/artist/releases' },
-    '/artist/releases/edit/:id': { label: 'Edit Release', parent: '/artist/releases' },
+    '/music/releases': { label: 'Releases', parent: '/music' },
+    '/music/releases/new': { label: 'Create Release', parent: '/music/releases' },
+    '/music/releases/edit/:id': { label: 'Edit Release', parent: '/music/releases' },
     
     // Financial section
     '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },
@@ -61,17 +63,22 @@ export class BreadcrumbService {
     '/events/referrals': { label: 'Referrals', parent: '/events' },
     '/events/email': { label: 'Send Email', parent: '/events' },
     '/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/events' },
+
+    // Labels workspace
+    '/labels': { label: 'Labels', icon: 'fas fa-tags' },
+    '/labels/earnings': { label: 'My Label Earnings', parent: '/labels', icon: 'fas fa-coins' },
+    '/labels/sublabels': { label: 'Sublabels', parent: '/labels', icon: 'fas fa-layer-group' },
     
     // Admin section
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
-    '/admin/brand': { label: 'Brand Settings', parent: '/admin' },
-    '/admin/label-finance': { label: 'Label Finance', parent: '/admin' },
-    '/admin/summary': { label: 'Music Earnings', parent: '/admin' },
-    '/admin/balance': { label: 'Artist Finance', parent: '/admin' },
-    '/admin/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin' },
-    '/admin/users': { label: 'Users', parent: '/admin' },
-    '/admin/child-brands': { label: 'Sublabels', parent: '/admin' },
+    '/admin/settings': { label: 'Settings', parent: '/admin' },
+    '/admin/reports': { label: 'Reports', parent: '/admin' },
+    '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
+    '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
     '/admin/tools': { label: 'Tools', parent: '/admin' },
+    '/admin/tools/email-logs': { label: 'Email Logs', parent: '/admin/tools' },
+    '/admin/tools/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin/tools' },
+    '/admin/users': { label: 'Users', parent: '/admin' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {
@@ -79,16 +86,21 @@ export class BreadcrumbService {
       filter(event => event instanceof NavigationEnd),
       map(() => this.createBreadcrumbs())
     ).subscribe(breadcrumbs => {
-      this.breadcrumbsSubject.next(breadcrumbs);
+      // Only overwrite stored breadcrumbs if we actually found breadcrumbs for the route
+      if (breadcrumbs && breadcrumbs.length > 0) {
+        this.breadcrumbsSubject.next(breadcrumbs);
+      }
     });
   }
 
   private createBreadcrumbs(): BreadcrumbItem[] {
     const currentUrl = this.router.url.split('?')[0]; // Remove query params
+    // createBreadcrumbs: generate breadcrumbs for current route
     const breadcrumbs: BreadcrumbItem[] = [];
 
     // First try exact match
     let menuItem = this.menuStructure[currentUrl];
+    // exact match check
     
     // If no exact match, try to match parameterized routes
     if (!menuItem) {
@@ -103,6 +115,17 @@ export class BreadcrumbService {
     if (menuItem) {
       // Recursively build the full hierarchy
       this.buildBreadcrumbHierarchy(currentUrl, breadcrumbs);
+      // built breadcrumbs
+    }
+
+    // Fallback: if no exact or parameterized match, try prefix matches (useful for nested paths)
+    if (!menuItem) {
+      for (const routePattern of Object.keys(this.menuStructure)) {
+        if (currentUrl === routePattern || currentUrl.startsWith(routePattern + '/')) {
+          this.buildBreadcrumbHierarchy(routePattern, breadcrumbs);
+          break;
+        }
+      }
     }
 
     return breadcrumbs;

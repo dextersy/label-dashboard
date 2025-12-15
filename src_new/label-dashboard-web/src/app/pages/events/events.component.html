@@ -1,16 +1,6 @@
 <div class="events-page">
   <div class="container-fluid">
-    
-    <!-- Event Selection -->
-    <app-event-selection
-      [events]="availableEvents"
-      [selectedEvent]="selectedEvent"
-      [loading]="loading"
-      [isAdmin]="isAdmin"
-      (eventSelected)="onEventSelection($event)"
-      (createEventRequested)="openCreateEventModal()">
-    </app-event-selection>
-    
+
     <!-- Page Header -->
     <div class="page-header mb-3">
       <app-breadcrumb></app-breadcrumb>

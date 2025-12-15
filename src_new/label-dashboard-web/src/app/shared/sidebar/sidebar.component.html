@@ -9,50 +9,29 @@
       </a>
     </div>
 
-    <ul class="nav">
+    <ul class="nav" *ngIf="isInitialized">
       <!-- Iterate through sections -->
-      <ng-container *ngFor="let section of sections; let sectionIndex = index">
+      <ng-container *ngFor="let section of visibleSections; let sectionIndex = index">
         <!-- Only show section if it has visible content -->
         <ng-container *ngIf="shouldShowSection(section)">
-          <!-- Section separator (if there's a visible previous section) -->
-          <li *ngIf="sectionIndex > 0 && shouldShowSection(sections[sectionIndex - 1])" class="separator"></li>
           
-          <!-- Artist Indicator (if section has showArtistIndicator flag) -->
-        <li *ngIf="section.showArtistIndicator" class="context-indicator">
-          <div class="context-indicator-content" 
-               (click)="goToArtistSelection()"
-               [title]="isCollapsed && !isMobileView ? (selectedArtist ? selectedArtist.name : 'Select an artist') : ''">
-            <ng-container *ngIf="selectedArtist">
-              <img [src]="getArtistProfilePhoto()" 
-                   [alt]="selectedArtist.name" 
-                   class="context-indicator-photo artist-indicator-photo">
-              <span class="context-indicator-name" [style.color]="textColor">{{ selectedArtist.name }}</span>
-            </ng-container>
-            <ng-container *ngIf="!selectedArtist">
-              <i class="fas fa-user-circle context-indicator-placeholder artist-indicator-placeholder" [style.color]="iconColor"></i>
-              <span class="context-indicator-name" [style.color]="textColor">Select an artist</span>
-            </ng-container>
-            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
-          </div>
-        </li>
+          <!-- Artist Selection (if section has showArtistIndicator flag) -->
+          <li *ngIf="section.showArtistIndicator" class="artist-selection-container">
+            <app-artist-selection 
+              [currentArtist]="selectedArtist"
+              (artistSelected)="onArtistSelected($event)">
+            </app-artist-selection>
+          </li>
         
-        <!-- Event Indicator (if section has showEventIndicator flag) -->
-        <li *ngIf="section.showEventIndicator && isAdmin" class="context-indicator">
-          <div class="context-indicator-content" 
-               (click)="goToEventSelection()"
-               [title]="isCollapsed && !isMobileView ? (selectedEvent ? selectedEvent.title : 'Select an event') : ''">
-            <ng-container *ngIf="selectedEvent">
-              <img [src]="getEventPoster()" 
-                   [alt]="selectedEvent.title" 
-                   class="context-indicator-photo event-indicator-photo">
-              <span class="context-indicator-name" [style.color]="textColor">{{ selectedEvent.title }}</span>
-            </ng-container>
-            <ng-container *ngIf="!selectedEvent">
-              <i class="fas fa-calendar-alt context-indicator-placeholder event-indicator-placeholder" [style.color]="iconColor"></i>
-              <span class="context-indicator-name" [style.color]="textColor">Select an event</span>
-            </ng-container>
-            <i class="fas fa-chevron-right context-indicator-caret" [style.color]="iconColor"></i>
-          </div>
+        <!-- Event Selection (if section has showEventIndicator flag) -->
+        <li *ngIf="section.showEventIndicator && isAdmin" class="event-selection-container">
+          <app-event-selection
+            [events]="events"
+            [selectedEvent]="selectedEvent"
+            [loading]="loadingEvents"
+            [isAdmin]="isAdmin"
+            (eventSelected)="onEventSelected($event)">
+          </app-event-selection>
         </li>
 
           <!-- Section menu items -->
@@ -88,13 +67,10 @@
            [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
            [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'"
            [title]="isCollapsed && !isMobileView ? item.title : ''">
-          <i [class]="item.icon" 
+          <i [class]="item.icon"
              [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
           <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
             {{ item.title }}
-            <i *ngIf="item.adminOnly" class="fas fa-shield-alt admin-icon" 
-               [style.color]="iconColor" 
-               title="Admin Only"></i>
           </p>
         </a>
         
@@ -126,9 +102,6 @@
                  class="submenu-item">
                 <span [style.color]="isActiveRoute(child.route) ? activeColor : textColor">
                   {{ child.title }}
-                  <i *ngIf="child.adminOnly" class="fas fa-shield-alt admin-icon" 
-                     [style.color]="iconColor" 
-                     title="Admin Only"></i>
                 </span>
               </a>
             </li>
@@ -155,9 +128,6 @@
          [style.color]="isActiveRoute(child.route) ? activeColor : textColor"
          [class.active]="isActiveRoute(child.route)">
         {{ child.title }}
-        <i *ngIf="child.adminOnly" class="fas fa-shield-alt admin-icon" 
-           [style.color]="iconColor" 
-           title="Admin Only"></i>
       </a>
     </li>
   </ul>

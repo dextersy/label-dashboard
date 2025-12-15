@@ -27,6 +27,18 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Auto-focus search input when dropdown opens if there are many events
     document.addEventListener('click', this.handleOutsideClick.bind(this));
+
+    // Listen to sidebar scroll events to reposition dropdown
+    setTimeout(() => {
+      const sidebar = document.querySelector('.sidebar') as HTMLElement;
+      if (sidebar) {
+        sidebar.addEventListener('scroll', () => {
+          if (this.isDropdownOpen) {
+            this.positionDropdown();
+          }
+        });
+      }
+    }, 500);
   }
 
   ngOnDestroy(): void {
@@ -35,17 +47,45 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
 
   toggleDropdown(): void {
     if (!this.loading) {
-      this.isDropdownOpen = !this.isDropdownOpen;
-      
-      // Focus search input after dropdown opens
-      if (this.isDropdownOpen && this.events.length > 5) {
-        setTimeout(() => {
-          const searchInput = document.querySelector('.search-input') as HTMLInputElement;
-          if (searchInput) {
-            searchInput.focus();
+      if (!this.isDropdownOpen) {
+        // Open dropdown first so Angular can render it
+        this.isDropdownOpen = true;
+
+        // Position dropdown immediately after Angular renders it
+        requestAnimationFrame(() => {
+          this.positionDropdown();
+
+          // Focus search input after dropdown opens
+          if (this.events.length > 5) {
+            setTimeout(() => {
+              const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+              if (searchInput) {
+                searchInput.focus();
+              }
+            }, 50);
           }
-        }, 100);
+        });
+      } else {
+        this.isDropdownOpen = false;
       }
+    }
+  }
+
+  @HostListener('window:resize')
+  @HostListener('window:scroll', ['$event'])
+  onWindowChange(): void {
+    if (this.isDropdownOpen) {
+      this.positionDropdown();
+    }
+  }
+
+  private positionDropdown(): void {
+    const dropdownButton = document.querySelector('.event-dropdown-btn') as HTMLElement;
+    const dropdownMenu = document.querySelector('.event-selection-container .dropdown-menu') as HTMLElement;
+
+    if (dropdownButton && dropdownMenu) {
+      const rect = dropdownButton.getBoundingClientRect();
+      dropdownMenu.style.top = `${rect.bottom + 2}px`;
     }
   }
 

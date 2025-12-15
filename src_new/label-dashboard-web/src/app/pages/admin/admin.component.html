@@ -10,44 +10,34 @@
       <div class="col-12">
         
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
-        <!-- Brand Settings Tab -->
-        <div *ngIf="activeTab === 'brand'">
+        <!-- Settings Tab -->
+        <div *ngIf="activeTab === 'settings'">
           <app-brand-settings-tab></app-brand-settings-tab>
         </div>
 
-        <!-- Summary View Tab -->
-        <div *ngIf="activeTab === 'summary'">
+        <!-- Reports - Music Earnings Tab -->
+        <div *ngIf="activeTab === 'reports-music-earnings'">
           <app-summary-view-tab></app-summary-view-tab>
         </div>
 
-        <!-- Balance Summary Tab -->
-        <div *ngIf="activeTab === 'balance'">
+        <!-- Reports - Artist Balances Tab -->
+        <div *ngIf="activeTab === 'reports-artist-balances'">
           <app-balance-summary-tab></app-balance-summary-tab>
         </div>
 
-        <!-- Bulk Add Earnings Tab -->
-        <div *ngIf="activeTab === 'bulk-add-earnings'">
+        <!-- Tools - Email Logs Tab -->
+        <div *ngIf="activeTab === 'tools-email-logs'">
+          <app-tools-tab></app-tools-tab>
+        </div>
+
+        <!-- Tools - Bulk Add Earnings Tab -->
+        <div *ngIf="activeTab === 'tools-bulk-add-earnings'">
           <app-bulk-add-earnings-tab></app-bulk-add-earnings-tab>
         </div>
 
         <!-- Users Tab -->
         <div *ngIf="activeTab === 'users'">
           <app-users-tab></app-users-tab>
-        </div>
-
-        <!-- Sublabels Tab -->
-        <div *ngIf="activeTab === 'child-brands'">
-          <app-child-brands-tab></app-child-brands-tab>
-        </div>
-
-        <!-- Tools Tab -->
-        <div *ngIf="activeTab === 'tools'">
-          <app-tools-tab></app-tools-tab>
-        </div>
-
-        <!-- Label Finance Tab -->
-        <div *ngIf="activeTab === 'label-finance'">
-          <app-label-finance-tab></app-label-finance-tab>
         </div>
         
       </div>
