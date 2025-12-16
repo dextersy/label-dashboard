@@ -16,9 +16,10 @@ interface UserAttributes {
   brand_id: number | null;
   reset_hash?: string;
   last_logged_in?: Date;
+  onboarding_completed: boolean;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'is_admin' | 'is_system_user' | 'brand_id'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'is_admin' | 'is_system_user' | 'brand_id' | 'onboarding_completed'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: number;
@@ -34,6 +35,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public brand_id!: number | null;
   public reset_hash?: string;
   public last_logged_in?: Date;
+  public onboarding_completed!: boolean;
 
   public brand?:Brand;
 
@@ -110,6 +112,11 @@ User.init(
     last_logged_in: {
       type: DataTypes.DATE,
       allowNull: true,
+    },
+    onboarding_completed: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

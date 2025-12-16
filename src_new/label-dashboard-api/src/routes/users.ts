@@ -10,7 +10,8 @@ import {
   getLoginAttempts,
   inviteAdmin,
   resendAdminInvite,
-  cancelAdminInvite
+  cancelAdminInvite,
+  completeOnboarding
 } from '../controllers/userController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { emailRateLimit, authRateLimit, adminRateLimit } from '../middleware/rateLimiting';
@@ -23,6 +24,9 @@ router.post('/send-reset-link', emailRateLimit, sendResetLink);
 router.post('/init', authRateLimit, initUser);
 
 // Protected routes (require authentication)
+router.post('/complete-onboarding', authenticateToken, completeOnboarding);
+
+// Admin-only routes
 router.get('/', authenticateToken, requireAdmin, adminRateLimit, getAllUsers);
 router.get('/login-attempts', authenticateToken, requireAdmin, adminRateLimit, getLoginAttempts);
 router.post('/invite', authenticateToken, requireAdmin, emailRateLimit, inviteUser);

@@ -169,7 +169,8 @@ export const login = async (req: Request, res: Response) => {
         last_name: user.last_name,
         is_admin: user.is_admin,
         is_superadmin: isSuperadmin,
-        brand_id: user.brand_id
+        brand_id: user.brand_id,
+        onboarding_completed: user.onboarding_completed || false
       }
     });
 
@@ -201,7 +202,8 @@ export const checkAuth = async (req: any, res: Response) => {
         last_name: user.last_name,
         is_admin: user.is_admin,
         is_superadmin: isSuperadmin,
-        brand_id: user.brand_id
+        brand_id: user.brand_id,
+        onboarding_completed: user.onboarding_completed || false
       }
     });
   } catch (error) {
@@ -385,7 +387,8 @@ export const completeProfile = async (req: Request, res: Response) => {
         last_name: user.last_name,
         is_admin: user.is_admin,
         is_superadmin: isSuperadmin,
-        brand_id: user.brand_id
+        brand_id: user.brand_id,
+        onboarding_completed: user.onboarding_completed || false
       }
     });
   } catch (error) {

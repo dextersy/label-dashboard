@@ -1,0 +1,239 @@
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000; // Above everything else
+  pointer-events: none; // Allow clicks through overlay except on interactive elements
+}
+
+.onboarding-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  animation: fadeIn 0.3s ease;
+}
+
+.onboarding-highlight {
+  position: absolute;
+  border: 3px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0.3);
+  pointer-events: none;
+  animation: pulse 2s ease-in-out infinite;
+  transition: opacity 0.2s ease, top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+  z-index: 10001;
+  opacity: 1;
+
+  &.transitioning {
+    opacity: 0;
+  }
+}
+
+.onboarding-tooltip {
+  position: absolute;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90vw;
+  pointer-events: all; // Enable interactions on tooltip
+  animation: slideIn 0.3s ease;
+  z-index: 10002;
+  transition: opacity 0.2s ease;
+  opacity: 1;
+
+  &.transitioning {
+    opacity: 0;
+  }
+
+  @media (max-width: 768px) {
+    max-width: 90vw;
+    margin: 0 5vw;
+  }
+
+  .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e9ecef;
+
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #6c757d;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #f8f9fa;
+        color: #333;
+      }
+    }
+  }
+
+  .tooltip-body {
+    padding: 20px 24px;
+
+    p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #495057;
+    }
+  }
+
+  .tooltip-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .step-number {
+        font-size: 13px;
+        color: #6c757d;
+        font-weight: 500;
+      }
+
+      .step-dots {
+        display: flex;
+        gap: 6px;
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #dee2e6;
+          transition: all 0.2s ease;
+
+          &.active {
+            background: #007bff;
+            width: 24px;
+            border-radius: 4px;
+          }
+        }
+      }
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+
+      button {
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+
+        i {
+          font-size: 12px;
+        }
+
+        &.btn-primary {
+          background: #007bff;
+          border-color: #007bff;
+          color: white;
+
+          &:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+          }
+        }
+
+        &.btn-outline-secondary {
+          border-color: #dee2e6;
+          color: #6c757d;
+
+          &:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            color: #495057;
+          }
+        }
+      }
+
+      @media (max-width: 768px) {
+        button {
+          flex: 1;
+          min-width: auto;
+
+          &:first-child {
+            order: 1;
+          }
+
+          &:nth-child(2) {
+            order: 2;
+          }
+
+          &:last-child {
+            order: 3;
+            flex-basis: 100%;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 20px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 123, 255, 0.8), 0 0 60px rgba(0, 123, 255, 0.5);
+  }
+}
