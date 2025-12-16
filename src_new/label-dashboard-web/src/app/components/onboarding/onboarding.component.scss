@@ -14,7 +14,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   animation: fadeIn 0.3s ease;
 }
 
@@ -22,7 +22,7 @@
   position: absolute;
   border: 3px solid #007bff;
   border-radius: 8px;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0.3);
   pointer-events: none;
   animation: pulse 2s ease-in-out infinite;
   transition: opacity 0.2s ease, top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
@@ -231,9 +231,9 @@
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0);
   }
   50% {
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 123, 255, 0.8), 0 0 60px rgba(0, 123, 255, 0.5);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 123, 255, 0.8), 0 0 60px rgba(0, 123, 255, 0.5);
   }
 }
