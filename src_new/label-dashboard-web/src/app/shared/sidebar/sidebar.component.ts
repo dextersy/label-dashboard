@@ -121,7 +121,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
         },
-        { route: '/team', icon: 'fas fa-users', title: 'Team Management', adminOnly: false }
+        { route: '/team', icon: 'fas fa-users', title: 'Team', adminOnly: false }
       ]
     },
     {
