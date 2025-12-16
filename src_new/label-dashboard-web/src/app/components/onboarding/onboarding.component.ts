@@ -97,29 +97,61 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   private calculateTooltipPosition(rect: DOMRect): any {
     const position = this.currentStep?.position || 'bottom';
     const offset = 20;
+    const padding = 16; // Padding from screen edges
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const isMobile = viewportWidth <= 991;
 
+    // For mobile, use smart positioning to keep tooltip visible
+    if (isMobile) {
+      const estimatedTooltipHeight = 200; // Approximate tooltip height
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // If element is in bottom half and there's not enough space below, position above
+      if (position === 'top' || spaceBelow < estimatedTooltipHeight + offset) {
+        return {
+          bottom: `${viewportHeight - rect.top + offset}px`,
+          left: `${padding}px`,
+          right: `${padding}px`,
+          transform: 'none',
+          maxWidth: `${viewportWidth - padding * 2}px`
+        };
+      } else {
+        // Position below if there's enough space
+        return {
+          top: `${rect.bottom + offset}px`,
+          left: `${padding}px`,
+          right: `${padding}px`,
+          transform: 'none',
+          maxWidth: `${viewportWidth - padding * 2}px`
+        };
+      }
+    }
+
+    // Desktop positioning with boundary checks
     switch (position) {
       case 'top':
         return {
-          bottom: `${window.innerHeight - rect.top + offset}px`,
-          left: `${rect.left + rect.width / 2}px`,
+          bottom: `${viewportHeight - rect.top + offset}px`,
+          left: `${Math.max(padding, Math.min(rect.left + rect.width / 2, viewportWidth - padding))}px`,
           transform: 'translateX(-50%)'
         };
       case 'bottom':
         return {
           top: `${rect.bottom + offset}px`,
-          left: `${rect.left + rect.width / 2}px`,
+          left: `${Math.max(padding, Math.min(rect.left + rect.width / 2, viewportWidth - padding))}px`,
           transform: 'translateX(-50%)'
         };
       case 'left':
         return {
-          top: `${rect.top + rect.height / 2}px`,
-          right: `${window.innerWidth - rect.left + offset}px`,
+          top: `${Math.max(padding, Math.min(rect.top + rect.height / 2, viewportHeight - padding))}px`,
+          right: `${viewportWidth - rect.left + offset}px`,
           transform: 'translateY(-50%)'
         };
       case 'right':
         return {
-          top: `${rect.top + rect.height / 2}px`,
+          top: `${Math.max(padding, Math.min(rect.top + rect.height / 2, viewportHeight - padding))}px`,
           left: `${rect.right + offset}px`,
           transform: 'translateY(-50%)'
         };
