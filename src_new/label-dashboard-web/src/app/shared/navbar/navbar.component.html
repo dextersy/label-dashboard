@@ -85,3 +85,17 @@
     </div>
   </div>
 </nav>
+
+<!-- Mobile Bottom Workspace Navigation -->
+<div class="mobile-bottom-nav">
+  <button
+    *ngFor="let workspace of availableWorkspaces"
+    class="mobile-workspace-btn"
+    [class.active]="currentWorkspace === workspace"
+    (click)="selectWorkspace(workspace)">
+    <i [class]="getWorkspaceIcon(workspace)"></i>
+    <span class="mobile-workspace-label">{{ getWorkspaceLabel(workspace) }}</span>
+  </button>
+  <!-- Blank spacer to prevent chat widget overlap -->
+  <div class="mobile-workspace-spacer"></div>
+</div>
