@@ -9,6 +9,12 @@
       </a>
     </div>
 
+    <!-- Current Workspace Indicator -->
+    <div class="workspace-indicator" *ngIf="currentWorkspace">
+      <i [class]="getWorkspaceIcon(currentWorkspace)" class="workspace-icon"></i>
+      <span class="workspace-name">{{ getWorkspaceLabel(currentWorkspace) }}</span>
+    </div>
+
     <ul class="nav" *ngIf="isInitialized">
       <!-- Iterate through sections -->
       <ng-container *ngFor="let section of visibleSections; let sectionIndex = index">

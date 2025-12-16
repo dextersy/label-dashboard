@@ -121,7 +121,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
         },
-        { route: '/team', icon: 'fas fa-users', title: 'Team Management', adminOnly: false }
+        { route: '/team', icon: 'fas fa-users', title: 'Team', adminOnly: false }
       ]
     },
     {
@@ -678,5 +678,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onEventSelected(event: Event): void {
     this.eventService.setSelectedEvent(event);
+  }
+
+  getWorkspaceIcon(workspace: WorkspaceType): string {
+    return this.workspaceService.getWorkspaceIcon(workspace);
+  }
+
+  getWorkspaceLabel(workspace: WorkspaceType): string {
+    return this.workspaceService.getWorkspaceLabel(workspace);
   }
 }

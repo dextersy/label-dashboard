@@ -1143,3 +1143,28 @@ div .table tbody {
 /* ================================= */
 /* Note: Floating actions use sticky positioning in component styles
    to work within the wrapper container, similar to artist profile. */
+/* ================================= */
+/* MOBILE BOTTOM NAV SPACING        */
+/* ================================= */
+/* Add bottom padding on mobile to prevent content from being hidden
+   behind the floating bottom workspace navigation bar */
+@media (max-width: 991px) {
+  .main-panel .content,
+  .content,
+  body {
+    padding-bottom: 70px !important; /* Height of bottom nav + some spacing */
+  }
+}
+
+/* ================================= */
+/* GLOBAL MOBILE STICKY BOTTOM FIX  */
+/* ================================= */
+/* Adjust any sticky/fixed bottom elements for mobile workspace bar */
+@media (max-width: 991px) {
+  .floating-actions,
+  .sticky-bottom,
+  [class*="sticky"][class*="bottom"],
+  [class*="fixed"][class*="bottom"] {
+    bottom: 70px !important;
+  }
+}

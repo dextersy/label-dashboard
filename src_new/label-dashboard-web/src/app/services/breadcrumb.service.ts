@@ -33,8 +33,8 @@ export class BreadcrumbService {
     '/artist/epk': { label: 'Electronic Press Kit (EPK)', parent: '/artist' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
 
-    // Team Management (top-level)
-    '/team': { label: 'Team Management', icon: 'fas fa-users' },
+    // Team (top-level)
+    '/team': { label: 'Team', icon: 'fas fa-users' },
 
     // Music section
     '/music': { label: 'Music', icon: 'fas fa-music' },

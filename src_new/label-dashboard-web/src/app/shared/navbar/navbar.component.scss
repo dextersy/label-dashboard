@@ -72,10 +72,14 @@
   gap: 6px;
 }
 
-/* Workspace selector */
+/* Workspace selector - Desktop only */
 .navbar-workspace-selector {
   margin-left: 15px;
-  
+
+  @media (max-width: 991px) {
+    display: none; // Hide top workspace selector on mobile
+  }
+
   .workspace-tabs {
     display: flex;
     gap: 0;
@@ -85,7 +89,7 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
-  
+
   .workspace-tab {
     display: flex;
     align-items: center;
@@ -99,27 +103,21 @@
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
-    
+
     i {
       font-size: 16px;
     }
-    
-    .workspace-label {
-      @media (max-width: 768px) {
-        display: none; // Hide labels on mobile, show only icons
-      }
-    }
-    
+
     &:hover {
       background-color: rgba(255, 255, 255, 0.2);
       color: #333;
     }
-    
+
     &.active {
       background-color: rgba(255, 255, 255, 0.3);
       color: #333;
       font-weight: 600;
-      
+
       &::after {
         content: '';
         position: absolute;
@@ -130,9 +128,84 @@
         background-color: #007bff;
       }
     }
-    
+
     &:not(:last-child) {
       border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* Mobile Bottom Workspace Navigation */
+.mobile-bottom-nav {
+  display: none; // Hidden on desktop
+
+  @media (max-width: 991px) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    z-index: 1100; // High z-index to stay above autocomplete dropdowns, modals, and other overlays
+    justify-content: space-around;
+    align-items: center;
+
+    .mobile-workspace-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 12px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 8px;
+      min-width: 70px;
+
+      i {
+        font-size: 20px;
+        transition: all 0.2s ease;
+      }
+
+      .mobile-workspace-label {
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+        max-width: 70px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &.active {
+        color: #007bff;
+        font-weight: 600;
+
+        i {
+          transform: scale(1.1);
+        }
+      }
+
+      &:not(.active):hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #333;
+      }
+    }
+
+    .mobile-workspace-spacer {
+      min-width: 70px; // Same width as workspace buttons
+      flex-shrink: 0;
     }
   }
 }
