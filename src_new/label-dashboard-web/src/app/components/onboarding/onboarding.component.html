@@ -3,10 +3,10 @@
   <div class="onboarding-backdrop"></div>
 
   <!-- Highlight around target element -->
-  <div class="onboarding-highlight" *ngIf="currentStep.targetElement" [ngStyle]="highlightStyle"></div>
+  <div class="onboarding-highlight" *ngIf="currentStep.targetElement" [ngStyle]="highlightStyle" [class.transitioning]="isTransitioning"></div>
 
   <!-- Tooltip with step content -->
-  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle">
+  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning">
     <div class="tooltip-header">
       <h3>{{ currentStep.title }}</h3>
       <button class="close-btn" (click)="onSkip()" aria-label="Skip onboarding">

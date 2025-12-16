@@ -25,8 +25,13 @@
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0.3);
   pointer-events: none;
   animation: pulse 2s ease-in-out infinite;
-  transition: all 0.3s ease;
+  transition: opacity 0.2s ease, top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
   z-index: 10001;
+  opacity: 1;
+
+  &.transitioning {
+    opacity: 0;
+  }
 }
 
 .onboarding-tooltip {
@@ -39,6 +44,12 @@
   pointer-events: all; // Enable interactions on tooltip
   animation: slideIn 0.3s ease;
   z-index: 10002;
+  transition: opacity 0.2s ease;
+  opacity: 1;
+
+  &.transitioning {
+    opacity: 0;
+  }
 
   @media (max-width: 768px) {
     max-width: 90vw;

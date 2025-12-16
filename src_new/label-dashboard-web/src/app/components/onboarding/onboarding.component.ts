@@ -17,6 +17,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   totalSteps = 0;
   highlightStyle: any = {};
   tooltipStyle: any = {};
+  isTransitioning = false;
 
   private subscriptions = new Subscription();
 
@@ -57,6 +58,12 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       const delay = this.currentStep.delay || 100;
       setTimeout(() => {
         this.updateHighlightPosition();
+        // Fade back in after positions are updated
+        if (this.isTransitioning) {
+          setTimeout(() => {
+            this.isTransitioning = false;
+          }, 50);
+        }
       }, delay);
     }
   }
@@ -166,11 +173,21 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   onNext(): void {
-    this.onboardingService.nextStep();
+    // Start fade-out transition
+    this.isTransitioning = true;
+    // Wait for fade-out, then change step
+    setTimeout(() => {
+      this.onboardingService.nextStep();
+    }, 200);
   }
 
   onPrevious(): void {
-    this.onboardingService.previousStep();
+    // Start fade-out transition
+    this.isTransitioning = true;
+    // Wait for fade-out, then change step
+    setTimeout(() => {
+      this.onboardingService.previousStep();
+    }, 200);
   }
 
   onSkip(): void {
