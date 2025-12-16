@@ -1,0 +1,55 @@
+<div class="onboarding-overlay" *ngIf="showOnboarding && currentStep">
+  <!-- Dark backdrop -->
+  <div class="onboarding-backdrop"></div>
+
+  <!-- Highlight around target element -->
+  <div class="onboarding-highlight" *ngIf="currentStep.targetElement" [ngStyle]="highlightStyle"></div>
+
+  <!-- Tooltip with step content -->
+  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle">
+    <div class="tooltip-header">
+      <h3>{{ currentStep.title }}</h3>
+      <button class="close-btn" (click)="onSkip()" aria-label="Skip onboarding">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="tooltip-body">
+      <p>{{ currentStep.description }}</p>
+    </div>
+
+    <div class="tooltip-footer">
+      <div class="step-indicator">
+        <span class="step-number">{{ currentStepIndex + 1 }} of {{ totalSteps }}</span>
+        <div class="step-dots">
+          <span
+            *ngFor="let step of [].constructor(totalSteps); let i = index"
+            class="dot"
+            [class.active]="i === currentStepIndex">
+          </span>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button
+          *ngIf="canGoPrevious"
+          class="btn btn-outline-secondary"
+          (click)="onPrevious()">
+          <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <button
+          class="btn btn-outline-secondary"
+          (click)="onSkip()">
+          Skip Tour
+        </button>
+        <button
+          class="btn btn-primary"
+          (click)="onNext()">
+          {{ isLastStep ? 'Get Started' : 'Next' }}
+          <i class="fas fa-arrow-right" *ngIf="!isLastStep"></i>
+          <i class="fas fa-check" *ngIf="isLastStep"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

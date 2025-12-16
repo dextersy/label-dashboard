@@ -28,6 +28,7 @@
         <button
           *ngFor="let workspace of availableWorkspaces"
           class="workspace-tab"
+          [class]="'workspace-tab-' + workspace"
           [class.active]="currentWorkspace === workspace"
           (click)="selectWorkspace(workspace)">
           <i [class]="getWorkspaceIcon(workspace)"></i>
@@ -52,7 +53,7 @@
     
     <!-- Mobile icons (visible on mobile) -->
     <div class="navbar-mobile-icons">
-      <a class="mobile-icon-link" *ngIf="isAdmin" (click)="selectWorkspace('admin')" style="cursor: pointer;" title="Administration">
+      <a class="mobile-icon-link mobile-icon-link-admin" *ngIf="isAdmin" (click)="selectWorkspace('admin')" style="cursor: pointer;" title="Administration">
         <i class="fa-solid fa-cogs"></i>
       </a>
       <a class="mobile-icon-link" routerLink="/profile" title="Edit Profile">
@@ -67,7 +68,7 @@
     <div class="collapse navbar-collapse" id="navigation-example-2">
       <ul class="navbar-nav">
         <li class="nav-item" *ngIf="isAdmin">
-          <a class="nav-link" (click)="selectWorkspace('admin')" style="cursor: pointer;">
+          <a class="nav-link nav-link-admin" (click)="selectWorkspace('admin')" style="cursor: pointer;">
             <i class="fas fa-cogs"></i> Administration
           </a>
         </li>
@@ -91,6 +92,7 @@
   <button
     *ngFor="let workspace of availableWorkspaces"
     class="mobile-workspace-btn"
+    [class]="'mobile-workspace-btn-' + workspace"
     [class.active]="currentWorkspace === workspace"
     (click)="selectWorkspace(workspace)">
     <i [class]="getWorkspaceIcon(workspace)"></i>

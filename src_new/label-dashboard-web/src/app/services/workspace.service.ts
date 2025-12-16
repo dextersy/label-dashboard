@@ -39,4 +39,17 @@ export class WorkspaceService {
       default: return 'fas fa-music';
     }
   }
+
+  /**
+   * Get available workspaces based on user permissions
+   */
+  getAvailableWorkspaces(isAdmin: boolean = false): WorkspaceType[] {
+    const workspaces: WorkspaceType[] = ['music'];
+
+    if (isAdmin) {
+      workspaces.push('events', 'labels', 'admin');
+    }
+
+    return workspaces;
+  }
 }

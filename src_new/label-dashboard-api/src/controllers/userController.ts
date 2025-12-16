@@ -1013,3 +1013,38 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// ======================================
+// ONBOARDING SYSTEM
+// ======================================
+
+export const completeOnboarding = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+
+    if (!user) {
+      console.error(`User not found for ID: ${req.user.id}`);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await user.update({ onboarding_completed: true });
+
+    // Reload to get fresh data
+    await user.reload();
+
+    res.json({
+      message: 'Onboarding completed successfully',
+      onboarding_completed: user.onboarding_completed
+    });
+  } catch (error) {
+    console.error('Complete onboarding error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};

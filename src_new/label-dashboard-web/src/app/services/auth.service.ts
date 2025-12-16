@@ -12,6 +12,7 @@ export interface User {
   is_admin: boolean;
   is_superadmin: boolean;
   brand_id: number;
+  onboarding_completed: boolean;
 }
 
 export interface LoginResponse {
@@ -118,6 +119,16 @@ export class AuthService {
   // Force logout due to session timeout or authorization error
   forceLogout(): void {
     this.logout();
+  }
+
+  // Update current user (for updating user state without re-login)
+  updateCurrentUser(updates: Partial<User>): void {
+    const currentUser = this.currentUserValue;
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...updates };
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      this.currentUserSubject.next(updatedUser);
+    }
   }
 
   getToken(): string | null {

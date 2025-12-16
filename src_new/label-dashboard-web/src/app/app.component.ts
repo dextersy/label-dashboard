@@ -11,6 +11,7 @@ import { ConfirmationDialogComponent } from './components/shared/confirmation-di
 import { EventPublishedModalComponent } from './components/shared/event-published-modal/event-published-modal.component';
 import { ReleaseSubmittedModalComponent } from './components/shared/release-submitted-modal/release-submitted-modal.component';
 import { AudioPlayerPopupComponent } from './components/shared/audio-player-popup/audio-player-popup.component';
+import { OnboardingComponent } from './components/onboarding/onboarding.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
@@ -18,12 +19,14 @@ import { NotificationService } from './services/notification.service';
 import { SidebarService } from './services/sidebar.service';
 import { ConnectionMonitorService } from './services/connection-monitor.service';
 import { AppNotificationService } from './services/app-notification.service';
+import { OnboardingService } from './services/onboarding.service';
+import { WorkspaceService } from './services/workspace.service';
 import { PendingInviteNotificationProvider } from './services/notification-providers/pending-invite-notification.provider';
 import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
-    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent, EventPublishedModalComponent, ReleaseSubmittedModalComponent, AudioPlayerPopupComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent, EventPublishedModalComponent, ReleaseSubmittedModalComponent, AudioPlayerPopupComponent, OnboardingComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
@@ -43,6 +46,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private sidebarService: SidebarService,
     private connectionMonitor: ConnectionMonitorService,
     private appNotificationService: AppNotificationService,
+    private onboardingService: OnboardingService,
+    private workspaceService: WorkspaceService,
     private pendingInviteProvider: PendingInviteNotificationProvider
   ) {
     // Register notification providers
@@ -130,6 +135,18 @@ export class AppComponent implements OnInit, OnDestroy {
       this.sidebarOpen = isOpen;
     });
     this.subscriptions.push(sidebarSubscription);
+
+    // Initialize onboarding for users who haven't completed it
+    const authSubscription = this.authService.currentUser.subscribe(user => {
+      if (user && user.onboarding_completed === false) {
+        // Get available workspaces for this user based on admin status
+        const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
+
+        // Initialize onboarding with available workspaces
+        this.onboardingService.initializeOnboarding(user.onboarding_completed, availableWorkspaces);
+      }
+    });
+    this.subscriptions.push(authSubscription);
   }
   
   ngOnDestroy(): void {
