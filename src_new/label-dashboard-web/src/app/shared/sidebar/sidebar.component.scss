@@ -120,6 +120,44 @@
   // Color is now set dynamically via [style.color] binding
 }
 
+// Workspace Indicator (subtle display under logo)
+.workspace-indicator {
+  text-align: center;
+  padding: 0 15px 15px;
+  margin: 0 15px 10px;
+
+  .workspace-icon {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-right: 6px;
+  }
+
+  .workspace-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Collapsed sidebar - hide workspace name, show only icon
+.sidebar.collapsed:not(.open) {
+  .workspace-indicator {
+    padding: 0 5px 10px;
+    margin: 0 10px 10px;
+
+    .workspace-icon {
+      margin-right: 0;
+      font-size: 16px;
+    }
+
+    .workspace-name {
+      display: none;
+    }
+  }
+}
+
 .nav {
   margin-top: 0;
   list-style: none;
