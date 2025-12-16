@@ -22,8 +22,8 @@
       </div>
     </div>
 
-    <!-- Workspace Selector -->
-    <div class="navbar-workspace-selector">
+    <!-- Workspace Selector (only show if user has multiple workspaces) -->
+    <div class="navbar-workspace-selector" *ngIf="availableWorkspaces.length > 1">
       <div class="workspace-tabs">
         <button
           *ngFor="let workspace of availableWorkspaces"
@@ -86,8 +86,8 @@
   </div>
 </nav>
 
-<!-- Mobile Bottom Workspace Navigation -->
-<div class="mobile-bottom-nav">
+<!-- Mobile Bottom Workspace Navigation (only show if user has multiple workspaces) -->
+<div class="mobile-bottom-nav" *ngIf="availableWorkspaces.length > 1">
   <button
     *ngFor="let workspace of availableWorkspaces"
     class="mobile-workspace-btn"
