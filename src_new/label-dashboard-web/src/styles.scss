@@ -1152,6 +1152,13 @@ div .table tbody {
   .main-panel .content,
   .content,
   body {
+    padding-bottom: 0 !important;
+  }
+
+  /* Only add padding when mobile nav is visible */
+  :root.has-mobile-nav .main-panel .content,
+  :root.has-mobile-nav .content,
+  :root.has-mobile-nav body {
     padding-bottom: 70px !important; /* Height of bottom nav + some spacing */
   }
 }
@@ -1165,6 +1172,14 @@ div .table tbody {
   .sticky-bottom,
   [class*="sticky"][class*="bottom"],
   [class*="fixed"][class*="bottom"] {
+    bottom: 0 !important;
+  }
+
+  /* Only offset when mobile nav is visible */
+  :root.has-mobile-nav .floating-actions,
+  :root.has-mobile-nav .sticky-bottom,
+  :root.has-mobile-nav [class*="sticky"][class*="bottom"],
+  :root.has-mobile-nav [class*="fixed"][class*="bottom"] {
     bottom: 70px !important;
   }
 }

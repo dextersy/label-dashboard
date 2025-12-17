@@ -238,9 +238,3 @@
     }
   }
 }
-/* Mobile adjustments for workspace bar */
-@media (max-width: 991px) {
-  .sticky-bottom {
-    bottom: 70px !important; // Adjust for mobile bottom workspace navigation
-  }
-}

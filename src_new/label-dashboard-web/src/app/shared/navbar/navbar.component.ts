@@ -48,6 +48,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
           this.isSuperadmin = user.is_superadmin || false;
           // Ensure users land in the Music workspace by default
           this.workspaceService.setWorkspace('music');
+
+          // Update body class based on whether mobile nav is shown
+          this.updateMobileNavClass();
         } else {
           this.userFirstName = 'User';
           this.isAdmin = false;
@@ -189,5 +192,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarService.toggleSidebar();
+  }
+
+  private updateMobileNavClass(): void {
+    // Add class to document root when mobile nav is visible (multiple workspaces)
+    if (this.availableWorkspaces.length > 1) {
+      document.documentElement.classList.add('has-mobile-nav');
+    } else {
+      document.documentElement.classList.remove('has-mobile-nav');
+    }
   }
 }
