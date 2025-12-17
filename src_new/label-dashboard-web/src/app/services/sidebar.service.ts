@@ -7,12 +7,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export class SidebarService {
   private isOpenSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.getInitialState());
   public isOpen$: Observable<boolean> = this.isOpenSubject.asObservable();
+  private lastWidth: number = typeof window !== 'undefined' ? window.innerWidth : 0;
 
   constructor() {
     // Handle window resize to auto-close sidebar on mobile
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', () => this.handleResize());
-      
+
       // Initialize DOM state based on initial sidebar state
       this.initializeDOMState();
     }
@@ -33,11 +34,18 @@ export class SidebarService {
   }
 
   private handleResize(): void {
-    if (this.isMobile()) {
-      // Close sidebar when switching to mobile view
-      this.closeSidebar();
+    const currentWidth = window.innerWidth;
+
+    // Only handle resize if width actually changed (ignore keyboard opening/closing)
+    if (Math.abs(currentWidth - this.lastWidth) > 10) {
+      if (this.isMobile()) {
+        // Close sidebar when switching to mobile view
+        this.closeSidebar();
+      }
+      // On desktop, maintain current state (collapsed or expanded)
+
+      this.lastWidth = currentWidth;
     }
-    // On desktop, maintain current state (collapsed or expanded)
   }
 
   private isMobile(): boolean {
