@@ -7,7 +7,8 @@ export type WorkspaceType = 'music' | 'events' | 'admin' | 'labels';
   providedIn: 'root'
 })
 export class WorkspaceService {
-  private currentWorkspaceSubject = new BehaviorSubject<WorkspaceType>('music');
+  private readonly STORAGE_KEY = 'selectedWorkspace';
+  private currentWorkspaceSubject = new BehaviorSubject<WorkspaceType>(this.loadWorkspaceFromStorage());
   public currentWorkspace$ = this.currentWorkspaceSubject.asObservable();
 
   constructor() {}
@@ -18,6 +19,23 @@ export class WorkspaceService {
 
   setWorkspace(workspace: WorkspaceType): void {
     this.currentWorkspaceSubject.next(workspace);
+    this.saveWorkspaceToStorage(workspace);
+  }
+
+  private loadWorkspaceFromStorage(): WorkspaceType {
+    const stored = localStorage.getItem(this.STORAGE_KEY);
+    if (stored && this.isValidWorkspace(stored)) {
+      return stored as WorkspaceType;
+    }
+    return 'music'; // Default workspace
+  }
+
+  private saveWorkspaceToStorage(workspace: WorkspaceType): void {
+    localStorage.setItem(this.STORAGE_KEY, workspace);
+  }
+
+  private isValidWorkspace(value: string): boolean {
+    return ['music', 'events', 'admin', 'labels'].includes(value);
   }
 
   getWorkspaceLabel(workspace: WorkspaceType): string {

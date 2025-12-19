@@ -46,8 +46,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
           this.userFirstName = user.first_name || 'User';
           this.isAdmin = user.is_admin || false;
           this.isSuperadmin = user.is_superadmin || false;
-          // Ensure users land in the Music workspace by default
-          this.workspaceService.setWorkspace('music');
+
+          // Note: Workspace is now automatically restored from localStorage by WorkspaceService
+          // No need to force it to 'music' here
 
           // Update body class based on whether mobile nav is shown
           this.updateMobileNavClass();
