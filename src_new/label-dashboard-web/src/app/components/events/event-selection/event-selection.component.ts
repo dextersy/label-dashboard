@@ -80,24 +80,21 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   }
 
   private positionDropdown(): void {
+    const isMobile = window.innerWidth <= 991; // Match sidebar mobile breakpoint
+
+    // On mobile, CSS handles positioning with position: absolute
+    // No need for JavaScript positioning
+    if (isMobile) {
+      return;
+    }
+
+    // Desktop: position dropdown using JavaScript for better control
     const dropdownButton = document.querySelector('.event-dropdown-btn') as HTMLElement;
     const dropdownMenu = document.querySelector('.event-selection-container .dropdown-menu') as HTMLElement;
 
     if (dropdownButton && dropdownMenu) {
       const rect = dropdownButton.getBoundingClientRect();
-      const isMobile = window.innerWidth <= 768;
-
-      if (isMobile) {
-        // On mobile, use relative positioning and ensure dropdown fits within viewport
-        dropdownMenu.style.top = `${rect.bottom + 2}px`;
-        dropdownMenu.style.left = `${rect.left}px`;
-
-        // Constrain dropdown width to not exceed sidebar or viewport
-        const maxWidth = Math.min(rect.width, window.innerWidth - rect.left - 20);
-        dropdownMenu.style.maxWidth = `${maxWidth}px`;
-      } else {
-        dropdownMenu.style.top = `${rect.bottom + 2}px`;
-      }
+      dropdownMenu.style.top = `${rect.bottom + 2}px`;
     }
   }
 

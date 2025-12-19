@@ -732,25 +732,52 @@
 
     ::ng-deep .dropdown-menu {
       position: fixed !important;
-      top: auto !important;
-      left: 100% !important;
-      right: auto !important;
-      width: 320px !important;
-      min-width: 320px !important;
-      max-width: 320px !important;
-      max-height: 400px !important;
-      z-index: 1050 !important;
-      margin-top: 0 !important;
-      transform: translateX(-100%) !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: calc(100vw - 40px) !important;
+      max-width: 500px !important;
+      min-width: auto !important;
+      max-height: 80vh !important;
+      z-index: 1060 !important;
+      margin: 0 !important;
       box-sizing: border-box !important;
-      padding: 5px 0 !important;
+      padding: 8px 0 !important;
       background-color: #fff !important;
-      border-radius: 4px !important;
-      box-shadow: 0 6px 12px rgba(0,0,0,.175) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 10px 40px rgba(0,0,0,.3) !important;
+      overflow-y: auto !important;
     }
 
-    ::ng-deep .dropdown.open .dropdown-menu {
-      transform: translateX(0) !important;
+    // Backdrop for dropdown on mobile
+    ::ng-deep .dropdown.open::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1055;
+    }
+
+    // Increase touch target size for mobile
+    ::ng-deep .dropdown-menu .event-item,
+    ::ng-deep .dropdown-menu .artist-item {
+      a {
+        padding: 16px 20px !important;
+        min-height: 70px !important;
+      }
+    }
+
+    ::ng-deep .dropdown-menu .dropdown-event-title,
+    ::ng-deep .dropdown-menu .dropdown-artist-name {
+      font-size: 16px !important;
+    }
+
+    ::ng-deep .dropdown-menu .dropdown-event-meta,
+    ::ng-deep .dropdown-menu .dropdown-artist-meta {
+      font-size: 14px !important;
     }
   }
 }
