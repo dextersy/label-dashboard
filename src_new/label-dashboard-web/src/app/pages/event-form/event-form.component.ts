@@ -853,6 +853,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   private populateFormFromEvent(event: any): void {
+    // Clear poster preview when loading a new event
+    this.posterPreview = null;
+    this.selectedPosterFile = null;
+
     this.eventData = {
       title: event.title || '',
       date_and_time: this.formatDateForInput(event.date_and_time),
