@@ -1,10 +1,14 @@
 .event-selection-container {
   margin-bottom: 25px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .event-selection-row {
   display: flex;
   justify-content: flex-start;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dropdown {
@@ -12,10 +16,12 @@
   display: block;
   width: 100%;
   max-width: 600px; // Limit width on desktop
+  box-sizing: border-box;
 }
 
 .event-dropdown-btn {
   width: 100%;
+  max-width: 100%;
   text-align: left;
   padding: 15px 20px;
   border: none !important; /* Remove border for borderless style */
@@ -27,6 +33,7 @@
   justify-content: space-between;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
   
   // Prevent Bootstrap from adding its own caret
   &::after {
@@ -163,6 +170,7 @@
   border-right: 5px solid transparent;
   border-left: 5px solid transparent;
   transition: transform 0.2s ease;
+  flex-shrink: 0; // Prevent caret from shrinking
 }
 
 .dropdown.open .caret {
@@ -457,47 +465,92 @@
 
 // Responsive adjustments
 @media (max-width: 768px) {
+  .event-selection-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden; // Prevent horizontal overflow
+    box-sizing: border-box;
+  }
+
   .event-selection-row {
     justify-content: stretch;
-  }
-  
-  .dropdown {
-    max-width: none; // Remove width limit on mobile
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
-  
+
+  .dropdown {
+    max-width: 100% !important; // Override desktop max-width and constrain to parent
+    width: 100%;
+    overflow: hidden; // Prevent overflow
+    box-sizing: border-box;
+  }
+
   .event-dropdown-btn {
     min-height: 70px;
     padding: 12px 15px;
+    width: 100% !important;
+    max-width: 100% !important; // Ensure button doesn't exceed container
+    box-sizing: border-box;
   }
-  
+
+  .event-info {
+    max-width: calc(100% - 30px); // Account for caret space
+    overflow: hidden; // Prevent content overflow
+    flex: 1;
+    min-width: 0; // Allow flex item to shrink
+  }
+
+  .event-poster {
+    flex-shrink: 0; // Keep poster size fixed
+  }
+
+  .event-details {
+    flex: 1;
+    min-width: 0; // Allow flex item to shrink
+    max-width: 100%;
+    overflow: hidden;
+  }
+
   .event-title {
     font-size: 15px;
+    max-width: 100%;
   }
-  
+
   .event-meta {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
     width: 100%;
-    
+    max-width: 100%;
+
     .event-date, .event-venue {
       max-width: 100%;
       width: 100%;
     }
   }
-  
+
   .dropdown-menu {
     max-height: 300px;
+    width: 100%; // Match parent width
+    max-width: 100%; // Don't exceed parent
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
   }
-  
+
   .dropdown-event-meta {
     width: 100%;
-    
+
     .dropdown-event-date,
     .dropdown-event-venue {
       max-width: 100%;
       width: 100%;
     }
+  }
+
+  .caret {
+    flex-shrink: 0;
+    margin-left: 8px; // Reduce margin on mobile
   }
 }

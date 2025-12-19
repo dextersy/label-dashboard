@@ -317,21 +317,37 @@
 .event-selection-container {
   list-style: none;
   margin: 0 12px 8px 12px;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 
   // Override component styles for sidebar
   ::ng-deep .artist-selection-container,
   ::ng-deep .event-selection-container {
     margin-bottom: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  ::ng-deep .event-selection-row,
+  ::ng-deep .artist-selection-row {
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   ::ng-deep .dropdown {
     width: 100%;
-    max-width: none;
+    max-width: 100% !important; // Override component's 600px max-width
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   ::ng-deep .artist-dropdown-btn,
   ::ng-deep .event-dropdown-btn {
     width: 100%;
+    max-width: 100% !important;
     padding: 10px 12px;
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -341,6 +357,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
     min-height: auto;
+    box-sizing: border-box;
+    overflow: hidden;
 
     &:hover {
       background: rgba(255, 255, 255, 0.95);
@@ -353,7 +371,31 @@
       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
     }
   }
-  
+
+  ::ng-deep .event-info,
+  ::ng-deep .artist-info {
+    max-width: calc(100% - 30px);
+    overflow: hidden;
+    min-width: 0;
+    flex: 1;
+  }
+
+  ::ng-deep .event-details,
+  ::ng-deep .artist-details {
+    max-width: 100%;
+    overflow: hidden;
+    min-width: 0;
+    flex: 1;
+  }
+
+  ::ng-deep .event-title,
+  ::ng-deep .artist-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   ::ng-deep .artist-photo,
   ::ng-deep .event-image,
   ::ng-deep .default-event-image {
@@ -548,18 +590,20 @@
   ::ng-deep .artist-dropdown-btn,
   ::ng-deep .event-dropdown-btn {
     padding: 10px;
-    justify-content: center;
-    align-items: center;
+    justify-content: center !important;
+    align-items: center !important;
     min-height: auto;
-    display: flex;
+    display: flex !important;
   }
 
   ::ng-deep .artist-info,
   ::ng-deep .event-info {
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    flex: none;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 !important;
+    flex: none !important;
+    max-width: none !important; // Remove width constraint in collapsed view
+    overflow: visible !important;
   }
 
   ::ng-deep .artist-details,
@@ -567,7 +611,7 @@
   ::ng-deep .caret,
   ::ng-deep .no-artist,
   ::ng-deep .no-event {
-    display: none;
+    display: none !important;
   }
 
   // Show event poster but hide details
@@ -616,6 +660,76 @@
 @media (max-width: 991px) {
   .artist-selection-container,
   .event-selection-container {
+    margin: 0 0 8px 0 !important; // Remove side margins
+    padding: 0 12px !important; // Use padding instead
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    ::ng-deep .event-selection-container,
+    ::ng-deep .artist-selection-container {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    ::ng-deep .event-selection-row,
+    ::ng-deep .artist-selection-row {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    ::ng-deep .dropdown {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    ::ng-deep .artist-dropdown-btn,
+    ::ng-deep .event-dropdown-btn {
+      display: flex !important; // Keep flex for internal layout
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+
+      // Override Bootstrap button defaults
+      &.btn {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+      }
+    }
+
+    ::ng-deep .event-info,
+    ::ng-deep .artist-info {
+      max-width: calc(100% - 30px) !important;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    ::ng-deep .event-details,
+    ::ng-deep .artist-details {
+      max-width: 100%;
+      overflow: hidden;
+      min-width: 0;
+    }
+
     ::ng-deep .dropdown-menu {
       position: fixed !important;
       top: auto !important;
