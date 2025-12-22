@@ -192,8 +192,16 @@ export class FinancialComponent implements OnInit, OnDestroy {
     date_paid: ''  // Will be set in ngOnInit
   };
 
-  newEarningForm = {
+  newEarningForm: {
+    release_id: string;
+    type: string;
+    description: string;
+    amount: number;
+    date_recorded: string;
+    calculate_royalties: boolean;
+  } = {
     release_id: '',
+    type: 'Streaming',
     description: '',
     amount: 0,
     date_recorded: new Date().toISOString().split('T')[0],
@@ -634,6 +642,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
   private resetEarningForm(): void {
     this.newEarningForm = {
       release_id: '',
+      type: 'Streaming',
       description: '',
       amount: 0,
       date_recorded: new Date().toISOString().split('T')[0],

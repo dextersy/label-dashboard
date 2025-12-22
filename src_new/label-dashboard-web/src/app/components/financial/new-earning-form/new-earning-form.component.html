@@ -20,22 +20,37 @@
             </div>
             <div class="col-md-6">
               <div class="form-group">
+                <label>Earning Type</label>
+                <select class="form-control" [(ngModel)]="newEarningForm.type" name="type" required>
+                  <option value="Streaming">Streaming</option>
+                  <option value="Sync">Sync</option>
+                  <option value="Downloads">Downloads</option>
+                  <option value="Physical">Physical</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
                 <label>Date Recorded</label>
                 <input type="date" class="form-control" [(ngModel)]="newEarningForm.date_recorded" name="date_recorded" required>
               </div>
             </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Amount (PHP)</label>
+                <input type="number" class="form-control" [(ngModel)]="newEarningForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+              </div>
+            </div>
           </div>
-          
+
           <div class="form-group">
             <label>Description</label>
             <textarea class="form-control" [(ngModel)]="newEarningForm.description" name="description" rows="3" placeholder="Enter earning description" required></textarea>
           </div>
-          
-          <div class="form-group">
-            <label>Amount (PHP)</label>
-            <input type="number" class="form-control" [(ngModel)]="newEarningForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
-          </div>
-          
+
           <div class="form-group">
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" [(ngModel)]="newEarningForm.calculate_royalties" name="calculate_royalties" id="calculateRoyalties">
