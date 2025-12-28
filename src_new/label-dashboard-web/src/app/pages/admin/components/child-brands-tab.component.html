@@ -92,10 +92,13 @@
       </div>
     </ng-template>
   </app-paginated-table>
+</div>
 
-  <!-- Summary Cards -->
-  <div class="row mt-4" *ngIf="!loading && childBrands.length > 0">
-    <div class="col-md-6 col-lg-3 mb-3">
+<!-- Sticky Summary Cards - Outside main container -->
+<div class="summary-cards-sticky" *ngIf="!loading && childBrands.length > 0">
+  <div class="container-fluid">
+    <div class="row">
+    <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
           <h4 class="card-title text-primary">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
@@ -103,8 +106,8 @@
         </div>
       </div>
     </div>
-    
-    <div class="col-md-6 col-lg-3 mb-3">
+
+    <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
           <h4 class="card-title text-info">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
@@ -112,8 +115,8 @@
         </div>
       </div>
     </div>
-    
-    <div class="col-md-6 col-lg-3 mb-3">
+
+    <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
           <h4 class="card-title text-warning">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
@@ -121,39 +124,58 @@
         </div>
       </div>
     </div>
-    
+
+    <div class="col-md-6 col-lg">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-secondary">₱{{ getTotalPayments() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Payments Made</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg">
+      <div class="card summary-card">
+        <div class="card-body text-center">
+          <h4 class="card-title text-dark">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
+          <p class="card-text text-muted">Total Platform Fees</p>
+        </div>
+      </div>
+    </div>
+
+    </div>
   </div>
-
-  <!-- Add Sublabel Modal -->
-  <app-add-sublabel-modal
-    [show]="showAddSublabelModal"
-    (close)="closeAddSublabelModal()"
-    (submit)="onCreateSublabel($event)">
-  </app-add-sublabel-modal>
-
-  <!-- Fee Settings Modal -->
-  <app-fee-settings-modal
-    [show]="showFeeSettingsModal"
-    [brandId]="selectedSublabelForFees?.brand_id || null"
-    [sublabelName]="selectedSublabelForFees?.brand_name || ''"
-    (close)="closeFeeSettingsModal()"
-    (saved)="onFeeSettingsSaved($event)">
-  </app-fee-settings-modal>
-
-  <!-- Payout Modal -->
-  <app-sublabel-payout-modal
-    #payoutModal
-    [show]="showPayoutModal"
-    [sublabel]="selectedSublabelForPayout"
-    (close)="closePayoutModal()"
-    (submit)="onPayoutSubmit($event)">
-  </app-sublabel-payout-modal>
-
-  <!-- Earnings Breakdown Modal -->
-  <app-earnings-breakdown-modal
-    [show]="showEarningsBreakdownModal"
-    [childBrand]="selectedSublabelForBreakdown"
-    [breakdownType]="earningsBreakdownType"
-    (close)="closeEarningsBreakdownModal()">
-  </app-earnings-breakdown-modal>
 </div>
+
+<!-- Add Sublabel Modal -->
+<app-add-sublabel-modal
+  [show]="showAddSublabelModal"
+  (close)="closeAddSublabelModal()"
+  (submit)="onCreateSublabel($event)">
+</app-add-sublabel-modal>
+
+<!-- Fee Settings Modal -->
+<app-fee-settings-modal
+  [show]="showFeeSettingsModal"
+  [brandId]="selectedSublabelForFees?.brand_id || null"
+  [sublabelName]="selectedSublabelForFees?.brand_name || ''"
+  (close)="closeFeeSettingsModal()"
+  (saved)="onFeeSettingsSaved($event)">
+</app-fee-settings-modal>
+
+<!-- Payout Modal -->
+<app-sublabel-payout-modal
+  #payoutModal
+  [show]="showPayoutModal"
+  [sublabel]="selectedSublabelForPayout"
+  (close)="closePayoutModal()"
+  (submit)="onPayoutSubmit($event)">
+</app-sublabel-payout-modal>
+
+<!-- Earnings Breakdown Modal -->
+<app-earnings-breakdown-modal
+  [show]="showEarningsBreakdownModal"
+  [childBrand]="selectedSublabelForBreakdown"
+  [breakdownType]="earningsBreakdownType"
+  (close)="closeEarningsBreakdownModal()">
+</app-earnings-breakdown-modal>
