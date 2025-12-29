@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
 import { AuthService } from '../../services/auth.service';
+import { WorkspaceService } from '../../services/workspace.service';
 
 @Component({
     selector: 'app-login',
@@ -38,7 +39,8 @@ export class LoginComponent implements OnInit {
     private route: ActivatedRoute,
     private apiService: ApiService,
     private brandService: BrandService,
-    private authService: AuthService
+    private authService: AuthService,
+    private workspaceService: WorkspaceService
   ) {}
 
   ngOnInit(): void {
@@ -58,7 +60,7 @@ export class LoginComponent implements OnInit {
     // Check if user is already logged in (similar to original PHP check)
     const loggedInUser = localStorage.getItem('auth_token');
     if (loggedInUser) {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate([this.getDefaultPageForWorkspace()]);
     }
 
     this.loadBrandSettings();
@@ -143,9 +145,9 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        // Normal login - redirect to dashboard or specified URL
+        // Normal login - redirect to workspace default page or specified URL
         if (response.token) {
-          const redirectTo = this.redirectUrl || '/dashboard';
+          const redirectTo = this.redirectUrl || this.getDefaultPageForWorkspace();
           this.router.navigate([redirectTo]);
         }
       },
@@ -183,5 +185,21 @@ export class LoginComponent implements OnInit {
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  private getDefaultPageForWorkspace(): string {
+    const workspace = this.workspaceService.currentWorkspace;
+    switch (workspace) {
+      case 'music':
+        return '/dashboard';
+      case 'events':
+        return '/events/details';
+      case 'labels':
+        return '/labels/earnings';
+      case 'admin':
+        return '/admin/settings';
+      default:
+        return '/dashboard';
+    }
   }
 }
