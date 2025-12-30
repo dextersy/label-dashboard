@@ -27,4 +27,8 @@ export class FinancialSummaryTabComponent {
       currency: 'PHP'
     }).format(amount);
   }
+
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
 }

@@ -28,7 +28,7 @@
             <td class="title-cell">
               <div class="release-title">{{ release.title }}</div>
             </td>
-            <td class="text-right">{{ formatCurrency(release.total_earnings) }}</td>
+            <td class="text-right" [ngClass]="getAmountClass(release.total_earnings)">{{ formatCurrency(release.total_earnings) }}</td>
           </tr>
           <tr *ngIf="releases.length === 0">
             <td colspan="5" class="text-center text-muted">No earnings data found</td>

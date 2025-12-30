@@ -11,7 +11,7 @@
       <tr *ngFor="let expense of expenses">
         <td class="mobile-narrow" data-label="Date">{{ formatDate(expense.date_recorded) }}</td>
         <td class="mobile-text" data-label="Description">{{ expense.expense_description }}</td>
-        <td class="mobile-narrow mobile-number text-right" data-label="Amount">{{ formatCurrency(expense.expense_amount) }}</td>
+        <td class="mobile-narrow mobile-number text-right" data-label="Amount" [ngClass]="getAmountClass(expense.expense_amount)">{{ formatCurrency(expense.expense_amount) }}</td>
       </tr>
     </tbody>
   </table>

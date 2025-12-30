@@ -87,4 +87,8 @@ export class SummaryViewTabComponent implements OnInit {
   formatCurrency(amount: number): string {
     return '₱' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
 }

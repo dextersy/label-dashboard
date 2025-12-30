@@ -198,4 +198,8 @@ export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy 
 
     return now > eventDate;
   }
+
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
 }

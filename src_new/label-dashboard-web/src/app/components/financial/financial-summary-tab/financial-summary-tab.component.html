@@ -2,7 +2,7 @@
   <div class="col-md-3">
     <div class="current-balance-section text-center p-4">
       <h2 class="balance-title">Current Balance</h2>
-      <h1 class="balance-amount">{{ formatCurrency(summary.currentBalance) }}</h1>
+      <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
       <p class="balance-subtitle" *ngIf="!isAdmin">This is your total earned royalties less payments and advances made to you. Once this reaches your set payout point, this will be transferred to you on the 15th of the month.</p>
       <button class="btn btn-primary pay-now-btn" 
               *ngIf="isAdmin"
@@ -16,7 +16,7 @@
     <div class="card text-center financial-card">
       <div class="card-body">
         <h3 class="card-title">Total Earnings</h3>
-        <h2>{{ formatCurrency(summary.totalEarnings) }}</h2>
+        <h2 [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</h2>
         <button class="btn btn-outline-secondary btn-sm" 
                 (click)="viewEarningsDetails.emit()">
           View Details
@@ -28,7 +28,7 @@
     <div class="card text-center financial-card">
       <div class="card-body">
         <h3 class="card-title">Total Royalties</h3>
-        <h2>{{ formatCurrency(summary.totalRoyalties) }}</h2>
+        <h2 [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</h2>
         <button class="btn btn-outline-secondary btn-sm" 
                 (click)="viewRoyaltiesDetails.emit()">
           View Details
@@ -40,7 +40,7 @@
     <div class="card text-center financial-card">
       <div class="card-body">
         <h3 class="card-title">Total Payments</h3>
-        <h2>{{ formatCurrency(summary.totalPayments) }}</h2>
+        <h2 [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</h2>
         <button class="btn btn-outline-secondary btn-sm" 
                 (click)="viewPaymentsDetails.emit()">
           View Details

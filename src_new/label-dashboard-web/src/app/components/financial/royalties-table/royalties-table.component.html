@@ -13,7 +13,7 @@
         <td class="mobile-narrow" data-label="Date">{{ formatDate(royalty.date_recorded) }}</td>
         <td class="mobile-text" data-label="Release">{{ royalty.release_title || '(None)' }}</td>
         <td class="tablet-hide" data-label="Description">{{ royalty.description }}</td>
-        <td class="mobile-narrow mobile-number" style="text-align:right" data-label="Amount">{{ formatCurrency(royalty.amount) }}</td>
+        <td class="mobile-narrow mobile-number" style="text-align:right" data-label="Amount" [ngClass]="getAmountClass(royalty.amount)">{{ formatCurrency(royalty.amount) }}</td>
       </tr>
       <tr *ngIf="royalties.length === 0">
         <td [attr.colspan]="showHeader ? 4 : 1" class="text-center">No recorded royalties yet.</td>

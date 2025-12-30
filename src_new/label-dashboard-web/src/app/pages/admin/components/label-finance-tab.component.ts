@@ -273,4 +273,8 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     
     return payment.paid_thru_type;
   }
+
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
 }

@@ -86,7 +86,7 @@
             </td>
             <td class="text-right" data-label="Remaining Recuperable Expense">
               <div class="d-flex align-items-center justify-content-end">
-                <span>{{ formatCurrency(release.recuperable_expense_balance) }}</span>
+                <span [ngClass]="getAmountClass(release.recuperable_expense_balance)">{{ formatCurrency(release.recuperable_expense_balance) }}</span>
                 <button 
                   type="button"
                   class="btn btn-link btn-sm btn-icon-only ml-2"
@@ -104,8 +104,8 @@
                 </button>
               </div>
             </td>
-            <td style="text-align: right;" data-label="Total earnings">{{ formatCurrency(release.total_earnings) }}</td>
-            <td style="text-align: right;" data-label="Total royalties earned">{{ formatCurrency(release.total_royalties) }}</td>
+            <td style="text-align: right;" data-label="Total earnings" [ngClass]="getAmountClass(release.total_earnings)">{{ formatCurrency(release.total_earnings) }}</td>
+            <td style="text-align: right;" data-label="Total royalties earned" [ngClass]="getAmountClass(release.total_royalties)">{{ formatCurrency(release.total_royalties) }}</td>
           </tr>
         </tbody>
       </table>

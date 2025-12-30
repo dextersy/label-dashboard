@@ -27,7 +27,7 @@
         <h4 class="title"><i class="fa fa-shopping-bag"></i> Physical Earnings</h4>
       </div>
       <div class="card-body text-center">
-        <h5>{{ formatCurrency(earningsSummary.physical_earnings) }}</h5>
+        <h5 [ngClass]="getAmountClass(earningsSummary.physical_earnings)">{{ formatCurrency(earningsSummary.physical_earnings) }}</h5>
       </div>
     </div>
   </div>
@@ -38,7 +38,7 @@
         <h4 class="title"><i class="fa fa-download"></i> Download Earnings</h4>
       </div>
       <div class="card-body text-center">
-        <h5>{{ formatCurrency(earningsSummary.download_earnings) }}</h5>
+        <h5 [ngClass]="getAmountClass(earningsSummary.download_earnings)">{{ formatCurrency(earningsSummary.download_earnings) }}</h5>
       </div>
     </div>
   </div>
@@ -49,7 +49,7 @@
         <h4 class="title"><i class="fa fa-headphones"></i> Streaming Earnings</h4>
       </div>
       <div class="card-body text-center">
-        <h5>{{ formatCurrency(earningsSummary.streaming_earnings) }}</h5>
+        <h5 [ngClass]="getAmountClass(earningsSummary.streaming_earnings)">{{ formatCurrency(earningsSummary.streaming_earnings) }}</h5>
       </div>
     </div>
   </div>
@@ -60,7 +60,7 @@
         <h4 class="title"><i class="fa fa-television"></i> Sync Earnings</h4>
       </div>
       <div class="card-body text-center">
-        <h5>{{ formatCurrency(earningsSummary.sync_earnings) }}</h5>
+        <h5 [ngClass]="getAmountClass(earningsSummary.sync_earnings)">{{ formatCurrency(earningsSummary.sync_earnings) }}</h5>
       </div>
     </div>
   </div>
@@ -96,8 +96,8 @@
               <tbody>
                 <tr *ngFor="let artist of paymentsRoyaltiesSummary.artist_summaries">
                   <td class="fw-medium mobile-text" data-label="Artist">{{ artist.artist_name }}</td>
-                  <td class="mobile-narrow mobile-number text-end text-success" data-label="Payments">{{ formatCurrency(artist.total_payments) }}</td>
-                  <td class="mobile-narrow mobile-number text-end text-primary" data-label="Royalties">{{ formatCurrency(artist.total_royalties) }}</td>
+                  <td class="mobile-narrow mobile-number text-end text-success" data-label="Payments" [ngClass]="getAmountClass(artist.total_payments)">{{ formatCurrency(artist.total_payments) }}</td>
+                  <td class="mobile-narrow mobile-number text-end text-primary" data-label="Royalties" [ngClass]="getAmountClass(artist.total_royalties)">{{ formatCurrency(artist.total_royalties) }}</td>
                 </tr>
                 <tr *ngIf="paymentsRoyaltiesSummary.artist_summaries.length === 0">
                   <td colspan="3" class="text-muted text-center py-4">
@@ -123,7 +123,7 @@
             </h4>
           </div>
           <div class="card-body text-center d-flex align-items-center justify-content-center">
-            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_payments) }}</h5>
+            <h5 class="mb-0" [ngClass]="getAmountClass(paymentsRoyaltiesSummary.overall_total_payments)">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_payments) }}</h5>
           </div>
         </div>
       </div>
@@ -136,7 +136,7 @@
             </h4>
           </div>
           <div class="card-body text-center d-flex align-items-center justify-content-center">
-            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_royalties) }}</h5>
+            <h5 class="mb-0" [ngClass]="getAmountClass(paymentsRoyaltiesSummary.overall_total_royalties)">{{ formatCurrency(paymentsRoyaltiesSummary.overall_total_royalties) }}</h5>
           </div>
         </div>
       </div>
@@ -151,7 +151,7 @@
             </h4>
           </div>
           <div class="card-body text-center d-flex align-items-center justify-content-center">
-            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.total_new_recuperable_expense) }}</h5>
+            <h5 class="mb-0" [ngClass]="getAmountClass(paymentsRoyaltiesSummary.total_new_recuperable_expense)">{{ formatCurrency(paymentsRoyaltiesSummary.total_new_recuperable_expense) }}</h5>
           </div>
         </div>
       </div>
@@ -164,7 +164,7 @@
             </h4>
           </div>
           <div class="card-body text-center d-flex align-items-center justify-content-center">
-            <h5 class="mb-0">{{ formatCurrency(paymentsRoyaltiesSummary.total_recuperated_expense) }}</h5>
+            <h5 class="mb-0" [ngClass]="getAmountClass(paymentsRoyaltiesSummary.total_recuperated_expense)">{{ formatCurrency(paymentsRoyaltiesSummary.total_recuperated_expense) }}</h5>
           </div>
         </div>
       </div>

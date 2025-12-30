@@ -35,4 +35,8 @@ export class EarningsBreakdownModalComponent {
   getPlatformFeesBreakdownTitle(): string {
     return `Platform Fees Breakdown - ${this.childBrand?.brand_name}`;
   }
+
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
 }

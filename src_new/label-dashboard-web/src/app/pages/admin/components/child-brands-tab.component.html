@@ -101,7 +101,7 @@
     <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
-          <h4 class="card-title text-primary">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
+          <h4 class="card-title text-primary" [ngClass]="getAmountClass(getTotalBalance())">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
           <p class="card-text text-muted">Total Balance</p>
         </div>
       </div>
@@ -110,7 +110,7 @@
     <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
-          <h4 class="card-title text-info">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
+          <h4 class="card-title text-info" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
           <p class="card-text text-muted">Total Music Earnings</p>
         </div>
       </div>
@@ -119,7 +119,7 @@
     <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
-          <h4 class="card-title text-warning">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
+          <h4 class="card-title text-warning" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
           <p class="card-text text-muted">Total Event Earnings</p>
         </div>
       </div>
@@ -128,7 +128,7 @@
     <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
-          <h4 class="card-title text-secondary">₱{{ getTotalPayments() | number:'1.2-2' }}</h4>
+          <h4 class="card-title text-secondary" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</h4>
           <p class="card-text text-muted">Total Payments Made</p>
         </div>
       </div>
@@ -137,7 +137,7 @@
     <div class="col-md-6 col-lg">
       <div class="card summary-card">
         <div class="card-body text-center">
-          <h4 class="card-title text-dark">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
+          <h4 class="card-title text-dark" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
           <p class="card-text text-muted">Total Platform Fees</p>
         </div>
       </div>

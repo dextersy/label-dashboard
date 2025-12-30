@@ -303,4 +303,10 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
   onBreakdownButtonClick(item: any, columnKey: string): void {
     this.breakdownButtonClick.emit({ item, columnKey });
   }
+
+  getAmountClass(value: any): string {
+    if (value === undefined || value === null) return '';
+    const numValue = typeof value === 'number' ? value : parseFloat(value);
+    return !isNaN(numValue) && numValue < 0 ? 'text-danger' : '';
+  }
 }

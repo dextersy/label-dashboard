@@ -529,4 +529,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     }
   }
 
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
+
 }

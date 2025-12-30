@@ -14,7 +14,7 @@
     <div class="col-md-3">
       <div class="current-balance-section text-center p-4">
         <h2 class="balance-title">Receivable Balance</h2>
-        <h1 class="balance-amount">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
+        <h1 class="balance-amount" [ngClass]="getAmountClass(dashboard?.receivable_balance ?? 0)">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
         <p class="balance-subtitle">Net earnings - payments received</p>
       </div>
     </div>
@@ -23,7 +23,7 @@
       <div class="card text-center financial-card">
         <div class="card-body">
           <h3 class="card-title">Net Music Earnings</h3>
-          <h2>₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</h2>
+          <h2 [ngClass]="getAmountClass(dashboard?.net_music_earnings ?? 0)">₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</h2>
           <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('music')">
             View Details
           </button>
@@ -35,7 +35,7 @@
       <div class="card text-center financial-card">
         <div class="card-body">
           <h3 class="card-title">Net Event Earnings</h3>
-          <h2>₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</h2>
+          <h2 [ngClass]="getAmountClass(dashboard?.net_event_earnings ?? 0)">₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</h2>
           <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('event')">
             View Details
           </button>
@@ -47,7 +47,7 @@
       <div class="card text-center financial-card">
         <div class="card-body">
           <h3 class="card-title">Total Payments</h3>
-          <h2>₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</h2>
+          <h2 [ngClass]="getAmountClass(dashboard?.total_payments ?? 0)">₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</h2>
           <p class="text-muted small">Payments received</p>
         </div>
       </div>
@@ -132,7 +132,7 @@
                   <tr *ngFor="let payment of payments">
                     <td>{{ payment.date_paid | date:'MMM dd, yyyy' }}</td>
                     <td>{{ payment.description || 'Payment received' }}</td>
-                    <td>₱{{ payment.amount | number:'1.2-2' }}</td>
+                    <td [ngClass]="getAmountClass(payment.amount)">₱{{ payment.amount | number:'1.2-2' }}</td>
                     <td>{{ formatPaymentMethod(payment) }}</td>
                     <td>{{ payment.reference_number || 'N/A' }}</td>
                   </tr>
@@ -200,17 +200,17 @@
                     <tr>
                       <ng-container *ngIf="breakdownType === 'music'">
                         <td>{{ item.release_title }}</td>
-                        <td>₱{{ item.gross_earnings | number:'1.2-2' }}</td>
-                        <td>₱{{ item.royalties | number:'1.2-2' }}</td>
-                        <td>₱{{ item.platform_fees | number:'1.2-2' }}</td>
-                        <td>₱{{ item.net_earnings | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.gross_earnings)">₱{{ item.gross_earnings | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.royalties)">₱{{ item.royalties | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.platform_fees)">₱{{ item.platform_fees | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.net_earnings)">₱{{ item.net_earnings | number:'1.2-2' }}</td>
                       </ng-container>
                       <ng-container *ngIf="breakdownType === 'event'">
                         <td>{{ item.event_name }}</td>
-                        <td>₱{{ item.sales | number:'1.2-2' }}</td>
-                        <td>₱{{ item.platform_fees | number:'1.2-2' }}</td>
-                        <td>₱{{ item.processing_fees | number:'1.2-2' }}</td>
-                        <td>₱{{ item.net_earnings | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.sales)">₱{{ item.sales | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.platform_fees)">₱{{ item.platform_fees | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.processing_fees)">₱{{ item.processing_fees | number:'1.2-2' }}</td>
+                        <td [ngClass]="getAmountClass(item.net_earnings)">₱{{ item.net_earnings | number:'1.2-2' }}</td>
                       </ng-container>
                     </tr>
                   </ng-container>

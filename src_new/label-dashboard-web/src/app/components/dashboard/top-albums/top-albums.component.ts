@@ -33,11 +33,15 @@ export class TopAlbumsComponent {
     }).format(amount);
   }
 
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
+
   getCoverArtUrl(coverArt: string | undefined): string {
     if (!coverArt || !coverArt.startsWith('http')) {
       return 'assets/img/placeholder.jpg'; // Default placeholder
     }
-    
+
     // If it's already a full URL, return as is
     return coverArt;
   }

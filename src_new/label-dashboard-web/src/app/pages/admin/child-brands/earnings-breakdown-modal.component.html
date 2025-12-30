@@ -16,7 +16,7 @@
               <strong>Net Music Earnings:</strong>
             </div>
             <div class="col-sm-4 text-end">
-              <strong class="text-success">₱{{ childBrand.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+              <strong class="text-success" [ngClass]="getAmountClass(childBrand.music_earnings)">₱{{ childBrand.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
             </div>
           </div>
           
@@ -30,7 +30,7 @@
                 <span class="text-muted">• Gross Music Earnings:</span>
               </div>
               <div class="col-sm-4 text-end">
-                <span class="text-primary">₱{{ childBrand.music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                <span class="text-primary" [ngClass]="getAmountClass(childBrand.music_gross_earnings)">₱{{ childBrand.music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
               </div>
             </div>
             

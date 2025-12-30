@@ -204,9 +204,14 @@
                         {{ getColumnValue(item, column) }}
                       </strong>
                     </span>
-                    
+
+                    <!-- Currency columns with negative number styling -->
+                    <span *ngIf="column.key === 'amount' || column.key === 'payment_processing_fee'" [ngClass]="getAmountClass(item[column.key])">
+                      {{ getColumnValue(item, column) }}
+                    </span>
+
                     <!-- Default handling -->
-                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status' && !column.showBreakdownButton">
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status' && !column.showBreakdownButton && column.key !== 'amount' && column.key !== 'payment_processing_fee'">
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>

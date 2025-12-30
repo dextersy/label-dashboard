@@ -19,6 +19,10 @@ export class ExpensesTableComponent {
     }).format(amount);
   }
 
+  getAmountClass(amount: number | undefined): string {
+    return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
+
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-PH');
   }

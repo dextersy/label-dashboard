@@ -26,8 +26,8 @@
           <td data-label="Name">{{ referrer.name }}</td>
           <td data-label="Referral Code"><code>{{ referrer.referral_code }}</code></td>
           <td class="text-center" data-label="Tickets Sold">{{ referrer.tickets_sold }}</td>
-          <td class="text-end" data-label="Gross Sales">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
-          <td class="text-end" data-label="Net Sales">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
+          <td class="text-end" data-label="Gross Sales" [ngClass]="getAmountClass(referrer.gross_amount_sold)">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
+          <td class="text-end" data-label="Net Sales" [ngClass]="getAmountClass(referrer.net_amount_sold)">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
           <td class="text-center" data-label="Referral Link">
             <button 
               class="btn btn-sm btn-outline-primary"
@@ -43,8 +43,8 @@
           <th>Total</th>
           <th></th>
           <th class="text-center">{{ getTotalTicketsSold() }}</th>
-          <th class="text-end">{{ getTotalGrossSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
-          <th class="text-end">{{ getTotalNetSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
+          <th class="text-end" [ngClass]="getAmountClass(getTotalGrossSales())">{{ getTotalGrossSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
+          <th class="text-end" [ngClass]="getAmountClass(getTotalNetSales())">{{ getTotalNetSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
           <th></th>
         </tr>
       </tfoot>

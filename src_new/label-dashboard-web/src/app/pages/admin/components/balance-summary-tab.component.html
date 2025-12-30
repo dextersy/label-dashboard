@@ -54,10 +54,10 @@
             <tbody>
               <tr *ngFor="let artist of data" [class.table-success]="artist.ready_for_payment">
                 <td class="mobile-text" data-label="Artist">{{ artist.name }}</td>
-                <td class="mobile-hide tablet-hide text-end" data-label="Total royalties">{{ formatCurrency(artist.total_royalties) }}</td>
-                <td class="mobile-hide tablet-hide text-end" data-label="Total payments">{{ formatCurrency(artist.total_payments) }}</td>
-                <td class="mobile-narrow mobile-number text-end fw-bold" data-label="Balance">{{ formatCurrency(artist.total_balance) }}</td>
-                <td class="mobile-hide text-end" data-label="Payout point">{{ formatCurrency(artist.payout_point) }}</td>
+                <td class="mobile-hide tablet-hide text-end" data-label="Total royalties"><span [ngClass]="{'text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span></td>
+                <td class="mobile-hide tablet-hide text-end" data-label="Total payments"><span [ngClass]="{'text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span></td>
+                <td class="mobile-narrow mobile-number text-end fw-bold" data-label="Balance"><span [ngClass]="{'text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
+                <td class="mobile-hide text-end" data-label="Payout point"><span [ngClass]="{'text-danger': artist.payout_point < 0}">{{ formatCurrency(artist.payout_point) }}</span></td>
                 <td class="mobile-narrow text-center" data-label="Due for payment">
                   <i class="fas fa-check text-success" *ngIf="artist.due_for_payment"></i>
                   <span *ngIf="!artist.due_for_payment" class="text-muted">-</span>
@@ -83,7 +83,7 @@
         <h5 class="card-title mb-0">Total Balance</h5>
       </div>
       <div class="card-body text-center">
-        <h3><strong>{{ formatCurrency(balanceSummary?.total_balance || 0) }}</strong></h3>
+        <h3><strong [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_balance || 0) }}</strong></h3>
       </div>
     </div>
   </div>
@@ -94,7 +94,7 @@
         <h5 class="card-title mb-0">Total Due For Payment</h5>
       </div>
       <div class="card-body text-center">
-        <h3><strong>{{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}</strong></h3>
+        <h3><strong [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}</strong></h3>
       </div>
     </div>
   </div>
@@ -107,17 +107,17 @@
         </h5>
       </div>
       <div class="card-body text-center">
-        <h3><strong>{{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}</strong></h3>
-        <button class="btn btn-primary w-100" 
+        <h3><strong [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}</strong></h3>
+        <button class="btn btn-primary w-100"
                 [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
                 (click)="payAllBalances()">
           <i class="fas fa-credit-card"></i> Pay Now
         </button>
-        <small class="d-block mt-2"><strong>On hold:</strong> {{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</small>
+        <small class="d-block mt-2"><strong>On hold:</strong> <span [style.color]="(balanceSummary?.paused_payouts || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</span></small>
       </div>
       <div class="card-footer text-center">
         <div class="badge bg-info">
-          Available balance: {{ formatCurrency(walletBalance) }}
+          Available balance: <span [style.color]="walletBalance < 0 ? '#FF4A55' : ''">{{ formatCurrency(walletBalance) }}</span>
         </div>
       </div>
     </div>
@@ -149,7 +149,7 @@
         <h5 class="card-title mb-0">Total Recuperable Expense</h5>
       </div>
       <div class="card-body text-center">
-        <h3><strong>{{ formatCurrency(expensesSummary?.total_recuperable_expense || 0) }}</strong></h3>
+        <h3><strong [style.color]="(expensesSummary?.total_recuperable_expense || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(expensesSummary?.total_recuperable_expense || 0) }}</strong></h3>
       </div>
     </div>
   </div>

@@ -192,7 +192,7 @@
             <!-- Summary Row -->
             <div class="d-flex align-items-center justify-content-center mb-2">
               <small class="text-muted">
-                Total: {{ formatCurrency(totalEarnings) }} • {{ bulkEarnings.length }} rows
+                Total: <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span> • {{ bulkEarnings.length }} rows
               </small>
             </div>
             
@@ -212,8 +212,8 @@
             <!-- Left Side: Totals and Add Row Buttons -->
             <div class="d-flex align-items-center gap-4">
               <div>
-                <strong>Current total earnings:</strong> 
-                <span>{{ formatCurrency(totalEarnings) }}</span>
+                <strong>Current total earnings:</strong>
+                <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span>
               </div>
               <div class="text-muted">
                 Total rows: {{ bulkEarnings.length }}
@@ -298,7 +298,7 @@
       <div class="col-md-3">
         <div class="card">
           <div class="card-body text-center">
-            <h5 class="card-title text-success">{{ formatCurrency(csvTotalAmount) }}</h5>
+            <h5 class="card-title text-success" [ngClass]="getAmountClass(csvTotalAmount)">{{ formatCurrency(csvTotalAmount) }}</h5>
             <p class="card-text text-muted">Total Matched Amount</p>
           </div>
         </div>
