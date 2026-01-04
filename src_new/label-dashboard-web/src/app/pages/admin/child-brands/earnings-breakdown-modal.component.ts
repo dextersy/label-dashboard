@@ -2,6 +2,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChildBrand } from '../../../services/admin.service';
 
+export interface AggregatedTotals {
+  event_sales: number;
+  event_platform_fees: number;
+  event_processing_fees: number;
+  event_estimated_tax: number;
+  event_earnings: number;
+}
+
 @Component({
     selector: 'app-earnings-breakdown-modal',
     imports: [CommonModule],
@@ -11,7 +19,8 @@ import { ChildBrand } from '../../../services/admin.service';
 export class EarningsBreakdownModalComponent {
   @Input() show: boolean = false;
   @Input() childBrand: ChildBrand | null = null;
-  @Input() breakdownType: 'music' | 'event' | 'platform_fees' = 'music';
+  @Input() aggregatedTotals: AggregatedTotals | null = null;
+  @Input() breakdownType: 'music' | 'event' | 'platform_fees' | 'total_event' = 'music';
   @Output() close = new EventEmitter<void>();
 
   onClose(): void {
@@ -34,6 +43,10 @@ export class EarningsBreakdownModalComponent {
 
   getPlatformFeesBreakdownTitle(): string {
     return `Platform Fees Breakdown - ${this.childBrand?.brand_name}`;
+  }
+
+  getTotalEventBreakdownTitle(): string {
+    return 'Total Event Earnings Breakdown - All Sublabels';
   }
 
   getAmountClass(amount: number | undefined): string {

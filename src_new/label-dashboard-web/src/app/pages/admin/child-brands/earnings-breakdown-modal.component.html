@@ -5,12 +5,13 @@
         <h5 class="modal-title" *ngIf="breakdownType === 'music'">{{ getMusicBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'event'">{{ getEventBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'platform_fees'">{{ getPlatformFeesBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'total_event'">{{ getTotalEventBreakdownTitle() }}</h5>
         <button type="button" class="btn-close" (click)="onClose()"></button>
       </div>
-      <div class="modal-body" *ngIf="childBrand">
-        
+      <div class="modal-body">
+
         <!-- Music Earnings Breakdown -->
-        <div *ngIf="breakdownType === 'music'">
+        <div *ngIf="breakdownType === 'music' && childBrand">
           <div class="row mb-3">
             <div class="col-sm-8">
               <strong>Net Music Earnings:</strong>
@@ -77,7 +78,7 @@
         </div>
 
         <!-- Event Earnings Breakdown -->
-        <div *ngIf="breakdownType === 'event'">
+        <div *ngIf="breakdownType === 'event' && childBrand">
           <div class="row mb-3">
             <div class="col-sm-8">
               <strong>Net Event Earnings:</strong>
@@ -144,7 +145,7 @@
         </div>
 
         <!-- Platform Fees Breakdown -->
-        <div *ngIf="breakdownType === 'platform_fees'">
+        <div *ngIf="breakdownType === 'platform_fees' && childBrand">
           <div class="row mb-3">
             <div class="col-sm-8">
               <strong>Total Platform Fees:</strong>
@@ -185,7 +186,74 @@
             </small>
           </div>
         </div>
-        
+
+        <!-- Total Event Earnings Breakdown -->
+        <div *ngIf="breakdownType === 'total_event' && aggregatedTotals">
+          <div class="row mb-3">
+            <div class="col-sm-8">
+              <strong>Total Event Earnings:</strong>
+            </div>
+            <div class="col-sm-4 text-end">
+              <strong class="text-success">₱{{ aggregatedTotals.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="mb-3">
+            <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Total Gross Event Sales:</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-primary">₱{{ aggregatedTotals.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Less: Platform Fees:</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-danger">-₱{{ aggregatedTotals.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="mb-3">
+            <h6 class="text-muted mb-2">Other Information:</h6>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Total Processing Fees:</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-info">₱{{ aggregatedTotals.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Total Estimated Tax (0.5%):</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-secondary">₱{{ aggregatedTotals.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              This breakdown shows the aggregated totals across all sublabels. Total Event Earnings = Total Gross Event Sales - Platform Fees. Processing fees and estimated tax are informational and represent additional charges during ticket purchases.
+            </small>
+          </div>
+        </div>
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>

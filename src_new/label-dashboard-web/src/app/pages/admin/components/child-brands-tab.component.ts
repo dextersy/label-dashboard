@@ -12,7 +12,7 @@ import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '
 import { AddSublabelModalComponent } from '../../../components/admin/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../../components/admin/fee-settings-modal/fee-settings-modal.component';
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/admin/sublabel-payout-modal/sublabel-payout-modal.component';
-import { EarningsBreakdownModalComponent } from '../child-brands/earnings-breakdown-modal.component';
+import { EarningsBreakdownModalComponent, AggregatedTotals } from '../child-brands/earnings-breakdown-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
@@ -35,7 +35,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   selectedSublabelForPayout: ChildBrand | null = null;
   showEarningsBreakdownModal: boolean = false;
   selectedSublabelForBreakdown: ChildBrand | null = null;
-  earningsBreakdownType: 'music' | 'event' | 'platform_fees' = 'music';
+  aggregatedTotalsForBreakdown: AggregatedTotals | null = null;
+  earningsBreakdownType: 'music' | 'event' | 'platform_fees' | 'total_event' = 'music';
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
@@ -288,6 +289,17 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     return this.childBrands.reduce((total, brand) => total + brand.platform_fees, 0);
   }
 
+  // Calculate aggregated totals for event earnings
+  getAggregatedEventTotals(): AggregatedTotals {
+    return {
+      event_sales: this.childBrands.reduce((total, brand) => total + (brand.event_sales || 0), 0),
+      event_platform_fees: this.childBrands.reduce((total, brand) => total + (brand.event_platform_fees || 0), 0),
+      event_processing_fees: this.childBrands.reduce((total, brand) => total + (brand.event_processing_fees || 0), 0),
+      event_estimated_tax: this.childBrands.reduce((total, brand) => total + (brand.event_estimated_tax || 0), 0),
+      event_earnings: this.childBrands.reduce((total, brand) => total + (brand.event_earnings || 0), 0)
+    };
+  }
+
   // Superadmin check
   isSuperAdmin(): boolean {
     const currentUser = this.authService.currentUserValue;
@@ -507,6 +519,15 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   closeEarningsBreakdownModal(): void {
     this.showEarningsBreakdownModal = false;
     this.selectedSublabelForBreakdown = null;
+    this.aggregatedTotalsForBreakdown = null;
+  }
+
+  // Open Total Event Earnings breakdown modal
+  openTotalEventBreakdown(): void {
+    this.aggregatedTotalsForBreakdown = this.getAggregatedEventTotals();
+    this.selectedSublabelForBreakdown = null; // No specific sublabel
+    this.earningsBreakdownType = 'total_event';
+    this.showEarningsBreakdownModal = true;
   }
 
   // Handle breakdown button clicks from the table

@@ -117,10 +117,13 @@
     </div>
 
     <div class="col-md-6 col-lg">
-      <div class="card summary-card">
+      <div class="card summary-card clickable-card" (click)="openTotalEventBreakdown()" style="cursor: pointer;">
         <div class="card-body text-center">
           <h4 class="card-title text-warning" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Event Earnings</p>
+          <p class="card-text text-muted">
+            Total Event Earnings
+            <i class="fas fa-info-circle ms-1" style="font-size: 0.8em;"></i>
+          </p>
         </div>
       </div>
     </div>
@@ -176,6 +179,7 @@
 <app-earnings-breakdown-modal
   [show]="showEarningsBreakdownModal"
   [childBrand]="selectedSublabelForBreakdown"
+  [aggregatedTotals]="aggregatedTotalsForBreakdown"
   [breakdownType]="earningsBreakdownType"
   (close)="closeEarningsBreakdownModal()">
 </app-earnings-breakdown-modal>
