@@ -1,0 +1,97 @@
+<div class="modal fade show" style="display: block;" *ngIf="show" (click)="onBackdropClick($event)">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Payments - {{ brandName }}</h5>
+        <button type="button" class="btn-close" (click)="onClose()"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-muted mt-2">Loading payments...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && payments.length === 0" class="text-center py-4">
+          <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+          <p class="text-muted">No payments found for this sublabel.</p>
+        </div>
+
+        <!-- Payments Table -->
+        <div *ngIf="!loading && payments.length > 0">
+          <!-- Summary Cards -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="summary-box">
+                <div class="summary-label">Total Payments</div>
+                <div class="summary-value text-success">₱{{ getTotalPayments() | number:'1.2-2' }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="summary-box">
+                <div class="summary-label">Total Processing Fees</div>
+                <div class="summary-value text-info">₱{{ getTotalProcessingFees() | number:'1.2-2' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payments Table -->
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Payment Method</th>
+                  <th class="text-end">Amount</th>
+                  <th class="text-end">Processing Fee</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let payment of payments">
+                  <td>
+                    <small>{{ formatDate(payment.date_paid) }}</small>
+                  </td>
+                  <td>
+                    <div>{{ payment.description || 'Payment' }}</div>
+                    <small class="text-muted" *ngIf="payment.reference_number">
+                      Ref: {{ payment.reference_number }}
+                    </small>
+                  </td>
+                  <td>
+                    <small>{{ getPaymentMethodDisplay(payment) }}</small>
+                  </td>
+                  <td class="text-end">
+                    <strong class="text-success">₱{{ parseAmount(payment.amount) | number:'1.2-2' }}</strong>
+                  </td>
+                  <td class="text-end">
+                    <span class="text-info" *ngIf="payment.payment_processing_fee">
+                      ₱{{ parseAmount(payment.payment_processing_fee) | number:'1.2-2' }}
+                    </span>
+                    <span class="text-muted" *ngIf="!payment.payment_processing_fee">
+                      -
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Payment Count -->
+          <div class="text-muted text-end mt-2">
+            <small>{{ payments.length }} payment{{ payments.length !== 1 ? 's' : '' }} total</small>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="show"></div>

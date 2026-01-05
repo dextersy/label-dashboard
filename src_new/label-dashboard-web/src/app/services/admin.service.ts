@@ -922,7 +922,13 @@ export class AdminService {
   getLabelPayments(): Observable<any> {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = user.brand_id;
-    
+
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getSublabelPayments(brandId: number): Observable<any> {
     return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments`, {
       headers: this.getAuthHeaders()
     });
@@ -931,7 +937,7 @@ export class AdminService {
   getLabelPaymentById(paymentId: number): Observable<any> {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = user.brand_id;
-    
+
     return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments/${paymentId}`, {
       headers: this.getAuthHeaders()
     });

@@ -183,3 +183,11 @@
   [breakdownType]="earningsBreakdownType"
   (close)="closeEarningsBreakdownModal()">
 </app-earnings-breakdown-modal>
+
+<!-- Sublabel Payments Modal -->
+<app-sublabel-payments-modal
+  [show]="showPaymentsModal"
+  [brandId]="selectedSublabelForPayments?.brand_id || null"
+  [brandName]="selectedSublabelForPayments?.brand_name || ''"
+  (close)="closePaymentsModal()">
+</app-sublabel-payments-modal>

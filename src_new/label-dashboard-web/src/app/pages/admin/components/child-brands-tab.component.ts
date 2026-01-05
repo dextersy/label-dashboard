@@ -13,11 +13,12 @@ import { AddSublabelModalComponent } from '../../../components/admin/add-sublabe
 import { FeeSettingsModalComponent } from '../../../components/admin/fee-settings-modal/fee-settings-modal.component';
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/admin/sublabel-payout-modal/sublabel-payout-modal.component';
 import { EarningsBreakdownModalComponent, AggregatedTotals } from '../child-brands/earnings-breakdown-modal.component';
+import { SublabelPaymentsModalComponent } from '../child-brands/sublabel-payments-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
     selector: 'app-child-brands-tab',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, BreadcrumbComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, BreadcrumbComponent],
     templateUrl: './child-brands-tab.component.html',
     styleUrls: ['./child-brands-tab.component.scss']
 })
@@ -37,6 +38,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   selectedSublabelForBreakdown: ChildBrand | null = null;
   aggregatedTotalsForBreakdown: AggregatedTotals | null = null;
   earningsBreakdownType: 'music' | 'event' | 'platform_fees' | 'total_event' = 'music';
+  showPaymentsModal: boolean = false;
+  selectedSublabelForPayments: ChildBrand | null = null;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
@@ -105,13 +108,14 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       formatter: (item: ChildBrand) => `₱${item.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       showBreakdownButton: true
     },
-    { 
-      key: 'payments', 
-      label: 'Payments Made', 
+    {
+      key: 'payments',
+      label: 'Payments Made',
       type: 'number',
       sortable: true,
       align: 'right',
-      formatter: (item: ChildBrand) => `₱${item.payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      formatter: (item: ChildBrand) => `₱${item.payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      showBreakdownButton: true
     },
     { 
       key: 'platform_fees', 
@@ -530,6 +534,20 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     this.showEarningsBreakdownModal = true;
   }
 
+  // Payments Modal handlers
+  openPaymentsBreakdown(brandId: number): void {
+    const childBrand = this.childBrands.find(b => b.brand_id === brandId);
+    if (childBrand) {
+      this.selectedSublabelForPayments = childBrand;
+      this.showPaymentsModal = true;
+    }
+  }
+
+  closePaymentsModal(): void {
+    this.showPaymentsModal = false;
+    this.selectedSublabelForPayments = null;
+  }
+
   // Handle breakdown button clicks from the table
   onBreakdownButtonClick(event: {item: ChildBrand, columnKey: string}): void {
     if (event.columnKey === 'music_earnings') {
@@ -538,6 +556,8 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       this.openEventBreakdown(event.item.brand_id);
     } else if (event.columnKey === 'platform_fees') {
       this.openPlatformFeesBreakdown(event.item.brand_id);
+    } else if (event.columnKey === 'payments') {
+      this.openPaymentsBreakdown(event.item.brand_id);
     }
   }
 

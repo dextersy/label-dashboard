@@ -363,6 +363,23 @@ export const getLabelPayments = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    const { brandId } = req.params;
+    const targetBrandId = brandId ? parseInt(brandId, 10) : req.user.brand_id;
+
+    // If a specific brandId is provided, verify it's a child brand
+    if (brandId && targetBrandId !== req.user.brand_id) {
+      const targetBrand = await Brand.findOne({
+        where: {
+          id: targetBrandId,
+          parent_brand: req.user.brand_id
+        }
+      });
+
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Sublabel not found or not accessible' });
+      }
+    }
+
     const { page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
 
     const pageNum = parseInt(page as string);
@@ -370,7 +387,7 @@ export const getLabelPayments = async (req: AuthRequest, res: Response) => {
     const offset = (pageNum - 1) * pageSize;
 
     // Build where conditions based on filters
-    const where: any = { brand_id: req.user.brand_id };
+    const where: any = { brand_id: targetBrandId };
     
     // Add search filters
     if (filters.description && filters.description !== '') {
@@ -453,12 +470,27 @@ export const getLabelPaymentById = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { id } = req.params;
+    const { brandId, id } = req.params;
+    const targetBrandId = brandId ? parseInt(brandId, 10) : req.user.brand_id;
+
+    // If a specific brandId is provided, verify it's a child brand
+    if (brandId && targetBrandId !== req.user.brand_id) {
+      const targetBrand = await Brand.findOne({
+        where: {
+          id: targetBrandId,
+          parent_brand: req.user.brand_id
+        }
+      });
+
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Sublabel not found or not accessible' });
+      }
+    }
 
     const payment = await LabelPayment.findOne({
-      where: { 
+      where: {
         id,
-        brand_id: req.user.brand_id 
+        brand_id: targetBrandId
       },
       include: [
         {
