@@ -1,7 +1,7 @@
 <div class="public-page" [style.background-color]="brandColor">
   <!-- Countdown Notification Bar -->
-  <app-countdown-notification 
-    *ngIf="event && event.show_countdown && !isLoading && !isError"
+  <app-countdown-notification
+    *ngIf="event && event.show_countdown && !isLoading && !isError && canBuyTickets()"
     [eventDate]="event.date_and_time"
     [closeTime]="event.close_time"
     [eventTitle]="event.title"
