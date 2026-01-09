@@ -27,7 +27,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   paymentMethods: LabelPaymentMethod[] = [];
   payments: LabelPayment[] = [];
   paymentsResponse: LabelPaymentsResponse | null = null;
-  
+
   showAddPaymentMethodModal = false;
   newPaymentMethod: any = {}; // Using 'any' to allow bank_selection property
   isAddingPaymentMethod = false;
@@ -35,6 +35,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
 
   startDate?: string;
   endDate?: string;
+  loading = false;
 
   constructor(
     private labelFinanceService: LabelFinanceService,
@@ -82,18 +83,27 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     this.loadDashboard();
   }
 
+  onRefresh(): void {
+    this.loadDashboard();
+    this.loadPaymentMethods();
+    this.loadPayments();
+  }
+
   private loadDashboard(): void {
     if (!this.brandId) return;
 
+    this.loading = true;
     this.subscriptions.add(
       this.labelFinanceService.getDashboard(this.brandId, this.startDate, this.endDate)
         .subscribe({
           next: (data) => {
             this.dashboard = data;
+            this.loading = false;
           },
           error: (error) => {
             console.error('Error loading dashboard:', error);
             this.notificationService.showError('Failed to load dashboard data');
+            this.loading = false;
           }
         })
     );

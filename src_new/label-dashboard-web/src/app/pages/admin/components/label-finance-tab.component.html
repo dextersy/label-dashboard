@@ -1,10 +1,13 @@
 <div class="label-finance-tab">
   <!-- Date Range Filter -->
   <div class="row mb-4">
-    <div class="col-md-6">
-      <app-date-range-filter 
+    <div class="col-md-12">
+      <app-date-range-filter
+        [compact]="true"
+        [loading]="loading"
+        [initialPreset]="'alltime'"
         (dateRangeChange)="onDateRangeChanged($event)"
-        [initialPreset]="'alltime'">
+        (refresh)="onRefresh()">
       </app-date-range-filter>
     </div>
   </div>
