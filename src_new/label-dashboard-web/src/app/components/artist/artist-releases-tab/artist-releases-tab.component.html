@@ -109,10 +109,11 @@
                   </button>
                   <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="onEditRelease(release)"
-                          [title]="release.status === 'Draft' ? 'Edit Release Information' : 'View Release'">
-                    <i class="fa" [ngClass]="release.status === 'Draft' ? 'fa-edit' : 'fa-eye'"></i>
+                          [title]="canEditRelease(release) ? 'Edit Release Information' : 'View Release'">
+                    <i class="fa" [ngClass]="canEditRelease(release) ? 'fa-edit' : 'fa-eye'"></i>
                   </button>
-                  <button class="btn btn-link btn-sm p-0 me-2"
+                  <button *ngIf="canEditRelease(release)"
+                          class="btn btn-link btn-sm p-0 me-2"
                           (click)="onManageTrackList(release)"
                           title="Manage Track List">
                     <i class="fa fa-music"></i>

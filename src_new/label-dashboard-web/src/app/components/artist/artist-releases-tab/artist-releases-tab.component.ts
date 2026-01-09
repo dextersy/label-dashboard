@@ -312,4 +312,9 @@ export class ArtistReleasesTabComponent {
       }
     });
   }
+
+  canEditRelease(release: ArtistRelease): boolean {
+    // Release can be edited if it's in Draft status or user is an admin
+    return release.status === 'Draft';
+  }
 }
