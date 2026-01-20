@@ -1,0 +1,209 @@
+<div class="fundraiser-page" [style.--brand-color]="brandColor">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="loading"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="isError && !isLoading" class="wrapper h-100 d-flex justify-content-center align-items-center">
+    <div class="card text-center" style="max-width: 500px;">
+      <div class="card-body py-5">
+        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+        <h1 class="text-danger" style="font-size: 1.5rem;">Error</h1>
+        <p class="text-muted">{{ errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fundraiser Content -->
+  <div *ngIf="fundraiser && !isLoading && !isError" class="wrapper fadeInDown h-100">
+    <div class="page-container">
+      <!-- Header Section - Poster Banner -->
+      <div class="header-section" *ngIf="fundraiser.poster_url">
+        <div class="poster-banner" (click)="openLightbox()">
+          <img [src]="fundraiser.poster_url" class="fundraiser-poster-banner" alt="Fundraiser poster">
+          <button
+            class="view-full-image-btn"
+            (click)="openLightbox(); $event.stopPropagation()"
+            title="View full image">
+            <i class="fas fa-search-plus"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body Section - Title, Description & Donation Form -->
+      <div class="body-section">
+        <!-- Title -->
+        <h1 class="fundraiser-title text-center mb-3"><strong>{{ fundraiser.title }}</strong></h1>
+
+        <!-- Description -->
+        <div *ngIf="fundraiser.description" class="description-box mb-4 p-3">
+          <p class="mb-0" style="white-space: pre-wrap;">{{ fundraiser.description }}</p>
+        </div>
+
+        <form [formGroup]="donationForm" (ngSubmit)="onSubmit()">
+          <!-- Amount Field - Prominent -->
+          <div class="amount-container fadeIn first">
+            <h6><strong>How much would you like to donate?</strong></h6>
+            <div class="input-group amount-input-group">
+              <span class="input-group-text currency-prefix">₱</span>
+              <div class="form-floating flex-fill">
+                <input
+                  type="number"
+                  class="form-control amount-field"
+                  id="amount"
+                  formControlName="amount"
+                  placeholder="Amount"
+                  [class.is-invalid]="amountControl?.invalid && amountControl?.touched"
+                  min="20"
+                  step="0.01">
+                <label for="amount">Amount</label>
+              </div>
+            </div>
+            <div class="invalid-feedback d-block"
+                 *ngIf="amountControl?.invalid && amountControl?.touched">
+              <span *ngIf="amountControl?.errors?.['required']">Amount is required.</span>
+              <span *ngIf="amountControl?.errors?.['min']">Minimum amount is ₱20.00.</span>
+            </div>
+          </div>
+
+          <h6 class="fadeIn second"><strong>Please provide your details.</strong></h6>
+
+          <!-- Name Field -->
+          <div class="name-container fadeIn second">
+            <div class="input-group">
+              <div class="form-floating flex-fill">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="name"
+                  formControlName="name"
+                  placeholder="Full name"
+                  [class.is-invalid]="nameControl?.invalid && nameControl?.touched"
+                  required>
+                <label for="name">Full name</label>
+              </div>
+            </div>
+            <div class="invalid-feedback d-block"
+                 *ngIf="nameControl?.invalid && nameControl?.touched">
+              Full name is required.
+            </div>
+          </div>
+
+          <!-- Email Field -->
+          <div class="email-container fadeIn third">
+            <div class="input-group">
+              <div class="form-floating flex-fill">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  formControlName="email"
+                  placeholder="Email address"
+                  [class.is-invalid]="emailControl?.invalid && emailControl?.touched"
+                  required>
+                <label for="email">Email address</label>
+              </div>
+            </div>
+            <div class="invalid-feedback d-block"
+                 *ngIf="emailControl?.invalid && emailControl?.touched && emailControl?.errors?.['required']">
+              Email address is required.
+            </div>
+            <div class="invalid-feedback d-block"
+                 *ngIf="emailControl?.invalid && emailControl?.touched && emailControl?.errors?.['email']">
+              Email address is not valid.
+            </div>
+            <div class="valid-feedback d-block"
+                 *ngIf="!emailControl?.invalid && emailControl?.value">
+              <i class="fas fa-check-circle text-success"></i>
+              Please make sure your email address is correct.
+            </div>
+          </div>
+
+          <!-- Contact Number Field -->
+          <div class="contact-number-container fadeIn fourth">
+            <div class="input-group">
+              <span class="input-group-text">🇵🇭 +63</span>
+              <div class="form-floating flex-fill">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="contact_number"
+                  formControlName="contact_number"
+                  placeholder="Contact number (optional)">
+                <label for="contact_number">Contact number (optional)</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Anonymous Checkbox -->
+          <div class="anonymous-container fadeIn fifth">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="anonymous"
+                formControlName="anonymous"
+              />
+              <label class="form-check-label" for="anonymous">
+                Make this donation anonymous
+              </label>
+            </div>
+            <small class="text-muted">
+              Your name will not be displayed to the organizers if you check this option.
+            </small>
+          </div>
+
+          <!-- Submit Error -->
+          <div class="submit-error mb-3" *ngIf="submitError">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ submitError }}
+          </div>
+
+          <!-- Submit Button -->
+          <div class="fadeIn sixth">
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg w-100 submit-button"
+              [disabled]="isSubmitting"
+            >
+              <i class="fas fa-heart me-2" *ngIf="!isSubmitting"></i>
+              <span *ngIf="!isSubmitting">Donate Now</span>
+              <span *ngIf="isSubmitting">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Processing...
+              </span>
+            </button>
+            <div class="text-center mt-2" style="font-size: 12px;">
+              Clicking <b>Donate Now</b> will bring you to our Paymongo checkout page.
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center footer-section">
+        <p>
+          <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span><br>
+          <span style="font-size:12px; font-style:italic;">
+            Having trouble? Contact us via email
+            <a [href]="'mailto:support@melt-records.com?subject=Issue with donation for ' + fundraiser.title">here</a>
+            or use the chat widget on the lower right.
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox-overlay" *ngIf="showLightbox" (click)="closeLightbox()">
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      <button class="lightbox-close" (click)="closeLightbox()">
+        <i class="fas fa-times"></i>
+      </button>
+      <img [src]="fundraiser?.poster_url" class="lightbox-image" alt="Fundraiser poster">
+      <div class="lightbox-caption" *ngIf="fundraiser?.description">
+        <p style="white-space: pre-wrap;">{{ fundraiser?.description }}</p>
+      </div>
+    </div>
+  </div>
+</div>

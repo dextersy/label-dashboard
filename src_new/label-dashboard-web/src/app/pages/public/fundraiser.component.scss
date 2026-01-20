@@ -1,0 +1,743 @@
+/* BASIC - Override global dashboard styles for public pages */
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+// Force override of global dashboard styles
+.fundraiser-page {
+  background-color: #fafafa !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  min-height: 100vh;
+
+  --brand-color: #6f42c1;
+
+  // Override any existing background gradients
+  background-image: none !important;
+
+  // Reset any dashboard margins/padding
+  margin: 0 !important;
+  padding: 0 !important;
+
+  // Use system default fonts and sizes for everything, including headers
+  h1, h2, h3, h4, h5, h6 {
+    font-family: inherit !important;
+  }
+
+  // Override all possible font-family sources with higher specificity
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]):before,
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]):after,
+  body,
+  div:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
+  span:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
+  p:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
+  label,
+  input,
+  button,
+  .form-control,
+  .input-group-text,
+  .btn {
+    font-family: Arial, sans-serif !important;
+  }
+
+  // Ensure FontAwesome icons keep their proper font-family
+  .fa, .fas, .far, .fab, .fal,
+  i.fa, i.fas, i.far, i.fab, i.fal,
+  .fa::before, .fas::before, .far::before, .fab::before, .fal::before,
+  i.fa::before, i.fas::before, i.far::before, i.fab::before, i.fal::before {
+    font-family: "Font Awesome 7 Free", "Font Awesome 7 Brands" !important;
+  }
+
+  // Override global heading sizes
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 0.5em !important;
+  }
+  h1 {
+    font-size: 2.5em !important;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+  }
+
+  h5 {
+    font-size: 1.25em !important;
+    font-weight: normal;
+    margin-bottom: 0.5em;
+  }
+
+  h6 {
+    font-size: 1em !important;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* STRUCTURE */
+
+.page-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  min-height: 100vh;
+}
+
+.header-section {
+  padding: 0;
+  width: 100%;
+}
+
+.body-section {
+  padding: 20px 25px;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.footer-section {
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.wrapper {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  padding: 0px;
+}
+
+/* Description box styling */
+.description-box {
+  text-align: left;
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #555;
+  }
+}
+
+/* LOADING SPINNER */
+.loading {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 10px solid #656565;
+  border-top-color: var(--brand-color, orange);
+  animation: loading 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-overlay {
+  opacity: 0.5;
+  background: #FFF;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ANIMATIONS */
+
+.fadeInDown {
+  -webkit-animation-name: fadeInDown;
+  animation-name: fadeInDown;
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+@-webkit-keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(0, -100%, 0);
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: none;
+    transform: none;
+  }
+}
+
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(0, -100%, 0);
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: none;
+    transform: none;
+  }
+}
+
+@-webkit-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@-moz-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.fadeIn {
+  opacity: 0;
+  -webkit-animation: fadeIn ease-in 1;
+  -moz-animation: fadeIn ease-in 1;
+  animation: fadeIn ease-in 1;
+
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+
+  -webkit-animation-duration: 1s;
+  -moz-animation-duration: 1s;
+  animation-duration: 1s;
+}
+
+.fadeIn.first {
+  -webkit-animation-delay: 0.4s;
+  -moz-animation-delay: 0.4s;
+  animation-delay: 0.4s;
+}
+
+.fadeIn.second {
+  -webkit-animation-delay: 0.6s;
+  -moz-animation-delay: 0.6s;
+  animation-delay: 0.6s;
+}
+
+.fadeIn.third {
+  -webkit-animation-delay: 0.8s;
+  -moz-animation-delay: 0.8s;
+  animation-delay: 0.8s;
+}
+
+.fadeIn.fourth {
+  -webkit-animation-delay: 1s;
+  -moz-animation-delay: 1s;
+  animation-delay: 1s;
+}
+
+.fadeIn.fifth {
+  -webkit-animation-delay: 1.2s;
+  -moz-animation-delay: 1.2s;
+  animation-delay: 1.2s;
+}
+
+.fadeIn.sixth {
+  -webkit-animation-delay: 1.4s;
+  -moz-animation-delay: 1.4s;
+  animation-delay: 1.4s;
+}
+
+/* Bootstrap Form Controls - Consistent styling for all form fields */
+.name-container,
+.email-container,
+.contact-number-container {
+  margin-bottom: 1rem;
+
+  // Override Bootstrap form-floating height constraints
+  .form-floating {
+    > .form-control {
+      height: 4rem !important;
+      padding-top: 1.625rem !important;
+      padding-bottom: 0.625rem !important;
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+    }
+
+    // Default label position (when field is empty) - center vertically
+    > label {
+      top: 0 !important;
+      height: 4rem !important;
+      padding: 1rem 0.75rem !important;
+      line-height: 2rem !important;
+    }
+
+    // Floating label position (when focused or filled) - move to top
+    > .form-control:focus ~ label,
+    > .form-control:not(:placeholder-shown) ~ label {
+      opacity: 0.65 !important;
+      transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem) !important;
+    }
+  }
+
+  .input-group-text {
+    background-color: white;
+    border-color: #ced4da;
+    font-weight: 500;
+  }
+
+  .form-control {
+    border-color: #ced4da;
+
+    &.form-control {
+      height: 4rem !important;
+      padding: 1.5rem 0.75rem !important;
+      line-height: 1.2 !important;
+      font-size: 1rem !important;
+    }
+
+    &[type="text"],
+    &[type="email"] {
+      background-color: white !important;
+      border: 1px solid #ced4da !important;
+      height: 4rem !important;
+      padding: 1.5rem 0.75rem !important;
+      text-align: left !important;
+      margin: 0 !important;
+      font-size: 1rem !important;
+      border-radius: 0.375rem !important;
+      line-height: 1.2 !important;
+
+      &:focus {
+        background-color: white !important;
+        border-color: var(--brand-color) !important;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+      }
+    }
+
+    &:focus {
+      border-color: var(--brand-color);
+      box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+
+    &.is-invalid {
+      border-color: #dc3545;
+    }
+  }
+
+  .invalid-feedback {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 0.25rem;
+  }
+
+  .valid-feedback {
+    color: #28a745;
+    font-size: 14px;
+    margin-top: 0.25rem;
+  }
+}
+
+// Special styling for input groups with prepend text
+.contact-number-container {
+  .form-control {
+    border-left: 0;
+  }
+}
+
+/* Amount field - Prominent styling */
+.amount-container {
+  margin-bottom: 1.5rem;
+
+  .amount-input-group {
+    .currency-prefix {
+      background-color: var(--brand-color);
+      color: white;
+      border-color: var(--brand-color);
+      font-size: 1.5rem;
+      font-weight: 700;
+      padding: 0 1.25rem;
+    }
+
+    .form-floating {
+      > .form-control {
+        height: 5rem !important;
+        padding-top: 1.625rem !important;
+        padding-bottom: 0.625rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        font-size: 1.75rem !important;
+        font-weight: 600 !important;
+      }
+
+      > label {
+        top: 0 !important;
+        height: 5rem !important;
+        padding: 1.25rem 1rem !important;
+        line-height: 2.5rem !important;
+        font-size: 1.1rem;
+      }
+
+      > .form-control:focus ~ label,
+      > .form-control:not(:placeholder-shown) ~ label {
+        opacity: 0.65 !important;
+        transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem) !important;
+      }
+    }
+
+    .amount-field {
+      border-left: 0 !important;
+
+      &:focus {
+        border-color: var(--brand-color) !important;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+      }
+
+      &.is-invalid {
+        border-color: #dc3545 !important;
+      }
+    }
+  }
+
+  .invalid-feedback {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 0.25rem;
+  }
+}
+
+/* Anonymous checkbox container */
+.anonymous-container {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+
+  .form-check {
+    margin-bottom: 0.5rem;
+  }
+
+  .form-check-input {
+    &:checked {
+      background-color: var(--brand-color);
+      border-color: var(--brand-color);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+  }
+
+  .form-check-label {
+    font-weight: 500;
+  }
+
+  small {
+    display: block;
+    margin-left: 1.5rem;
+  }
+}
+
+/* Submit Error */
+.submit-error {
+  background-color: #fff5f5;
+  border: 1px solid #fc8181;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Submit Button */
+.submit-button {
+  background-color: var(--brand-color) !important;
+  border-color: var(--brand-color) !important;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: #cccccc !important;
+    border-color: #999999 !important;
+  }
+}
+
+/* Mobile responsive - general */
+@media only screen and (max-width: 768px) {
+  .wrapper {
+    height: auto !important;
+  }
+
+  .wrapper, .header-section, .container {
+    padding: 0px;
+  }
+
+  .amount-container {
+    .amount-input-group {
+      .currency-prefix {
+        font-size: 1.25rem;
+        padding: 0 1rem;
+      }
+
+      .form-floating {
+        > .form-control {
+          font-size: 1.5rem !important;
+        }
+      }
+    }
+  }
+}
+
+/* Utility classes */
+.w-100 {
+  width: 100% !important;
+}
+
+a {
+  color: var(--brand-color);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Poster Banner Styling - Full Width */
+.poster-banner {
+  position: relative;
+  width: 100%;
+  max-height: 400px;
+  overflow: hidden;
+  cursor: pointer;
+
+  &:hover .view-full-image-btn {
+    opacity: 1;
+  }
+}
+
+.fundraiser-poster-banner {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Fundraiser title in body */
+.fundraiser-title {
+  font-size: 2rem !important;
+  margin-top: 0 !important;
+}
+
+/* View full image button - positioned on banner */
+.view-full-image-btn {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  z-index: 10;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  i {
+    margin: 0;
+  }
+}
+
+/* Lightbox overlay */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+}
+
+/* Lightbox content container */
+.lightbox-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: scaleIn 0.3s ease;
+}
+
+/* Lightbox image */
+.lightbox-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Lightbox caption */
+.lightbox-caption {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+  max-width: 800px;
+  max-height: 200px;
+  overflow-y: auto;
+  text-align: center;
+
+  p {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  p:first-child {
+    margin-top: 0;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Lightbox close button */
+.lightbox-close {
+  position: absolute;
+  top: -2.5rem;
+  right: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-size: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: white;
+    transform: rotate(90deg);
+  }
+}
+
+/* Scale animation for lightbox */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile responsive styles for poster banner */
+@media only screen and (max-width: 768px) {
+  .page-container {
+    max-width: 100%;
+    box-shadow: none;
+  }
+
+  .body-section {
+    padding: 15px;
+  }
+
+  .fundraiser-poster-banner {
+    height: 250px;
+  }
+
+  .poster-banner {
+    max-height: 250px;
+  }
+
+  .fundraiser-title {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media only screen and (max-device-width: 400px) {
+  .fundraiser-poster-banner {
+    height: 200px;
+  }
+
+  .poster-banner {
+    max-height: 200px;
+  }
+}
+
+/* Mobile responsive styles for lightbox */
+@media only screen and (max-width: 768px) {
+  .view-full-image-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+
+  .lightbox-content {
+    max-width: 95%;
+  }
+
+  .lightbox-image {
+    max-height: 60vh;
+  }
+
+  .lightbox-caption {
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    max-height: 150px;
+  }
+
+  .lightbox-close {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.25rem;
+  }
+}

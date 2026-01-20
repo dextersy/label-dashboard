@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -2517,5 +2517,163 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       // Headers already sent, just end the response
       res.end();
     }
+  }
+};
+
+// Get fundraiser for public donation page
+export const getFundraiserForPublic = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const fundraiserId = parseInt(id, 10);
+    const requestDomain = getRequestDomain(req);
+
+    if (isNaN(fundraiserId)) {
+      return res.status(400).json({ error: 'Invalid fundraiser ID' });
+    }
+
+    const fundraiser = await Fundraiser.findOne({
+      where: {
+        id: fundraiserId,
+        status: 'published'
+      },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          include: [{
+            model: Domain,
+            as: 'domains',
+            attributes: ['domain_name']
+          }]
+        }
+      ]
+    });
+
+    if (!fundraiser) {
+      return res.status(404).json({ error: 'Fundraiser not found' });
+    }
+
+    // Validate domain matches brand
+    if (fundraiser.brand && fundraiser.brand.domains && requestDomain) {
+      const brandDomains = fundraiser.brand.domains.map((d: any) => d.domain_name);
+      const isDomainValid = brandDomains.includes(requestDomain);
+
+      if (!isDomainValid) {
+        return res.status(403).json({ error: 'Invalid domain' });
+      }
+    } else {
+      return res.status(403).json({ error: 'Cannot validate domain: ' + requestDomain });
+    }
+
+    res.json({
+      fundraiser: {
+        id: fundraiser.id,
+        title: fundraiser.title,
+        description: fundraiser.description,
+        poster_url: fundraiser.poster_url,
+        brand: fundraiser.brand ? {
+          id: fundraiser.brand.id,
+          name: fundraiser.brand.brand_name,
+          color: fundraiser.brand.brand_color,
+          logo_url: fundraiser.brand.logo_url
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error('Get fundraiser for public error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Make a donation
+export const makeDonation = async (req: Request, res: Response) => {
+  try {
+    const { fundraiser_id, name, email, contact_number, amount, anonymous } = req.body;
+
+    // Validate required fields
+    if (!fundraiser_id || !name || !email || !amount) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Validate amount (PayMongo requires minimum ₱20 for most payment methods)
+    const MIN_AMOUNT = 20;
+    const donationAmount = parseFloat(amount);
+    if (isNaN(donationAmount) || donationAmount < MIN_AMOUNT) {
+      return res.status(400).json({ error: `Minimum amount is ₱${MIN_AMOUNT}` });
+    }
+
+    // Get fundraiser with brand info
+    const fundraiser = await Fundraiser.findOne({
+      where: { id: fundraiser_id, status: 'published' },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!fundraiser) {
+      return res.status(404).json({ error: 'Fundraiser not found or not published' });
+    }
+
+    // Create donation record with pending status
+    const donation = await Donation.create({
+      fundraiser_id,
+      name,
+      email,
+      contact_number: contact_number || null,
+      amount: donationAmount,
+      payment_status: 'pending',
+      anonymous: anonymous || false,
+      order_timestamp: new Date()
+    });
+
+    // Get brand frontend URL for success/cancel redirects
+    const brandUrl = await getBrandFrontendUrl(fundraiser.brand_id);
+    if (!brandUrl) {
+      return res.status(500).json({ error: 'Brand URL configuration missing' });
+    }
+
+    const successUrl = `${brandUrl}/public/donation/success`;
+    const cancelUrl = `${brandUrl}/public/fundraiser/${fundraiser_id}`;
+
+    // Build payment methods array - allow all available payment methods for fundraisers
+    const paymentMethods = ['card', 'gcash', 'paymaya', 'grab_pay', 'dob', 'dob_ubp'];
+
+    // Create Paymongo checkout session
+    const checkoutSession = await paymentService.createCheckoutSession({
+      line_items: [{
+        name: `Payment: ${fundraiser.title}`,
+        amount: Math.round(donationAmount * 100), // Convert to cents
+        currency: 'PHP',
+        quantity: 1
+      }],
+      payment_method_types: paymentMethods,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      description: `Payment for ${fundraiser.title}`,
+      billing: {
+        name,
+        email,
+        phone: contact_number || ''
+      }
+    });
+
+    if (!checkoutSession) {
+      return res.status(500).json({ error: 'Failed to create payment checkout' });
+    }
+
+    // Update donation with checkout key
+    await donation.update({
+      checkout_key: checkoutSession.attributes.client_key
+    });
+
+    res.json({
+      success: true,
+      donation_id: donation.id,
+      checkout_url: checkoutSession.attributes.checkout_url,
+      message: 'Donation initialized successfully'
+    });
+
+  } catch (error) {
+    console.error('Make donation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

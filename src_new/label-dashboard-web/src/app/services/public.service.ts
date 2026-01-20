@@ -437,4 +437,43 @@ export class PublicService {
       withCredentials: true
     });
   }
+
+  /**
+   * Get fundraiser details for public donation page
+   */
+  getFundraiser(fundraiserId: number): Observable<{
+    fundraiser: {
+      id: number;
+      title: string;
+      description?: string;
+      poster_url?: string;
+      brand?: {
+        id: number;
+        name: string;
+        color?: string;
+        logo_url?: string;
+      };
+    };
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/public/fundraiser/${fundraiserId}`);
+  }
+
+  /**
+   * Make a donation to a fundraiser
+   */
+  makeDonation(request: {
+    fundraiser_id: number;
+    name: string;
+    email: string;
+    contact_number?: string;
+    amount: number;
+    anonymous: boolean;
+  }): Observable<{
+    success: boolean;
+    donation_id: number;
+    checkout_url: string;
+    message: string;
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/public/donation/donate`, request);
+  }
 }

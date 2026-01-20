@@ -1,0 +1,64 @@
+.donation-success-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+
+  --brand-color: #6f42c1;
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .spinner-border {
+      color: var(--brand-color);
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+
+  .success-container {
+    text-align: center;
+    max-width: 500px;
+  }
+
+  .success-icon {
+    color: #28a745;
+    margin-bottom: 2rem;
+
+    svg {
+      width: 80px;
+      height: 80px;
+    }
+  }
+
+  .success-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .success-message {
+    font-size: 1.25rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+  }
+
+  .email-notice {
+    font-size: 1rem;
+    color: #777;
+  }
+
+  .footer-text {
+    margin-top: 3rem;
+    color: #aaa;
+
+    small {
+      font-size: 0.75rem;
+    }
+  }
+}

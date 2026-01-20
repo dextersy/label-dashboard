@@ -28,6 +28,8 @@ import SongCollaborator from './SongCollaborator';
 import SongAuthor from './SongAuthor';
 import SongComposer from './SongComposer';
 import Songwriter from './Songwriter';
+import Fundraiser from './Fundraiser';
+import Donation from './Donation';
 
 // Define relationships
 // Brand relationships
@@ -41,6 +43,7 @@ Brand.hasMany(EmailAttempt, { foreignKey: 'brand_id', as: 'emailAttempts' });
 Brand.hasMany(Domain, { foreignKey: 'brand_id', as: 'domains' });
 Brand.hasMany(LabelPaymentMethod, { foreignKey: 'brand_id', as: 'labelPaymentMethods' });
 Brand.hasMany(LabelPayment, { foreignKey: 'brand_id', as: 'labelPayments' });
+Brand.hasMany(Fundraiser, { foreignKey: 'brand_id', as: 'fundraisers' });
 
 // Brand self-referencing relationships for parent-child hierarchy
 Brand.hasMany(Brand, { foreignKey: 'parent_brand', as: 'childBrands' });
@@ -192,6 +195,13 @@ SongComposer.belongsTo(Songwriter, { foreignKey: 'songwriter_id', as: 'songwrite
 Songwriter.hasMany(SongAuthor, { foreignKey: 'songwriter_id', as: 'songAuthors' });
 Songwriter.hasMany(SongComposer, { foreignKey: 'songwriter_id', as: 'songComposers' });
 
+// Fundraiser relationships
+Fundraiser.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Fundraiser.hasMany(Donation, { foreignKey: 'fundraiser_id', as: 'donations' });
+
+// Donation relationships
+Donation.belongsTo(Fundraiser, { foreignKey: 'fundraiser_id', as: 'fundraiser' });
+
 // Export all models
 export {
   sequelize,
@@ -222,6 +232,8 @@ export {
   SongAuthor,
   SongComposer,
   Songwriter,
+  Fundraiser,
+  Donation,
 };
 
 // Initialize database connection

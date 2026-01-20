@@ -236,6 +236,9 @@ export const sendBrandedEmail = async (
     case 'payment_confirmed':
       subject = `Payment confirmed for ${templateData.event_name}!`;
       break;
+    case 'donation_thank_you':
+      subject = `Thank you for contributing to ${templateData.FUNDRAISER_TITLE}!`;
+      break;
     default:
       subject = 'Notification';
   }

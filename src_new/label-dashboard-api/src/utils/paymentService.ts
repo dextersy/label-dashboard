@@ -5,9 +5,9 @@ import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
-import { Ticket, Event, User, Domain, TicketType } from '../models';
+import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser } from '../models';
 import { sendTicketEmail } from './ticketEmailService';
-import { sendBrandedEmail } from './emailService';
+import { sendBrandedEmail, sendEmail } from './emailService';
 import { calculatePlatformFeeForEventTickets } from './platformFeeCalculator';
 
 interface PayMongoLinkData {
@@ -199,16 +199,31 @@ export class PaymentService {
       
       // Find ticket based on payment type
       const ticket = await this.findTicketByPaymentType(eventType, eventData);
-      
-      // Early return if ticket not found
+
+      // If no ticket found, try finding a donation
       if (!ticket) {
-        this.webhookLog('ERROR: Reference is not valid or ticket not found');
-        await this.sendAdminFailureNotification('Invalid reference value in JSON response', undefined, payload);
-        return false;
+        const donation = await this.findDonationByPaymentType(eventType, eventData);
+
+        if (!donation) {
+          this.webhookLog('ERROR: Reference is not valid - neither ticket nor donation found');
+          await this.sendAdminFailureNotification('Invalid reference value in JSON response', undefined, payload);
+          return false;
+        }
+
+        this.webhookLog('Valid reference found for donation ID: ' + donation.id);
+
+        // Calculate processing fee
+        const processingFee = this.calculateProcessingFeeFromPayments(eventType, eventData);
+
+        // Extract payment ID
+        const paymentId = this.extractPaymentIdFromPayments(eventType, eventData);
+
+        // Process donation payment confirmation
+        return await this.processDonationPaymentConfirmation(donation, processingFee, paymentId, payload);
       }
-      
+
       this.webhookLog('Valid reference found for ticket ID: ' + ticket.id);
-      
+
       // Calculate processing fee
       const processingFee = this.calculateProcessingFeeFromPayments(eventType, eventData);
 
@@ -257,7 +272,37 @@ export class PaymentService {
     
     return null;
   }
-  
+
+  private async findDonationByPaymentType(eventType: string, eventData: any): Promise<any> {
+    const includeOptions = [
+      {
+        model: Fundraiser,
+        as: 'fundraiser',
+        include: [{ model: Brand, as: 'brand' }]
+      }
+    ];
+
+    if (eventType === 'link') {
+      // Donations don't use payment links, only checkout sessions
+      return null;
+    }
+
+    if (eventType === 'checkout_session') {
+      // Use the client_key from checkout session to match against checkout_key field
+      const clientKey = eventData.attributes?.client_key;
+      if (!clientKey) {
+        return null;
+      }
+
+      return await Donation.findOne({
+        where: { checkout_key: clientKey },
+        include: includeOptions
+      });
+    }
+
+    return null;
+  }
+
   private calculateProcessingFeeFromPayments(eventType: string, eventData: any): number {
     const payments = eventData.attributes?.payments;
     
@@ -359,7 +404,122 @@ export class PaymentService {
     this.webhookLog('Successfully sent admin notification');
     return true;
   }
-  
+
+  private async processDonationPaymentConfirmation(donation: any, processingFee: number, paymentId: string | null, payload?: any): Promise<boolean> {
+    try {
+      // Update donation payment status
+      await donation.update({
+        payment_status: 'paid',
+        processing_fee: processingFee,
+        payment_id: paymentId,
+        payment_reference: paymentId,
+        date_paid: new Date()
+      });
+
+      this.webhookLog('Successfully updated donation payment status');
+
+      // Send thank you email to donor
+      const emailSent = await this.sendDonationThankYouEmail(donation);
+      if (!emailSent) {
+        this.webhookLog('ERROR: Failed to send donation thank you email');
+        // Don't fail the webhook - payment is processed, just email failed
+      } else {
+        this.webhookLog('Successfully sent donation thank you email');
+      }
+
+      // Send admin notification
+      await this.sendDonationAdminNotification(donation);
+
+      return true;
+    } catch (error) {
+      console.error('Failed to process donation payment confirmation:', error);
+      this.webhookLog('ERROR: Failed to process donation payment: ' + (error as Error).message);
+      return false;
+    }
+  }
+
+  private async sendDonationThankYouEmail(donation: any): Promise<boolean> {
+    try {
+      const fundraiser = donation.fundraiser;
+      const brand = fundraiser.brand;
+
+      // Generate logo HTML - either an image or text fallback
+      const brandLogoHtml = brand.logo_url
+        ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+        : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${brand.brand_name}</div>`;
+
+      const templateData = {
+        BRAND_NAME: brand.brand_name,
+        BRAND_LOGO_HTML: brandLogoHtml,
+        BRAND_COLOR: brand.brand_color || '#333333',
+        DONOR_NAME: donation.name,
+        FUNDRAISER_TITLE: fundraiser.title,
+        AMOUNT: donation.amount.toFixed(2)
+      };
+
+      await sendBrandedEmail(
+        donation.email,
+        'donation_thank_you',
+        templateData,
+        brand.id
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Failed to send donation thank you email:', error);
+      return false;
+    }
+  }
+
+  private async sendDonationAdminNotification(donation: any): Promise<void> {
+    try {
+      const fundraiser = donation.fundraiser;
+      const brand = fundraiser.brand;
+
+      // Get admin emails for the brand
+      const adminUsers = await User.findAll({
+        where: {
+          brand_id: brand.id,
+          is_admin: true
+        }
+      });
+
+      if (adminUsers.length === 0) {
+        this.webhookLog('No admin users found for brand ' + brand.id);
+        return;
+      }
+
+      const adminEmails = adminUsers.map((u: any) => u.email_address);
+      const donorName = donation.anonymous ? 'Anonymous Donor' : donation.name;
+
+      const subject = `New Donation: ${fundraiser.title}`;
+      const htmlBody = `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>New Donation Received</h2>
+          <p><strong>Fundraiser:</strong> ${fundraiser.title}</p>
+          <p><strong>Donor:</strong> ${donorName}</p>
+          <p><strong>Amount:</strong> ₱${donation.amount.toFixed(2)}</p>
+          <p><strong>Processing Fee:</strong> ₱${(donation.processing_fee || 0).toFixed(2)}</p>
+          <p><strong>Net Amount:</strong> ₱${(donation.amount - (donation.processing_fee || 0)).toFixed(2)}</p>
+          <p><strong>Payment ID:</strong> ${donation.payment_id || 'N/A'}</p>
+          <p><strong>Date:</strong> ${new Date(donation.date_paid).toLocaleString()}</p>
+        </div>
+      `;
+
+      await sendEmail(
+        adminEmails,
+        subject,
+        htmlBody,
+        brand.id
+      );
+
+      this.webhookLog('Successfully sent donation admin notification');
+    } catch (error) {
+      console.error('Failed to send donation admin notification:', error);
+      this.webhookLog('ERROR: Failed to send donation admin notification');
+    }
+  }
+
   private verifyWebhookSignature(payload: any, signature: string): boolean {
     try {
       // PayMongo webhook signature verification

@@ -16,7 +16,9 @@ import {
   getArtistEPK,
   generateArtistEPKSEOPage,
   getAvailableTicketTypesPublic,
-  streamPublicAudio
+  streamPublicAudio,
+  getFundraiserForPublic,
+  makeDonation
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 
@@ -36,6 +38,10 @@ router.get('/epk/:artist_id', getArtistEPK);
 router.get('/seo/event-:id.html', generateEventSEOPage);
 router.get('/seo/events-:domain.html', generateEventsListSEOPage);
 router.get('/seo/epk-:id.html', generateArtistEPKSEOPage);
+
+// Fundraiser routes
+router.get('/fundraiser/:id', getFundraiserForPublic);
+router.post('/donation/donate', createPaymentRateLimit(10, 300000), makeDonation);
 
 // Payment rate limiter for ticket purchasing
 const ticketPurchaseRateLimit = createPaymentRateLimit(10, 300000); // 10 purchases per 5 minutes
