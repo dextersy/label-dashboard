@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WorkspaceService, WorkspaceType } from './workspace.service';
@@ -17,6 +18,8 @@ export interface OnboardingStep {
   workspace?: WorkspaceType; // Which workspace to switch to for this step
   delay?: number; // Delay before showing this step (to allow workspace switch)
   requiresSidebar?: boolean; // Whether this step requires the sidebar to be open/expanded
+  expandMenu?: string; // Route of a sidebar menu to expand (e.g., '/campaigns/events')
+  navigateTo?: string; // Route to navigate to for this step
 }
 
 @Injectable({
@@ -35,6 +38,7 @@ export class OnboardingService {
 
   constructor(
     private http: HttpClient,
+    private router: Router,
     private workspaceService: WorkspaceService,
     private authService: AuthService,
     private sidebarService: SidebarService
@@ -155,6 +159,62 @@ export class OnboardingService {
           showOnMobile: true,
           showOnDesktop: true
         });
+        // Events menu step
+        this.steps.push({
+          id: 'events-menu',
+          title: 'Events Menu',
+          description: 'The Events menu lets you manage your live events, ticket sales, and attendee information.',
+          targetElement: '.nav-menu-events',
+          position: 'right',
+          workspace: 'campaigns',
+          delay: 500,
+          requiresSidebar: true,
+          expandMenu: '/campaigns/events',
+          showOnMobile: true,
+          showOnDesktop: true
+        });
+        // Event selection step
+        this.steps.push({
+          id: 'event-selection',
+          title: 'Event Selection',
+          description: 'Select an event from this dropdown to view its details, manage tickets, and track sales.',
+          targetElement: '.event-selection-container',
+          position: 'bottom',
+          workspace: 'campaigns',
+          navigateTo: '/campaigns/events/tickets',
+          delay: 500,
+          requiresSidebar: false,
+          showOnMobile: true,
+          showOnDesktop: true
+        });
+        // Fundraisers menu step
+        this.steps.push({
+          id: 'fundraisers-menu',
+          title: 'Fundraisers Menu',
+          description: 'The Fundraisers menu lets you manage your fundraising campaigns and track donations.',
+          targetElement: '.nav-menu-fundraisers',
+          position: 'right',
+          workspace: 'campaigns',
+          delay: 500,
+          requiresSidebar: true,
+          expandMenu: '/campaigns/fundraisers',
+          showOnMobile: true,
+          showOnDesktop: true
+        });
+        // Fundraiser selection step
+        this.steps.push({
+          id: 'fundraiser-selection',
+          title: 'Fundraiser Selection',
+          description: 'Select a fundraiser from this dropdown to view its details, manage donations, and track progress.',
+          targetElement: '.fundraiser-selection-container',
+          position: 'bottom',
+          workspace: 'campaigns',
+          navigateTo: '/campaigns/fundraisers/donations',
+          delay: 500,
+          requiresSidebar: false,
+          showOnMobile: true,
+          showOnDesktop: true
+        });
         break;
 
       case 'admin':
@@ -207,12 +267,26 @@ export class OnboardingService {
         this.workspaceService.setWorkspace(nextStep.workspace);
       }
 
+      // Navigate to a specific route if required
+      if (nextStep.navigateTo) {
+        this.router.navigate([nextStep.navigateTo]);
+      }
+
       // Open/expand or close sidebar based on step requirements
       if (nextStep.requiresSidebar) {
         this.sidebarService.openSidebar();
       } else if (this.isMobile) {
         // Close sidebar on mobile for steps that don't require it
         this.sidebarService.closeSidebar();
+      }
+
+      // Expand a specific menu if required - do this BEFORE updating the step
+      // so the submenu animation can complete before the highlight is calculated
+      if (nextStep.expandMenu) {
+        // Small delay to allow sidebar to open first, then expand menu
+        setTimeout(() => {
+          this.sidebarService.expandMenu(nextStep.expandMenu!);
+        }, 50);
       }
 
       this.currentStepSubject.next(currentIndex + 1);
@@ -244,6 +318,10 @@ export class OnboardingService {
   completeOnboarding(): void {
     this.showOnboardingSubject.next(false);
     this.currentStepSubject.next(0);
+
+    // Navigate back to Music workspace and Dashboard
+    this.workspaceService.setWorkspace('music');
+    this.router.navigate(['/dashboard']);
 
     // Call API to mark onboarding as completed
     this.http.post(`${environment.apiUrl}/users/complete-onboarding`, {})

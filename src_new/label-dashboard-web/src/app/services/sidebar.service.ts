@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +8,10 @@ export class SidebarService {
   private isOpenSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(this.getInitialState());
   public isOpen$: Observable<boolean> = this.isOpenSubject.asObservable();
   private lastWidth: number = typeof window !== 'undefined' ? window.innerWidth : 0;
+
+  // Subject for expanding menus programmatically (used by onboarding)
+  private expandMenuSubject = new Subject<string>();
+  public expandMenu$ = this.expandMenuSubject.asObservable();
 
   constructor() {
     // Handle window resize to auto-close sidebar on mobile
@@ -84,6 +88,13 @@ export class SidebarService {
     this.isOpenSubject.next(false);
     document.documentElement.classList.remove('nav-open');
     this.removeBodyClickHandler();
+  }
+
+  /**
+   * Programmatically expand a menu by its route (used by onboarding)
+   */
+  expandMenu(route: string): void {
+    this.expandMenuSubject.next(route);
   }
 
   private addBodyClickHandler(): void {

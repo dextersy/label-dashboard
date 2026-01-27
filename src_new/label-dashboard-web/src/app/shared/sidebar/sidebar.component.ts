@@ -65,6 +65,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private authSubscription: Subscription = new Subscription();
   private artistSubscription: Subscription = new Subscription();
   private workspaceSubscription: Subscription = new Subscription();
+  private expandMenuSubscription: Subscription = new Subscription();
 
   // Menu sections with nested items and indicator flags
   sections: MenuSection[] = [
@@ -373,6 +374,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Subscribe to expand menu requests (from onboarding)
+    this.expandMenuSubscription.add(
+      this.sidebarService.expandMenu$.subscribe(route => {
+        if (route) {
+          this.expandMenuByRoute(route);
+        }
+      })
+    );
+
     // Initialize visible sections
     this.updateVisibleSections();
     this.isInitialized = true;
@@ -396,6 +406,34 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.unsubscribe();
     this.artistSubscription.unsubscribe();
     this.workspaceSubscription.unsubscribe();
+    this.expandMenuSubscription.unsubscribe();
+  }
+
+  /**
+   * Programmatically expand a menu by its route (used by onboarding)
+   */
+  expandMenuByRoute(route: string): void {
+    // Close all other expanded menus first
+    this.allMenuItems.forEach((item: MenuItem) => {
+      if (item.children && item.route !== route) {
+        this.expandedMenus.delete(item.route);
+        this.collapsedMenus.add(item.route);
+      }
+    });
+
+    // Expand the specified menu
+    this.expandedMenus.add(route);
+    this.collapsedMenus.delete(route);
+  }
+
+  /**
+   * Get a CSS class name from a menu item route for targeting in onboarding
+   */
+  getMenuItemClass(route: string): string {
+    // Convert route to a class name, e.g., '/campaigns/events' -> 'nav-menu-events'
+    const parts = route.split('/').filter(p => p);
+    const lastPart = parts[parts.length - 1] || '';
+    return `nav-menu-${lastPart}`;
   }
 
 
