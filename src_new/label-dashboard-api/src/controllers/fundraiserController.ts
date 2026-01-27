@@ -410,16 +410,18 @@ export const getDonations = async (req: Request, res: Response) => {
     const whereClause: any = {};
 
     if (fundraiser_id) {
+      const parsedFundraiserId = parseInt(fundraiser_id as string, 10);
+
       // Verify the fundraiser belongs to the brand
       const fundraiser = await Fundraiser.findOne({
-        where: { id: fundraiser_id, brand_id: brandId }
+        where: { id: parsedFundraiserId, brand_id: brandId }
       });
 
       if (!fundraiser) {
         return res.status(404).json({ error: 'Fundraiser not found' });
       }
 
-      whereClause.fundraiser_id = fundraiser_id;
+      whereClause.fundraiser_id = parsedFundraiserId;
     } else {
       // Get all fundraiser IDs for this brand
       const brandFundraisers = await Fundraiser.findAll({
