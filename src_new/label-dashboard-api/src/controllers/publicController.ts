@@ -2531,10 +2531,11 @@ export const getFundraiserForPublic = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid fundraiser ID' });
     }
 
+    // Fetch published or closed fundraisers (not draft)
     const fundraiser = await Fundraiser.findOne({
       where: {
         id: fundraiserId,
-        status: 'published'
+        status: { [Op.in]: ['published', 'closed'] }
       },
       include: [
         {
@@ -2572,6 +2573,7 @@ export const getFundraiserForPublic = async (req: Request, res: Response) => {
         title: fundraiser.title,
         description: fundraiser.description,
         poster_url: fundraiser.poster_url,
+        status: fundraiser.status,
         brand: fundraiser.brand ? {
           id: fundraiser.brand.id,
           name: fundraiser.brand.brand_name,

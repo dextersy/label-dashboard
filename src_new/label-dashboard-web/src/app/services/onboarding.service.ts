@@ -143,40 +143,14 @@ export class OnboardingService {
         });
         break;
 
-      case 'events':
+      case 'campaigns':
         this.steps.push({
-          id: 'events-workspace',
-          title: 'Events Workspace',
-          description: 'The Events workspace is where you manage live events, tickets, and attendees.',
-          targetElement: this.isMobile ? '.mobile-workspace-btn-events' : '.workspace-tab-events',
+          id: 'campaigns-workspace',
+          title: 'Campaigns Workspace',
+          description: 'The Campaigns workspace is where you manage live events, fundraisers, tickets, and donations.',
+          targetElement: this.isMobile ? '.mobile-workspace-btn-campaigns' : '.workspace-tab-campaigns',
           position: this.isMobile ? 'top' : 'bottom',
-          workspace: 'events',
-          delay: 500,
-          showOnMobile: true,
-          showOnDesktop: true
-        });
-        this.steps.push({
-          id: 'event-selection',
-          title: 'Event Selection',
-          description: 'Select an event from the sidebar to manage tickets, view orders, and track attendance. You can switch between events at any time.',
-          targetElement: '.event-selection-container',
-          position: 'right',
-          workspace: 'events',
-          delay: 500,
-          showOnMobile: true,
-          showOnDesktop: true,
-          requiresSidebar: true
-        });
-        break;
-
-      case 'labels':
-        this.steps.push({
-          id: 'labels-workspace',
-          title: 'Labels Workspace',
-          description: 'The Labels workspace is where you manage your label earnings and sublabels. Use the sidebar menu to access label earnings and sublabel management.',
-          targetElement: this.isMobile ? '.mobile-workspace-btn-labels' : '.workspace-tab-labels',
-          position: this.isMobile ? 'top' : 'bottom',
-          workspace: 'labels',
+          workspace: 'campaigns',
           delay: 500,
           showOnMobile: true,
           showOnDesktop: true

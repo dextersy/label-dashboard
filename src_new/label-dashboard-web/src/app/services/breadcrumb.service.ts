@@ -54,20 +54,24 @@ export class BreadcrumbService {
     '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
     '/financial/earnings/new': { label: 'New Earning', parent: '/financial/earnings' },
     
-    // Events section
-    '/events': { label: 'Events', icon: 'fas fa-ticket-alt' },
-    '/events/new': { label: 'New Event', parent: '/events' },
-    '/events/details': { label: 'Manage Events', parent: '/events' },
-    '/events/tickets': { label: 'Tickets', parent: '/events' },
-    '/events/abandoned': { label: 'Pending Orders', parent: '/events' },
-    '/events/referrals': { label: 'Referrals', parent: '/events' },
-    '/events/email': { label: 'Send Email', parent: '/events' },
-    '/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/events' },
+    // Campaigns section
+    '/campaigns': { label: 'Campaigns', icon: 'fas fa-bullhorn' },
 
-    // Labels workspace
-    '/labels': { label: 'Labels', icon: 'fas fa-tags' },
-    '/labels/earnings': { label: 'My Label Earnings', parent: '/labels', icon: 'fas fa-coins' },
-    '/labels/sublabels': { label: 'Sublabels', parent: '/labels', icon: 'fas fa-layer-group' },
+    // Events (under campaigns)
+    '/campaigns/events': { label: 'Events', parent: '/campaigns', icon: 'fas fa-ticket-alt' },
+    '/campaigns/events/new': { label: 'New Event', parent: '/campaigns/events' },
+    '/campaigns/events/details': { label: 'Manage Events', parent: '/campaigns/events' },
+    '/campaigns/events/tickets': { label: 'Tickets', parent: '/campaigns/events' },
+    '/campaigns/events/abandoned': { label: 'Pending Orders', parent: '/campaigns/events' },
+    '/campaigns/events/referrals': { label: 'Referrals', parent: '/campaigns/events' },
+    '/campaigns/events/email': { label: 'Send Email', parent: '/campaigns/events' },
+    '/campaigns/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/campaigns/events' },
+
+    // Fundraisers (under campaigns)
+    '/campaigns/fundraisers': { label: 'Fundraisers', parent: '/campaigns', icon: 'fas fa-hand-holding-heart' },
+    '/campaigns/fundraisers/new': { label: 'New Fundraiser', parent: '/campaigns/fundraisers' },
+    '/campaigns/fundraisers/details': { label: 'Manage Fundraisers', parent: '/campaigns/fundraisers' },
+    '/campaigns/fundraisers/donations': { label: 'Donations', parent: '/campaigns/fundraisers' },
     
     // Admin section
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
@@ -79,6 +83,11 @@ export class BreadcrumbService {
     '/admin/tools/email-logs': { label: 'Email Logs', parent: '/admin/tools' },
     '/admin/tools/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin/tools' },
     '/admin/users': { label: 'Users', parent: '/admin' },
+
+    // Labels section
+    '/labels': { label: 'Labels', icon: 'fas fa-tags' },
+    '/labels/earnings': { label: 'My Label Earnings', parent: '/labels' },
+    '/labels/sublabels': { label: 'Sublabels', parent: '/labels' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

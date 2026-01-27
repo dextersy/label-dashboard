@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-export type WorkspaceType = 'music' | 'events' | 'admin' | 'labels';
+export type WorkspaceType = 'music' | 'campaigns' | 'labels' | 'admin';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +24,13 @@ export class WorkspaceService {
 
   private loadWorkspaceFromStorage(): WorkspaceType {
     const stored = localStorage.getItem(this.STORAGE_KEY);
+
+    // Migration: handle old workspace values
+    if (stored === 'events') {
+      this.saveWorkspaceToStorage('campaigns');
+      return 'campaigns';
+    }
+
     if (stored && this.isValidWorkspace(stored)) {
       return stored as WorkspaceType;
     }
@@ -35,13 +42,13 @@ export class WorkspaceService {
   }
 
   private isValidWorkspace(value: string): boolean {
-    return ['music', 'events', 'admin', 'labels'].includes(value);
+    return ['music', 'campaigns', 'labels', 'admin'].includes(value);
   }
 
   getWorkspaceLabel(workspace: WorkspaceType): string {
     switch (workspace) {
       case 'music': return 'Music';
-      case 'events': return 'Events';
+      case 'campaigns': return 'Campaigns';
       case 'labels': return 'Labels';
       case 'admin': return 'Administration';
       default: return 'Music';
@@ -51,7 +58,7 @@ export class WorkspaceService {
   getWorkspaceIcon(workspace: WorkspaceType): string {
     switch (workspace) {
       case 'music': return 'fas fa-music';
-      case 'events': return 'fas fa-ticket-alt';
+      case 'campaigns': return 'fas fa-bullhorn';
       case 'labels': return 'fas fa-tags';
       case 'admin': return 'fas fa-cogs';
       default: return 'fas fa-music';
@@ -62,10 +69,11 @@ export class WorkspaceService {
    * Get available workspaces based on user permissions
    */
   getAvailableWorkspaces(isAdmin: boolean = false): WorkspaceType[] {
+    // Returns workspaces for the toolbar (admin is accessed via upper right menu)
     const workspaces: WorkspaceType[] = ['music'];
 
     if (isAdmin) {
-      workspaces.push('events', 'labels', 'admin');
+      workspaces.push('campaigns', 'labels');
     }
 
     return workspaces;

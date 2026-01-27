@@ -4,6 +4,27 @@
   max-width: 1600px;
   margin: 0 auto;
   min-height: calc(100vh - 60px); /* Ensure page takes full height minus nav */
+
+  .page-header {
+    @media (max-width: 768px) {
+      .d-flex {
+        display: block !important;
+        width: 100%;
+      }
+    }
+
+    .event-selector-main {
+      min-width: 280px;
+      max-width: 400px;
+
+      @media (max-width: 768px) {
+        min-width: 100%;
+        max-width: 100%;
+        width: 100%;
+        margin-top: 0;
+      }
+    }
+  }
 }
 
 /* Two-column layout: Sidebar + Main Content */

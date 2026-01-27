@@ -1,0 +1,84 @@
+<div class="donations-tab">
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3">
+      <div class="card summary-card">
+        <div class="card-body">
+          <div class="summary-icon text-success">
+            <i class="fas fa-peso-sign"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ formatCurrency(summary.totalRaised) }}</div>
+            <div class="summary-label">Total Raised</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+      <div class="card summary-card">
+        <div class="card-body">
+          <div class="summary-icon text-primary">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ summary.totalDonations }}</div>
+            <div class="summary-label">Total Donors</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+      <div class="card summary-card">
+        <div class="card-body">
+          <div class="summary-icon text-warning">
+            <i class="fas fa-receipt"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ formatCurrency(summary.totalProcessingFees) }}</div>
+            <div class="summary-label">Processing Fees</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+      <div class="card summary-card">
+        <div class="card-body">
+          <div class="summary-icon text-info">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ formatCurrency(summary.netAmount) }}</div>
+            <div class="summary-label">Net Amount</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Range Filter -->
+  <div class="row mb-3">
+    <div class="col-md-12">
+      <app-date-range-filter
+        [compact]="true"
+        [loading]="loading"
+        (dateRangeChange)="onDateRangeChange($event)"
+        (refresh)="onRefresh()">
+      </app-date-range-filter>
+    </div>
+  </div>
+
+  <!-- Paginated Table -->
+  <app-paginated-table
+    title=""
+    [data]="donations"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="tableColumns"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [sortInfo]="currentSort"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)"
+    (sortChange)="onSortChange($event)">
+  </app-paginated-table>
+</div>

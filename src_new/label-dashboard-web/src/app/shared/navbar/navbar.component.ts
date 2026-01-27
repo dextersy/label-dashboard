@@ -4,7 +4,6 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { ArtistStateService } from '../../services/artist-state.service';
-import { EventService, Event } from '../../services/event.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
@@ -22,19 +21,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   isSuperadmin: boolean = false;
   selectedArtist: Artist | null = null;
-  selectedEvent: Event | null = null;
   currentWorkspace: WorkspaceType = 'music';
   private authSubscription: Subscription = new Subscription();
   private workspaceSubscription: Subscription = new Subscription();
-  private eventSubscription: Subscription = new Subscription();
-  private isInitialized: boolean = false;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private sidebarService: SidebarService,
     private artistStateService: ArtistStateService,
-    private eventService: EventService,
     private workspaceService: WorkspaceService
   ) {}
 
@@ -73,24 +68,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.currentWorkspace = workspace;
       })
     );
-
-    // Subscribe to selected event changes
-    this.eventSubscription.add(
-      this.eventService.selectedEvent$.subscribe(event => {
-        const previousEvent = this.selectedEvent;
-        this.selectedEvent = event;
-
-        // Close sidebar on mobile when event changes (user-initiated)
-        if (this.isInitialized && previousEvent?.id !== event?.id && event !== null) {
-          this.sidebarService.closeOnMobileNavigation();
-        }
-      })
-    );
-
-    // Mark as initialized after subscriptions are set up
-    setTimeout(() => {
-      this.isInitialized = true;
-    }, 100);
   }
 
   onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
@@ -120,7 +97,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.authSubscription.unsubscribe();
     this.workspaceSubscription.unsubscribe();
-    this.eventSubscription.unsubscribe();
   }
 
   // Get artist profile photo URL
@@ -136,25 +112,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return 'assets/img/placeholder.jpg';
   }
 
-  // Get event poster URL
-  getEventPoster(): string {
-    if (this.selectedEvent?.poster_url) {
-      return this.selectedEvent.poster_url;
-    }
-    return 'assets/img/placeholder.jpg';
-  }
-
   // Workspace methods
   selectWorkspace(workspace: WorkspaceType): void {
     this.workspaceService.setWorkspace(workspace);
-    
+
     // Navigate to the default page for the selected workspace
     switch (workspace) {
       case 'music':
         this.router.navigate(['/dashboard']);
         break;
-      case 'events':
-        this.router.navigate(['/events/details']);
+      case 'campaigns':
+        this.router.navigate(['/campaigns/events/details']);
         break;
       case 'labels':
         this.router.navigate(['/labels/earnings']);
@@ -177,10 +145,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   get availableWorkspaces(): WorkspaceType[] {
-    // Return all workspaces, filter based on admin status
+    // Return workspaces for the toolbar (admin is accessed via upper right menu)
     const workspaces: WorkspaceType[] = ['music'];
     if (this.isAdmin) {
-      workspaces.push('events');
+      workspaces.push('campaigns');
       workspaces.push('labels');
     }
     return workspaces;

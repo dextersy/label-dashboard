@@ -395,7 +395,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       return;
     }
 
-    this.router.navigate(['/events/custom-ticket'], {
+    this.router.navigate(['/campaigns/events/custom-ticket'], {
       queryParams: { eventId: this.selectedEvent.id, from: 'abandoned' }
     });
   }

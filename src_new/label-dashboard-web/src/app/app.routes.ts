@@ -7,6 +7,8 @@ import { AddNewArtistComponent } from './components/artist/add-new-artist/add-ne
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
+import { FundraisersComponent } from './pages/fundraisers/fundraisers.component';
+import { FundraiserFormComponent } from './pages/fundraiser-form/fundraiser-form.component';
 import { ReleaseSubmissionComponent } from './components/artist/release-submission/release-submission.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { LabelFinanceTabComponent } from './pages/admin/components/label-finance-tab.component';
@@ -97,20 +99,40 @@ export const routes: Routes = [
     ]
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { 
-    path: 'events', 
+
+  // Campaigns workspace (Events + Fundraisers)
+  {
+    path: 'campaigns',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'details', pathMatch: 'full' },
-      { path: 'new', component: EventFormComponent },
-      { path: 'details', component: EventFormComponent },
-      { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },
-      { path: 'abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
-      { path: 'referrals', component: EventsComponent, data: { tab: 'referrals' } },
-      { path: 'email', component: EventsComponent, data: { tab: 'email' } },
-      { path: 'custom-ticket', component: CustomTicketComponent }
+      { path: '', redirectTo: 'events/details', pathMatch: 'full' },
+      // Events
+      { path: 'events', redirectTo: 'events/details', pathMatch: 'full' },
+      { path: 'events/new', component: EventFormComponent },
+      { path: 'events/details', component: EventFormComponent },
+      { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
+      { path: 'events/abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
+      { path: 'events/referrals', component: EventsComponent, data: { tab: 'referrals' } },
+      { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
+      { path: 'events/custom-ticket', component: CustomTicketComponent },
+      // Fundraisers
+      { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },
+      { path: 'fundraisers/new', component: FundraiserFormComponent },
+      { path: 'fundraisers/details', component: FundraiserFormComponent },
+      { path: 'fundraisers/donations', component: FundraisersComponent, data: { tab: 'donations' } }
     ]
   },
+
+  // Legacy events routes - redirect to campaigns
+  { path: 'events', redirectTo: 'campaigns/events', pathMatch: 'full' },
+  { path: 'events/new', redirectTo: 'campaigns/events/new', pathMatch: 'full' },
+  { path: 'events/details', redirectTo: 'campaigns/events/details', pathMatch: 'full' },
+  { path: 'events/tickets', redirectTo: 'campaigns/events/tickets', pathMatch: 'full' },
+  { path: 'events/abandoned', redirectTo: 'campaigns/events/abandoned', pathMatch: 'full' },
+  { path: 'events/referrals', redirectTo: 'campaigns/events/referrals', pathMatch: 'full' },
+  { path: 'events/email', redirectTo: 'campaigns/events/email', pathMatch: 'full' },
+  { path: 'events/custom-ticket', redirectTo: 'campaigns/events/custom-ticket', pathMatch: 'full' },
+
   {
     path: 'admin',
     canActivate: [adminGuard],
@@ -124,6 +146,8 @@ export const routes: Routes = [
       { path: 'users', component: AdminComponent, data: { tab: 'users' } }
     ]
   },
+
+  // Labels workspace
   {
     path: 'labels',
     canActivate: [adminGuard],
@@ -133,6 +157,7 @@ export const routes: Routes = [
       { path: 'sublabels', component: ChildBrandsTabComponent }
     ]
   },
+
   { path: 'domain-not-found', component: DomainNotFoundComponent },
   { path: '**', redirectTo: '/login' }
 ];

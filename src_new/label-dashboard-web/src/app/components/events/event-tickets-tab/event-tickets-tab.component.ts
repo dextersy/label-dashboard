@@ -523,7 +523,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    this.router.navigate(['/events/custom-ticket'], {
+    this.router.navigate(['/campaigns/events/custom-ticket'], {
       queryParams: { eventId: this.selectedEvent.id, from: 'tickets' }
     });
   }

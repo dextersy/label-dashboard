@@ -122,6 +122,7 @@ const startServer = async () => {
       { name: 'artists', path: './routes/artists' },
       { name: 'releases', path: './routes/releases' },
       { name: 'events', path: './routes/events' },
+      { name: 'fundraisers', path: './routes/fundraisers' },
       { name: 'financial', path: './routes/financial' },
       { name: 'public', path: './routes/public' },
       { name: 'brand', path: './routes/brand' },
@@ -172,6 +173,7 @@ const startServer = async () => {
     const artistRoutes = routes.artists;
     const releaseRoutes = routes.releases;
     const eventRoutes = routes.events;
+    const fundraiserRoutes = routes.fundraisers;
     const financialRoutes = routes.financial;
     const publicRoutes = routes.public;
     const brandRoutes = routes.brand;
@@ -191,6 +193,7 @@ const startServer = async () => {
     app.use('/api/artists', artistRoutes);
     app.use('/api/releases', releaseRoutes);
     app.use('/api/events', eventRoutes);
+    app.use('/api/fundraisers', fundraiserRoutes);
     app.use('/api/financial', financialRoutes);
     app.use('/api/brands', brandRoutes);
     app.use('/api/dashboard', dashboardRoutes);

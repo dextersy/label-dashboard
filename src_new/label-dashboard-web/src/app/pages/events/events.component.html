@@ -1,10 +1,21 @@
 <div class="events-page">
   <div class="container-fluid">
-
-    <!-- Page Header -->
+    <!-- Page Header with Event Selector -->
     <div class="page-header mb-3">
-      <app-breadcrumb></app-breadcrumb>
+      <div class="d-flex align-items-start flex-wrap gap-3">
+        <div class="event-selector-main" *ngIf="availableEvents.length > 0">
+          <app-event-selection
+            [events]="availableEvents"
+            [selectedEvent]="selectedEvent"
+            [loading]="loading"
+            [isAdmin]="isAdmin"
+            (eventSelected)="onEventSelection($event)">
+          </app-event-selection>
+        </div>
+      </div>
     </div>
+
+    <app-breadcrumb></app-breadcrumb>
 
     <!-- Past Event Warning -->
     <div class="alert alert-warning mb-3" *ngIf="selectedEvent && isEventPast(selectedEvent)">

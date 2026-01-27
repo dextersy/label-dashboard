@@ -22,27 +22,36 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   isDropdownOpen = false;
   searchTerm = '';
 
+  // Store bound function references to properly remove event listeners
+  private boundHandleOutsideClick = this.handleOutsideClick.bind(this);
+  private boundHandleSidebarScroll = this.handleSidebarScroll.bind(this);
+  private sidebarElement: HTMLElement | null = null;
+
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    // Auto-focus search input when dropdown opens if there are many events
-    document.addEventListener('click', this.handleOutsideClick.bind(this));
+    document.addEventListener('click', this.boundHandleOutsideClick);
 
     // Listen to sidebar scroll events to reposition dropdown
     setTimeout(() => {
-      const sidebar = document.querySelector('.sidebar') as HTMLElement;
-      if (sidebar) {
-        sidebar.addEventListener('scroll', () => {
-          if (this.isDropdownOpen) {
-            this.positionDropdown();
-          }
-        });
+      this.sidebarElement = document.querySelector('.sidebar') as HTMLElement;
+      if (this.sidebarElement) {
+        this.sidebarElement.addEventListener('scroll', this.boundHandleSidebarScroll);
       }
     }, 500);
   }
 
   ngOnDestroy(): void {
-    document.removeEventListener('click', this.handleOutsideClick.bind(this));
+    document.removeEventListener('click', this.boundHandleOutsideClick);
+    if (this.sidebarElement) {
+      this.sidebarElement.removeEventListener('scroll', this.boundHandleSidebarScroll);
+    }
+  }
+
+  private handleSidebarScroll(): void {
+    if (this.isDropdownOpen) {
+      this.positionDropdown();
+    }
   }
 
   toggleDropdown(): void {
@@ -105,7 +114,7 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   }
 
   createEvent(): void {
-    this.router.navigate(['/events/new']);
+    this.router.navigate(['/campaigns/events/new']);
     this.isDropdownOpen = false;
   }
 

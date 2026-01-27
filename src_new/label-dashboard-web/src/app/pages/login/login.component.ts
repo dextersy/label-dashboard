@@ -192,10 +192,8 @@ export class LoginComponent implements OnInit {
     switch (workspace) {
       case 'music':
         return '/dashboard';
-      case 'events':
-        return '/events/details';
-      case 'labels':
-        return '/labels/earnings';
+      case 'campaigns':
+        return '/campaigns/events/details';
       case 'admin':
         return '/admin/settings';
       default:

@@ -1,10 +1,10 @@
-.event-selection-container {
+.fundraiser-selection-container {
   margin-bottom: 25px;
   max-width: 100%;
   box-sizing: border-box;
 }
 
-.event-selection-row {
+.fundraiser-selection-row {
   display: flex;
   justify-content: flex-start;
   max-width: 100%;
@@ -15,16 +15,16 @@
   position: relative;
   display: block;
   width: 100%;
-  max-width: 600px; // Limit width on desktop
+  max-width: 600px;
   box-sizing: border-box;
 }
 
-.event-dropdown-btn {
+.fundraiser-dropdown-btn {
   width: 100%;
   max-width: 100%;
   text-align: left;
   padding: 15px 20px;
-  border: none !important; /* Remove border for borderless style */
+  border: none !important;
   background: #fff;
   border-radius: 8px;
   min-height: 80px;
@@ -34,27 +34,26 @@
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   box-sizing: border-box;
-  
-  // Prevent Bootstrap from adding its own caret
+
   &::after {
     display: none !important;
   }
-  
+
   &:hover {
     background: #f9fafb;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
   }
-  
+
   &:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    
+
     &:hover {
       background: #fff;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -63,19 +62,19 @@
   }
 }
 
-.event-info {
+.fundraiser-info {
   display: flex;
   align-items: center;
   flex: 1;
-  min-width: 0; // Allow text truncation
+  min-width: 0;
 }
 
-.event-poster {
+.fundraiser-poster {
   margin-right: 15px;
   flex-shrink: 0;
 }
 
-.event-image {
+.fundraiser-image {
   width: 50px;
   height: 50px;
   border-radius: 6px;
@@ -83,11 +82,11 @@
   border: 2px solid #e1e5e9;
 }
 
-.default-event-image {
+.default-fundraiser-image {
   width: 50px;
   height: 50px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,12 +95,12 @@
   border: 2px solid #e1e5e9;
 }
 
-.event-details {
+.fundraiser-details {
   flex: 1;
-  min-width: 0; // Allow text truncation
+  min-width: 0;
 }
 
-.event-title {
+.fundraiser-title {
   font-weight: 600;
   font-size: 16px;
   color: #333;
@@ -111,7 +110,7 @@
   text-overflow: ellipsis;
 }
 
-.event-meta {
+.fundraiser-meta {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
@@ -119,7 +118,7 @@
   gap: 8px;
 }
 
-.event-date, .event-venue {
+.fundraiser-raised, .fundraiser-donors {
   font-size: 13px;
   color: #666;
   display: flex;
@@ -128,36 +127,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  
+
   i {
     color: #999;
-    flex-shrink: 0; // Prevent icon from shrinking
+    flex-shrink: 0;
     margin-right: 4px;
   }
 }
 
-.event-status {
-  display: flex;
-  align-items: center;
-  
-  .badge {
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-weight: 500;
-  }
+.badge.badge-sm {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  vertical-align: middle;
 }
 
-.event-price {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.no-event, .loading {
+.no-fundraiser, .loading-inline {
   color: #999;
   font-size: 14px;
   display: flex;
   align-items: center;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e9ecef;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .caret {
@@ -170,7 +175,7 @@
   border-right: 5px solid transparent;
   border-left: 5px solid transparent;
   transition: transform 0.2s ease;
-  flex-shrink: 0; // Prevent caret from shrinking
+  flex-shrink: 0;
 }
 
 .dropdown.open .caret {
@@ -193,7 +198,7 @@
   text-align: left;
   list-style: none;
   background-color: #fff;
-  border: none; /* Remove border for borderless style */
+  border: none;
   border-radius: 8px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
   background-clip: padding-box;
@@ -225,7 +230,7 @@
   border-radius: 20px;
   font-size: 13px;
   height: 34px;
-  
+
   &:focus {
     border-color: #007bff;
     box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
@@ -238,41 +243,37 @@
   padding: 4px 8px;
   font-size: 12px;
   color: #999;
-  
+
   &:hover {
     color: #666;
   }
 }
 
-.event-item {
+.fundraiser-item {
   &:not(.divider) {
     &:hover {
       background-color: #f8f9fa;
     }
-    
+
     &.active {
       background-color: #007bff;
-      
+
       a {
         color: #fff;
-        
-        .dropdown-event-title {
+
+        .dropdown-fundraiser-title {
           color: #fff;
         }
-        
-        .dropdown-event-date,
-        .dropdown-event-venue {
+
+        .dropdown-fundraiser-raised,
+        .dropdown-fundraiser-donors {
           color: rgba(255,255,255,0.8);
-          
+
           i {
             color: rgba(255,255,255,0.7);
           }
         }
-        
-        .dropdown-event-price {
-          color: rgba(255,255,255,0.9);
-        }
-        
+
         .badge {
           background-color: rgba(255,255,255,0.2) !important;
           color: #fff !important;
@@ -282,7 +283,8 @@
   }
 }
 
-.event-item a {
+.fundraiser-item a,
+.create-fundraiser-item a {
   display: flex;
   align-items: center;
   padding: 12px 16px;
@@ -293,18 +295,18 @@
   text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
-  
+
   &:hover {
     text-decoration: none;
   }
 }
 
-.dropdown-event-poster {
+.dropdown-fundraiser-poster {
   margin-right: 12px;
   flex-shrink: 0;
 }
 
-.dropdown-event-image {
+.dropdown-fundraiser-image {
   width: 40px;
   height: 40px;
   border-radius: 4px;
@@ -312,11 +314,11 @@
   border: 1px solid #e1e5e9;
 }
 
-.dropdown-default-event-image {
+.dropdown-default-fundraiser-image {
   width: 40px;
   height: 40px;
   border-radius: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,12 +327,12 @@
   border: 1px solid #e1e5e9;
 }
 
-.dropdown-event-info {
+.dropdown-fundraiser-info {
   flex: 1;
   min-width: 0;
 }
 
-.dropdown-event-title {
+.dropdown-fundraiser-title {
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 3px;
@@ -339,12 +341,12 @@
   text-overflow: ellipsis;
 }
 
-.dropdown-event-meta {
+.dropdown-fundraiser-meta {
   margin-bottom: 4px;
 }
 
-.dropdown-event-date,
-.dropdown-event-venue {
+.dropdown-fundraiser-raised,
+.dropdown-fundraiser-donors {
   font-size: 12px;
   color: #666;
   margin-bottom: 2px;
@@ -354,38 +356,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  
+
   i {
     color: #999;
     font-size: 11px;
-    flex-shrink: 0; // Prevent icon from shrinking
+    flex-shrink: 0;
     margin-right: 4px;
   }
 }
 
-.dropdown-event-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-  .badge {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-weight: 500;
-    
-    &.badge-sm {
-      font-size: 9px;
-      padding: 1px 5px;
-    }
-  }
-}
-
-.dropdown-event-price {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-}
 
 .divider {
   height: 1px;
@@ -394,20 +373,20 @@
   background-color: #eee;
 }
 
-.create-new-event {
+.create-new-fundraiser {
   font-weight: 600;
   color: #007bff !important;
-  
+
   &:hover {
     background-color: #f8f9fa !important;
   }
-  
+
   i {
     color: #007bff;
   }
 }
 
-.create-event-item {
+.create-fundraiser-item {
   border-top: 1px solid #eee;
   margin-top: 4px;
   padding-top: 4px;
@@ -421,7 +400,7 @@
 .no-results-content {
   color: #999;
   font-size: 13px;
-  
+
   i {
     margin-right: 8px;
     font-size: 16px;
@@ -475,14 +454,14 @@
     width: 100%;
   }
 
-  .event-selection-container {
+  .fundraiser-selection-container {
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible; // Allow dropdown to overflow
     box-sizing: border-box;
   }
 
-  .event-selection-row {
+  .fundraiser-selection-row {
     display: block;
     width: 100% !important;
     max-width: 100% !important;
@@ -490,52 +469,52 @@
   }
 
   .dropdown {
-    max-width: 100% !important; // Override desktop max-width and constrain to parent
+    max-width: 100% !important;
     width: 100% !important;
     overflow: visible; // Allow dropdown to overflow
     box-sizing: border-box;
     position: static; // Allow dropdown-menu to position relative to viewport
   }
 
-  .event-dropdown-btn {
+  .fundraiser-dropdown-btn {
     min-height: 70px;
     padding: 12px 15px;
     width: 100% !important;
-    max-width: 100% !important; // Ensure button doesn't exceed container
+    max-width: 100% !important;
     box-sizing: border-box;
   }
 
-  .event-info {
-    max-width: calc(100% - 30px); // Account for caret space
-    overflow: hidden; // Prevent content overflow
+  .fundraiser-info {
+    max-width: calc(100% - 30px);
+    overflow: hidden;
     flex: 1;
-    min-width: 0; // Allow flex item to shrink
+    min-width: 0;
   }
 
-  .event-poster {
-    flex-shrink: 0; // Keep poster size fixed
+  .fundraiser-poster {
+    flex-shrink: 0;
   }
 
-  .event-details {
+  .fundraiser-details {
     flex: 1;
-    min-width: 0; // Allow flex item to shrink
+    min-width: 0;
     max-width: 100%;
     overflow: hidden;
   }
 
-  .event-title {
+  .fundraiser-title {
     font-size: 15px;
     max-width: 100%;
   }
 
-  .event-meta {
+  .fundraiser-meta {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
     width: 100%;
     max-width: 100%;
 
-    .event-date, .event-venue {
+    .fundraiser-raised, .fundraiser-donors {
       max-width: 100%;
       width: 100%;
     }
@@ -605,12 +584,11 @@
     }
   }
 
-
-  .dropdown-event-meta {
+  .dropdown-fundraiser-meta {
     width: 100%;
 
-    .dropdown-event-date,
-    .dropdown-event-venue {
+    .dropdown-fundraiser-raised,
+    .dropdown-fundraiser-donors {
       max-width: 100%;
       width: 100%;
     }
@@ -618,11 +596,12 @@
 
   .caret {
     flex-shrink: 0;
-    margin-left: 8px; // Reduce margin on mobile
+    margin-left: 8px;
   }
 
   // Larger touch targets on mobile
-  .event-item a {
+  .fundraiser-item a,
+  .create-fundraiser-item a {
     padding: 16px;
   }
 

@@ -48,7 +48,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
   isAdmin = false;
   loading = false;
   submitting = false;
-  returnRoute = '/events/abandoned'; // Default to pending orders
+  returnRoute = '/campaigns/events/abandoned'; // Default to pending orders
   currentView: 'single' | 'bulk' = 'single';
   
   customTicketForm: CustomTicketForm = {
@@ -86,7 +86,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
         if (!this.isAdmin) {
-          this.router.navigate(['/events']);
+          this.router.navigate(['/campaigns/events']);
           return;
         }
       })
@@ -100,7 +100,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
           this.loadEventById(event.id);
         } else {
           // If no event is selected, redirect to events
-          this.router.navigate(['/events']);
+          this.router.navigate(['/campaigns/events']);
         }
       })
     );
@@ -114,9 +114,9 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     // Check where the user came from to determine return route
     const fromParam = this.route.snapshot.queryParams['from'];
     if (fromParam === 'tickets') {
-      this.returnRoute = '/events/tickets';
+      this.returnRoute = '/campaigns/events/tickets';
     } else {
-      this.returnRoute = '/events/abandoned';
+      this.returnRoute = '/campaigns/events/abandoned';
     }
   }
 
@@ -141,7 +141,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Failed to load event:', error);
           this.notificationService.showError('Event not found');
-          this.router.navigate(['/events']);
+          this.router.navigate(['/campaigns/events']);
           this.loading = false;
         }
       })
@@ -276,7 +276,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     this.resetCustomTicketForm();
     this.submitting = false;
     // Always navigate to pending orders after creation since that's where new tickets appear
-    this.router.navigate(['/events/abandoned'], { 
+    this.router.navigate(['/campaigns/events/abandoned'], { 
       queryParams: { eventId: this.selectedEvent?.id } 
     });
   }
@@ -351,9 +351,9 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
   private updateBreadcrumbs(): void {
     if (this.selectedEvent) {
-      const parentTabLabel = this.returnRoute === '/events/tickets' ? 'Tickets' : 'Pending Orders';
+      const parentTabLabel = this.returnRoute === '/campaigns/events/tickets' ? 'Tickets' : 'Pending Orders';
       this.breadcrumbService.setBreadcrumbs([
-        { label: 'Events', route: '/events', icon: 'fas fa-ticket-alt' },
+        { label: 'Events', route: '/campaigns/events', icon: 'fas fa-ticket-alt' },
         { label: parentTabLabel, route: this.returnRoute },
         { label: 'Create Custom Ticket' } // Current page - no route
       ]);
@@ -548,7 +548,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
           this.bulkTickets = [];
           this.submitting = false;
           // Always navigate to pending orders after creation since that's where new tickets appear
-          this.router.navigate(['/events/abandoned'], { 
+          this.router.navigate(['/campaigns/events/abandoned'], { 
             queryParams: { eventId: this.selectedEvent?.id } 
           });
         },

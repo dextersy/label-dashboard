@@ -253,7 +253,7 @@ export class EventsComponent implements OnInit, OnDestroy {
    * Navigate to create new event page
    */
   openCreateEventModal(): void {
-    this.router.navigate(['/events/new']);
+    this.router.navigate(['/campaigns/events/new']);
   }
   
   
@@ -276,7 +276,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   setActiveTab(tabId: EventsTabType): void {
     this.activeTab = tabId;
-    this.router.navigate(['/events', tabId]);
+    this.router.navigate(['/campaigns/events', tabId]);
     // Auto-refresh data when tab changes
     this.refreshCurrentTabData();
   }

@@ -23,22 +23,11 @@
           
           <!-- Artist Selection (if section has showArtistIndicator flag) -->
           <li *ngIf="section.showArtistIndicator" class="artist-selection-container">
-            <app-artist-selection 
+            <app-artist-selection
               [currentArtist]="selectedArtist"
               (artistSelected)="onArtistSelected($event)">
             </app-artist-selection>
           </li>
-        
-        <!-- Event Selection (if section has showEventIndicator flag) -->
-        <li *ngIf="section.showEventIndicator && isAdmin" class="event-selection-container">
-          <app-event-selection
-            [events]="events"
-            [selectedEvent]="selectedEvent"
-            [loading]="loadingEvents"
-            [isAdmin]="isAdmin"
-            (eventSelected)="onEventSelected($event)">
-          </app-event-selection>
-        </li>
 
           <!-- Section menu items -->
           <ng-container *ngFor="let item of section.items">
