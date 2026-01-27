@@ -1,5 +1,5 @@
 .event-selection-container {
-  margin-bottom: 25px;
+  margin-bottom: 0 !important;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -188,7 +188,7 @@
   max-height: 400px;
   overflow-y: auto;
   padding: 8px 0;
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 14px;
   text-align: left;
   list-style: none;

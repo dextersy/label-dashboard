@@ -1,9 +1,14 @@
 .donations-tab {
+  .row.mb-2 {
+    margin-bottom: 12px !important;
+  }
+
   .summary-card {
     border: none;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.2s ease;
+    margin-bottom: 0 !important;
 
     &:hover {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
@@ -12,7 +17,7 @@
     .card-body {
       display: flex;
       align-items: center;
-      padding: 1.25rem;
+      padding: 1rem;
     }
 
     .summary-icon {

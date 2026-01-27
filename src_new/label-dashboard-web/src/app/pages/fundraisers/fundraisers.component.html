@@ -1,5 +1,7 @@
 <div class="fundraisers-page">
   <div class="container-fluid">
+    <app-breadcrumb></app-breadcrumb>
+
     <!-- Page Header with Fundraiser Selector -->
     <div class="page-header mb-3">
       <div class="d-flex align-items-start flex-wrap gap-3">
@@ -14,8 +16,6 @@
         </div>
       </div>
     </div>
-
-    <app-breadcrumb></app-breadcrumb>
 
     <!-- Main Content -->
     <div class="row" *ngIf="selectedFundraiser">

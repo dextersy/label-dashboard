@@ -1,7 +1,19 @@
 <div class="donations-tab">
+  <!-- Date Range Filter -->
+  <div class="row mb-2">
+    <div class="col-md-12">
+      <app-date-range-filter
+        [compact]="true"
+        [loading]="loading"
+        (dateRangeChange)="onDateRangeChange($event)"
+        (refresh)="onRefresh()">
+      </app-date-range-filter>
+    </div>
+  </div>
+
   <!-- Summary Cards -->
-  <div class="row mb-4">
-    <div class="col-md-3 col-6 mb-3">
+  <div class="row mb-2">
+    <div class="col-md-3 col-6 mb-1 mb-md-0">
       <div class="card summary-card">
         <div class="card-body">
           <div class="summary-icon text-success">
@@ -14,7 +26,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-6 mb-3">
+    <div class="col-md-3 col-6 mb-1 mb-md-0">
       <div class="card summary-card">
         <div class="card-body">
           <div class="summary-icon text-primary">
@@ -27,7 +39,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-6 mb-3">
+    <div class="col-md-3 col-6 mb-1 mb-md-0">
       <div class="card summary-card">
         <div class="card-body">
           <div class="summary-icon text-warning">
@@ -40,7 +52,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-6 mb-3">
+    <div class="col-md-3 col-6 mb-1 mb-md-0">
       <div class="card summary-card">
         <div class="card-body">
           <div class="summary-icon text-info">
@@ -52,18 +64,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Date Range Filter -->
-  <div class="row mb-3">
-    <div class="col-md-12">
-      <app-date-range-filter
-        [compact]="true"
-        [loading]="loading"
-        (dateRangeChange)="onDateRangeChange($event)"
-        (refresh)="onRefresh()">
-      </app-date-range-filter>
     </div>
   </div>
 
