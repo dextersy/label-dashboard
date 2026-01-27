@@ -1,0 +1,74 @@
+.donations-tab {
+  .row.mb-2 {
+    margin-bottom: 12px !important;
+  }
+
+  .summary-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease;
+    margin-bottom: 0 !important;
+
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-body {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .summary-icon {
+      font-size: 2rem;
+      margin-right: 1rem;
+      opacity: 0.8;
+    }
+
+    .summary-content {
+      flex: 1;
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.2;
+    }
+
+    .summary-label {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 2px;
+    }
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    text-transform: capitalize;
+  }
+}
+
+@media (max-width: 768px) {
+  .donations-tab {
+    .summary-card {
+      .card-body {
+        padding: 1rem;
+      }
+
+      .summary-icon {
+        font-size: 1.5rem;
+      }
+
+      .summary-value {
+        font-size: 1.25rem;
+      }
+
+      .summary-label {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}

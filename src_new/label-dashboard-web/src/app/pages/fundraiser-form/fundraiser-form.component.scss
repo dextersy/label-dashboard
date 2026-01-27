@@ -1,0 +1,207 @@
+.fundraiser-form-page {
+  padding: 20px;
+  padding-bottom: 120px;
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: calc(100vh - 60px);
+
+  .page-header {
+    @media (max-width: 768px) {
+      .d-flex {
+        display: block !important;
+        width: 100%;
+      }
+    }
+
+    .fundraiser-selector-main {
+      min-width: 280px;
+      max-width: 400px;
+
+      @media (max-width: 768px) {
+        min-width: 100%;
+        max-width: 100%;
+        width: 100%;
+        margin-top: 0;
+      }
+    }
+  }
+}
+
+.fundraiser-form-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.fundraiser-form-content {
+  padding: 32px;
+
+  .form-section {
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    p {
+      color: #6c757d;
+      margin-bottom: 24px;
+    }
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+
+    &.required::after {
+      content: ' *';
+      color: #dc3545;
+    }
+  }
+
+  .poster-upload-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #007bff;
+      background: #f8f9fa;
+    }
+  }
+
+  .poster-preview {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+
+    img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .poster-remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 32px;
+
+  .loading-dots {
+    display: flex;
+    gap: 8px;
+
+    div {
+      width: 12px;
+      height: 12px;
+      background: #007bff;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+
+      &:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+
+      &:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+    }
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Floating Action Buttons */
+.floating-actions {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  z-index: 1050;
+
+  button {
+    min-width: 140px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .fundraiser-form-page {
+    padding: 12px;
+    padding-bottom: 100px;
+  }
+
+  .fundraiser-form-content {
+    padding: 20px;
+
+    .form-section {
+      h3 {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .floating-actions {
+    padding: 12px 16px;
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      min-width: auto;
+      font-size: 14px;
+    }
+  }
+}

@@ -1,0 +1,194 @@
+<div class="fundraiser-form-page">
+  <app-breadcrumb></app-breadcrumb>
+
+  <!-- Page Header with Fundraiser Selector -->
+  <div class="page-header mb-3">
+    <div class="d-flex align-items-start flex-wrap gap-3">
+      <div class="fundraiser-selector-main" *ngIf="!isNewFundraiser && availableFundraisers.length > 0">
+        <app-fundraiser-selection
+          [fundraisers]="availableFundraisers"
+          [selectedFundraiser]="fundraiser"
+          [loading]="loading"
+          [isAdmin]="isAdmin"
+          (fundraiserSelected)="onFundraiserSelection($event)">
+        </app-fundraiser-selection>
+      </div>
+    </div>
+  </div>
+
+  <div class="fundraiser-form-container">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="loading-dots">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <!-- Form Content -->
+    <div *ngIf="!loading" class="fundraiser-form-content">
+      <!-- Form Section -->
+      <div class="form-section">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <h3 class="mb-0">Fundraiser Details</h3>
+          <span class="badge bg-secondary" *ngIf="isFundraiserDraft()">Draft</span>
+          <span class="badge bg-success" *ngIf="isFundraiserPublished()">Published</span>
+          <span class="badge bg-dark" *ngIf="isFundraiserClosed()">Closed</span>
+        </div>
+        <p>Basic fundraiser information displayed on the donation page</p>
+
+        <div class="row">
+          <div class="col-12 mb-3">
+            <label for="fundraiserTitle" class="form-label required">Fundraiser Title</label>
+            <input
+              type="text"
+              id="fundraiserTitle"
+              class="form-control"
+              [(ngModel)]="fundraiserData.title"
+              placeholder="Enter fundraiser title"
+              [disabled]="isFundraiserClosed()"
+              required>
+            <small class="form-text text-muted">
+              <i class="fa fa-info-circle"></i> The title will be displayed prominently on the donation page
+            </small>
+          </div>
+
+          <div class="col-12 mb-3">
+            <label for="fundraiserDescription" class="form-label">Description</label>
+            <quill-editor
+              id="fundraiserDescription"
+              [(ngModel)]="fundraiserData.description"
+              [modules]="quillConfig"
+              [disabled]="isFundraiserClosed()"
+              placeholder="Describe your fundraiser and what the donations will be used for...">
+            </quill-editor>
+            <small class="form-text text-muted">
+              <i class="fa fa-info-circle"></i> Explain the purpose of the fundraiser and how the funds will be used
+            </small>
+          </div>
+
+          <div class="col-12 mb-3">
+            <label class="form-label">Fundraiser Poster</label>
+            <div *ngIf="!posterPreview && !fundraiserData.poster_url"
+                 class="poster-upload-zone"
+                 role="button"
+                 tabindex="0"
+                 (click)="posterInput.click()"
+                 (keydown)="onPosterUploadKeydown($event)"
+                 aria-label="Upload fundraiser poster image">
+              <i class="fa fa-image fa-3x text-muted mb-2"></i>
+              <p class="text-muted mb-0">Click to upload poster image</p>
+              <small class="text-muted">JPG, PNG or GIF (max 10MB)</small>
+            </div>
+
+            <div *ngIf="posterPreview || fundraiserData.poster_url" class="poster-preview">
+              <img [src]="posterPreview || fundraiserData.poster_url" alt="Fundraiser poster">
+              <button
+                type="button"
+                class="btn btn-sm btn-danger poster-remove-btn"
+                (click)="removePoster()"
+                *ngIf="!isFundraiserClosed()">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+
+            <input
+              type="file"
+              #posterInput
+              accept="image/*"
+              (change)="onPosterSelected($event)"
+              aria-label="Fundraiser poster image file"
+              style="display: none;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Buttons -->
+<div class="floating-actions">
+  <!-- Cancel button only shown when creating a new fundraiser -->
+  <button
+    type="button"
+    class="btn btn-outline-secondary"
+    (click)="onCancel()"
+    [disabled]="saving"
+    *ngIf="isNewFundraiser">
+    Cancel
+  </button>
+
+  <!-- Draft Fundraiser Buttons -->
+  <ng-container *ngIf="isFundraiserDraft()">
+    <button
+      type="button"
+      class="btn btn-outline-primary"
+      (click)="onSave()"
+      [disabled]="saving">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-save" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Save as Draft</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+    <button
+      type="button"
+      class="btn btn-success"
+      (click)="onPublish()"
+      [disabled]="saving">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-rocket" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Publish</span>
+      <span *ngIf="saving">Publishing...</span>
+    </button>
+  </ng-container>
+
+  <!-- Published Fundraiser Buttons -->
+  <ng-container *ngIf="isFundraiserPublished()">
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="onSave()"
+      [disabled]="saving || !isFormDirty()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-save" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Save Changes</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+    <button
+      type="button"
+      class="btn btn-warning"
+      (click)="onUnpublish()"
+      [disabled]="saving || hasDonations()"
+      *ngIf="!hasDonations()">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Unpublish</span>
+      <span *ngIf="saving">Unpublishing...</span>
+    </button>
+    <button
+      type="button"
+      class="btn btn-secondary"
+      (click)="onClose()"
+      [disabled]="saving">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-lock" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Close Fundraiser</span>
+      <span *ngIf="saving">Closing...</span>
+    </button>
+  </ng-container>
+
+  <!-- Closed Fundraiser -->
+  <ng-container *ngIf="isFundraiserClosed()">
+    <button
+      type="button"
+      class="btn btn-success"
+      (click)="onReopen()"
+      [disabled]="saving">
+      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+      <i class="fa fa-unlock" *ngIf="!saving"></i>
+      <span *ngIf="!saving">Reopen Fundraiser</span>
+      <span *ngIf="saving">Reopening...</span>
+    </button>
+  </ng-container>
+</div>

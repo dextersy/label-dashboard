@@ -1,0 +1,68 @@
+<div class="fundraisers-page">
+  <div class="container-fluid">
+    <app-breadcrumb></app-breadcrumb>
+
+    <!-- Page Header with Fundraiser Selector -->
+    <div class="page-header mb-3">
+      <div class="d-flex align-items-start flex-wrap gap-3">
+        <div class="fundraiser-selector-main" *ngIf="availableFundraisers.length > 0">
+          <app-fundraiser-selection
+            [fundraisers]="availableFundraisers"
+            [selectedFundraiser]="selectedFundraiser"
+            [loading]="loading"
+            [isAdmin]="isAdmin"
+            (fundraiserSelected)="onFundraiserSelection($event)">
+          </app-fundraiser-selection>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row" *ngIf="selectedFundraiser">
+      <div class="col-12">
+
+        <!-- Fundraiser Donations Tab -->
+        <div *ngIf="activeTab === 'donations'">
+          <app-fundraiser-donations-tab
+            [selectedFundraiser]="selectedFundraiser"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)">
+          </app-fundraiser-donations-tab>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Loading Fundraisers -->
+    <div class="row" *ngIf="loading && availableFundraisers.length === 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <div class="loading-dots">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Fundraisers Available -->
+    <div class="row" *ngIf="!loading && availableFundraisers.length === 0">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center p-5">
+            <i class="fas fa-hand-holding-heart fa-4x text-muted mb-3"></i>
+            <h4>No Fundraisers Available</h4>
+            <p class="text-muted">No fundraisers found for your label. Create a new fundraiser to get started.</p>
+            <button class="btn btn-primary" *ngIf="isAdmin" (click)="openCreateFundraiserModal()">
+              <i class="fa fa-plus me-1"></i>Create New Fundraiser
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

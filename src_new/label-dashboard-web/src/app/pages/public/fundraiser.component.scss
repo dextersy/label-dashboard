@@ -534,6 +534,26 @@ a {
   display: block;
 }
 
+/* Smaller poster for closed fundraisers */
+.closed-header {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.poster-banner-small {
+  max-width: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.fundraiser-poster-small {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Fundraiser title in body */
 .fundraiser-title {
   font-size: 2rem !important;

@@ -1,6 +1,21 @@
 <div class="event-form-page">
   <app-breadcrumb></app-breadcrumb>
 
+  <!-- Page Header with Event Selector -->
+  <div class="page-header mb-3">
+    <div class="d-flex align-items-start flex-wrap gap-3">
+      <div class="event-selector-main" *ngIf="!isNewEvent && availableEvents.length > 0">
+        <app-event-selection
+          [events]="availableEvents"
+          [selectedEvent]="event"
+          [loading]="loading"
+          [isAdmin]="isAdmin"
+          (eventSelected)="onEventSelection($event)">
+        </app-event-selection>
+      </div>
+    </div>
+  </div>
+
   <div class="event-form-layout">
     <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
     <nav class="event-form-sidebar mt-3">

@@ -1,0 +1,142 @@
+<div class="fundraiser-selection-container">
+  <div class="fundraiser-selection-row">
+    <div class="dropdown" [class.open]="isDropdownOpen">
+      <button class="btn btn-default fundraiser-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+        <div class="fundraiser-info" *ngIf="selectedFundraiser">
+          <div class="fundraiser-poster">
+            <img *ngIf="selectedFundraiser.poster_url; else defaultPoster"
+                 [src]="selectedFundraiser.poster_url"
+                 class="fundraiser-image"
+                 [alt]="selectedFundraiser.title"
+                 (error)="onImageError($event)">
+            <ng-template #defaultPoster>
+              <div class="default-fundraiser-image">
+                <i class="fa fa-hand-holding-heart"></i>
+              </div>
+            </ng-template>
+          </div>
+          <div class="fundraiser-details">
+            <div class="fundraiser-title">
+              {{ selectedFundraiser.title }}
+              <span class="badge badge-sm ms-2" [class]="getFundraiserStatusClass(selectedFundraiser)">
+                {{ getFundraiserStatusText(selectedFundraiser) }}
+              </span>
+            </div>
+            <div class="fundraiser-meta">
+              <span class="fundraiser-raised">
+                <i class="fa fa-peso-sign me-1"></i>
+                {{ formatCurrency(selectedFundraiser.totalRaised) }} raised
+              </span>
+              <span class="fundraiser-donors ms-2" *ngIf="selectedFundraiser.donationCount">
+                <i class="fas fa-users me-1"></i>
+                {{ selectedFundraiser.donationCount }} donors
+              </span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="!selectedFundraiser && !loading" class="no-fundraiser">
+          <i class="fa fa-hand-holding-heart me-2"></i>
+          Select a Fundraiser
+        </div>
+        <div *ngIf="loading" class="loading-inline">
+          <div class="loading-spinner"></div>Loading fundraisers...
+        </div>
+        <span class="caret"></span>
+      </button>
+
+      <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+        <!-- Mobile header with close button -->
+        <li class="mobile-dropdown-header">
+          <span class="mobile-dropdown-title">Select Fundraiser</span>
+          <button type="button" class="mobile-dropdown-close" (click)="toggleDropdown(); $event.stopPropagation()">
+            <i class="fa fa-times"></i>
+          </button>
+        </li>
+
+        <!-- Search input for many fundraisers -->
+        <li class="search-container" *ngIf="fundraisers.length > 5">
+          <div class="search-input-wrapper">
+            <i class="fa fa-search search-icon"></i>
+            <input
+              type="text"
+              class="form-control search-input"
+              placeholder="Search fundraisers..."
+              [(ngModel)]="searchTerm"
+              (click)="$event.stopPropagation()"
+              #searchInput>
+            <button
+              class="btn btn-link search-clear"
+              *ngIf="searchTerm"
+              (click)="clearSearch(); $event.stopPropagation()">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </li>
+
+        <li class="divider" *ngIf="fundraisers.length > 5"></li>
+
+        <!-- Create new fundraiser option at the top -->
+        <li *ngIf="isAdmin" class="create-fundraiser-item">
+          <a (click)="createFundraiser()" class="create-new-fundraiser">
+            <i class="fa fa-plus me-2"></i>
+            Create New Fundraiser
+          </a>
+        </li>
+
+        <li class="divider" *ngIf="isAdmin && fundraisers.length > 0"></li>
+
+        <li *ngFor="let fundraiser of filteredFundraisers"
+            [class.active]="selectedFundraiser?.id === fundraiser.id"
+            class="fundraiser-item">
+          <a (click)="selectFundraiser(fundraiser)">
+            <div class="dropdown-fundraiser-poster">
+              <img *ngIf="fundraiser.poster_url; else dropdownDefaultPoster"
+                   [src]="fundraiser.poster_url"
+                   class="dropdown-fundraiser-image"
+                   [alt]="fundraiser.title"
+                   (error)="onDropdownImageError($event)">
+              <ng-template #dropdownDefaultPoster>
+                <div class="dropdown-default-fundraiser-image">
+                  <i class="fa fa-hand-holding-heart"></i>
+                </div>
+              </ng-template>
+            </div>
+            <div class="dropdown-fundraiser-info">
+              <div class="dropdown-fundraiser-title">
+                {{ fundraiser.title }}
+                <span class="badge badge-sm ms-2" [class]="getFundraiserStatusClass(fundraiser)">
+                  {{ getFundraiserStatusText(fundraiser) }}
+                </span>
+              </div>
+              <div class="dropdown-fundraiser-meta">
+                <span class="dropdown-fundraiser-raised">
+                  <i class="fa fa-peso-sign me-1"></i>
+                  {{ formatCurrency(fundraiser.totalRaised) }} raised
+                </span>
+                <span class="dropdown-fundraiser-donors ms-2" *ngIf="fundraiser.donationCount">
+                  <i class="fas fa-users me-1"></i>
+                  {{ fundraiser.donationCount }} donors
+                </span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <li class="no-results" *ngIf="filteredFundraisers.length === 0 && searchTerm">
+          <div class="no-results-content">
+            <i class="fa fa-search text-muted"></i>
+            <span>No fundraisers found matching "{{ searchTerm }}"</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Fundraiser search results summary -->
+  <div class="search-summary mt-2" *ngIf="searchTerm && filteredFundraisers.length > 0">
+    <small class="text-muted">
+      <i class="fa fa-filter me-1"></i>
+      Showing {{ filteredFundraisers.length }} of {{ fundraisers.length }} fundraisers
+    </small>
+  </div>
+</div>

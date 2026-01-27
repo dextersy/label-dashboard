@@ -24,6 +24,7 @@ export class FundraiserComponent implements OnInit, OnDestroy {
   isLoading = false;
   isSubmitting = false;
   isError = false;
+  isClosed = false;
   errorMessage = '';
   submitError = '';
   brandColor = '#6f42c1';
@@ -77,6 +78,9 @@ export class FundraiserComponent implements OnInit, OnDestroy {
           } else if (this.fundraiser.brand?.color) {
             this.brandColor = this.fundraiser.brand.color;
           }
+
+          // Check if fundraiser is closed
+          this.isClosed = this.fundraiser.status === 'closed';
 
           this.isLoading = false;
         },

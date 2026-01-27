@@ -15,8 +15,41 @@
     </div>
   </div>
 
-  <!-- Fundraiser Content -->
-  <div *ngIf="fundraiser && !isLoading && !isError" class="wrapper fadeInDown h-100">
+  <!-- Closed Fundraiser State -->
+  <div *ngIf="fundraiser && isClosed && !isLoading && !isError" class="wrapper fadeInDown h-100">
+    <div class="page-container">
+      <!-- Header Section - Smaller Poster -->
+      <div class="header-section closed-header" *ngIf="fundraiser.poster_url">
+        <div class="poster-banner-small">
+          <img [src]="fundraiser.poster_url" class="fundraiser-poster-small" alt="Fundraiser poster">
+        </div>
+      </div>
+
+      <!-- Body Section -->
+      <div class="body-section text-center">
+        <div class="closed-message py-5">
+          <i class="fas fa-heart fa-4x" style="color: var(--brand-color);"></i>
+          <h1 class="mb-3" style="font-size: 3rem;">Thank You!</h1>
+          <p class="text-muted mb-4">
+            <strong>{{ fundraiser.title }}</strong> fundraiser has ended and is no longer accepting donations.
+          </p>
+          <p class="text-muted">
+            We appreciate everyone who contributed to this cause.
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center footer-section">
+        <p>
+          <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fundraiser Content (Active) -->
+  <div *ngIf="fundraiser && !isClosed && !isLoading && !isError" class="wrapper fadeInDown h-100">
     <div class="page-container">
       <!-- Header Section - Poster Banner -->
       <div class="header-section" *ngIf="fundraiser.poster_url">
@@ -38,7 +71,7 @@
 
         <!-- Description -->
         <div *ngIf="fundraiser.description" class="description-box mb-4 p-3">
-          <p class="mb-0" style="white-space: pre-wrap;">{{ fundraiser.description }}</p>
+          <div class="description-content" [innerHTML]="fundraiser.description"></div>
         </div>
 
         <form [formGroup]="donationForm" (ngSubmit)="onSubmit()">

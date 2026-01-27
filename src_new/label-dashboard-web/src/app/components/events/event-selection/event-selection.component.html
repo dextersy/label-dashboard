@@ -45,6 +45,14 @@
     </button>
     
     <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+      <!-- Mobile header with close button -->
+      <li class="mobile-dropdown-header">
+        <span class="mobile-dropdown-title">Select Event</span>
+        <button type="button" class="mobile-dropdown-close" (click)="toggleDropdown(); $event.stopPropagation()">
+          <i class="fa fa-times"></i>
+        </button>
+      </li>
+
       <!-- Search input for many events -->
       <li class="search-container" *ngIf="events.length > 5">
         <div class="search-input-wrapper">

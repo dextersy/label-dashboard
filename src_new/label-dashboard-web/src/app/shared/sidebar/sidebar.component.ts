@@ -5,10 +5,8 @@ import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
-import { EventService, Event } from '../../services/event.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
-import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -26,13 +24,12 @@ interface MenuSection {
   id: string;
   adminOnly?: boolean;
   showArtistIndicator?: boolean;
-  showEventIndicator?: boolean;
   items: MenuItem[];
 }
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent, EventSelectionComponent],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -57,11 +54,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   // Selected artist state
   selectedArtist: Artist | null = null;
-  
-  // Selected event state
-  selectedEvent: Event | null = null;
-  events: Event[] = [];
-  loadingEvents = false;
 
   // Current workspace
   currentWorkspace: WorkspaceType = 'music';
@@ -72,8 +64,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private sidebarSubscription: Subscription = new Subscription();
   private authSubscription: Subscription = new Subscription();
   private artistSubscription: Subscription = new Subscription();
-  private eventSubscription: Subscription = new Subscription();
   private workspaceSubscription: Subscription = new Subscription();
+  private expandMenuSubscription: Subscription = new Subscription();
 
   // Menu sections with nested items and indicator flags
   sections: MenuSection[] = [
@@ -125,21 +117,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      id: 'events',
+      id: 'campaigns',
       adminOnly: true,
-      showEventIndicator: true,
       items: [
-        { 
-          route: '/events', 
-          icon: 'fas fa-ticket-alt', 
-          title: 'Events', 
+        {
+          route: '/campaigns/events',
+          icon: 'fas fa-ticket-alt',
+          title: 'Events',
           adminOnly: true,
           children: [
-            { route: '/events/details', title: 'Manage events', adminOnly: true },
-            { route: '/events/tickets', title: 'Tickets', adminOnly: true },
-            { route: '/events/abandoned', title: 'Pending Orders', adminOnly: true },
-            { route: '/events/referrals', title: 'Referrals', adminOnly: true },
-            { route: '/events/email', title: 'Send Email', adminOnly: true }
+            { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true },
+            { route: '/campaigns/events/tickets', title: 'Tickets', adminOnly: true },
+            { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true },
+            { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true },
+            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true }
+          ]
+        },
+        {
+          route: '/campaigns/fundraisers',
+          icon: 'fas fa-hand-holding-heart',
+          title: 'Fundraisers',
+          adminOnly: true,
+          children: [
+            { route: '/campaigns/fundraisers/details', title: 'Manage fundraisers', adminOnly: true },
+            { route: '/campaigns/fundraisers/donations', title: 'Donations', adminOnly: true }
           ]
         }
       ]
@@ -154,8 +155,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Labels',
           adminOnly: true,
           children: [
-            { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true, icon: 'fas fa-coins' },
-            { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true, icon: 'fas fa-layer-group' }
+            { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true },
+            { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true }
           ]
         }
       ]
@@ -222,38 +223,49 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [];
         }
         break;
-      case 'events':
-        // For events workspace, show dashboard first, then event selector with event menu items
-        const eventsSection = this.sections.find(section => section.id === 'events');
-        const eventsDashboardItem = { route: '/events/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
-        if (eventsSection && eventsSection.items.length > 0) {
-          const eventsItem = eventsSection.items[0];
+      case 'campaigns':
+        // For campaigns workspace, show dashboard first, then events and fundraisers menu items
+        const campaignsSection = this.sections.find(section => section.id === 'campaigns');
+        const campaignsDashboardItem = { route: '/campaigns/events/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
+        if (campaignsSection && campaignsSection.items.length > 0) {
           this.visibleSections = [
             {
-              id: 'events-dashboard',
-              items: [eventsDashboardItem]
+              id: 'campaigns-dashboard',
+              items: [campaignsDashboardItem]
             },
             {
-              id: 'events-top-level',
-              showEventIndicator: true,
-              items: eventsItem.children?.map(child => {
+              id: 'campaigns-top-level',
+              items: campaignsSection.items.map(item => {
                 // Assign appropriate icons based on the route
-                let icon = 'fas fa-ticket-alt'; // default
+                let icon = item.icon || 'fas fa-bullhorn';
+                return {
+                  ...item,
+                  icon: icon
+                };
+              })
+            }
+          ];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'labels':
+        // For labels workspace, show labels submenu items as top-level items
+        const labelsSection = this.sections.find(section => section.id === 'labels');
+        if (labelsSection && labelsSection.items.length > 0) {
+          const labelsItem = labelsSection.items[0];
+          this.visibleSections = [
+            {
+              id: 'labels-top-level',
+              items: labelsItem.children?.map(child => {
+                // Assign appropriate icons based on the route
+                let icon = 'fas fa-tags'; // default
                 switch (child.route) {
-                  case '/events/details':
-                    icon = 'fas fa-calendar-alt';
+                  case '/labels/earnings':
+                    icon = 'fas fa-coins';
                     break;
-                  case '/events/tickets':
-                    icon = 'fas fa-ticket-alt';
-                    break;
-                  case '/events/abandoned':
-                    icon = 'fas fa-clock';
-                    break;
-                  case '/events/referrals':
-                    icon = 'fas fa-users';
-                    break;
-                  case '/events/email':
-                    icon = 'fas fa-envelope';
+                  case '/labels/sublabels':
+                    icon = 'fas fa-layer-group';
                     break;
                 }
                 return {
@@ -303,21 +315,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [];
         }
         break;
-      case 'labels':
-        const labelsSection = this.sections.find(section => section.id === 'labels');
-        if (labelsSection) {
-          // show the labels top-level children
-          const labelsItem = labelsSection.items[0];
-          this.visibleSections = [
-            {
-              id: 'labels-top-level',
-              items: labelsItem.children?.map(child => ({ ...child, icon: child.icon || 'fas fa-tags' })) || []
-            }
-          ];
-        } else {
-          this.visibleSections = [];
-        }
-        break;
       default:
         this.visibleSections = this.sections;
         break;
@@ -330,7 +327,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private sidebarService: SidebarService,
     private authService: AuthService,
     private artistStateService: ArtistStateService,
-    private eventService: EventService,
     private workspaceService: WorkspaceService
   ) {}
 
@@ -360,11 +356,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
-
-        // Load events when user becomes admin
-        if (this.isAdmin && this.events.length === 0) {
-          this.loadEvents();
-        }
       })
     );
 
@@ -375,18 +366,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Subscribe to selected event changes
-    this.eventSubscription.add(
-      this.eventService.selectedEvent$.subscribe(event => {
-        this.selectedEvent = event;
-      })
-    );
-
     // Subscribe to workspace changes
     this.workspaceSubscription.add(
       this.workspaceService.currentWorkspace$.subscribe(workspace => {
         this.currentWorkspace = workspace;
         this.updateVisibleSections();
+      })
+    );
+
+    // Subscribe to expand menu requests (from onboarding)
+    this.expandMenuSubscription.add(
+      this.sidebarService.expandMenu$.subscribe(route => {
+        if (route) {
+          this.expandMenuByRoute(route);
+        }
       })
     );
 
@@ -412,8 +405,35 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarSubscription.unsubscribe();
     this.authSubscription.unsubscribe();
     this.artistSubscription.unsubscribe();
-    this.eventSubscription.unsubscribe();
     this.workspaceSubscription.unsubscribe();
+    this.expandMenuSubscription.unsubscribe();
+  }
+
+  /**
+   * Programmatically expand a menu by its route (used by onboarding)
+   */
+  expandMenuByRoute(route: string): void {
+    // Close all other expanded menus first
+    this.allMenuItems.forEach((item: MenuItem) => {
+      if (item.children && item.route !== route) {
+        this.expandedMenus.delete(item.route);
+        this.collapsedMenus.add(item.route);
+      }
+    });
+
+    // Expand the specified menu
+    this.expandedMenus.add(route);
+    this.collapsedMenus.delete(route);
+  }
+
+  /**
+   * Get a CSS class name from a menu item route for targeting in onboarding
+   */
+  getMenuItemClass(route: string): string {
+    // Convert route to a class name, e.g., '/campaigns/events' -> 'nav-menu-events'
+    const parts = route.split('/').filter(p => p);
+    const lastPart = parts[parts.length - 1] || '';
+    return `nav-menu-${lastPart}`;
   }
 
 
@@ -626,14 +646,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (section.adminOnly && !this.isAdmin) {
       return false;
     }
-    
+
     // Show if section has artist indicator
     if (section.showArtistIndicator) {
-      return true;
-    }
-    
-    // Show if section has event indicator and user is admin
-    if (section.showEventIndicator && this.isAdmin) {
       return true;
     }
     
@@ -670,24 +685,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onMenuItemClick(item?: any): void {
     // Close sidebar on mobile when menu item is clicked
     this.sidebarService.closeOnMobileNavigation();
-  }
-
-  loadEvents(): void {
-    this.loadingEvents = true;
-    this.eventService.getEvents().subscribe({
-      next: (events) => {
-        this.events = events;
-        this.loadingEvents = false;
-      },
-      error: (error) => {
-        console.error('Error loading events:', error);
-        this.loadingEvents = false;
-      }
-    });
-  }
-
-  onEventSelected(event: Event): void {
-    this.eventService.setSelectedEvent(event);
   }
 
   getWorkspaceIcon(workspace: WorkspaceType): string {

@@ -347,6 +347,12 @@ export class PaymentService {
   }
 
   private async processPaymentConfirmation(ticket: any, processingFee: number, paymentId: string | null, payload?: any): Promise<boolean> {
+    // Idempotency check - prevent duplicate processing from webhook retries
+    if (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.') {
+      this.webhookLog('Ticket already processed (status: ' + ticket.status + '), skipping duplicate webhook');
+      return true;
+    }
+
     // Update ticket payment status
     const paymentUpdated = await this.updateTicketPaymentStatus(ticket.id, processingFee, paymentId);
     
@@ -407,6 +413,12 @@ export class PaymentService {
 
   private async processDonationPaymentConfirmation(donation: any, processingFee: number, paymentId: string | null, payload?: any): Promise<boolean> {
     try {
+      // Idempotency check - prevent duplicate processing from webhook retries
+      if (donation.payment_status === 'paid') {
+        this.webhookLog('Donation already marked as paid, skipping duplicate webhook');
+        return true;
+      }
+
       // Update donation payment status
       await donation.update({
         payment_status: 'paid',
@@ -723,7 +735,7 @@ export class PaymentService {
         Payment : ${totalPayment.toFixed(2)}<br>
         Processing fee : -${processingFee.toFixed(2)}<br>
         <br>
-        Go to <a href="https://${domainName}/events#tickets" target="_blank">dashboard</a>
+        Go to <a href="https://${domainName}/campaigns/events/tickets" target="_blank">dashboard</a>
       `;
       
       // Use the simple sendEmail function that accepts HTML directly (matches PHP pattern)

@@ -228,7 +228,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
           console.error('Error loading event:', error);
           this.notificationService.showError('Failed to load event details');
           this.loading = false;
-          this.router.navigate(['/events']);
+          this.router.navigate(['/campaigns/events']);
         }
       })
     );
@@ -296,7 +296,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   onCancel(): void {
-    this.router.navigate(['/events']);
+    this.router.navigate(['/campaigns/events']);
   }
 
   onSave(): void {
@@ -326,7 +326,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
           if (this.isNewEvent) {
             // Set the newly created event as selected and navigate to details
             this.eventService.setSelectedEvent(event);
-            this.router.navigate(['/events/details']);
+            this.router.navigate(['/campaigns/events/details']);
           } else {
             // Update the event object and reset dirty tracking without repopulating form
             this.event = event;
@@ -396,7 +396,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
           
           if (this.isNewEvent) {
             // Navigate to details view for newly published events
-            this.router.navigate(['/events/details']);
+            this.router.navigate(['/campaigns/events/details']);
           } else {
             this.populateFormFromEvent(event);
           }

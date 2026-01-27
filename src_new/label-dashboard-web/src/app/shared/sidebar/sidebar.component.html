@@ -29,24 +29,13 @@
             </app-artist-selection>
           </li>
 
-        <!-- Event Selection (if section has showEventIndicator flag) -->
-        <li *ngIf="section.showEventIndicator && isAdmin" class="event-selection-container">
-          <app-event-selection
-            [events]="events"
-            [selectedEvent]="selectedEvent"
-            [loading]="loadingEvents"
-            [isAdmin]="isAdmin"
-            (eventSelected)="onEventSelected($event)">
-          </app-event-selection>
-        </li>
-
           <!-- Section menu items -->
           <ng-container *ngFor="let item of section.items">
             <ng-container *ngTemplateOutlet="menuItemTemplate; context: { item: item }"></ng-container>
           </ng-container>
 
           <!-- Separator after dashboard sections -->
-          <li *ngIf="section.id === 'dashboard' || section.id === 'events-dashboard'" class="section-divider"></li>
+          <li *ngIf="section.id === 'dashboard'" class="section-divider"></li>
         </ng-container>
       </ng-container>
       
@@ -68,7 +57,8 @@
 
     <!-- Reusable menu item template -->
     <ng-template #menuItemTemplate let-item="item">
-      <li [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)">
+      <li [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)"
+          [ngClass]="getMenuItemClass(item.route)">
         <!-- Menu item without children -->
         <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)" 
            [routerLink]="item.route" 
