@@ -542,6 +542,82 @@ async function getEventSalesData(req: AuthRequest) {
   );
 }
 
+// Get events dashboard data (admin only)
+export const getEventsDashboardData = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const brandFilter = { brand_id: req.user.brand_id };
+    const { Op } = require('sequelize');
+
+    // Get active events count (published events still open for ticket sales)
+    const now = new Date();
+    const activeEventsCount = await Event.count({
+      where: {
+        ...brandFilter,
+        status: 'published',
+        [Op.or]: [
+          { close_time: null },
+          { close_time: { [Op.gt]: now } }
+        ]
+      }
+    });
+
+    // Get this month's sales
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Get all events for this brand
+    const events = await Event.findAll({
+      where: brandFilter,
+      attributes: ['id']
+    });
+
+    const eventIds = events.map(e => e.id);
+
+    // Get confirmed tickets for this month
+    let thisMonthSales = 0;
+    if (eventIds.length > 0) {
+      const tickets = await Ticket.findAll({
+        where: {
+          event_id: eventIds,
+          status: ['Payment Confirmed', 'Ticket sent.'],
+          order_timestamp: {
+            [require('sequelize').Op.between]: [startOfMonth, endOfMonth]
+          }
+        },
+        attributes: ['price_per_ticket', 'number_of_entries']
+      });
+
+      thisMonthSales = tickets.reduce((sum, ticket) => {
+        const price = parseFloat(ticket.price_per_ticket?.toString() || '0');
+        const entries = parseInt(ticket.number_of_entries?.toString() || '1');
+        return sum + (price * entries);
+      }, 0);
+    }
+
+    // Get event sales data (reuse existing function)
+    const eventSales = await getEventSalesData(req);
+
+    res.json({
+      user: {
+        firstName: req.user.first_name,
+        isAdmin: req.user.is_admin
+      },
+      stats: {
+        activeEvents: activeEventsCount,
+        thisMonthSales: thisMonthSales
+      },
+      eventSales
+    });
+  } catch (error) {
+    console.error('Get events dashboard data error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 async function getDashboardStatsData(req: AuthRequest) {
   let statsQuery = {};
   let accessibleArtistIds: number[] = [];

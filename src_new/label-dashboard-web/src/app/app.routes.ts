@@ -6,6 +6,7 @@ import { SelectArtistComponent } from './pages/select-artist/select-artist.compo
 import { AddNewArtistComponent } from './components/artist/add-new-artist/add-new-artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
+import { EventsDashboardComponent } from './pages/events-dashboard/events-dashboard.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
 import { ReleaseSubmissionComponent } from './components/artist/release-submission/release-submission.component';
 import { AdminComponent } from './pages/admin/admin.component';
@@ -97,11 +98,12 @@ export const routes: Routes = [
     ]
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { 
-    path: 'events', 
+  {
+    path: 'events',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'details', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: EventsDashboardComponent },
       { path: 'new', component: EventFormComponent },
       { path: 'details', component: EventFormComponent },
       { path: 'tickets', component: EventsComponent, data: { tab: 'tickets' } },

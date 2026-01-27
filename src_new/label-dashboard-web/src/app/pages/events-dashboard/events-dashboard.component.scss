@@ -1,0 +1,197 @@
+/* Events Dashboard page styles - Minimalist Design */
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Welcome Section - Clean & Simple */
+.welcome-section {
+  padding: 1rem 0 0.5rem;
+
+  .welcome-greeting {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #1a1a2e;
+    margin: 0;
+    letter-spacing: -0.5px;
+
+    .welcome-name {
+      font-weight: 600;
+    }
+  }
+
+  .welcome-date {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0.25rem 0 0;
+    font-weight: 400;
+  }
+}
+
+/* Section Labels */
+.section-label {
+  font-size: 0.75rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+
+  &.section-label-lg {
+    font-size: 1rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #1a1a2e;
+  }
+}
+
+/* Quick Menu Cards */
+.quick-menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1rem 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  height: 100%;
+
+  &:hover {
+    border-color: #ccc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    transform: translateY(-2px);
+
+    .quick-menu-icon {
+      transform: scale(1.1);
+
+      i {
+        color: #667eea;
+      }
+    }
+  }
+
+  .quick-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+    transition: transform 0.2s ease;
+
+    i {
+      font-size: 1.75rem;
+      color: #999;
+      transition: color 0.2s ease;
+    }
+  }
+
+  .quick-menu-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+/* Compact Stats Card */
+.stats-compact-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 0.75rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.stats-compact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+
+  &.stats-compact-item-clickable {
+    cursor: pointer;
+
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+
+  i {
+    font-size: 0.9rem;
+    color: #999;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .stats-compact-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1;
+
+    &.stats-compact-value-currency {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+  }
+
+  .stats-compact-label {
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .quick-menu-card {
+    padding: 0.85rem 0.5rem;
+
+    .quick-menu-icon i {
+      font-size: 1.5rem;
+    }
+
+    .quick-menu-label {
+      font-size: 0.9rem;
+    }
+  }
+
+  .stats-compact-card {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-section {
+    .welcome-greeting {
+      font-size: 1.5rem;
+    }
+  }
+
+  .quick-menu-card {
+    padding: 1rem 0.75rem;
+
+    .quick-menu-icon i {
+      font-size: 1.5rem;
+    }
+
+    .quick-menu-label {
+      font-size: 0.9rem;
+    }
+  }
+}

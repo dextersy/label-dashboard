@@ -45,8 +45,8 @@
             <ng-container *ngTemplateOutlet="menuItemTemplate; context: { item: item }"></ng-container>
           </ng-container>
 
-          <!-- Separator after dashboard section -->
-          <li *ngIf="section.id === 'dashboard'" class="section-divider"></li>
+          <!-- Separator after dashboard sections -->
+          <li *ngIf="section.id === 'dashboard' || section.id === 'events-dashboard'" class="section-divider"></li>
         </ng-container>
       </ng-container>
       

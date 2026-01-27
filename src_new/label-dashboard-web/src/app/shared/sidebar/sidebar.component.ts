@@ -223,11 +223,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
         }
         break;
       case 'events':
-        // For events workspace, show events submenu items as top-level items
+        // For events workspace, show dashboard first, then event selector with event menu items
         const eventsSection = this.sections.find(section => section.id === 'events');
+        const eventsDashboardItem = { route: '/events/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
         if (eventsSection && eventsSection.items.length > 0) {
           const eventsItem = eventsSection.items[0];
           this.visibleSections = [
+            {
+              id: 'events-dashboard',
+              items: [eventsDashboardItem]
+            },
             {
               id: 'events-top-level',
               showEventIndicator: true,

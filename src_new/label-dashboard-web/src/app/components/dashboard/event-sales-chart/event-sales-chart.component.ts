@@ -105,11 +105,17 @@ export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestro
     this.createTicketsChart();
   }
 
+  private truncateLabel(label: string, maxLength: number = 20): string {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength - 3) + '...';
+  }
+
   private createSalesChart(): void {
     const ctx = this.salesChartRef.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const labels = this.eventSales.map(event => event.name || 'Untitled Event');
+    const fullLabels = this.eventSales.map(event => event.name || 'Untitled Event');
+    const labels = fullLabels.map(label => this.truncateLabel(label));
     const data = this.eventSales.map(event => event.total_sales || 0);
 
     const config: ChartConfiguration<'bar'> = {
@@ -134,6 +140,14 @@ export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestro
           },
           legend: {
             display: false
+          },
+          tooltip: {
+            callbacks: {
+              title: (context) => {
+                const index = context[0].dataIndex;
+                return fullLabels[index];
+              }
+            }
           }
         },
         scales: {
@@ -162,7 +176,8 @@ export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestro
     const ctx = this.ticketsChartRef.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const labels = this.eventSales.map(event => event.name || 'Untitled Event');
+    const fullLabels = this.eventSales.map(event => event.name || 'Untitled Event');
+    const labels = fullLabels.map(label => this.truncateLabel(label));
     const soldData = this.eventSales.map(event => event.tickets_sold || 0);
     const config: ChartConfiguration<'bar'> = {
       type: 'bar',
@@ -186,6 +201,14 @@ export class EventSalesChartComponent implements OnInit, AfterViewInit, OnDestro
           },
           legend: {
             display: false
+          },
+          tooltip: {
+            callbacks: {
+              title: (context) => {
+                const index = context[0].dataIndex;
+                return fullLabels[index];
+              }
+            }
           }
         },
         scales: {

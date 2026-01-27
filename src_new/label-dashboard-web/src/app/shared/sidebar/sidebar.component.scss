@@ -237,6 +237,12 @@
   list-style: none;
 }
 
+/* Section divider marker for specific sections */
+.nav-section-events-dashboard + .section-divider,
+.nav-section-dashboard + .section-divider {
+  display: block;
+}
+
 /* Menu section dividers */
 .separator {
   height: 12px;
