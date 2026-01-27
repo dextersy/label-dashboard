@@ -205,23 +205,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private updateVisibleSections(): void {
     switch (this.currentWorkspace) {
       case 'music':
-        // For music workspace, combine dashboard with artist/music/financial items
+        // For music workspace, show dashboard first, then artist selector with music/financial items
         const musicSection = this.sections.find(section => section.id === 'artist-music-financial');
         const dashboardItem = { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false };
         if (musicSection) {
-          this.visibleSections = [{
-            ...musicSection,
-            items: [dashboardItem, ...musicSection.items]
-          }];
+          this.visibleSections = [
+            {
+              id: 'dashboard',
+              items: [dashboardItem]
+            },
+            {
+              ...musicSection
+            }
+          ];
         } else {
           this.visibleSections = [];
         }
         break;
       case 'campaigns':
-        // For campaigns workspace, show events and fundraisers as top-level items with their children
+        // For campaigns workspace, show dashboard first, then events and fundraisers menu items
         const campaignsSection = this.sections.find(section => section.id === 'campaigns');
+        const campaignsDashboardItem = { route: '/campaigns/events/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
         if (campaignsSection && campaignsSection.items.length > 0) {
           this.visibleSections = [
+            {
+              id: 'campaigns-dashboard',
+              items: [campaignsDashboardItem]
+            },
             {
               id: 'campaigns-top-level',
               items: campaignsSection.items.map(item => {

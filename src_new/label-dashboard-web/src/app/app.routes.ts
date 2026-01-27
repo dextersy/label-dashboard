@@ -6,6 +6,7 @@ import { SelectArtistComponent } from './pages/select-artist/select-artist.compo
 import { AddNewArtistComponent } from './components/artist/add-new-artist/add-new-artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
+import { EventsDashboardComponent } from './pages/events-dashboard/events-dashboard.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
 import { FundraisersComponent } from './pages/fundraisers/fundraisers.component';
 import { FundraiserFormComponent } from './pages/fundraiser-form/fundraiser-form.component';
@@ -105,9 +106,10 @@ export const routes: Routes = [
     path: 'campaigns',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'events/details', pathMatch: 'full' },
+      { path: '', redirectTo: 'events/dashboard', pathMatch: 'full' },
       // Events
-      { path: 'events', redirectTo: 'events/details', pathMatch: 'full' },
+      { path: 'events', redirectTo: 'events/dashboard', pathMatch: 'full' },
+      { path: 'events/dashboard', component: EventsDashboardComponent },
       { path: 'events/new', component: EventFormComponent },
       { path: 'events/details', component: EventFormComponent },
       { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
@@ -125,6 +127,7 @@ export const routes: Routes = [
 
   // Legacy events routes - redirect to campaigns
   { path: 'events', redirectTo: 'campaigns/events', pathMatch: 'full' },
+  { path: 'events/dashboard', redirectTo: 'campaigns/events/dashboard', pathMatch: 'full' },
   { path: 'events/new', redirectTo: 'campaigns/events/new', pathMatch: 'full' },
   { path: 'events/details', redirectTo: 'campaigns/events/details', pathMatch: 'full' },
   { path: 'events/tickets', redirectTo: 'campaigns/events/tickets', pathMatch: 'full' },

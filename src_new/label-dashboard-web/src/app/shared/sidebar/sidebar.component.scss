@@ -227,6 +227,22 @@
   }
 }
 
+/* Section divider - visual separation between nav sections */
+.section-divider {
+  display: block;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 12px 12px 16px 12px;
+  padding: 0;
+  list-style: none;
+}
+
+/* Section divider marker for specific sections */
+.nav-section-events-dashboard + .section-divider,
+.nav-section-dashboard + .section-divider {
+  display: block;
+}
+
 /* Menu section dividers */
 .separator {
   height: 12px;

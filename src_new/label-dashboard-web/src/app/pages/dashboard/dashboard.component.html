@@ -31,76 +31,81 @@
       <p class="welcome-date">{{ today | date:'EEEE, MMMM d, y' }}</p>
     </div>
 
-    <!-- Stats Row -->
+    <!-- Quick Menu + Stats Row -->
     <div class="row mb-4">
-      <div class="col-md-4 mb-3 mb-md-0">
-        <div class="stat-card stat-card-clickable" (click)="goToArtistSelection()">
-          <div class="stat-icon">
+      <!-- Quick Menu Cards -->
+      <div class="col-lg-9 col-md-12 mb-3 mb-lg-0">
+        <h6 class="section-label section-label-lg">What do you want to do today?</h6>
+        <div class="row">
+          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+            <a routerLink="/music/releases/new" class="quick-menu-card">
+              <div class="quick-menu-icon">
+                <i class="fas fa-upload"></i>
+              </div>
+              <span class="quick-menu-label">Submit a Release</span>
+            </a>
+          </div>
+          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+            <a routerLink="/artist/profile" class="quick-menu-card">
+              <div class="quick-menu-icon">
+                <i class="fas fa-user-edit"></i>
+              </div>
+              <span class="quick-menu-label">Update Artist Profile</span>
+            </a>
+          </div>
+          <div class="col-lg-4 col-md-4 col-sm-12 mb-3 mb-lg-0">
+            <a routerLink="/financial/summary" class="quick-menu-card">
+              <div class="quick-menu-icon">
+                <i class="fas fa-chart-pie"></i>
+              </div>
+              <span class="quick-menu-label">View Financial Summary</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact Stats Card -->
+      <div class="col-lg-3 col-md-12">
+        <h6 class="section-label">Quick Stats</h6>
+        <div class="stats-compact-card">
+          <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
             <i class="fas fa-users"></i>
+            <span class="stats-compact-value">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
+            <span class="stats-compact-label">Artists</span>
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
-            <span class="stat-label">Artists</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 mb-3 mb-md-0">
-        <div class="stat-card stat-card-clickable" routerLink="/music/releases">
-          <div class="stat-icon">
+          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/music/releases">
             <i class="fas fa-compact-disc"></i>
+            <span class="stats-compact-value">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
+            <span class="stats-compact-label">Releases</span>
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
-            <span class="stat-label">Releases</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="stat-card stat-card-clickable" *ngIf="dashboardData.stats?.latestRelease" (click)="goToLatestRelease()">
-          <div class="stat-icon">
+          <div class="stats-compact-item"
+               [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
+               (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
             <i class="fas fa-music"></i>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value stat-value-text">{{ dashboardData.stats?.latestRelease?.title }}</span>
-            <span class="stat-label">Latest Release</span>
-          </div>
-        </div>
-        <div class="stat-card" *ngIf="!dashboardData.stats?.latestRelease">
-          <div class="stat-icon">
-            <i class="fas fa-music"></i>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">—</span>
-            <span class="stat-label">Latest Release</span>
+            <span class="stats-compact-value stats-compact-value-text">
+              {{ dashboardData.stats?.latestRelease?.title || '—' }}
+            </span>
+            <span class="stats-compact-label">Latest</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Dashboard widgets -->
-    <!-- Row 1: Latest releases and Top earning releases -->
-    <div class="row mb-4">
+    <div class="row">
       <!-- Latest releases -->
-      <div class="col-lg-6 mb-4 mb-lg-0">
+      <div class="col-lg-4 mb-4 mb-lg-0">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
 
       <!-- Top earning releases -->
-      <div class="col-lg-6">
+      <div class="col-lg-4 mb-4 mb-lg-0">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
-    </div>
 
-    <!-- Row 2: Balance summary and Event sales -->
-    <div class="row">
       <!-- Balance summary -->
-      <div class="col-lg-6 mb-4 mb-lg-0">
+      <div class="col-lg-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
-      </div>
-
-      <!-- Event sales (admin only) -->
-      <div *ngIf="isAdmin && dashboardData.eventSales" class="col-lg-6">
-        <app-event-sales-chart [eventSales]="dashboardData.eventSales"></app-event-sales-chart>
       </div>
     </div>
   </div>

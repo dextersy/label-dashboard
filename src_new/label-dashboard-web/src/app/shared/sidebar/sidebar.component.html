@@ -20,7 +20,7 @@
       <ng-container *ngFor="let section of visibleSections; let sectionIndex = index">
         <!-- Only show section if it has visible content -->
         <ng-container *ngIf="shouldShowSection(section)">
-          
+
           <!-- Artist Selection (if section has showArtistIndicator flag) -->
           <li *ngIf="section.showArtistIndicator" class="artist-selection-container">
             <app-artist-selection
@@ -33,6 +33,9 @@
           <ng-container *ngFor="let item of section.items">
             <ng-container *ngTemplateOutlet="menuItemTemplate; context: { item: item }"></ng-container>
           </ng-container>
+
+          <!-- Separator after dashboard sections -->
+          <li *ngIf="section.id === 'dashboard'" class="section-divider"></li>
         </ng-container>
       </ng-container>
       

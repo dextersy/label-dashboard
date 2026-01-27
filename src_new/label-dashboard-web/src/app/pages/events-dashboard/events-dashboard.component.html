@@ -1,0 +1,92 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="page-header mb-3">
+    <app-breadcrumb></app-breadcrumb>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="loading-dots">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fa fa-exclamation-triangle"></i> {{ error }}
+    <button class="btn btn-sm btn-outline-danger ml-2" (click)="loadDashboardData()">
+      <i class="fas fa-sync"></i> Retry
+    </button>
+  </div>
+
+  <!-- Dashboard content -->
+  <div *ngIf="!loading && !error && dashboardData">
+    <!-- Welcome Header -->
+    <div class="welcome-section mb-4">
+      <h1 class="welcome-greeting">
+        Good {{ getTimeOfDay() }}, <span class="welcome-name">{{ userFirstName }}!</span>
+      </h1>
+      <p class="welcome-date">{{ today | date:'EEEE, MMMM d, y' }}</p>
+    </div>
+
+    <!-- Quick Menu + Stats Row -->
+    <div class="row mb-4">
+      <!-- Quick Menu Cards -->
+      <div class="col-lg-9 col-md-12 mb-3 mb-lg-0">
+        <h6 class="section-label section-label-lg">What do you want to do today?</h6>
+        <div class="row">
+          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+            <a routerLink="/campaigns/events/new" class="quick-menu-card">
+              <div class="quick-menu-icon">
+                <i class="fas fa-calendar-plus"></i>
+              </div>
+              <span class="quick-menu-label">Create New Event</span>
+            </a>
+          </div>
+          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+            <a routerLink="/campaigns/events/tickets" class="quick-menu-card">
+              <div class="quick-menu-icon">
+                <i class="fas fa-ticket-alt"></i>
+              </div>
+              <span class="quick-menu-label">View Ticket Sales</span>
+            </a>
+          </div>
+          <div class="col-lg-4 col-md-4 col-sm-12 mb-3 mb-lg-0">
+            <a routerLink="/campaigns/events/email" class="quick-menu-card">
+              <div class="quick-menu-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <span class="quick-menu-label">Engage Attendees</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact Stats Card -->
+      <div class="col-lg-3 col-md-12">
+        <h6 class="section-label">Quick Stats</h6>
+        <div class="stats-compact-card">
+          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
+            <i class="fas fa-calendar-check"></i>
+            <span class="stats-compact-value">{{ dashboardData.stats?.activeEvents || 0 }}</span>
+            <span class="stats-compact-label">Active Events</span>
+          </div>
+          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/tickets">
+            <i class="fas fa-peso-sign"></i>
+            <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthSales || 0) }}</span>
+            <span class="stats-compact-label">This Month</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Sales Charts -->
+    <div class="row">
+      <div class="col-12">
+        <app-event-sales-chart [eventSales]="dashboardData.eventSales"></app-event-sales-chart>
+      </div>
+    </div>
+  </div>
+</div>

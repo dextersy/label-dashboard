@@ -5,7 +5,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { LatestAlbumsComponent, LatestRelease } from '../../components/dashboard/latest-albums/latest-albums.component';
 import { TopAlbumsComponent, TopEarningRelease } from '../../components/dashboard/top-albums/top-albums.component';
 import { BalanceTableComponent, ArtistBalance } from '../../components/dashboard/balance-table/balance-table.component';
-import { EventSalesChartComponent, EventSales } from '../../components/dashboard/event-sales-chart/event-sales-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { ArtistStateService } from '../../services/artist-state.service';
@@ -32,7 +31,6 @@ interface DashboardData {
   topEarningReleases: TopEarningRelease[];
   balanceSummary: ArtistBalance[];
   stats?: DashboardStats;
-  eventSales?: EventSales[];
 }
 
 @Component({
@@ -43,7 +41,6 @@ interface DashboardData {
         LatestAlbumsComponent,
         TopAlbumsComponent,
         BalanceTableComponent,
-        EventSalesChartComponent,
         BreadcrumbComponent
     ],
     templateUrl: './dashboard.component.html',
