@@ -106,33 +106,41 @@
   <div class="form-group">
     <label for="description">Tell us about this release</label>
     <small class="form-text text-muted mb-2">
-      Give us a quick statement about the release, indicating what the song is about, the musical approach, 
-      production stories, and any future plans related to the song. We will use this to craft our pitch to 
+      Give us a quick statement about the release, indicating what the song is about, the musical approach,
+      production stories, and any future plans related to the song. We will use this to craft our pitch to
       playlists as well as for our press releases. Feel free to give us a bullet list or just a rough statement.
     </small>
-    <quill-editor 
+    <quill-editor
       id="description"
       formControlName="description"
       [modules]="quillConfig"
+      (onContentChanged)="onDescriptionContentChanged($event)"
       placeholder="Description of the release, musical approach, stories..."
       [style.height.px]="120">
     </quill-editor>
+    <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
+      {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
+    </small>
   </div>
 
   <div class="form-group">
     <label for="linerNotes">Liner Notes</label>
     <small class="form-text text-muted mb-2">
-      Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp. 
+      Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
       It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
       <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
     </small>
-    <quill-editor 
+    <quill-editor
       id="linerNotes"
       formControlName="liner_notes"
       [modules]="quillConfig"
+      (onContentChanged)="onLinerNotesContentChanged($event)"
       placeholder="Liner notes, acknowledgments, credits..."
       [style.height.px]="150">
     </quill-editor>
+    <small class="form-text" [class.text-danger]="linerNotesCharCount > linerNotesCharLimit" [class.text-muted]="linerNotesCharCount <= linerNotesCharLimit">
+      {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters
+    </small>
   </div>
 
   <!-- Royalty Artists (Admin Only) -->

@@ -171,12 +171,16 @@
 
               <div class="col-12 mb-3">
                 <label for="eventDescription" class="form-label">Description</label>
-                <quill-editor 
+                <quill-editor
                   id="eventDescription"
                   [(ngModel)]="eventData.description"
                   [modules]="quillConfig"
+                  (onContentChanged)="onDescriptionContentChanged($event)"
                   placeholder="Enter event description...">
                 </quill-editor>
+                <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
+                  {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
+                </small>
               </div>
 
               <div class="col-12 mb-3">

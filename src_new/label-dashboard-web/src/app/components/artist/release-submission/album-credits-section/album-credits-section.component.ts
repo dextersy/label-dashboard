@@ -45,6 +45,15 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     ]
   };
 
+  // Character limits for rich text fields (visible characters, not HTML)
+  linerNotesCharLimit = 3000;
+  linerNotesCharCount = 0;
+
+  onLinerNotesContentChanged(event: any): void {
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.linerNotesCharCount = text.length;
+  }
+
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,

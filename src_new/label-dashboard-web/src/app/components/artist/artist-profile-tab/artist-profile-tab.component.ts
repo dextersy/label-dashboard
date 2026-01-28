@@ -59,7 +59,18 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     ]
   };
 
+  // Character limits for rich text fields (visible characters, not HTML)
+  bioCharLimit = 2000;
+  bioCharCount = 0;
+
   constructor(private http: HttpClient, private router: Router) {}
+
+  onBioContentChanged(event: any): void {
+    // event.text contains the plain text without HTML tags
+    // Quill adds a trailing newline, so we trim it
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.bioCharCount = text.length;
+  }
 
   ngOnInit(): void {
     if (this.artist) {

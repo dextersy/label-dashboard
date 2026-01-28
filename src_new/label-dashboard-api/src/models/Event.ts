@@ -103,7 +103,7 @@ Event.init(
       allowNull: false,
     },
     description: {
-      type: DataTypes.STRING(1024),
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     poster_url: {

@@ -165,9 +165,13 @@
           id="linerNotes"
           formControlName="liner_notes"
           [modules]="quillConfig"
+          (onContentChanged)="onLinerNotesContentChanged($event)"
           placeholder="Liner notes, acknowledgments, credits..."
           [style.height.px]="150">
         </quill-editor>
+        <small class="form-text" [class.text-danger]="linerNotesCharCount > linerNotesCharLimit" [class.text-muted]="linerNotesCharCount <= linerNotesCharLimit">
+          {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters
+        </small>
       </div>
     </div>
 

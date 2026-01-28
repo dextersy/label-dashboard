@@ -50,6 +50,22 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
     ]
   };
 
+  // Character limits for rich text fields (visible characters, not HTML)
+  descriptionCharLimit = 2000;
+  descriptionCharCount = 0;
+  linerNotesCharLimit = 3000;
+  linerNotesCharCount = 0;
+
+  onDescriptionContentChanged(event: any): void {
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.descriptionCharCount = text.length;
+  }
+
+  onLinerNotesContentChanged(event: any): void {
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.linerNotesCharCount = text.length;
+  }
+
   constructor(
     private fb: FormBuilder,
     private releaseService: ReleaseService,

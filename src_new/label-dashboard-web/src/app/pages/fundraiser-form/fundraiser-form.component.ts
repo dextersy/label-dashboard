@@ -55,6 +55,10 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
     ]
   };
 
+  // Character limits for rich text fields (visible characters, not HTML)
+  descriptionCharLimit = 5000;
+  descriptionCharCount = 0;
+
   private subscriptions = new Subscription();
 
   constructor(
@@ -476,5 +480,12 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
       return '0.00';
     }
     return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  onDescriptionContentChanged(event: any): void {
+    // event.text contains the plain text without HTML tags
+    // Quill adds a trailing newline, so we trim it
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.descriptionCharCount = text.length;
   }
 }

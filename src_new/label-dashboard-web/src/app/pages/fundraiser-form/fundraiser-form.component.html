@@ -61,10 +61,11 @@
               [(ngModel)]="fundraiserData.description"
               [modules]="quillConfig"
               [disabled]="isFundraiserClosed()"
+              (onContentChanged)="onDescriptionContentChanged($event)"
               placeholder="Describe your fundraiser and what the donations will be used for...">
             </quill-editor>
-            <small class="form-text text-muted">
-              <i class="fa fa-info-circle"></i> Explain the purpose of the fundraiser and how the funds will be used
+            <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
+              {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
             </small>
           </div>
 
