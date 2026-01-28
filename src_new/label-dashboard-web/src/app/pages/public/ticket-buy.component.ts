@@ -442,13 +442,20 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Sanitize HTML content and normalize non-breaking spaces for proper text wrapping.
-   * Quill editor inserts Unicode \u00A0 characters which prevent word wrap.
+   * Sanitize HTML content and normalize formatting for proper display.
+   * - Converts Quill's paragraph tags to line breaks for compact rendering
+   * - Normalizes non-breaking spaces for proper text wrapping
    */
   sanitizeHtml(content: string | undefined): SafeHtml | string {
     if (!content) return '';
     // Normalize non-breaking spaces (\u00A0) to regular spaces for proper text wrapping
     content = content.replace(/\u00A0/g, ' ');
+    // Convert Quill's paragraph-based line breaks to <br> for compact display
+    // Replace closing </p> followed by opening <p> with a single <br>
+    content = content.replace(/<\/p>\s*<p>/gi, '<br>');
+    // Remove the outer <p> and </p> tags
+    content = content.replace(/^<p>/i, '');
+    content = content.replace(/<\/p>$/i, '');
     // Use SecurityContext.HTML to properly sanitize the content
     return this.sanitizer.sanitize(SecurityContext.HTML, content) || '';
   }
