@@ -106,10 +106,11 @@ export const routes: Routes = [
     path: 'campaigns',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'events/dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: EventsDashboardComponent },
       // Events
-      { path: 'events', redirectTo: 'events/dashboard', pathMatch: 'full' },
-      { path: 'events/dashboard', component: EventsDashboardComponent },
+      { path: 'events', redirectTo: 'events/details', pathMatch: 'full' },
+      { path: 'events/dashboard', redirectTo: '/campaigns/dashboard', pathMatch: 'full' }, // Legacy redirect
       { path: 'events/new', component: EventFormComponent },
       { path: 'events/details', component: EventFormComponent },
       { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
@@ -127,7 +128,7 @@ export const routes: Routes = [
 
   // Legacy events routes - redirect to campaigns
   { path: 'events', redirectTo: 'campaigns/events', pathMatch: 'full' },
-  { path: 'events/dashboard', redirectTo: 'campaigns/events/dashboard', pathMatch: 'full' },
+  { path: 'events/dashboard', redirectTo: 'campaigns/dashboard', pathMatch: 'full' },
   { path: 'events/new', redirectTo: 'campaigns/events/new', pathMatch: 'full' },
   { path: 'events/details', redirectTo: 'campaigns/events/details', pathMatch: 'full' },
   { path: 'events/tickets', redirectTo: 'campaigns/events/tickets', pathMatch: 'full' },

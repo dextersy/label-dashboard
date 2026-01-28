@@ -3,22 +3,26 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { EventSalesChartComponent, EventSales } from '../../components/dashboard/event-sales-chart/event-sales-chart.component';
+import { FundraiserDonationsChartComponent, FundraiserDonations } from '../../components/dashboard/fundraiser-donations-chart/fundraiser-donations-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { environment } from 'environments/environment';
 
-interface EventsDashboardStats {
+interface CampaignsDashboardStats {
   activeEvents: number;
+  activeFundraisers: number;
   thisMonthSales: number;
+  thisMonthDonations: number;
 }
 
-interface EventsDashboardData {
+interface CampaignsDashboardData {
   user: {
     firstName: string;
     isAdmin: boolean;
   };
-  stats: EventsDashboardStats;
+  stats: CampaignsDashboardStats;
   eventSales: EventSales[];
+  fundraiserDonations: FundraiserDonations[];
 }
 
 @Component({
@@ -27,13 +31,14 @@ interface EventsDashboardData {
         CommonModule,
         RouterModule,
         EventSalesChartComponent,
+        FundraiserDonationsChartComponent,
         BreadcrumbComponent
     ],
     templateUrl: './events-dashboard.component.html',
     styleUrl: './events-dashboard.component.scss'
 })
 export class EventsDashboardComponent implements OnInit {
-  dashboardData: EventsDashboardData | null = null;
+  dashboardData: CampaignsDashboardData | null = null;
   loading = true;
   error: string | null = null;
   today: Date = new Date();
@@ -52,7 +57,7 @@ export class EventsDashboardComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.http.get<EventsDashboardData>(`${environment.apiUrl}/dashboard/events`).subscribe({
+    this.http.get<CampaignsDashboardData>(`${environment.apiUrl}/dashboard/events`).subscribe({
       next: (data) => {
         this.dashboardData = data;
         this.loading = false;

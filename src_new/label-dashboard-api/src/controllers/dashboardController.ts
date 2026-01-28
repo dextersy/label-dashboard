@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess } from '../models';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -542,7 +542,43 @@ async function getEventSalesData(req: AuthRequest) {
   );
 }
 
-// Get events dashboard data (admin only)
+// Get fundraiser donations data for dashboard
+async function getFundraiserDonationsData(req: AuthRequest) {
+  const fundraisers = await Fundraiser.findAll({
+    where: { brand_id: req.user.brand_id },
+    order: [['id', 'DESC']],
+    limit: 5
+  });
+
+  return await Promise.all(
+    fundraisers.map(async (fundraiser) => {
+      const donations = await Donation.findAll({
+        where: {
+          fundraiser_id: fundraiser.id,
+          payment_status: 'paid'
+        },
+        attributes: ['amount']
+      });
+
+      const totalRaised = donations.reduce((sum, donation) => {
+        const amount = parseFloat(donation.amount?.toString() || '0');
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+
+      const donorCount = donations.length;
+
+      return {
+        id: fundraiser.id,
+        name: fundraiser.title || 'Untitled Fundraiser',
+        status: fundraiser.status || 'draft',
+        total_raised: isNaN(totalRaised) ? 0 : totalRaised,
+        donor_count: donorCount
+      };
+    })
+  );
+}
+
+// Get campaigns dashboard data (admin only) - includes both events and fundraisers
 export const getEventsDashboardData = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user.is_admin) {
@@ -562,6 +598,14 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
           { close_time: null },
           { close_time: { [Op.gt]: now } }
         ]
+      }
+    });
+
+    // Get active fundraisers count
+    const activeFundraisersCount = await Fundraiser.count({
+      where: {
+        ...brandFilter,
+        status: 'active'
       }
     });
 
@@ -598,8 +642,38 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       }, 0);
     }
 
-    // Get event sales data (reuse existing function)
-    const eventSales = await getEventSalesData(req);
+    // Get this month's donations
+    const fundraisers = await Fundraiser.findAll({
+      where: brandFilter,
+      attributes: ['id']
+    });
+
+    const fundraiserIds = fundraisers.map(f => f.id);
+
+    let thisMonthDonations = 0;
+    if (fundraiserIds.length > 0) {
+      const donations = await Donation.findAll({
+        where: {
+          fundraiser_id: fundraiserIds,
+          payment_status: 'paid',
+          date_paid: {
+            [Op.between]: [startOfMonth, endOfMonth]
+          }
+        },
+        attributes: ['amount']
+      });
+
+      thisMonthDonations = donations.reduce((sum, donation) => {
+        const amount = parseFloat(donation.amount?.toString() || '0');
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+    }
+
+    // Get event sales and fundraiser donations data (reuse existing functions)
+    const [eventSales, fundraiserDonations] = await Promise.all([
+      getEventSalesData(req),
+      getFundraiserDonationsData(req)
+    ]);
 
     res.json({
       user: {
@@ -608,9 +682,12 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       },
       stats: {
         activeEvents: activeEventsCount,
-        thisMonthSales: thisMonthSales
+        activeFundraisers: activeFundraisersCount,
+        thisMonthSales: thisMonthSales,
+        thisMonthDonations: thisMonthDonations
       },
-      eventSales
+      eventSales,
+      fundraiserDonations
     });
   } catch (error) {
     console.error('Get events dashboard data error:', error);

@@ -226,7 +226,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       case 'campaigns':
         // For campaigns workspace, show dashboard first, then events and fundraisers menu items
         const campaignsSection = this.sections.find(section => section.id === 'campaigns');
-        const campaignsDashboardItem = { route: '/campaigns/events/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
+        const campaignsDashboardItem = { route: '/campaigns/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
         if (campaignsSection && campaignsSection.items.length > 0) {
           this.visibleSections = [
             {

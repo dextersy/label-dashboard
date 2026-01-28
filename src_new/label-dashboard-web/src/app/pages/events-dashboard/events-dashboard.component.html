@@ -34,10 +34,10 @@
     <!-- Quick Menu + Stats Row -->
     <div class="row mb-4">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-9 col-md-12 mb-3 mb-lg-0">
+      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
         <div class="row">
-          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+          <div class="col-lg-6 col-md-6 col-sm-6 mb-3 mb-lg-0">
             <a routerLink="/campaigns/events/new" class="quick-menu-card">
               <div class="quick-menu-icon">
                 <i class="fas fa-calendar-plus"></i>
@@ -45,27 +45,19 @@
               <span class="quick-menu-label">Create New Event</span>
             </a>
           </div>
-          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
-            <a routerLink="/campaigns/events/tickets" class="quick-menu-card">
+          <div class="col-lg-6 col-md-6 col-sm-6 mb-3 mb-lg-0">
+            <a routerLink="/campaigns/fundraisers/new" class="quick-menu-card">
               <div class="quick-menu-icon">
-                <i class="fas fa-ticket-alt"></i>
+                <i class="fas fa-hand-holding-heart"></i>
               </div>
-              <span class="quick-menu-label">View Ticket Sales</span>
-            </a>
-          </div>
-          <div class="col-lg-4 col-md-4 col-sm-12 mb-3 mb-lg-0">
-            <a routerLink="/campaigns/events/email" class="quick-menu-card">
-              <div class="quick-menu-icon">
-                <i class="fas fa-envelope"></i>
-              </div>
-              <span class="quick-menu-label">Engage Attendees</span>
+              <span class="quick-menu-label">Create New Fundraiser</span>
             </a>
           </div>
         </div>
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-3 col-md-12">
+      <div class="col-lg-4 col-md-12">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
@@ -73,19 +65,36 @@
             <span class="stats-compact-value">{{ dashboardData.stats?.activeEvents || 0 }}</span>
             <span class="stats-compact-label">Active Events</span>
           </div>
+          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/details">
+            <i class="fas fa-hand-holding-heart"></i>
+            <span class="stats-compact-value">{{ dashboardData.stats?.activeFundraisers || 0 }}</span>
+            <span class="stats-compact-label">Active Fundraisers</span>
+          </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/tickets">
-            <i class="fas fa-peso-sign"></i>
+            <i class="fas fa-ticket-alt"></i>
             <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthSales || 0) }}</span>
-            <span class="stats-compact-label">This Month</span>
+            <span class="stats-compact-label">Ticket Sales</span>
+          </div>
+          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/donations">
+            <i class="fas fa-donate"></i>
+            <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthDonations || 0) }}</span>
+            <span class="stats-compact-label">Donations</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Event Sales Charts -->
-    <div class="row">
+    <div class="row mb-4">
       <div class="col-12">
         <app-event-sales-chart [eventSales]="dashboardData.eventSales"></app-event-sales-chart>
+      </div>
+    </div>
+
+    <!-- Fundraiser Donations Charts -->
+    <div class="row">
+      <div class="col-12">
+        <app-fundraiser-donations-chart [fundraiserDonations]="dashboardData.fundraiserDonations"></app-fundraiser-donations-chart>
       </div>
     </div>
   </div>
