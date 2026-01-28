@@ -69,60 +69,46 @@
     </div>
   </div>
 
-  <!-- Payment Methods Section -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card">
+  <!-- Payment Methods and Payment History Section -->
+  <div class="row">
+    <!-- Payment Methods -->
+    <div class="col-lg-4 mb-4 mb-lg-0">
+      <div class="card h-100">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Payment Methods</h5>
-          <button class="btn btn-primary" (click)="openAddPaymentMethodModal()">
-            <i class="fas fa-plus me-1"></i>Add Payment Method
+          <button class="btn btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
+            <i class="fas fa-plus me-1"></i>Add
           </button>
         </div>
         <div class="card-body">
           <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="text-center text-muted">
             <i class="fas fa-credit-card fa-3x mb-3"></i>
             <p>No payment methods configured yet.</p>
-            <button class="btn btn-primary" (click)="openAddPaymentMethodModal()">
-              <i class="fas fa-plus me-1"></i>Add Your First Payment Method
+            <button class="btn btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
+              <i class="fas fa-plus me-1"></i>Add Payment Method
             </button>
           </div>
           <div *ngIf="paymentMethods && paymentMethods.length > 0">
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Account Name</th>
-                    <th>Account Number/Email</th>
-                    <th>Bank Code</th>
-                    <th>Default</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let method of paymentMethods">
-                    <td>{{ method.type }}</td>
-                    <td>{{ method.account_name }}</td>
-                    <td>{{ method.account_number_or_email }}</td>
-                    <td>{{ method.bank_code || 'N/A' }}</td>
-                    <td>
-                      <span *ngIf="method.is_default_for_brand" class="badge bg-success">Default</span>
-                      <span *ngIf="!method.is_default_for_brand" class="text-muted">-</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="list-group list-group-flush">
+              <div class="list-group-item px-0" *ngFor="let method of paymentMethods">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>{{ method.type }}</strong>
+                    <span *ngIf="method.is_default_for_brand" class="badge bg-success ms-2">Default</span>
+                    <div class="small text-muted">{{ method.account_name }}</div>
+                    <div class="small text-muted">{{ method.account_number_or_email }}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Payments List Section -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
+    <!-- Payment History -->
+    <div class="col-lg-8">
+      <div class="card h-100">
         <div class="card-header">
           <h5 class="mb-0">Payment History</h5>
         </div>
@@ -154,15 +140,15 @@
                 </tbody>
               </table>
             </div>
-            
+
             <!-- Pagination -->
             <nav *ngIf="paymentsResponse?.pagination && (paymentsResponse?.pagination?.total_pages || 0) > 1">
               <ul class="pagination justify-content-center">
                 <li class="page-item" [class.disabled]="!paymentsResponse?.pagination?.has_prev">
-                  <button class="page-link" (click)="loadPayments((paymentsResponse?.pagination?.current_page || 1) - 1)" 
+                  <button class="page-link" (click)="loadPayments((paymentsResponse?.pagination?.current_page || 1) - 1)"
                           [disabled]="!paymentsResponse?.pagination?.has_prev">Previous</button>
                 </li>
-                <li class="page-item" *ngFor="let page of getPageNumbers()" 
+                <li class="page-item" *ngFor="let page of getPageNumbers()"
                     [class.active]="page === paymentsResponse?.pagination?.current_page">
                   <button class="page-link" (click)="loadPayments(page)">{{ page }}</button>
                 </li>
