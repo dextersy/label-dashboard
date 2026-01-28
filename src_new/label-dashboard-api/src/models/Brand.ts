@@ -20,6 +20,9 @@ interface BrandAttributes {
   event_transaction_fixed_fee?: number;
   event_revenue_percentage_fee?: number;
   event_fee_revenue_type?: 'net' | 'gross';
+  fundraiser_transaction_fixed_fee?: number;
+  fundraiser_revenue_percentage_fee?: number;
+  fundraiser_fee_revenue_type?: 'net' | 'gross';
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -43,6 +46,9 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public event_transaction_fixed_fee?: number;
   public event_revenue_percentage_fee?: number;
   public event_fee_revenue_type?: 'net' | 'gross';
+  public fundraiser_transaction_fixed_fee?: number;
+  public fundraiser_revenue_percentage_fee?: number;
+  public fundraiser_fee_revenue_type?: 'net' | 'gross';
 
   // Association properties
   public parentBrand?: Brand;
@@ -181,6 +187,35 @@ Brand.init(
       }
     },
     event_fee_revenue_type: {
+      type: DataTypes.ENUM('net', 'gross'),
+      allowNull: true,
+      defaultValue: 'net'
+    },
+    fundraiser_transaction_fixed_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('fundraiser_transaction_fixed_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('fundraiser_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    fundraiser_revenue_percentage_fee: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('fundraiser_revenue_percentage_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('fundraiser_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    fundraiser_fee_revenue_type: {
       type: DataTypes.ENUM('net', 'gross'),
       allowNull: true,
       defaultValue: 'net'

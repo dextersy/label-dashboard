@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 export interface LabelFinanceDashboard {
   net_music_earnings: number;
   net_event_earnings: number;
+  net_fundraiser_earnings: number;
   total_payments: number;
   receivable_balance: number;
   breakdown: {
@@ -21,15 +22,22 @@ export interface LabelFinanceDashboard {
       processing_fees: number;
       net_earnings: number;
     };
+    fundraiser: {
+      gross_earnings: number;
+      platform_fees: number;
+      processing_fees: number;
+      net_earnings: number;
+    };
     artist_payments: number;
   };
 }
 
 export interface LabelFinanceBreakdown {
-  type: 'music' | 'event';
+  type: 'music' | 'event' | 'fundraiser';
   breakdown: Array<{
     release_title?: string;
     event_name?: string;
+    fundraiser_name?: string;
     gross_earnings?: number;
     sales?: number;
     royalties?: number;
@@ -90,7 +98,7 @@ export class LabelFinanceService {
     return this.http.get<LabelFinanceDashboard>(`${this.apiUrl}/${brandId}/finance/dashboard`, { params });
   }
 
-  getBreakdown(brandId: number, type: 'music' | 'event', startDate?: string, endDate?: string): Observable<LabelFinanceBreakdown> {
+  getBreakdown(brandId: number, type: 'music' | 'event' | 'fundraiser', startDate?: string, endDate?: string): Observable<LabelFinanceBreakdown> {
     let params = new HttpParams().set('type', type);
     if (startDate) params = params.set('start_date', startDate);
     if (endDate) params = params.set('end_date', endDate);

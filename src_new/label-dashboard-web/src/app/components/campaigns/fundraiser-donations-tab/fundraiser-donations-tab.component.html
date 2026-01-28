@@ -46,8 +46,8 @@
             <i class="fas fa-receipt"></i>
           </div>
           <div class="summary-content">
-            <div class="summary-value">{{ formatCurrency(summary.totalProcessingFees) }}</div>
-            <div class="summary-label">Processing Fees</div>
+            <div class="summary-value">{{ formatCurrency(hasPlatformFees ? summary.totalPlatformFees : summary.totalProcessingFees) }}</div>
+            <div class="summary-label">{{ hasPlatformFees ? 'Platform Fees' : 'Processing Fees' }}</div>
           </div>
         </div>
       </div>

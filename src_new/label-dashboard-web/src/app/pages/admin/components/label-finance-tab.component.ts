@@ -21,7 +21,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
 
   dashboard: LabelFinanceDashboard | null = null;
   breakdown: LabelFinanceBreakdown | null = null;
-  breakdownType: 'music' | 'event' = 'music';
+  breakdownType: 'music' | 'event' | 'fundraiser' = 'music';
   showBreakdownModal = false;
 
   paymentMethods: LabelPaymentMethod[] = [];
@@ -109,7 +109,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     );
   }
 
-  showBreakdown(type: 'music' | 'event'): void {
+  showBreakdown(type: 'music' | 'event' | 'fundraiser'): void {
     if (!this.brandId) {
       this.notificationService.showError('Brand information not loaded yet');
       return;

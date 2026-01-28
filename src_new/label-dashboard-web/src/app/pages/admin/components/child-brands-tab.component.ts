@@ -37,7 +37,7 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
   showEarningsBreakdownModal: boolean = false;
   selectedSublabelForBreakdown: ChildBrand | null = null;
   aggregatedTotalsForBreakdown: AggregatedTotals | null = null;
-  earningsBreakdownType: 'music' | 'event' | 'platform_fees' | 'total_event' = 'music';
+  earningsBreakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' = 'music';
   showPaymentsModal: boolean = false;
   selectedSublabelForPayments: ChildBrand | null = null;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
@@ -99,13 +99,22 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       formatter: (item: ChildBrand) => `₱${item.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       showBreakdownButton: true
     },
-    { 
-      key: 'event_earnings', 
-      label: 'Net Event Earnings', 
+    {
+      key: 'event_earnings',
+      label: 'Net Event Earnings',
       type: 'number',
       sortable: true,
       align: 'right',
       formatter: (item: ChildBrand) => `₱${item.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      showBreakdownButton: true
+    },
+    {
+      key: 'fundraiser_earnings',
+      label: 'Net Fundraiser Earnings',
+      type: 'number',
+      sortable: true,
+      align: 'right',
+      formatter: (item: ChildBrand) => `₱${(item.fundraiser_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       showBreakdownButton: true
     },
     {
@@ -284,6 +293,9 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
     return this.childBrands.reduce((total, brand) => total + brand.event_earnings, 0);
   }
 
+  getTotalFundraiserEarnings(): number {
+    return this.childBrands.reduce((total, brand) => total + (brand.fundraiser_earnings || 0), 0);
+  }
 
   getTotalPayments(): number {
     return this.childBrands.reduce((total, brand) => total + brand.payments, 0);
@@ -554,10 +566,21 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       this.openMusicBreakdown(event.item.brand_id);
     } else if (event.columnKey === 'event_earnings') {
       this.openEventBreakdown(event.item.brand_id);
+    } else if (event.columnKey === 'fundraiser_earnings') {
+      this.openFundraiserBreakdown(event.item.brand_id);
     } else if (event.columnKey === 'platform_fees') {
       this.openPlatformFeesBreakdown(event.item.brand_id);
     } else if (event.columnKey === 'payments') {
       this.openPaymentsBreakdown(event.item.brand_id);
+    }
+  }
+
+  openFundraiserBreakdown(brandId: number): void {
+    const childBrand = this.childBrands.find(b => b.brand_id === brandId);
+    if (childBrand) {
+      this.selectedSublabelForBreakdown = childBrand;
+      this.earningsBreakdownType = 'fundraiser';
+      this.showEarningsBreakdownModal = true;
     }
   }
 

@@ -51,6 +51,11 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         transaction_fixed_fee: [0, [Validators.min(0)]],
         revenue_percentage_fee: [0, [Validators.min(0), Validators.max(100)]],
         fee_revenue_type: ['net', [Validators.required]]
+      }),
+      fundraiser: this.fb.group({
+        transaction_fixed_fee: [0, [Validators.min(0)]],
+        revenue_percentage_fee: [0, [Validators.min(0), Validators.max(100)]],
+        fee_revenue_type: ['net', [Validators.required]]
       })
     });
   }
@@ -74,6 +79,11 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
             transaction_fixed_fee: settings.event.transaction_fixed_fee || 0,
             revenue_percentage_fee: settings.event.revenue_percentage_fee || 0,
             fee_revenue_type: settings.event.fee_revenue_type || 'net'
+          },
+          fundraiser: {
+            transaction_fixed_fee: settings.fundraiser?.transaction_fixed_fee || 0,
+            revenue_percentage_fee: settings.fundraiser?.revenue_percentage_fee || 0,
+            fee_revenue_type: settings.fundraiser?.fee_revenue_type || 'net'
           }
         });
         this.loading = false;
@@ -84,7 +94,7 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         this.loading = false;
         // Initialize with default values on error
         this.feeForm.get('monthly_fee')?.setValue(0);
-        
+
         this.feeForm.patchValue({
           music: {
             transaction_fixed_fee: 0,
@@ -95,6 +105,11 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
             transaction_fixed_fee: 0,
             revenue_percentage_fee: 0,
             fee_revenue_type: 'net'
+          },
+          fundraiser: {
+            transaction_fixed_fee: 0,
+            revenue_percentage_fee: 0,
+            fee_revenue_type: 'net'
           }
         });
       }
@@ -102,7 +117,7 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   }
 
   showPreview(): boolean {
-    return this.showMonthlyPreview() || this.showMusicPreview() || this.showEventPreview();
+    return this.showMonthlyPreview() || this.showMusicPreview() || this.showEventPreview() || this.showFundraiserPreview();
   }
 
   showMonthlyPreview(): boolean {
@@ -121,8 +136,15 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   showEventPreview(): boolean {
     const event = this.feeForm.get('event')?.value;
     if (!event) return false;
-    return (event.transaction_fixed_fee > 0) || 
+    return (event.transaction_fixed_fee > 0) ||
            (event.revenue_percentage_fee > 0);
+  }
+
+  showFundraiserPreview(): boolean {
+    const fundraiser = this.feeForm.get('fundraiser')?.value;
+    if (!fundraiser) return false;
+    return (fundraiser.transaction_fixed_fee > 0) ||
+           (fundraiser.revenue_percentage_fee > 0);
   }
 
   onSubmit(): void {
@@ -135,7 +157,8 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
     const feeSettings = {
       monthly_fee: this.feeForm.get('monthly_fee')?.value || 0,
       music: this.feeForm.get('music')?.value,
-      event: this.feeForm.get('event')?.value
+      event: this.feeForm.get('event')?.value,
+      fundraiser: this.feeForm.get('fundraiser')?.value
     };
 
     this.adminService.updateFeeSettings(this.brandId, feeSettings).subscribe({
@@ -145,7 +168,8 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
           id: this.brandId!,
           monthly_fee: feeSettings.monthly_fee,
           music: feeSettings.music,
-          event: feeSettings.event
+          event: feeSettings.event,
+          fundraiser: feeSettings.fundraiser
         });
         this.onClose();
         this.loading = false;

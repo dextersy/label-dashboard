@@ -119,3 +119,57 @@ export async function calculatePlatformFeeForEventTickets(
   };
 }
 
+/**
+ * Calculate platform fee for a fundraiser donation based on brand fee settings
+ * @param brandId - The brand ID
+ * @param donationAmount - The donation amount
+ * @param paymentProcessingFee - The payment processing fee already charged
+ * @returns Platform fee calculation breakdown
+ */
+export async function calculatePlatformFeeForFundraiserDonation(
+  brandId: number,
+  donationAmount: number,
+  paymentProcessingFee: number = 0
+): Promise<PlatformFeeCalculation> {
+  // Get brand fee settings
+  const brand = await Brand.findByPk(brandId);
+
+  if (!brand) {
+    throw new Error('Brand not found');
+  }
+
+  let fixedFee = 0;
+  let percentageFee = 0;
+
+  // Calculate gross revenue (donation amount)
+  const grossRevenue = donationAmount;
+
+  // Calculate net revenue (gross minus processing fees)
+  const netRevenue = grossRevenue - paymentProcessingFee;
+
+  // 1. Fixed fee per transaction
+  if (brand.fundraiser_transaction_fixed_fee && brand.fundraiser_transaction_fixed_fee > 0) {
+    fixedFee = brand.fundraiser_transaction_fixed_fee;
+  }
+
+  // 2. Percentage fee calculation
+  if (brand.fundraiser_revenue_percentage_fee && brand.fundraiser_revenue_percentage_fee > 0) {
+    if (brand.fundraiser_fee_revenue_type === 'gross') {
+      // Apply percentage to gross revenue (donation amount)
+      percentageFee = (grossRevenue * brand.fundraiser_revenue_percentage_fee) / 100;
+    } else if (brand.fundraiser_fee_revenue_type === 'net') {
+      // Apply percentage to net revenue (after processing fees)
+      percentageFee = (netRevenue * brand.fundraiser_revenue_percentage_fee) / 100;
+    }
+  }
+  // When percentage fee is 0%, percentageFee stays 0
+
+  const totalPlatformFee = parseFloat((fixedFee + percentageFee).toFixed(2));
+
+  return {
+    fixedFee: parseFloat(fixedFee.toFixed(2)),
+    percentageFee: parseFloat(percentageFee.toFixed(2)),
+    totalPlatformFee
+  };
+}
+

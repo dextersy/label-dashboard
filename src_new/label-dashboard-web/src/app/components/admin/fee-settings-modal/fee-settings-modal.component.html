@@ -103,7 +103,7 @@
                     <input
                       class="form-check-input"
                       type="radio"
-                      name="fee_revenue_type"
+                      name="music_fee_revenue_type"
                       id="musicNetRevenue"
                       value="net"
                       formControlName="fee_revenue_type">
@@ -115,7 +115,7 @@
                     <input
                       class="form-check-input"
                       type="radio"
-                      name="fee_revenue_type"
+                      name="music_fee_revenue_type"
                       id="musicGrossRevenue"
                       value="gross"
                       formControlName="fee_revenue_type">
@@ -139,7 +139,7 @@
               </h6>
             </div>
             <div class="card-body" formGroupName="event">
-              
+
               <!-- Event Transaction Fixed Fee -->
               <div class="mb-3">
                 <label for="eventTransactionFee" class="form-label">Fixed Fee per Transaction (₱)</label>
@@ -185,7 +185,7 @@
                     <input
                       class="form-check-input"
                       type="radio"
-                      name="fee_revenue_type"
+                      name="event_fee_revenue_type"
                       id="eventNetRevenue"
                       value="net"
                       formControlName="fee_revenue_type">
@@ -197,7 +197,7 @@
                     <input
                       class="form-check-input"
                       type="radio"
-                      name="fee_revenue_type"
+                      name="event_fee_revenue_type"
                       id="eventGrossRevenue"
                       value="gross"
                       formControlName="fee_revenue_type">
@@ -208,7 +208,89 @@
                 </div>
                 <div class="form-text">Whether the percentage applies to net (after expenses) or gross (before expenses) event revenue</div>
               </div>
-              
+
+            </div>
+          </div>
+
+          <!-- Fundraiser Fee Settings -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="fas fa-hand-holding-heart me-2 text-danger"></i>
+                Fundraiser Earnings Fee Settings
+              </h6>
+            </div>
+            <div class="card-body" formGroupName="fundraiser">
+
+              <!-- Fundraiser Transaction Fixed Fee -->
+              <div class="mb-3">
+                <label for="fundraiserTransactionFee" class="form-label">Fixed Fee per Donation (₱)</label>
+                <input
+                  type="number"
+                  id="fundraiserTransactionFee"
+                  class="form-control"
+                  formControlName="transaction_fixed_fee"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.is-invalid]="feeForm.get('fundraiser.transaction_fixed_fee')?.invalid && feeForm.get('fundraiser.transaction_fixed_fee')?.touched">
+                <div class="form-text">Fixed fee per donation transaction</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.invalid && feeForm.get('fundraiser.transaction_fixed_fee')?.touched">
+                  Transaction fee must be a non-negative number
+                </div>
+              </div>
+
+              <!-- Fundraiser Revenue Percentage Fee -->
+              <div class="mb-3">
+                <label for="fundraiserRevenueFee" class="form-label">Revenue Percentage Fee (%)</label>
+                <input
+                  type="number"
+                  id="fundraiserRevenueFee"
+                  class="form-control"
+                  formControlName="revenue_percentage_fee"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  placeholder="0.00"
+                  [class.is-invalid]="feeForm.get('fundraiser.revenue_percentage_fee')?.invalid && feeForm.get('fundraiser.revenue_percentage_fee')?.touched">
+                <div class="form-text">Percentage of donation revenue (0-100%)</div>
+                <div class="invalid-feedback" *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.invalid && feeForm.get('fundraiser.revenue_percentage_fee')?.touched">
+                  Revenue percentage must be between 0 and 100
+                </div>
+              </div>
+
+              <!-- Fundraiser Fee Revenue Type -->
+              <div class="mb-3">
+                <label class="form-label">Revenue Type for Fundraiser Percentage Fee</label>
+                <div class="d-flex gap-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="fundraiser_fee_revenue_type"
+                      id="fundraiserNetRevenue"
+                      value="net"
+                      formControlName="fee_revenue_type">
+                    <label class="form-check-label" for="fundraiserNetRevenue">
+                      Net Revenue
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="fundraiser_fee_revenue_type"
+                      id="fundraiserGrossRevenue"
+                      value="gross"
+                      formControlName="fee_revenue_type">
+                    <label class="form-check-label" for="fundraiserGrossRevenue">
+                      Gross Revenue
+                    </label>
+                  </div>
+                </div>
+                <div class="form-text">Whether the percentage applies to net (after processing fees) or gross (total donation) revenue</div>
+              </div>
+
             </div>
           </div>
 
@@ -248,7 +330,7 @@
               </div>
 
               <!-- Event Fees Summary -->
-              <div *ngIf="showEventPreview()">
+              <div *ngIf="showEventPreview()" class="mb-3">
                 <strong class="text-warning">
                   <i class="fas fa-calendar-alt me-2"></i>Event Earnings Fees:
                 </strong>
@@ -260,6 +342,23 @@
                   <li *ngIf="feeForm.get('event.revenue_percentage_fee')?.value > 0">
                     <i class="fas fa-percentage me-2 text-warning"></i>
                     {{ feeForm.get('event.revenue_percentage_fee')?.value }}% of {{ feeForm.get('event.fee_revenue_type')?.value }} revenue
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Fundraiser Fees Summary -->
+              <div *ngIf="showFundraiserPreview()">
+                <strong class="text-danger">
+                  <i class="fas fa-hand-holding-heart me-2"></i>Fundraiser Earnings Fees:
+                </strong>
+                <ul class="list-unstyled mb-0 ms-3">
+                  <li *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.value > 0">
+                    <i class="fas fa-exchange-alt me-2 text-info"></i>
+                    Per Donation: ₱{{ feeForm.get('fundraiser.transaction_fixed_fee')?.value | number:'1.2-2' }}
+                  </li>
+                  <li *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.value > 0">
+                    <i class="fas fa-percentage me-2 text-warning"></i>
+                    {{ feeForm.get('fundraiser.revenue_percentage_fee')?.value }}% of {{ feeForm.get('fundraiser.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
               </div>

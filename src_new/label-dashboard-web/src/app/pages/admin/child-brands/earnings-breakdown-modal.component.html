@@ -4,6 +4,7 @@
       <div class="modal-header">
         <h5 class="modal-title" *ngIf="breakdownType === 'music'">{{ getMusicBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'event'">{{ getEventBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'fundraiser'">{{ getFundraiserBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'platform_fees'">{{ getPlatformFeesBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'total_event'">{{ getTotalEventBreakdownTitle() }}</h5>
         <button type="button" class="btn-close" (click)="onClose()"></button>
@@ -144,6 +145,64 @@
           </div>
         </div>
 
+        <!-- Fundraiser Earnings Breakdown -->
+        <div *ngIf="breakdownType === 'fundraiser' && childBrand">
+          <div class="row mb-3">
+            <div class="col-sm-8">
+              <strong>Net Fundraiser Earnings:</strong>
+            </div>
+            <div class="col-sm-4 text-end">
+              <strong class="text-success">₱{{ (childBrand.fundraiser_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="mb-3">
+            <h6 class="text-muted mb-2">Fundraiser Donations Breakdown:</h6>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Total Donations (Gross):</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-primary">₱{{ (childBrand.fundraiser_gross_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Less: Platform Fees:</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-danger">-₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="mb-3">
+            <h6 class="text-muted mb-2">Other Information:</h6>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Total Processing Fees:</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-info">₱{{ (childBrand.fundraiser_processing_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Net Fundraiser Earnings represents the total donations minus platform fees. Processing fees are additional charges applied during donation payments.
+            </small>
+          </div>
+        </div>
+
         <!-- Platform Fees Breakdown -->
         <div *ngIf="breakdownType === 'platform_fees' && childBrand">
           <div class="row mb-3">
@@ -154,12 +213,12 @@
               <strong class="text-danger">₱{{ childBrand.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
             </div>
           </div>
-          
+
           <hr>
-          
+
           <div class="mb-3">
             <h6 class="text-muted mb-2">Platform Fees Breakdown by Source:</h6>
-            
+
             <div class="row mb-2">
               <div class="col-sm-8">
                 <span class="text-muted">• Music Platform Fees:</span>
@@ -168,7 +227,7 @@
                 <span class="text-info">₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
               </div>
             </div>
-            
+
             <div class="row mb-2">
               <div class="col-sm-8">
                 <span class="text-muted">• Event Platform Fees:</span>
@@ -177,12 +236,21 @@
                 <span class="text-warning">₱{{ childBrand.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
               </div>
             </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-8">
+                <span class="text-muted">• Fundraiser Platform Fees:</span>
+              </div>
+              <div class="col-sm-4 text-end">
+                <span class="text-danger">₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
           </div>
-          
+
           <div class="alert alert-info">
             <small>
               <i class="fas fa-info-circle me-1"></i>
-              Platform fees are charged on both music sales and event ticket sales. These fees are deducted from gross revenues before calculating net earnings.
+              Platform fees are charged on music sales, event ticket sales, and fundraiser donations. These fees are deducted from gross revenues before calculating net earnings.
             </small>
           </div>
         </div>

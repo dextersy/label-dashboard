@@ -481,12 +481,13 @@ export const getDonations = async (req: Request, res: Response) => {
     // Calculate summary (for filtered results)
     const allDonations = await Donation.findAll({
       where: whereClause,
-      attributes: ['amount', 'processing_fee', 'payment_status']
+      attributes: ['amount', 'processing_fee', 'platform_fee', 'payment_status']
     });
 
     const paidDonations = allDonations.filter((d: any) => d.payment_status === 'paid');
     const totalRaised = paidDonations.reduce((sum: number, d: any) => sum + parseFloat(d.amount || 0), 0);
     const totalProcessingFees = paidDonations.reduce((sum: number, d: any) => sum + parseFloat(d.processing_fee || 0), 0);
+    const totalPlatformFees = paidDonations.reduce((sum: number, d: any) => sum + parseFloat(d.platform_fee || 0), 0);
     const netAmount = totalRaised - totalProcessingFees;
 
     res.json({
@@ -501,6 +502,7 @@ export const getDonations = async (req: Request, res: Response) => {
         totalDonations: paidDonations.length,
         totalRaised,
         totalProcessingFees,
+        totalPlatformFees,
         netAmount
       }
     });

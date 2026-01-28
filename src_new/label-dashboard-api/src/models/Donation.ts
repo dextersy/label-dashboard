@@ -12,6 +12,7 @@ interface DonationAttributes {
   amount: number;
   payment_status: DonationStatus;
   processing_fee?: number;
+  platform_fee?: number;
   payment_reference?: string;
   checkout_key?: string;
   payment_id?: string;
@@ -31,6 +32,7 @@ class Donation extends Model<DonationAttributes, DonationCreationAttributes> imp
   public amount!: number;
   public payment_status!: DonationStatus;
   public processing_fee?: number;
+  public platform_fee?: number;
   public payment_reference?: string;
   public checkout_key?: string;
   public payment_id?: string;
@@ -93,6 +95,17 @@ Donation.init(
       },
       set(value: any) {
         this.setDataValue('processing_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+      }
+    },
+    platform_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      get() {
+        const value = this.getDataValue('platform_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+      set(value: any) {
+        this.setDataValue('platform_fee', value !== null && value !== undefined ? parseFloat(value) : value);
       }
     },
     payment_reference: {

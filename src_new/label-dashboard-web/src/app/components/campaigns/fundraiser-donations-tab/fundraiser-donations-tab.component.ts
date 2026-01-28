@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { FundraiserService, Fundraiser, Donation, DonationSummary } from '../../../services/fundraiser.service';
+import { AdminService, FeeSettings } from '../../../services/admin.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../shared/date-range-filter/date-range-filter.component';
 
@@ -37,23 +38,43 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
   currentDateRange: DateRangeSelection | null = null;
 
   // Table configuration
-  tableColumns: TableColumn[] = [
-    { key: 'name', label: 'Donor', searchable: true, sortable: true, formatter: (item) => this.getDisplayName(item) },
-    { key: 'email', label: 'Email', searchable: true, sortable: true, formatter: (item) => item.anonymous ? 'Hidden' : item.email },
-    { key: 'amount', label: 'Amount', searchable: false, sortable: true, type: 'number', align: 'right' },
-    { key: 'processing_fee', label: 'Processing Fee', searchable: false, sortable: false, type: 'number', align: 'right', formatter: (item) => this.formatCurrency(item.processing_fee) },
-    { key: 'status', label: 'Status', searchable: false, sortable: true, type: 'select', options: [
-      { value: 'paid', label: 'Paid' },
-      { value: 'pending', label: 'Pending' },
-      { value: 'failed', label: 'Failed' },
-      { value: 'refunded', label: 'Refunded' }
-    ], formatter: (item) => this.getStatusHtml(item.payment_status) },
-    { key: 'createdAt', label: 'Date', searchable: false, sortable: true, type: 'date' }
-  ];
+  tableColumns: TableColumn[] = [];
+
+  // Fee settings to determine column label
+  hasPlatformFees = false;
 
   private subscriptions = new Subscription();
 
-  constructor(private fundraiserService: FundraiserService) {}
+  constructor(
+    private fundraiserService: FundraiserService,
+    private adminService: AdminService
+  ) {
+    this.initializeTableColumns();
+  }
+
+  private initializeTableColumns(): void {
+    this.tableColumns = [
+      { key: 'name', label: 'Donor', searchable: true, sortable: true, formatter: (item) => this.getDisplayName(item) },
+      { key: 'email', label: 'Email', searchable: true, sortable: true, formatter: (item) => item.anonymous ? 'Hidden' : item.email },
+      { key: 'amount', label: 'Amount', searchable: false, sortable: true, type: 'number', align: 'right' },
+      {
+        key: 'fee',
+        label: this.hasPlatformFees ? 'Platform Fee' : 'Processing Fee',
+        searchable: false,
+        sortable: false,
+        type: 'number',
+        align: 'right',
+        formatter: (item) => this.formatCurrency(this.hasPlatformFees ? item.platform_fee : item.processing_fee)
+      },
+      { key: 'status', label: 'Status', searchable: false, sortable: true, type: 'select', options: [
+        { value: 'paid', label: 'Paid' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'failed', label: 'Failed' },
+        { value: 'refunded', label: 'Refunded' }
+      ], formatter: (item) => this.getStatusHtml(item.payment_status) },
+      { key: 'createdAt', label: 'Date', searchable: false, sortable: true, type: 'date' }
+    ];
+  }
 
   ngOnInit(): void {
     this.subscriptions.add(
@@ -67,8 +88,30 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedFundraiser'] && this.selectedFundraiser) {
+      this.loadFeeSettings();
       this.loadDonations();
     }
+  }
+
+  private loadFeeSettings(): void {
+    if (!this.selectedFundraiser) return;
+
+    this.adminService.getFeeSettings(this.selectedFundraiser.brand_id).subscribe({
+      next: (settings: FeeSettings) => {
+        // Check if fundraiser fees are configured (not 0)
+        const hasFixedFee = (settings.fundraiser?.transaction_fixed_fee || 0) > 0;
+        const hasPercentageFee = (settings.fundraiser?.revenue_percentage_fee || 0) > 0;
+        this.hasPlatformFees = hasFixedFee || hasPercentageFee;
+        // Reinitialize table columns with updated label
+        this.initializeTableColumns();
+      },
+      error: (error) => {
+        console.error('Failed to load fee settings:', error);
+        // Default to processing fee if we can't load settings
+        this.hasPlatformFees = false;
+        this.initializeTableColumns();
+      }
+    });
   }
 
   ngOnDestroy(): void {

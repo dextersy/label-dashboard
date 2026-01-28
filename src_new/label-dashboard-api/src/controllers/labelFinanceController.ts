@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, literal } from 'sequelize';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -152,6 +152,51 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
 
     eventEarnings = eventSales - eventPlatformFees;
 
+    // Calculate fundraiser earnings for this brand
+    let fundraiserEarnings = 0;
+    let fundraiserGrossEarnings = 0;
+    let fundraiserPlatformFees = 0;
+    let fundraiserProcessingFees = 0;
+
+    // Get all fundraiser IDs for this brand
+    const fundraiserIds = await Fundraiser.findAll({
+      where: { brand_id: req.user.brand_id },
+      attributes: ['id'],
+      raw: true
+    });
+
+    const fundraiserIdList = fundraiserIds.map(f => (f as any).id);
+
+    if (fundraiserIdList.length > 0) {
+      // Gross donations: only count confirmed donations (exclude refunded)
+      const donationsQuery = await Donation.findAll({
+        attributes: [
+          [literal('SUM(amount)'), 'total_amount'],
+          [literal('SUM(processing_fee)'), 'total_processing_fee'],
+          [literal('SUM(platform_fee)'), 'total_platform_fee']
+        ],
+        where: {
+          fundraiser_id: { [Op.in]: fundraiserIdList },
+          payment_status: 'paid',
+          ...(startDateFilter && endDateFilter ? {
+            date_paid: {
+              [Op.between]: [startDateFilter, endDateFilter]
+            }
+          } : {})
+        },
+        raw: true
+      });
+
+      if (donationsQuery.length > 0 && donationsQuery[0]) {
+        const donationData = donationsQuery[0] as any;
+        fundraiserGrossEarnings = parseFloat(donationData.total_amount) || 0;
+        fundraiserProcessingFees = parseFloat(donationData.total_processing_fee) || 0;
+        fundraiserPlatformFees = parseFloat(donationData.total_platform_fee) || 0;
+      }
+
+      fundraiserEarnings = fundraiserGrossEarnings - fundraiserPlatformFees;
+    }
+
     // Calculate total payments made to artists under this label
     const artistIds = await Artist.findAll({
       where: { brand_id: req.user.brand_id },
@@ -188,11 +233,12 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
     }) || 0;
 
     // Calculate receivable balance (net earnings minus payments received by the label)
-    const receivableBalance = musicEarnings + eventEarnings - totalPayments;
+    const receivableBalance = musicEarnings + eventEarnings + fundraiserEarnings - totalPayments;
 
     res.json({
       net_music_earnings: musicEarnings,
       net_event_earnings: eventEarnings,
+      net_fundraiser_earnings: fundraiserEarnings,
       total_payments: totalPayments,
       receivable_balance: receivableBalance,
       breakdown: {
@@ -207,6 +253,12 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
           platform_fees: eventPlatformFees,
           processing_fees: eventProcessingFees,
           net_earnings: eventEarnings
+        },
+        fundraiser: {
+          gross_earnings: fundraiserGrossEarnings,
+          platform_fees: fundraiserPlatformFees,
+          processing_fees: fundraiserProcessingFees,
+          net_earnings: fundraiserEarnings
         },
         artist_payments: artistPayments
       }
@@ -231,14 +283,14 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       return res.status(403).json({ error: 'Access denied: You can only access data for your own brand' });
     }
 
-    const { start_date, end_date, type } = req.query as { 
-      start_date?: string; 
-      end_date?: string; 
-      type?: 'music' | 'event';
+    const { start_date, end_date, type } = req.query as {
+      start_date?: string;
+      end_date?: string;
+      type?: 'music' | 'event' | 'fundraiser';
     };
 
-    if (!type || !['music', 'event'].includes(type)) {
-      return res.status(400).json({ error: 'Type parameter is required (music or event)' });
+    if (!type || !['music', 'event', 'fundraiser'].includes(type)) {
+      return res.status(400).json({ error: 'Type parameter is required (music, event, or fundraiser)' });
     }
 
     // Date filtering setup
@@ -385,6 +437,60 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       }
 
       res.json({ type: 'event', breakdown });
+
+    } else if (type === 'fundraiser') {
+      // Get fundraiser earnings breakdown by fundraiser
+      const fundraisers = await Fundraiser.findAll({
+        where: { brand_id: req.user.brand_id },
+        attributes: ['id', 'title']
+      });
+
+      const breakdown = [];
+
+      for (const fundraiser of fundraisers) {
+        const donationsQuery = await Donation.findAll({
+          attributes: [
+            [literal('SUM(amount)'), 'total_amount'],
+            [literal('SUM(processing_fee)'), 'total_processing_fee'],
+            [literal('SUM(platform_fee)'), 'total_platform_fee']
+          ],
+          where: {
+            fundraiser_id: fundraiser.id,
+            payment_status: 'paid',
+            ...(startDateFilter && endDateFilter ? {
+              date_paid: {
+                [Op.between]: [startDateFilter, endDateFilter]
+              }
+            } : {})
+          },
+          raw: true
+        });
+
+        let grossEarnings = 0;
+        let platformFees = 0;
+        let processingFees = 0;
+
+        if (donationsQuery.length > 0 && donationsQuery[0]) {
+          const donationData = donationsQuery[0] as any;
+          grossEarnings = parseFloat(donationData.total_amount) || 0;
+          processingFees = parseFloat(donationData.total_processing_fee) || 0;
+          platformFees = parseFloat(donationData.total_platform_fee) || 0;
+        }
+
+        const netEarnings = grossEarnings - platformFees;
+
+        if (grossEarnings > 0 || platformFees > 0 || processingFees > 0) {
+          breakdown.push({
+            fundraiser_name: fundraiser.title,
+            gross_earnings: grossEarnings,
+            platform_fees: platformFees,
+            processing_fees: processingFees,
+            net_earnings: netEarnings
+          });
+        }
+      }
+
+      res.json({ type: 'fundraiser', breakdown });
     }
 
   } catch (error) {

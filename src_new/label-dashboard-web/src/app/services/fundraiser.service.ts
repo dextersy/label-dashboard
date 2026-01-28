@@ -33,6 +33,7 @@ export interface Donation {
   amount: number;
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   processing_fee?: number;
+  platform_fee?: number;
   payment_reference?: string;
   anonymous: boolean;
   order_timestamp?: string;
@@ -48,6 +49,7 @@ export interface DonationSummary {
   totalDonations: number;
   totalRaised: number;
   totalProcessingFees: number;
+  totalPlatformFees?: number;
   netAmount: number;
 }
 

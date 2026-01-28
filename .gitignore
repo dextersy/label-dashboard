@@ -26,3 +26,4 @@ docs/
 
 .claude/settings.local.json
 **/environment.prod.ts
+start_smee.sh

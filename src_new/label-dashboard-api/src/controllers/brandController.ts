@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
 import User from '../models/User';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, Fundraiser, Donation } from '../models';
 import { Op, literal } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
@@ -203,6 +203,11 @@ export const getFeeSettings = async (req: Request, res: Response) => {
         transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
         revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
         fee_revenue_type: brand.event_fee_revenue_type || 'net'
+      },
+      fundraiser: {
+        transaction_fixed_fee: brand.fundraiser_transaction_fixed_fee || 0,
+        revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee || 0,
+        fee_revenue_type: brand.fundraiser_fee_revenue_type || 'net'
       }
     });
 
@@ -215,7 +220,7 @@ export const getFeeSettings = async (req: Request, res: Response) => {
 export const updateFeeSettings = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { monthly_fee, music, event } = req.body;
+    const { monthly_fee, music, event, fundraiser } = req.body;
 
     const brand = await Brand.findByPk(brandId);
 
@@ -254,6 +259,19 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       }
     }
 
+    // Validate fundraiser fee values
+    if (fundraiser) {
+      if (fundraiser.transaction_fixed_fee !== undefined && (isNaN(fundraiser.transaction_fixed_fee) || fundraiser.transaction_fixed_fee < 0)) {
+        return res.status(400).json({ error: 'Fundraiser transaction fixed fee must be a non-negative number' });
+      }
+      if (fundraiser.revenue_percentage_fee !== undefined && (isNaN(fundraiser.revenue_percentage_fee) || fundraiser.revenue_percentage_fee < 0 || fundraiser.revenue_percentage_fee > 100)) {
+        return res.status(400).json({ error: 'Fundraiser revenue percentage fee must be between 0 and 100' });
+      }
+      if (fundraiser.fee_revenue_type && !['net', 'gross'].includes(fundraiser.fee_revenue_type)) {
+        return res.status(400).json({ error: 'Fundraiser fee revenue type must be either "net" or "gross"' });
+      }
+    }
+
     // Update fee settings
     const updateData: any = {};
     
@@ -269,6 +287,12 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       if (event.transaction_fixed_fee !== undefined) updateData.event_transaction_fixed_fee = event.transaction_fixed_fee;
       if (event.revenue_percentage_fee !== undefined) updateData.event_revenue_percentage_fee = event.revenue_percentage_fee;
       if (event.fee_revenue_type !== undefined) updateData.event_fee_revenue_type = event.fee_revenue_type;
+    }
+
+    if (fundraiser) {
+      if (fundraiser.transaction_fixed_fee !== undefined) updateData.fundraiser_transaction_fixed_fee = fundraiser.transaction_fixed_fee;
+      if (fundraiser.revenue_percentage_fee !== undefined) updateData.fundraiser_revenue_percentage_fee = fundraiser.revenue_percentage_fee;
+      if (fundraiser.fee_revenue_type !== undefined) updateData.fundraiser_fee_revenue_type = fundraiser.fee_revenue_type;
     }
 
     await brand.update(updateData);
@@ -287,6 +311,11 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
           transaction_fixed_fee: brand.event_transaction_fixed_fee,
           revenue_percentage_fee: brand.event_revenue_percentage_fee,
           fee_revenue_type: brand.event_fee_revenue_type
+        },
+        fundraiser: {
+          transaction_fixed_fee: brand.fundraiser_transaction_fixed_fee,
+          revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee,
+          fee_revenue_type: brand.fundraiser_fee_revenue_type
         }
       }
     });
@@ -856,12 +885,16 @@ interface ChildBrandData {
   event_sales: number;
   event_processing_fees: number;
   event_estimated_tax: number;
+  fundraiser_earnings: number;
+  fundraiser_gross_earnings: number;
+  fundraiser_processing_fees: number;
   total_royalties: number;
   artist_payments: number;
   payments: number;
   platform_fees: number;
   music_platform_fees: number;
   event_platform_fees: number;
+  fundraiser_platform_fees: number;
   balance: number;
   status: string;
   domains: Array<{
@@ -1063,8 +1096,53 @@ export const getChildBrands = async (req: Request, res: Response) => {
         }) || 0;
       }
 
-      // Calculate balance
-      const balance = musicEarnings + eventEarnings - payments;
+      // Calculate fundraiser earnings (donations minus platform fees)
+      let fundraiserEarnings = 0;
+      let fundraiserGrossEarnings = 0;
+      let fundraiserProcessingFees = 0;
+      let fundraiserPlatformFees = 0;
+
+      // Get all fundraiser IDs for this brand
+      const fundraiserIds = await Fundraiser.findAll({
+        where: { brand_id: childBrand.id },
+        attributes: ['id'],
+        raw: true
+      });
+
+      const fundraiserIdList = fundraiserIds.map(f => (f as any).id);
+
+      if (fundraiserIdList.length > 0) {
+        // Calculate total donations (gross earnings)
+        const donationSalesQuery = await Donation.findAll({
+          attributes: [
+            [literal('SUM(amount)'), 'total_amount'],
+            [literal('SUM(processing_fee)'), 'total_processing_fee'],
+            [literal('SUM(platform_fee)'), 'total_platform_fee']
+          ],
+          where: {
+            fundraiser_id: { [Op.in]: fundraiserIdList },
+            payment_status: 'paid',
+            ...(startDateFilter && endDateFilter ? {
+              date_paid: {
+                [Op.between]: [startDateFilter, endDateFilter]
+              }
+            } : {})
+          },
+          raw: true
+        });
+
+        if (donationSalesQuery.length > 0 && donationSalesQuery[0]) {
+          const donationData = donationSalesQuery[0] as any;
+          fundraiserGrossEarnings = parseFloat(donationData.total_amount) || 0;
+          fundraiserProcessingFees = parseFloat(donationData.total_processing_fee) || 0;
+          fundraiserPlatformFees = parseFloat(donationData.total_platform_fee) || 0;
+        }
+
+        fundraiserEarnings = fundraiserGrossEarnings - fundraiserPlatformFees;
+      }
+
+      // Calculate balance (including fundraiser earnings)
+      const balance = musicEarnings + eventEarnings + fundraiserEarnings - payments;
 
       // Get domains for this child brand
       const domains = await Domain.findAll({
@@ -1088,12 +1166,16 @@ export const getChildBrands = async (req: Request, res: Response) => {
         event_sales: eventSales,
         event_processing_fees: eventProcessingFees,
         event_estimated_tax: eventEstimatedTax,
+        fundraiser_earnings: fundraiserEarnings,
+        fundraiser_gross_earnings: fundraiserGrossEarnings,
+        fundraiser_processing_fees: fundraiserProcessingFees,
         total_royalties: totalRoyalties,
         artist_payments: artistPayments,
         payments: payments,
-        platform_fees: musicPlatformFees + eventPlatformFees,
+        platform_fees: musicPlatformFees + eventPlatformFees + fundraiserPlatformFees,
         music_platform_fees: musicPlatformFees,
         event_platform_fees: eventPlatformFees,
+        fundraiser_platform_fees: fundraiserPlatformFees,
         balance: balance,
         status: calculateSublabelStatus(domainData),
         domains: domainData

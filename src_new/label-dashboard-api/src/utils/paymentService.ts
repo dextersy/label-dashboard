@@ -8,7 +8,7 @@ import LabelPaymentMethod from '../models/LabelPaymentMethod';
 import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser } from '../models';
 import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail, sendEmail } from './emailService';
-import { calculatePlatformFeeForEventTickets } from './platformFeeCalculator';
+import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
 
 interface PayMongoLinkData {
   amount: number; // in cents
@@ -419,10 +419,29 @@ export class PaymentService {
         return true;
       }
 
+      // Calculate platform fee for the donation
+      let platformFee = 0;
+      try {
+        const brandId = donation.fundraiser?.brand_id;
+        if (brandId) {
+          const feeCalculation = await calculatePlatformFeeForFundraiserDonation(
+            brandId,
+            parseFloat(donation.amount),
+            processingFee
+          );
+          platformFee = feeCalculation.totalPlatformFee;
+          this.webhookLog(`Calculated platform fee: ${platformFee} for donation amount: ${donation.amount}`);
+        }
+      } catch (feeError) {
+        this.webhookLog('WARNING: Failed to calculate platform fee: ' + (feeError as Error).message);
+        // Continue processing even if fee calculation fails
+      }
+
       // Update donation payment status
       await donation.update({
         payment_status: 'paid',
         processing_fee: processingFee,
+        platform_fee: platformFee,
         payment_id: paymentId,
         payment_reference: paymentId,
         date_paid: new Date()

@@ -20,7 +20,7 @@ export class EarningsBreakdownModalComponent {
   @Input() show: boolean = false;
   @Input() childBrand: ChildBrand | null = null;
   @Input() aggregatedTotals: AggregatedTotals | null = null;
-  @Input() breakdownType: 'music' | 'event' | 'platform_fees' | 'total_event' = 'music';
+  @Input() breakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' = 'music';
   @Output() close = new EventEmitter<void>();
 
   onClose(): void {
@@ -39,6 +39,10 @@ export class EarningsBreakdownModalComponent {
 
   getEventBreakdownTitle(): string {
     return `Event Earnings Breakdown - ${this.childBrand?.brand_name}`;
+  }
+
+  getFundraiserBreakdownTitle(): string {
+    return `Fundraiser Earnings Breakdown - ${this.childBrand?.brand_name}`;
   }
 
   getPlatformFeesBreakdownTitle(): string {
