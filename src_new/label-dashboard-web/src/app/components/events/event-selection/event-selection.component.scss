@@ -177,6 +177,12 @@
   transform: rotate(180deg);
 }
 
+// When dropdown is open, adjust button border-radius to connect with menu
+.dropdown.open .event-dropdown-btn {
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -188,15 +194,22 @@
   max-height: 400px;
   overflow-y: auto;
   padding: 8px 0;
-  margin: 0;
+  margin: 0 !important;
   font-size: 14px;
   text-align: left;
   list-style: none;
   background-color: #fff;
-  border: none; /* Remove border for borderless style */
-  border-radius: 8px;
+  border: none;
+  border-radius: 0 0 8px 8px; // Only round bottom corners to attach to selector
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
   background-clip: padding-box;
+  transform-origin: top center !important;
+
+  // Remove Bootstrap arrow pseudo-elements
+  &::before,
+  &::after {
+    display: none !important;
+  }
 }
 
 .search-container {

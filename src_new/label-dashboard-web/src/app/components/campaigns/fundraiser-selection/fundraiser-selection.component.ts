@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -22,7 +22,6 @@ export class FundraiserSelectionComponent implements OnInit, OnDestroy {
   isDropdownOpen = false;
   searchTerm = '';
 
-  // Store bound function reference to properly remove event listener
   private boundHandleOutsideClick = this.handleOutsideClick.bind(this);
 
   constructor(private router: Router) {}
@@ -40,45 +39,18 @@ export class FundraiserSelectionComponent implements OnInit, OnDestroy {
       if (!this.isDropdownOpen) {
         this.isDropdownOpen = true;
 
-        requestAnimationFrame(() => {
-          this.positionDropdown();
-
-          if (this.fundraisers.length > 5) {
-            setTimeout(() => {
-              const searchInput = document.querySelector('.fundraiser-selection-container .search-input') as HTMLInputElement;
-              if (searchInput) {
-                searchInput.focus();
-              }
-            }, 50);
-          }
-        });
+        // Focus search input after dropdown opens
+        if (this.fundraisers.length > 5) {
+          setTimeout(() => {
+            const searchInput = document.querySelector('.fundraiser-selection-container .search-input') as HTMLInputElement;
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }, 50);
+        }
       } else {
         this.isDropdownOpen = false;
       }
-    }
-  }
-
-  @HostListener('window:resize')
-  @HostListener('window:scroll', ['$event'])
-  onWindowChange(): void {
-    if (this.isDropdownOpen) {
-      this.positionDropdown();
-    }
-  }
-
-  private positionDropdown(): void {
-    const isMobile = window.innerWidth <= 991;
-
-    if (isMobile) {
-      return;
-    }
-
-    const dropdownButton = document.querySelector('.fundraiser-dropdown-btn') as HTMLElement;
-    const dropdownMenu = document.querySelector('.fundraiser-selection-container .dropdown-menu') as HTMLElement;
-
-    if (dropdownButton && dropdownMenu) {
-      const rect = dropdownButton.getBoundingClientRect();
-      dropdownMenu.style.top = `${rect.bottom + 2}px`;
     }
   }
 
