@@ -60,7 +60,7 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   };
 
   // Character limits for rich text fields (visible characters, not HTML)
-  bioCharLimit = 2000;
+  bioCharLimit = 5000;
   bioCharCount = 0;
 
   constructor(private http: HttpClient, private router: Router) {}
@@ -72,15 +72,28 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     this.bioCharCount = text.length;
   }
 
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    // Create a temporary element to extract plain text from HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
+  }
+
   ngOnInit(): void {
     if (this.artist) {
       this.editingProfile = { ...this.artist };
+      // Initialize bio character count from loaded content
+      this.bioCharCount = this.getPlainTextLength(this.artist.bio || '');
     }
   }
 
   ngOnChanges(): void {
     if (this.artist) {
       this.editingProfile = { ...this.artist };
+      // Initialize bio character count from loaded content
+      this.bioCharCount = this.getPlainTextLength(this.artist.bio || '');
     }
   }
 
@@ -128,6 +141,14 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
 
   saveProfile(): void {
     if (!this.artist) return;
+
+    if (this.bioCharCount > this.bioCharLimit) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: `Biography exceeds the ${this.bioCharLimit.toLocaleString()} character limit.`
+      });
+      return;
+    }
 
     this.saving = true;
     this.uploadProgress = 0;

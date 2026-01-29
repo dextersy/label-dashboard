@@ -598,6 +598,15 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.descriptionCharCount = text.length;
   }
 
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    // Create a temporary element to extract plain text from HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
+  }
+
   isEventDraft(): boolean {
     if (this.isNewEvent) return true;
     const status = (this.event as any)?.status || this.eventData?.status;
@@ -688,6 +697,12 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
     if (!this.eventData.venue || !this.eventData.venue.trim()) {
       this.notificationService.showError('Venue is required');
+      this.setActiveSection('details');
+      return false;
+    }
+
+    if (this.descriptionCharCount > this.descriptionCharLimit) {
+      this.notificationService.showError(`Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit`);
       this.setActiveSection('details');
       return false;
     }
@@ -898,6 +913,9 @@ export class EventFormComponent implements OnInit, OnDestroy {
       ticket_naming: event.ticket_naming || 'ticket',
       status: (event as any).status || 'draft'
     };
+
+    // Initialize description character count from loaded content
+    this.descriptionCharCount = this.getPlainTextLength(event.description || '');
 
     // Set unlimited state based on max_tickets
     this.isMaxTicketsUnlimited = !event.max_tickets || event.max_tickets === 0;

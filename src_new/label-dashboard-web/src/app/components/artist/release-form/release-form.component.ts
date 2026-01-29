@@ -51,9 +51,9 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
   };
 
   // Character limits for rich text fields (visible characters, not HTML)
-  descriptionCharLimit = 2000;
+  descriptionCharLimit = 5000;
   descriptionCharCount = 0;
-  linerNotesCharLimit = 3000;
+  linerNotesCharLimit = 5000;
   linerNotesCharCount = 0;
 
   onDescriptionContentChanged(event: any): void {
@@ -64,6 +64,15 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
   onLinerNotesContentChanged(event: any): void {
     const text = event.text ? event.text.replace(/\n$/, '') : '';
     this.linerNotesCharCount = text.length;
+  }
+
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    // Create a temporary element to extract plain text from HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
   }
 
   constructor(
@@ -262,6 +271,10 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
         status: this.editingRelease.status
       });
 
+      // Initialize character counts from loaded content
+      this.descriptionCharCount = this.getPlainTextLength(this.editingRelease.description || '');
+      this.linerNotesCharCount = this.getPlainTextLength(this.editingRelease.liner_notes || '');
+
       if (this.editingRelease.cover_art) {
         this.coverArtPreview = this.getCoverArtUrl(this.editingRelease.cover_art);
       }
@@ -327,6 +340,22 @@ export class ReleaseFormComponent implements OnInit, OnChanges {
   onSubmit(): void {
     if (this.releaseForm.invalid) {
       this.markFormGroupTouched();
+      return;
+    }
+
+    if (this.descriptionCharCount > this.descriptionCharLimit) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: `Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit.`
+      });
+      return;
+    }
+
+    if (this.linerNotesCharCount > this.linerNotesCharLimit) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: `Liner notes exceeds the ${this.linerNotesCharLimit.toLocaleString()} character limit.`
+      });
       return;
     }
 

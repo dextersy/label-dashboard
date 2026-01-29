@@ -69,9 +69,6 @@
         .ql-editor {
           width: 100% !important;
           box-sizing: border-box !important;
-          min-height: 150px;
-          max-height: 200px; // Allow some expansion but constrain
-          overflow-y: auto;
         }
 
         .ql-toolbar {

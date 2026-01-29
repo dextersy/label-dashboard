@@ -453,6 +453,11 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    if (this.descriptionCharCount > this.descriptionCharLimit) {
+      this.notificationService.showError(`Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit`);
+      return false;
+    }
+
     return true;
   }
 
@@ -466,6 +471,9 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
       poster_url: fundraiser.poster_url || '',
       status: fundraiser.status || 'draft'
     };
+
+    // Initialize description character count from loaded content
+    this.descriptionCharCount = this.getPlainTextLength(fundraiser.description || '');
 
     if (fundraiser.poster_url) {
       this.posterPreview = fundraiser.poster_url;
@@ -487,5 +495,14 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
     // Quill adds a trailing newline, so we trim it
     const text = event.text ? event.text.replace(/\n$/, '') : '';
     this.descriptionCharCount = text.length;
+  }
+
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    // Create a temporary element to extract plain text from HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
   }
 }

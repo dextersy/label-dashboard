@@ -126,8 +126,7 @@
         formControlName="description"
         [modules]="quillConfig"
         (onContentChanged)="onDescriptionContentChanged($event)"
-        placeholder="Description of the release, musical approach, stories..."
-        [style.height.px]="100">
+        placeholder="Description of the release, musical approach, stories...">
       </quill-editor>
       <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
         {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters

@@ -57,12 +57,21 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
   };
 
   // Character limits for rich text fields (visible characters, not HTML)
-  descriptionCharLimit = 2000;
+  descriptionCharLimit = 5000;
   descriptionCharCount = 0;
 
   onDescriptionContentChanged(event: any): void {
     const text = event.text ? event.text.replace(/\n$/, '') : '';
     this.descriptionCharCount = text.length;
+  }
+
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    // Create a temporary element to extract plain text from HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
   }
 
   constructor(
@@ -246,6 +255,9 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       this.coverArtPreview = this.editingRelease.cover_art;
     }
 
+    // Initialize description character count from loaded content
+    this.descriptionCharCount = this.getPlainTextLength(this.editingRelease.description || '');
+
     // Emit validation after populating form
     this.emitValidation();
   }
@@ -326,14 +338,22 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
   async saveRelease(): Promise<void> {
     // Mark all form controls as touched to trigger validation display
     this.releaseForm.markAllAsTouched();
-    
+
     // Update validity
     this.releaseForm.updateValueAndValidity();
-    
+
     if (!this.releaseForm.valid) {
       this.alertMessage.emit({
         type: 'error',
         message: 'Please fill in all required fields before saving.'
+      });
+      return;
+    }
+
+    if (this.descriptionCharCount > this.descriptionCharLimit) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: `Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit.`
       });
       return;
     }

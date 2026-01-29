@@ -39,10 +39,9 @@
                 [(ngModel)]="editingProfile.bio"
                 [modules]="quillConfig"
                 (onContentChanged)="onBioContentChanged($event)"
-                placeholder="Tell us about the artist..."
-                [style.height.px]="120">
+                placeholder="Tell us about the artist...">
               </quill-editor>
-              <small class="form-text" style="margin-top: 3.5rem; display: block;" [class.text-danger]="bioCharCount > bioCharLimit" [class.text-muted]="bioCharCount <= bioCharLimit">
+              <small class="form-text" [class.text-danger]="bioCharCount > bioCharLimit" [class.text-muted]="bioCharCount <= bioCharLimit">
                 {{ bioCharCount | number }} / {{ bioCharLimit | number }} characters
               </small>
             </div>

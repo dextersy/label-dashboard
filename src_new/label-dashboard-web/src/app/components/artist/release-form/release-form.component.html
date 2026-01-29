@@ -115,8 +115,7 @@
       formControlName="description"
       [modules]="quillConfig"
       (onContentChanged)="onDescriptionContentChanged($event)"
-      placeholder="Description of the release, musical approach, stories..."
-      [style.height.px]="120">
+      placeholder="Description of the release, musical approach, stories...">
     </quill-editor>
     <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
       {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
@@ -135,8 +134,7 @@
       formControlName="liner_notes"
       [modules]="quillConfig"
       (onContentChanged)="onLinerNotesContentChanged($event)"
-      placeholder="Liner notes, acknowledgments, credits..."
-      [style.height.px]="150">
+      placeholder="Liner notes, acknowledgments, credits...">
     </quill-editor>
     <small class="form-text" [class.text-danger]="linerNotesCharCount > linerNotesCharLimit" [class.text-muted]="linerNotesCharCount <= linerNotesCharLimit">
       {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters

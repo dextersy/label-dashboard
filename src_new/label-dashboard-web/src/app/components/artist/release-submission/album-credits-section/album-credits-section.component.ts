@@ -46,12 +46,21 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
   };
 
   // Character limits for rich text fields (visible characters, not HTML)
-  linerNotesCharLimit = 3000;
+  linerNotesCharLimit = 5000;
   linerNotesCharCount = 0;
 
   onLinerNotesContentChanged(event: any): void {
     const text = event.text ? event.text.replace(/\n$/, '') : '';
     this.linerNotesCharCount = text.length;
+  }
+
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    // Create a temporary element to extract plain text from HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
   }
 
   constructor(
@@ -150,6 +159,9 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
     this.creditsForm.patchValue({
       liner_notes: this.editingRelease.liner_notes || ''
     });
+
+    // Initialize liner notes character count from loaded content
+    this.linerNotesCharCount = this.getPlainTextLength(this.editingRelease.liner_notes || '');
 
     // Clear existing artists
     const artistsArray = this.creditsForm.get('royaltyArtists') as FormArray;
@@ -324,6 +336,14 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
       this.alertMessage.emit({
         type: 'error',
         message: 'Please fix the form errors before saving.'
+      });
+      return;
+    }
+
+    if (this.linerNotesCharCount > this.linerNotesCharLimit) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: `Liner notes exceeds the ${this.linerNotesCharLimit.toLocaleString()} character limit.`
       });
       return;
     }
