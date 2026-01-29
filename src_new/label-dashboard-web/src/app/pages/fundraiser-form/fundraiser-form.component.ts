@@ -505,4 +505,20 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
     const text = temp.textContent || temp.innerText || '';
     return text.replace(/\n$/, '').length;
   }
+
+  getPublicFundraiserUrl(): string {
+    if (!this.fundraiser?.id) return '';
+    return `${window.location.origin}/public/fundraiser/${this.fundraiser.id}`;
+  }
+
+  copyPublicLink(): void {
+    const url = this.getPublicFundraiserUrl();
+    if (url) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.notificationService.showSuccess('Link copied to clipboard');
+      }).catch(() => {
+        this.notificationService.showError('Failed to copy link');
+      });
+    }
+  }
 }

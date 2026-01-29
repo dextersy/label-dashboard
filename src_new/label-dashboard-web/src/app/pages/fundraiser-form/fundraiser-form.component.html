@@ -38,6 +38,37 @@
         </div>
         <p>Basic fundraiser information displayed on the donation page</p>
 
+        <!-- Public Link (shown for published/closed fundraisers) -->
+        <div class="public-link-section mb-4 p-3 border rounded bg-light" *ngIf="!isNewFundraiser && fundraiser?.id && (isFundraiserPublished() || isFundraiserClosed())">
+          <label class="form-label fw-semibold mb-2">
+            <i class="fa fa-link me-1"></i> Public Donation Link
+          </label>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              [value]="getPublicFundraiserUrl()"
+              readonly>
+            <button
+              type="button"
+              class="btn btn-outline-secondary d-flex align-items-center"
+              (click)="copyPublicLink()"
+              title="Copy link to clipboard">
+              <i class="fa fa-copy"></i>
+            </button>
+            <a
+              [href]="getPublicFundraiserUrl()"
+              target="_blank"
+              class="btn btn-outline-primary d-flex align-items-center"
+              title="Open in new tab">
+              <i class="fa fa-external-link"></i>
+            </a>
+          </div>
+          <small class="form-text text-muted">
+            <i class="fa fa-info-circle"></i> Share this link with potential donors
+          </small>
+        </div>
+
         <div class="row">
           <div class="col-12 mb-3">
             <label for="fundraiserTitle" class="form-label required">Fundraiser Title</label>
