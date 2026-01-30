@@ -201,7 +201,7 @@ class MeltDashboardPlugin {
                 <li><code>artist.bio</code> - <?php _e('Artist biography (HTML)', 'melt-dashboard'); ?></li>
                 <li><code>artist.band_members</code> - <?php _e('Band members (plain text, newlines as line breaks)', 'melt-dashboard'); ?></li>
                 <li><code>artist.profile_photo</code> - <?php _e('Profile image URL', 'melt-dashboard'); ?></li>
-                <li><code>artist.social_media</code> - <?php _e('Social media links (rendered as list)', 'melt-dashboard'); ?></li>
+                <li><code>artist.social_media</code> - <?php _e('Social media links (FontAwesome icons)', 'melt-dashboard'); ?></li>
                 <li><code>artist.social_media.instagram</code> - <?php _e('Instagram handle', 'melt-dashboard'); ?></li>
                 <li><code>artist.social_media.facebook</code> - <?php _e('Facebook handle', 'melt-dashboard'); ?></li>
                 <li><code>artist.social_media.twitter</code> - <?php _e('Twitter/X handle', 'melt-dashboard'); ?></li>
@@ -220,6 +220,12 @@ class MeltDashboardPlugin {
                 <li><code>releases</code> - <?php _e('Artist releases (rendered as list)', 'melt-dashboard'); ?></li>
             </ul>
 
+            <h3><?php _e('Social Media Options', 'melt-dashboard'); ?></h3>
+            <p><?php _e('Social media links are displayed as FontAwesome icons. Options:', 'melt-dashboard'); ?></p>
+            <ul>
+                <li><code>target</code> - <?php _e('Link target: "_blank" for new tab, "_self" for same tab (default: "_blank")', 'melt-dashboard'); ?></li>
+            </ul>
+
             <h3><?php _e('Gallery Options', 'melt-dashboard'); ?></h3>
             <p><?php _e('When using field="gallery", you can customize the display with these options:', 'melt-dashboard'); ?></p>
             <ul>
@@ -236,6 +242,7 @@ class MeltDashboardPlugin {
 [melt-dashboard-artist id="123" field="artist.bio"]
 [melt-dashboard-artist id="123" field="artist.profile_photo" tag="img"]
 [melt-dashboard-artist id="123" field="artist.social_media"]
+[melt-dashboard-artist id="123" field="artist.social_media" target="_self"]
 [melt-dashboard-artist id="123" field="releases"]
 [melt-dashboard-artist id="123" field="gallery"]
 [melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5" max_images="20"]</pre>
@@ -459,6 +466,8 @@ class MeltDashboardPlugin {
             'tablet_row_count' => '3',
             'mobile_row_count' => '2',
             'max_images' => '12',
+            // Link options
+            'target' => '',
         ], $atts, 'melt-dashboard-artist');
 
         if (empty($atts['id'])) {
@@ -504,7 +513,7 @@ class MeltDashboardPlugin {
                 return esc_url($value);
 
             case 'artist.social_media':
-                return $this->render_social_media($value, $class);
+                return $this->render_social_media($value, $atts);
 
             case 'gallery':
                 return $this->render_gallery($value, $atts);
@@ -560,49 +569,118 @@ class MeltDashboardPlugin {
     }
 
     /**
-     * Render social media object as links
+     * Render social media object as icon links
      */
-    private function render_social_media($social_media, $class = '') {
+    private function render_social_media($social_media, $atts = []) {
         if (!is_array($social_media)) {
             return '';
         }
 
+        $class = isset($atts['class']) ? $atts['class'] : '';
+        $target = isset($atts['target']) ? $atts['target'] : '_blank';
+
+        // Platform config: base_url, FontAwesome icon class
         $platforms = [
-            'instagram' => 'https://instagram.com/',
-            'facebook' => 'https://facebook.com/',
-            'twitter' => 'https://twitter.com/',
-            'youtube' => 'https://youtube.com/',
-            'tiktok' => 'https://tiktok.com/@',
-            'website' => '', // Direct URL
+            'instagram' => ['url' => 'https://instagram.com/', 'icon' => 'fa-brands fa-instagram'],
+            'facebook' => ['url' => 'https://facebook.com/', 'icon' => 'fa-brands fa-facebook'],
+            'twitter' => ['url' => 'https://twitter.com/', 'icon' => 'fa-brands fa-x-twitter'],
+            'youtube' => ['url' => 'https://youtube.com/', 'icon' => 'fa-brands fa-youtube'],
+            'tiktok' => ['url' => 'https://tiktok.com/@', 'icon' => 'fa-brands fa-tiktok'],
+            'website' => ['url' => '', 'icon' => 'fa-solid fa-globe'],
         ];
 
-        $class_attr = $class ? ' class="' . esc_attr($class) . '"' : ' class="melt-social-links"';
-        $output = '<ul' . $class_attr . '>';
+        $class_list = 'melt-social-links';
+        if ($class) {
+            $class_list .= ' ' . esc_attr($class);
+        }
+
+        $target_attr = $target ? ' target="' . esc_attr($target) . '"' : '';
+        $rel_attr = $target === '_blank' ? ' rel="noopener noreferrer"' : '';
+
+        // Include FontAwesome and styles
+        $output = $this->get_social_icons_styles();
+
+        $output .= '<ul class="' . $class_list . '">';
         $has_links = false;
 
-        foreach ($platforms as $platform => $base_url) {
+        foreach ($platforms as $platform => $config) {
             if (!empty($social_media[$platform])) {
                 $has_links = true;
-                $handle = $social_media[$platform];
+                $value = trim($social_media[$platform]);
 
-                // For website, use the URL directly; for others, prepend base URL
-                if ($platform === 'website') {
-                    $url = $handle;
+                // Check if value is already a full URL
+                if (preg_match('#^https?://#i', $value)) {
+                    // Already a full URL, use as-is
+                    $url = $value;
+                } elseif ($platform === 'website') {
+                    // Website without protocol, add https://
+                    $url = 'https://' . $value;
                 } else {
-                    // Remove @ if present at start of handle
-                    $handle = ltrim($handle, '@');
-                    $url = $base_url . $handle;
+                    // Handle only - remove @ if present and prepend base URL
+                    $handle = ltrim($value, '@');
+                    $url = $config['url'] . $handle;
                 }
 
-                $display_name = ucfirst($platform);
                 $output .= '<li class="melt-social-link melt-social-' . esc_attr($platform) . '">';
-                $output .= '<a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($display_name) . '</a>';
+                $output .= '<a href="' . esc_url($url) . '"' . $target_attr . $rel_attr . ' title="' . esc_attr(ucfirst($platform)) . '">';
+                $output .= '<i class="' . esc_attr($config['icon']) . '"></i>';
+                $output .= '</a>';
                 $output .= '</li>';
             }
         }
 
         $output .= '</ul>';
         return $has_links ? $output : '';
+    }
+
+    /**
+     * Get social icons styles and FontAwesome (rendered once per page)
+     */
+    private function get_social_icons_styles() {
+        static $styles_rendered = false;
+        if ($styles_rendered) {
+            return '';
+        }
+        $styles_rendered = true;
+
+        return '
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            .melt-social-links {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            .melt-social-link {
+                margin: 0;
+                padding: 0;
+            }
+            .melt-social-link a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #333;
+                color: #fff;
+                text-decoration: none;
+                font-size: 18px;
+                transition: background-color 0.2s, transform 0.2s;
+            }
+            .melt-social-link a:hover {
+                transform: scale(1.1);
+            }
+            .melt-social-instagram a:hover { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+            .melt-social-facebook a:hover { background: #1877f2; }
+            .melt-social-twitter a:hover { background: #000; }
+            .melt-social-youtube a:hover { background: #ff0000; }
+            .melt-social-tiktok a:hover { background: #000; }
+            .melt-social-website a:hover { background: #0077b5; }
+        </style>';
     }
 
     /**
