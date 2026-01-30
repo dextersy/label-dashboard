@@ -215,8 +215,19 @@ class MeltDashboardPlugin {
             </ul>
             <p><strong><?php _e('Gallery & Releases:', 'melt-dashboard'); ?></strong></p>
             <ul>
-                <li><code>gallery</code> - <?php _e('Photo gallery (rendered as list)', 'melt-dashboard'); ?></li>
+                <li><code>gallery</code> - <?php _e('Photo gallery (responsive grid)', 'melt-dashboard'); ?></li>
                 <li><code>releases</code> - <?php _e('Artist releases (rendered as list)', 'melt-dashboard'); ?></li>
+            </ul>
+
+            <h3><?php _e('Gallery Options', 'melt-dashboard'); ?></h3>
+            <p><?php _e('When using field="gallery", you can customize the display with these options:', 'melt-dashboard'); ?></p>
+            <ul>
+                <li><code>img_width</code> - <?php _e('Image width in pixels (default: 100)', 'melt-dashboard'); ?></li>
+                <li><code>img_height</code> - <?php _e('Image height in pixels (default: 100)', 'melt-dashboard'); ?></li>
+                <li><code>desktop_row_count</code> - <?php _e('Images per row on desktop (default: 4)', 'melt-dashboard'); ?></li>
+                <li><code>tablet_row_count</code> - <?php _e('Images per row on tablet (default: 3)', 'melt-dashboard'); ?></li>
+                <li><code>mobile_row_count</code> - <?php _e('Images per row on mobile (default: 2)', 'melt-dashboard'); ?></li>
+                <li><code>max_images</code> - <?php _e('Maximum images to display (default: 12)', 'melt-dashboard'); ?></li>
             </ul>
 
             <h3><?php _e('Examples', 'melt-dashboard'); ?></h3>
@@ -224,7 +235,9 @@ class MeltDashboardPlugin {
 [melt-dashboard-artist id="123" field="artist.bio"]
 [melt-dashboard-artist id="123" field="artist.profile_photo" tag="img"]
 [melt-dashboard-artist id="123" field="artist.social_media"]
-[melt-dashboard-artist id="123" field="releases"]</pre>
+[melt-dashboard-artist id="123" field="releases"]
+[melt-dashboard-artist id="123" field="gallery"]
+[melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5" max_images="20"]</pre>
         </div>
         <?php
     }
@@ -438,6 +451,13 @@ class MeltDashboardPlugin {
             'field' => '',
             'tag' => '',
             'class' => '',
+            // Gallery options
+            'img_width' => '100',
+            'img_height' => '100',
+            'desktop_row_count' => '4',
+            'tablet_row_count' => '3',
+            'mobile_row_count' => '2',
+            'max_images' => '12',
         ], $atts, 'melt-dashboard-artist');
 
         if (empty($atts['id'])) {
@@ -454,13 +474,16 @@ class MeltDashboardPlugin {
             return $this->render_error($epk_data->get_error_message());
         }
 
-        return $this->render_field($epk_data, $atts['field'], $atts['tag'], $atts['class']);
+        return $this->render_field($epk_data, $atts['field'], $atts);
     }
 
     /**
      * Render a specific field from EPK data
      */
-    private function render_field($data, $field, $tag = '', $class = '') {
+    private function render_field($data, $field, $atts = []) {
+        $tag = isset($atts['tag']) ? $atts['tag'] : '';
+        $class = isset($atts['class']) ? $atts['class'] : '';
+
         // Handle nested field access with dot notation
         $value = $this->get_nested_value($data, $field);
 
@@ -483,7 +506,7 @@ class MeltDashboardPlugin {
                 return $this->render_social_media($value, $class);
 
             case 'gallery':
-                return $this->render_gallery($value, $class);
+                return $this->render_gallery($value, $atts);
 
             case 'releases':
                 return $this->render_releases($value, $class);
@@ -574,32 +597,199 @@ class MeltDashboardPlugin {
     }
 
     /**
-     * Render gallery
+     * Render gallery with responsive grid and lightbox
      */
-    private function render_gallery($gallery, $class = '') {
+    private function render_gallery($gallery, $atts = []) {
         if (!is_array($gallery) || empty($gallery)) {
             return '';
         }
 
-        $class_attr = $class ? ' class="' . esc_attr($class) . '"' : ' class="melt-gallery"';
-        $output = '<div' . $class_attr . '>';
+        // Parse options with defaults
+        $class = isset($atts['class']) ? $atts['class'] : '';
+        $img_width = absint(isset($atts['img_width']) ? $atts['img_width'] : 100);
+        $img_height = absint(isset($atts['img_height']) ? $atts['img_height'] : 100);
+        $desktop_cols = absint(isset($atts['desktop_row_count']) ? $atts['desktop_row_count'] : 4);
+        $tablet_cols = absint(isset($atts['tablet_row_count']) ? $atts['tablet_row_count'] : 3);
+        $mobile_cols = absint(isset($atts['mobile_row_count']) ? $atts['mobile_row_count'] : 2);
+        $max_images = absint(isset($atts['max_images']) ? $atts['max_images'] : 12);
+
+        // Limit gallery items
+        $gallery = array_slice($gallery, 0, $max_images);
+
+        // Generate unique ID for scoped styles
+        $gallery_id = 'melt-gallery-' . wp_rand(1000, 9999);
+
+        $class_list = 'melt-gallery ' . $gallery_id;
+        if ($class) {
+            $class_list .= ' ' . esc_attr($class);
+        }
+
+        // Generate responsive CSS and lightbox styles
+        $output = '<style>
+            .' . $gallery_id . ' {
+                display: grid;
+                gap: 8px;
+                grid-template-columns: repeat(' . $mobile_cols . ', 1fr);
+            }
+            .' . $gallery_id . ' .melt-gallery-item {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                cursor: pointer;
+            }
+            .' . $gallery_id . ' .melt-gallery-item img {
+                width: ' . $img_width . 'px;
+                height: ' . $img_height . 'px;
+                object-fit: cover;
+                display: block;
+                transition: transform 0.2s ease;
+            }
+            .' . $gallery_id . ' .melt-gallery-item:hover img {
+                transform: scale(1.05);
+            }
+            @media (min-width: 768px) {
+                .' . $gallery_id . ' {
+                    grid-template-columns: repeat(' . $tablet_cols . ', 1fr);
+                }
+            }
+            @media (min-width: 1024px) {
+                .' . $gallery_id . ' {
+                    grid-template-columns: repeat(' . $desktop_cols . ', 1fr);
+                }
+            }
+        </style>';
+
+        // Add lightbox styles only once per page
+        $output .= $this->get_lightbox_styles();
+
+        $output .= '<div class="' . $class_list . '">';
 
         foreach ($gallery as $item) {
             $image_url = isset($item['image_url']) ? esc_url($item['image_url']) : '';
             $caption = isset($item['caption']) ? esc_html($item['caption']) : '';
 
             if ($image_url) {
-                $output .= '<figure class="melt-gallery-item">';
-                $output .= '<img src="' . $image_url . '" alt="' . esc_attr($caption) . '">';
-                if ($caption) {
-                    $output .= '<figcaption>' . $caption . '</figcaption>';
-                }
+                $output .= '<figure class="melt-gallery-item" onclick="meltOpenLightbox(\'' . esc_js($image_url) . '\', \'' . esc_js($caption) . '\')">';
+                $output .= '<img src="' . $image_url . '" alt="' . esc_attr($caption) . '" title="' . esc_attr($caption) . '">';
                 $output .= '</figure>';
             }
         }
 
         $output .= '</div>';
+
+        // Add lightbox HTML and JS only once per page
+        $output .= $this->get_lightbox_html();
+
         return $output;
+    }
+
+    /**
+     * Get lightbox CSS styles (rendered once per page)
+     */
+    private function get_lightbox_styles() {
+        static $styles_rendered = false;
+        if ($styles_rendered) {
+            return '';
+        }
+        $styles_rendered = true;
+
+        return '<style>
+            .melt-lightbox {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 999999;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+            .melt-lightbox.active {
+                display: flex;
+            }
+            .melt-lightbox-close {
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                font-size: 40px;
+                color: #fff;
+                cursor: pointer;
+                z-index: 1000000;
+                line-height: 1;
+                opacity: 0.8;
+                transition: opacity 0.2s;
+            }
+            .melt-lightbox-close:hover {
+                opacity: 1;
+            }
+            .melt-lightbox-content {
+                max-width: 90%;
+                max-height: 85%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .melt-lightbox-content img {
+                max-width: 100%;
+                max-height: 80vh;
+                object-fit: contain;
+            }
+            .melt-lightbox-caption {
+                color: #fff;
+                text-align: center;
+                padding: 15px;
+                font-size: 14px;
+                max-width: 600px;
+            }
+        </style>';
+    }
+
+    /**
+     * Get lightbox HTML and JavaScript (rendered once per page)
+     */
+    private function get_lightbox_html() {
+        static $html_rendered = false;
+        if ($html_rendered) {
+            return '';
+        }
+        $html_rendered = true;
+
+        return '
+        <div class="melt-lightbox" id="melt-lightbox" onclick="meltCloseLightbox(event)">
+            <span class="melt-lightbox-close" onclick="meltCloseLightbox(event)">&times;</span>
+            <div class="melt-lightbox-content" onclick="event.stopPropagation()">
+                <img id="melt-lightbox-img" src="" alt="">
+                <div class="melt-lightbox-caption" id="melt-lightbox-caption"></div>
+            </div>
+        </div>
+        <script>
+            function meltOpenLightbox(src, caption) {
+                var lightbox = document.getElementById("melt-lightbox");
+                var img = document.getElementById("melt-lightbox-img");
+                var captionEl = document.getElementById("melt-lightbox-caption");
+                img.src = src;
+                captionEl.textContent = caption || "";
+                captionEl.style.display = caption ? "block" : "none";
+                lightbox.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+            function meltCloseLightbox(event) {
+                if (event) {
+                    event.stopPropagation();
+                }
+                var lightbox = document.getElementById("melt-lightbox");
+                lightbox.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape") {
+                    meltCloseLightbox();
+                }
+            });
+        </script>';
     }
 
     /**
