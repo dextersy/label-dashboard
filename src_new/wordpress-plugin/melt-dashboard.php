@@ -224,6 +224,7 @@ class MeltDashboardPlugin {
             <p><?php _e('Social media links are displayed as FontAwesome icons. Options:', 'melt-dashboard'); ?></p>
             <ul>
                 <li><code>target</code> - <?php _e('Link target: "_blank" for new tab, "_self" for same tab (default: "_blank")', 'melt-dashboard'); ?></li>
+                <li><code>align</code> - <?php _e('"left", "center", or "right" (default: "left")', 'melt-dashboard'); ?></li>
             </ul>
 
             <h3><?php _e('Gallery Options', 'melt-dashboard'); ?></h3>
@@ -256,6 +257,7 @@ class MeltDashboardPlugin {
 [melt-dashboard-artist id="123" field="artist.profile_photo" tag="img"]
 [melt-dashboard-artist id="123" field="artist.social_media"]
 [melt-dashboard-artist id="123" field="artist.social_media" target="_self"]
+[melt-dashboard-artist id="123" field="artist.social_media" align="center"]
 [melt-dashboard-artist id="123" field="releases"]
 [melt-dashboard-artist id="123" field="gallery"]
 [melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5"]
@@ -492,6 +494,8 @@ class MeltDashboardPlugin {
             'ken_burns' => 'false',
             // Link options
             'target' => '',
+            // Social media options
+            'align' => 'left',
         ], $atts, 'melt-dashboard-artist');
 
         if (empty($atts['id'])) {
@@ -602,6 +606,7 @@ class MeltDashboardPlugin {
 
         $class = isset($atts['class']) ? $atts['class'] : '';
         $target = isset($atts['target']) ? $atts['target'] : '_blank';
+        $align = isset($atts['align']) ? $atts['align'] : 'left';
 
         // Platform config: base_url, FontAwesome icon class
         $platforms = [
@@ -613,7 +618,7 @@ class MeltDashboardPlugin {
             'website' => ['url' => '', 'icon' => 'fa-solid fa-globe'],
         ];
 
-        $class_list = 'melt-social-links';
+        $class_list = 'melt-social-links melt-social-align-' . esc_attr($align);
         if ($class) {
             $class_list .= ' ' . esc_attr($class);
         }
@@ -624,7 +629,7 @@ class MeltDashboardPlugin {
         // Include FontAwesome and styles
         $output = $this->get_social_icons_styles();
 
-        $output .= '<ul class="' . $class_list . '">';
+        $output .= '<div class="' . $class_list . '">';
         $has_links = false;
 
         foreach ($platforms as $platform => $config) {
@@ -645,15 +650,13 @@ class MeltDashboardPlugin {
                     $url = $config['url'] . $handle;
                 }
 
-                $output .= '<li class="melt-social-link melt-social-' . esc_attr($platform) . '">';
-                $output .= '<a href="' . esc_url($url) . '"' . $target_attr . $rel_attr . ' title="' . esc_attr(ucfirst($platform)) . '">';
+                $output .= '<a href="' . esc_url($url) . '"' . $target_attr . $rel_attr . ' class="melt-social-link melt-social-' . esc_attr($platform) . '" title="' . esc_attr(ucfirst($platform)) . '">';
                 $output .= '<i class="' . esc_attr($config['icon']) . '"></i>';
                 $output .= '</a>';
-                $output .= '</li>';
             }
         }
 
-        $output .= '</ul>';
+        $output .= '</div>';
         return $has_links ? $output : '';
     }
 
@@ -671,18 +674,14 @@ class MeltDashboardPlugin {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <style>
             .melt-social-links {
-                list-style: none;
-                padding: 0;
-                margin: 0;
                 display: flex;
-                gap: 12px;
+                gap: 8px;
                 flex-wrap: wrap;
             }
+            .melt-social-links.melt-social-align-left { justify-content: flex-start; }
+            .melt-social-links.melt-social-align-center { justify-content: center; }
+            .melt-social-links.melt-social-align-right { justify-content: flex-end; }
             .melt-social-link {
-                margin: 0;
-                padding: 0;
-            }
-            .melt-social-link a {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -695,15 +694,15 @@ class MeltDashboardPlugin {
                 font-size: 18px;
                 transition: background-color 0.2s, transform 0.2s;
             }
-            .melt-social-link a:hover {
+            .melt-social-link:hover {
                 transform: scale(1.1);
             }
-            .melt-social-instagram a:hover { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-            .melt-social-facebook a:hover { background: #1877f2; }
-            .melt-social-twitter a:hover { background: #000; }
-            .melt-social-youtube a:hover { background: #ff0000; }
-            .melt-social-tiktok a:hover { background: #000; }
-            .melt-social-website a:hover { background: #0077b5; }
+            .melt-social-instagram:hover { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+            .melt-social-facebook:hover { background: #1877f2; }
+            .melt-social-twitter:hover { background: #000; }
+            .melt-social-youtube:hover { background: #ff0000; }
+            .melt-social-tiktok:hover { background: #000; }
+            .melt-social-website:hover { background: #0077b5; }
         </style>';
     }
 
