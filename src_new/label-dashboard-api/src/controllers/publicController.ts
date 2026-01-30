@@ -2053,7 +2053,8 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'tiktok_handle',
         'youtube_channel',
         'website_page_url',
-        'epk_template'
+        'epk_template',
+        'band_members'
       ]
     });
 
@@ -2130,6 +2131,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         bio: artist.bio,
         profile_photo: artist.profile_photo,
         epk_template: artist.epk_template || 1,
+        band_members: artist.band_members,
         social_media: {
           instagram: artist.instagram_handle,
           facebook: artist.facebook_handle,

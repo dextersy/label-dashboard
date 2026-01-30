@@ -199,6 +199,7 @@ class MeltDashboardPlugin {
             <ul>
                 <li><code>artist.name</code> - <?php _e('Artist name', 'melt-dashboard'); ?></li>
                 <li><code>artist.bio</code> - <?php _e('Artist biography (HTML)', 'melt-dashboard'); ?></li>
+                <li><code>artist.band_members</code> - <?php _e('Band members (plain text, newlines as line breaks)', 'melt-dashboard'); ?></li>
                 <li><code>artist.profile_photo</code> - <?php _e('Profile image URL', 'melt-dashboard'); ?></li>
                 <li><code>artist.social_media</code> - <?php _e('Social media links (rendered as list)', 'melt-dashboard'); ?></li>
                 <li><code>artist.social_media.instagram</code> - <?php _e('Instagram handle', 'melt-dashboard'); ?></li>
@@ -518,6 +519,14 @@ class MeltDashboardPlugin {
                     return '<' . esc_attr($tag) . $class_attr . '>' . wp_kses($value, $allowed_tags) . '</' . esc_attr($tag) . '>';
                 }
                 return wp_kses($value, $allowed_tags);
+
+            case 'artist.band_members':
+                // Band members is plain text with newlines converted to <br>
+                $formatted = nl2br(esc_html($value));
+                if ($tag) {
+                    return '<' . esc_attr($tag) . $class_attr . '>' . $formatted . '</' . esc_attr($tag) . '>';
+                }
+                return $formatted;
 
             default:
                 // Plain text fields
