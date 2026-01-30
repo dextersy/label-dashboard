@@ -227,14 +227,27 @@ class MeltDashboardPlugin {
             </ul>
 
             <h3><?php _e('Gallery Options', 'melt-dashboard'); ?></h3>
-            <p><?php _e('When using field="gallery", you can customize the display with these options:', 'melt-dashboard'); ?></p>
+            <p><?php _e('When using field="gallery", you can choose between grid or slideshow display:', 'melt-dashboard'); ?></p>
             <ul>
-                <li><code>img_width</code> - <?php _e('Image width in pixels (default: 100)', 'melt-dashboard'); ?></li>
-                <li><code>img_height</code> - <?php _e('Image height in pixels (default: 100)', 'melt-dashboard'); ?></li>
+                <li><code>display</code> - <?php _e('"grid" (default) or "slideshow"', 'melt-dashboard'); ?></li>
+                <li><code>max_images</code> - <?php _e('Maximum images to display (default: 12)', 'melt-dashboard'); ?></li>
+            </ul>
+            <p><strong><?php _e('Grid Options:', 'melt-dashboard'); ?></strong></p>
+            <ul>
+                <li><code>img_width</code> - <?php _e('Thumbnail width in pixels (default: 100)', 'melt-dashboard'); ?></li>
+                <li><code>img_height</code> - <?php _e('Thumbnail height in pixels (default: 100)', 'melt-dashboard'); ?></li>
                 <li><code>desktop_row_count</code> - <?php _e('Images per row on desktop (default: 4)', 'melt-dashboard'); ?></li>
                 <li><code>tablet_row_count</code> - <?php _e('Images per row on tablet (default: 3)', 'melt-dashboard'); ?></li>
                 <li><code>mobile_row_count</code> - <?php _e('Images per row on mobile (default: 2)', 'melt-dashboard'); ?></li>
-                <li><code>max_images</code> - <?php _e('Maximum images to display (default: 12)', 'melt-dashboard'); ?></li>
+            </ul>
+            <p><strong><?php _e('Slideshow Options:', 'melt-dashboard'); ?></strong></p>
+            <ul>
+                <li><code>slideshow_width</code> - <?php _e('Slideshow width in pixels (default: 800)', 'melt-dashboard'); ?></li>
+                <li><code>slideshow_height</code> - <?php _e('Slideshow height in pixels (default: 500)', 'melt-dashboard'); ?></li>
+                <li><code>slideshow_width_mobile</code> - <?php _e('Slideshow width on mobile (optional, falls back to slideshow_width)', 'melt-dashboard'); ?></li>
+                <li><code>slideshow_height_mobile</code> - <?php _e('Slideshow height on mobile (optional, falls back to slideshow_height)', 'melt-dashboard'); ?></li>
+                <li><code>slide_duration</code> - <?php _e('Time per slide in milliseconds (default: 5000)', 'melt-dashboard'); ?></li>
+                <li><code>ken_burns</code> - <?php _e('"true" or "false" - enable Ken Burns zoom effect (default: false)', 'melt-dashboard'); ?></li>
             </ul>
 
             <h3><?php _e('Examples', 'melt-dashboard'); ?></h3>
@@ -245,7 +258,10 @@ class MeltDashboardPlugin {
 [melt-dashboard-artist id="123" field="artist.social_media" target="_self"]
 [melt-dashboard-artist id="123" field="releases"]
 [melt-dashboard-artist id="123" field="gallery"]
-[melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5" max_images="20"]</pre>
+[melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5"]
+[melt-dashboard-artist id="123" field="gallery" display="slideshow"]
+[melt-dashboard-artist id="123" field="gallery" display="slideshow" slideshow_width="1000" slideshow_height="600" slide_duration="4000" ken_burns="true"]
+[melt-dashboard-artist id="123" field="gallery" display="slideshow" slideshow_width="800" slideshow_height="500" slideshow_width_mobile="350" slideshow_height_mobile="250"]</pre>
         </div>
         <?php
     }
@@ -459,13 +475,21 @@ class MeltDashboardPlugin {
             'field' => '',
             'tag' => '',
             'class' => '',
-            // Gallery options
+            // Gallery grid options
+            'display' => 'grid',
             'img_width' => '100',
             'img_height' => '100',
             'desktop_row_count' => '4',
             'tablet_row_count' => '3',
             'mobile_row_count' => '2',
             'max_images' => '12',
+            // Gallery slideshow options
+            'slideshow_width' => '800',
+            'slideshow_height' => '500',
+            'slideshow_width_mobile' => '',
+            'slideshow_height_mobile' => '',
+            'slide_duration' => '5000',
+            'ken_burns' => 'false',
             // Link options
             'target' => '',
         ], $atts, 'melt-dashboard-artist');
@@ -684,13 +708,30 @@ class MeltDashboardPlugin {
     }
 
     /**
-     * Render gallery with responsive grid and lightbox
+     * Render gallery with responsive grid/slideshow and lightbox
      */
     private function render_gallery($gallery, $atts = []) {
         if (!is_array($gallery) || empty($gallery)) {
             return '';
         }
 
+        $display = isset($atts['display']) ? $atts['display'] : 'grid';
+        $max_images = absint(isset($atts['max_images']) ? $atts['max_images'] : 12);
+
+        // Limit gallery items
+        $gallery = array_slice($gallery, 0, $max_images);
+
+        if ($display === 'slideshow') {
+            return $this->render_gallery_slideshow($gallery, $atts);
+        }
+
+        return $this->render_gallery_grid($gallery, $atts);
+    }
+
+    /**
+     * Render gallery as grid with lightbox
+     */
+    private function render_gallery_grid($gallery, $atts = []) {
         // Parse options with defaults
         $class = isset($atts['class']) ? $atts['class'] : '';
         $img_width = absint(isset($atts['img_width']) ? $atts['img_width'] : 100);
@@ -698,10 +739,6 @@ class MeltDashboardPlugin {
         $desktop_cols = absint(isset($atts['desktop_row_count']) ? $atts['desktop_row_count'] : 4);
         $tablet_cols = absint(isset($atts['tablet_row_count']) ? $atts['tablet_row_count'] : 3);
         $mobile_cols = absint(isset($atts['mobile_row_count']) ? $atts['mobile_row_count'] : 2);
-        $max_images = absint(isset($atts['max_images']) ? $atts['max_images'] : 12);
-
-        // Limit gallery items
-        $gallery = array_slice($gallery, 0, $max_images);
 
         // Generate unique ID for scoped styles
         $gallery_id = 'melt-gallery-' . wp_rand(1000, 9999);
@@ -768,6 +805,292 @@ class MeltDashboardPlugin {
         $output .= $this->get_lightbox_html();
 
         return $output;
+    }
+
+    /**
+     * Render gallery as slideshow
+     */
+    private function render_gallery_slideshow($gallery, $atts = []) {
+        $class = isset($atts['class']) ? $atts['class'] : '';
+        $width = absint(isset($atts['slideshow_width']) ? $atts['slideshow_width'] : 800);
+        $height = absint(isset($atts['slideshow_height']) ? $atts['slideshow_height'] : 500);
+        $duration = absint(isset($atts['slide_duration']) ? $atts['slide_duration'] : 5000);
+        $ken_burns = isset($atts['ken_burns']) && ($atts['ken_burns'] === 'true' || $atts['ken_burns'] === true);
+
+        // Mobile dimensions - fall back to regular dimensions if not set
+        $width_mobile = !empty($atts['slideshow_width_mobile']) ? absint($atts['slideshow_width_mobile']) : $width;
+        $height_mobile = !empty($atts['slideshow_height_mobile']) ? absint($atts['slideshow_height_mobile']) : $height;
+
+        // Generate unique ID for this slideshow
+        $slideshow_id = 'melt-slideshow-' . wp_rand(1000, 9999);
+
+        $class_list = 'melt-slideshow ' . $slideshow_id;
+        if ($class) {
+            $class_list .= ' ' . esc_attr($class);
+        }
+
+        // Ken Burns animation suffix
+        $kb_class = $ken_burns ? ' melt-ken-burns' : '';
+
+        $output = $this->get_slideshow_styles();
+
+        // Scoped styles for this slideshow instance
+        $output .= '<style>
+            .' . $slideshow_id . ' {
+                width: ' . $width . 'px;
+                height: ' . $height . 'px;
+                max-width: 100%;
+            }
+            .' . $slideshow_id . ' .melt-slideshow-slide img {
+                width: ' . $width . 'px;
+                height: ' . $height . 'px;
+            }
+            @media (max-width: 767px) {
+                .' . $slideshow_id . ' {
+                    width: ' . $width_mobile . 'px;
+                    height: ' . $height_mobile . 'px;
+                }
+                .' . $slideshow_id . ' .melt-slideshow-slide img {
+                    width: ' . $width_mobile . 'px;
+                    height: ' . $height_mobile . 'px;
+                }
+            }
+        </style>';
+
+        $output .= '<div class="' . $class_list . '" data-duration="' . $duration . '">';
+        $output .= '<div class="melt-slideshow-container">';
+
+        $index = 0;
+        foreach ($gallery as $item) {
+            $image_url = isset($item['image_url']) ? esc_url($item['image_url']) : '';
+            $caption = isset($item['caption']) ? esc_html($item['caption']) : '';
+
+            if ($image_url) {
+                $active_class = $index === 0 ? ' active' : '';
+                $output .= '<div class="melt-slideshow-slide' . $active_class . $kb_class . '" data-index="' . $index . '">';
+                $output .= '<img src="' . $image_url . '" alt="' . esc_attr($caption) . '">';
+                if ($caption) {
+                    $output .= '<div class="melt-slideshow-caption">' . $caption . '</div>';
+                }
+                $output .= '</div>';
+                $index++;
+            }
+        }
+
+        $output .= '</div>'; // .melt-slideshow-container
+
+        // Navigation arrows
+        $output .= '<button class="melt-slideshow-nav melt-slideshow-prev" onclick="meltSlideshowNav(\'' . $slideshow_id . '\', -1)">&#10094;</button>';
+        $output .= '<button class="melt-slideshow-nav melt-slideshow-next" onclick="meltSlideshowNav(\'' . $slideshow_id . '\', 1)">&#10095;</button>';
+
+        // Dots navigation
+        $output .= '<div class="melt-slideshow-dots">';
+        for ($i = 0; $i < $index; $i++) {
+            $active_dot = $i === 0 ? ' active' : '';
+            $output .= '<span class="melt-slideshow-dot' . $active_dot . '" onclick="meltSlideshowGoto(\'' . $slideshow_id . '\', ' . $i . ')"></span>';
+        }
+        $output .= '</div>';
+
+        $output .= '</div>'; // .melt-slideshow
+
+        $output .= $this->get_slideshow_scripts();
+
+        return $output;
+    }
+
+    /**
+     * Get slideshow CSS styles (rendered once per page)
+     */
+    private function get_slideshow_styles() {
+        static $styles_rendered = false;
+        if ($styles_rendered) {
+            return '';
+        }
+        $styles_rendered = true;
+
+        return '<style>
+            .melt-slideshow {
+                position: relative;
+                overflow: hidden;
+                background: #000;
+            }
+            .melt-slideshow-container {
+                position: relative;
+                width: 100%;
+                height: 100%;
+            }
+            .melt-slideshow-slide {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                transition: opacity 1s ease-in-out;
+            }
+            .melt-slideshow-slide.active {
+                opacity: 1;
+            }
+            .melt-slideshow-slide img {
+                object-fit: cover;
+                max-width: 100%;
+            }
+            /* Ken Burns effect */
+            .melt-slideshow-slide.melt-ken-burns img {
+                animation: meltKenBurns 20s ease-in-out infinite alternate;
+                transform-origin: center center;
+            }
+            .melt-slideshow-slide.melt-ken-burns:nth-child(odd) img {
+                animation-name: meltKenBurns1;
+            }
+            .melt-slideshow-slide.melt-ken-burns:nth-child(even) img {
+                animation-name: meltKenBurns2;
+            }
+            @keyframes meltKenBurns1 {
+                0% { transform: scale(1) translate(0, 0); }
+                100% { transform: scale(1.2) translate(-3%, -3%); }
+            }
+            @keyframes meltKenBurns2 {
+                0% { transform: scale(1.2) translate(-3%, 3%); }
+                100% { transform: scale(1) translate(0, 0); }
+            }
+            .melt-slideshow-caption {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.6);
+                color: #fff;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            .melt-slideshow-nav {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0, 0, 0, 0.5);
+                color: #fff;
+                border: none;
+                padding: 16px 12px;
+                cursor: pointer;
+                font-size: 18px;
+                transition: background 0.2s;
+                z-index: 10;
+            }
+            .melt-slideshow-nav:hover {
+                background: rgba(0, 0, 0, 0.8);
+            }
+            .melt-slideshow-prev { left: 0; }
+            .melt-slideshow-next { right: 0; }
+            .melt-slideshow-dots {
+                position: absolute;
+                bottom: 15px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 8px;
+                z-index: 10;
+            }
+            .melt-slideshow-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.5);
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .melt-slideshow-dot:hover,
+            .melt-slideshow-dot.active {
+                background: #fff;
+            }
+        </style>';
+    }
+
+    /**
+     * Get slideshow JavaScript (rendered once per page)
+     */
+    private function get_slideshow_scripts() {
+        static $scripts_rendered = false;
+        if ($scripts_rendered) {
+            return '';
+        }
+        $scripts_rendered = true;
+
+        return '<script>
+            (function() {
+                var slideshowTimers = {};
+
+                function initSlideshow(id) {
+                    var slideshow = document.querySelector("." + id);
+                    if (!slideshow) return;
+
+                    var duration = parseInt(slideshow.getAttribute("data-duration")) || 5000;
+                    startSlideshowTimer(id, duration);
+                }
+
+                function startSlideshowTimer(id, duration) {
+                    if (slideshowTimers[id]) {
+                        clearInterval(slideshowTimers[id]);
+                    }
+                    slideshowTimers[id] = setInterval(function() {
+                        meltSlideshowNav(id, 1);
+                    }, duration);
+                }
+
+                window.meltSlideshowNav = function(id, direction) {
+                    var slideshow = document.querySelector("." + id);
+                    if (!slideshow) return;
+
+                    var slides = slideshow.querySelectorAll(".melt-slideshow-slide");
+                    var dots = slideshow.querySelectorAll(".melt-slideshow-dot");
+                    var current = slideshow.querySelector(".melt-slideshow-slide.active");
+                    var currentIndex = current ? parseInt(current.getAttribute("data-index")) : 0;
+                    var newIndex = currentIndex + direction;
+
+                    if (newIndex >= slides.length) newIndex = 0;
+                    if (newIndex < 0) newIndex = slides.length - 1;
+
+                    slides.forEach(function(s) { s.classList.remove("active"); });
+                    dots.forEach(function(d) { d.classList.remove("active"); });
+                    slides[newIndex].classList.add("active");
+                    if (dots[newIndex]) dots[newIndex].classList.add("active");
+
+                    // Reset timer
+                    var duration = parseInt(slideshow.getAttribute("data-duration")) || 5000;
+                    startSlideshowTimer(id, duration);
+                };
+
+                window.meltSlideshowGoto = function(id, index) {
+                    var slideshow = document.querySelector("." + id);
+                    if (!slideshow) return;
+
+                    var slides = slideshow.querySelectorAll(".melt-slideshow-slide");
+                    var dots = slideshow.querySelectorAll(".melt-slideshow-dot");
+
+                    slides.forEach(function(s) { s.classList.remove("active"); });
+                    dots.forEach(function(d) { d.classList.remove("active"); });
+                    if (slides[index]) slides[index].classList.add("active");
+                    if (dots[index]) dots[index].classList.add("active");
+
+                    // Reset timer
+                    var duration = parseInt(slideshow.getAttribute("data-duration")) || 5000;
+                    startSlideshowTimer(id, duration);
+                };
+
+                // Initialize all slideshows on page load
+                document.addEventListener("DOMContentLoaded", function() {
+                    document.querySelectorAll(".melt-slideshow").forEach(function(el) {
+                        var classes = el.className.split(" ");
+                        for (var i = 0; i < classes.length; i++) {
+                            if (classes[i].indexOf("melt-slideshow-") === 0) {
+                                initSlideshow(classes[i]);
+                                break;
+                            }
+                        }
+                    });
+                });
+            })();
+        </script>';
     }
 
     /**
