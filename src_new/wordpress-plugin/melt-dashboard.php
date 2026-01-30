@@ -240,6 +240,7 @@ class MeltDashboardPlugin {
                 <li><code>desktop_row_count</code> - <?php _e('Images per row on desktop (default: 4)', 'melt-dashboard'); ?></li>
                 <li><code>tablet_row_count</code> - <?php _e('Images per row on tablet (default: 3)', 'melt-dashboard'); ?></li>
                 <li><code>mobile_row_count</code> - <?php _e('Images per row on mobile (default: 2)', 'melt-dashboard'); ?></li>
+                <li><code>gap</code> - <?php _e('Gap between images in pixels (default: 0)', 'melt-dashboard'); ?></li>
             </ul>
             <p><strong><?php _e('Slideshow Options:', 'melt-dashboard'); ?></strong></p>
             <ul>
@@ -260,7 +261,7 @@ class MeltDashboardPlugin {
 [melt-dashboard-artist id="123" field="artist.social_media" align="center"]
 [melt-dashboard-artist id="123" field="releases"]
 [melt-dashboard-artist id="123" field="gallery"]
-[melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5"]
+[melt-dashboard-artist id="123" field="gallery" img_width="150" img_height="150" desktop_row_count="5" gap="4"]
 [melt-dashboard-artist id="123" field="gallery" display="slideshow"]
 [melt-dashboard-artist id="123" field="gallery" display="slideshow" slideshow_width="1000" slideshow_height="600" slide_duration="4000" ken_burns="true"]
 [melt-dashboard-artist id="123" field="gallery" display="slideshow" slideshow_width="800" slideshow_height="500" slideshow_width_mobile="350" slideshow_height_mobile="250"]</pre>
@@ -485,6 +486,7 @@ class MeltDashboardPlugin {
             'tablet_row_count' => '3',
             'mobile_row_count' => '2',
             'max_images' => '12',
+            'gap' => '0',
             // Gallery slideshow options
             'slideshow_width' => '800',
             'slideshow_height' => '500',
@@ -738,6 +740,7 @@ class MeltDashboardPlugin {
         $desktop_cols = absint(isset($atts['desktop_row_count']) ? $atts['desktop_row_count'] : 4);
         $tablet_cols = absint(isset($atts['tablet_row_count']) ? $atts['tablet_row_count'] : 3);
         $mobile_cols = absint(isset($atts['mobile_row_count']) ? $atts['mobile_row_count'] : 2);
+        $gap = absint(isset($atts['gap']) ? $atts['gap'] : 0);
 
         // Generate unique ID for scoped styles
         $gallery_id = 'melt-gallery-' . wp_rand(1000, 9999);
@@ -751,7 +754,7 @@ class MeltDashboardPlugin {
         $output = '<style>
             .' . $gallery_id . ' {
                 display: grid;
-                gap: 8px;
+                gap: ' . $gap . 'px;
                 grid-template-columns: repeat(' . $mobile_cols . ', 1fr);
             }
             .' . $gallery_id . ' .melt-gallery-item {
