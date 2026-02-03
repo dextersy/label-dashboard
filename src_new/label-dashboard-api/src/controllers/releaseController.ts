@@ -294,6 +294,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     const {
       title,
+      catalog_no,
       UPC,
       spotify_link,
       apple_music_link,
@@ -370,6 +371,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     // Only allow admins to update these fields
     if (req.user.is_admin) {
+      updateData.catalog_no = catalog_no !== undefined ? catalog_no : release.catalog_no;
       updateData.UPC = UPC !== undefined ? UPC : release.UPC;
       updateData.spotify_link = spotify_link !== undefined ? spotify_link : release.spotify_link;
       updateData.apple_music_link = apple_music_link !== undefined ? apple_music_link : release.apple_music_link;
