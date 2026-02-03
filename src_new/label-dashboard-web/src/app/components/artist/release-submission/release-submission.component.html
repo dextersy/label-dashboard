@@ -6,7 +6,8 @@
     <app-release-view
       [release]="releaseForView"
       [isAdmin]="isUserAdmin"
-      (editClicked)="onEnableEditMode()">
+      (editClicked)="onEnableEditMode()"
+      (alertMessage)="onAlertMessage($event)">
     </app-release-view>
   </ng-container>
   

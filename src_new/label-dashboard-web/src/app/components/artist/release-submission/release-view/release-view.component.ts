@@ -2,8 +2,9 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, SecurityCont
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
-import { Release } from '../../../../services/release.service';
+import { Release, ReleaseService } from '../../../../services/release.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
+import { downloadFromResponse } from '../../../../utils/file-utils';
 
 @Component({
   selector: 'app-release-view',
@@ -16,17 +17,22 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   @Input() release: Release | null = null;
   @Input() isAdmin: boolean = false;
   @Output() editClicked = new EventEmitter<void>();
+  @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
   // Audio player state (synced from service)
   playingSongId: number | null = null;
   loadingSongId: number | null = null;
   pausedSongId: number | null = null;
-  
+
+  // Download masters state
+  downloadingMasters = false;
+
   private subscription: Subscription | null = null;
 
   constructor(
     private audioPlayerService: AudioPlayerService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private releaseService: ReleaseService
   ) {}
 
   ngOnInit(): void {
@@ -152,28 +158,77 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   // Get collaborators for a song
   getSongCollaborators(song: any): string {
     const collaborators: string[] = [];
-    
+
     if (song.collaborators?.length) {
       song.collaborators.forEach((c: any) => {
         const name = c.artist?.name || 'Unknown';
         collaborators.push(name);
       });
     }
-    
+
     if (song.authors?.length) {
       song.authors.forEach((a: any) => {
         const name = a.songwriter?.name || 'Unknown';
         collaborators.push(`${name} (Author)`);
       });
     }
-    
+
     if (song.composers?.length) {
       song.composers.forEach((c: any) => {
         const name = c.songwriter?.name || 'Unknown';
         collaborators.push(`${name} (Composer)`);
       });
     }
-    
+
     return collaborators.join(', ') || '—';
+  }
+
+  hasMasters(): boolean {
+    if (!this.release) return false;
+
+    // Check if release has cover art
+    if (this.release.cover_art && this.release.cover_art.trim() !== '') {
+      return true;
+    }
+
+    // Check if release has any songs with audio files
+    if (this.release.songs && this.release.songs.length > 0) {
+      return this.release.songs.some(song => song.audio_file && song.audio_file.trim() !== '');
+    }
+
+    return false;
+  }
+
+  onDownloadMasters(): void {
+    if (this.downloadingMasters || !this.release || !this.hasMasters()) {
+      return;
+    }
+
+    this.downloadingMasters = true;
+
+    this.releaseService.downloadMasters(this.release.id).subscribe({
+      next: (response) => {
+        this.downloadingMasters = false;
+        downloadFromResponse(response);
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Masters downloaded successfully!'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading masters:', error);
+        this.downloadingMasters = false;
+
+        let errorMessage = 'Failed to download masters.';
+        if (error.status === 404) {
+          errorMessage = 'No masters available for this release.';
+        }
+
+        this.alertMessage.emit({
+          type: 'error',
+          message: errorMessage
+        });
+      }
+    });
   }
 }
