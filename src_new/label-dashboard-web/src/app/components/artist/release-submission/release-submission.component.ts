@@ -514,23 +514,30 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   // Switch from read-only view to edit mode (admin only)
   onEnableEditMode(): void {
     if (!this.isUserAdmin) return;
-    
+
     this.showReadOnlyView = false;
-    
+
     // Initialize the form data from the loaded release
     if (this.editingRelease) {
       this.initReleaseInfoFromRelease(this.editingRelease);
-      
+
       // Mark as valid since we're editing existing data
       this.isReleaseInfoValid = true;
       this.isAlbumCreditsValid = true;
-      
+
       // Start with release info section
       this.activeSection = 'info';
 
       // Perform initial validation
       this.performInitialValidation(this.editingRelease, this.editingRelease.songs || []);
     }
+  }
+
+  // Handle release submission from view mode (admin only)
+  onReleaseSubmitted(release: Release): void {
+    // Update the local release data with the new status
+    this.releaseForView = release;
+    this.editingRelease = release;
   }
 
   /**

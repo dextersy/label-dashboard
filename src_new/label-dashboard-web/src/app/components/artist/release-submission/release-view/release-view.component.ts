@@ -18,6 +18,7 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   @Input() isAdmin: boolean = false;
   @Output() editClicked = new EventEmitter<void>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
+  @Output() releaseSubmitted = new EventEmitter<Release>();
 
   // Audio player state (synced from service)
   playingSongId: number | null = null;
@@ -26,6 +27,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
 
   // Download masters state
   downloadingMasters = false;
+
+  // Submit release state
+  submittingRelease = false;
 
   private subscription: Subscription | null = null;
 
@@ -222,6 +226,45 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
         let errorMessage = 'Failed to download masters.';
         if (error.status === 404) {
           errorMessage = 'No masters available for this release.';
+        }
+
+        this.alertMessage.emit({
+          type: 'error',
+          message: errorMessage
+        });
+      }
+    });
+  }
+
+  canSubmitRelease(): boolean {
+    // Only admins can submit, and only for Draft or For Submission status
+    return this.isAdmin && this.release !== null &&
+           (this.release.status === 'Draft' || this.release.status === 'For Submission');
+  }
+
+  onSubmitRelease(): void {
+    if (this.submittingRelease || !this.release || !this.canSubmitRelease()) {
+      return;
+    }
+
+    this.submittingRelease = true;
+
+    this.releaseService.updateRelease(this.release.id, { status: 'Pending' }).subscribe({
+      next: (response) => {
+        this.submittingRelease = false;
+        this.alertMessage.emit({
+          type: 'success',
+          message: `Release "${this.release!.title}" has been submitted and is now pending.`
+        });
+        this.releaseSubmitted.emit(response.release);
+      },
+      error: (error) => {
+        console.error('Error submitting release:', error);
+        this.submittingRelease = false;
+
+        let errorMessage = 'Failed to submit release.';
+        if (error.error?.error) {
+          errorMessage = error.error.error;
         }
 
         this.alertMessage.emit({

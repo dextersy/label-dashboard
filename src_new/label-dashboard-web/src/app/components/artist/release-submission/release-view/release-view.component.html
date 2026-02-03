@@ -5,9 +5,22 @@
       <h2 class="release-title">{{ release.title }}</h2>
       <span class="badge" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
     </div>
-    <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
-      <i class="fas fa-edit"></i>
-    </button>
+    <div class="d-flex align-items-center gap-3">
+      <button *ngIf="canSubmitRelease()"
+              class="submit-release-btn"
+              (click)="onSubmitRelease()"
+              [disabled]="submittingRelease"
+              title="Submit Release">
+        <i class="fa me-2"
+           [class.fa-spinner]="submittingRelease"
+           [class.fa-spin]="submittingRelease"
+           [class.fa-paper-plane]="!submittingRelease"></i>
+        <span class="btn-text">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
+      </button>
+      <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
+        <i class="fas fa-edit"></i>
+      </button>
+    </div>
   </div>
 
   <!-- Main Content -->
