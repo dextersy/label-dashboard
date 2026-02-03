@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty } from '../models';
 import AWS from 'aws-sdk';
 import path from 'path';
 import archiver from 'archiver';
@@ -582,22 +582,62 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
 
     const { id } = req.params;
     const releaseId = parseInt(id, 10);
-    
+
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
 
     const release = await Release.findOne({
-      where: { 
+      where: {
         id: releaseId,
-        brand_id: req.user.brand_id 
-      }
+        brand_id: req.user.brand_id
+      },
+      include: [
+        { model: Song, as: 'songs' }
+      ]
     });
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // Only allow deletion of Draft releases
+    if (release.status !== 'Draft') {
+      return res.status(400).json({ error: 'Only Draft releases can be deleted' });
+    }
+
+    // Delete related records in correct order to avoid foreign key constraint errors
+    // 1. Delete song-related records (SongCollaborator, SongAuthor, SongComposer)
+    const songIds = release.songs?.map((song: any) => song.id) || [];
+    if (songIds.length > 0) {
+      await SongCollaborator.destroy({ where: { song_id: songIds } });
+      await SongAuthor.destroy({ where: { song_id: songIds } });
+      await SongComposer.destroy({ where: { song_id: songIds } });
+    }
+
+    // 2. Delete songs
+    await Song.destroy({ where: { release_id: releaseId } });
+
+    // 3. Delete royalties linked to earnings of this release
+    const earnings = await Earning.findAll({ where: { release_id: releaseId } });
+    const earningIds = earnings.map((e: any) => e.id);
+    if (earningIds.length > 0) {
+      await Royalty.destroy({ where: { earning_id: earningIds } });
+    }
+
+    // 4. Delete royalties directly linked to this release
+    await Royalty.destroy({ where: { release_id: releaseId } });
+
+    // 5. Delete earnings
+    await Earning.destroy({ where: { release_id: releaseId } });
+
+    // 6. Delete recuperable expenses
+    await RecuperableExpense.destroy({ where: { release_id: releaseId } });
+
+    // 7. Delete release-artist associations
+    await ReleaseArtist.destroy({ where: { release_id: releaseId } });
+
+    // 8. Finally, delete the release itself
     await release.destroy();
 
     res.json({ message: 'Release deleted successfully' });

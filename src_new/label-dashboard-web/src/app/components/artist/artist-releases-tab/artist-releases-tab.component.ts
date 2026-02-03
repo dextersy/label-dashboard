@@ -317,4 +317,42 @@ export class ArtistReleasesTabComponent {
     // Release can be edited if it's in Draft status or user is an admin
     return release.status === 'Draft';
   }
+
+  canDeleteRelease(release: ArtistRelease): boolean {
+    // Only Draft releases can be deleted, and only by admins
+    return this.isAdmin && release.status === 'Draft';
+  }
+
+  async onDeleteRelease(release: ArtistRelease): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Release',
+      message: `Are you sure you want to delete "${release.title}"? This will permanently remove the release and all associated tracks, earnings, and other related data. This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      this.releaseService.deleteRelease(release.id).subscribe({
+        next: () => {
+          this.alertMessage.emit({
+            type: 'success',
+            message: `Release "${release.title}" has been deleted.`
+          });
+          this.loadReleases();
+        },
+        error: (error) => {
+          console.error('Error deleting release:', error);
+          let errorMessage = 'Failed to delete release.';
+          if (error.error?.error) {
+            errorMessage = error.error.error;
+          }
+          this.alertMessage.emit({
+            type: 'error',
+            message: errorMessage
+          });
+        }
+      });
+    }
+  }
 }

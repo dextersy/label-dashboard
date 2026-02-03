@@ -127,11 +127,17 @@
                        [class.fa-spin]="downloadingMastersId === release.id"
                        [class.fa-download]="downloadingMastersId !== release.id"></i>
                   </button>
-                  <button class="btn btn-link btn-sm p-0"
+                  <button class="btn btn-link btn-sm p-0 me-2"
                           (click)="toggleExcludeFromEPK(release)"
                           [ngClass]="release.exclude_from_epk ? 'text-warning' : 'text-info'"
                           [title]="release.exclude_from_epk ? 'Excluded from EPK - Click to include' : 'Included in EPK - Click to exclude'">
                     <i class="fa" [ngClass]="release.exclude_from_epk ? 'fa-eye-slash' : 'fa-globe'"></i>
+                  </button>
+                  <button *ngIf="canDeleteRelease(release)"
+                          class="btn btn-link btn-sm p-0 text-danger"
+                          (click)="onDeleteRelease(release)"
+                          title="Delete Release">
+                    <i class="fa fa-trash"></i>
                   </button>
                 </td>
               </tr>
