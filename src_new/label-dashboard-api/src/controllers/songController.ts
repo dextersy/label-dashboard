@@ -1,15 +1,6 @@
 import { Request, Response } from 'express';
 import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
-import AWS from 'aws-sdk';
-
-// Configure AWS S3
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
+import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -473,10 +464,10 @@ export const deleteSong = async (req: AuthRequest, res: Response) => {
     // Delete audio file from S3 if exists
     if (song.audio_file) {
       try {
-        await s3.deleteObject({
+        await deleteFromS3({
           Bucket: process.env.S3_BUCKET_MASTERS!,
           Key: song.audio_file
-        }).promise();
+        });
       } catch (s3Error) {
         console.error('S3 delete error:', s3Error);
       }

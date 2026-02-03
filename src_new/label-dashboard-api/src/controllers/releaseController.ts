@@ -1,18 +1,9 @@
 import { Request, Response } from 'express';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty } from '../models';
-import AWS from 'aws-sdk';
 import path from 'path';
 import archiver from 'archiver';
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
-
-// Configure AWS S3
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
+import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -181,14 +172,12 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
         const fileName = `cover-art/${catalog_no}-${uniqueSuffix}${extension}`;
 
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
         coverArtUrl = result.Location;
       } catch (uploadError) {
         console.error('S3 upload error:', uploadError);
@@ -316,14 +305,12 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
         const fileName = `cover-art/${releaseId}-${uniqueSuffix}${extension}`;
         
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-        
-        const result = await s3.upload(uploadParams).promise();
+        });
         coverArtUrl = result.Location;
       } catch (uploadError) {
         console.error('S3 upload error:', uploadError);
@@ -351,10 +338,10 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
         const oldUrl = new URL(release.cover_art);
         const oldKey = oldUrl.pathname.substring(1);
         
-        await s3.deleteObject({
+        await deleteFromS3({
           Bucket: process.env.S3_BUCKET!,
           Key: oldKey
-        }).promise();
+        });
       } catch (deleteError) {
         console.error('Error deleting old cover art:', deleteError);
       }
@@ -970,18 +957,18 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
         const coverArtFileName = `cover${coverArtExtension}`;
 
         // Validate file exists in S3 before streaming
-        await s3.headObject({
-          Bucket: process.env.S3_BUCKET,
+        await headS3Object({
+          Bucket: process.env.S3_BUCKET!,
           Key: coverArtKey
-        }).promise();
+        });
 
         // File exists, now create stream and add to zip
-        const coverArtStream = s3.getObject({
-          Bucket: process.env.S3_BUCKET,
+        const coverArtResult = await getS3ObjectStream({
+          Bucket: process.env.S3_BUCKET!,
           Key: coverArtKey
-        }).createReadStream();
+        });
 
-        archive.append(coverArtStream, { name: coverArtFileName });
+        archive.append(coverArtResult.Body, { name: coverArtFileName });
       } catch (error) {
         console.error('Error adding cover art to zip:', error);
         // Continue without cover art - file doesn't exist or access denied
@@ -1003,18 +990,18 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
             .trim();
 
           // Validate file exists in S3 before streaming
-          await s3.headObject({
-            Bucket: process.env.S3_BUCKET_MASTERS,
+          await headS3Object({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
             Key: song.audio_file
-          }).promise();
+          });
 
           // File exists, now create stream and add to zip
-          const audioStream = s3.getObject({
-            Bucket: process.env.S3_BUCKET_MASTERS,
+          const audioResult = await getS3ObjectStream({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
             Key: song.audio_file
-          }).createReadStream();
+          });
 
-          archive.append(audioStream, { name: audioFileName });
+          archive.append(audioResult.Body, { name: audioFileName });
         } catch (error) {
           console.error(`Error adding song ${song.id} to zip:`, error);
           // Continue with other songs - file doesn't exist or access denied

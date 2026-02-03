@@ -7,7 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
-import AWS from 'aws-sdk';
+import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import crypto from 'crypto';
 
 const unlinkAsync = promisify(fs.unlink);
@@ -185,14 +185,12 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 
       try {
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
 
         // Store the S3 URL temporarily for gallery entry creation after artist creation
         profilePhotoUrl = result.Location;
@@ -297,14 +295,12 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
 
       try {
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
         profilePhotoUrl = result.Location;
 
         // Create gallery entry
@@ -322,7 +318,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
           try {
             // Check if the old profile photo exists in the gallery
             const existsInGallery = await ArtistImage.findOne({
-              where: { 
+              where: {
                 path: artist.profile_photo,
                 artist_id: parseInt(id)
               }
@@ -332,12 +328,12 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
             if (!existsInGallery) {
               const oldUrl = new URL(artist.profile_photo);
               const oldKey = oldUrl.pathname.substring(1);
-              
-              await s3.deleteObject({
+
+              await deleteFromS3({
                 Bucket: process.env.S3_BUCKET!,
                 Key: oldKey
-              }).promise();
-              
+              });
+
               console.log('Deleted old profile photo from S3 (not in gallery)');
             } else {
               console.log('Old profile photo preserved (exists in gallery)');
@@ -700,15 +696,6 @@ export const getArtistBalance = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Configure AWS S3
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
-
 // Multer configuration for memory storage (for S3 upload)
 const storage = multer.memoryStorage();
 
@@ -849,14 +836,12 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
 
       try {
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: file.buffer,
           ContentType: file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
 
         // Save to database with S3 URL
         const artistImage = await ArtistImage.create({
@@ -1075,13 +1060,11 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
       // Extract the key from the S3 URL
       const url = new URL(photo.path);
       const key = url.pathname.substring(1); // Remove leading '/'
-      
-      const deleteParams = {
+
+      await deleteFromS3({
         Bucket: process.env.S3_BUCKET!,
         Key: key
-      };
-
-      await s3.deleteObject(deleteParams).promise();
+      });
     } catch (fileError) {
       console.error('Error deleting file from S3:', fileError);
       // Continue with database deletion even if S3 deletion fails
@@ -1915,14 +1898,12 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
 
     try {
       // Upload to S3
-      const uploadParams = {
+      const result = await uploadToS3({
         Bucket: process.env.S3_BUCKET!,
         Key: fileName,
         Body: req.file.buffer,
         ContentType: req.file.mimetype
-      };
-
-      const result = await s3.upload(uploadParams).promise();
+      });
 
       // Save to database with S3 URL
       const artistDocument = await ArtistDocument.create({
@@ -1989,13 +1970,11 @@ export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
       // Extract the key from the S3 URL
       const url = new URL(document.path);
       const key = url.pathname.substring(1); // Remove leading '/'
-      
-      const deleteParams = {
+
+      await deleteFromS3({
         Bucket: process.env.S3_BUCKET!,
         Key: key
-      };
-
-      await s3.deleteObject(deleteParams).promise();
+      });
     } catch (fileError) {
       console.error('Error deleting file from S3:', fileError);
       // Continue with database deletion even if S3 deletion fails
