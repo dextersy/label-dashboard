@@ -68,6 +68,14 @@
           <i class="fa fa-paper-plane"></i>
           <span>Submit</span>
         </button>
+        <button
+          type="button"
+          class="sidebar-item sidebar-item-cancel"
+          *ngIf="canCancelToViewMode"
+          (click)="onCancelEditMode()">
+          <i class="fa fa-times"></i>
+          <span>Cancel</span>
+        </button>
       </div>
     </nav>
 

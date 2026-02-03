@@ -540,6 +540,18 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     this.editingRelease = release;
   }
 
+  // Cancel edit mode and return to read-only view (for non-Draft releases)
+  onCancelEditMode(): void {
+    if (this.editingRelease && this.editingRelease.status !== 'Draft') {
+      this.showReadOnlyView = true;
+    }
+  }
+
+  // Check if we can show the cancel button (editing a non-Draft release)
+  get canCancelToViewMode(): boolean {
+    return this.isEditing && !this.isDraftStatus && this.editingRelease?.status !== 'Draft';
+  }
+
   /**
    * Initialize releaseInfoData from a Release object.
    * Extracted to avoid code duplication between loadRelease() and onEnableEditMode().
