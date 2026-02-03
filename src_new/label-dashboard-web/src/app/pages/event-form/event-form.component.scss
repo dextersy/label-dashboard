@@ -401,7 +401,7 @@
   }
 }
 
-/* Mobile - Icon-only navigation */
+/* Mobile - Tab Bar (Top) */
 @media (max-width: 768px) {
   .event-form-page {
     padding: 12px;
@@ -409,16 +409,40 @@
   }
 
   .event-form-sidebar {
+    position: static;
+    width: 100%;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 8px 8px 0 0;
+    padding: 0;
+    margin-top: 0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
     .sidebar-items {
-      padding: 0 12px;
+      flex-direction: row;
       gap: 0;
+      padding: 0;
+      min-width: auto;
+      width: 100%;
     }
 
     .sidebar-item {
-      padding: 14px 12px;
+      flex: 1;
+      height: auto;
+      min-height: 56px;
+      padding: 12px 4px 8px 4px;
+      border: none;
+      border-radius: 0;
+      background-color: transparent;
+      color: #8e8e93;
+      display: flex;
       flex-direction: column;
-      gap: 4px;
-      font-size: 11px;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      position: relative;
+      transition: color 0.2s ease;
+      white-space: normal;
 
       i {
         font-size: 20px;
@@ -426,12 +450,24 @@
       }
 
       span {
-        display: none;
+        display: block;
+        font-size: 10px;
+        font-weight: 500;
       }
 
-      /* Show text on active item */
-      &.active span {
-        display: block;
+      &.active {
+        color: #007bff;
+        border-left-color: transparent;
+        border-bottom-color: transparent;
+        background-color: rgba(0, 123, 255, 0.05);
+      }
+
+      &:hover:not(:disabled):not(.active) {
+        color: #6c757d;
+      }
+
+      &:disabled {
+        opacity: 0.35;
       }
     }
   }
