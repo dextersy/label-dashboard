@@ -120,8 +120,9 @@ export class ReleaseService {
 
   updateRelease(id: number, releaseData: Partial<ReleaseFormData>): Observable<{ message: string; release: Release }> {
     const formData = new FormData();
-    
+
     if (releaseData.title) formData.append('title', releaseData.title);
+    if (releaseData.catalog_no) formData.append('catalog_no', releaseData.catalog_no);
     if (releaseData.UPC !== undefined) formData.append('UPC', releaseData.UPC);
     if (releaseData.spotify_link !== undefined) formData.append('spotify_link', releaseData.spotify_link);
     if (releaseData.apple_music_link !== undefined) formData.append('apple_music_link', releaseData.apple_music_link);
