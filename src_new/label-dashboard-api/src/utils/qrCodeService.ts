@@ -1,14 +1,6 @@
 import QRCode from 'qrcode';
-import AWS from 'aws-sdk';
+import { uploadToS3, deleteFromS3, headS3Object } from './s3Service';
 
-// Configure AWS S3 (reusing existing configuration pattern)
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
 const S3_BUCKET = process.env.S3_BUCKET || 'melt-records-assets';
 
 export class QRCodeService {
@@ -34,15 +26,15 @@ export class QRCodeService {
   static async qrCodeExists(eventId: number, ticketCode: string): Promise<boolean> {
     try {
       const key = this.generateS3Key(eventId, ticketCode);
-      
-      await s3.headObject({
+
+      await headS3Object({
         Bucket: S3_BUCKET,
         Key: key
-      }).promise();
-      
+      });
+
       return true;
     } catch (error: any) {
-      if (error.code === 'NotFound') {
+      if (error.name === 'NotFound' || error.Code === 'NotFound') {
         return false;
       }
       throw error;
@@ -56,7 +48,7 @@ export class QRCodeService {
   static async generateAndStoreQRCode(eventId: number, ticketCode: string): Promise<string> {
     try {
       const key = this.generateS3Key(eventId, ticketCode);
-      
+
       // Generate QR code as buffer containing just the ticket code
       const qrCodeBuffer = await QRCode.toBuffer(ticketCode, {
         type: 'png',
@@ -69,15 +61,12 @@ export class QRCodeService {
       });
 
       // Upload to S3
-      const uploadParams = {
+      await uploadToS3({
         Bucket: S3_BUCKET,
         Key: key,
         Body: qrCodeBuffer,
-        ContentType: 'image/png',
-        CacheControl: 'public, max-age=31536000', // Cache for 1 year
-      };
-
-      await s3.upload(uploadParams).promise();
+        ContentType: 'image/png'
+      });
 
       // Return the public S3 URL
       return `https://${S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`;
@@ -94,7 +83,7 @@ export class QRCodeService {
     try {
       // Check if QR code already exists
       const exists = await this.qrCodeExists(eventId, ticketCode);
-      
+
       if (exists) {
         // Return existing S3 URL
         const key = this.generateS3Key(eventId, ticketCode);
@@ -115,12 +104,12 @@ export class QRCodeService {
   static async deleteQRCode(eventId: number, ticketCode: string): Promise<boolean> {
     try {
       const key = this.generateS3Key(eventId, ticketCode);
-      
-      await s3.deleteObject({
+
+      await deleteFromS3({
         Bucket: S3_BUCKET,
         Key: key
-      }).promise();
-      
+      });
+
       return true;
     } catch (error) {
       console.error('Failed to delete QR code:', error);

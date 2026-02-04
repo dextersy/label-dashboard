@@ -18,7 +18,7 @@ const addResponsiveImageStyling = (content: string): string => {
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
-import AWS from 'aws-sdk';
+import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -190,15 +190,13 @@ const processImagesInHtml = async (htmlContent: string, eventId: number): Promis
       const fileName = `email-image-${eventId}-${uniqueSuffix}.${imageType}`;
       
       // Upload to S3
-      const uploadParams = {
+      const result = await uploadToS3({
         Bucket: process.env.S3_BUCKET!,
         Key: fileName,
         Body: imageBuffer,
         ContentType: `image/${imageType}`,
         ACL: 'public-read' // Make images publicly accessible for emails
-      };
-      
-      const result = await s3.upload(uploadParams).promise();
+      });
       
       // Replace the base64 src with S3 URL in the HTML
       const newImgTag = fullMatch.replace(/src="data:image\/[^;]+;base64,[^"]+"/, `src="${result.Location}"`);
@@ -400,14 +398,12 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
 
       try {
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
         finalPosterUrl = result.Location;
       } catch (uploadError) {
         console.error('S3 upload error:', uploadError);
@@ -602,14 +598,12 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
 
       try {
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
         finalPosterUrl = result.Location;
 
         // Delete old poster from S3 if it exists
@@ -617,11 +611,11 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
           try {
             const oldUrl = new URL(event.poster_url);
             const oldKey = oldUrl.pathname.substring(1);
-            
-            await s3.deleteObject({
+
+            await deleteFromS3({
               Bucket: process.env.S3_BUCKET!,
               Key: oldKey
-            }).promise();
+            });
           } catch (deleteError) {
             console.error('Error deleting old poster:', deleteError);
           }
@@ -1363,15 +1357,6 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-// Configure AWS S3
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
 
 // Multer configuration for memory storage (for S3 upload)
 const storage = multer.memoryStorage();

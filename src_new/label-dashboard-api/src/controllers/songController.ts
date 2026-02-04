@@ -622,10 +622,10 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     // Delete old audio file if exists
     if (song.audio_file) {
       try {
-        await s3.deleteObject({
+        await deleteFromS3({
           Bucket: process.env.S3_BUCKET_MASTERS!,
           Key: song.audio_file
-        }).promise();
+        });
       } catch (s3Error) {
         console.error('S3 delete error:', s3Error);
       }
@@ -642,13 +642,13 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     // S3 doesn't require explicit folder creation - it's created automatically
     // Structure: <Brand Name>/<catalog number> <Artist Name> - <Release title>/<filename>
     const fileName = `${sanitizedBrandName}/${releaseFolderName}/${Date.now()}-${sanitizedOriginalName}`;
-    await s3.upload({
+    await uploadToS3({
       Bucket: process.env.S3_BUCKET_MASTERS!,
       Key: fileName,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,
       ACL: 'private'
-    }).promise();
+    });
 
     // Get file size from the uploaded file buffer
     const fileSize = req.file.buffer.length;
@@ -699,7 +699,7 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
     };
 
     // Get file metadata
-    const headData = await s3.headObject(params).promise();
+    const headData = await headS3Object(params);
     const fileSize = headData.ContentLength || 0;
 
     // Set response headers
@@ -719,16 +719,16 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
       res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
       res.setHeader('Content-Length', chunkSize);
 
-      const stream = s3.getObject({
+      const streamResult = await getS3ObjectStream({
         ...params,
         Range: `bytes=${start}-${end}`
-      }).createReadStream();
+      });
 
-      stream.pipe(res);
+      streamResult.Body.pipe(res);
     } else {
       // Stream entire file
-      const stream = s3.getObject(params).createReadStream();
-      stream.pipe(res);
+      const streamResult = await getS3ObjectStream(params);
+      streamResult.Body.pipe(res);
     }
 
     // Handle stream errors

@@ -3,10 +3,7 @@ import { Op } from 'sequelize';
 import { Fundraiser, Donation, Brand } from '../models';
 import multer from 'multer';
 import path from 'path';
-import AWS from 'aws-sdk';
-
-// Configure S3 client (using aws-sdk v2 for consistency with rest of codebase)
-const s3 = new AWS.S3();
+import { uploadToS3 } from '../utils/s3Service';
 
 // Configure multer for memory storage (we'll upload to S3)
 const storage = multer.memoryStorage();
@@ -25,8 +22,8 @@ export const upload = multer({
   }
 });
 
-// Helper function to upload to S3
-async function uploadToS3(file: Express.Multer.File, brandId: number): Promise<string> {
+// Helper function to upload poster to S3
+async function uploadPosterToS3(file: Express.Multer.File, brandId: number): Promise<string> {
   const bucket = process.env.S3_BUCKET;
   if (!bucket) {
     throw new Error('S3_BUCKET environment variable is not configured');
@@ -36,14 +33,12 @@ async function uploadToS3(file: Express.Multer.File, brandId: number): Promise<s
   const ext = path.extname(file.originalname);
   const key = `fundraiser-poster-${brandId}-${uniqueSuffix}${ext}`;
 
-  const uploadParams = {
+  const result = await uploadToS3({
     Bucket: bucket,
     Key: key,
     Body: file.buffer,
     ContentType: file.mimetype
-  };
-
-  const result = await s3.upload(uploadParams).promise();
+  });
   return result.Location;
 }
 
@@ -167,7 +162,7 @@ export const createFundraiser = async (req: Request, res: Response) => {
     // Handle file upload if present
     if (req.file) {
       try {
-        posterUrl = await uploadToS3(req.file, brandId);
+        posterUrl = await uploadPosterToS3(req.file, brandId);
       } catch (uploadError) {
         console.error('Error uploading poster:', uploadError);
         return res.status(500).json({ error: 'Failed to upload poster image' });
@@ -220,7 +215,7 @@ export const updateFundraiser = async (req: Request, res: Response) => {
     // Handle file upload if present
     if (req.file) {
       try {
-        newPosterUrl = await uploadToS3(req.file, brandId);
+        newPosterUrl = await uploadPosterToS3(req.file, brandId);
       } catch (uploadError) {
         console.error('Error uploading poster:', uploadError);
         return res.status(500).json({ error: 'Failed to upload poster image' });

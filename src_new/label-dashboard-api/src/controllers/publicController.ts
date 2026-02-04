@@ -8,16 +8,8 @@ import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
-import AWS from 'aws-sdk';
+import { headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
-// Configure AWS S3
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
 const paymentService = new PaymentService();
 
 // Helper function to extract domain from request
@@ -2425,13 +2417,13 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     // Get file metadata first (this validates the file exists before we commit to streaming)
     let headData;
     try {
-      headData = await s3.headObject(params).promise();
+      headData = await headS3Object(params);
     } catch (s3Error: any) {
       console.error('S3 headObject error:', s3Error);
       // Check for common S3 errors
-      if (s3Error.code === 'NoSuchKey') {
+      if (s3Error.name === 'NotFound' || s3Error.Code === 'NotFound') {
         return res.status(404).json({ error: 'Audio file not found' });
-      } else if (s3Error.code === 'Forbidden' || s3Error.code === 'AccessDenied') {
+      } else if (s3Error.name === 'Forbidden' || s3Error.name === 'AccessDenied') {
         console.error('S3 access denied - check AWS credentials and permissions');
         return res.status(500).json({ error: 'Audio streaming service unavailable' });
       }
@@ -2478,12 +2470,12 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
       res.setHeader('Content-Length', chunkSize);
 
-      const fileStream = s3.getObject({
+      const streamResult = await getS3ObjectStream({
         ...params,
         Range: `bytes=${start}-${end}`
-      }).createReadStream();
+      });
 
-      fileStream.on('error', (error: any) => {
+      streamResult.Body.on('error', (error: any) => {
         console.error('S3 streaming error:', error);
         if (!res.headersSent) {
           res.status(500).end();
@@ -2492,14 +2484,14 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
         }
       });
 
-      fileStream.pipe(res);
+      streamResult.Body.pipe(res);
     } else {
       // Stream entire file
       res.setHeader('Content-Length', fileSize.toString());
 
-      const fileStream = s3.getObject(params).createReadStream();
-      
-      fileStream.on('error', (error: any) => {
+      const streamResult = await getS3ObjectStream(params);
+
+      streamResult.Body.on('error', (error: any) => {
         console.error('S3 streaming error:', error);
         if (!res.headersSent) {
           res.status(500).end();
@@ -2508,7 +2500,7 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
         }
       });
 
-      fileStream.pipe(res);
+      streamResult.Body.pipe(res);
     }
   } catch (error) {
     console.error('Stream public audio error:', error);

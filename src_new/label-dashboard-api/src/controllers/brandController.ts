@@ -6,7 +6,7 @@ import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment
 import { Op, literal } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
-import AWS from 'aws-sdk';
+import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
@@ -326,15 +326,6 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
   }
 };
 
-// Configure AWS S3
-AWS.config.update({
-  accessKeyId: process.env.S3_ACCESS_KEY,
-  secretAccessKey: process.env.S3_SECRET_KEY,
-  region: process.env.S3_REGION
-});
-
-const s3 = new AWS.S3();
-
 // Configure multer for memory storage (for S3 upload)
 const storage = multer.memoryStorage();
 
@@ -392,25 +383,23 @@ export const uploadLogo = [
 
       try {
         // Upload to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: req.file.buffer,
           ContentType: req.file.mimetype
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
 
         // Delete old logo from S3 if it exists
         if (brand.logo_url && brand.logo_url.startsWith('https://')) {
           try {
             const oldUrl = new URL(brand.logo_url);
             const oldKey = oldUrl.pathname.substring(1);
-            
-            await s3.deleteObject({
+
+            await deleteFromS3({
               Bucket: process.env.S3_BUCKET!,
               Key: oldKey
-            }).promise();
+            });
           } catch (deleteError) {
             console.error('Error deleting old logo:', deleteError);
           }
@@ -460,25 +449,23 @@ export const uploadFavicon = [
         const icoBuffer = await pngToIco(req.file.buffer);
 
         // Upload ICO to S3
-        const uploadParams = {
+        const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
           Key: fileName,
           Body: icoBuffer,
           ContentType: 'image/x-icon'
-        };
-
-        const result = await s3.upload(uploadParams).promise();
+        });
 
         // Delete old favicon from S3 if it exists
         if (brand.favicon_url && brand.favicon_url.startsWith('https://')) {
           try {
             const oldUrl = new URL(brand.favicon_url);
             const oldKey = oldUrl.pathname.substring(1);
-            
-            await s3.deleteObject({
+
+            await deleteFromS3({
               Bucket: process.env.S3_BUCKET!,
               Key: oldKey
-            }).promise();
+            });
           } catch (deleteError) {
             console.error('Error deleting old favicon:', deleteError);
           }
