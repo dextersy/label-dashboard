@@ -2421,7 +2421,7 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     } catch (s3Error: any) {
       console.error('S3 headObject error:', s3Error);
       // Check for common S3 errors
-      if (s3Error.name === 'NotFound' || s3Error.Code === 'NotFound') {
+      if (s3Error.name === 'NoSuchKey' || s3Error.name === 'NotFound') {
         return res.status(404).json({ error: 'Audio file not found' });
       } else if (s3Error.name === 'Forbidden' || s3Error.name === 'AccessDenied') {
         console.error('S3 access denied - check AWS credentials and permissions');

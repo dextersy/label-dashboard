@@ -34,7 +34,7 @@ export class QRCodeService {
 
       return true;
     } catch (error: any) {
-      if (error.name === 'NotFound' || error.Code === 'NotFound') {
+      if (error.name === 'NoSuchKey' || error.name === 'NotFound') {
         return false;
       }
       throw error;
