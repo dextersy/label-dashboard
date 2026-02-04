@@ -753,7 +753,7 @@ export const getEarningById = async (req: AuthRequest, res: Response) => {
 export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { artist_id } = req.params;
-    let artistIdNum = parseInt(artist_id, 10);
+    let artistIdNum = parseInt(artist_id as string, 10);
     
     if (isNaN(artistIdNum)) {
       return res.status(400).json({ error: 'Invalid artist ID' });

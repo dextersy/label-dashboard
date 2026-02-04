@@ -40,7 +40,7 @@ export const getSongwriter = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const songwriter = await Songwriter.findByPk(id);
+    const songwriter = await Songwriter.findByPk(id as string);
 
     if (!songwriter) {
       return res.status(404).json({ error: 'Songwriter not found' });
@@ -95,7 +95,7 @@ export const updateSongwriter = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, pro_affiliation, ipi_number } = req.body;
 
-    const songwriter = await Songwriter.findByPk(id);
+    const songwriter = await Songwriter.findByPk(id as string);
 
     if (!songwriter) {
       return res.status(404).json({ error: 'Songwriter not found' });
@@ -129,7 +129,7 @@ export const deleteSongwriter = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Only administrators can delete songwriters' });
     }
 
-    const songwriter = await Songwriter.findByPk(id);
+    const songwriter = await Songwriter.findByPk(id as string);
 
     if (!songwriter) {
       return res.status(404).json({ error: 'Songwriter not found' });

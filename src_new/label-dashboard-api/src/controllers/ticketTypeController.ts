@@ -165,7 +165,7 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, price, max_tickets, start_date, end_date, disabled } = req.body;
 
-    const ticketTypeId = parseInt(id, 10);
+    const ticketTypeId = parseInt(id as string, 10);
 
     if (isNaN(ticketTypeId)) {
       return res.status(400).json({ error: 'Invalid ticket type ID' });
@@ -368,7 +368,7 @@ export const deleteTicketType = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const ticketTypeId = parseInt(id, 10);
+    const ticketTypeId = parseInt(id as string, 10);
 
     if (isNaN(ticketTypeId)) {
       return res.status(400).json({ error: 'Invalid ticket type ID' });

@@ -15,7 +15,7 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
     }
 
     // Verify that the authenticated user is an admin for the specific brand being queried
-    if (req.user.brand_id !== parseInt(brandId)) {
+    if (req.user.brand_id !== parseInt(brandId as string)) {
       return res.status(403).json({ error: 'Access denied: You can only access data for your own brand' });
     }
 
@@ -279,7 +279,7 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
     }
 
     // Verify that the authenticated user is an admin for the specific brand being queried
-    if (req.user.brand_id !== parseInt(brandId)) {
+    if (req.user.brand_id !== parseInt(brandId as string)) {
       return res.status(403).json({ error: 'Access denied: You can only access data for your own brand' });
     }
 

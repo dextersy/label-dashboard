@@ -76,7 +76,7 @@ export const getBrandSettings = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
 
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
 
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
@@ -128,7 +128,7 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       event_fee_revenue_type
     } = req.body;
 
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
 
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
@@ -185,7 +185,7 @@ export const getFeeSettings = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
 
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
 
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
@@ -222,7 +222,7 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
     const { brandId } = req.params;
     const { monthly_fee, music, event, fundraiser } = req.body;
 
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
 
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
@@ -371,7 +371,7 @@ export const uploadLogo = [
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const brand = await Brand.findByPk(brandId);
+      const brand = await Brand.findByPk(brandId as string);
       if (!brand) {
         return res.status(404).json({ error: 'Brand not found' });
       }
@@ -435,7 +435,7 @@ export const uploadFavicon = [
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const brand = await Brand.findByPk(brandId);
+      const brand = await Brand.findByPk(brandId as string);
       if (!brand) {
         return res.status(404).json({ error: 'Brand not found' });
       }
@@ -526,7 +526,7 @@ export const addDomain = async (req: Request, res: Response) => {
     }
 
     // Check if brand exists
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
     }
@@ -543,7 +543,7 @@ export const addDomain = async (req: Request, res: Response) => {
     // Create new domain
     const finalDomainName = domain_name.toLowerCase().trim();
     const newDomain = await Domain.create({
-      brand_id: parseInt(brandId),
+      brand_id: parseInt(brandId as string),
       domain_name: finalDomainName,
       status: 'Unverified'
     });
@@ -571,7 +571,7 @@ export const deleteDomain = async (req: Request, res: Response) => {
     const { brandId, domainName } = req.params;
 
     // Check if brand exists
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
     }
@@ -600,8 +600,8 @@ export const deleteDomain = async (req: Request, res: Response) => {
     if (wasConnectedOrNoSSL) {
       console.log(`[SSL] Removing domain ${domainName} from SSL certificate before database deletion`);
       try {
-        const sslResult = await removeDomainFromSSL(domainName);
-        logSSLOperation(domainName, sslResult);
+        const sslResult = await removeDomainFromSSL(domainName as string);
+        logSSLOperation(domainName as string, sslResult);
 
         if (!sslResult.success) {
           console.error(`[SSL] Warning: Failed to remove domain from SSL certificate, but continuing with database deletion`);
@@ -704,7 +704,7 @@ const verifyDomainAsync = async (
         try {
           console.log(`[Async][SSL] Attempting to add ${domainName} to SSL certificate`);
           const sslResult = await addDomainToSSL(domainName);
-          logSSLOperation(domainName, sslResult);
+          logSSLOperation(domainName as string, sslResult);
           
           finalStatus = sslResult.success ? 'Connected' : 'No SSL';
           sslConfigured = sslResult.success;
@@ -749,7 +749,7 @@ const verifyDomainAsync = async (
       domain: {
         domain_name: domainName,
         status: finalStatus,
-        brand_id: parseInt(brandId),
+        brand_id: parseInt(brandId as string),
         verification_message: resultMessage,
         ssl_configured: sslConfigured,
         ssl_message: sslMessage
@@ -786,7 +786,7 @@ export const verifyDomain = async (req: Request, res: Response) => {
     const { brandId, domainName } = req.params;
 
     // Check if brand exists
-    const brand = await Brand.findByPk(brandId);
+    const brand = await Brand.findByPk(brandId as string);
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
     }
@@ -808,7 +808,7 @@ export const verifyDomain = async (req: Request, res: Response) => {
 
     // Start async domain verification process
     setImmediate(() => {
-      verifyDomainAsync(brandId, domainName, brand.brand_name);
+      verifyDomainAsync(brandId as string, domainName as string, brand.brand_name);
     });
 
     // Return immediately with job started response
@@ -1213,7 +1213,7 @@ const createSublabelAsync = async (
     // Create new brand (sublabel)
     const newBrand = await Brand.create({
       brand_name: brand_name.trim(),
-      parent_brand: parseInt(brandId),
+      parent_brand: parseInt(brandId as string),
       logo_url: null,
       brand_color: '#6c757d', // Default gray color
       brand_website: '',
@@ -1371,7 +1371,7 @@ export const createSublabel = async (req: Request, res: Response) => {
     }
 
     // Check if parent brand exists
-    const parentBrand = await Brand.findByPk(brandId);
+    const parentBrand = await Brand.findByPk(brandId as string);
     if (!parentBrand) {
       return res.status(404).json({ error: 'Parent brand not found' });
     }
@@ -1392,7 +1392,7 @@ export const createSublabel = async (req: Request, res: Response) => {
 
     // Start async sublabel creation process
     setImmediate(() => {
-      createSublabelAsync(brandId, brand_name, domain_name, subdomain_name, currentUserId, parentBrand.brand_name);
+      createSublabelAsync(brandId as string, brand_name, domain_name, subdomain_name, currentUserId, parentBrand.brand_name);
     });
 
     // Return immediately with job started response

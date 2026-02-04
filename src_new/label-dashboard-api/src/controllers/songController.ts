@@ -58,7 +58,7 @@ export const getSong = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const song = await Song.findByPk(id, {
+    const song = await Song.findByPk(id as string, {
       include: [
         {
           model: Release,
@@ -266,7 +266,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     // Find song and verify brand ownership
-    const song = await Song.findByPk(id, {
+    const song = await Song.findByPk(id as string, {
       include: [{
         model: Release,
         as: 'release',
@@ -310,7 +310,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     if (isRestrictedMode) {
       // Skip updating collaborators, authors, and composers in restricted mode
       // Fetch updated song with associations and return
-      const updatedSong = await Song.findByPk(id, {
+      const updatedSong = await Song.findByPk(id as string, {
         include: [
           {
             model: SongCollaborator,
@@ -410,7 +410,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     }
 
     // Fetch updated song with associations
-    const updatedSong = await Song.findByPk(id, {
+    const updatedSong = await Song.findByPk(id as string, {
       include: [
         {
           model: SongCollaborator,
@@ -443,7 +443,7 @@ export const deleteSong = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
 
     // Find song and verify brand ownership
-    const song = await Song.findByPk(id, {
+    const song = await Song.findByPk(id as string, {
       include: [{
         model: Release,
         as: 'release',
@@ -564,7 +564,7 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     }
 
     // Find song and verify brand ownership, include release, artists, and brand
-    const song = await Song.findByPk(id, {
+    const song = await Song.findByPk(id as string, {
       include: [{
         model: Release,
         as: 'release',
@@ -676,7 +676,7 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
 
     // Find song and verify brand ownership
-    const song = await Song.findByPk(id, {
+    const song = await Song.findByPk(id as string, {
       include: [{
         model: Release,
         as: 'release',

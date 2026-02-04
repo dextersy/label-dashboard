@@ -95,7 +95,7 @@ export const getFundraiser = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
 
     if (!fundraiserId || isNaN(fundraiserId) || fundraiserId <= 0) {
       return res.status(400).json({ error: 'Invalid fundraiser ID' });
@@ -191,7 +191,7 @@ export const updateFundraiser = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
     const { title, description, status, poster_url } = req.body;
 
     if (!fundraiserId || isNaN(fundraiserId) || fundraiserId <= 0) {
@@ -243,7 +243,7 @@ export const publishFundraiser = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
 
     if (!fundraiserId || isNaN(fundraiserId) || fundraiserId <= 0) {
       return res.status(400).json({ error: 'Invalid fundraiser ID' });
@@ -277,7 +277,7 @@ export const unpublishFundraiser = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
 
     if (!fundraiserId || isNaN(fundraiserId) || fundraiserId <= 0) {
       return res.status(400).json({ error: 'Invalid fundraiser ID' });
@@ -311,7 +311,7 @@ export const closeFundraiser = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
 
     if (!fundraiserId || isNaN(fundraiserId) || fundraiserId <= 0) {
       return res.status(400).json({ error: 'Invalid fundraiser ID' });
@@ -345,7 +345,7 @@ export const reopenFundraiser = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
 
     if (!fundraiserId || isNaN(fundraiserId) || fundraiserId <= 0) {
       return res.status(400).json({ error: 'Invalid fundraiser ID' });

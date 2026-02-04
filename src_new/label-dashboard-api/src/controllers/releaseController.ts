@@ -37,7 +37,7 @@ export const getReleases = async (req: AuthRequest, res: Response) => {
 export const getRelease = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
     
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -270,7 +270,7 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
 export const updateRelease = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
     
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -417,7 +417,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     }
 
     // Fetch updated release with all associations
-    const updatedRelease = await Release.findByPk(id, {
+    const updatedRelease = await Release.findByPk(id as string, {
       include: [
         {
           model: Artist,
@@ -529,7 +529,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 export const toggleReleaseExcludeFromEPK = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
 
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -570,7 +570,7 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
 
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -639,7 +639,7 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
 export const getReleaseEarnings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
     
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -679,7 +679,7 @@ export const getReleaseEarnings = async (req: AuthRequest, res: Response) => {
 export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
     
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -747,7 +747,7 @@ export const addReleaseExpense = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
     
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
@@ -864,7 +864,7 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const releaseId = parseInt(id, 10);
+    const releaseId = parseInt(id as string, 10);
 
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });

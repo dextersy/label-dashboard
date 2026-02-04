@@ -110,7 +110,7 @@ const getTotalTicketsSold = async (eventId: number): Promise<number> => {
 export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const eventId = parseInt(id, 10);
+    const eventId = parseInt(id as string, 10);
     const requestDomain = getRequestDomain(req);
 
     if (isNaN(eventId)) {
@@ -1340,7 +1340,7 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
 // Generate SEO page on-demand for social media crawlers
 export const generateEventSEOPage = async (req: Request, res: Response) => {
   try {
-    const eventId = parseInt(req.params.id, 10);
+    const eventId = parseInt(req.params.id as string, 10);
     
     if (isNaN(eventId)) {
       return res.status(404).send('Event not found');
@@ -2008,7 +2008,7 @@ ${JSON.stringify(structuredData, null, 4)}
 export const getArtistEPK = async (req: Request, res: Response) => {
   try {
     const { artist_id } = req.params;
-    const artistId = parseInt(artist_id, 10);
+    const artistId = parseInt(artist_id as string, 10);
 
     if (isNaN(artistId)) {
       return res.status(400).json({ error: 'Invalid artist ID' });
@@ -2178,7 +2178,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
 // Generate SEO page on-demand for social media crawlers (Artist EPK)
 export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
   try {
-    const artistId = parseInt(req.params.id, 10);
+    const artistId = parseInt(req.params.id as string, 10);
     
     if (isNaN(artistId)) {
       return res.status(404).send('Artist not found');
@@ -2327,8 +2327,8 @@ ${JSON.stringify(structuredData, null, 4)}
 // Stream audio for public EPK (no authentication required, but validated against artist/brand)
 export const streamPublicAudio = async (req: Request, res: Response) => {
   try {
-    const songId = parseInt(req.params.songId, 10);
-    const artistId = parseInt(req.params.artistId, 10);
+    const songId = parseInt(req.params.songId as string, 10);
+    const artistId = parseInt(req.params.artistId as string, 10);
 
     if (isNaN(songId) || isNaN(artistId)) {
       return res.status(400).json({ error: 'Invalid parameters' });
@@ -2518,7 +2518,7 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
 export const getFundraiserForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const fundraiserId = parseInt(id, 10);
+    const fundraiserId = parseInt(id as string, 10);
     const requestDomain = getRequestDomain(req);
 
     if (isNaN(fundraiserId)) {

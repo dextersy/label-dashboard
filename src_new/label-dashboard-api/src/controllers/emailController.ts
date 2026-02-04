@@ -88,7 +88,7 @@ export const getEmailContent = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const emailId = parseInt(req.params.id);
+    const emailId = parseInt(req.params.id as string);
     
     if (!emailId) {
       return res.status(400).json({ error: 'Email ID is required' });

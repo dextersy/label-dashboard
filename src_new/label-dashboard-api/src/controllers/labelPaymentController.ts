@@ -62,7 +62,7 @@ export const getLabelPaymentMethods = async (req: AuthRequest, res: Response) =>
     }
 
     const { brandId } = req.params;
-    const targetBrandId = parseInt(brandId, 10);
+    const targetBrandId = parseInt(brandId as string, 10);
 
     if (!targetBrandId || isNaN(targetBrandId)) {
       return res.status(400).json({ error: 'Valid brand ID is required' });
@@ -195,7 +195,7 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
     }
 
     const { brandId } = req.params; // Get the target sublabel's brand ID from route params
-    const targetBrandId = parseInt(brandId, 10);
+    const targetBrandId = parseInt(brandId as string, 10);
 
     if (!targetBrandId || isNaN(targetBrandId)) {
       return res.status(400).json({ error: 'Valid brand ID is required' });
@@ -364,7 +364,7 @@ export const getLabelPayments = async (req: AuthRequest, res: Response) => {
     }
 
     const { brandId } = req.params;
-    const targetBrandId = brandId ? parseInt(brandId, 10) : req.user.brand_id;
+    const targetBrandId = brandId ? parseInt(brandId as string, 10) : req.user.brand_id;
 
     // If a specific brandId is provided, verify it's a child brand
     if (brandId && targetBrandId !== req.user.brand_id) {
@@ -471,7 +471,7 @@ export const getLabelPaymentById = async (req: AuthRequest, res: Response) => {
     }
 
     const { brandId, id } = req.params;
-    const targetBrandId = brandId ? parseInt(brandId, 10) : req.user.brand_id;
+    const targetBrandId = brandId ? parseInt(brandId as string, 10) : req.user.brand_id;
 
     // If a specific brandId is provided, verify it's a child brand
     if (brandId && targetBrandId !== req.user.brand_id) {

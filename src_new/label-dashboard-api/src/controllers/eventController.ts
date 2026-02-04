@@ -247,7 +247,7 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
 export const getEvent = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const eventId = parseInt(id, 10);
+    const eventId = parseInt(id as string, 10);
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -525,7 +525,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const eventId = parseInt(id, 10);
+    const eventId = parseInt(id as string, 10);
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -1212,7 +1212,7 @@ export const refreshVerificationPIN = async (req: AuthRequest, res: Response) =>
     }
 
     const { id } = req.params;
-    const eventId = parseInt(id, 10);
+    const eventId = parseInt(id as string, 10);
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -1541,7 +1541,7 @@ export const updateEventReferrer = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const referrerId = parseInt(id, 10);
+    const referrerId = parseInt(id as string, 10);
 
     if (isNaN(referrerId)) {
       return res.status(400).json({ error: 'Invalid referrer ID' });
@@ -1609,7 +1609,7 @@ export const deleteEventReferrer = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const referrerId = parseInt(id, 10);
+    const referrerId = parseInt(id as string, 10);
 
     if (isNaN(referrerId)) {
       return res.status(400).json({ error: 'Invalid referrer ID' });
@@ -2834,7 +2834,7 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
 
     const { id } = req.params;
     const { slug } = req.body;
-    const eventId = parseInt(id, 10);
+    const eventId = parseInt(id as string, 10);
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -2907,7 +2907,7 @@ export const unpublishEvent = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const eventId = parseInt(id, 10);
+    const eventId = parseInt(id as string, 10);
     
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });

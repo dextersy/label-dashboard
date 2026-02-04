@@ -103,7 +103,7 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
 export const getArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     
     if (isNaN(artistId)) {
       return res.status(400).json({ error: 'Invalid artist ID' });
@@ -248,7 +248,7 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 export const updateArtist = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     const {
       name,
       facebook_handle,
@@ -264,7 +264,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     // Check if user has access to this artist
-    const artistAccess = await checkArtistAccess(parseInt(id), req.user.id, req.user.brand_id, req.user.is_admin);
+    const artistAccess = await checkArtistAccess(parseInt(id as string), req.user.id, req.user.brand_id, req.user.is_admin);
     if (!artistAccess) {
       return res.status(404).json({ error: 'Artist not found or access denied' });
     }
@@ -307,7 +307,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
         const artistImage = await ArtistImage.create({
           path: result.Location,
           credits: 'Profile photo',
-          artist_id: parseInt(id),
+          artist_id: parseInt(id as string),
           date_uploaded: new Date()
         });
 
@@ -320,7 +320,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
             const existsInGallery = await ArtistImage.findOne({
               where: {
                 path: artist.profile_photo,
-                artist_id: parseInt(id)
+                artist_id: parseInt(id as string)
               }
             });
 
@@ -491,7 +491,7 @@ export const deleteArtist = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     const artist = await Artist.findOne({
       where: { 
@@ -557,7 +557,7 @@ export const setSelectedArtist = async (req: AuthRequest, res: Response) => {
 export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -584,7 +584,7 @@ export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
 export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     const { payout_point, hold_payouts } = req.body;
 
     const artist = await Artist.findOne({
@@ -656,7 +656,7 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
 export const getArtistBalance = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     const artist = await Artist.findOne({
       where: { 
@@ -750,7 +750,7 @@ export const documentUpload = multer({
 export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -808,7 +808,7 @@ export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
 export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -847,7 +847,7 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
         const artistImage = await ArtistImage.create({
           path: result.Location,
           credits: '', // Empty caption initially
-          artist_id: parseInt(id),
+          artist_id: parseInt(id as string),
           date_uploaded: new Date()
         });
 
@@ -879,8 +879,8 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
 export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
   try {
     const { id, photoId } = req.params;
-    const artistId = parseInt(id, 10);
-    const photoIdNum = parseInt(photoId, 10);
+    const artistId = parseInt(id as string, 10);
+    const photoIdNum = parseInt(photoId as string, 10);
     
     // Validate request body exists
     if (!req.body || typeof req.body !== 'object') {
@@ -931,8 +931,8 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
 export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response) => {
   try {
     const { id, photoId } = req.params;
-    const artistId = parseInt(id, 10);
-    const photoIdNum = parseInt(photoId, 10);
+    const artistId = parseInt(id as string, 10);
+    const photoIdNum = parseInt(photoId as string, 10);
 
     if (isNaN(artistId) || isNaN(photoIdNum)) {
       return res.status(400).json({ error: 'Invalid artist ID or photo ID' });
@@ -981,8 +981,8 @@ export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response)
 export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
   try {
     const { id, photoId } = req.params;
-    const artistId = parseInt(id, 10);
-    const photoIdNum = parseInt(photoId, 10);
+    const artistId = parseInt(id as string, 10);
+    const photoIdNum = parseInt(photoId as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1028,8 +1028,8 @@ export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
 export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
   try {
     const { id, photoId } = req.params;
-    const artistId = parseInt(id, 10);
-    const photoIdNum = parseInt(photoId, 10);
+    const artistId = parseInt(id as string, 10);
+    const photoIdNum = parseInt(photoId as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1095,7 +1095,7 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
 export const getArtistReleases = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1254,7 +1254,7 @@ export const updateRoyalties = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     const { releases } = req.body;
 
     // Verify artist belongs to user's brand
@@ -1297,7 +1297,7 @@ export const updateRoyalties = async (req: AuthRequest, res: Response) => {
 export const getArtistTeam = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1344,7 +1344,7 @@ export const getArtistTeam = async (req: AuthRequest, res: Response) => {
 export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     const { email } = req.body;
 
     if (!email) {
@@ -1389,7 +1389,7 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
 
     // Create artist access
     const access = await ArtistAccess.create({
-      artist_id: parseInt(id),
+      artist_id: parseInt(id as string),
       user_id: user.id,
       status: 'Pending',
       invite_hash: inviteHash
@@ -1444,8 +1444,8 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
 export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
   try {
     const { id, memberId } = req.params;
-    const artistId = parseInt(id, 10);
-    const memberIdNum = parseInt(memberId, 10);
+    const artistId = parseInt(id as string, 10);
+    const memberIdNum = parseInt(memberId as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1512,8 +1512,8 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
 export const removeTeamMember = async (req: AuthRequest, res: Response) => {
   try {
     const { id, memberId } = req.params;
-    const artistId = parseInt(id, 10);
-    const memberIdNum = parseInt(memberId, 10);
+    const artistId = parseInt(id as string, 10);
+    const memberIdNum = parseInt(memberId as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1557,7 +1557,7 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
 export const getPaymentMethods = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -1592,7 +1592,7 @@ export const getPaymentMethods = async (req: AuthRequest, res: Response) => {
 export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     const {
       type,
       account_name,
@@ -1689,8 +1689,8 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
 export const deletePaymentMethod = async (req: AuthRequest, res: Response) => {
   try {
     const { id, paymentMethodId } = req.params;
-    const artistId = parseInt(id, 10);
-    const paymentMethodIdNum = parseInt(paymentMethodId, 10);
+    const artistId = parseInt(id as string, 10);
+    const paymentMethodIdNum = parseInt(paymentMethodId as string, 10);
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -1755,8 +1755,8 @@ export const deletePaymentMethod = async (req: AuthRequest, res: Response) => {
 export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) => {
   try {
     const { id, paymentMethodId } = req.params;
-    const artistId = parseInt(id, 10);
-    const paymentMethodIdNum = parseInt(paymentMethodId, 10);
+    const artistId = parseInt(id as string, 10);
+    const paymentMethodIdNum = parseInt(paymentMethodId as string, 10);
 
     // Verify artist belongs to user's brand
     const artist = await Artist.findOne({
@@ -1805,7 +1805,7 @@ export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) =
 export const getArtistDocuments = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1862,7 +1862,7 @@ export const getArtistDocuments = async (req: AuthRequest, res: Response) => {
 export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     
     // Validate request body exists
     if (!req.body || typeof req.body !== 'object') {
@@ -1909,7 +1909,7 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
       const artistDocument = await ArtistDocument.create({
         title: title.trim(),
         path: result.Location,
-        artist_id: parseInt(id),
+        artist_id: parseInt(id as string),
         date_uploaded: new Date()
       });
 
@@ -1938,8 +1938,8 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
 export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
   try {
     const { id, documentId } = req.params;
-    const artistId = parseInt(id, 10);
-    const documentIdNum = parseInt(documentId, 10);
+    const artistId = parseInt(id as string, 10);
+    const documentIdNum = parseInt(documentId as string, 10);
 
     // Verify artist exists and user has access
     const artist = await Artist.findOne({
@@ -1997,7 +1997,7 @@ export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
 export const updateEPKSettings = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const artistId = parseInt(id, 10);
+    const artistId = parseInt(id as string, 10);
     const { epk_template } = req.body;
 
     // Check if user has access to this artist
