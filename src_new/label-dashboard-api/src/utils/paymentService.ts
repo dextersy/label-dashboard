@@ -522,27 +522,38 @@ export class PaymentService {
 
       const adminEmails = adminUsers.map((u: any) => u.email_address);
       const donorName = donation.anonymous ? 'Anonymous Donor' : donation.name;
+      const processingFee = donation.processing_fee || 0;
+      const netAmount = donation.amount - processingFee;
 
-      const subject = `New Donation: ${fundraiser.title}`;
-      const htmlBody = `
-        <div style="font-family: Arial, sans-serif;">
-          <h2>New Donation Received</h2>
-          <p><strong>Fundraiser:</strong> ${fundraiser.title}</p>
-          <p><strong>Donor:</strong> ${donorName}</p>
-          <p><strong>Amount:</strong> ₱${donation.amount.toFixed(2)}</p>
-          <p><strong>Processing Fee:</strong> ₱${(donation.processing_fee || 0).toFixed(2)}</p>
-          <p><strong>Net Amount:</strong> ₱${(donation.amount - (donation.processing_fee || 0)).toFixed(2)}</p>
-          <p><strong>Payment ID:</strong> ${donation.payment_id || 'N/A'}</p>
-          <p><strong>Date:</strong> ${new Date(donation.date_paid).toLocaleString()}</p>
-        </div>
-      `;
+      // Get domain for the brand
+      const domains = await Domain.findAll({
+        where: { brand_id: brand.id }
+      });
+      const domainName = domains.length > 0 ? domains[0].domain_name : 'dashboard.meltrecords.com';
+      const dashboardUrl = `https://${domainName}/campaigns/fundraisers/donations`;
 
-      await sendEmail(
-        adminEmails,
-        subject,
-        htmlBody,
-        brand.id
-      );
+      // Generate logo HTML - either an image or text fallback
+      const brandLogoHtml = brand.logo_url
+        ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+        : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${brand.brand_name}</div>`;
+
+      const templateData = {
+        BRAND_NAME: brand.brand_name,
+        BRAND_LOGO_HTML: brandLogoHtml,
+        BRAND_COLOR: brand.brand_color || '#333333',
+        FUNDRAISER_TITLE: fundraiser.title,
+        DONOR_NAME: donorName,
+        AMOUNT: `₱${donation.amount.toFixed(2)}`,
+        PLATFORM_FEE: `₱${processingFee.toFixed(2)}`,
+        NET_AMOUNT: `₱${netAmount.toFixed(2)}`,
+        DATE_PAID: new Date(donation.date_paid).toLocaleString(),
+        DASHBOARD_URL: dashboardUrl
+      };
+
+      // Send branded email to each admin
+      for (const email of adminEmails) {
+        await sendBrandedEmail(email, 'donation_admin_notification', templateData, brand.id);
+      }
 
       this.webhookLog('Successfully sent donation admin notification');
     } catch (error) {
@@ -723,44 +734,58 @@ export class PaymentService {
   private async sendAdminNotification(event: any, ticket: any): Promise<boolean> {
     try {
       const adminEmails = await this.getAdminEmails(event.brand_id);
-      
+
       if (adminEmails.length === 0) {
         return false;
       }
-      
+
+      const brand = event.brand;
+
       // Get domain for the brand
       const domains = await Domain.findAll({
         where: { brand_id: event.brand_id }
       });
-      
+
       const domainName = domains.length > 0 ? domains[0].domain_name : 'dashboard.meltrecords.com';
-      
-      const subject = `New ticket order for ${event.title} completed.`;
+      const dashboardUrl = `https://${domainName}/campaigns/events/tickets`;
+
       const totalPayment = ticket.price_per_ticket * ticket.number_of_entries;
-      
+
       // Ensure processing fee is a number
       const processingFee = parseFloat(ticket.payment_processing_fee) || 0;
-      
-      // Create HTML body matching the PHP implementation exactly
+
       const ticketTypeName = (ticket as any).ticketType ? (ticket as any).ticketType.name : 'Regular';
-      const body = `
-        Confirmed payment for the following ticket.<br><br>
-        Ticket ID : ${ticket.id}<br>
-        Name : ${ticket.name}<br>
-        Email : ${ticket.email_address}<br>
-        Code : ${ticket.ticket_code}<br>
-        Number of entries : ${ticket.number_of_entries}<br>
-        Ticket Type : ${ticketTypeName}<br>
-        Payment : ${totalPayment.toFixed(2)}<br>
-        Processing fee : -${processingFee.toFixed(2)}<br>
-        <br>
-        Go to <a href="https://${domainName}/campaigns/events/tickets" target="_blank">dashboard</a>
-      `;
-      
-      // Use the simple sendEmail function that accepts HTML directly (matches PHP pattern)
-      const { sendEmail } = await import('./emailService');
-      
-      return await sendEmail(adminEmails, subject, body, event.brand_id);
+
+      // Generate logo HTML - either an image or text fallback
+      const brandLogoHtml = brand?.logo_url
+        ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+        : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${brand?.brand_name || 'Dashboard'}</div>`;
+
+      const netAmount = totalPayment - processingFee;
+
+      const templateData = {
+        BRAND_NAME: brand?.brand_name || 'Dashboard',
+        BRAND_LOGO_HTML: brandLogoHtml,
+        BRAND_COLOR: brand?.brand_color || '#333333',
+        EVENT_TITLE: event.title,
+        TICKET_ID: ticket.id.toString(),
+        CUSTOMER_NAME: ticket.name,
+        CUSTOMER_EMAIL: ticket.email_address,
+        TICKET_CODE: ticket.ticket_code,
+        TICKET_TYPE: ticketTypeName,
+        NUMBER_OF_ENTRIES: ticket.number_of_entries.toString(),
+        PAYMENT_AMOUNT: `₱${totalPayment.toFixed(2)}`,
+        PLATFORM_FEE: `₱${processingFee.toFixed(2)}`,
+        NET_AMOUNT: `₱${netAmount.toFixed(2)}`,
+        DASHBOARD_URL: dashboardUrl
+      };
+
+      // Send branded email to each admin
+      for (const email of adminEmails) {
+        await sendBrandedEmail(email, 'ticket_admin_notification', templateData, event.brand_id);
+      }
+
+      return true;
     } catch (error) {
       console.error('Failed to send admin notification:', error);
       return false;
