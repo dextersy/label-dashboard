@@ -23,6 +23,7 @@ export interface TableColumn {
   mobileClass?: string; // CSS classes for mobile responsiveness
   tabletClass?: string; // CSS classes for tablet responsiveness
   showBreakdownButton?: boolean; // Show breakdown button for earnings columns
+  renderHtml?: boolean; // Render formatter output as HTML instead of text
 }
 
 export interface SearchFilters {

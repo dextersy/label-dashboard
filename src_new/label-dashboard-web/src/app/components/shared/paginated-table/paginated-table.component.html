@@ -211,9 +211,11 @@
                     </span>
 
                     <!-- Default handling -->
-                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status' && !column.showBreakdownButton && column.key !== 'amount' && column.key !== 'payment_processing_fee'">
+                    <span *ngIf="column.key !== 'payment_link' && (column.key !== 'result' || (item[column.key] !== 'Success' && item[column.key] !== 'Failed' && item[column.key] !== 'Successful')) && column.key !== 'balance' && column.key !== 'status' && !column.showBreakdownButton && column.key !== 'amount' && column.key !== 'payment_processing_fee' && !column.renderHtml">
                       {{ getColumnValue(item, column) }}
                     </span>
+                    <!-- HTML rendering for columns with renderHtml flag -->
+                    <span *ngIf="column.renderHtml && column.key !== 'status'" [innerHTML]="getColumnValue(item, column)"></span>
                   </td>
                   <td *ngIf="showActionsColumn" class="actions-column">
                     <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
