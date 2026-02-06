@@ -206,14 +206,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private updateVisibleSections(): void {
     switch (this.currentWorkspace) {
       case 'music':
-        // For music workspace, show dashboard first, then artist selector with music/financial items
+        // For music workspace, show dashboard and sync licensing (admin only) above divider, then artist selector with music/financial items
         const musicSection = this.sections.find(section => section.id === 'artist-music-financial');
         const dashboardItem = { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false };
+        const syncLicensingItem = { route: '/music/sync-licensing', icon: 'fas fa-file-contract', title: 'Sync Licensing', adminOnly: true };
         if (musicSection) {
           this.visibleSections = [
             {
               id: 'dashboard',
-              items: [dashboardItem]
+              items: [dashboardItem, syncLicensingItem]
             },
             {
               ...musicSection

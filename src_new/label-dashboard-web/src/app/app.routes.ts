@@ -34,6 +34,7 @@ import { DonationSuccessComponent } from './pages/public/donation-success.compon
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
+import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -81,6 +82,8 @@ export const routes: Routes = [
       { path: 'releases/edit/:id', component: ReleaseSubmissionComponent }
     ]
   },
+  // Sync Licensing (admin only, not artist-specific)
+  { path: 'music/sync-licensing', component: SyncLicensingComponent, canActivate: [adminGuard] },
   { path: 'team', component: ArtistComponent, canActivate: [authGuard, artistSelectedGuard], data: { tab: 'team' } },
   { 
     path: 'financial', 

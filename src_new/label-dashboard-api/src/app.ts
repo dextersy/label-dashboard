@@ -132,7 +132,8 @@ const startServer = async () => {
       { name: 'email', path: './routes/email' },
       { name: 'system', path: './routes/system' },
       { name: 'songs', path: './routes/songs' },
-      { name: 'songwriters', path: './routes/songwriters' }
+      { name: 'songwriters', path: './routes/songwriters' },
+      { name: 'syncLicensing', path: './routes/syncLicensing' }
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -184,6 +185,7 @@ const startServer = async () => {
     const systemRoutes = routes.system;
     const songRoutes = routes.songs;
     const songwriterRoutes = routes.songwriters;
+    const syncLicensingRoutes = routes.syncLicensing;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -202,6 +204,7 @@ const startServer = async () => {
     app.use('/api/email', emailRoutes);
     app.use('/api/songs', songRoutes);
     app.use('/api/songwriters', songwriterRoutes);
+    app.use('/api/sync-licensing', syncLicensingRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);
