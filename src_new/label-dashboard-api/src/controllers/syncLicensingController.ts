@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import archiver from 'archiver';
 import { Readable } from 'stream';
-import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User, Brand, SongAuthor, Songwriter } from '../models';
+import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User, Brand, SongAuthor, SongComposer, Songwriter } from '../models';
 import { getS3ObjectStream } from '../utils/s3Service';
 
 /**
@@ -22,6 +22,16 @@ async function getSongsForPitch(pitchId: number): Promise<any[]> {
         model: Release,
         as: 'release',
         attributes: ['id', 'title', 'cover_art']
+      },
+      {
+        model: SongAuthor,
+        as: 'authors',
+        attributes: ['id']
+      },
+      {
+        model: SongComposer,
+        as: 'composers',
+        attributes: ['id']
       }
     ]
   });
@@ -352,7 +362,7 @@ export const searchSongs = async (req: Request, res: Response) => {
     const whereClause: any = {
       brand_id: brandId,
       // Only include songs that have master audio files
-      audio_file: { [Op.ne]: null }
+      audio_file: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
     };
 
     if (search.trim()) {
@@ -368,6 +378,16 @@ export const searchSongs = async (req: Request, res: Response) => {
           model: Release,
           as: 'release',
           attributes: ['id', 'title', 'cover_art']
+        },
+        {
+          model: SongAuthor,
+          as: 'authors',
+          attributes: ['id']
+        },
+        {
+          model: SongComposer,
+          as: 'composers',
+          attributes: ['id']
         }
       ]
     });

@@ -48,6 +48,9 @@
                     <td>{{ truncateText(pitch.description, 50) }}</td>
                     <td class="text-center">
                       <span class="badge bg-secondary">{{ pitch.songs?.length || 0 }}</span>
+                      <i class="fas fa-exclamation-triangle text-warning ms-1"
+                         *ngIf="hasPitchWarnings(pitch)"
+                         [title]="getPitchWarnings(pitch)"></i>
                     </td>
                     <td>{{ getCreatorName(pitch) }}</td>
                     <td>{{ pitch.createdAt | date:'mediumDate' }}</td>
@@ -150,6 +153,9 @@
                 <div>
                   <strong>{{ song.title }}</strong>
                   <small class="text-muted d-block">{{ getArtistNames(song) }} &bull; {{ song.release?.title }}</small>
+                  <small class="text-warning d-block" *ngIf="getSongWarnings(song).length">
+                    <i class="fas fa-exclamation-triangle me-1"></i>{{ getSongWarnings(song).join(' · ') }}
+                  </small>
                 </div>
                 <i class="fas fa-plus text-primary"></i>
               </button>
@@ -169,6 +175,9 @@
                   <div>
                     <strong>{{ song.title }}</strong>
                     <small class="text-muted d-block">{{ getArtistNames(song) }}</small>
+                    <small class="text-warning d-block" *ngIf="getSongWarnings(song).length">
+                      <i class="fas fa-exclamation-triangle me-1"></i>{{ getSongWarnings(song).join(' · ') }}
+                    </small>
                   </div>
                 </div>
                 <button type="button" class="btn btn-sm btn-link text-danger p-1" (click)="removeSong(song)">

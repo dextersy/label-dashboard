@@ -316,6 +316,33 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     return song.release.artists.map(a => a.name).join(', ');
   }
 
+  getSongWarnings(song: SongForPitch): string[] {
+    const warnings: string[] = [];
+    if (!song.isrc) warnings.push('No ISRC');
+    if (!song.lyrics) warnings.push('No lyrics');
+    if (!song.authors?.length) warnings.push('No authors');
+    if (!song.composers?.length) warnings.push('No composers');
+    return warnings;
+  }
+
+  getPitchWarnings(pitch: SyncLicensingPitch): string {
+    if (!pitch.songs?.length) return '';
+
+    const songWarnings: string[] = [];
+    for (const song of pitch.songs) {
+      const warnings = this.getSongWarnings(song);
+      if (warnings.length) {
+        songWarnings.push(`${song.title}: ${warnings.join(', ')}`);
+      }
+    }
+    return songWarnings.join('\n');
+  }
+
+  hasPitchWarnings(pitch: SyncLicensingPitch): boolean {
+    if (!pitch.songs?.length) return false;
+    return pitch.songs.some(song => this.getSongWarnings(song).length > 0);
+  }
+
   formatDuration(seconds: number | undefined): string {
     if (!seconds) return '-';
     const mins = Math.floor(seconds / 60);

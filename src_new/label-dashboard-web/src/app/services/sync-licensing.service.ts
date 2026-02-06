@@ -8,6 +8,9 @@ export interface SongForPitch {
   title: string;
   duration?: number;
   isrc?: string;
+  lyrics?: string;
+  authors?: { id: number }[];
+  composers?: { id: number }[];
   release?: {
     id: number;
     title: string;
