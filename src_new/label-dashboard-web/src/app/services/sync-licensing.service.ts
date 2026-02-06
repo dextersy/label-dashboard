@@ -112,12 +112,19 @@ export class SyncLicensingService {
   }
 
   /**
-   * Search songs to add to a pitch
+   * Search songs to add to a pitch (only songs with master audio)
    */
   searchSongs(search: string = '', limit: number = 20): Observable<{ songs: SongForPitch[] }> {
     return this.http.get<{ songs: SongForPitch[] }>(
       `${environment.apiUrl}/sync-licensing/songs/search?search=${encodeURIComponent(search)}&limit=${limit}`
     );
+  }
+
+  /**
+   * Get the URL for downloading masters
+   */
+  getDownloadMastersUrl(pitchId: number): string {
+    return `${environment.apiUrl}/sync-licensing/${pitchId}/download-masters`;
   }
 
   /**

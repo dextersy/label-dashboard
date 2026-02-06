@@ -52,6 +52,10 @@
                     <td>{{ getCreatorName(pitch) }}</td>
                     <td>{{ pitch.createdAt | date:'mediumDate' }}</td>
                     <td class="text-end">
+                      <button class="btn btn-sm btn-link text-success p-1" (click)="downloadMasters(pitch)" title="Download Masters" [disabled]="!pitch.songs?.length || downloadingPitchId === pitch.id">
+                        <i class="fas fa-spinner fa-spin" *ngIf="downloadingPitchId === pitch.id"></i>
+                        <i class="fas fa-download" *ngIf="downloadingPitchId !== pitch.id"></i>
+                      </button>
                       <button class="btn btn-sm btn-link text-primary p-1" (click)="openEditModal(pitch)" title="Edit">
                         <i class="fas fa-edit"></i>
                       </button>
@@ -163,7 +167,7 @@
                     <small class="text-muted d-block">{{ getArtistNames(song) }}</small>
                   </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeSong(song)">
+                <button type="button" class="btn btn-sm btn-link text-danger p-1" (click)="removeSong(song)">
                   <i class="fas fa-times"></i>
                 </button>
               </div>

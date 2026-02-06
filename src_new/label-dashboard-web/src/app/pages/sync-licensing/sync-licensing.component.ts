@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
@@ -34,12 +35,16 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   songSearchResults: SongForPitch[] = [];
   searchingSongs = false;
 
+  // Download state
+  downloadingPitchId: number | null = null;
+
   private subscriptions = new Subscription();
 
   constructor(
     private syncLicensingService: SyncLicensingService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -219,6 +224,40 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         }
       })
     );
+  }
+
+  downloadMasters(pitch: SyncLicensingPitch): void {
+    if (!pitch.songs?.length) {
+      this.notificationService.showError('No songs in this pitch');
+      return;
+    }
+
+    this.downloadingPitchId = pitch.id;
+    const url = this.syncLicensingService.getDownloadMastersUrl(pitch.id);
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        // Create a download link and trigger it
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_masters.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+        this.downloadingPitchId = null;
+      },
+      error: (error) => {
+        console.error('Failed to download masters:', error);
+        if (error.status === 404) {
+          this.notificationService.showError('No songs with master audio found in this pitch');
+        } else {
+          this.notificationService.showError('Failed to download masters');
+        }
+        this.downloadingPitchId = null;
+      }
+    });
   }
 
   // Helpers
