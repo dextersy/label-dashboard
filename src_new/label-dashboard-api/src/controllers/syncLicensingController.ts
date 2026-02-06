@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import archiver from 'archiver';
 import { Readable } from 'stream';
-import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User, Brand } from '../models';
+import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User, Brand, SongAuthor, Songwriter } from '../models';
 import { getS3ObjectStream } from '../utils/s3Service';
 
 /**
@@ -513,6 +513,108 @@ export const downloadMasters = async (req: Request, res: Response) => {
     console.error('Error downloading masters:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to download masters' });
+    }
+  }
+};
+
+/**
+ * Download lyrics for a pitch as a text file
+ */
+export const downloadLyrics = async (req: Request, res: Response) => {
+  try {
+    const brandId = (req as any).user?.brand_id;
+    const { id } = req.params;
+    const pitchId = parseInt(id as string, 10);
+
+    if (!pitchId || isNaN(pitchId) || pitchId <= 0) {
+      return res.status(400).json({ error: 'Valid pitch ID is required' });
+    }
+
+    // Get the pitch
+    const pitch = await SyncLicensingPitch.findOne({
+      where: { id: pitchId, brand_id: brandId }
+    });
+
+    if (!pitch) {
+      return res.status(404).json({ error: 'Pitch not found' });
+    }
+
+    // Get songs with lyrics for this pitch
+    const songs = await Song.findAll({
+      where: {
+        lyrics: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
+      },
+      include: [
+        {
+          model: SyncLicensingPitch,
+          as: 'pitches',
+          where: { id: pitchId },
+          attributes: [],
+          through: { attributes: [] }
+        },
+        {
+          model: Release,
+          as: 'release',
+          attributes: ['id', 'title']
+        },
+        {
+          model: SongAuthor,
+          as: 'authors',
+          include: [
+            {
+              model: Songwriter,
+              as: 'songwriter',
+              attributes: ['id', 'name']
+            }
+          ]
+        }
+      ],
+      order: [['title', 'ASC']]
+    });
+
+    if (songs.length === 0) {
+      return res.status(404).json({ error: 'No songs with lyrics found in this pitch' });
+    }
+
+    // Build the lyrics text content
+    let lyricsContent = `LYRICS - ${pitch.title}\n`;
+    lyricsContent += `${'='.repeat(50)}\n\n`;
+
+    for (const song of songs) {
+      const songData = song.toJSON() as any;
+      const releaseTitle = songData.release?.title || 'Unknown Release';
+
+      // Get author names
+      const authorNames = songData.authors
+        ?.map((author: any) => author.songwriter?.name)
+        .filter((name: string | undefined) => name)
+        .join(', ') || '';
+
+      lyricsContent += `${songData.title}\n`;
+      lyricsContent += `From: ${releaseTitle}\n`;
+      if (authorNames) {
+        lyricsContent += `Written by: ${authorNames}\n`;
+      }
+      lyricsContent += `${'-'.repeat(40)}\n\n`;
+      lyricsContent += `${songData.lyrics}\n\n`;
+      lyricsContent += `${'='.repeat(50)}\n\n`;
+    }
+
+    // Sanitize pitch title for filename
+    const sanitizedTitle = pitch.title
+      .replace(/[^a-zA-Z0-9\s\-_]/g, '')
+      .replace(/\s+/g, '_')
+      .trim();
+
+    // Set response headers for text file download
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedTitle}_lyrics.txt"`);
+
+    res.send(lyricsContent);
+  } catch (error) {
+    console.error('Error downloading lyrics:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download lyrics' });
     }
   }
 };

@@ -36,7 +36,8 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   searchingSongs = false;
 
   // Download state
-  downloadingPitchId: number | null = null;
+  downloadingMastersPitchId: number | null = null;
+  downloadingLyricsPitchId: number | null = null;
 
   private subscriptions = new Subscription();
 
@@ -232,7 +233,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.downloadingPitchId = pitch.id;
+    this.downloadingMastersPitchId = pitch.id;
     const url = this.syncLicensingService.getDownloadMastersUrl(pitch.id);
 
     this.http.get(url, { responseType: 'blob' }).subscribe({
@@ -246,7 +247,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
-        this.downloadingPitchId = null;
+        this.downloadingMastersPitchId = null;
       },
       error: (error) => {
         console.error('Failed to download masters:', error);
@@ -255,7 +256,41 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         } else {
           this.notificationService.showError('Failed to download masters');
         }
-        this.downloadingPitchId = null;
+        this.downloadingMastersPitchId = null;
+      }
+    });
+  }
+
+  downloadLyrics(pitch: SyncLicensingPitch): void {
+    if (!pitch.songs?.length) {
+      this.notificationService.showError('No songs in this pitch');
+      return;
+    }
+
+    this.downloadingLyricsPitchId = pitch.id;
+    const url = this.syncLicensingService.getDownloadLyricsUrl(pitch.id);
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        // Create a download link and trigger it
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_lyrics.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+        this.downloadingLyricsPitchId = null;
+      },
+      error: (error) => {
+        console.error('Failed to download lyrics:', error);
+        if (error.status === 404) {
+          this.notificationService.showError('No songs with lyrics found in this pitch');
+        } else {
+          this.notificationService.showError('Failed to download lyrics');
+        }
+        this.downloadingLyricsPitchId = null;
       }
     });
   }

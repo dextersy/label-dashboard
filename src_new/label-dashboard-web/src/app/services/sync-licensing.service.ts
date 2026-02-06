@@ -128,6 +128,13 @@ export class SyncLicensingService {
   }
 
   /**
+   * Get the URL for downloading lyrics
+   */
+  getDownloadLyricsUrl(pitchId: number): string {
+    return `${environment.apiUrl}/sync-licensing/${pitchId}/download-lyrics`;
+  }
+
+  /**
    * Set the currently selected pitch
    */
   setSelectedPitch(pitch: SyncLicensingPitch | null): void {

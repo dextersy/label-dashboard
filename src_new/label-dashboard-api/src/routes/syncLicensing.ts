@@ -6,7 +6,8 @@ import {
   updatePitch,
   deletePitch,
   searchSongs,
-  downloadMasters
+  downloadMasters,
+  downloadLyrics
 } from '../controllers/syncLicensingController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -26,7 +27,8 @@ router.post('/', createPitch);
 router.put('/:id', updatePitch);
 router.delete('/:id', deletePitch);
 
-// Download masters
+// Downloads
 router.get('/:id/download-masters', downloadMasters);
+router.get('/:id/download-lyrics', downloadLyrics);
 
 export default router;
