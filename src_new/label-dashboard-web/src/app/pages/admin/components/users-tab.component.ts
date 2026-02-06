@@ -49,7 +49,15 @@ export class UsersTabComponent implements OnInit {
     { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true },
     { key: 'name', label: 'Name', type: 'text', searchable: true, sortable: true },
     { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true },
-    { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true },
+    { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
+      const result = item.result;
+      if (result === 'Success' || result === 'Successful') {
+        return `<span class="badge bg-success">${result}</span>`;
+      } else if (result === 'Failed') {
+        return `<span class="badge bg-danger">${result}</span>`;
+      }
+      return result;
+    }},
     { key: 'remote_ip', label: 'Remote IP', type: 'text', searchable: true, sortable: true }
   ];
 

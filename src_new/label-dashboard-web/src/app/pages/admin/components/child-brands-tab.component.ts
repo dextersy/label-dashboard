@@ -65,13 +65,14 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       sortable: true,
       align: 'left'
     },
-    { 
-      key: 'status', 
-      label: 'Status', 
+    {
+      key: 'status',
+      label: 'Status',
       type: 'text',
       searchable: true,
       sortable: true,
       align: 'center',
+      renderHtml: true,
       formatter: (item: ChildBrand) => {
         const status = item.status || 'Unknown';
         switch (status) {

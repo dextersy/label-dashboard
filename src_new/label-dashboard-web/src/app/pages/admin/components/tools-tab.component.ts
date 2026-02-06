@@ -22,7 +22,15 @@ export class ToolsTabComponent implements OnInit, OnDestroy {
     { key: 'timestamp', label: 'Timestamp', type: 'date', searchable: true, sortable: true },
     { key: 'recipients', label: 'Recipients', type: 'text', searchable: true, sortable: true },
     { key: 'subject', label: 'Subject', type: 'text', searchable: true, sortable: true },
-    { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true }
+    { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
+      const result = item.result;
+      if (result === 'Success' || result === 'Successful') {
+        return `<span class="badge bg-success">${result}</span>`;
+      } else if (result === 'Failed') {
+        return `<span class="badge bg-danger">${result}</span>`;
+      }
+      return result;
+    }}
   ];
 
   constructor(

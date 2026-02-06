@@ -27,4 +27,8 @@ docs/
 .claude/settings.local.json
 **/environment.prod.ts
 start_smee.sh
+start_dev.sh
+dev_api.log
+dev_web.log
+dev_smee.log
 src_new/wordpress-plugin/melt-dashboard.zip

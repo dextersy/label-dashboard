@@ -66,7 +66,7 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
         align: 'right',
         formatter: (item) => this.formatCurrency(this.hasPlatformFees ? item.platform_fee : item.processing_fee)
       },
-      { key: 'status', label: 'Status', searchable: false, sortable: true, type: 'select', options: [
+      { key: 'status', label: 'Status', searchable: false, sortable: true, type: 'select', renderHtml: true, options: [
         { value: 'paid', label: 'Paid' },
         { value: 'pending', label: 'Pending' },
         { value: 'failed', label: 'Failed' },

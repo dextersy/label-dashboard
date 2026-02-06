@@ -52,11 +52,11 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     { key: 'payment_link', label: 'Payment Link', sortable: false },
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
-    { key: 'status', label: 'Status', searchable: true, sortable: true, type: 'select', options: [
+    { key: 'status', label: 'Status', searchable: true, sortable: true, type: 'select', renderHtml: true, options: [
       { value: 'New', label: 'Awaiting Payment' },
       { value: 'Payment Confirmed', label: 'Payment Confirmed' },
       { value: 'Canceled', label: 'Canceled' }
-    ]},
+    ], formatter: (item) => this.getStatusHtml(item.status) },
   ];
 
   private subscriptions = new Subscription();
@@ -423,6 +423,20 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
         return 'text-muted';
       default:
         return '';
+    }
+  }
+
+  getStatusHtml(status: string): string {
+    const text = this.getStatusText(status);
+    switch (status) {
+      case 'New':
+        return `<span class="badge bg-warning text-dark">${text}</span>`;
+      case 'Payment Confirmed':
+        return `<span class="badge bg-success">${text}</span>`;
+      case 'Canceled':
+        return `<span class="badge bg-secondary">${text}</span>`;
+      default:
+        return `<span class="badge bg-secondary">${text}</span>`;
     }
   }
 
