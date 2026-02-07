@@ -38,6 +38,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   // Download state
   downloadingMastersPitchId: number | null = null;
   downloadingLyricsPitchId: number | null = null;
+  downloadingBSheetPitchId: number | null = null;
 
   private subscriptions = new Subscription();
 
@@ -291,6 +292,40 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
           this.notificationService.showError('Failed to download lyrics');
         }
         this.downloadingLyricsPitchId = null;
+      }
+    });
+  }
+
+  downloadBSheet(pitch: SyncLicensingPitch): void {
+    if (!pitch.songs?.length) {
+      this.notificationService.showError('No songs in this pitch');
+      return;
+    }
+
+    this.downloadingBSheetPitchId = pitch.id;
+    const url = this.syncLicensingService.getDownloadBSheetUrl(pitch.id);
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        // Create a download link and trigger it
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_b-sheet.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+        this.downloadingBSheetPitchId = null;
+      },
+      error: (error) => {
+        console.error('Failed to download B-Sheet:', error);
+        if (error.status === 404) {
+          this.notificationService.showError('No songs found in this pitch');
+        } else {
+          this.notificationService.showError('Failed to download B-Sheet');
+        }
+        this.downloadingBSheetPitchId = null;
       }
     });
   }

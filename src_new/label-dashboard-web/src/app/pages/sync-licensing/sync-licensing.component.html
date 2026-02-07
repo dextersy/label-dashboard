@@ -63,6 +63,10 @@
                         <i class="fas fa-spinner fa-spin" *ngIf="downloadingLyricsPitchId === pitch.id"></i>
                         <i class="fas fa-file-alt" *ngIf="downloadingLyricsPitchId !== pitch.id"></i>
                       </button>
+                      <button class="btn btn-sm btn-link text-secondary p-1" (click)="downloadBSheet(pitch)" title="Download B-Sheet" [disabled]="!pitch.songs?.length || downloadingBSheetPitchId === pitch.id">
+                        <i class="fas fa-spinner fa-spin" *ngIf="downloadingBSheetPitchId === pitch.id"></i>
+                        <i class="fas fa-file-excel" *ngIf="downloadingBSheetPitchId !== pitch.id"></i>
+                      </button>
                       <button class="btn btn-sm btn-link text-primary p-1" (click)="openEditModal(pitch)" title="Edit">
                         <i class="fas fa-edit"></i>
                       </button>

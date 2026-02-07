@@ -138,6 +138,13 @@ export class SyncLicensingService {
   }
 
   /**
+   * Get the URL for downloading B-Sheet
+   */
+  getDownloadBSheetUrl(pitchId: number): string {
+    return `${environment.apiUrl}/sync-licensing/${pitchId}/download-bsheet`;
+  }
+
+  /**
    * Set the currently selected pitch
    */
   setSelectedPitch(pitch: SyncLicensingPitch | null): void {
