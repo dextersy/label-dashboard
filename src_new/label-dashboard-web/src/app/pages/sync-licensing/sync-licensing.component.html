@@ -55,17 +55,11 @@
                     <td>{{ getCreatorName(pitch) }}</td>
                     <td>{{ pitch.createdAt | date:'mediumDate' }}</td>
                     <td class="text-end">
-                      <button class="btn btn-sm btn-link text-success p-1" (click)="downloadMasters(pitch)" title="Download Masters" [disabled]="!pitch.songs?.length || downloadingMastersPitchId === pitch.id">
-                        <i class="fas fa-spinner fa-spin" *ngIf="downloadingMastersPitchId === pitch.id"></i>
-                        <i class="fas fa-download" *ngIf="downloadingMastersPitchId !== pitch.id"></i>
-                      </button>
-                      <button class="btn btn-sm btn-link text-info p-1" (click)="downloadLyrics(pitch)" title="Download Lyrics" [disabled]="!pitch.songs?.length || downloadingLyricsPitchId === pitch.id">
-                        <i class="fas fa-spinner fa-spin" *ngIf="downloadingLyricsPitchId === pitch.id"></i>
-                        <i class="fas fa-file-alt" *ngIf="downloadingLyricsPitchId !== pitch.id"></i>
-                      </button>
-                      <button class="btn btn-sm btn-link text-secondary p-1" (click)="downloadBSheet(pitch)" title="Download B-Sheet" [disabled]="!pitch.songs?.length || downloadingBSheetPitchId === pitch.id">
-                        <i class="fas fa-spinner fa-spin" *ngIf="downloadingBSheetPitchId === pitch.id"></i>
-                        <i class="fas fa-file-excel" *ngIf="downloadingBSheetPitchId !== pitch.id"></i>
+                      <button #downloadBtn class="btn btn-sm btn-link text-secondary p-1" type="button" (click)="toggleDownloadDropdown($event, pitch.id, downloadBtn)" [disabled]="!pitch.songs?.length || isDownloading(pitch.id)">
+                        <i class="fas fa-spinner fa-spin me-1" *ngIf="isDownloading(pitch.id)"></i>
+                        <i class="fas fa-download me-1" *ngIf="!isDownloading(pitch.id)"></i>
+                        Download
+                        <i class="fas fa-caret-down ms-1"></i>
                       </button>
                       <button class="btn btn-sm btn-link text-primary p-1" (click)="openEditModal(pitch)" title="Edit">
                         <i class="fas fa-edit"></i>
@@ -208,3 +202,17 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="showPitchModal" *ngIf="showPitchModal"></div>
+
+<!-- Download Dropdown (rendered outside table to avoid overflow clipping) -->
+<div *ngIf="openDownloadDropdownId !== null && dropdownPosition"
+     [style.position]="'fixed'"
+     [style.top.px]="dropdownPosition.top"
+     [style.right.px]="dropdownPosition.right"
+     [style.zIndex]="9999"
+     style="width: 180px; background-color: #ffffff; border: 1px solid rgba(0,0,0,.15); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 8px 0;">
+  <a href="javascript:void(0)" (click)="downloadMastersById(); closeDownloadDropdown()" style="display: block; padding: 8px 16px; color: #212529; text-decoration: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'"><i class="fas fa-music me-2"></i>Masters</a>
+  <a href="javascript:void(0)" (click)="downloadLyricsById(); closeDownloadDropdown()" style="display: block; padding: 8px 16px; color: #212529; text-decoration: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'"><i class="fas fa-file-alt me-2"></i>Lyrics</a>
+  <a href="javascript:void(0)" (click)="downloadBSheetById(); closeDownloadDropdown()" style="display: block; padding: 8px 16px; color: #212529; text-decoration: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'"><i class="fas fa-file-excel me-2"></i>B-Sheet</a>
+  <hr style="margin: 4px 0; border: none; border-top: 1px solid #eee;">
+  <a href="javascript:void(0)" (click)="downloadAllById(); closeDownloadDropdown()" style="display: block; padding: 8px 16px; color: #212529; text-decoration: none; cursor: pointer;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'"><i class="fas fa-file-archive me-2"></i>All</a>
+</div>

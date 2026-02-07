@@ -39,8 +39,11 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   downloadingMastersPitchId: number | null = null;
   downloadingLyricsPitchId: number | null = null;
   downloadingBSheetPitchId: number | null = null;
+  openDownloadDropdownId: number | null = null;
+  dropdownPosition: { top: number; right: number } | null = null;
 
   private subscriptions = new Subscription();
+  private clickListener: ((event: MouseEvent) => void) | null = null;
 
   constructor(
     private syncLicensingService: SyncLicensingService,
@@ -55,6 +58,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    this.closeDownloadDropdown();
   }
 
   loadPitches(page: number = 1): void {
@@ -328,6 +332,86 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         this.downloadingBSheetPitchId = null;
       }
     });
+  }
+
+  downloadAll(pitch: SyncLicensingPitch): void {
+    if (!pitch.songs?.length) {
+      this.notificationService.showError('No songs in this pitch');
+      return;
+    }
+
+    // Trigger all three downloads
+    this.downloadMasters(pitch);
+    this.downloadLyrics(pitch);
+    this.downloadBSheet(pitch);
+  }
+
+  // Methods that use the stored dropdown pitch ID
+  private getOpenPitch(): SyncLicensingPitch | null {
+    if (!this.openDownloadDropdownId) return null;
+    return this.pitches.find(p => p.id === this.openDownloadDropdownId) || null;
+  }
+
+  downloadMastersById(): void {
+    const pitch = this.getOpenPitch();
+    if (pitch) this.downloadMasters(pitch);
+  }
+
+  downloadLyricsById(): void {
+    const pitch = this.getOpenPitch();
+    if (pitch) this.downloadLyrics(pitch);
+  }
+
+  downloadBSheetById(): void {
+    const pitch = this.getOpenPitch();
+    if (pitch) this.downloadBSheet(pitch);
+  }
+
+  downloadAllById(): void {
+    const pitch = this.getOpenPitch();
+    if (pitch) this.downloadAll(pitch);
+  }
+
+  isDownloading(pitchId: number): boolean {
+    return this.downloadingMastersPitchId === pitchId ||
+           this.downloadingLyricsPitchId === pitchId ||
+           this.downloadingBSheetPitchId === pitchId;
+  }
+
+  toggleDownloadDropdown(event: MouseEvent, pitchId: number, buttonElement: HTMLElement): void {
+    event.stopPropagation();
+    if (this.openDownloadDropdownId === pitchId) {
+      this.closeDownloadDropdown();
+    } else {
+      this.openDownloadDropdownId = pitchId;
+      // Calculate position based on button location
+      const rect = buttonElement.getBoundingClientRect();
+
+      // Calculate right position from viewport's right edge
+      // This aligns the dropdown's right edge with the button's right edge
+      const rightFromViewport = window.innerWidth - rect.right;
+
+      this.dropdownPosition = {
+        top: rect.bottom + 4,
+        right: rightFromViewport
+      };
+      // Add click listener to close dropdown when clicking outside
+      setTimeout(() => {
+        this.clickListener = (e: MouseEvent) => {
+          this.closeDownloadDropdown();
+        };
+        document.addEventListener('click', this.clickListener);
+      });
+    }
+  }
+
+  closeDownloadDropdown(): void {
+    this.openDownloadDropdownId = null;
+    this.dropdownPosition = null;
+    if (this.clickListener) {
+      document.removeEventListener('click', this.clickListener);
+      this.clickListener = null;
+    }
   }
 
   // Helpers

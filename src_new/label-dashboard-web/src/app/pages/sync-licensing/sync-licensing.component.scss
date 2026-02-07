@@ -39,3 +39,54 @@
 .list-group-item-action:hover {
   background-color: var(--bs-light);
 }
+
+// Dropdown styles
+.dropdown {
+  position: relative;
+
+  .dropdown-menu {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+
+    &.show {
+      display: block;
+    }
+
+    &.dropdown-menu-end {
+      right: 0;
+      left: auto;
+    }
+  }
+
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: #212529;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+
+  .dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+  }
+}
