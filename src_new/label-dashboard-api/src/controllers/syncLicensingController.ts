@@ -448,7 +448,7 @@ export const downloadMasters = async (req: Request, res: Response) => {
     // Get songs with audio files for this pitch
     const songs = await Song.findAll({
       where: {
-        audio_file: { [Op.ne]: null }
+        audio_file: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
       },
       include: [
         {
