@@ -72,7 +72,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     {
       id: 'dashboard',
       items: [
-        { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false }
+        { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
+        { route: '/music/sync-licensing', icon: 'fas fa-file-contract', title: 'Sync Licensing', adminOnly: true }
       ]
     },
     {
@@ -206,19 +207,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private updateVisibleSections(): void {
     switch (this.currentWorkspace) {
       case 'music':
-        // For music workspace, show dashboard and sync licensing (admin only) above divider, then artist selector with music/financial items
+        // For music workspace, show dashboard section (with sync licensing) above divider, then artist selector with music/financial items
+        const dashboardSection = this.sections.find(section => section.id === 'dashboard');
         const musicSection = this.sections.find(section => section.id === 'artist-music-financial');
-        const dashboardItem = { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false };
-        const syncLicensingItem = { route: '/music/sync-licensing', icon: 'fas fa-file-contract', title: 'Sync Licensing', adminOnly: true };
-        if (musicSection) {
+        if (dashboardSection && musicSection) {
           this.visibleSections = [
-            {
-              id: 'dashboard',
-              items: [dashboardItem, syncLicensingItem]
-            },
-            {
-              ...musicSection
-            }
+            { ...dashboardSection },
+            { ...musicSection }
           ];
         } else {
           this.visibleSections = [];
