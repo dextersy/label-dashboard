@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface SongForPitch {
@@ -124,24 +124,48 @@ export class SyncLicensingService {
   }
 
   /**
-   * Get the URL for downloading masters
+   * Download master audio files for a pitch as a zip
    */
-  getDownloadMastersUrl(pitchId: number): string {
-    return `${environment.apiUrl}/sync-licensing/${pitchId}/download-masters`;
+  downloadMasters(pitch: SyncLicensingPitch): Observable<Blob> {
+    return this._downloadFile(pitch, 'masters', 'download-masters', '.zip');
   }
 
   /**
-   * Get the URL for downloading lyrics
+   * Download lyrics for a pitch as a text file
    */
-  getDownloadLyricsUrl(pitchId: number): string {
-    return `${environment.apiUrl}/sync-licensing/${pitchId}/download-lyrics`;
+  downloadLyrics(pitch: SyncLicensingPitch): Observable<Blob> {
+    return this._downloadFile(pitch, 'lyrics', 'download-lyrics', '.txt');
   }
 
   /**
-   * Get the URL for downloading B-Sheet
+   * Download B-Sheet for a pitch as an Excel file
    */
-  getDownloadBSheetUrl(pitchId: number): string {
-    return `${environment.apiUrl}/sync-licensing/${pitchId}/download-bsheet`;
+  downloadBSheet(pitch: SyncLicensingPitch): Observable<Blob> {
+    return this._downloadFile(pitch, 'bsheet', 'download-bsheet', '.xlsx');
+  }
+
+  /**
+   * Internal method to handle blob fetching and triggering browser download.
+   */
+  private _downloadFile(pitch: SyncLicensingPitch, suffix: string, endpoint: string, extension: string): Observable<Blob> {
+    const url = `${environment.apiUrl}/sync-licensing/${pitch.id}/${endpoint}`;
+    const sanitizedTitle = pitch.title
+      .replace(/[^a-zA-Z0-9\s\-_]/g, '')
+      .replace(/\s+/g, '_');
+    const filename = `${sanitizedTitle}_${suffix}${extension}`;
+
+    return this.http.get(url, { responseType: 'blob' }).pipe(
+      tap((blob) => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      })
+    );
   }
 
   /**

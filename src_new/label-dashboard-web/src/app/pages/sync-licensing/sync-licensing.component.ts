@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
@@ -35,10 +34,8 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   songSearchResults: SongForPitch[] = [];
   searchingSongs = false;
 
-  // Download state
-  downloadingMastersPitchId: number | null = null;
-  downloadingLyricsPitchId: number | null = null;
-  downloadingBSheetPitchId: number | null = null;
+  // Download state - tracks which pitch/type combinations are currently downloading
+  private downloadingSet = new Set<string>();
   openDownloadDropdownId: number | null = null;
   dropdownPosition: { top: number; right: number } | null = null;
 
@@ -48,8 +45,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   constructor(
     private syncLicensingService: SyncLicensingService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService,
-    private http: HttpClient
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -238,31 +234,18 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.downloadingMastersPitchId = pitch.id;
-    const url = this.syncLicensingService.getDownloadMastersUrl(pitch.id);
+    const key = `${pitch.id}-masters`;
+    this.downloadingSet.add(key);
 
     this.subscriptions.add(
-      this.http.get(url, { responseType: 'blob' }).subscribe({
-        next: (blob) => {
-          // Create a download link and trigger it
-          const downloadUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_masters.zip`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(downloadUrl);
-          this.downloadingMastersPitchId = null;
-        },
+      this.syncLicensingService.downloadMasters(pitch).subscribe({
+        next: () => this.downloadingSet.delete(key),
         error: (error) => {
           console.error('Failed to download masters:', error);
-          if (error.status === 404) {
-            this.notificationService.showError('No songs with master audio found in this pitch');
-          } else {
-            this.notificationService.showError('Failed to download masters');
-          }
-          this.downloadingMastersPitchId = null;
+          this.notificationService.showError(
+            error.status === 404 ? 'No songs with master audio found in this pitch' : 'Failed to download masters'
+          );
+          this.downloadingSet.delete(key);
         }
       })
     );
@@ -274,31 +257,18 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.downloadingLyricsPitchId = pitch.id;
-    const url = this.syncLicensingService.getDownloadLyricsUrl(pitch.id);
+    const key = `${pitch.id}-lyrics`;
+    this.downloadingSet.add(key);
 
     this.subscriptions.add(
-      this.http.get(url, { responseType: 'blob' }).subscribe({
-        next: (blob) => {
-          // Create a download link and trigger it
-          const downloadUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_lyrics.txt`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(downloadUrl);
-          this.downloadingLyricsPitchId = null;
-        },
+      this.syncLicensingService.downloadLyrics(pitch).subscribe({
+        next: () => this.downloadingSet.delete(key),
         error: (error) => {
           console.error('Failed to download lyrics:', error);
-          if (error.status === 404) {
-            this.notificationService.showError('No songs with lyrics found in this pitch');
-          } else {
-            this.notificationService.showError('Failed to download lyrics');
-          }
-          this.downloadingLyricsPitchId = null;
+          this.notificationService.showError(
+            error.status === 404 ? 'No songs with lyrics found in this pitch' : 'Failed to download lyrics'
+          );
+          this.downloadingSet.delete(key);
         }
       })
     );
@@ -310,31 +280,18 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.downloadingBSheetPitchId = pitch.id;
-    const url = this.syncLicensingService.getDownloadBSheetUrl(pitch.id);
+    const key = `${pitch.id}-bsheet`;
+    this.downloadingSet.add(key);
 
     this.subscriptions.add(
-      this.http.get(url, { responseType: 'blob' }).subscribe({
-        next: (blob) => {
-          // Create a download link and trigger it
-          const downloadUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_b-sheet.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(downloadUrl);
-          this.downloadingBSheetPitchId = null;
-        },
+      this.syncLicensingService.downloadBSheet(pitch).subscribe({
+        next: () => this.downloadingSet.delete(key),
         error: (error) => {
           console.error('Failed to download B-Sheet:', error);
-          if (error.status === 404) {
-            this.notificationService.showError('No songs found in this pitch');
-          } else {
-            this.notificationService.showError('Failed to download B-Sheet');
-          }
-          this.downloadingBSheetPitchId = null;
+          this.notificationService.showError(
+            error.status === 404 ? 'No songs found in this pitch' : 'Failed to download B-Sheet'
+          );
+          this.downloadingSet.delete(key);
         }
       })
     );
@@ -346,7 +303,6 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Trigger all three downloads
     this.downloadMasters(pitch);
     this.downloadLyrics(pitch);
     this.downloadBSheet(pitch);
@@ -379,9 +335,9 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   }
 
   isDownloading(pitchId: number): boolean {
-    return this.downloadingMastersPitchId === pitchId ||
-           this.downloadingLyricsPitchId === pitchId ||
-           this.downloadingBSheetPitchId === pitchId;
+    return this.downloadingSet.has(`${pitchId}-masters`) ||
+           this.downloadingSet.has(`${pitchId}-lyrics`) ||
+           this.downloadingSet.has(`${pitchId}-bsheet`);
   }
 
   toggleDownloadDropdown(event: MouseEvent, pitchId: number, buttonElement: HTMLElement): void {
