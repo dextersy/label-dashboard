@@ -241,29 +241,31 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.downloadingMastersPitchId = pitch.id;
     const url = this.syncLicensingService.getDownloadMastersUrl(pitch.id);
 
-    this.http.get(url, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        // Create a download link and trigger it
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_masters.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-        this.downloadingMastersPitchId = null;
-      },
-      error: (error) => {
-        console.error('Failed to download masters:', error);
-        if (error.status === 404) {
-          this.notificationService.showError('No songs with master audio found in this pitch');
-        } else {
-          this.notificationService.showError('Failed to download masters');
+    this.subscriptions.add(
+      this.http.get(url, { responseType: 'blob' }).subscribe({
+        next: (blob) => {
+          // Create a download link and trigger it
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_masters.zip`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(downloadUrl);
+          this.downloadingMastersPitchId = null;
+        },
+        error: (error) => {
+          console.error('Failed to download masters:', error);
+          if (error.status === 404) {
+            this.notificationService.showError('No songs with master audio found in this pitch');
+          } else {
+            this.notificationService.showError('Failed to download masters');
+          }
+          this.downloadingMastersPitchId = null;
         }
-        this.downloadingMastersPitchId = null;
-      }
-    });
+      })
+    );
   }
 
   downloadLyrics(pitch: SyncLicensingPitch): void {
@@ -275,29 +277,31 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.downloadingLyricsPitchId = pitch.id;
     const url = this.syncLicensingService.getDownloadLyricsUrl(pitch.id);
 
-    this.http.get(url, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        // Create a download link and trigger it
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_lyrics.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-        this.downloadingLyricsPitchId = null;
-      },
-      error: (error) => {
-        console.error('Failed to download lyrics:', error);
-        if (error.status === 404) {
-          this.notificationService.showError('No songs with lyrics found in this pitch');
-        } else {
-          this.notificationService.showError('Failed to download lyrics');
+    this.subscriptions.add(
+      this.http.get(url, { responseType: 'blob' }).subscribe({
+        next: (blob) => {
+          // Create a download link and trigger it
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_lyrics.txt`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(downloadUrl);
+          this.downloadingLyricsPitchId = null;
+        },
+        error: (error) => {
+          console.error('Failed to download lyrics:', error);
+          if (error.status === 404) {
+            this.notificationService.showError('No songs with lyrics found in this pitch');
+          } else {
+            this.notificationService.showError('Failed to download lyrics');
+          }
+          this.downloadingLyricsPitchId = null;
         }
-        this.downloadingLyricsPitchId = null;
-      }
-    });
+      })
+    );
   }
 
   downloadBSheet(pitch: SyncLicensingPitch): void {
@@ -309,29 +313,31 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.downloadingBSheetPitchId = pitch.id;
     const url = this.syncLicensingService.getDownloadBSheetUrl(pitch.id);
 
-    this.http.get(url, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        // Create a download link and trigger it
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_b-sheet.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-        this.downloadingBSheetPitchId = null;
-      },
-      error: (error) => {
-        console.error('Failed to download B-Sheet:', error);
-        if (error.status === 404) {
-          this.notificationService.showError('No songs found in this pitch');
-        } else {
-          this.notificationService.showError('Failed to download B-Sheet');
+    this.subscriptions.add(
+      this.http.get(url, { responseType: 'blob' }).subscribe({
+        next: (blob) => {
+          // Create a download link and trigger it
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${pitch.title.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_')}_b-sheet.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(downloadUrl);
+          this.downloadingBSheetPitchId = null;
+        },
+        error: (error) => {
+          console.error('Failed to download B-Sheet:', error);
+          if (error.status === 404) {
+            this.notificationService.showError('No songs found in this pitch');
+          } else {
+            this.notificationService.showError('Failed to download B-Sheet');
+          }
+          this.downloadingBSheetPitchId = null;
         }
-        this.downloadingBSheetPitchId = null;
-      }
-    });
+      })
+    );
   }
 
   downloadAll(pitch: SyncLicensingPitch): void {
