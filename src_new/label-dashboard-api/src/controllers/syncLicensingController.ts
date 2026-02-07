@@ -7,6 +7,54 @@ import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User
 import { getS3ObjectStream } from '../utils/s3Service';
 
 /**
+ * Helper function to enrich songs with artist data from their releases.
+ * Uses batch fetching to avoid N+1 query problem - fetches all releases in a single query.
+ */
+async function enrichSongsWithArtists(songs: Song[]): Promise<any[]> {
+  const songsData = songs.map(song => song.toJSON() as any);
+
+  // Collect unique release IDs
+  const releaseIds = [...new Set(
+    songsData
+      .filter(s => s.release?.id)
+      .map(s => s.release.id)
+  )];
+
+  if (releaseIds.length === 0) {
+    return songsData;
+  }
+
+  // Batch fetch all releases with their artists in a single query
+  const releases = await Release.findAll({
+    where: { id: releaseIds },
+    include: [
+      {
+        model: Artist,
+        as: 'artists',
+        attributes: ['id', 'name'],
+        through: { attributes: [] }
+      }
+    ]
+  });
+
+  // Create a map for quick lookup
+  const releaseArtistsMap = new Map<number, any[]>();
+  for (const release of releases) {
+    const releaseData = release.toJSON() as any;
+    releaseArtistsMap.set(releaseData.id, releaseData.artists || []);
+  }
+
+  // Enrich songs with cached artist data
+  for (const songData of songsData) {
+    if (songData.release?.id) {
+      songData.release.artists = releaseArtistsMap.get(songData.release.id) || [];
+    }
+  }
+
+  return songsData;
+}
+
+/**
  * Helper function to fetch songs with releases and artists for a pitch
  */
 async function getSongsForPitch(pitchId: number): Promise<any[]> {
@@ -37,30 +85,7 @@ async function getSongsForPitch(pitchId: number): Promise<any[]> {
     ]
   });
 
-  // Fetch artists for each song's release separately to avoid nested BelongsToMany issue
-  const songsWithArtists = await Promise.all(
-    songs.map(async (song) => {
-      const songData = song.toJSON() as any;
-      if (songData.release) {
-        const release = await Release.findByPk(songData.release.id, {
-          include: [
-            {
-              model: Artist,
-              as: 'artists',
-              attributes: ['id', 'name'],
-              through: { attributes: [] }
-            }
-          ]
-        });
-        if (release) {
-          songData.release.artists = (release as any).artists || [];
-        }
-      }
-      return songData;
-    })
-  );
-
-  return songsWithArtists;
+  return enrichSongsWithArtists(songs);
 }
 
 /**
@@ -393,28 +418,7 @@ export const searchSongs = async (req: Request, res: Response) => {
       ]
     });
 
-    // Fetch artists for each song's release separately
-    const songsWithArtists = await Promise.all(
-      songs.map(async (song) => {
-        const songData = song.toJSON() as any;
-        if (songData.release) {
-          const release = await Release.findByPk(songData.release.id, {
-            include: [
-              {
-                model: Artist,
-                as: 'artists',
-                attributes: ['id', 'name'],
-                through: { attributes: [] }
-              }
-            ]
-          });
-          if (release) {
-            songData.release.artists = (release as any).artists || [];
-          }
-        }
-        return songData;
-      })
-    );
+    const songsWithArtists = await enrichSongsWithArtists(songs);
 
     res.json({ songs: songsWithArtists });
   } catch (error) {
@@ -709,28 +713,7 @@ export const downloadBSheet = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No songs found in this pitch' });
     }
 
-    // Fetch artists for each song's release separately
-    const songsWithArtists = await Promise.all(
-      songs.map(async (song) => {
-        const songData = song.toJSON() as any;
-        if (songData.release) {
-          const release = await Release.findByPk(songData.release.id, {
-            include: [
-              {
-                model: Artist,
-                as: 'artists',
-                attributes: ['id', 'name'],
-                through: { attributes: [] }
-              }
-            ]
-          });
-          if (release) {
-            songData.release.artists = (release as any).artists || [];
-          }
-        }
-        return songData;
-      })
-    );
+    const songsWithArtists = await enrichSongsWithArtists(songs);
 
     // Create workbook
     const workbook = new ExcelJS.Workbook();
