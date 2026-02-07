@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface SongForPitch {
@@ -62,9 +62,6 @@ export interface PitchPagination {
   providedIn: 'root'
 })
 export class SyncLicensingService {
-  private selectedPitchSubject = new BehaviorSubject<SyncLicensingPitch | null>(null);
-  public selectedPitch$ = this.selectedPitchSubject.asObservable();
-
   constructor(private http: HttpClient) {}
 
   /**
@@ -168,17 +165,4 @@ export class SyncLicensingService {
     );
   }
 
-  /**
-   * Set the currently selected pitch
-   */
-  setSelectedPitch(pitch: SyncLicensingPitch | null): void {
-    this.selectedPitchSubject.next(pitch);
-  }
-
-  /**
-   * Get the currently selected pitch
-   */
-  getSelectedPitch(): SyncLicensingPitch | null {
-    return this.selectedPitchSubject.value;
-  }
 }
