@@ -522,7 +522,28 @@ export const searchSongs = async (req: Request, res: Response) => {
     };
 
     if (search.trim()) {
-      whereClause.title = { [Op.like]: `%${escapeLikeWildcards(search.trim())}%` };
+      const escapedSearch = escapeLikeWildcards(search.trim());
+      const likeCondition = { [Op.like]: `%${escapedSearch}%` };
+
+      // Find release IDs where an artist name matches the search
+      const matchingReleases = await Release.findAll({
+        attributes: ['id'],
+        include: [{
+          model: Artist,
+          as: 'artists',
+          where: { name: likeCondition },
+          attributes: [],
+          through: { attributes: [] }
+        }]
+      });
+      const matchingReleaseIds = matchingReleases.map(r => r.id);
+
+      whereClause[Op.or] = [
+        { title: likeCondition },
+        ...(matchingReleaseIds.length > 0
+          ? [{ release_id: { [Op.in]: matchingReleaseIds } }]
+          : [])
+      ];
     }
 
     const songs = await Song.findAll({
