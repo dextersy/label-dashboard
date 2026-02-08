@@ -1,0 +1,37 @@
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.list-group-item-action:hover {
+  background-color: var(--bs-light);
+}
+
+// Download dropdown (rendered outside table with fixed positioning)
+.download-dropdown {
+  position: fixed;
+  z-index: 9999;
+  width: 180px;
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+}
+
+.download-dropdown-item {
+  display: block;
+  padding: 8px 16px;
+  color: #212529;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+}
+
+.download-dropdown-divider {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid #eee;
+}

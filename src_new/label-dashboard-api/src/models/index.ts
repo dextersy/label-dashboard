@@ -30,6 +30,8 @@ import SongComposer from './SongComposer';
 import Songwriter from './Songwriter';
 import Fundraiser from './Fundraiser';
 import Donation from './Donation';
+import SyncLicensingPitch from './SyncLicensingPitch';
+import SyncLicensingPitchSong from './SyncLicensingPitchSong';
 
 // Define relationships
 // Brand relationships
@@ -202,6 +204,32 @@ Fundraiser.hasMany(Donation, { foreignKey: 'fundraiser_id', as: 'donations' });
 // Donation relationships
 Donation.belongsTo(Fundraiser, { foreignKey: 'fundraiser_id', as: 'fundraiser' });
 
+// SyncLicensingPitch relationships
+SyncLicensingPitch.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+SyncLicensingPitch.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+SyncLicensingPitch.hasMany(SyncLicensingPitchSong, { foreignKey: 'pitch_id', as: 'pitchSongs' });
+SyncLicensingPitch.belongsToMany(Song, {
+  through: SyncLicensingPitchSong,
+  foreignKey: 'pitch_id',
+  otherKey: 'song_id',
+  as: 'songs'
+});
+
+// SyncLicensingPitchSong relationships
+SyncLicensingPitchSong.belongsTo(SyncLicensingPitch, { foreignKey: 'pitch_id', as: 'pitch' });
+SyncLicensingPitchSong.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
+
+// Song relationships to SyncLicensingPitch (reverse)
+Song.belongsToMany(SyncLicensingPitch, {
+  through: SyncLicensingPitchSong,
+  foreignKey: 'song_id',
+  otherKey: 'pitch_id',
+  as: 'pitches'
+});
+
+// Brand relationships to SyncLicensingPitch
+Brand.hasMany(SyncLicensingPitch, { foreignKey: 'brand_id', as: 'syncLicensingPitches' });
+
 // Export all models
 export {
   sequelize,
@@ -234,6 +262,8 @@ export {
   Songwriter,
   Fundraiser,
   Donation,
+  SyncLicensingPitch,
+  SyncLicensingPitchSong,
 };
 
 // Initialize database connection
