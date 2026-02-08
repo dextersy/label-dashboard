@@ -5,12 +5,12 @@ import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
-import { PaginationInfo } from '../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-sync-licensing',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent],
   templateUrl: './sync-licensing.component.html',
   styleUrl: './sync-licensing.component.scss'
 })
@@ -18,6 +18,66 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   pitches: SyncLicensingPitch[] = [];
   loading = false;
   pagination: PaginationInfo | null = null;
+
+  // Search & sort state
+  currentFilters: SearchFilters = {};
+  currentSort: SortInfo | null = null;
+
+  // Table columns configuration
+  pitchColumns: TableColumn[] = [
+    {
+      key: 'title',
+      label: 'Title',
+      searchable: true,
+      sortable: true,
+      renderHtml: true,
+      formatter: (pitch: any) => `<strong>${this.escapeHtml(pitch.title)}</strong>`
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      searchable: true,
+      sortable: false,
+      formatter: (pitch: any) => this.truncateText(pitch.description, 50)
+    },
+    {
+      key: 'songs',
+      label: 'Songs',
+      align: 'center',
+      searchable: false,
+      sortable: false,
+      renderHtml: true,
+      formatter: (pitch: any) => {
+        const count = pitch.songs?.length || 0;
+        let html = `<span class="badge bg-secondary">${count}</span>`;
+        if (this.hasPitchWarnings(pitch)) {
+          const warnings = this.escapeHtml(this.getPitchWarnings(pitch))
+            .replace(/\n/g, '&#10;');
+          html += ` <i class="fas fa-exclamation-triangle text-warning" title="${warnings}"></i>`;
+        }
+        return html;
+      }
+    },
+    {
+      key: 'creator',
+      label: 'Created By',
+      searchable: false,
+      sortable: false,
+      formatter: (pitch: any) => this.getCreatorName(pitch)
+    },
+    {
+      key: 'createdAt',
+      label: 'Created',
+      searchable: false,
+      sortable: true,
+      formatter: (pitch: any) => {
+        if (!pitch.createdAt) return '';
+        return new Date(pitch.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric'
+        });
+      }
+    }
+  ];
 
   // Modal state
   showPitchModal = false;
@@ -60,7 +120,12 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   loadPitches(page: number = 1): void {
     this.loading = true;
     this.subscriptions.add(
-      this.syncLicensingService.getPitches(page).subscribe({
+      this.syncLicensingService.getPitches({
+        page,
+        filters: this.currentFilters,
+        sort_field: this.currentSort?.column,
+        sort_order: this.currentSort?.direction
+      }).subscribe({
         next: (response) => {
           this.pitches = response.pitches;
           this.pagination = {
@@ -84,6 +149,16 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   onPageChange(page: number): void {
     this.loadPitches(page);
+  }
+
+  onFiltersChange(filters: SearchFilters): void {
+    this.currentFilters = filters;
+    this.loadPitches(1);
+  }
+
+  onSortChange(sort: SortInfo | null): void {
+    this.currentSort = sort;
+    this.loadPitches(1);
   }
 
   openCreateModal(): void {
@@ -377,6 +452,14 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   }
 
   // Helpers
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   truncateText(text: string | undefined, maxLength: number): string {
     if (!text) return '-';
     if (text.length <= maxLength) return text;
@@ -429,5 +512,14 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // TrackBy functions for *ngFor performance
+  trackByPitchId(index: number, pitch: SyncLicensingPitch): number {
+    return pitch.id;
+  }
+
+  trackBySongId(index: number, song: SongForPitch): number {
+    return song.id;
   }
 }

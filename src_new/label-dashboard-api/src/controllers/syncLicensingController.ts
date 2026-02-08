@@ -107,14 +107,35 @@ export const getPitches = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = (page - 1) * limit;
 
+    // Search & sort params
+    const searchTitle = (req.query.title as string || '').trim().substring(0, 100);
+    const searchDescription = (req.query.description as string || '').trim().substring(0, 100);
+    const sortField = req.query.sort_field as string || 'createdAt';
+    const sortOrder = (req.query.sort_order as string || 'DESC').toUpperCase();
+
     if (!brandId) {
       return res.status(400).json({ error: 'Brand ID is required' });
     }
 
+    // Whitelist sort fields and order
+    const allowedSortFields = ['title', 'createdAt'];
+    const allowedSortOrders = ['ASC', 'DESC'];
+    const safeSortField = allowedSortFields.includes(sortField) ? sortField : 'createdAt';
+    const safeSortOrder = allowedSortOrders.includes(sortOrder) ? sortOrder : 'DESC';
+
+    // Build where clause with search filters
+    const where: any = { brand_id: brandId };
+    if (searchTitle) {
+      where.title = { [Op.like]: `%${searchTitle}%` };
+    }
+    if (searchDescription) {
+      where.description = { [Op.like]: `%${searchDescription}%` };
+    }
+
     // Get pitches with creator only
     const { count, rows: pitches } = await SyncLicensingPitch.findAndCountAll({
-      where: { brand_id: brandId },
-      order: [['createdAt', 'DESC']],
+      where,
+      order: [[safeSortField, safeSortOrder]],
       limit,
       offset,
       distinct: true,

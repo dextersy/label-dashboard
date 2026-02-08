@@ -65,11 +65,35 @@ export class SyncLicensingService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get all sync licensing pitches with pagination
+   * Get all sync licensing pitches with pagination, search, and sort
    */
-  getPitches(page: number = 1, limit: number = 20): Observable<{ pitches: SyncLicensingPitch[], pagination: PitchPagination }> {
+  getPitches(params: {
+    page?: number;
+    limit?: number;
+    filters?: { [key: string]: string };
+    sort_field?: string;
+    sort_order?: string;
+  } = {}): Observable<{ pitches: SyncLicensingPitch[], pagination: PitchPagination }> {
+    const queryParams = new URLSearchParams();
+    queryParams.set('page', (params.page || 1).toString());
+    queryParams.set('limit', (params.limit || 20).toString());
+
+    if (params.filters) {
+      for (const [key, value] of Object.entries(params.filters)) {
+        if (value?.trim()) {
+          queryParams.set(key, value.trim());
+        }
+      }
+    }
+    if (params.sort_field) {
+      queryParams.set('sort_field', params.sort_field);
+    }
+    if (params.sort_order) {
+      queryParams.set('sort_order', params.sort_order);
+    }
+
     return this.http.get<{ pitches: SyncLicensingPitch[], pagination: PitchPagination }>(
-      `${environment.apiUrl}/sync-licensing?page=${page}&limit=${limit}`
+      `${environment.apiUrl}/sync-licensing?${queryParams.toString()}`
     );
   }
 
