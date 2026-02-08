@@ -740,12 +740,12 @@ export const downloadBSheet = async (req: Request, res: Response) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Metadata');
 
-    // Static publisher info
-    const PUBLISHER_NAME = 'Melt Records Music Publishing Inc.';
-    const PUBLISHER_PRO = 'FILSCAP';
-    const PUBLISHER_IPI = '1179052840';
-    const PUBLISHER_PHONE = '+639176257955';
-    const PUBLISHER_EMAIL = 'hi@melt-records.com';
+    // TODO: Move publisher info to a brand-level database table so each brand can have its own publisher details
+    const PUBLISHER_NAME = process.env.BSHEET_PUBLISHER_NAME || '';
+    const PUBLISHER_PRO = process.env.BSHEET_PUBLISHER_PRO || '';
+    const PUBLISHER_IPI = process.env.BSHEET_PUBLISHER_IPI || '';
+    const PUBLISHER_PHONE = process.env.BSHEET_PUBLISHER_PHONE || '';
+    const PUBLISHER_EMAIL = process.env.BSHEET_PUBLISHER_EMAIL || '';
     const PUBLISHER_CUT = 100;
 
     // Define styles
