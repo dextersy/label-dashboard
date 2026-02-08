@@ -62,7 +62,7 @@ async function enrichSongsWithArtists(songs: Song[]): Promise<any[]> {
 }
 
 /**
- * Helper function to fetch songs with releases and artists for a pitch
+ * Helper function to fetch songs with releases and artists for a single pitch.
  */
 async function getSongsForPitch(pitchId: number): Promise<any[]> {
   const songs = await Song.findAll({
@@ -96,12 +96,110 @@ async function getSongsForPitch(pitchId: number): Promise<any[]> {
 }
 
 /**
- * Helper function to enrich a pitch with songs
+ * Helper function to enrich a single pitch with its songs.
  */
 async function enrichPitchWithSongs(pitch: any): Promise<any> {
   const pitchData = pitch.toJSON ? pitch.toJSON() : pitch;
   pitchData.songs = await getSongsForPitch(pitchData.id);
   return pitchData;
+}
+
+/**
+ * Batch-fetch songs for multiple pitches in two queries (songs + release artists)
+ * instead of 2N queries. Returns a map of pitchId -> enriched song data.
+ */
+async function getSongsForPitches(pitchIds: number[]): Promise<Map<number, any[]>> {
+  if (pitchIds.length === 0) return new Map();
+
+  // Single query: fetch all songs linked to any of the given pitches
+  const pitchSongRows = await SyncLicensingPitchSong.findAll({
+    where: { pitch_id: pitchIds },
+    include: [
+      {
+        model: Song,
+        as: 'song',
+        include: [
+          {
+            model: Release,
+            as: 'release',
+            attributes: ['id', 'title', 'cover_art']
+          },
+          {
+            model: SongAuthor,
+            as: 'authors',
+            attributes: ['id']
+          },
+          {
+            model: SongComposer,
+            as: 'composers',
+            attributes: ['id']
+          }
+        ]
+      }
+    ]
+  });
+
+  // Deduplicate songs and track which pitches they belong to
+  const pitchSongsMap = new Map<number, Song[]>();
+  for (const row of pitchSongRows) {
+    const rowData = row.toJSON() as any;
+    const pitchId = rowData.pitch_id;
+    if (!rowData.song) continue;
+
+    if (!pitchSongsMap.has(pitchId)) {
+      pitchSongsMap.set(pitchId, []);
+    }
+    pitchSongsMap.get(pitchId)!.push(rowData.song);
+  }
+
+  // Collect all unique songs for a single batch artist enrichment
+  const allSongsMap = new Map<number, any>();
+  for (const songs of pitchSongsMap.values()) {
+    for (const song of songs) {
+      if (!allSongsMap.has(song.id)) {
+        allSongsMap.set(song.id, song);
+      }
+    }
+  }
+  const allSongs = Array.from(allSongsMap.values());
+
+  // Single query: batch fetch release artists for all songs
+  const releaseIds = [...new Set(
+    allSongs.filter(s => s.release?.id).map(s => s.release.id)
+  )];
+
+  const releaseArtistsMap = new Map<number, any[]>();
+  if (releaseIds.length > 0) {
+    const releases = await Release.findAll({
+      where: { id: releaseIds },
+      include: [{
+        model: Artist,
+        as: 'artists',
+        attributes: ['id', 'name'],
+        through: { attributes: [] }
+      }]
+    });
+    for (const release of releases) {
+      const rd = release.toJSON() as any;
+      releaseArtistsMap.set(rd.id, rd.artists || []);
+    }
+  }
+
+  // Apply artist data to all songs
+  for (const song of allSongs) {
+    if (song.release?.id) {
+      song.release.artists = releaseArtistsMap.get(song.release.id) || [];
+    }
+  }
+
+  // Build the final map: pitchId -> enriched songs (using the shared song objects)
+  const result = new Map<number, any[]>();
+  for (const pitchId of pitchIds) {
+    const songs = pitchSongsMap.get(pitchId) || [];
+    result.set(pitchId, songs.map(s => allSongsMap.get(s.id) || s));
+  }
+
+  return result;
 }
 
 /**
@@ -155,10 +253,14 @@ export const getPitches = async (req: Request, res: Response) => {
       ]
     });
 
-    // Fetch songs for each pitch separately
-    const pitchesWithSongs = await Promise.all(
-      pitches.map(pitch => enrichPitchWithSongs(pitch))
-    );
+    // Batch-fetch songs for all pitches in 2 queries instead of 2N
+    const pitchIds = pitches.map(p => p.id);
+    const songsMap = await getSongsForPitches(pitchIds);
+    const pitchesWithSongs = pitches.map(pitch => {
+      const pitchData = pitch.toJSON() as any;
+      pitchData.songs = songsMap.get(pitchData.id) || [];
+      return pitchData;
+    });
 
     res.json({
       pitches: pitchesWithSongs,
