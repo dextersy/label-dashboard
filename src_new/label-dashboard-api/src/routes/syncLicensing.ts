@@ -11,6 +11,7 @@ import {
   downloadBSheet
 } from '../controllers/syncLicensingController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { uploadRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
 
@@ -28,9 +29,9 @@ router.post('/', createPitch);
 router.put('/:id', updatePitch);
 router.delete('/:id', deletePitch);
 
-// Downloads
-router.get('/:id/download-masters', downloadMasters);
-router.get('/:id/download-lyrics', downloadLyrics);
-router.get('/:id/download-bsheet', downloadBSheet);
+// Downloads (rate limited - streams S3 objects through the server)
+router.get('/:id/download-masters', uploadRateLimit, downloadMasters);
+router.get('/:id/download-lyrics', uploadRateLimit, downloadLyrics);
+router.get('/:id/download-bsheet', uploadRateLimit, downloadBSheet);
 
 export default router;

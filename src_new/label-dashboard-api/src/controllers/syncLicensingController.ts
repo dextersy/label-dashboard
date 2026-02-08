@@ -7,6 +7,13 @@ import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User
 import { getS3ObjectStream } from '../utils/s3Service';
 
 /**
+ * Escape SQL LIKE wildcard characters so user input is treated as literal text.
+ */
+function escapeLikeWildcards(value: string): string {
+  return value.replace(/[%_]/g, '\\$&');
+}
+
+/**
  * Helper function to enrich songs with artist data from their releases.
  * Uses batch fetching to avoid N+1 query problem - fetches all releases in a single query.
  */
@@ -126,10 +133,10 @@ export const getPitches = async (req: Request, res: Response) => {
     // Build where clause with search filters
     const where: any = { brand_id: brandId };
     if (searchTitle) {
-      where.title = { [Op.like]: `%${searchTitle}%` };
+      where.title = { [Op.like]: `%${escapeLikeWildcards(searchTitle)}%` };
     }
     if (searchDescription) {
-      where.description = { [Op.like]: `%${searchDescription}%` };
+      where.description = { [Op.like]: `%${escapeLikeWildcards(searchDescription)}%` };
     }
 
     // Get pitches with creator only
@@ -413,7 +420,7 @@ export const searchSongs = async (req: Request, res: Response) => {
     };
 
     if (search.trim()) {
-      whereClause.title = { [Op.like]: `%${search.trim()}%` };
+      whereClause.title = { [Op.like]: `%${escapeLikeWildcards(search.trim())}%` };
     }
 
     const songs = await Song.findAll({
