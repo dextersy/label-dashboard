@@ -845,6 +845,18 @@ export const downloadBSheet = async (req: Request, res: Response) => {
 
     const songsWithArtists = await enrichSongsWithArtists(songs);
 
+    // Batch-fetch brand names for release label (uses the song's brand, not the user's,
+    // so child-brand releases display their own label name)
+    const brandIds = [...new Set(songs.map(s => (s as any).brand_id).filter(Boolean))];
+    const brands = brandIds.length > 0
+      ? await Brand.findAll({ where: { id: brandIds }, attributes: ['id', 'brand_name'] })
+      : [];
+    const brandNameMap = new Map<number, string>();
+    for (const b of brands) {
+      const bd = b.toJSON() as any;
+      brandNameMap.set(bd.id, bd.brand_name);
+    }
+
     // Create workbook
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Metadata');
@@ -1006,9 +1018,6 @@ export const downloadBSheet = async (req: Request, res: Response) => {
       if (col === 7) cell.fill = lightGreenFill;
     }
 
-    // Track data row start for styling later
-    const dataStartRow = 8;
-
     // Add song data
     for (const song of songsWithArtists) {
       const artistNames = song.release?.artists?.map((a: any) => a.name).join(', ') || '';
@@ -1016,6 +1025,7 @@ export const downloadBSheet = async (req: Request, res: Response) => {
         ? new Date(song.release.release_date).toISOString().split('T')[0]
         : '';
       const releaseTitle = song.release?.title || '';
+      const releaseLabel = brandNameMap.get(song.brand_id) || '';
 
       // Combine authors and composers as writers
       // 50% split evenly among authors, 50% split evenly among composers
@@ -1073,7 +1083,7 @@ export const downloadBSheet = async (req: Request, res: Response) => {
           '✓', // Non-exclusive
           '', // DBP YouTube/Social Media Promotion
           releaseDate,
-          'Melt Records', // Release Label
+          releaseLabel, // Release Label
           releaseTitle,
           '', // Writer First Name
           '', // Writer Last Name
@@ -1117,7 +1127,7 @@ export const downloadBSheet = async (req: Request, res: Response) => {
           '✓', // Non-exclusive
           '', // DBP YouTube/Social Media Promotion
           releaseDate,
-          'Melt Records', // Release Label
+          releaseLabel, // Release Label
           releaseTitle,
           nameParts.firstName,
           nameParts.lastName,
