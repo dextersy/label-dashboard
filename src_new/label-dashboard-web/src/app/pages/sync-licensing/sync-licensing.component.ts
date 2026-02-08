@@ -48,13 +48,20 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       sortable: false,
       renderHtml: true,
       formatter: (pitch: any) => {
-        const count = pitch.songs?.length || 0;
-        let html = `<span class="badge bg-secondary">${count}</span>`;
-        if (this.hasPitchWarnings(pitch)) {
-          const warnings = this.escapeHtml(this.getPitchWarnings(pitch))
-            .replace(/\n/g, '&#10;');
-          html += ` <i class="fas fa-exclamation-triangle text-warning" title="${warnings}"></i>`;
+        const songs: any[] = pitch.songs || [];
+        const warnSongs = songs.filter(s => this.getSongWarnings(s).length > 0);
+        const validSongs = songs.filter(s => this.getSongWarnings(s).length === 0);
+
+        const validTooltip = validSongs.map(s => this.escapeHtml(s.title)).join('&#10;');
+        let html = `<i class="fas fa-check-circle text-success me-1" title="${validTooltip}"></i>${validSongs.length}`;
+
+        if (warnSongs.length > 0) {
+          const warnTooltip = warnSongs
+            .map(s => `${this.escapeHtml(s.title)}: ${this.getSongWarnings(s).join(', ')}`)
+            .join('&#10;');
+          html += ` <i class="fas fa-exclamation-triangle text-warning ms-2 me-1" title="${warnTooltip}"></i>${warnSongs.length}`;
         }
+
         return html;
       }
     },
