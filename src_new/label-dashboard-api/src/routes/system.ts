@@ -9,7 +9,8 @@ import {
   getArtistsDuePayment,
   getWalletBalances,
   getUsedS3Urls,
-  getSublabelsDuePayment
+  getSublabelsDuePayment,
+  getReleaseStatus
 } from '../controllers/systemController';
 import {
   getSSLDomains,
@@ -52,6 +53,7 @@ router.get('/artists-due-payment', getArtistsDuePayment);
 router.get('/sublabels-due-payment', getSublabelsDuePayment);
 router.get('/wallet-balances', getWalletBalances);
 router.get('/s3-used-urls', getUsedS3Urls);
+router.get('/release-status', getReleaseStatus);
 
 // SSL domain management endpoints
 router.get('/ssl-domains', getSSLDomains);

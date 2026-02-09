@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
@@ -498,6 +498,127 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching sublabels due payment:', error);
     auditLogger.logSystemAccess(req, 'ERROR_SUBLABELS_DUE_PAYMENT', { error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get release and song status (cross-brand)
+ *
+ * Returns ALL releases across ALL brands with their songs and metadata
+ * for generating status reports. Includes song author/composer counts,
+ * ISRC, lyrics, and audio file status.
+ *
+ * Query parameters:
+ * - page: Page number (default: 1)
+ * - limit: Results per page (max: 100, default: 50)
+ * - status: Filter by release status (optional)
+ */
+export const getReleaseStatus = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+    const offset = (page - 1) * limit;
+    const statusFilter = req.query.status as string;
+
+    const whereClause: any = {};
+    if (statusFilter) {
+      whereClause.status = statusFilter;
+    }
+
+    const { count, rows: releases } = await Release.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name'],
+          required: true
+        },
+        {
+          model: Artist,
+          as: 'artists',
+          attributes: ['id', 'name'],
+          through: { attributes: [] }
+        },
+        {
+          model: Song,
+          as: 'songs',
+          attributes: ['id', 'title', 'track_number', 'isrc', 'lyrics', 'audio_file'],
+          include: [
+            {
+              model: SongAuthor,
+              as: 'authors',
+              attributes: ['id']
+            },
+            {
+              model: SongComposer,
+              as: 'composers',
+              attributes: ['id']
+            }
+          ]
+        }
+      ],
+      order: [
+        ['brand_id', 'ASC'],
+        ['status', 'ASC'],
+        ['title', 'ASC'],
+        [{ model: Song, as: 'songs' }, 'track_number', 'ASC']
+      ],
+      limit,
+      offset,
+      distinct: true
+    });
+
+    const results = releases.map(release => {
+      const r = release.toJSON() as any;
+
+      const songs = (r.songs || []).map((song: any) => ({
+        id: song.id,
+        track_number: song.track_number,
+        title: song.title,
+        isrc: song.isrc || null,
+        has_lyrics: !!(song.lyrics && song.lyrics.trim()),
+        has_audio: !!(song.audio_file && song.audio_file.trim()),
+        author_count: song.authors?.length || 0,
+        composer_count: song.composers?.length || 0
+      }));
+
+      return {
+        id: r.id,
+        title: r.title || '',
+        catalog_no: r.catalog_no,
+        status: r.status,
+        UPC: r.UPC || null,
+        cover_art: r.cover_art || null,
+        release_date: r.release_date || null,
+        description: r.description || null,
+        brand_id: r.brand?.id,
+        brand_name: r.brand?.brand_name,
+        artists: (r.artists || []).map((a: any) => a.name),
+        song_count: songs.length,
+        songs
+      };
+    });
+
+    auditLogger.logDataAccess(req, 'release-status', 'READ', results.length, {
+      page,
+      limit,
+      statusFilter,
+      totalReleases: count
+    });
+
+    res.json({
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+      results
+    });
+
+  } catch (error) {
+    console.error('Error fetching release status:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_RELEASE_STATUS', { error: error.message });
     res.status(500).json({ error: 'Internal server error' });
   }
 };

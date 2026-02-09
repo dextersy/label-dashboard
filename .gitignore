@@ -32,3 +32,5 @@ dev_api.log
 dev_web.log
 dev_smee.log
 src_new/wordpress-plugin/melt-dashboard.zip
+**/.env
+**/dist
