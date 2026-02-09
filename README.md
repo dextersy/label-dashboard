@@ -10,49 +10,67 @@ Feel free to fork this repository for your own modifications. I'd be happy to ge
 
 \- **Dexter Sy**, Melt Records
 
-## Quick start
+## Architecture
 
-This project requires a working web server (Nginx, Apache, or any HTTP server of your choice), the PHP modules (recommended at least PHP 7.3), and MySQL.
+The project consists of three main components:
 
-[Note: There is not yet a MySQL schema included as of August 2021. This will be added in a future commit.]
+| Component | Directory | Tech Stack |
+|---|---|---|
+| Backend API | `src_new/label-dashboard-api/` | Node.js, TypeScript, Express, Sequelize |
+| Frontend | `src_new/label-dashboard-web/` | Angular, Bootstrap |
+| Scheduled Jobs | `src_new/label-dashboard-jobs/` | TypeScript, AWS Lambda |
+| Legacy App | `src/` | PHP (deprecated, do not modify) |
 
-### To get started:
-1. Copy all the files in `src` to your web server document root. (Refer to your web server's manual for details on how to set up local domains, as needed.)
-2. Make a copy or rename `inc/config.php.sample` to `inc/config.php`.
-3. Input the necessary details for your database server and SMTP server on `config.php`. The following information is needed:
-        
-        // Update your actual server, database, user, and password here
-        define('DB_SERVER', 'localhost');
-        define('DB_DATABASE', 'meltrecords_dashboard');
-        define('DB_USER', '');
-        define('DB_PASSWORD', '');
+### Key Features
+- **Multi-brand support** - domain-based routing with brand-specific styling and isolated data
+- **Role-based access control** - Admin, Artist, and Team Member roles with JWT authentication
+- **Financial reporting** - Earnings, payments, royalties, and expenses tracking
+- **Release management** - Albums/singles with metadata, cover art, and song tracking
+- **Event management** - Live shows with ticket sales integration
 
-        // Update your actual SMTP configuration here
-        define('SMTP_HOST', 'email-smtp.ap-southeast-1.amazonaws.com');
-        define('SMTP_PORT', '587');
-        define('SMTP_SECURE', 'tls');
-        define('SMTP_USER', '');
-        define('SMTP_PASS', '');
+## Quick Start
 
-    `Note: Don't forget to change DB_SERVER, DB_DATABASE, SMTP_PORT, SMTP_SECURE to your actual database and SMTP settings. The included values are only examples.`
+### Prerequisites
+- Node.js (v18+)
+- MySQL
+- npm
 
-4. Run the app on your PHP-enabled webserver and access it through http://localhost
+### Backend API
 
-    `Note: Due to limitations of the code, it's not currently possible to run the app on a subdirectory (e.g. localhost/meltrecords) - this results in unexpected behavior. If you are hosting more than one site on your web server, please set up vhosts locally.`
+```bash
+cd src_new/label-dashboard-api
+cp .env.example .env       # Configure database, SMTP, and SSL settings
+npm install
+npm run dev                # Start development server with nodemon
+```
 
-### License
+### Frontend
+
+```bash
+cd src_new/label-dashboard-web
+npm install
+npm start                  # Start Angular dev server (ng serve)
+```
+
+### Database
+
+Create a MySQL database before starting the API:
+
+```sql
+CREATE DATABASE meltrecords_dashboard;
+```
+
+Then configure the connection details in the API's `.env` file. The API uses Sequelize ORM with auto-sync, so tables will be created automatically on first startup.
+
+## License
 Copyright 2021 Dexter Sy & Melt Records (https://www.melt-records.com)
 
 Copyright 2019 Creative Tim (http://www.creative-tim.com)
 
 Licensed under MIT (https://github.com/creativetimofficial/light-bootstrap-dashboard/blob/master/LICENSE.md)
 
-## Useful Links
+## Links
 
-Social Media:
-
-Twitter: https://twitter.com/meltrecordsph
-
-Facebook: https://www.facebook.com/meltrecordsph
-
-Instagram: https://instagram.com/meltrecordsph
+- Twitter: https://twitter.com/meltrecordsph
+- Facebook: https://www.facebook.com/meltrecordsph
+- Instagram: https://instagram.com/meltrecordsph
