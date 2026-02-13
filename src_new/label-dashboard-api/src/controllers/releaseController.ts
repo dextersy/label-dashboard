@@ -1121,9 +1121,11 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
 
     // Format release date
     let releaseDateFormatted = '';
+    let releaseDateYMD = '';
     if (release.release_date) {
       const d = new Date(release.release_date);
       releaseDateFormatted = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      releaseDateYMD = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
     }
 
     const cellBorders = {
@@ -1293,12 +1295,12 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
         createRow('ARTIST BIO', artistBio),
         createRow('SOCIAL MEDIA (URL + followers)', socialMedia),
         createRow('ABOUT THE RELEASE', aboutRelease),
-        createRow('RELEASE TIMELINE', `<Date (YYYY/MM/DD)> - Release date of "${release.title || ''}"`),
+        createRow('RELEASE TIMELINE', `${releaseDateYMD || '<Date (YYYY/MM/DD)>'} - Release date of "${release.title || ''}"`),
         createRow('KEY MESSAGE', ''),
         createRow('TARGET MARKETS', ''),
         createRow('TARGET AUDIENCE (core fans persona)', ''),
         createRow('CAMPAIGN IDEAS', ''),
-        createRow('MARKETING TIMELINE', `<Date (YYYY/MM/DD)> - Release date of "${release.title || ''}"`),
+        createRow('MARKETING TIMELINE', `${releaseDateYMD || '<Date (YYYY/MM/DD)>'} - Release date of "${release.title || ''}"`),
         createRow('MARKETING BUDGET OUTLINE', ''),
         createRow('PROMOTION ACTIVITIES', ''),
         createRow('SOCIAL MEDIA DIRECTION', ''),
