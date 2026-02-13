@@ -1,6 +1,34 @@
 import { Request, Response } from 'express';
 import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import { Readable } from 'stream';
+
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+/**
+ * Convert a WAV buffer to 192kbps MP3 using ffmpeg.
+ * Returns a Promise resolving to a Buffer containing the MP3 data.
+ */
+function convertWavToMp3(wavBuffer: Buffer): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const inputStream = Readable.from(wavBuffer);
+    const chunks: Buffer[] = [];
+
+    const command = ffmpeg(inputStream)
+      .inputFormat('wav')
+      .audioCodec('libmp3lame')
+      .audioBitrate(192)
+      .format('mp3')
+      .on('error', (err: Error) => reject(err));
+
+    const outputStream = command.pipe();
+    outputStream.on('data', (chunk: Buffer) => chunks.push(chunk));
+    outputStream.on('end', () => resolve(Buffer.concat(chunks)));
+    outputStream.on('error', (err: Error) => reject(err));
+  });
+}
 
 interface AuthRequest extends Request {
   user?: any;
@@ -619,7 +647,7 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       .replace(/\s+/g, ' ') // Collapse multiple spaces
       .trim();
 
-    // Delete old audio file if exists
+    // Delete old audio files if exists (both WAV and MP3)
     if (song.audio_file) {
       try {
         await deleteFromS3({
@@ -627,7 +655,17 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
           Key: song.audio_file
         });
       } catch (s3Error) {
-        console.error('S3 delete error:', s3Error);
+        console.error('S3 delete error (WAV):', s3Error);
+      }
+    }
+    if (song.audio_file_mp3) {
+      try {
+        await deleteFromS3({
+          Bucket: process.env.S3_BUCKET_MASTERS!,
+          Key: song.audio_file_mp3
+        });
+      } catch (s3Error) {
+        console.error('S3 delete error (MP3):', s3Error);
       }
     }
 
@@ -653,16 +691,40 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     // Get file size from the uploaded file buffer
     const fileSize = req.file.buffer.length;
 
-    // Update song with new audio file path and size
+    // Convert WAV to MP3 (192kbps) and upload to S3
+    let mp3FileName: string | undefined;
+    let mp3FileSize: number | undefined;
+    try {
+      const mp3Buffer = await convertWavToMp3(req.file.buffer);
+      mp3FileName = `${fileName}.mp3`;
+      mp3FileSize = mp3Buffer.length;
+      await uploadToS3({
+        Bucket: process.env.S3_BUCKET_MASTERS!,
+        Key: mp3FileName,
+        Body: mp3Buffer,
+        ContentType: 'audio/mpeg',
+        ACL: 'private'
+      });
+      console.log(`MP3 version created: ${mp3FileName} (${mp3FileSize} bytes)`);
+    } catch (mp3Error) {
+      console.error('MP3 conversion error (WAV upload still succeeded):', mp3Error);
+      mp3FileName = undefined;
+      mp3FileSize = undefined;
+    }
+
+    // Update song with new audio file path, size, and MP3 path
     await song.update({
       audio_file: fileName,
-      audio_file_size: fileSize
+      audio_file_size: fileSize,
+      ...(mp3FileName ? { audio_file_mp3: mp3FileName, audio_file_mp3_size: mp3FileSize } : {})
     });
 
     res.json({
       message: 'Audio file uploaded successfully',
       audio_file: fileName,
-      audio_file_size: fileSize
+      audio_file_size: fileSize,
+      audio_file_mp3: mp3FileName,
+      audio_file_mp3_size: mp3FileSize
     });
   } catch (error) {
     console.error('Upload audio error:', error);
@@ -692,10 +754,14 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'No audio file available for this song' });
     }
 
+    // Prefer MP3 version if available, fallback to WAV
+    const audioKey = song.audio_file_mp3 || song.audio_file;
+    const contentType = song.audio_file_mp3 ? 'audio/mpeg' : 'audio/wav';
+
     // Get audio file from S3
     const params = {
       Bucket: process.env.S3_BUCKET_MASTERS!,
-      Key: song.audio_file
+      Key: audioKey
     };
 
     // Get file metadata
@@ -703,7 +769,7 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
     const fileSize = headData.ContentLength || 0;
 
     // Set response headers
-    res.setHeader('Content-Type', headData.ContentType || 'audio/wav');
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Length', fileSize);
     res.setHeader('Accept-Ranges', 'bytes');
 

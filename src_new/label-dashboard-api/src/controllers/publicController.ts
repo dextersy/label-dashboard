@@ -2411,9 +2411,12 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Audio streaming service unavailable' });
     }
 
+    // Prefer MP3 version if available, fallback to WAV
+    const audioKey = song.audio_file_mp3 || song.audio_file;
+
     const params = {
       Bucket: process.env.S3_BUCKET_MASTERS,
-      Key: song.audio_file
+      Key: audioKey
     };
 
     // Get file metadata first (this validates the file exists before we commit to streaming)
@@ -2434,7 +2437,7 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     }
 
     const fileSize = headData.ContentLength || 0;
-    const contentType = headData.ContentType || 'audio/wav'; // Default to audio/mpeg if not specified
+    const contentType = song.audio_file_mp3 ? 'audio/mpeg' : (headData.ContentType || 'audio/wav');
 
     // SECURITY: Use the already-validated requestDomain for CORS
     // requestDomain was validated against artistBrandDomains earlier
@@ -2912,19 +2915,20 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
 
     archive.pipe(res);
 
-    // Add audio files
+    // Add audio files (prefer MP3 version, fallback to WAV)
     for (const song of songs) {
-      if (song.audio_file) {
+      const audioKey = song.audio_file_mp3 || song.audio_file;
+      if (audioKey) {
         try {
-          const audioExtension = path.extname(song.audio_file) || '.wav';
+          const audioExtension = song.audio_file_mp3 ? '.mp3' : (path.extname(song.audio_file) || '.wav');
           const trackNumberPadded = String(song.track_number).padStart(2, '0');
           const audioFileName = `${artistName} - ${release.title} - ${trackNumberPadded} - ${song.title}${audioExtension}`
             .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
             .replace(/\s+/g, ' ')
             .trim();
 
-          await headS3Object({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: song.audio_file });
-          const audioResult = await getS3ObjectStream({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: song.audio_file });
+          await headS3Object({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: audioKey });
+          const audioResult = await getS3ObjectStream({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: audioKey });
           archive.append(audioResult.Body, { name: audioFileName });
         } catch (error) {
           console.error(`Error adding song ${song.id} to zip:`, error);
