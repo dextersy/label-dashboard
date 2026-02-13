@@ -15,6 +15,7 @@ import {
   generateEventsListSEOPage,
   getArtistEPK,
   downloadArtistPhotos,
+  downloadReleaseMastersByUPC,
   generateArtistEPKSEOPage,
   getAvailableTicketTypesPublic,
   streamPublicAudio,
@@ -34,6 +35,7 @@ router.get('/events/ticket-types/available', getAvailableTicketTypesPublic);
 // Audio streaming and photo download must come before the general EPK route to avoid route conflict
 router.get('/epk/:artistId/audio/:songId', publicRateLimit, streamPublicAudio);
 router.get('/epk/:artist_id/photos/download', publicRateLimit, downloadArtistPhotos);
+router.get('/epk/release/:upc/download', publicRateLimit, downloadReleaseMastersByUPC);
 router.get('/epk/:artist_id', getArtistEPK);
 
 // On-demand SEO page generation for social media crawlers

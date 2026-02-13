@@ -2814,3 +2814,130 @@ export const downloadArtistPhotos = async (req: Request, res: Response) => {
     }
   }
 };
+
+// Download release masters (cover art + audio) as ZIP via UPC (public endpoint)
+export const downloadReleaseMastersByUPC = async (req: Request, res: Response) => {
+  try {
+    const upc = req.params.upc as string;
+
+    if (!upc || upc.trim().length === 0) {
+      return res.status(400).json({ error: 'Invalid UPC' });
+    }
+
+    // Domain validation (supports direct browser navigation)
+    let requestDomain = getRequestDomain(req);
+    if (!requestDomain) {
+      const hostHeader = req.get('host') || '';
+      requestDomain = hostHeader.split(':')[0];
+    }
+
+    if (!process.env.S3_BUCKET || !process.env.S3_BUCKET_MASTERS) {
+      console.error('Missing required S3 environment variables');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    const release = await Release.findOne({
+      where: { UPC: upc },
+      include: [
+        {
+          model: Song,
+          as: 'songs',
+          where: { audio_file: { [Op.ne]: null } },
+          required: false
+        },
+        {
+          model: Artist,
+          as: 'artists',
+          include: [
+            {
+              model: Brand,
+              as: 'brand',
+              attributes: ['id'],
+              include: [
+                {
+                  model: Domain,
+                  as: 'domains',
+                  attributes: ['domain_name']
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const artists = (release as any).artists || [];
+    const songs = (release as any).songs || [];
+
+    // Validate domain using the release's brand (via artist)
+    if (artists.length > 0 && artists[0].brand?.domains && requestDomain) {
+      const brandDomains = artists[0].brand.domains.map((d: any) => d.domain_name);
+      if (!brandDomains.includes(requestDomain)) {
+        return res.status(404).json({ error: 'Release not found' });
+      }
+    } else {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    if (songs.length === 0 && !release.cover_art) {
+      return res.status(404).json({ error: 'No masters available for this release' });
+    }
+
+    const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
+    const rawFileName = `${artistName} - ${release.title}`;
+    let sanitizedFileName = rawFileName
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || `release-${upc}`;
+    sanitizedFileName += '.zip';
+    const escapedFileName = sanitizedFileName.replace(/"/g, '\\"');
+    const encodedFileName = encodeURIComponent(rawFileName + '.zip');
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
+
+    const archive = archiver('zip', { zlib: { level: 6 } });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to create zip file' });
+      }
+    });
+
+    archive.pipe(res);
+
+    // Add audio files
+    for (const song of songs) {
+      if (song.audio_file) {
+        try {
+          const audioExtension = path.extname(song.audio_file) || '.wav';
+          const trackNumberPadded = String(song.track_number).padStart(2, '0');
+          const audioFileName = `${artistName} - ${release.title} - ${trackNumberPadded} - ${song.title}${audioExtension}`
+            .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          await headS3Object({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: song.audio_file });
+          const audioResult = await getS3ObjectStream({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: song.audio_file });
+          archive.append(audioResult.Body, { name: audioFileName });
+        } catch (error) {
+          console.error(`Error adding song ${song.id} to zip:`, error);
+        }
+      }
+    }
+
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Download release masters by UPC error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+};
