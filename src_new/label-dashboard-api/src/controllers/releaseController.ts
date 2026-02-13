@@ -1189,7 +1189,37 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
         createRow('GENRE/MOOD', ''),
         createRow('PRODUCT TYPE', 'Audio'),
         createRow('UPC', release.UPC || ''),
-        createRow('ISRC', isrcCodes),
+        new TableRow({
+          height: { value: 260, rule: HeightRule.ATLEAST },
+          children: [
+            new TableCell({
+              width: { size: 3559, type: WidthType.DXA },
+              borders: cellBorders,
+              children: [
+                new Paragraph({
+                  spacing: cellSpacing,
+                  children: [
+                    new TextRun({ text: 'ISRC', font: 'Calibri', size: 22, color: '201f1e' }),
+                  ],
+                }),
+              ],
+            }),
+            new TableCell({
+              width: { size: 5790, type: WidthType.DXA },
+              borders: cellBorders,
+              children: [
+                new Paragraph({
+                  spacing: cellSpacing,
+                  children: songs.length === 1 && songs[0].isrc
+                    ? [new TextRun({ text: songs[0].isrc, font: 'Calibri', size: 22, color: '201f1e' })]
+                    : songs.length > 1
+                      ? [new TextRun({ text: 'Please add ISRC for the carrier track.', font: 'Calibri', size: 22, color: 'FF0000' })]
+                      : [new TextRun({ text: ' ', font: 'Calibri', size: 22, color: '201f1e' })],
+                }),
+              ],
+            }),
+          ],
+        }),
         createRow('SPOTIFY ID', spotifyId),
         createRow('APPLE ID', appleId),
         new TableRow({
