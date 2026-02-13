@@ -28,6 +28,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   // Download masters state
   downloadingMasters = false;
 
+  // Download priority pitch state
+  downloadingPriorityPitch = false;
+
   // Submit release state
   submittingRelease = false;
 
@@ -231,6 +234,33 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
         this.alertMessage.emit({
           type: 'error',
           message: errorMessage
+        });
+      }
+    });
+  }
+
+  onDownloadPriorityPitch(): void {
+    if (this.downloadingPriorityPitch || !this.release) {
+      return;
+    }
+
+    this.downloadingPriorityPitch = true;
+
+    this.releaseService.downloadPriorityPitch(this.release.id).subscribe({
+      next: (response) => {
+        this.downloadingPriorityPitch = false;
+        downloadFromResponse(response);
+        this.alertMessage.emit({
+          type: 'success',
+          message: 'Priority Pitch downloaded successfully!'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading priority pitch:', error);
+        this.downloadingPriorityPitch = false;
+        this.alertMessage.emit({
+          type: 'error',
+          message: 'Failed to download Priority Pitch.'
         });
       }
     });

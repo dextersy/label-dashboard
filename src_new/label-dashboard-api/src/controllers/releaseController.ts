@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty } from '../models';
 import path from 'path';
 import archiver from 'archiver';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
@@ -1014,6 +1015,225 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
 
   } catch (error) {
     console.error('Download masters error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+};
+
+// Download Priority Pitch as a DOCX file
+export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || !req.user.brand_id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { id } = req.params;
+    const releaseId = parseInt(id as string, 10);
+
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
+
+    const release = await Release.findOne({
+      where: {
+        id: releaseId,
+        brand_id: req.user.brand_id
+      },
+      include: [
+        { model: Artist, as: 'artists' },
+        {
+          model: Song,
+          as: 'songs',
+          required: false,
+          include: [
+            { model: SongCollaborator, as: 'collaborators', include: [{ model: Artist, as: 'artist' }] },
+            { model: SongAuthor, as: 'authors', include: [{ model: Songwriter, as: 'songwriter' }] },
+            { model: SongComposer, as: 'composers', include: [{ model: Songwriter, as: 'songwriter' }] }
+          ]
+        }
+      ],
+      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const brand = await Brand.findByPk(req.user.brand_id);
+    const artists = (release as any).artists || [];
+    const songs = (release as any).songs || [];
+
+    const artistName = artists.map((a: any) => a.name).join(', ') || '';
+    const isrcCodes = songs.map((s: any) => s.isrc).filter(Boolean).join(', ');
+
+    // Build artist bio (combine bios from all artists, strip HTML)
+    const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+    const artistBio = artists
+      .map((a: any) => a.bio ? stripHtml(a.bio) : '')
+      .filter(Boolean)
+      .join('\n\n');
+
+    // Build social media info from all artists
+    const socialMediaLines: string[] = [];
+    for (const artist of artists) {
+      const prefix = artists.length > 1 ? `${artist.name}: ` : '';
+      if (artist.facebook_handle) socialMediaLines.push(`${prefix}FB – facebook.com/${artist.facebook_handle}`);
+      if (artist.instagram_handle) socialMediaLines.push(`${prefix}IG – instagram.com/${artist.instagram_handle}`);
+      if (artist.twitter_handle) socialMediaLines.push(`${prefix}X – x.com/${artist.twitter_handle}`);
+      if (artist.tiktok_handle) socialMediaLines.push(`${prefix}TikTok – tiktok.com/@${artist.tiktok_handle}`);
+      if (artist.youtube_channel) socialMediaLines.push(`${prefix}YouTube – ${artist.youtube_channel}`);
+    }
+    const socialMedia = socialMediaLines.join('\n');
+
+    // Extract Spotify ID from link
+    let spotifyId = '';
+    if (release.spotify_link) {
+      const spotifyMatch = release.spotify_link.match(/(?:track|album|artist)\/([a-zA-Z0-9]+)/);
+      if (spotifyMatch) spotifyId = spotifyMatch[1];
+    }
+
+    // Extract Apple ID from link
+    let appleId = '';
+    if (release.apple_music_link) {
+      const appleMatch = release.apple_music_link.match(/\/(\d+)(?:\?|$)/);
+      if (appleMatch) appleId = appleMatch[1];
+    }
+
+    // Strip HTML tags from description
+    const aboutRelease = release.description ? stripHtml(release.description) : '';
+
+    // Format release date
+    let releaseDateFormatted = '';
+    if (release.release_date) {
+      const d = new Date(release.release_date);
+      releaseDateFormatted = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    const cellBorders = {
+      top: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+      bottom: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+      left: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+      right: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+    };
+
+    const cellSpacing = { after: 0, before: 0, line: 240, lineRule: LineRuleType.AUTO };
+
+    // Helper to create a table row: label cell + value cell
+    const createRow = (label: string, value: string, options?: { valueShading?: string }): TableRow => {
+      const lines = (value || ' ').split('\n');
+      const valueParagraphs = lines.map(line =>
+        new Paragraph({
+          spacing: cellSpacing,
+          children: [
+            new TextRun({ text: line || ' ', font: 'Calibri', size: 22, color: '201f1e' }),
+          ],
+        }),
+      );
+
+      const valueCellProps: any = {
+        width: { size: 5790, type: WidthType.DXA },
+        borders: cellBorders,
+        children: valueParagraphs,
+      };
+      if (options?.valueShading) {
+        valueCellProps.shading = { type: ShadingType.CLEAR, fill: options.valueShading };
+      }
+
+      return new TableRow({
+        height: { value: 260, rule: HeightRule.ATLEAST },
+        children: [
+          new TableCell({
+            width: { size: 3559, type: WidthType.DXA },
+            borders: cellBorders,
+            children: [
+              new Paragraph({
+                spacing: cellSpacing,
+                children: [
+                  new TextRun({ text: label, font: 'Calibri', size: 22, color: '201f1e' }),
+                ],
+              }),
+            ],
+          }),
+          new TableCell(valueCellProps),
+        ],
+      });
+    };
+
+    const table = new Table({
+      width: { size: 9349, type: WidthType.DXA },
+      indent: { size: 216, type: WidthType.DXA },
+      layout: TableLayoutType.FIXED,
+      rows: [
+        createRow('LEVEL OF PRIORITY', '', { valueShading: 'bfbfbf' }),
+        createRow('ARTIST NAME', artistName),
+        createRow('RELEASE TITLE / KEY TRACK', release.title || ''),
+        createRow('RELEASE DATE', releaseDateFormatted),
+        createRow('LABEL', brand?.brand_name || ''),
+        createRow('GENRE/MOOD', ''),
+        createRow('PRODUCT TYPE', 'Audio'),
+        createRow('UPC', release.UPC || ''),
+        createRow('ISRC', isrcCodes),
+        createRow('SPOTIFY ID', spotifyId),
+        createRow('APPLE ID', appleId),
+        createRow('LISTENING LINK', ''),
+        createRow('ARTIST PHOTOS (DP LINK)', ''),
+        createRow('ARTIST BIO', artistBio),
+        createRow('SOCIAL MEDIA (URL + followers)', socialMedia),
+        createRow('ABOUT THE RELEASE', aboutRelease),
+        createRow('RELEASE TIMELINE', `<Date (YYYY/MM/DD)> - Release date of "${release.title || ''}"`),
+        createRow('KEY MESSAGE', ''),
+        createRow('TARGET MARKETS', ''),
+        createRow('TARGET AUDIENCE (core fans persona)', ''),
+        createRow('CAMPAIGN IDEAS', ''),
+        createRow('MARKETING TIMELINE', `<Date (YYYY/MM/DD)> - Release date of "${release.title || ''}"`),
+        createRow('MARKETING BUDGET OUTLINE', ''),
+        createRow('PROMOTION ACTIVITIES', ''),
+        createRow('SOCIAL MEDIA DIRECTION', ''),
+        createRow('DEDICATED PLANS - DSP', ''),
+        createRow('MOCK-UP OF DEDICATED ASSETS (DP LINK)', ''),
+        createRow('PR SET-UP', ''),
+        createRow('EXPECTED RESULTS FROM THE PITCH', ''),
+      ],
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            // Title
+            new Paragraph({
+              spacing: { after: 200 },
+              children: [
+                new TextRun({ text: 'PRIORITY PITCH', font: 'Calibri', size: 22, color: '201f1e' }),
+              ],
+            }),
+            // Spacer
+            new Paragraph({ children: [] }),
+            // Table
+            table,
+          ],
+        },
+      ],
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+
+    // Build filename
+    const rawFileName = `Priority Pitch - ${artistName || 'Unknown Artist'} - ${release.title || 'Untitled'}`;
+    const sanitizedFileName = rawFileName
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || `priority-pitch-${releaseId}`;
+    const escapedFileName = (sanitizedFileName + '.docx').replace(/"/g, '\\"');
+    const encodedFileName = encodeURIComponent(rawFileName + '.docx');
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
+    res.send(buffer);
+
+  } catch (error) {
+    console.error('Download priority pitch error:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Internal server error' });
     }

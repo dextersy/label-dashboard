@@ -17,6 +17,17 @@
            [class.fa-paper-plane]="!submittingRelease"></i>
         <span class="btn-text">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
       </button>
+      <button *ngIf="isAdmin"
+              class="btn btn-outline-secondary btn-sm"
+              (click)="onDownloadPriorityPitch()"
+              [disabled]="downloadingPriorityPitch"
+              title="Download Priority Pitch">
+        <i class="fa"
+           [class.fa-spinner]="downloadingPriorityPitch"
+           [class.fa-spin]="downloadingPriorityPitch"
+           [class.fa-file-word]="!downloadingPriorityPitch"></i>
+        {{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
+      </button>
       <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
         <i class="fas fa-edit"></i>
       </button>

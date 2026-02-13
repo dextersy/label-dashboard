@@ -11,7 +11,8 @@ import {
   getReleaseExpenses,
   addReleaseExpense,
   generateCatalogNumber,
-  downloadMasters
+  downloadMasters,
+  downloadPriorityPitch
 } from '../controllers/releaseController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -55,5 +56,8 @@ router.post('/:id/expenses', requireAdmin, addReleaseExpense);
 
 // Download masters (cover art + audio files)
 router.get('/:id/download-masters', downloadMasters);
+
+// Download Priority Pitch document (admin only)
+router.get('/:id/download-priority-pitch', requireAdmin, downloadPriorityPitch);
 
 export default router;

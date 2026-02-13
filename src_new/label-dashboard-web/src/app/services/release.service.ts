@@ -164,6 +164,14 @@ export class ReleaseService {
     });
   }
 
+  downloadPriorityPitch(releaseId: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/releases/${releaseId}/download-priority-pitch`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob',
+      observe: 'response'
+    });
+  }
+
   toggleExcludeFromEPK(releaseId: number): Observable<{ success: boolean; exclude_from_epk: boolean; message: string }> {
     return this.http.patch<{ success: boolean; exclude_from_epk: boolean; message: string }>(
       `${this.baseUrl}/releases/${releaseId}/exclude-from-epk`,
