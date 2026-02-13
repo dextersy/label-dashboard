@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
 import path from 'path';
 import archiver from 'archiver';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
@@ -1060,9 +1060,20 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    const brand = await Brand.findByPk(req.user.brand_id);
+    const brand = await Brand.findByPk(req.user.brand_id, {
+      include: [{ model: Domain, as: 'domains', attributes: ['domain_name'] }]
+    });
     const artists = (release as any).artists || [];
     const songs = (release as any).songs || [];
+
+    // Build artist photos download URL using brand domain
+    let artistPhotosLink = '';
+    if (artists.length > 0 && brand?.domains && (brand.domains as any[]).length > 0) {
+      const brandDomain = (brand.domains as any[])[0].domain_name;
+      const firstArtistId = artists[0].id;
+      const apiPort = process.env.HTTPS_PORT || '3001';
+      artistPhotosLink = `https://${brandDomain}:${apiPort}/api/public/epk/${firstArtistId}/photos/download`;
+    }
 
     const artistName = artists.map((a: any) => a.name).join(', ') || '';
     const isrcCodes = songs.map((s: any) => s.isrc).filter(Boolean).join(', ');
@@ -1177,7 +1188,40 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
         createRow('SPOTIFY ID', spotifyId),
         createRow('APPLE ID', appleId),
         createRow('LISTENING LINK', ''),
-        createRow('ARTIST PHOTOS (DP LINK)', ''),
+        new TableRow({
+          height: { value: 260, rule: HeightRule.ATLEAST },
+          children: [
+            new TableCell({
+              width: { size: 3559, type: WidthType.DXA },
+              borders: cellBorders,
+              children: [
+                new Paragraph({
+                  spacing: cellSpacing,
+                  children: [
+                    new TextRun({ text: 'ARTIST PHOTOS (DP LINK)', font: 'Calibri', size: 22, color: '201f1e' }),
+                  ],
+                }),
+              ],
+            }),
+            new TableCell({
+              width: { size: 5790, type: WidthType.DXA },
+              borders: cellBorders,
+              children: [
+                new Paragraph({
+                  spacing: cellSpacing,
+                  children: artistPhotosLink
+                    ? [new ExternalHyperlink({
+                        link: artistPhotosLink,
+                        children: [
+                          new TextRun({ text: 'Link to artist photos (download)', font: 'Calibri', size: 22, color: '0563C1', underline: {} }),
+                        ],
+                      })]
+                    : [new TextRun({ text: ' ', font: 'Calibri', size: 22, color: '201f1e' })],
+                }),
+              ],
+            }),
+          ],
+        }),
         createRow('ARTIST BIO', artistBio),
         createRow('SOCIAL MEDIA (URL + followers)', socialMedia),
         createRow('ABOUT THE RELEASE', aboutRelease),

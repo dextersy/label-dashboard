@@ -9,6 +9,8 @@ import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import archiver from 'archiver';
+import path from 'path';
 
 const paymentService = new PaymentService();
 
@@ -2671,5 +2673,144 @@ export const makeDonation = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Make donation error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Download artist photos as ZIP (public, max 5 latest EPK-visible photos)
+export const downloadArtistPhotos = async (req: Request, res: Response) => {
+  try {
+    const { artist_id } = req.params;
+    const artistId = parseInt(artist_id as string, 10);
+
+    if (isNaN(artistId)) {
+      return res.status(400).json({ error: 'Invalid artist ID' });
+    }
+
+    // For direct browser navigation (e.g. clicking link from a document),
+    // Origin/Referer headers are absent, so also check the Host header
+    let requestDomain = getRequestDomain(req);
+    if (!requestDomain) {
+      const hostHeader = req.get('host') || '';
+      requestDomain = hostHeader.split(':')[0];
+    }
+
+    const artist = await Artist.findOne({
+      where: { id: artistId },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name'],
+          include: [
+            {
+              model: Domain,
+              as: 'domains',
+              attributes: ['domain_name']
+            }
+          ]
+        }
+      ],
+      attributes: ['id', 'name']
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Validate domain
+    if (artist.brand && artist.brand.domains && requestDomain) {
+      const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
+      if (!artistBrandDomains.includes(requestDomain)) {
+        return res.status(404).json({ error: 'Artist not found' });
+      }
+    } else {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Get latest 5 EPK-visible photos
+    const photos = await ArtistImage.findAll({
+      where: {
+        artist_id: artistId,
+        exclude_from_epk: false
+      },
+      attributes: ['id', 'path', 'credits', 'date_uploaded'],
+      order: [['date_uploaded', 'DESC']],
+      limit: 5
+    });
+
+    if (photos.length === 0) {
+      return res.status(404).json({ error: 'No photos available' });
+    }
+
+    if (!process.env.S3_BUCKET) {
+      console.error('Missing S3_BUCKET environment variable');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    // Build filename
+    const rawFileName = `${artist.name} - Photos`;
+    const sanitizedFileName = rawFileName
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || `artist-${artistId}-photos`;
+    const escapedFileName = (sanitizedFileName + '.zip').replace(/"/g, '\\"');
+    const encodedFileName = encodeURIComponent(rawFileName + '.zip');
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
+
+    const archive = archiver('zip', { zlib: { level: 6 } });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to create zip file' });
+      }
+    });
+
+    archive.pipe(res);
+
+    for (let i = 0; i < photos.length; i++) {
+      const photo = photos[i];
+      if (!photo.path) continue;
+
+      try {
+        let s3Key: string;
+        if (photo.path.startsWith('https://')) {
+          const photoUrl = new URL(photo.path);
+          s3Key = photoUrl.pathname.substring(1);
+        } else {
+          s3Key = photo.path;
+        }
+
+        const extension = path.extname(s3Key) || '.jpg';
+        const photoFileName = `${artist.name} - Photo ${i + 1}${extension}`
+          .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        await headS3Object({
+          Bucket: process.env.S3_BUCKET!,
+          Key: s3Key
+        });
+
+        const result = await getS3ObjectStream({
+          Bucket: process.env.S3_BUCKET!,
+          Key: s3Key
+        });
+
+        archive.append(result.Body, { name: photoFileName });
+      } catch (error) {
+        console.error(`Error adding photo ${photo.id} to zip:`, error);
+      }
+    }
+
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Download artist photos error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 };

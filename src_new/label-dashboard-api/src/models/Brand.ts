@@ -53,6 +53,7 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   // Association properties
   public parentBrand?: Brand;
   public childBrands?: Brand[];
+  public domains?: any[];
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
