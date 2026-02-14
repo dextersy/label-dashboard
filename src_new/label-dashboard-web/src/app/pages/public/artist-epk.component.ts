@@ -43,6 +43,7 @@ export interface ArtistEPK {
     description?: string;
     cover_art_url?: string;
     release_date: string;
+    status?: string;
     release_type: string;
     streaming_links: {
       spotify?: string;
@@ -381,6 +382,10 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     return release.songs && release.songs.length > 0 && release.songs.some((s: any) => s.has_audio);
   }
 
+  isReleasePlayable(release: any): boolean {
+    return release.status === 'Live' && this.releaseHasAudio(release);
+  }
+
   isReleasePlaying(release: any): boolean {
     return this.playingReleaseId === release.id && this.audioState?.isPlaying === true;
   }
@@ -394,7 +399,7 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
   }
 
   togglePlayRelease(release: any): void {
-    if (!this.releaseHasAudio(release)) return;
+    if (!this.isReleasePlayable(release)) return;
 
     // If already playing this release, pause/resume it
     if (this.playingReleaseId === release.id) {

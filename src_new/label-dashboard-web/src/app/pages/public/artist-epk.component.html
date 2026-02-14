@@ -82,10 +82,12 @@
                 [src]="getCoverArtUrl(release.cover_art_url)" 
                 [alt]="release.title + ' Cover Art'"
                 class="release-image">
+              <!-- Coming Soon badge for Pending releases (always visible) -->
+              <span *ngIf="release.status === 'Pending'" class="coming-soon-badge">Coming on {{ formatReleaseDate(release.release_date) }}</span>
               <div class="release-overlay">
-                <!-- Play/Pause Button for Releases with Audio -->
-                <button 
-                  *ngIf="releaseHasAudio(release)"
+                <!-- Play/Pause Button for Live Releases with Audio -->
+                <button
+                  *ngIf="isReleasePlayable(release)"
                   class="play-pause-btn"
                   [class.paused]="isReleasePaused(release)"
                   [class.loading]="isReleaseLoading(release)"
@@ -224,9 +226,11 @@
                     [src]="getCoverArtUrl(release.cover_art_url)"
                     [alt]="release.title + ' Cover Art'"
                     class="minimal-release-cover">
+                  <!-- Coming Soon badge for Pending releases (always visible) -->
+                  <span *ngIf="release.status === 'Pending'" class="coming-soon-badge">Coming on {{ formatReleaseDate(release.release_date) }}</span>
                   <!-- Play/Pause Button Overlay -->
-                  <button 
-                    *ngIf="releaseHasAudio(release)"
+                  <button
+                    *ngIf="isReleasePlayable(release)"
                     class="play-pause-btn minimal"
                     [class.paused]="isReleasePaused(release)"
                     [class.loading]="isReleaseLoading(release)"

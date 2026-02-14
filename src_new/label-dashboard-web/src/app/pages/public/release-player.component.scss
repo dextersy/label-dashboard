@@ -95,6 +95,25 @@
   }
 }
 
+// Pre-release notice
+.pre-release-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 32px;
+  padding: 10px 16px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6d5b00;
+
+  i {
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+}
+
 // Now-playing bar
 .now-playing-bar {
   padding: 12px 32px 16px;
@@ -245,6 +264,10 @@
     .artist-name {
       font-size: 16px;
     }
+  }
+
+  .pre-release-notice {
+    margin: 0 20px;
   }
 
   .now-playing-bar {

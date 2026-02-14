@@ -13,6 +13,7 @@ export interface ReleasePlayerData {
     cover_art_url?: string;
     release_date: string;
     description?: string;
+    status?: string;
   };
   songs: Array<{
     id: number;
@@ -137,6 +138,10 @@ export class ReleasePlayerComponent implements OnInit, OnDestroy {
   getBrandLogoUrl(logoUrl?: string): string {
     if (!logoUrl) return '';
     return logoUrl.startsWith('http') ? logoUrl : `/api/uploads/brands/${logoUrl}`;
+  }
+
+  isPreRelease(): boolean {
+    return !!this.playerData && this.playerData.release.status !== 'Live';
   }
 
   getBrandColor(): string {

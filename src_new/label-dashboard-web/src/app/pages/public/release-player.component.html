@@ -41,6 +41,12 @@
       <p class="release-date" *ngIf="playerData.release.release_date">{{ formatReleaseDate(playerData.release.release_date) }}</p>
     </div>
 
+    <!-- Pre-release discretion notice -->
+    <div class="pre-release-notice" *ngIf="isPreRelease()">
+      <i class="fas fa-lock"></i>
+      <span>This release is not yet public. Please keep this link confidential.</span>
+    </div>
+
     <!-- Now-playing bar -->
     <div class="now-playing-bar" *ngIf="currentSongIndex >= 0 && audioState">
       <div class="now-playing-info">

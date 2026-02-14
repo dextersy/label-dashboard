@@ -2073,7 +2073,7 @@ export const getReleasePlayer = async (req: Request, res: Response) => {
           attributes: ['id', 'title', 'track_number', 'audio_file', 'duration'],
         }
       ],
-      attributes: ['id', 'title', 'cover_art', 'release_date', 'description'],
+      attributes: ['id', 'title', 'cover_art', 'release_date', 'description', 'status'],
       order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
     });
 
@@ -2095,7 +2095,8 @@ export const getReleasePlayer = async (req: Request, res: Response) => {
         title: release.title,
         cover_art_url: release.cover_art,
         release_date: release.release_date,
-        description: release.description
+        description: release.description,
+        status: release.status
       },
       songs,
       artist: {
@@ -2191,9 +2192,11 @@ export const getArtistEPK = async (req: Request, res: Response) => {
 
     // Get artist's releases using the proper many-to-many relationship
     // Exclude releases marked as exclude_from_epk
+    // Only show Live and Pending releases publicly
     const releases = await Release.findAll({
       where: {
-        exclude_from_epk: false
+        exclude_from_epk: false,
+        status: ['Live', 'Pending']
       },
       include: [
         {
@@ -2216,6 +2219,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'description',
         'cover_art',
         'release_date',
+        'status',
         'spotify_link',
         'apple_music_link',
         'youtube_link'
@@ -2261,6 +2265,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         description: release.description,
         cover_art_url: release.cover_art,
         release_date: release.release_date,
+        status: release.status,
         release_type: 'Release', // Default since not in model
         streaming_links: {
           spotify: release.spotify_link,
