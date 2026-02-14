@@ -2179,6 +2179,11 @@ export const getArtistEPK = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    // Check if EPK is disabled (template = 0)
+    if (artist.epk_template === 0) {
+      return res.status(404).json({ error: 'EPK is not available for this artist' });
+    }
+
     // Get artist's media gallery using ArtistImage model
     // Exclude images marked as exclude_from_epk
     const gallery = await ArtistImage.findAll({

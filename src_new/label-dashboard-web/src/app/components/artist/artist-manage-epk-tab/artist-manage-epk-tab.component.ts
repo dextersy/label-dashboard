@@ -30,7 +30,8 @@ export class ArtistManageEpkTabComponent implements OnInit {
 
   templateOptions = [
     { value: 1, name: 'Modern Gradient', description: 'Bold design with gradient overlays and dynamic effects' },
-    { value: 2, name: 'Minimal Clean', description: 'Simple, elegant design with clean typography' }
+    { value: 2, name: 'Minimal Clean', description: 'Simple, elegant design with clean typography' },
+    { value: 0, name: 'Disabled', description: 'EPK page is not publicly accessible' }
   ];
 
   constructor(

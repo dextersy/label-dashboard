@@ -14,8 +14,8 @@
             Share your Electronic Press Kit (EPK) with industry professionals, media, and fans using the link below.
           </p>
 
-          <!-- EPK Link -->
-          <div class="form-group mb-4">
+          <!-- EPK Link (hidden when EPK is disabled) -->
+          <div class="form-group mb-4" *ngIf="selectedTemplate !== 0">
             <label for="epkUrl" class="form-label">EPK Link</label>
             <div class="input-group">
               <input
@@ -45,10 +45,11 @@
             <p class="text-muted small mb-2">Choose the design template for your EPK page.</p>
 
             <div class="row g-3">
-              <div class="col-md-6" *ngFor="let template of templateOptions">
+              <div class="col-md-4" *ngFor="let template of templateOptions">
                 <div
                   class="card template-option"
                   [class.selected]="selectedTemplate === template.value"
+                  [class.template-disabled]="template.value === 0"
                   (click)="selectedTemplate = template.value">
                   <div class="card-body">
                     <div class="form-check">
@@ -64,7 +65,7 @@
                         <p class="text-muted small mb-0 mt-1">{{ template.description }}</p>
                       </label>
                     </div>
-                    <div class="mt-2">
+                    <div class="mt-2" *ngIf="template.value !== 0">
                       <button
                         type="button"
                         class="btn btn-sm btn-outline-primary w-100"

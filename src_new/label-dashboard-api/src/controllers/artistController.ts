@@ -2024,9 +2024,9 @@ export const updateEPKSettings = async (req: AuthRequest, res: Response) => {
     if (epk_template !== undefined && epk_template !== null) {
       const templateValue = parseInt(epk_template, 10);
 
-      // Validate template value (1 or 2)
-      if (![1, 2].includes(templateValue)) {
-        return res.status(400).json({ error: 'EPK template must be 1 or 2' });
+      // Validate template value (0 = disabled, 1 or 2 = active templates)
+      if (![0, 1, 2].includes(templateValue)) {
+        return res.status(400).json({ error: 'EPK template must be 0, 1, or 2' });
       }
 
       updateData.epk_template = templateValue;

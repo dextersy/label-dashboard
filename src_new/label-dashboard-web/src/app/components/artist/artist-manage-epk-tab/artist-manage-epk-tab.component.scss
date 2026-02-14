@@ -81,6 +81,18 @@
       }
     }
 
+    &.template-disabled {
+      border-color: #d5d5d5;
+
+      .card-body {
+        background-color: #f0f0f0;
+      }
+
+      &.selected .card-body {
+        background-color: #e8e8ee;
+      }
+    }
+
     .card-body {
       padding: 1rem;
     }
