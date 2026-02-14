@@ -678,8 +678,9 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
 
     // Upload new file to S3 masters bucket with brand as top-level folder
     // S3 doesn't require explicit folder creation - it's created automatically
-    // Structure: <Brand Name>/<catalog number> <Artist Name> - <Release title>/<filename>
-    const fileName = `${sanitizedBrandName}/${releaseFolderName}/${Date.now()}-${sanitizedOriginalName}`;
+    // Structure: <Brand Name>/<catalog number> <Artist Name> - <Release title>/WAV/<filename>
+    const timestampedName = `${Date.now()}-${sanitizedOriginalName}`;
+    const fileName = `${sanitizedBrandName}/${releaseFolderName}/WAV/${timestampedName}`;
     await uploadToS3({
       Bucket: process.env.S3_BUCKET_MASTERS!,
       Key: fileName,
@@ -691,12 +692,13 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     // Get file size from the uploaded file buffer
     const fileSize = req.file.buffer.length;
 
-    // Convert WAV to MP3 (192kbps) and upload to S3
+    // Convert WAV to MP3 (192kbps) and upload to S3 in MP3 subfolder
     let mp3FileName: string | undefined;
     let mp3FileSize: number | undefined;
     try {
       const mp3Buffer = await convertWavToMp3(req.file.buffer);
-      mp3FileName = `${fileName}.mp3`;
+      const mp3Name = timestampedName.replace(/\.[^.]+$/, '.mp3');
+      mp3FileName = `${sanitizedBrandName}/${releaseFolderName}/MP3/${mp3Name}`;
       mp3FileSize = mp3Buffer.length;
       await uploadToS3({
         Bucket: process.env.S3_BUCKET_MASTERS!,
