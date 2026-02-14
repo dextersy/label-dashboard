@@ -355,6 +355,13 @@ export class PublicService {
   }
 
   /**
+   * Get release player data for public playback
+   */
+  getReleasePlayer(artistId: number, releaseId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/public/player/${artistId}/${releaseId}`);
+  }
+
+  /**
    * Get available ticket types for public purchase (excludes sold out and unavailable based on date range)
    */
   getAvailableTicketTypes(eventId: number): Observable<{ ticketTypes: Array<{

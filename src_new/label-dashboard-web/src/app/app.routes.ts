@@ -29,6 +29,7 @@ import { TicketSuccessComponent } from './pages/public/ticket-success.component'
 import { TicketVerifyComponent } from './pages/public/ticket-verify.component';
 import { PublicEventsComponent } from './pages/public/public-events.component';
 import { ArtistEPKComponent } from './pages/public/artist-epk.component';
+import { ReleasePlayerComponent } from './pages/public/release-player.component';
 import { FundraiserComponent } from './pages/public/fundraiser.component';
 import { DonationSuccessComponent } from './pages/public/donation-success.component';
 import { authGuard } from './guards/auth.guard';
@@ -50,6 +51,7 @@ export const routes: Routes = [
   // Public Routes (no authentication required)
   { path: 'public/events', component: PublicEventsComponent },
   { path: 'public/epk/:artist_id', component: ArtistEPKComponent },
+  { path: 'public/player/:artistId/:releaseId', component: ReleasePlayerComponent },
   { path: 'public/tickets/buy/:id', component: TicketBuyComponent },
   { path: 'public/tickets/success', component: TicketSuccessComponent },
   { path: 'public/tickets/verify/:id', component: TicketVerifyComponent },

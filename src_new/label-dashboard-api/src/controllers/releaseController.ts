@@ -1069,14 +1069,16 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
     // Build public download URLs using brand domain
     let artistPhotosLink = '';
     let listeningLink = '';
+    let downloadLink = '';
     if (brand?.domains && (brand.domains as any[]).length > 0) {
       const brandDomain = (brand.domains as any[])[0].domain_name;
       const apiPort = process.env.HTTPS_PORT || '3001';
       if (artists.length > 0) {
         artistPhotosLink = `https://${brandDomain}:${apiPort}/api/public/epk/${artists[0].id}/photos/download`;
+        listeningLink = `https://${brandDomain}/public/player/${artists[0].id}/${release.id}`;
       }
       if (release.UPC && release.UPC.trim()) {
-        listeningLink = `https://${brandDomain}:${apiPort}/api/public/epk/release/${encodeURIComponent(release.UPC.trim())}/download`;
+        downloadLink = `https://${brandDomain}:${apiPort}/api/public/epk/release/${encodeURIComponent(release.UPC.trim())}/download`;
       }
     }
 
@@ -1245,13 +1247,22 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
               children: [
                 new Paragraph({
                   spacing: cellSpacing,
-                  children: listeningLink
-                    ? [new ExternalHyperlink({
-                        link: listeningLink,
-                        children: [
-                          new TextRun({ text: `${artistName} - ${release.title || 'Untitled'} (download)`, font: 'Calibri', size: 22, color: '0563C1', underline: {} }),
-                        ],
-                      })]
+                  children: (listeningLink || downloadLink)
+                    ? [
+                        ...(listeningLink ? [new ExternalHyperlink({
+                          link: listeningLink,
+                          children: [
+                            new TextRun({ text: 'Listen', font: 'Calibri', size: 22, color: '0563C1', underline: {} }),
+                          ],
+                        })] : []),
+                        ...(listeningLink && downloadLink ? [new TextRun({ text: '  ', font: 'Calibri', size: 22 })] : []),
+                        ...(downloadLink ? [new ExternalHyperlink({
+                          link: downloadLink,
+                          children: [
+                            new TextRun({ text: 'Download', font: 'Calibri', size: 22, color: '0563C1', underline: {} }),
+                          ],
+                        })] : []),
+                      ]
                     : [new TextRun({ text: release.spotify_link || release.apple_music_link || release.youtube_link || ' ', font: 'Calibri', size: 22, color: '201f1e' })],
                 }),
               ],

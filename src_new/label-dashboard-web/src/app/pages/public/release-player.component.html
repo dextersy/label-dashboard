@@ -1,0 +1,85 @@
+<div class="release-player-page" [style.background]="'linear-gradient(135deg, ' + getBrandColor() + ' 0%, #1a1a2e 100%)'">
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="isError && !isLoading" class="error-container">
+    <div class="error-card">
+      <h4>Release Not Found</h4>
+      <p>The requested release could not be found or is not available.</p>
+    </div>
+  </div>
+
+  <!-- Player -->
+  <div *ngIf="!isLoading && !isError && playerData" class="player-container">
+
+    <!-- Brand header -->
+    <div class="player-header" *ngIf="playerData.brand" [style.background-color]="getBrandColor()">
+      <img
+        *ngIf="playerData.brand.logo_url"
+        [src]="getBrandLogoUrl(playerData.brand.logo_url)"
+        [alt]="playerData.brand.name"
+        class="brand-logo">
+      <span *ngIf="!playerData.brand.logo_url" class="brand-name">{{ playerData.brand.name }}</span>
+    </div>
+
+    <!-- Release info -->
+    <div class="release-info">
+      <div class="cover-art-wrapper">
+        <img
+          [src]="getCoverArtUrl(playerData.release.cover_art_url)"
+          [alt]="playerData.release.title"
+          class="cover-art">
+      </div>
+      <h1 class="release-title">{{ playerData.release.title }}</h1>
+      <h2 class="artist-name">{{ playerData.artist.name }}</h2>
+      <p class="release-date" *ngIf="playerData.release.release_date">{{ formatReleaseDate(playerData.release.release_date) }}</p>
+    </div>
+
+    <!-- Now-playing bar -->
+    <div class="now-playing-bar" *ngIf="currentSongIndex >= 0 && audioState">
+      <div class="now-playing-info">
+        <span class="now-playing-title">{{ playerData.songs[currentSongIndex]?.title }}</span>
+        <span class="now-playing-artist">{{ playerData.artist.name }}</span>
+      </div>
+      <div class="playback-row">
+        <span class="time-label">{{ formatTime(getCurrentTime()) }}</span>
+        <div class="progress-bar-wrapper" (click)="seekAudio($event)">
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="getProgress()" [style.background-color]="getBrandColor()"></div>
+          </div>
+        </div>
+        <span class="time-label">{{ formatTime(getDuration()) }}</span>
+      </div>
+    </div>
+
+    <!-- Tracklist -->
+    <div class="tracklist">
+      <div
+        *ngFor="let song of playerData.songs; let i = index"
+        class="track-item"
+        [class.active]="currentSongIndex === i"
+        [class.disabled]="!song.has_audio"
+        (click)="song.has_audio ? togglePlaySong(i) : null">
+
+        <span class="track-number">{{ song.track_number || (i + 1) }}</span>
+
+        <span class="track-play-icon" *ngIf="song.has_audio">
+          <i *ngIf="isSongLoading(i)" class="fas fa-spinner fa-spin"></i>
+          <i *ngIf="!isSongLoading(i) && isSongPlaying(i)" class="fas fa-pause"></i>
+          <i *ngIf="!isSongLoading(i) && !isSongPlaying(i)" class="fas fa-play"></i>
+        </span>
+
+        <span class="track-title">{{ song.title }}</span>
+
+        <span class="track-duration" *ngIf="song.duration">{{ formatDuration(song.duration) }}</span>
+      </div>
+    </div>
+
+  </div>
+</div>

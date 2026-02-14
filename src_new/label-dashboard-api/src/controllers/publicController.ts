@@ -2006,6 +2006,115 @@ ${JSON.stringify(structuredData, null, 4)}
   }
 };
 
+// Get public release player data
+export const getReleasePlayer = async (req: Request, res: Response) => {
+  try {
+    const { artistId, releaseId } = req.params;
+    const artistIdNum = parseInt(artistId as string, 10);
+    const releaseIdNum = parseInt(releaseId as string, 10);
+
+    if (isNaN(artistIdNum) || isNaN(releaseIdNum)) {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
+
+    const requestDomain = getRequestDomain(req);
+
+    // Get artist with brand/domain info for validation
+    const artist = await Artist.findOne({
+      where: { id: artistIdNum },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          include: [
+            {
+              model: Domain,
+              as: 'domains',
+              attributes: ['domain_name']
+            }
+          ]
+        }
+      ],
+      attributes: ['id', 'name', 'brand_id']
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    // Validate domain against artist's brand
+    if (artist.brand && artist.brand.domains && requestDomain) {
+      const brandDomains = artist.brand.domains.map((d: any) => d.domain_name);
+      if (!brandDomains.includes(requestDomain)) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+    } else {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    // Get release, verifying it belongs to the same brand and is associated with this artist
+    const release = await Release.findOne({
+      where: {
+        id: releaseIdNum,
+        brand_id: artist.brand_id
+      },
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          where: { id: artistIdNum },
+          attributes: [],
+          through: { attributes: [] }
+        },
+        {
+          model: Song,
+          as: 'songs',
+          attributes: ['id', 'title', 'track_number', 'audio_file', 'duration'],
+        }
+      ],
+      attributes: ['id', 'title', 'cover_art', 'release_date', 'description'],
+      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const songs = ((release as any).songs || []).map((song: any) => ({
+      id: song.id,
+      title: song.title,
+      track_number: song.track_number,
+      has_audio: !!song.audio_file,
+      duration: song.duration
+    }));
+
+    res.json({
+      release: {
+        id: release.id,
+        title: release.title,
+        cover_art_url: release.cover_art,
+        release_date: release.release_date,
+        description: release.description
+      },
+      songs,
+      artist: {
+        id: artist.id,
+        name: artist.name
+      },
+      brand: {
+        id: artist.brand.id,
+        name: artist.brand.brand_name,
+        color: artist.brand.brand_color,
+        logo_url: artist.brand.logo_url
+      }
+    });
+  } catch (error) {
+    console.error('Get release player error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Get public EPK (Electronic Press Kit) for an artist
 export const getArtistEPK = async (req: Request, res: Response) => {
   try {

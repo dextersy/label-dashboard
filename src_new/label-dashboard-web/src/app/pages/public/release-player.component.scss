@@ -1,0 +1,257 @@
+.release-player-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-container {
+  .error-card {
+    background: white;
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+    max-width: 480px;
+
+    h4 {
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    p {
+      color: #666;
+      margin: 0;
+    }
+  }
+}
+
+.player-container {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+// Header
+.player-header {
+  padding: 16px 24px;
+  text-align: center;
+  .brand-logo {
+    max-height: 40px;
+    max-width: 180px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+// Release info
+.release-info {
+  padding: 32px 32px 24px;
+  text-align: center;
+
+  .cover-art-wrapper {
+    margin-bottom: 20px;
+
+    .cover-art {
+      width: 260px;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .release-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 4px;
+  }
+
+  .artist-name {
+    font-size: 18px;
+    font-weight: 400;
+    color: #666;
+    margin: 0 0 4px;
+  }
+
+  .release-date {
+    font-size: 13px;
+    color: #999;
+    margin: 0;
+  }
+}
+
+// Now-playing bar
+.now-playing-bar {
+  padding: 12px 32px 16px;
+  border-bottom: 1px solid #eee;
+
+  .now-playing-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    .now-playing-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .now-playing-artist {
+      font-size: 13px;
+      color: #999;
+    }
+  }
+
+  .playback-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .time-label {
+      font-size: 11px;
+      color: #999;
+      min-width: 36px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-bar-wrapper {
+      flex: 1;
+      cursor: pointer;
+      padding: 6px 0;
+
+      .progress-track {
+        height: 4px;
+        background: #e0e0e0;
+        border-radius: 2px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 2px;
+          transition: width 0.1s linear;
+        }
+      }
+
+      &:hover .progress-track {
+        height: 6px;
+      }
+    }
+  }
+}
+
+// Tracklist
+.tracklist {
+  padding: 8px 16px 16px;
+
+  .track-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    user-select: none;
+
+    &:hover:not(.disabled) {
+      background: #f5f5f5;
+    }
+
+    &.active {
+      background: #f0f0ff;
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .track-number {
+      width: 28px;
+      font-size: 13px;
+      color: #999;
+      text-align: right;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .track-play-icon {
+      width: 28px;
+      font-size: 12px;
+      color: #666;
+      flex-shrink: 0;
+      text-align: center;
+    }
+
+    .track-title {
+      flex: 1;
+      font-size: 15px;
+      color: #1a1a1a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .track-duration {
+      font-size: 13px;
+      color: #999;
+      margin-left: 12px;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .release-player-page {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .player-container {
+    max-width: none;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+
+  .release-info {
+    padding: 24px 20px 20px;
+
+    .cover-art-wrapper .cover-art {
+      width: 200px;
+      height: 200px;
+    }
+
+    .release-title {
+      font-size: 20px;
+    }
+
+    .artist-name {
+      font-size: 16px;
+    }
+  }
+
+  .now-playing-bar {
+    padding: 12px 20px 16px;
+  }
+
+  .tracklist {
+    padding: 8px 8px 16px;
+  }
+}

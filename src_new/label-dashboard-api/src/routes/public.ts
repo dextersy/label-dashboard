@@ -19,6 +19,7 @@ import {
   generateArtistEPKSEOPage,
   getAvailableTicketTypesPublic,
   streamPublicAudio,
+  getReleasePlayer,
   getFundraiserForPublic,
   makeDonation
 } from '../controllers/publicController';
@@ -32,6 +33,8 @@ router.get('/events/domain/:domain', getAllEventsForDomain);
 router.get('/events/:id', getEventForPublic);
 router.get('/events/:id/info', getPublicEventInfo);
 router.get('/events/ticket-types/available', getAvailableTicketTypesPublic);
+// Release player data
+router.get('/player/:artistId/:releaseId', publicRateLimit, getReleasePlayer);
 // Audio streaming and photo download must come before the general EPK route to avoid route conflict
 router.get('/epk/:artistId/audio/:songId', publicRateLimit, streamPublicAudio);
 router.get('/epk/:artist_id/photos/download', publicRateLimit, downloadArtistPhotos);
