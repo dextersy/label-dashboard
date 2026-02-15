@@ -8,6 +8,7 @@ interface SongAttributes {
   title: string;
   track_number?: number;
   duration?: number;
+  tempo?: number;
   lyrics?: string;
   audio_file?: string;
   audio_file_mp3?: string;
@@ -30,6 +31,7 @@ class Song extends Model<SongAttributes, SongCreationAttributes> implements Song
   public title!: string;
   public track_number?: number;
   public duration?: number;
+  public tempo?: number;
   public lyrics?: string;
   public audio_file?: string;
   public audio_file_mp3?: string;
@@ -83,6 +85,10 @@ Song.init(
     },
     duration: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    tempo: {
+      type: DataTypes.FLOAT,
       allowNull: true,
     },
     lyrics: {

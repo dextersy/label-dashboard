@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import { analyzeAudio } from '../utils/audioAnalyzer';
 import { Readable } from 'stream';
 
 const ffmpeg = require('fluent-ffmpeg');
@@ -728,6 +729,25 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       audio_file_mp3: mp3FileName,
       audio_file_mp3_size: mp3FileSize
     });
+
+    // Fire-and-forget: detect BPM and duration from the uploaded audio
+    // Only update fields that are not already set
+    const needsTempo = !song.tempo;
+    const needsDuration = !song.duration;
+    if (needsTempo || needsDuration) {
+      analyzeAudio(req.file.buffer).then(async ({ bpm, duration }) => {
+        const updates: any = {};
+        if (needsTempo && bpm) updates.tempo = bpm;
+        if (needsDuration && duration) updates.duration = duration;
+
+        if (Object.keys(updates).length > 0) {
+          await song.update(updates);
+          console.log(`Audio analysis for song ${song.id}:`, updates);
+        }
+      }).catch(err => {
+        console.error(`Audio analysis failed for song ${song.id}:`, err);
+      });
+    }
   } catch (error) {
     console.error('Upload audio error:', error);
     res.status(500).json({ error: 'Internal server error' });
