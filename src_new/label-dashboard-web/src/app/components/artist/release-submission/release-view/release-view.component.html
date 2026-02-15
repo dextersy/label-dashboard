@@ -63,7 +63,14 @@
           </div>
           <div class="detail-row" *ngIf="release.UPC">
             <span class="detail-label">UPC</span>
-            <span class="detail-value">{{ release.UPC }}</span>
+            <span class="detail-value">
+              {{ release.UPC }}
+              <button class="btn btn-outline-secondary btn-sm ms-2"
+                      (click)="downloadBarcode()"
+                      title="Download Barcode">
+                <i class="fas fa-barcode"></i>
+              </button>
+            </span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Release Date</span>

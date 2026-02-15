@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { Release, ReleaseService } from '../../../../services/release.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
 import { downloadFromResponse } from '../../../../utils/file-utils';
+import JsBarcode from 'jsbarcode';
 
 @Component({
   selector: 'app-release-view',
@@ -264,6 +265,38 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  downloadBarcode(): void {
+    if (!this.release?.UPC) return;
+
+    try {
+      const canvas = document.createElement('canvas');
+      JsBarcode(canvas, this.release.UPC, {
+        format: 'EAN13',
+        width: 4,
+        height: 200,
+        displayValue: true,
+        fontSize: 32,
+        margin: 20
+      });
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          this.alertMessage.emit({ type: 'error', message: 'Failed to generate barcode image.' });
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `UPC-${this.release!.UPC}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    } catch (e) {
+      console.error('Barcode generation error:', e);
+      this.alertMessage.emit({ type: 'error', message: 'Failed to generate barcode. The UPC may be invalid.' });
+    }
   }
 
   canSubmitRelease(): boolean {
