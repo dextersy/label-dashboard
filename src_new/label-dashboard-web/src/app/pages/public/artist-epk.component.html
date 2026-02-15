@@ -7,9 +7,12 @@
   </div>
 
   <!-- Error State -->
-  <div *ngIf="isError && !isLoading" class="alert alert-danger text-center">
-    <h4>Artist Not Found</h4>
-    <p class="mb-0">The requested artist could not be found or is not available.</p>
+  <div *ngIf="isError && !isLoading" class="epk-error-state">
+    <div class="epk-error-icon">
+      <i class="fas fa-music"></i>
+    </div>
+    <h3 class="epk-error-title">Artist not found</h3>
+    <p class="epk-error-message">Sorry, we couldn't find the artist you were looking for.<br>If you think this was a mistake, please <a href="mailto:support@melt-records.com?subject=EPK Page Not Found">contact support</a>.</p>
   </div>
 
   <!-- EPK Content - Template 1 (Modern Gradient Design) -->

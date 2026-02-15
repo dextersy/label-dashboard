@@ -1,4 +1,4 @@
-<div class="release-player-page" [style.background]="'linear-gradient(135deg, ' + getBrandColor() + ' 0%, #1a1a2e 100%)'">
+<div class="release-player-page" [style.background]="isError ? '#fff' : 'linear-gradient(135deg, ' + getBrandColor() + ' 0%, #1a1a2e 100%)'">
 
   <!-- Loading -->
   <div *ngIf="isLoading" class="loading-container">
@@ -9,10 +9,11 @@
 
   <!-- Error -->
   <div *ngIf="isError && !isLoading" class="error-container">
-    <div class="error-card">
-      <h4>Release Not Found</h4>
-      <p>The requested release could not be found or is not available.</p>
+    <div class="error-icon">
+      <i class="fas fa-music"></i>
     </div>
+    <h3 class="error-title">Link not found</h3>
+    <p class="error-message">Sorry, we couldn't find the link you were looking for.<br>If you think this was a mistake, please <a href="mailto:support@melt-records.com?subject=Player Link Not Found">contact support</a>.</p>
   </div>
 
   <!-- Player -->
