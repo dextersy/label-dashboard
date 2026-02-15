@@ -715,12 +715,24 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       mp3FileSize = undefined;
     }
 
-    // Update song with new audio file path, size, and MP3 path
-    await song.update({
+    // Detect BPM and duration from the uploaded audio before responding
+    // so the frontend can display updated values immediately
+    const songUpdates: any = {
       audio_file: fileName,
       audio_file_size: fileSize,
       ...(mp3FileName ? { audio_file_mp3: mp3FileName, audio_file_mp3_size: mp3FileSize } : {})
-    });
+    };
+
+    const needsTempo = !song.tempo;
+    try {
+      const { bpm, duration } = await analyzeAudio(req.file.buffer);
+      if (needsTempo && bpm) songUpdates.tempo = bpm;
+      if (duration) songUpdates.duration = duration;
+    } catch (err) {
+      console.error(`Audio analysis failed for song ${song.id}:`, err);
+    }
+
+    await song.update(songUpdates);
 
     res.json({
       message: 'Audio file uploaded successfully',
@@ -729,25 +741,6 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       audio_file_mp3: mp3FileName,
       audio_file_mp3_size: mp3FileSize
     });
-
-    // Fire-and-forget: detect BPM and duration from the uploaded audio
-    // Only update fields that are not already set
-    const needsTempo = !song.tempo;
-    const needsDuration = !song.duration;
-    if (needsTempo || needsDuration) {
-      analyzeAudio(req.file.buffer).then(async ({ bpm, duration }) => {
-        const updates: any = {};
-        if (needsTempo && bpm) updates.tempo = bpm;
-        if (needsDuration && duration) updates.duration = duration;
-
-        if (Object.keys(updates).length > 0) {
-          await song.update(updates);
-          console.log(`Audio analysis for song ${song.id}:`, updates);
-        }
-      }).catch(err => {
-        console.error(`Audio analysis failed for song ${song.id}:`, err);
-      });
-    }
   } catch (error) {
     console.error('Upload audio error:', error);
     res.status(500).json({ error: 'Internal server error' });

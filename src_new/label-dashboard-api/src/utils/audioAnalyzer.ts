@@ -2,12 +2,14 @@ import { Readable } from 'stream';
 
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
 
-// Lower sample rate for BPM detection — reduces memory by ~4x vs 44100
+// Lower sample rate keeps memory manageable for BPM analysis
 const ANALYSIS_SAMPLE_RATE = 11025;
+
+// Only buffer 60 seconds of audio for BPM detection — music-tempo
+// doesn't need the full track and this caps memory usage
+const BPM_SAMPLE_LIMIT = ANALYSIS_SAMPLE_RATE * 60; // 60s worth of samples
 
 interface AudioAnalysis {
   bpm: number | null;
@@ -16,64 +18,62 @@ interface AudioAnalysis {
 
 /**
  * Analyze an audio buffer to detect BPM and duration.
- * Uses ffprobe for duration (no decode needed) and a downsampled
- * PCM stream for BPM detection to avoid heap issues with large files.
+ *
+ * Duration is computed by streaming PCM and counting total bytes
+ * without buffering the entire output.
+ *
+ * BPM is detected from the first 60 seconds only, capping memory usage
+ * to ~240 KB regardless of track length.
  */
 export async function analyzeAudio(wavBuffer: Buffer): Promise<AudioAnalysis> {
   let duration: number | null = null;
   let bpm: number | null = null;
 
-  // Get duration via ffprobe — no PCM decode needed
   try {
-    duration = await probeDuration(wavBuffer);
-  } catch (err) {
-    console.error('Duration detection failed:', err);
-  }
+    const { totalSamples, bpmSamples } = await decodePCM(wavBuffer);
 
-  // Get BPM via downsampled PCM
-  try {
-    const pcmData = await decodeToFloat32PCM(wavBuffer);
-    const MusicTempo = require('music-tempo');
-    const mt = new MusicTempo(pcmData);
-    const detectedBpm = Math.round(mt.tempo);
-    if (detectedBpm > 0) {
-      bpm = detectedBpm;
+    // Duration from total sample count (streamed, not buffered)
+    const totalSeconds = Math.round(totalSamples / ANALYSIS_SAMPLE_RATE);
+    if (totalSeconds > 0) {
+      duration = totalSeconds;
+    }
+
+    // BPM from the first 60s
+    if (bpmSamples.length > 0) {
+      try {
+        const MusicTempo = require('music-tempo');
+        const mt = new MusicTempo(bpmSamples);
+        const detectedBpm = Math.round(mt.tempo);
+        if (detectedBpm > 0) {
+          bpm = detectedBpm;
+        }
+      } catch (bpmError) {
+        console.error('BPM detection failed:', bpmError);
+      }
     }
   } catch (err) {
-    console.error('BPM detection failed:', err);
+    console.error('Audio analysis failed:', err);
   }
 
   return { bpm, duration };
 }
 
-/**
- * Use ffprobe to get the duration in seconds without decoding audio.
- */
-function probeDuration(wavBuffer: Buffer): Promise<number | null> {
-  return new Promise((resolve, reject) => {
-    const inputStream = Readable.from(wavBuffer);
-    const command = ffmpeg(inputStream).inputFormat('wav');
-
-    command.ffprobe((err: Error | null, data: any) => {
-      if (err) return reject(err);
-      const seconds = data?.format?.duration;
-      if (seconds && seconds > 0) {
-        resolve(Math.round(seconds));
-      } else {
-        resolve(null);
-      }
-    });
-  });
+interface DecodedPCM {
+  totalSamples: number;
+  bpmSamples: Float32Array;
 }
 
 /**
- * Decode an audio buffer to mono float32 PCM at a low sample rate.
- * Uses 11025 Hz to keep memory usage manageable for BPM analysis.
+ * Decode audio to mono float32 PCM at a low sample rate.
+ * Streams the full output to count total samples for duration,
+ * but only buffers the first 60 seconds for BPM analysis.
  */
-function decodeToFloat32PCM(wavBuffer: Buffer): Promise<Float32Array> {
+function decodePCM(wavBuffer: Buffer): Promise<DecodedPCM> {
   return new Promise((resolve, reject) => {
     const inputStream = Readable.from(wavBuffer);
-    const chunks: Buffer[] = [];
+    const bpmChunks: Buffer[] = [];
+    let bpmSamplesCollected = 0;
+    let totalBytes = 0;
 
     const command = ffmpeg(inputStream)
       .inputFormat('wav')
@@ -84,16 +84,37 @@ function decodeToFloat32PCM(wavBuffer: Buffer): Promise<Float32Array> {
       .on('error', (err: Error) => reject(err));
 
     const outputStream = command.pipe();
-    outputStream.on('data', (chunk: Buffer) => chunks.push(chunk));
-    outputStream.on('end', () => {
-      const rawBuffer = Buffer.concat(chunks);
-      // Copy into a properly-sized Float32Array (don't share the concat buffer)
-      const sampleCount = rawBuffer.length / 4;
-      const float32Array = new Float32Array(sampleCount);
-      for (let i = 0; i < sampleCount; i++) {
-        float32Array[i] = rawBuffer.readFloatLE(i * 4);
+    outputStream.on('data', (chunk: Buffer) => {
+      totalBytes += chunk.length;
+
+      // Only buffer chunks until we have 60s worth for BPM
+      if (bpmSamplesCollected < BPM_SAMPLE_LIMIT) {
+        const samplesInChunk = chunk.length / 4;
+        const samplesNeeded = BPM_SAMPLE_LIMIT - bpmSamplesCollected;
+
+        if (samplesInChunk <= samplesNeeded) {
+          bpmChunks.push(chunk);
+          bpmSamplesCollected += samplesInChunk;
+        } else {
+          // Only take what we need from this chunk
+          bpmChunks.push(chunk.subarray(0, samplesNeeded * 4));
+          bpmSamplesCollected += samplesNeeded;
+        }
       }
-      resolve(float32Array);
+      // Remaining chunks are counted but not buffered
+    });
+    outputStream.on('end', () => {
+      const totalSamples = totalBytes / 4;
+
+      // Build Float32Array from buffered BPM chunks
+      const rawBuffer = Buffer.concat(bpmChunks);
+      const sampleCount = rawBuffer.length / 4;
+      const bpmSamples = new Float32Array(sampleCount);
+      for (let i = 0; i < sampleCount; i++) {
+        bpmSamples[i] = rawBuffer.readFloatLE(i * 4);
+      }
+
+      resolve({ totalSamples, bpmSamples });
     });
     outputStream.on('error', (err: Error) => reject(err));
   });
