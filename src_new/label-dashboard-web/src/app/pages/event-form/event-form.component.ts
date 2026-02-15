@@ -13,6 +13,7 @@ import { EventSelectionComponent } from '../../components/events/event-selection
 import { VenueAutocompleteComponent, VenueSelection } from '../../components/events/venue-autocomplete/venue-autocomplete.component';
 import { TicketTypesComponent } from '../../components/events/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
+import { downloadQRCode } from '../../utils/qr-utils';
 
 export interface TicketType {
   id?: number;
@@ -573,6 +574,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
       this.notificationService.showSuccess('Copied to clipboard!');
     }).catch(() => {
       this.notificationService.showError('Failed to copy to clipboard');
+    });
+  }
+
+  downloadLinkQR(url: string, label: string): void {
+    const slug = label.replace(/[^a-z0-9]/gi, '-');
+    downloadQRCode(url, slug).catch(() => {
+      this.notificationService.showError('Failed to generate QR code');
     });
   }
 

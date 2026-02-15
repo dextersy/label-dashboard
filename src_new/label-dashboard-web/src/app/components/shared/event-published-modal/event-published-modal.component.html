@@ -22,12 +22,19 @@
             readonly
             aria-label="Event ticket purchase link"
             #linkInput>
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             type="button"
             (click)="copyLink()">
             <i class="fas" [ngClass]="copySuccess ? 'fa-check' : 'fa-copy'"></i>
             {{ copySuccess ? 'Copied!' : 'Copy' }}
+          </button>
+          <button
+            class="btn btn-outline-primary"
+            type="button"
+            (click)="downloadBuyLinkQR()"
+            title="Download QR Code">
+            <i class="fas fa-qrcode"></i>
           </button>
         </div>
         

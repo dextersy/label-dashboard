@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventReferrer as ServiceEventReferrer } from '../../../services/event.service';
+import { downloadQRCode } from '../../../utils/qr-utils';
 
 export interface EventReferrer {
   id: number;
@@ -122,6 +123,13 @@ export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy 
         type: 'error',
         text: 'Failed to copy referral link to clipboard.'
       });
+    });
+  }
+
+  downloadReferralQR(referralShortlink: string, referralCode: string): void {
+    downloadQRCode(referralShortlink, `Referral-${referralCode}`).catch(err => {
+      console.error('Failed to generate QR code:', err);
+      this.alertMessage.emit({ type: 'error', text: 'Failed to generate QR code.' });
     });
   }
 

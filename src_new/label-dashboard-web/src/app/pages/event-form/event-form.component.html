@@ -242,12 +242,19 @@
                         class="form-control" 
                         [value]="event.buy_shortlink"
                         readonly>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         class="btn btn-primary"
                         (click)="copyToClipboard(event.buy_shortlink)"
                         title="Copy to clipboard">
                         <i class="fa fa-copy me-2"></i>Copy Link
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-outline-primary"
+                        (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
+                        title="Download QR Code">
+                        <i class="fa fa-qrcode"></i>
                       </button>
                     </div>
                     <small class="text-muted mt-2 d-block">

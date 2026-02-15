@@ -6,6 +6,7 @@ import { Artist } from '../artist-selection/artist-selection.component';
 import { BrandService } from '../../../services/brand.service';
 import { ApiService } from '../../../services/api.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
+import { downloadQRCode } from '../../../utils/qr-utils';
 
 export interface ArtistWithEPK extends Artist {
   epk_template?: number;
@@ -140,6 +141,16 @@ export class ArtistManageEpkTabComponent implements OnInit {
     }
 
     document.body.removeChild(textArea);
+  }
+
+  downloadEPKQRCode(): void {
+    if (!this.epkUrl) return;
+
+    const artistName = this.artist.name.replace(/[^a-z0-9]/gi, '-');
+    downloadQRCode(this.epkUrl, `EPK-${artistName}`).catch(err => {
+      console.error('Failed to generate QR code:', err);
+      this.alertMessage.emit({ type: 'error', message: 'Failed to generate QR code.' });
+    });
   }
 
   openPreview(templateNumber: number): void {

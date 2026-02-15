@@ -10,6 +10,7 @@ import { ConfirmationService } from '../../services/confirmation.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { FundraiserSelectionComponent } from '../../components/campaigns/fundraiser-selection/fundraiser-selection.component';
 import { QuillModule } from 'ngx-quill';
+import { downloadQRCode } from '../../utils/qr-utils';
 
 @Component({
   selector: 'app-fundraiser-form',
@@ -518,6 +519,16 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
         this.notificationService.showSuccess('Link copied to clipboard');
       }).catch(() => {
         this.notificationService.showError('Failed to copy link');
+      });
+    }
+  }
+
+  downloadFundraiserQR(): void {
+    const url = this.getPublicFundraiserUrl();
+    if (url) {
+      const title = (this.fundraiser?.title || 'Fundraiser').replace(/[^a-z0-9]/gi, '-');
+      downloadQRCode(url, `Fundraiser-${title}`).catch(() => {
+        this.notificationService.showError('Failed to generate QR code');
       });
     }
   }

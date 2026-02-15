@@ -56,6 +56,13 @@
               title="Copy link to clipboard">
               <i class="fa fa-copy"></i>
             </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary d-flex align-items-center"
+              (click)="downloadFundraiserQR()"
+              title="Download QR Code">
+              <i class="fa fa-qrcode"></i>
+            </button>
             <a
               [href]="getPublicFundraiserUrl()"
               target="_blank"
