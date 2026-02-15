@@ -42,7 +42,7 @@ export class ArtistManageEpkTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.generateEPKUrl();
-    this.selectedTemplate = this.artist?.epk_template || 1;
+    this.selectedTemplate = this.artist?.epk_template ?? 1;
   }
 
   private generateEPKUrl(): void {
