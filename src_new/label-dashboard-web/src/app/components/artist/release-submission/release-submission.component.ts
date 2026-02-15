@@ -543,6 +543,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   // Cancel edit mode and return to read-only view (for non-Draft releases)
   onCancelEditMode(): void {
     if (this.editingRelease && this.editingRelease.status !== 'Draft') {
+      this.releaseForView = this.editingRelease;
       this.showReadOnlyView = true;
     }
   }
