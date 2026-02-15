@@ -114,6 +114,18 @@
     margin: 0 0 4px;
   }
 
+  .epk-link {
+    display: block;
+    font-size: 13px;
+    color: #667eea;
+    text-decoration: none;
+    margin-bottom: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   .release-date {
     font-size: 13px;
     color: #999;

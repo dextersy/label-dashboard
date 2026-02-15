@@ -2036,7 +2036,7 @@ export const getReleasePlayer = async (req: Request, res: Response) => {
           ]
         }
       ],
-      attributes: ['id', 'name', 'brand_id']
+      attributes: ['id', 'name', 'brand_id', 'epk_template']
     });
 
     if (!artist) {
@@ -2101,7 +2101,8 @@ export const getReleasePlayer = async (req: Request, res: Response) => {
       songs,
       artist: {
         id: artist.id,
-        name: artist.name
+        name: artist.name,
+        has_epk: !!(artist as any).epk_template && (artist as any).epk_template !== 0
       },
       brand: {
         id: artist.brand.id,

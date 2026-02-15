@@ -25,6 +25,7 @@ export interface ReleasePlayerData {
   artist: {
     id: number;
     name: string;
+    has_epk?: boolean;
   };
   brand?: {
     id: number;
@@ -146,6 +147,11 @@ export class ReleasePlayerComponent implements OnInit, OnDestroy {
 
   getBrandColor(): string {
     return this.playerData?.brand?.color || '#667eea';
+  }
+
+  getEpkUrl(): string {
+    if (!this.playerData?.artist?.id) return '';
+    return `/public/epk/${this.playerData.artist.id}`;
   }
 
   formatReleaseDate(dateString: string): string {
