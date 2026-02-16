@@ -179,7 +179,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     // If event has ticket types, find the first available (not sold out) one
     if (this.event.ticketTypes && this.event.ticketTypes.length > 0) {
       // Find first available ticket type (not sold out)
-      const availableTicketType = this.event.ticketTypes.find(tt => !tt.is_sold_out);
+      const availableTicketType = this.event.ticketTypes.find(tt => tt.is_available !== false && !tt.is_sold_out);
 
       if (availableTicketType) {
         this.selectedTicketType = availableTicketType;
@@ -358,6 +358,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
       if (selectedTicketType && selectedTicketType.is_sold_out) {
         alert('The selected ticket type is sold out. Please choose a different ticket type.');
+        return;
+      }
+
+      if (selectedTicketType && selectedTicketType.is_available === false) {
+        alert('The selected ticket type is currently unavailable. Please choose a different ticket type.');
         return;
       }
 

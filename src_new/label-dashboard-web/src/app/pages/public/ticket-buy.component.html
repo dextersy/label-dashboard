@@ -195,14 +195,16 @@
                       id="ticket_type_id"
                       formControlName="ticket_type_id"
                       (change)="onTicketTypeChange()">
-                      <option *ngFor="let ticketType of event.ticketTypes"
-                              [value]="ticketType.id"
-                              [disabled]="ticketType.is_sold_out"
-                              [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
-                              [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
-                        {{ ticketType.name }} - {{ formatPriceDisplay(ticketType.price) }}
-                        <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
-                      </option>
+                      <ng-container *ngFor="let ticketType of event.ticketTypes">
+                        <option *ngIf="ticketType.is_available !== false"
+                                [value]="ticketType.id"
+                                [disabled]="ticketType.is_sold_out"
+                                [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
+                                [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
+                          {{ ticketType.name }} - {{ formatPriceDisplay(ticketType.price) }}
+                          <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
+                        </option>
+                      </ng-container>
                     </select>
                     <label for="ticket_type_id">Ticket type</label>
                   </div>
