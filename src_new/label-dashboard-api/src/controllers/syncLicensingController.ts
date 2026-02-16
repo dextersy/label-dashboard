@@ -171,9 +171,9 @@ async function getSongsForPitches(pitchIds: number[]): Promise<Map<number, any[]
       if (!allSongsMap.has(song.id)) {
         // Normalize many-to-many: pick first release and expose as `release`
         if (song.releases?.length) {
-          song.release = song.releases[0];
+          (song as any).release = song.releases[0];
         } else {
-          song.release = null;
+          (song as any).release = null;
         }
         delete song.releases;
         allSongsMap.set(song.id, song);

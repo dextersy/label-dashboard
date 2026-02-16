@@ -94,7 +94,7 @@ export const getSongsByRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    const songs = await fetchSongsForRelease(releaseId);
+    const songs = await fetchSongsForRelease(releaseId as string);
 
     res.json({ songs });
   } catch (error) {
@@ -655,7 +655,7 @@ export const reorderSongs = async (req: AuthRequest, res: Response) => {
     }
 
     // Fetch updated songs
-    const songs = await fetchSongsForRelease(releaseId);
+    const songs = await fetchSongsForRelease(releaseId as string);
 
     res.json({ songs });
   } catch (error) {
