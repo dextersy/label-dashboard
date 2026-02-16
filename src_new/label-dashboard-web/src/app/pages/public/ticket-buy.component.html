@@ -186,7 +186,7 @@
               </div>
 
               <!-- Ticket Type Selection -->
-              <div class="ticket-type-container fadeIn fourth" *ngIf="event.ticketTypes && event.ticketTypes.length > 1">
+              <div class="ticket-type-container fadeIn fourth" *ngIf="event.ticketTypes && getAvailableTicketTypes().length > 1">
                 <h6><strong>Select ticket type</strong></h6>
                 <div class="input-group">
                   <div class="form-floating flex-fill">
