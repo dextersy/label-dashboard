@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
+import { Op } from 'sequelize';
+import { Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 import { analyzeAudio } from '../utils/audioAnalyzer';
 import { Readable } from 'stream';
@@ -36,6 +37,46 @@ interface AuthRequest extends Request {
   file?: Express.Multer.File;
 }
 
+/** Standard song includes for collaborators, authors, composers */
+const songAssociationIncludes = [
+  {
+    model: SongCollaborator,
+    as: 'collaborators',
+    include: [{ model: Artist, as: 'artist' }]
+  },
+  {
+    model: SongAuthor,
+    as: 'authors',
+    include: [{ model: Songwriter, as: 'songwriter' }]
+  },
+  {
+    model: SongComposer,
+    as: 'composers',
+    include: [{ model: Songwriter, as: 'songwriter' }]
+  }
+];
+
+/**
+ * Fetch songs for a release via ReleaseSong join table.
+ * Returns songs with track_number flattened onto each song object.
+ */
+async function fetchSongsForRelease(releaseId: number | string) {
+  const releaseSongs = await ReleaseSong.findAll({
+    where: { release_id: releaseId },
+    include: [{
+      model: Song,
+      as: 'song',
+      include: songAssociationIncludes
+    }],
+    order: [['track_number', 'ASC']]
+  });
+
+  return releaseSongs.map((rs: any) => ({
+    ...rs.song.toJSON(),
+    track_number: rs.track_number
+  }));
+}
+
 // Get all songs for a release
 export const getSongsByRelease = async (req: AuthRequest, res: Response) => {
   try {
@@ -53,27 +94,7 @@ export const getSongsByRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    const songs = await Song.findAll({
-      where: { release_id: releaseId },
-      include: [
-        {
-          model: SongCollaborator,
-          as: 'collaborators',
-          include: [{ model: Artist, as: 'artist' }]
-        },
-        {
-          model: SongAuthor,
-          as: 'authors',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        },
-        {
-          model: SongComposer,
-          as: 'composers',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        }
-      ],
-      order: [['track_number', 'ASC']]
-    });
+    const songs = await fetchSongsForRelease(releaseId);
 
     res.json({ songs });
   } catch (error) {
@@ -87,28 +108,15 @@ export const getSong = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const song = await Song.findByPk(id as string, {
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id },
       include: [
         {
           model: Release,
-          as: 'release',
-          where: { brand_id: req.user.brand_id }
+          as: 'releases',
+          through: { attributes: ['track_number'] }
         },
-        {
-          model: SongCollaborator,
-          as: 'collaborators',
-          include: [{ model: Artist, as: 'artist' }]
-        },
-        {
-          model: SongAuthor,
-          as: 'authors',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        },
-        {
-          model: SongComposer,
-          as: 'composers',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        }
+        ...songAssociationIncludes
       ]
     });
 
@@ -161,21 +169,19 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Cannot add songs to non-draft releases. Contact your label administrator.' });
     }
 
-    // Get the highest track number for this release and increment
-    const maxTrackSong = await Song.findOne({
+    // Get the highest track number for this release from the join table
+    const maxTrackEntry = await ReleaseSong.findOne({
       where: { release_id },
       order: [['track_number', 'DESC']],
       attributes: ['track_number']
     });
 
-    const nextTrackNumber = maxTrackSong?.track_number ? maxTrackSong.track_number + 1 : 1;
+    const nextTrackNumber = maxTrackEntry?.track_number ? maxTrackEntry.track_number + 1 : 1;
 
     // Create song (filter admin-only fields for non-admins)
     const songData: any = {
       brand_id: release.brand_id,
-      release_id,
       title,
-      track_number: nextTrackNumber,
       lyrics
     };
 
@@ -189,6 +195,13 @@ export const createSong = async (req: AuthRequest, res: Response) => {
     }
 
     const song = await Song.create(songData);
+
+    // Create the join table entry
+    await ReleaseSong.create({
+      release_id,
+      song_id: song.id!,
+      track_number: nextTrackNumber
+    });
 
     // Auto-add release artists as collaborators (non-editable)
     const releaseArtists = (release as any).artists || [];
@@ -250,26 +263,16 @@ export const createSong = async (req: AuthRequest, res: Response) => {
 
     // Fetch complete song with associations
     const completeSong = await Song.findByPk(song.id, {
-      include: [
-        {
-          model: SongCollaborator,
-          as: 'collaborators',
-          include: [{ model: Artist, as: 'artist' }]
-        },
-        {
-          model: SongAuthor,
-          as: 'authors',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        },
-        {
-          model: SongComposer,
-          as: 'composers',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        }
-      ]
+      include: songAssociationIncludes
     });
 
-    res.status(201).json({ song: completeSong });
+    // Attach track_number for frontend compatibility
+    const result = {
+      ...completeSong!.toJSON(),
+      track_number: nextTrackNumber
+    };
+
+    res.status(201).json({ song: result });
   } catch (error) {
     console.error('Create song error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -281,6 +284,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const {
+      release_id,
       title,
       track_number,
       duration,
@@ -295,19 +299,29 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     // Find song and verify brand ownership
-    const song = await Song.findByPk(id as string, {
-      include: [{
-        model: Release,
-        as: 'release',
-        where: { brand_id: req.user.brand_id }
-      }]
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
     });
 
     if (!song) {
       return res.status(404).json({ error: 'Song not found' });
     }
 
-    const release = (song as any).release;
+    // Determine release context for permission checks
+    let release: any = null;
+    if (release_id) {
+      release = await Release.findOne({
+        where: { id: release_id, brand_id: req.user.brand_id }
+      });
+    } else {
+      // Fall back to the first associated release
+      const firstReleaseSong = await ReleaseSong.findOne({
+        where: { song_id: id },
+        include: [{ model: Release, as: 'release' }]
+      });
+      release = firstReleaseSong?.release;
+    }
+
     const isRestrictedMode = !req.user.is_admin && release?.status !== 'Draft';
 
     // Prepare update data based on permissions
@@ -323,7 +337,6 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
 
       // Only admins can update these fields
       if (req.user.is_admin) {
-        updateData.track_number = track_number;
         updateData.duration = duration;
         updateData.isrc = isrc;
         updateData.spotify_link = spotify_link;
@@ -335,10 +348,17 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     // Update song fields
     await song.update(updateData);
 
+    // Update track_number on the join table if provided and admin
+    if (req.user.is_admin && track_number !== undefined && release_id) {
+      await ReleaseSong.update(
+        { track_number },
+        { where: { song_id: id, release_id } }
+      );
+    }
+
     // Non-admins on non-draft releases cannot update collaborators, authors, or composers
     if (isRestrictedMode) {
       // Skip updating collaborators, authors, and composers in restricted mode
-      // Fetch updated song with associations and return
       const updatedSong = await Song.findByPk(id as string, {
         include: [
           {
@@ -357,24 +377,30 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     // Update collaborators if provided
     if (collaborators !== undefined) {
       // Get release artists (these should always be present as collaborators)
-      const releaseWithArtists = await Release.findByPk(release.id, {
-        include: [{
-          model: Artist,
-          as: 'artists'
-        }]
-      });
-      const releaseArtists = (releaseWithArtists as any)?.artists || [];
-      const releaseArtistIds = releaseArtists.map((a: any) => Number(a.id));
-
-      // Delete existing collaborators
-      await SongCollaborator.destroy({ where: { song_id: id } });
-
-      // Re-add release artists (always present)
-      for (const artist of releaseArtists) {
-        await SongCollaborator.create({
-          song_id: Number(id),
-          artist_id: Number(artist.id)
+      let releaseArtistIds: number[] = [];
+      if (release) {
+        const releaseWithArtists = await Release.findByPk(release.id, {
+          include: [{
+            model: Artist,
+            as: 'artists'
+          }]
         });
+        const releaseArtists = (releaseWithArtists as any)?.artists || [];
+        releaseArtistIds = releaseArtists.map((a: any) => Number(a.id));
+
+        // Delete existing collaborators
+        await SongCollaborator.destroy({ where: { song_id: id } });
+
+        // Re-add release artists (always present)
+        for (const artist of releaseArtists) {
+          await SongCollaborator.create({
+            song_id: Number(id),
+            artist_id: Number(artist.id)
+          });
+        }
+      } else {
+        // No release context; just replace all collaborators
+        await SongCollaborator.destroy({ where: { song_id: id } });
       }
 
       // Add additional collaborators (excluding duplicates)
@@ -440,23 +466,7 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
 
     // Fetch updated song with associations
     const updatedSong = await Song.findByPk(id as string, {
-      include: [
-        {
-          model: SongCollaborator,
-          as: 'collaborators',
-          include: [{ model: Artist, as: 'artist' }]
-        },
-        {
-          model: SongAuthor,
-          as: 'authors',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        },
-        {
-          model: SongComposer,
-          as: 'composers',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        }
-      ]
+      include: songAssociationIncludes
     });
 
     res.json({ song: updatedSong });
@@ -466,31 +476,109 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Delete a song
-export const deleteSong = async (req: AuthRequest, res: Response) => {
+// Remove a song from a release (and delete if orphaned)
+export const deleteSongFromRelease = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id, releaseId } = req.params;
 
     // Find song and verify brand ownership
-    const song = await Song.findByPk(id as string, {
-      include: [{
-        model: Release,
-        as: 'release',
-        where: { brand_id: req.user.brand_id }
-      }]
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
     });
 
     if (!song) {
       return res.status(404).json({ error: 'Song not found' });
     }
 
-    // Check permissions: admins can delete any song, non-admins can only delete songs on Draft releases
-    const release = (song as any).release;
-    if (!req.user.is_admin && release?.status !== 'Draft') {
-      return res.status(403).json({ error: 'Cannot delete songs on non-draft releases. Contact your label administrator.' });
+    // Verify release belongs to user's brand
+    const release = await Release.findOne({
+      where: { id: releaseId, brand_id: req.user.brand_id }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
     }
 
-    // Delete audio file from S3 if exists
+    // Check permissions: admins can delete any song, non-admins can only delete songs on Draft releases
+    if (!req.user.is_admin && release.status !== 'Draft') {
+      return res.status(403).json({ error: 'Cannot remove songs from non-draft releases. Contact your label administrator.' });
+    }
+
+    // Remove the link between song and release
+    const deleted = await ReleaseSong.destroy({
+      where: { song_id: id, release_id: releaseId }
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Song is not part of this release' });
+    }
+
+    // Check if the song is still linked to any other releases
+    const remainingLinks = await ReleaseSong.count({
+      where: { song_id: id }
+    });
+
+    let songDeleted = false;
+    if (remainingLinks === 0) {
+      // Song is orphaned — delete audio files from S3 and remove the song
+      if (song.audio_file) {
+        try {
+          await deleteFromS3({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Key: song.audio_file
+          });
+        } catch (s3Error) {
+          console.error('S3 delete error (WAV):', s3Error);
+        }
+      }
+      if (song.audio_file_mp3) {
+        try {
+          await deleteFromS3({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Key: song.audio_file_mp3
+          });
+        } catch (s3Error) {
+          console.error('S3 delete error (MP3):', s3Error);
+        }
+      }
+
+      // Delete song (cascading will delete collaborators, authors, composers)
+      await song.destroy();
+      songDeleted = true;
+    }
+
+    res.json({
+      message: songDeleted
+        ? 'Song removed from release and permanently deleted'
+        : 'Song removed from this release',
+      song_deleted: songDeleted
+    });
+  } catch (error) {
+    console.error('Delete song from release error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Delete a song entirely (from all releases)
+export const deleteSong = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Find song and verify brand ownership
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    // Only admins can fully delete a song
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Only administrators can permanently delete songs.' });
+    }
+
+    // Delete audio files from S3
     if (song.audio_file) {
       try {
         await deleteFromS3({
@@ -501,6 +589,19 @@ export const deleteSong = async (req: AuthRequest, res: Response) => {
         console.error('S3 delete error:', s3Error);
       }
     }
+    if (song.audio_file_mp3) {
+      try {
+        await deleteFromS3({
+          Bucket: process.env.S3_BUCKET_MASTERS!,
+          Key: song.audio_file_mp3
+        });
+      } catch (s3Error) {
+        console.error('S3 delete error (MP3):', s3Error);
+      }
+    }
+
+    // Remove all release links
+    await ReleaseSong.destroy({ where: { song_id: id } });
 
     // Delete song (cascading will delete related records)
     await song.destroy();
@@ -539,14 +640,14 @@ export const reorderSongs = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Cannot reorder songs on non-draft releases. Contact your label administrator.' });
     }
 
-    // Update track numbers for each song
+    // Update track numbers on the join table
     for (let i = 0; i < songOrder.length; i++) {
       const songId = songOrder[i];
-      await Song.update(
+      await ReleaseSong.update(
         { track_number: i + 1 },
         {
           where: {
-            id: songId,
+            song_id: songId,
             release_id: releaseId
           }
         }
@@ -554,27 +655,7 @@ export const reorderSongs = async (req: AuthRequest, res: Response) => {
     }
 
     // Fetch updated songs
-    const songs = await Song.findAll({
-      where: { release_id: releaseId },
-      include: [
-        {
-          model: SongCollaborator,
-          as: 'collaborators',
-          include: [{ model: Artist, as: 'artist' }]
-        },
-        {
-          model: SongAuthor,
-          as: 'authors',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        },
-        {
-          model: SongComposer,
-          as: 'composers',
-          include: [{ model: Songwriter, as: 'songwriter' }]
-        }
-      ],
-      order: [['track_number', 'ASC']]
-    });
+    const songs = await fetchSongsForRelease(releaseId);
 
     res.json({ songs });
   } catch (error) {
@@ -592,32 +673,31 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Find song and verify brand ownership, include release, artists, and brand
-    const song = await Song.findByPk(id as string, {
-      include: [{
-        model: Release,
-        as: 'release',
-        where: { brand_id: req.user.brand_id },
-        include: [
-          {
-            model: Artist,
-            as: 'artists'
-          },
-          {
-            model: Brand,
-            as: 'brand'
-          }
-        ]
-      }]
+    // Find song and verify brand ownership
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
     });
 
     if (!song) {
       return res.status(404).json({ error: 'Song not found' });
     }
 
-    const release = (song as any).release;
+    // Get a release for permission check and S3 path construction
+    const releaseSong = await ReleaseSong.findOne({
+      where: { song_id: id },
+      include: [{
+        model: Release,
+        as: 'release',
+        include: [
+          { model: Artist, as: 'artists' },
+          { model: Brand, as: 'brand' }
+        ]
+      }]
+    });
+
+    const release = releaseSong?.release;
     if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
+      return res.status(404).json({ error: 'Song is not associated with any release' });
     }
 
     // Check permissions: admins can upload audio anytime, non-admins can only upload on Draft releases
@@ -753,12 +833,8 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
 
     // Find song and verify brand ownership
-    const song = await Song.findByPk(id as string, {
-      include: [{
-        model: Release,
-        as: 'release',
-        where: { brand_id: req.user.brand_id }
-      }]
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
     });
 
     if (!song) {
@@ -820,5 +896,133 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Stream audio error:', error);
     res.status(500).json({ error: 'Failed to stream audio file' });
+  }
+};
+
+// Add an existing song to a release
+export const addExistingSongToRelease = async (req: AuthRequest, res: Response) => {
+  try {
+    const { releaseId } = req.params;
+    const { song_id } = req.body;
+
+    if (!song_id) {
+      return res.status(400).json({ error: 'song_id is required' });
+    }
+
+    // Verify release belongs to user's brand
+    const release = await Release.findOne({
+      where: { id: releaseId, brand_id: req.user.brand_id }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Check permissions
+    if (!req.user.is_admin && release.status !== 'Draft') {
+      return res.status(403).json({ error: 'Cannot add songs to non-draft releases. Contact your label administrator.' });
+    }
+
+    // Verify song belongs to same brand
+    const song = await Song.findOne({
+      where: { id: song_id, brand_id: req.user.brand_id }
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    // Check if song is already in this release
+    const existingLink = await ReleaseSong.findOne({
+      where: { release_id: releaseId, song_id }
+    });
+
+    if (existingLink) {
+      return res.status(409).json({ error: 'Song is already part of this release' });
+    }
+
+    // Get next track number
+    const maxTrackEntry = await ReleaseSong.findOne({
+      where: { release_id: releaseId },
+      order: [['track_number', 'DESC']],
+      attributes: ['track_number']
+    });
+
+    const nextTrackNumber = maxTrackEntry?.track_number ? maxTrackEntry.track_number + 1 : 1;
+
+    // Create the link
+    await ReleaseSong.create({
+      release_id: parseInt(releaseId as string, 10),
+      song_id,
+      track_number: nextTrackNumber
+    });
+
+    // Fetch the complete song with associations
+    const completeSong = await Song.findByPk(song_id, {
+      include: songAssociationIncludes
+    });
+
+    const result = {
+      ...completeSong!.toJSON(),
+      track_number: nextTrackNumber
+    };
+
+    res.status(201).json({ song: result });
+  } catch (error) {
+    console.error('Add existing song to release error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Search songs within a brand (for "Add Existing Song" picker)
+export const searchSongsInBrand = async (req: AuthRequest, res: Response) => {
+  try {
+    const brandId = req.user.brand_id;
+    const search = (req.query.search as string) || '';
+    const excludeReleaseId = req.query.excludeReleaseId ? parseInt(req.query.excludeReleaseId as string, 10) : null;
+    const limit = parseInt(req.query.limit as string, 10) || 20;
+
+    const whereClause: any = { brand_id: brandId };
+    if (search.trim()) {
+      whereClause.title = { [Op.like]: `%${search}%` };
+    }
+
+    // If excluding a release, find song IDs already in that release
+    let excludeSongIds: number[] = [];
+    if (excludeReleaseId) {
+      const existingLinks = await ReleaseSong.findAll({
+        where: { release_id: excludeReleaseId },
+        attributes: ['song_id']
+      });
+      excludeSongIds = existingLinks.map((rs: any) => rs.song_id);
+    }
+
+    if (excludeSongIds.length > 0) {
+      whereClause.id = { [Op.notIn]: excludeSongIds };
+    }
+
+    const songs = await Song.findAll({
+      where: whereClause,
+      limit,
+      include: [
+        {
+          model: Release,
+          as: 'releases',
+          through: { attributes: [] },
+          attributes: ['id', 'title', 'catalog_no']
+        },
+        {
+          model: SongCollaborator,
+          as: 'collaborators',
+          include: [{ model: Artist, as: 'artist', attributes: ['id', 'name'] }]
+        }
+      ],
+      order: [['title', 'ASC']]
+    });
+
+    res.json({ songs });
+  } catch (error) {
+    console.error('Search songs error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

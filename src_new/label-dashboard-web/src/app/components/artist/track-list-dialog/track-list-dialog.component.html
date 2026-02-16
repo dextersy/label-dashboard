@@ -41,6 +41,14 @@
             </button>
             <button
               type="button"
+              class="btn btn-sm btn-outline-primary me-2"
+              (click)="onAddExistingSong()"
+              [disabled]="isRestrictedMode()"
+              title="Add an existing song from another release">
+              <i class="fa fa-link me-1"></i> Add Existing
+            </button>
+            <button
+              type="button"
               class="btn btn-sm btn-success"
               (click)="onAddSong()"
               [disabled]="isRestrictedMode()">
@@ -79,6 +87,46 @@
                   </li>
                 </ul>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Existing Song Picker -->
+        <div *ngIf="showExistingSongPicker" class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <strong><i class="fa fa-search me-1"></i> Add Existing Song</strong>
+            <button type="button" class="btn-close btn-sm" (click)="closeExistingSongPicker()"></button>
+          </div>
+          <div class="card-body py-2">
+            <input
+              type="text"
+              class="form-control form-control-sm mb-2"
+              placeholder="Search songs by title..."
+              [value]="searchQuery"
+              (input)="onSearchSongs($any($event.target).value)"
+              autofocus>
+            <div *ngIf="searchLoading" class="text-center py-2">
+              <div class="spinner-border spinner-border-sm" role="status"></div>
+              <span class="ms-2 small">Searching...</span>
+            </div>
+            <div *ngIf="!searchLoading && searchQuery && searchResults.length === 0" class="text-muted small py-2">
+              No songs found matching "{{ searchQuery }}".
+            </div>
+            <div *ngIf="searchResults.length > 0" class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+              <button
+                *ngFor="let song of searchResults"
+                type="button"
+                class="list-group-item list-group-item-action py-2"
+                (click)="onSelectExistingSong(song)">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ song.title }}</strong>
+                    <div class="small text-muted" *ngIf="getArtistNames(song)">{{ getArtistNames(song) }}</div>
+                    <div class="small text-muted" *ngIf="getReleaseNames(song)">From: {{ getReleaseNames(song) }}</div>
+                  </div>
+                  <i class="fa fa-plus text-primary"></i>
+                </div>
+              </button>
             </div>
           </div>
         </div>

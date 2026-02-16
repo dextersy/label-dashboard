@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -2070,18 +2070,24 @@ export const getReleasePlayer = async (req: Request, res: Response) => {
         {
           model: Song,
           as: 'songs',
-          attributes: ['id', 'title', 'track_number', 'audio_file', 'duration'],
+          attributes: ['id', 'title', 'audio_file', 'duration'],
+          through: { attributes: ['track_number'] }
         }
       ],
-      attributes: ['id', 'title', 'cover_art', 'release_date', 'description', 'status'],
-      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+      attributes: ['id', 'title', 'cover_art', 'release_date', 'description', 'status']
     });
 
     if (!release) {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    const songs = ((release as any).songs || []).map((song: any) => ({
+    const songs = ((release as any).songs || [])
+      .map((song: any) => ({
+        ...song.toJSON ? song.toJSON() : song,
+        track_number: song.release_song?.track_number ?? song.track_number
+      }))
+      .sort((a: any, b: any) => (a.track_number || 0) - (b.track_number || 0))
+      .map((song: any) => ({
       id: song.id,
       title: song.title,
       track_number: song.track_number,
@@ -2215,7 +2221,8 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         {
           model: Song,
           as: 'songs',
-          attributes: ['id', 'title', 'track_number', 'audio_file'],
+          attributes: ['id', 'title', 'audio_file'],
+          through: { attributes: ['track_number'] },
           required: false // LEFT JOIN - include releases even without songs
         }
       ],
@@ -2231,8 +2238,7 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'youtube_link'
       ],
       order: [
-        ['release_date', 'DESC'],
-        [{ model: Song, as: 'songs' }, 'track_number', 'ASC']
+        ['release_date', 'DESC']
       ]
     });
 
@@ -2280,12 +2286,14 @@ export const getArtistEPK = async (req: Request, res: Response) => {
           soundcloud: null,
           bandcamp: null
         },
-        songs: (release as any).songs?.map((song: any) => ({
-          id: song.id,
-          title: song.title,
-          track_number: song.track_number,
-          has_audio: !!song.audio_file
-        })) || []
+        songs: ((release as any).songs || [])
+          .map((song: any) => ({
+            id: song.id,
+            title: song.title,
+            track_number: song.release_song?.track_number ?? song.track_number,
+            has_audio: !!song.audio_file
+          }))
+          .sort((a: any, b: any) => (a.track_number || 0) - (b.track_number || 0))
       }))
     };
 
@@ -2466,7 +2474,8 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
       include: [
         {
           model: Release,
-          as: 'release',
+          as: 'releases',
+          through: { attributes: [] },
           required: true,
           attributes: ['id', 'title', 'brand_id'], // Include brand_id for validation
           include: [
@@ -2505,8 +2514,8 @@ export const streamPublicAudio = async (req: Request, res: Response) => {
     }
 
     // SECURITY: Verify the release belongs to the same brand as the artist
-    const artist = (song as any).release?.artists?.[0];
-    const release = (song as any).release;
+    const release = (song as any).releases?.[0];
+    const artist = release?.artists?.[0];
     
     if (!artist || !release) {
       return res.status(404).json({ error: 'Song not found or does not belong to this artist' });
@@ -2963,12 +2972,6 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
       where: { UPC: upc },
       include: [
         {
-          model: Song,
-          as: 'songs',
-          where: { audio_file: { [Op.ne]: null } },
-          required: false
-        },
-        {
           model: Artist,
           as: 'artists',
           include: [
@@ -2986,8 +2989,7 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
             }
           ]
         }
-      ],
-      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+      ]
     });
 
     if (!release) {
@@ -2995,7 +2997,23 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
     }
 
     const artists = (release as any).artists || [];
-    const songs = (release as any).songs || [];
+
+    // Get songs via join table, filtered to those with audio files
+    const releaseSongsData = await ReleaseSong.findAll({
+      where: { release_id: release.id },
+      include: [{
+        model: Song,
+        as: 'song',
+        where: { audio_file: { [Op.ne]: null } },
+        required: true
+      }],
+      order: [['track_number', 'ASC']]
+    });
+
+    const songs = releaseSongsData.map((rs: any) => ({
+      ...rs.song.toJSON(),
+      track_number: rs.track_number
+    }));
 
     // Validate domain using the release's brand (via artist)
     if (artists.length > 0 && artists[0].brand?.domains && requestDomain) {

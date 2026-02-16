@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import archiver from 'archiver';
 import { Readable } from 'stream';
 import ExcelJS from 'exceljs';
-import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, Artist, User, Brand, SongAuthor, SongComposer, Songwriter } from '../models';
+import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, ReleaseSong, Artist, User, Brand, SongAuthor, SongComposer, Songwriter } from '../models';
 import { getS3ObjectStream } from '../utils/s3Service';
 
 /**
@@ -19,6 +19,16 @@ function escapeLikeWildcards(value: string): string {
  */
 async function enrichSongsWithArtists(songs: Song[]): Promise<any[]> {
   const songsData = songs.map(song => song.toJSON() as any);
+
+  // Normalize: pick the first release from the many-to-many and expose it as `release`
+  for (const songData of songsData) {
+    if (songData.releases?.length) {
+      songData.release = songData.releases[0];
+    } else {
+      songData.release = null;
+    }
+    delete songData.releases;
+  }
 
   // Collect unique release IDs
   const releaseIds = [...new Set(
@@ -76,8 +86,9 @@ async function getSongsForPitch(pitchId: number): Promise<any[]> {
       },
       {
         model: Release,
-        as: 'release',
-        attributes: ['id', 'title', 'cover_art']
+        as: 'releases',
+        attributes: ['id', 'title', 'cover_art'],
+        through: { attributes: [] }
       },
       {
         model: SongAuthor,
@@ -121,8 +132,9 @@ async function getSongsForPitches(pitchIds: number[]): Promise<Map<number, any[]
         include: [
           {
             model: Release,
-            as: 'release',
-            attributes: ['id', 'title', 'cover_art']
+            as: 'releases',
+            attributes: ['id', 'title', 'cover_art'],
+            through: { attributes: [] }
           },
           {
             model: SongAuthor,
@@ -157,6 +169,13 @@ async function getSongsForPitches(pitchIds: number[]): Promise<Map<number, any[]
   for (const songs of pitchSongsMap.values()) {
     for (const song of songs) {
       if (!allSongsMap.has(song.id)) {
+        // Normalize many-to-many: pick first release and expose as `release`
+        if (song.releases?.length) {
+          song.release = song.releases[0];
+        } else {
+          song.release = null;
+        }
+        delete song.releases;
         allSongsMap.set(song.id, song);
       }
     }
@@ -538,10 +557,20 @@ export const searchSongs = async (req: Request, res: Response) => {
       });
       const matchingReleaseIds = matchingReleases.map(r => r.id);
 
+      // Find song IDs linked to those releases via the ReleaseSong join table
+      let matchingSongIds: number[] = [];
+      if (matchingReleaseIds.length > 0) {
+        const releaseSongRows = await ReleaseSong.findAll({
+          where: { release_id: { [Op.in]: matchingReleaseIds } },
+          attributes: ['song_id']
+        });
+        matchingSongIds = releaseSongRows.map((rs: any) => rs.song_id);
+      }
+
       whereClause[Op.or] = [
         { title: likeCondition },
-        ...(matchingReleaseIds.length > 0
-          ? [{ release_id: { [Op.in]: matchingReleaseIds } }]
+        ...(matchingSongIds.length > 0
+          ? [{ id: { [Op.in]: matchingSongIds } }]
           : [])
       ];
     }
@@ -553,8 +582,9 @@ export const searchSongs = async (req: Request, res: Response) => {
       include: [
         {
           model: Release,
-          as: 'release',
-          attributes: ['id', 'title', 'cover_art']
+          as: 'releases',
+          attributes: ['id', 'title', 'cover_art'],
+          through: { attributes: [] }
         },
         {
           model: SongAuthor,
@@ -615,8 +645,9 @@ export const downloadMasters = async (req: Request, res: Response) => {
         },
         {
           model: Release,
-          as: 'release',
-          attributes: ['id', 'title']
+          as: 'releases',
+          attributes: ['id', 'title'],
+          through: { attributes: [] }
         }
       ]
     });
@@ -668,7 +699,7 @@ export const downloadMasters = async (req: Request, res: Response) => {
 
           // Create a clean filename: "Song Title - Release Title.ext"
           const extension = originalFilename.substring(originalFilename.lastIndexOf('.')) || '.wav';
-          const releaseTitle = songData.release?.title || 'Unknown Release';
+          const releaseTitle = songData.releases?.[0]?.title || 'Unknown Release';
           const cleanFilename = `${songData.title} - ${releaseTitle}${extension}`
             .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
             .replace(/\s+/g, ' ')
@@ -730,8 +761,9 @@ export const downloadLyrics = async (req: Request, res: Response) => {
         },
         {
           model: Release,
-          as: 'release',
-          attributes: ['id', 'title']
+          as: 'releases',
+          attributes: ['id', 'title'],
+          through: { attributes: [] }
         },
         {
           model: SongAuthor,
@@ -758,7 +790,7 @@ export const downloadLyrics = async (req: Request, res: Response) => {
 
     for (const song of songs) {
       const songData = song.toJSON() as any;
-      const releaseTitle = songData.release?.title || 'Unknown Release';
+      const releaseTitle = songData.releases?.[0]?.title || 'Unknown Release';
 
       // Get author names
       const authorNames = songData.authors
@@ -829,8 +861,9 @@ export const downloadBSheet = async (req: Request, res: Response) => {
         },
         {
           model: Release,
-          as: 'release',
-          attributes: ['id', 'title', 'release_date']
+          as: 'releases',
+          attributes: ['id', 'title', 'release_date'],
+          through: { attributes: [] }
         },
         {
           model: SongAuthor,

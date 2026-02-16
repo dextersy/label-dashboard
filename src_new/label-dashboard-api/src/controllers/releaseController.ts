@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
 import path from 'path';
 import archiver from 'archiver';
 import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
@@ -72,9 +72,10 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
             ] 
           }
         },
-        { 
-          model: Song, 
+        {
+          model: Song,
           as: 'songs',
+          through: { attributes: ['track_number'] },
           include: [
             {
               model: SongCollaborator,
@@ -91,8 +92,7 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
               as: 'composers',
               include: [{ model: Songwriter, as: 'songwriter' }]
             }
-          ],
-          order: [['track_number', 'ASC']]
+          ]
         },
         { model: Earning, as: 'earnings' },
         { model: RecuperableExpense, as: 'expenses' }
@@ -103,7 +103,19 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    res.json({ release });
+    // Flatten track_number from join table and sort songs
+    const releaseJson = release.toJSON() as any;
+    if (releaseJson.songs) {
+      releaseJson.songs = releaseJson.songs
+        .map((song: any) => ({
+          ...song,
+          track_number: song.release_song?.track_number ?? song.track_number,
+          release_song: undefined
+        }))
+        .sort((a: any, b: any) => (a.track_number || 0) - (b.track_number || 0));
+    }
+
+    res.json({ release: releaseJson });
   } catch (error) {
     console.error('Get release error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -443,7 +455,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     if (originalStatus === 'Draft' && updateData.status === 'For Submission') {
       try {
         // Get track count for the notification
-        const trackCount = await Song.count({
+        const trackCount = await ReleaseSong.count({
           where: { release_id: release.id }
         });
 
@@ -471,7 +483,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     if (originalStatus !== 'Pending' && updateData.status === 'Pending') {
       try {
         // Get track count for the notification
-        const trackCount = await Song.count({
+        const trackCount = await ReleaseSong.count({
           where: { release_id: release.id }
         });
 
@@ -583,7 +595,11 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
         brand_id: req.user.brand_id
       },
       include: [
-        { model: Song, as: 'songs' }
+        {
+          model: Song,
+          as: 'songs',
+          through: { attributes: [] }
+        }
       ]
     });
 
@@ -596,17 +612,25 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Only Draft releases can be deleted' });
     }
 
-    // Delete related records in correct order to avoid foreign key constraint errors
-    // 1. Delete song-related records (SongCollaborator, SongAuthor, SongComposer)
+    // Get song IDs linked to this release
     const songIds = release.songs?.map((song: any) => song.id) || [];
-    if (songIds.length > 0) {
-      await SongCollaborator.destroy({ where: { song_id: songIds } });
-      await SongAuthor.destroy({ where: { song_id: songIds } });
-      await SongComposer.destroy({ where: { song_id: songIds } });
-    }
 
-    // 2. Delete songs
-    await Song.destroy({ where: { release_id: releaseId } });
+    // Remove all release-song links for this release
+    await ReleaseSong.destroy({ where: { release_id: releaseId } });
+
+    // Find orphaned songs (no longer linked to any release) and delete them
+    if (songIds.length > 0) {
+      for (const songId of songIds) {
+        const remainingLinks = await ReleaseSong.count({ where: { song_id: songId } });
+        if (remainingLinks === 0) {
+          // Delete song-related records
+          await SongCollaborator.destroy({ where: { song_id: songId } });
+          await SongAuthor.destroy({ where: { song_id: songId } });
+          await SongComposer.destroy({ where: { song_id: songId } });
+          await Song.destroy({ where: { id: songId } });
+        }
+      }
+    }
 
     // 3. Delete royalties linked to earnings of this release
     const earnings = await Earning.findAll({ where: { release_id: releaseId } });
@@ -879,24 +903,32 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
       },
       include: [
         {
-          model: Song,
-          as: 'songs',
-          where: { audio_file: { [require('sequelize').Op.ne]: null } },
-          required: false
-        },
-        {
           model: Artist,
           as: 'artists'
         }
-      ],
-      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+      ]
     });
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    const songs = (release as any).songs || [];
+    // Get songs for this release via join table, filtered to those with audio files
+    const releaseSongs = await ReleaseSong.findAll({
+      where: { release_id: releaseId },
+      include: [{
+        model: Song,
+        as: 'song',
+        where: { audio_file: { [require('sequelize').Op.ne]: null } },
+        required: true
+      }],
+      order: [['track_number', 'ASC']]
+    });
+
+    const songs = releaseSongs.map((rs: any) => ({
+      ...rs.song.toJSON(),
+      track_number: rs.track_number
+    }));
     const artists = (release as any).artists || [];
 
     // Check if there are any audio files to download
@@ -1041,30 +1073,37 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
         brand_id: req.user.brand_id
       },
       include: [
-        { model: Artist, as: 'artists' },
-        {
-          model: Song,
-          as: 'songs',
-          required: false,
-          include: [
-            { model: SongCollaborator, as: 'collaborators', include: [{ model: Artist, as: 'artist' }] },
-            { model: SongAuthor, as: 'authors', include: [{ model: Songwriter, as: 'songwriter' }] },
-            { model: SongComposer, as: 'composers', include: [{ model: Songwriter, as: 'songwriter' }] }
-          ]
-        }
-      ],
-      order: [[{ model: Song, as: 'songs' }, 'track_number', 'ASC']]
+        { model: Artist, as: 'artists' }
+      ]
     });
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // Get songs via join table with all associations
+    const releaseSongs = await ReleaseSong.findAll({
+      where: { release_id: releaseId },
+      include: [{
+        model: Song,
+        as: 'song',
+        include: [
+          { model: SongCollaborator, as: 'collaborators', include: [{ model: Artist, as: 'artist' }] },
+          { model: SongAuthor, as: 'authors', include: [{ model: Songwriter, as: 'songwriter' }] },
+          { model: SongComposer, as: 'composers', include: [{ model: Songwriter, as: 'songwriter' }] }
+        ]
+      }],
+      order: [['track_number', 'ASC']]
+    });
+
     const brand = await Brand.findByPk(req.user.brand_id, {
       include: [{ model: Domain, as: 'domains', attributes: ['domain_name'] }]
     });
     const artists = (release as any).artists || [];
-    const songs = (release as any).songs || [];
+    const songs = releaseSongs.map((rs: any) => ({
+      ...rs.song.toJSON(),
+      track_number: rs.track_number
+    }));
 
     // Build public download URLs using brand domain
     let artistPhotosLink = '';

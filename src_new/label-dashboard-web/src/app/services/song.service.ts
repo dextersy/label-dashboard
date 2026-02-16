@@ -32,7 +32,6 @@ export interface SongComposer {
 
 export interface Song {
   id?: number;
-  release_id: number;
   title: string;
   track_number?: number;
   duration?: number;
@@ -45,6 +44,7 @@ export interface Song {
   collaborators?: SongCollaborator[];
   authors?: SongAuthor[];
   composers?: SongComposer[];
+  releases?: any[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -109,9 +109,12 @@ export class SongService {
     );
   }
 
-  deleteSong(id: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(
-      `${this.baseUrl}/songs/${id}`,
+  deleteSong(id: number, releaseId?: number): Observable<{ message: string; song_deleted?: boolean }> {
+    const url = releaseId
+      ? `${this.baseUrl}/songs/${id}/release/${releaseId}`
+      : `${this.baseUrl}/songs/${id}`;
+    return this.http.delete<{ message: string; song_deleted?: boolean }>(
+      url,
       { headers: this.getAuthHeaders() }
     );
   }
@@ -133,6 +136,25 @@ export class SongService {
         reportProgress: true,
         observe: 'events'
       }
+    );
+  }
+
+  searchSongsInBrand(search: string, excludeReleaseId?: number): Observable<{ songs: Song[] }> {
+    let params = `?search=${encodeURIComponent(search)}`;
+    if (excludeReleaseId) {
+      params += `&excludeReleaseId=${excludeReleaseId}`;
+    }
+    return this.http.get<{ songs: Song[] }>(
+      `${this.baseUrl}/songs/search${params}`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  addExistingSongToRelease(releaseId: number, songId: number): Observable<{ song: Song }> {
+    return this.http.post<{ song: Song }>(
+      `${this.baseUrl}/songs/release/${releaseId}/add-existing`,
+      { song_id: songId },
+      { headers: this.getAuthHeaders() }
     );
   }
 

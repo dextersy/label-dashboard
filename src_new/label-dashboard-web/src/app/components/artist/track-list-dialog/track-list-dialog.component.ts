@@ -36,6 +36,12 @@ export class TrackListDialogComponent implements OnChanges {
   uploadProgress: { [songId: number]: number } = {};
   downloadingMasters = false;
 
+  // Add Existing Song state
+  showExistingSongPicker = false;
+  searchQuery = '';
+  searchResults: Song[] = [];
+  searchLoading = false;
+
   constructor(
     private songService: SongService,
     private releaseService: ReleaseService,
@@ -102,23 +108,18 @@ export class TrackListDialogComponent implements OnChanges {
   }
 
   async onDeleteSong(song: Song): Promise<void> {
-    if (!song.id) return;
+    if (!song.id || !this.releaseId) return;
 
-    // Show confirmation dialog with warning about master file deletion
+    // Show confirmation dialog
     const songTitle = song.title || 'this track';
-    const confirmMessage = `Are you sure you want to delete "${songTitle}"?\n\n` +
-      `⚠️ WARNING: This will permanently delete the master audio file and cannot be undone.\n\n` +
-      `The following will be deleted:\n` +
-      `• Track metadata (title, artists, ISRC, etc.)\n` +
-      `• Master audio file (WAV)\n` +
-      `• All associated data\n\n` +
-      `💡 IMPORTANT: Make sure you have a copy of the master audio file before proceeding.\n\n` +
-      `This action is PERMANENT and IRREVERSIBLE.`;
+    const confirmMessage = `Are you sure you want to remove "${songTitle}" from this release?\n\n` +
+      `If the song is not part of any other release, it will be permanently deleted along with its master audio file.\n\n` +
+      `💡 IMPORTANT: Make sure you have a copy of the master audio file before proceeding.`;
 
     const confirmed = await this.confirmationService.confirm({
-      title: 'Delete Track',
+      title: 'Remove Track',
       message: confirmMessage,
-      confirmText: 'Delete',
+      confirmText: 'Remove',
       cancelText: 'Cancel',
       type: 'danger'
     });
@@ -127,19 +128,21 @@ export class TrackListDialogComponent implements OnChanges {
       return; // User cancelled
     }
 
-    this.songService.deleteSong(song.id).subscribe({
-      next: () => {
+    this.songService.deleteSong(song.id, this.releaseId).subscribe({
+      next: (response) => {
         this.alertMessage.emit({
           type: 'success',
-          message: 'Song deleted successfully'
+          message: response.song_deleted
+            ? 'Song permanently deleted'
+            : 'Song removed from this release'
         });
         this.loadSongs();
       },
       error: (error) => {
-        console.error('Error deleting song:', error);
+        console.error('Error removing song:', error);
         this.alertMessage.emit({
           type: 'error',
-          message: 'Failed to delete song'
+          message: 'Failed to remove song'
         });
       }
     });
@@ -295,6 +298,63 @@ export class TrackListDialogComponent implements OnChanges {
 
   get validationWarnings() {
     return this.validation.warnings;
+  }
+
+  onAddExistingSong(): void {
+    this.showExistingSongPicker = true;
+    this.searchResults = [];
+    this.searchQuery = '';
+  }
+
+  onSearchSongs(query: string): void {
+    this.searchQuery = query;
+    if (!query.trim() || !this.releaseId) return;
+    this.searchLoading = true;
+    this.songService.searchSongsInBrand(query, this.releaseId).subscribe({
+      next: (response) => {
+        this.searchResults = response.songs;
+        this.searchLoading = false;
+      },
+      error: () => {
+        this.searchLoading = false;
+      }
+    });
+  }
+
+  onSelectExistingSong(song: Song): void {
+    if (!this.releaseId || !song.id) return;
+    this.songService.addExistingSongToRelease(this.releaseId, song.id).subscribe({
+      next: () => {
+        this.showExistingSongPicker = false;
+        this.alertMessage.emit({
+          type: 'success',
+          message: `"${song.title}" added to release`
+        });
+        this.loadSongs();
+      },
+      error: (error) => {
+        this.alertMessage.emit({
+          type: 'error',
+          message: error.error?.error || 'Failed to add song'
+        });
+      }
+    });
+  }
+
+  closeExistingSongPicker(): void {
+    this.showExistingSongPicker = false;
+    this.searchResults = [];
+    this.searchQuery = '';
+  }
+
+  getArtistNames(song: Song): string {
+    if (!song.collaborators || song.collaborators.length === 0) return '';
+    return song.collaborators.map(c => c.artist?.name).filter(Boolean).join(', ');
+  }
+
+  getReleaseNames(song: Song): string {
+    if (!song.releases || song.releases.length === 0) return '';
+    return song.releases.map((r: any) => r.title || r.catalog_no).filter(Boolean).join(', ');
   }
 
   onClose(): void {

@@ -6,9 +6,12 @@ import {
   createSong,
   updateSong,
   deleteSong,
+  deleteSongFromRelease,
   uploadAudio,
   reorderSongs,
-  streamAudio
+  streamAudio,
+  addExistingSongToRelease,
+  searchSongsInBrand
 } from '../controllers/songController';
 import { authenticateToken } from '../middleware/auth';
 
@@ -41,12 +44,21 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateToken);
 
+// Search songs within brand (must be before /:id to avoid route collision)
+router.get('/search', searchSongsInBrand);
+
 // Song CRUD operations
 router.get('/release/:releaseId', getSongsByRelease);
 router.get('/:id', getSong);
 router.post('/', createSong);
 router.put('/:id', updateSong);
 router.delete('/:id', deleteSong);
+
+// Remove song from a specific release (unlink, delete if orphaned)
+router.delete('/:id/release/:releaseId', deleteSongFromRelease);
+
+// Add existing song to a release
+router.post('/release/:releaseId/add-existing', addExistingSongToRelease);
 
 // Reorder songs
 router.put('/release/:releaseId/reorder', reorderSongs);
