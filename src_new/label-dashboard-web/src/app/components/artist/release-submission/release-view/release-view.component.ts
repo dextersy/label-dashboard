@@ -35,6 +35,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   // Submit release state
   submittingRelease = false;
 
+  // Mobile kebab menu state
+  kebabOpen = false;
+
   private subscription: Subscription | null = null;
 
   constructor(

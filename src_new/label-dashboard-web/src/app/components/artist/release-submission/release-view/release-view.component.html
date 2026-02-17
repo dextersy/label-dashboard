@@ -1,21 +1,19 @@
 <div class="release-view" *ngIf="release">
   <!-- Header with Edit Button -->
   <div class="release-view-header">
-    <div class="header-content">
-      <h2 class="release-title">{{ release.title }}</h2>
-      <span class="badge" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
-    </div>
-    <div class="d-flex align-items-center gap-3">
+    <h2 class="release-title">{{ release.title }}</h2>
+    <!-- Desktop action buttons -->
+    <div class="header-actions d-none d-md-flex">
       <button *ngIf="canSubmitRelease()"
-              class="submit-release-btn"
+              class="btn btn-success btn-sm"
               (click)="onSubmitRelease()"
               [disabled]="submittingRelease"
               title="Submit Release">
-        <i class="fa me-2"
+        <i class="fa"
            [class.fa-spinner]="submittingRelease"
            [class.fa-spin]="submittingRelease"
            [class.fa-paper-plane]="!submittingRelease"></i>
-        <span class="btn-text">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
+        <span class="ms-1">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
       </button>
       <button *ngIf="isAdmin"
               class="btn btn-outline-secondary btn-sm"
@@ -26,11 +24,33 @@
            [class.fa-spinner]="downloadingPriorityPitch"
            [class.fa-spin]="downloadingPriorityPitch"
            [class.fa-file-word]="!downloadingPriorityPitch"></i>
-        {{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
+        <span class="ms-1">{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}</span>
       </button>
       <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
         <i class="fas fa-edit"></i>
       </button>
+    </div>
+
+    <!-- Mobile kebab menu -->
+    <div class="kebab-menu d-md-none" *ngIf="isAdmin || canSubmitRelease()">
+      <button class="kebab-toggle" (click)="kebabOpen = !kebabOpen">
+        <i class="fas fa-ellipsis-v"></i>
+      </button>
+      <div class="kebab-dropdown" *ngIf="kebabOpen">
+        <button *ngIf="canSubmitRelease()"
+                (click)="onSubmitRelease(); kebabOpen = false"
+                [disabled]="submittingRelease">
+          <i class="fa fa-paper-plane me-2"></i>{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}
+        </button>
+        <button *ngIf="isAdmin"
+                (click)="onDownloadPriorityPitch(); kebabOpen = false"
+                [disabled]="downloadingPriorityPitch">
+          <i class="fa fa-file-word me-2"></i>{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
+        </button>
+        <button *ngIf="isAdmin" (click)="onEditClick(); kebabOpen = false">
+          <i class="fas fa-edit me-2"></i>Edit Release
+        </button>
+      </div>
     </div>
   </div>
 
@@ -40,6 +60,7 @@
     <section class="view-section">
       <h3 class="section-title">
         <i class="fas fa-info-circle me-2"></i>Release Information
+        <span class="badge ms-2" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
       </h3>
       
       <div class="info-grid">
