@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
@@ -544,7 +544,8 @@ export const getReleaseStatus = async (req: Request, res: Response) => {
         {
           model: Song,
           as: 'songs',
-          attributes: ['id', 'title', 'track_number', 'isrc', 'lyrics', 'audio_file'],
+          attributes: ['id', 'title', 'isrc', 'lyrics', 'audio_file'],
+          through: { attributes: ['track_number'] },
           include: [
             {
               model: SongAuthor,
@@ -563,7 +564,7 @@ export const getReleaseStatus = async (req: Request, res: Response) => {
         ['brand_id', 'ASC'],
         ['status', 'ASC'],
         ['title', 'ASC'],
-        [{ model: Song, as: 'songs' }, 'track_number', 'ASC']
+        [{ model: Song, as: 'songs' }, ReleaseSong, 'track_number', 'ASC']
       ],
       limit,
       offset,
@@ -575,14 +576,14 @@ export const getReleaseStatus = async (req: Request, res: Response) => {
 
       const songs = (r.songs || []).map((song: any) => ({
         id: song.id,
-        track_number: song.track_number,
+        track_number: song.release_song?.track_number ?? null,
         title: song.title,
         isrc: song.isrc || null,
         has_lyrics: !!(song.lyrics && song.lyrics.trim()),
         has_audio: !!(song.audio_file && song.audio_file.trim()),
         author_count: song.authors?.length || 0,
         composer_count: song.composers?.length || 0
-      }));
+      })).sort((a: any, b: any) => (a.track_number || 0) - (b.track_number || 0));
 
       return {
         id: r.id,
