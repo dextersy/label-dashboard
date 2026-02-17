@@ -1139,6 +1139,35 @@ div .table tbody {
 }
 
 /* ================================= */
+/* LINK DISPLAY UTILITIES           */
+/* ================================= */
+
+/* Accent left border for prominent link/URL sections */
+.link-accent {
+  border-left: 3px solid #007bff;
+  padding-left: 12px;
+}
+
+/* Mobile: stack action buttons below the input field */
+@media (max-width: 768px) {
+  .link-action-group {
+    flex-wrap: wrap;
+
+    .form-control {
+      flex: 1 1 100%;
+      border-radius: 0.375rem !important;
+      margin-bottom: 8px;
+    }
+
+    .btn, a.btn {
+      flex: 1;
+      border-radius: 0.375rem !important;
+      justify-content: center;
+    }
+  }
+}
+
+/* ================================= */
 /* FLOATING ACTIONS FIX             */
 /* ================================= */
 /* Note: Floating actions use sticky positioning in component styles

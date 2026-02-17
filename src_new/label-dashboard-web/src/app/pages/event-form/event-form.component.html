@@ -229,40 +229,34 @@
             <p>Configure payment methods and ticket sales settings</p>
 
             <!-- Purchase Link -->
-            <div class="row mb-4" *ngIf="event && event.buy_shortlink">
-              <div class="col-12">
-                <div class="card bg-light border-primary">
-                  <div class="card-body">
-                    <h5 class="card-title">
-                      <i class="fa fa-link text-primary me-2"></i>Ticket Purchase Link
-                    </h5>
-                    <div class="input-group input-group-lg">
-                      <input 
-                        type="text" 
-                        class="form-control" 
-                        [value]="event.buy_shortlink"
-                        readonly>
-                      <button
-                        type="button"
-                        class="btn btn-primary"
-                        (click)="copyToClipboard(event.buy_shortlink)"
-                        title="Copy to clipboard">
-                        <i class="fa fa-copy me-2"></i>Copy Link
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-outline-primary"
-                        (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
-                        title="Download QR Code">
-                        <i class="fa fa-qrcode"></i>
-                      </button>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                      <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
-                    </small>
-                  </div>
-                </div>
+            <div class="mb-4 link-accent" *ngIf="event && event.buy_shortlink">
+              <label class="form-label fw-semibold mb-2">
+                <i class="fa fa-link text-primary me-2"></i>Ticket Purchase Link
+              </label>
+              <div class="input-group input-group-lg link-action-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  [value]="event.buy_shortlink"
+                  readonly>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="copyToClipboard(event.buy_shortlink)"
+                  title="Copy to clipboard">
+                  <i class="fa fa-copy me-2"></i>Copy Link
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
+                  title="Download QR Code">
+                  <i class="fa fa-qrcode"></i>
+                </button>
               </div>
+              <small class="text-muted mt-2 d-block">
+                <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
+              </small>
             </div>
 
             <div class="row mb-4" *ngIf="!event || !event.buy_shortlink">
@@ -490,33 +484,27 @@
             <p>Ticket scanning and verification settings</p>
 
             <!-- Verification Link -->
-            <div class="row mb-4" *ngIf="event && event.verification_link">
-              <div class="col-12">
-                <div class="card bg-light border-primary">
-                  <div class="card-body">
-                    <h5 class="card-title">
-                      <i class="fa fa-qrcode text-primary me-2"></i>Verification Link
-                    </h5>
-                    <div class="input-group input-group-lg">
-                      <input 
-                        type="text" 
-                        class="form-control" 
-                        [value]="event.verification_link"
-                        readonly>
-                      <button 
-                        type="button" 
-                        class="btn btn-primary"
-                        (click)="copyToClipboard(event.verification_link)"
-                        title="Copy to clipboard">
-                        <i class="fa fa-copy me-2"></i>Copy Link
-                      </button>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                      <i class="fa fa-info-circle"></i> Share this link with ticket scanners
-                    </small>
-                  </div>
-                </div>
+            <div class="mb-4 link-accent" *ngIf="event && event.verification_link">
+              <label class="form-label fw-semibold mb-2">
+                <i class="fa fa-qrcode text-primary me-2"></i>Verification Link
+              </label>
+              <div class="input-group input-group-lg link-action-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  [value]="event.verification_link"
+                  readonly>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="copyToClipboard(event.verification_link)"
+                  title="Copy to clipboard">
+                  <i class="fa fa-copy me-2"></i>Copy Link
+                </button>
               </div>
+              <small class="text-muted mt-2 d-block">
+                <i class="fa fa-info-circle"></i> Share this link with ticket scanners
+              </small>
             </div>
 
             <div class="row mb-4" *ngIf="!event || !event.verification_link">
