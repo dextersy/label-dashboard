@@ -53,7 +53,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Photo Gallery</h5>
       <div class="filter-controls">
-        <div class="btn-group btn-group-sm" role="group">
+        <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
           <label class="btn btn-outline-secondary" for="epkFilterAll">All</label>
 
@@ -67,6 +67,11 @@
             <i class="fa fa-eye-slash"></i> Hidden from EPK
           </label>
         </div>
+        <select class="form-select form-select-sm d-md-none" [(ngModel)]="epkFilter">
+          <option value="all">All</option>
+          <option value="visible">Visible in EPK</option>
+          <option value="hidden">Hidden from EPK</option>
+        </select>
       </div>
     </div>
     <div class="card-body">

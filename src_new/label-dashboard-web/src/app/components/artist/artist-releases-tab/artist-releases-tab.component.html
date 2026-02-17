@@ -4,7 +4,7 @@
       <h5>Artist Releases</h5>
       <div class="d-flex gap-3 align-items-center">
         <div class="filter-controls">
-          <div class="btn-group btn-group-sm" role="group">
+          <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
             <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
             <label class="btn btn-outline-secondary" for="epkFilterAll">All</label>
 
@@ -18,13 +18,18 @@
               <i class="fa fa-eye-slash"></i> Hidden from EPK
             </label>
           </div>
+          <select class="form-select form-select-sm d-md-none" [(ngModel)]="epkFilter">
+            <option value="all">All</option>
+            <option value="visible">Visible in EPK</option>
+            <option value="hidden">Hidden from EPK</option>
+          </select>
         </div>
         <div *ngIf="artist">
           <button class="btn btn-primary btn-sm"
                   [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
                   (click)="navigateToCreateRelease()">
             <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
-            {{ isAdmin ? 'Create Release' : 'Submit Release' }}
+            <span class="d-none d-md-inline">{{ isAdmin ? 'Create Release' : 'Submit Release' }}</span>
           </button>
         </div>
       </div>

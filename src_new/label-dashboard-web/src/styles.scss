@@ -1148,6 +1148,18 @@ div .table tbody {
   padding-left: 12px;
 }
 
+/* Minimal mobile filter dropdown (replaces btn-group on small screens) */
+.filter-controls .form-select {
+  width: auto;
+  font-size: 12px;
+  padding: 4px 28px 4px 8px;
+  border: none;
+  color: #495057;
+  background-color: transparent;
+  text-align: right;
+  box-shadow: none;
+}
+
 /* Mobile: stack action buttons below the input field */
 @media (max-width: 768px) {
   .link-action-group {
