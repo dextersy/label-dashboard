@@ -63,20 +63,29 @@ export class FinancialEarningsTabComponent {
       mobileClass: 'mobile-narrow',
       tabletClass: ''
     },
-    { 
-      key: 'release_title', 
-      label: 'Release', 
-      type: 'text', 
-      searchable: true, 
+    {
+      key: 'release_title',
+      label: 'Release',
+      type: 'text',
+      searchable: true,
       sortable: true,
       mobileClass: 'mobile-text',
       tabletClass: ''
     },
-    { 
-      key: 'description', 
-      label: 'Description', 
-      type: 'text', 
-      searchable: true, 
+    {
+      key: 'song_title',
+      label: 'Song',
+      type: 'text',
+      searchable: true,
+      sortable: true,
+      mobileClass: '',
+      tabletClass: 'tablet-hide'
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      type: 'text',
+      searchable: true,
       sortable: true,
       mobileClass: '',
       tabletClass: 'tablet-hide'

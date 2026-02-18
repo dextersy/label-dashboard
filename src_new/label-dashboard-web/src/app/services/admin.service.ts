@@ -143,6 +143,7 @@ export interface ArtistBalance {
 
 export interface BulkEarning {
   release_id: number;
+  song_id?: number;
   date_recorded: string;
   type: string;
   description: string;
@@ -154,11 +155,18 @@ export interface ProcessedEarningRow {
   original_data: { [key: string]: string };
   catalog_no: string;
   release_title: string;
+  song_title: string;
+  isrc: string;
   earning_amount: number;
   matched_release: {
     id: number;
     catalog_no: string;
     title: string;
+  } | null;
+  matched_song: {
+    id: number;
+    title: string;
+    isrc: string;
   } | null;
   fuzzy_match_score?: number;
 }

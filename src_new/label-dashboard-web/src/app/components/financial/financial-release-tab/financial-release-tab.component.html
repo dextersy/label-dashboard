@@ -22,91 +22,232 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let release of releases; let i = index">
-            <td><strong>{{ release.title }}</strong></td>
-            <td class="text-right" data-label="Sync royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.sync_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)"> 
-                <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
-              </div>
-            </td>
-            <td class="text-right" data-label="Streaming royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.streaming_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)"> 
-                <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
-              </div>
-            </td>
-            <td class="text-right" data-label="Downloads royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.download_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
-                <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
-              </div>
-            </td>
-            <td class="text-right" data-label="Physical royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.physical_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
-                <div class="input-group-addon">% of {{ release.physical_royalty_type }}</div>
-              </div>
-            </td>
-            <td class="text-right" data-label="Remaining Recuperable Expense">
-              <div class="d-flex align-items-center justify-content-end">
-                <span [ngClass]="getAmountClass(release.recuperable_expense_balance)">{{ formatCurrency(release.recuperable_expense_balance) }}</span>
-                <button 
+          <ng-container *ngFor="let release of releases; let i = index">
+            <tr>
+              <td>
+                <strong>{{ release.title }}</strong>
+                <button
+                  *ngIf="isAdmin"
                   type="button"
-                  class="btn btn-link btn-sm btn-icon-only ml-2"
-                  (click)="openExpensesDialog(release.id, release.title)"
-                  title="View expenses">
-                  <i class="fa fa-eye"></i>
+                  class="btn btn-link btn-sm ml-2 p-0"
+                  (click)="toggleSongSplits(release.id)"
+                  title="Show/hide song collaborator splits">
+                  <i class="fa" [ngClass]="isReleaseExpanded(release.id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                  <small>Song Splits</small>
                 </button>
-                <button 
-                  *ngIf="isAdmin" 
-                  type="button"
-                  class="btn btn-link btn-sm btn-icon-only ml-1"
-                  (click)="openAddExpenseDialog(release.id, release.title)"
-                  title="Add recuperable expense">
-                  <i class="fa fa-plus"></i>
-                </button>
-              </div>
-            </td>
-            <td style="text-align: right;" data-label="Total earnings" [ngClass]="getAmountClass(release.total_earnings)">{{ formatCurrency(release.total_earnings) }}</td>
-            <td style="text-align: right;" data-label="Total royalties earned" [ngClass]="getAmountClass(release.total_royalties)">{{ formatCurrency(release.total_royalties) }}</td>
-          </tr>
+              </td>
+              <td class="text-right" data-label="Sync royalty %">
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    style="text-align: right;"
+                    min="0"
+                    step="1"
+                    max="100"
+                    [value]="formatPercentage(release.sync_royalty_percentage)"
+                    [disabled]="!editingRoyalties"
+                    (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)">
+                  <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
+                </div>
+              </td>
+              <td class="text-right" data-label="Streaming royalty %">
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    style="text-align: right;"
+                    min="0"
+                    step="1"
+                    max="100"
+                    [value]="formatPercentage(release.streaming_royalty_percentage)"
+                    [disabled]="!editingRoyalties"
+                    (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)">
+                  <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
+                </div>
+              </td>
+              <td class="text-right" data-label="Downloads royalty %">
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    style="text-align: right;"
+                    min="0"
+                    step="1"
+                    max="100"
+                    [value]="formatPercentage(release.download_royalty_percentage)"
+                    [disabled]="!editingRoyalties"
+                    (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
+                  <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
+                </div>
+              </td>
+              <td class="text-right" data-label="Physical royalty %">
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    style="text-align: right;"
+                    min="0"
+                    step="1"
+                    max="100"
+                    [value]="formatPercentage(release.physical_royalty_percentage)"
+                    [disabled]="!editingRoyalties"
+                    (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
+                  <div class="input-group-addon">% of {{ release.physical_royalty_type }}</div>
+                </div>
+              </td>
+              <td class="text-right" data-label="Remaining Recuperable Expense">
+                <div class="d-flex align-items-center justify-content-end">
+                  <span [ngClass]="getAmountClass(release.recuperable_expense_balance)">{{ formatCurrency(release.recuperable_expense_balance) }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm btn-icon-only ml-2"
+                    (click)="openExpensesDialog(release.id, release.title)"
+                    title="View expenses">
+                    <i class="fa fa-eye"></i>
+                  </button>
+                  <button
+                    *ngIf="isAdmin"
+                    type="button"
+                    class="btn btn-link btn-sm btn-icon-only ml-1"
+                    (click)="openAddExpenseDialog(release.id, release.title)"
+                    title="Add recuperable expense">
+                    <i class="fa fa-plus"></i>
+                  </button>
+                </div>
+              </td>
+              <td style="text-align: right;" data-label="Total earnings" [ngClass]="getAmountClass(release.total_earnings)">{{ formatCurrency(release.total_earnings) }}</td>
+              <td style="text-align: right;" data-label="Total royalties earned" [ngClass]="getAmountClass(release.total_royalties)">{{ formatCurrency(release.total_royalties) }}</td>
+            </tr>
+
+            <!-- Song Collaborator Splits (expandable) -->
+            <tr *ngIf="isReleaseExpanded(release.id)">
+              <td colspan="8" class="p-0">
+                <div class="song-splits-container p-3" style="background-color: #f8f9fa;">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Song Collaborator Royalty Splits</h6>
+                    <div *ngIf="isAdmin">
+                      <button
+                        *ngIf="!editingSongRoyalties || songRoyaltyReleaseId !== release.id"
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="toggleEditSongRoyalties(release.id)">
+                        <i class="fa fa-pencil"></i> Edit
+                      </button>
+                      <ng-container *ngIf="editingSongRoyalties && songRoyaltyReleaseId === release.id">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-primary mr-2"
+                          (click)="saveSongRoyalties(release.id)"
+                          [disabled]="updatingSongRoyalties">
+                          <span *ngIf="updatingSongRoyalties" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          {{ updatingSongRoyalties ? 'Saving...' : 'Save' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-secondary"
+                          (click)="toggleEditSongRoyalties(release.id)"
+                          [disabled]="updatingSongRoyalties">
+                          Cancel
+                        </button>
+                      </ng-container>
+                    </div>
+                  </div>
+
+                  <!-- Loading state -->
+                  <div *ngIf="isLoadingSongData(release.id)" class="text-center py-3">
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span class="ml-2">Loading song data...</span>
+                  </div>
+
+                  <!-- No songs -->
+                  <div *ngIf="!isLoadingSongData(release.id) && getSongsForRelease(release.id).length === 0" class="text-center py-3 text-muted">
+                    No songs found for this release.
+                  </div>
+
+                  <!-- Songs list -->
+                  <div *ngIf="!isLoadingSongData(release.id) && getSongsForRelease(release.id).length > 0">
+                    <div *ngFor="let song of getSongsForRelease(release.id)" class="card mb-2">
+                      <div class="card-header py-2">
+                        <strong>{{ song.track_number }}. {{ song.title }}</strong>
+                      </div>
+                      <div class="card-body p-2" *ngIf="song.collaborators.length > 0">
+                        <div class="table-responsive">
+                          <table class="table table-sm table-bordered mb-0">
+                            <thead>
+                              <tr>
+                                <th>Collaborator</th>
+                                <th class="text-right">Streaming %</th>
+                                <th class="text-right">Sync %</th>
+                                <th class="text-right">Downloads %</th>
+                                <th class="text-right">Physical %</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let collab of song.collaborators">
+                                <td>{{ collab.artist_name }}</td>
+                                <td class="text-right">
+                                  <input
+                                    *ngIf="editingSongRoyalties && songRoyaltyReleaseId === release.id"
+                                    type="number"
+                                    class="form-control form-control-sm text-right"
+                                    min="0" max="100" step="1"
+                                    [value]="formatPercentage(collab.streaming_royalty_percentage)"
+                                    (input)="onSongCollaboratorPercentageChange(collab, 'streaming_royalty_percentage', $event)">
+                                  <span *ngIf="!editingSongRoyalties || songRoyaltyReleaseId !== release.id">
+                                    {{ formatPercentage(collab.streaming_royalty_percentage) }}% of {{ collab.streaming_royalty_type }}
+                                  </span>
+                                </td>
+                                <td class="text-right">
+                                  <input
+                                    *ngIf="editingSongRoyalties && songRoyaltyReleaseId === release.id"
+                                    type="number"
+                                    class="form-control form-control-sm text-right"
+                                    min="0" max="100" step="1"
+                                    [value]="formatPercentage(collab.sync_royalty_percentage)"
+                                    (input)="onSongCollaboratorPercentageChange(collab, 'sync_royalty_percentage', $event)">
+                                  <span *ngIf="!editingSongRoyalties || songRoyaltyReleaseId !== release.id">
+                                    {{ formatPercentage(collab.sync_royalty_percentage) }}% of {{ collab.sync_royalty_type }}
+                                  </span>
+                                </td>
+                                <td class="text-right">
+                                  <input
+                                    *ngIf="editingSongRoyalties && songRoyaltyReleaseId === release.id"
+                                    type="number"
+                                    class="form-control form-control-sm text-right"
+                                    min="0" max="100" step="1"
+                                    [value]="formatPercentage(collab.download_royalty_percentage)"
+                                    (input)="onSongCollaboratorPercentageChange(collab, 'download_royalty_percentage', $event)">
+                                  <span *ngIf="!editingSongRoyalties || songRoyaltyReleaseId !== release.id">
+                                    {{ formatPercentage(collab.download_royalty_percentage) }}% of {{ collab.download_royalty_type }}
+                                  </span>
+                                </td>
+                                <td class="text-right">
+                                  <input
+                                    *ngIf="editingSongRoyalties && songRoyaltyReleaseId === release.id"
+                                    type="number"
+                                    class="form-control form-control-sm text-right"
+                                    min="0" max="100" step="1"
+                                    [value]="formatPercentage(collab.physical_royalty_percentage)"
+                                    (input)="onSongCollaboratorPercentageChange(collab, 'physical_royalty_percentage', $event)">
+                                  <span *ngIf="!editingSongRoyalties || songRoyaltyReleaseId !== release.id">
+                                    {{ formatPercentage(collab.physical_royalty_percentage) }}% of {{ collab.physical_royalty_type }}
+                                  </span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="card-body p-2 text-muted" *ngIf="song.collaborators.length === 0">
+                        No collaborators assigned to this song.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </div>

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
+import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User, Song, ReleaseSong, SongCollaborator } from '../models';
 import { sendEarningsNotification, sendPaymentNotification } from '../utils/emailService';
 import { PaymentService } from '../utils/paymentService';
 import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
@@ -21,6 +21,7 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
 
     const {
       release_id,
+      song_id,
       type,
       amount,
       description,
@@ -29,16 +30,16 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     if (!release_id || !amount || !date_recorded) {
-      return res.status(400).json({ 
-        error: 'Release ID, amount, and date are required' 
+      return res.status(400).json({
+        error: 'Release ID, amount, and date are required'
       });
     }
 
     // Verify release exists and belongs to user's brand
     const release = await Release.findOne({
-      where: { 
+      where: {
         id: release_id,
-        brand_id: req.user.brand_id 
+        brand_id: req.user.brand_id
       }
     });
 
@@ -46,9 +47,20 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // If song_id provided, validate it belongs to the release
+    if (song_id) {
+      const releaseSong = await ReleaseSong.findOne({
+        where: { release_id, song_id }
+      });
+      if (!releaseSong) {
+        return res.status(400).json({ error: 'Song is not part of the specified release' });
+      }
+    }
+
     // Create earning record with 0 platform fee initially (will be calculated after processing)
     const earning = await Earning.create({
       release_id,
+      song_id: song_id || null,
       type: type || 'Streaming',
       amount: parseFloat(amount.toFixed(2)),
       description,
@@ -118,9 +130,9 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
         
         // Verify release exists
         const release = await Release.findOne({
-          where: { 
+          where: {
             id: earningData.release_id,
-            brand_id: req.user.brand_id 
+            brand_id: req.user.brand_id
           }
         });
 
@@ -129,9 +141,21 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
           continue;
         }
 
+        // If song_id provided, validate it belongs to the release
+        if (earningData.song_id) {
+          const releaseSong = await ReleaseSong.findOne({
+            where: { release_id: earningData.release_id, song_id: earningData.song_id }
+          });
+          if (!releaseSong) {
+            errors.push(`Row ${i + 1}: Song is not part of the specified release`);
+            continue;
+          }
+        }
+
         // Create earning record with 0 platform fee initially (will be calculated after processing)
         const earning = await Earning.create({
           release_id: earningData.release_id,
+          song_id: earningData.song_id || null,
           type: earningData.type || 'Streaming',
           amount: parseFloat(earningData.amount.toFixed(2)),
           description: earningData.description,
@@ -195,11 +219,18 @@ interface ProcessedEarningRow {
   original_data: CsvRow;
   catalog_no: string;
   release_title: string;
+  song_title: string;
+  isrc: string;
   earning_amount: number;
   matched_release: {
     id: number;
     catalog_no: string;
     title: string;
+  } | null;
+  matched_song: {
+    id: number;
+    title: string;
+    isrc: string;
   } | null;
   fuzzy_match_score?: number;
 }
@@ -208,8 +239,10 @@ interface ProcessedEarningRow {
 const fuzzyMatchColumns = (headers: string[]): { [key: string]: string } => {
   const expectedFields = {
     catalog_no: ['catalog', 'catalog_no', 'catalog_number', 'cat_no', 'catno'],
-    release_title: ['title', 'release_title', 'release', 'album', 'song'],
-    earning_amount: ['amount', 'earning_amount', 'earnings', 'revenue', 'total']
+    release_title: ['title', 'release_title', 'release', 'album'],
+    earning_amount: ['amount', 'earning_amount', 'earnings', 'revenue', 'total'],
+    song_title: ['song_title', 'song', 'track', 'track_title', 'song_name'],
+    isrc: ['isrc', 'isrc_code']
   };
 
   const columnMapping: { [key: string]: string } = {};
@@ -288,6 +321,46 @@ const findMatchingRelease = async (
   return { release: null, score: 0 };
 };
 
+// Find matching song within a release by ISRC or title
+const findMatchingSong = async (
+  releaseId: number,
+  songTitle: string,
+  isrc: string
+): Promise<{ id: number; title: string; isrc: string } | null> => {
+  const releaseSongs = await ReleaseSong.findAll({
+    where: { release_id: releaseId },
+    include: [{ model: Song, as: 'song' }]
+  });
+
+  const songs = releaseSongs
+    .map((rs: any) => rs.song)
+    .filter(Boolean);
+
+  // Try ISRC match first (most reliable)
+  if (isrc && isrc.trim() !== '') {
+    const match = songs.find((s: any) =>
+      s.isrc && s.isrc.toLowerCase().trim() === isrc.toLowerCase().trim()
+    );
+    if (match) {
+      return { id: match.id, title: match.title || '', isrc: match.isrc || '' };
+    }
+  }
+
+  // Fall back to exact title match (case-insensitive)
+  if (songTitle && songTitle.trim() !== '') {
+    const titleMatches = songs.filter((s: any) =>
+      s.title && s.title.toLowerCase().trim() === songTitle.toLowerCase().trim()
+    );
+    // Only match if exactly one song matches to avoid ambiguity
+    if (titleMatches.length === 1) {
+      const match = titleMatches[0];
+      return { id: match.id, title: match.title || '', isrc: match.isrc || '' };
+    }
+  }
+
+  return null;
+};
+
 export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user.is_admin) {
@@ -339,11 +412,13 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
             for (const row of csvData) {
               const catalogNo = columnMapping.catalog_no ? (row[columnMapping.catalog_no] || '').trim() : '';
               const releaseTitle = columnMapping.release_title ? (row[columnMapping.release_title] || '').trim() : '';
+              const songTitle = columnMapping.song_title ? (row[columnMapping.song_title] || '').trim() : '';
+              const isrc = columnMapping.isrc ? (row[columnMapping.isrc] || '').trim() : '';
               const earningAmountStr = row[columnMapping.earning_amount] || '0';
-              
+
               // Parse earning amount
               const earningAmount = parseFloat(earningAmountStr.replace(/[^\d.-]/g, ''));
-              
+
               if (isNaN(earningAmount)) {
                 continue; // Skip rows with invalid amounts
               }
@@ -352,8 +427,11 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
                 original_data: row,
                 catalog_no: catalogNo,
                 release_title: releaseTitle,
+                song_title: songTitle,
+                isrc: isrc,
                 earning_amount: earningAmount,
-                matched_release: null
+                matched_release: null,
+                matched_song: null
               };
 
               // Try to find matching release
@@ -368,6 +446,14 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
                   processedRow.fuzzy_match_score = score;
                   // Only add to total if there's a match
                   totalMatchedAmount += earningAmount;
+
+                  // Try to match a song within the release
+                  if (songTitle || isrc) {
+                    const matchedSong = await findMatchingSong(release.id, songTitle, isrc);
+                    if (matchedSong) {
+                      processedRow.matched_song = matchedSong;
+                    }
+                  }
                 } else {
                   unmatchedCount++;
                   // Log unmatched entries for debugging
@@ -375,7 +461,7 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
                     catalog_no: catalogNo || '(not provided)',
                     release_title: releaseTitle || '(not provided)',
                     earning_amount: earningAmount,
-                    reason: catalogNo ? 'No exact catalog match found' : 
+                    reason: catalogNo ? 'No exact catalog match found' :
                             releaseTitle ? 'No unique title match found' : 'No identifiers provided'
                   });
                 }
@@ -468,47 +554,89 @@ async function processEarningRoyalties(earning: any) {
 
   // Only calculate royalties on the remaining amount after recuperable expense deduction
   let totalRoyalties = 0;
-  
+
   if (remainingEarningAmount > 0) {
-    const releaseArtists = await ReleaseArtist.findAll({
-      where: { release_id: earning.release_id },
-      include: [{ model: Artist, as: 'artist' }]
-    });
+    if (earning.song_id) {
+      // Song-level earning: use SongCollaborator royalty percentages
+      const songCollaborators = await SongCollaborator.findAll({
+        where: { song_id: earning.song_id },
+        include: [{ model: Artist, as: 'artist' }]
+      });
 
-    for (const releaseArtist of releaseArtists) {
-      let royaltyPercentage = 0;
-      
-      // Get royalty percentage based on earning type
-      switch (earning.type) {
-        case 'Streaming':
-          royaltyPercentage = releaseArtist.streaming_royalty_percentage;
-          break;
-        case 'Sync':
-          royaltyPercentage = releaseArtist.sync_royalty_percentage;
-          break;
-        case 'Downloads':
-          royaltyPercentage = releaseArtist.download_royalty_percentage;
-          break;
-        case 'Physical':
-          royaltyPercentage = releaseArtist.physical_royalty_percentage;
-          break;
+      for (const collaborator of songCollaborators) {
+        let royaltyPercentage = 0;
+
+        switch (earning.type) {
+          case 'Streaming':
+            royaltyPercentage = collaborator.streaming_royalty_percentage;
+            break;
+          case 'Sync':
+            royaltyPercentage = collaborator.sync_royalty_percentage;
+            break;
+          case 'Downloads':
+            royaltyPercentage = collaborator.download_royalty_percentage;
+            break;
+          case 'Physical':
+            royaltyPercentage = collaborator.physical_royalty_percentage;
+            break;
+        }
+
+        if (royaltyPercentage > 0) {
+          const royaltyAmount = parseFloat((remainingEarningAmount * royaltyPercentage).toFixed(2));
+
+          await Royalty.create({
+            artist_id: collaborator.artist_id,
+            earning_id: earning.id,
+            release_id: earning.release_id,
+            percentage_of_earning: royaltyPercentage,
+            amount: royaltyAmount,
+            description: `${earning.type} royalty from ${earning.description || 'earning'} (song-level, after recuperable expense deduction)`,
+            date_recorded: earning.date_recorded
+          });
+
+          totalRoyalties += royaltyAmount;
+        }
       }
+    } else {
+      // Release-level earning: use ReleaseArtist royalty percentages (backward compatible)
+      const releaseArtists = await ReleaseArtist.findAll({
+        where: { release_id: earning.release_id },
+        include: [{ model: Artist, as: 'artist' }]
+      });
 
-      if (royaltyPercentage > 0) {
-        const royaltyAmount = parseFloat((remainingEarningAmount * royaltyPercentage).toFixed(2));
-        
-        await Royalty.create({
-          artist_id: releaseArtist.artist_id,
-          earning_id: earning.id,
-          release_id: earning.release_id,
-          percentage_of_earning: royaltyPercentage,
-          amount: royaltyAmount,
-          description: `${earning.type} royalty from ${earning.description || 'earning'} (after recuperable expense deduction)`,
-          date_recorded: earning.date_recorded
-        });
-        
-        // Track total royalties applied
-        totalRoyalties += royaltyAmount;
+      for (const releaseArtist of releaseArtists) {
+        let royaltyPercentage = 0;
+
+        switch (earning.type) {
+          case 'Streaming':
+            royaltyPercentage = releaseArtist.streaming_royalty_percentage;
+            break;
+          case 'Sync':
+            royaltyPercentage = releaseArtist.sync_royalty_percentage;
+            break;
+          case 'Downloads':
+            royaltyPercentage = releaseArtist.download_royalty_percentage;
+            break;
+          case 'Physical':
+            royaltyPercentage = releaseArtist.physical_royalty_percentage;
+            break;
+        }
+
+        if (royaltyPercentage > 0) {
+          const royaltyAmount = parseFloat((remainingEarningAmount * royaltyPercentage).toFixed(2));
+
+          await Royalty.create({
+            artist_id: releaseArtist.artist_id,
+            earning_id: earning.id,
+            release_id: earning.release_id,
+            percentage_of_earning: royaltyPercentage,
+            amount: royaltyAmount,
+            description: `${earning.type} royalty from ${earning.description || 'earning'} (after recuperable expense deduction)`,
+            date_recorded: earning.date_recorded
+          });
+
+          totalRoyalties += royaltyAmount;
+        }
       }
     }
   }
@@ -674,12 +802,15 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
 // Get all earnings
 export const getEarnings = async (req: AuthRequest, res: Response) => {
   try {
-    const { release_id, type, page = '1', limit = '20' } = req.query;
+    const { release_id, song_id, type, page = '1', limit = '20' } = req.query;
     const releaseIdNum = release_id ? parseInt(release_id as string, 10) : undefined;
 
     const where: any = {};
     if (release_id) {
       where.release_id = releaseIdNum;
+    }
+    if (song_id) {
+      where.song_id = parseInt(song_id as string, 10);
     }
     if (type) {
       where.type = type;
@@ -692,10 +823,15 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
     const { count, rows: earnings } = await Earning.findAndCountAll({
       where,
       include: [
-        { 
-          model: Release, 
+        {
+          model: Release,
           as: 'release',
           where: { brand_id: req.user.brand_id }
+        },
+        {
+          model: Song,
+          as: 'song',
+          required: false
         }
       ],
       order: [['date_recorded', 'DESC']],
@@ -730,10 +866,15 @@ export const getEarningById = async (req: AuthRequest, res: Response) => {
     const earning = await Earning.findOne({
       where: { id },
       include: [
-        { 
-          model: Release, 
+        {
+          model: Release,
           as: 'release',
           where: { brand_id: req.user.brand_id }
+        },
+        {
+          model: Song,
+          as: 'song',
+          required: false
         }
       ]
     });
@@ -849,6 +990,11 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
               ]
             }
           ]
+        },
+        {
+          model: Song,
+          as: 'song',
+          required: false
         }
       ],
       order: orderClause,
@@ -2271,6 +2417,12 @@ export const downloadEarningsCSV = async (req: AuthRequest, res: Response) => {
             }
           ],
           attributes: ['title']
+        },
+        {
+          model: Song,
+          as: 'song',
+          required: false,
+          attributes: ['title']
         }
       ],
       where,
@@ -2279,10 +2431,11 @@ export const downloadEarningsCSV = async (req: AuthRequest, res: Response) => {
     });
 
     // Convert to CSV format
-    const csvHeaders = ['Date', 'Release', 'Description', 'Amount'];
+    const csvHeaders = ['Date', 'Release', 'Song', 'Description', 'Amount'];
     const csvRows = earnings.map(earning => [
       new Date(earning.date_recorded).toLocaleDateString(),
       earning.release?.title || '',
+      earning.song?.title || '',
       earning.description || '',
       `${parseFloat(earning.amount.toString()).toFixed(2)}`
     ]);
@@ -2413,6 +2566,205 @@ export const downloadRoyaltiesCSV = async (req: AuthRequest, res: Response) => {
     res.send(csvContent);
   } catch (error) {
     console.error('Download royalties CSV error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// SONG EARNINGS BREAKDOWN
+export const getSongEarningsBreakdown = async (req: AuthRequest, res: Response) => {
+  try {
+    const { release_id } = req.params;
+
+    // Verify release belongs to user's brand
+    const release = await Release.findOne({
+      where: {
+        id: release_id,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const { Op, fn, col, literal } = require('sequelize');
+
+    // Get earnings grouped by song_id
+    const earnings = await Earning.findAll({
+      where: { release_id },
+      attributes: [
+        'song_id',
+        [fn('SUM', col('amount')), 'total_earnings']
+      ],
+      include: [
+        {
+          model: Song,
+          as: 'song',
+          required: false,
+          attributes: ['id', 'title', 'isrc']
+        }
+      ],
+      group: ['song_id', 'song.id', 'song.title', 'song.isrc'],
+      raw: false
+    });
+
+    const breakdown = earnings.map((e: any) => ({
+      song_id: e.song_id,
+      song_title: e.song?.title || null,
+      song_isrc: e.song?.isrc || null,
+      total_earnings: parseFloat(e.getDataValue('total_earnings') || '0')
+    }));
+
+    res.json({
+      release_id: parseInt(release_id),
+      release_title: release.title,
+      breakdown
+    });
+  } catch (error) {
+    console.error('Get song earnings breakdown error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// SONG COLLABORATOR ROYALTY MANAGEMENT
+export const getSongCollaboratorRoyalties = async (req: AuthRequest, res: Response) => {
+  try {
+    const { release_id } = req.params;
+
+    // Verify release belongs to user's brand
+    const release = await Release.findOne({
+      where: {
+        id: release_id,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Get all songs in this release
+    const releaseSongs = await ReleaseSong.findAll({
+      where: { release_id },
+      include: [{
+        model: Song,
+        as: 'song',
+        include: [{
+          model: SongCollaborator,
+          as: 'collaborators',
+          include: [{
+            model: Artist,
+            as: 'artist',
+            attributes: ['id', 'name']
+          }]
+        }]
+      }],
+      order: [['track_number', 'ASC']]
+    });
+
+    const songs = releaseSongs.map((rs: any) => ({
+      song_id: rs.song.id,
+      title: rs.song.title,
+      track_number: rs.track_number,
+      collaborators: (rs.song.collaborators || []).map((c: any) => ({
+        id: c.id,
+        artist_id: c.artist_id,
+        artist_name: c.artist?.name || '',
+        streaming_royalty_percentage: parseFloat(c.streaming_royalty_percentage),
+        streaming_royalty_type: c.streaming_royalty_type,
+        sync_royalty_percentage: parseFloat(c.sync_royalty_percentage),
+        sync_royalty_type: c.sync_royalty_type,
+        download_royalty_percentage: parseFloat(c.download_royalty_percentage),
+        download_royalty_type: c.download_royalty_type,
+        physical_royalty_percentage: parseFloat(c.physical_royalty_percentage),
+        physical_royalty_type: c.physical_royalty_type
+      }))
+    }));
+
+    res.json({ release_id: parseInt(release_id), songs });
+  } catch (error) {
+    console.error('Get song collaborator royalties error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateSongCollaboratorRoyalties = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { release_id } = req.params;
+    const { updates } = req.body; // Array of { song_id, artist_id, streaming_royalty_percentage, ... }
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({ error: 'Updates array is required' });
+    }
+
+    // Verify release belongs to user's brand
+    const release = await Release.findOne({
+      where: {
+        id: release_id,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Get all song_ids for this release
+    const releaseSongs = await ReleaseSong.findAll({
+      where: { release_id },
+      attributes: ['song_id']
+    });
+    const validSongIds = new Set(releaseSongs.map((rs: any) => rs.song_id));
+
+    const updatedCount = [];
+    const errors = [];
+
+    for (const update of updates) {
+      try {
+        // Validate song belongs to release
+        if (!validSongIds.has(update.song_id)) {
+          errors.push(`Song ${update.song_id} is not part of this release`);
+          continue;
+        }
+
+        // Find the collaborator record
+        const collaborator = await SongCollaborator.findOne({
+          where: {
+            song_id: update.song_id,
+            artist_id: update.artist_id
+          }
+        });
+
+        if (!collaborator) {
+          errors.push(`Collaborator not found: song_id=${update.song_id}, artist_id=${update.artist_id}`);
+          continue;
+        }
+
+        // Update royalty percentages (convert from percentage to decimal: 50 -> 0.500)
+        await collaborator.update({
+          streaming_royalty_percentage: update.streaming_royalty_percentage / 100,
+          sync_royalty_percentage: update.sync_royalty_percentage / 100,
+          download_royalty_percentage: update.download_royalty_percentage / 100,
+          physical_royalty_percentage: update.physical_royalty_percentage / 100
+        });
+
+        updatedCount.push(collaborator.id);
+      } catch (error) {
+        errors.push(`Failed to update song_id=${update.song_id}, artist_id=${update.artist_id}: ${error.message}`);
+      }
+    }
+
+    res.json({
+      message: `Updated ${updatedCount.length} collaborator royalties`,
+      updated: updatedCount.length,
+      errors
+    });
+  } catch (error) {
+    console.error('Update song collaborator royalties error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -55,27 +55,34 @@ export class BulkAddEarningsTabComponent implements OnInit {
   };
 
   csvTableColumns: TableColumn[] = [
-    { 
-      key: 'matched_release', 
-      label: 'Catalog No', 
-      searchable: true, 
+    {
+      key: 'matched_release',
+      label: 'Catalog No',
+      searchable: true,
       sortable: true,
       formatter: (item) => item.matched_release?.catalog_no || ''
     },
-    { 
-      key: 'matched_release', 
-      label: 'Release Title', 
-      searchable: true, 
+    {
+      key: 'matched_release',
+      label: 'Release Title',
+      searchable: true,
       sortable: true,
       formatter: (item) => item.matched_release?.title || ''
     },
-    { 
-      key: 'earning_amount', 
-      label: 'Earning Amount', 
-      type: 'number', 
-      searchable: false, 
-      sortable: true, 
-      formatter: (item) => this.formatCurrency(item.earning_amount) 
+    {
+      key: 'matched_song',
+      label: 'Song',
+      searchable: true,
+      sortable: true,
+      formatter: (item) => item.matched_song?.title || ''
+    },
+    {
+      key: 'earning_amount',
+      label: 'Earning Amount',
+      type: 'number',
+      searchable: false,
+      sortable: true,
+      formatter: (item) => this.formatCurrency(item.earning_amount)
     }
   ];
 
@@ -372,6 +379,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     // Convert processed CSV data to BulkEarning format
     const bulkEarnings: BulkEarning[] = matchedRows.map(row => ({
       release_id: row.matched_release!.id,
+      song_id: row.matched_song?.id || undefined,
       date_recorded: new Date().toISOString().split('T')[0], // Use current date
       type: this.csvEarningType, // Use selected earning type
       description: this.csvDescription,

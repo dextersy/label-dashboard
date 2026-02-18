@@ -10,7 +10,7 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label>Release</label>
-                <select class="form-control" [(ngModel)]="newEarningForm.release_id" name="release_id" required>
+                <select class="form-control" [(ngModel)]="newEarningForm.release_id" name="release_id" required (ngModelChange)="onReleaseChange()">
                   <option value="">Select a release</option>
                   <option *ngFor="let release of releases" [value]="release.id">
                     {{ formatReleaseOption(release) }}
@@ -18,6 +18,22 @@
                 </select>
               </div>
             </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Song <small class="text-muted">(optional)</small></label>
+                <select class="form-control" [(ngModel)]="newEarningForm.song_id" name="song_id" [disabled]="loadingSongs || songs.length === 0">
+                  <option [ngValue]="null">-- Release level (no specific song) --</option>
+                  <option *ngFor="let song of songs" [ngValue]="song.id">
+                    {{ song.title }}
+                  </option>
+                </select>
+                <small *ngIf="loadingSongs" class="form-text text-muted">Loading songs...</small>
+                <small *ngIf="!loadingSongs && newEarningForm.release_id && songs.length === 0" class="form-text text-muted">No songs found for this release.</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label>Earning Type</label>
@@ -29,15 +45,15 @@
                 </select>
               </div>
             </div>
-          </div>
-
-          <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label>Date Recorded</label>
                 <input type="date" class="form-control" [(ngModel)]="newEarningForm.date_recorded" name="date_recorded" required>
               </div>
             </div>
+          </div>
+
+          <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label>Amount (PHP)</label>
@@ -59,10 +75,10 @@
               </label>
             </div>
             <small class="form-text text-muted">
-              When checked, this will automatically create royalty entries for all artists associated with the selected release based on their configured royalty percentages.
+              When checked, this will automatically create royalty entries. For song-level earnings, royalties are based on song collaborator percentages. For release-level earnings, royalties are based on release artist percentages.
             </small>
           </div>
-          
+
           <div class="text-right">
             <button type="submit" class="btn btn-primary" [disabled]="isLoading">
               <i class="fa fa-spinner fa-spin" *ngIf="isLoading"></i>

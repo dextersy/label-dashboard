@@ -8,9 +8,15 @@ interface ReleaseAssociation {
   title: string;
 }
 
+interface SongAssociation {
+  id: number;
+  title: string;
+}
+
 interface EarningAttributes {
   id: number;
   release_id: number;
+  song_id?: number;
   type: EarningType;
   amount?: number;
   description?: string;
@@ -18,19 +24,21 @@ interface EarningAttributes {
   platform_fee?: number;
 }
 
-interface EarningCreationAttributes extends Optional<EarningAttributes, 'id' | 'type'> {}
+interface EarningCreationAttributes extends Optional<EarningAttributes, 'id' | 'type' | 'song_id'> {}
 
 class Earning extends Model<EarningAttributes, EarningCreationAttributes> implements EarningAttributes {
   public id!: number;
   public release_id!: number;
+  public song_id?: number;
   public type!: EarningType;
   public amount?: number;
   public description?: string;
   public date_recorded!: Date;
   public platform_fee?: number;
 
-  // Association
+  // Associations
   public release?: ReleaseAssociation;
+  public song?: SongAssociation;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -46,6 +54,11 @@ Earning.init(
     release_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    song_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
     },
     type: {
       type: DataTypes.ENUM('Sync', 'Streaming', 'Downloads', 'Physical'),

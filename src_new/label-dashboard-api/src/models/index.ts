@@ -137,7 +137,11 @@ PaymentMethod.hasMany(Payment, { foreignKey: 'payment_method_id', as: 'payments'
 
 // Earning relationships
 Earning.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+Earning.belongsTo(Song, { foreignKey: 'song_id', as: 'song' });
 Earning.hasMany(Royalty, { foreignKey: 'earning_id', as: 'royalties' });
+
+// Song -> Earning relationship
+Song.hasMany(Earning, { foreignKey: 'song_id', as: 'earnings' });
 
 // Royalty relationships
 Royalty.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });

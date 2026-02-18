@@ -63,6 +63,7 @@ export class FinancialService {
         id: earning.id,
         date_recorded: earning.date_recorded,
         release_title: earning.release?.title || '(No release)',
+        song_title: earning.song?.title || null,
         description: earning.description || earning.type || 'Earning',
         amount: earning.amount
       })),
@@ -290,6 +291,29 @@ export class FinancialService {
     }));
 
     return response?.balance || 0;
+  }
+
+  async getSongCollaboratorRoyalties(releaseId: number): Promise<any> {
+    const response = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/financial/releases/${releaseId}/song-collaborator-royalties`, {
+      headers: this.getAuthHeaders()
+    }));
+    return response;
+  }
+
+  async updateSongCollaboratorRoyalties(releaseId: number, updates: any[]): Promise<any> {
+    const response = await firstValueFrom(this.http.put<any>(`${environment.apiUrl}/financial/releases/${releaseId}/song-collaborator-royalties`, {
+      updates
+    }, {
+      headers: this.getAuthHeaders()
+    }));
+    return response;
+  }
+
+  async getSongsForRelease(releaseId: number): Promise<any[]> {
+    const response = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/financial/releases/${releaseId}/song-collaborator-royalties`, {
+      headers: this.getAuthHeaders()
+    }));
+    return response?.songs || [];
   }
 
   async getReleaseExpenses(releaseId: number, page: number = 1, limit: number = 10): Promise<{expenses: any[], pagination: any}> {

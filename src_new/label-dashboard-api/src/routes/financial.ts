@@ -22,7 +22,10 @@ import {
   getArtistsReadyForPayment,
   payAllBalances,
   downloadEarningsCSV,
-  downloadRoyaltiesCSV
+  downloadRoyaltiesCSV,
+  getSongEarningsBreakdown,
+  getSongCollaboratorRoyalties,
+  updateSongCollaboratorRoyalties
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -66,6 +69,11 @@ router.get('/payments', getPayments);
 router.get('/payments/:id', getPaymentById);
 router.get('/artists/:artist_id/payments', getPaymentsByArtist);
 
+
+// Song-level earnings and collaborator royalties
+router.get('/releases/:release_id/song-earnings', getSongEarningsBreakdown);
+router.get('/releases/:release_id/song-collaborator-royalties', getSongCollaboratorRoyalties);
+router.put('/releases/:release_id/song-collaborator-royalties', requireAdmin, updateSongCollaboratorRoyalties);
 
 // Financial summary
 router.get('/summary', getFinancialSummary);
