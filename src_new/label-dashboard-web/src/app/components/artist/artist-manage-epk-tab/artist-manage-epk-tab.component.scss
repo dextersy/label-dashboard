@@ -97,6 +97,18 @@
       padding: 1rem;
     }
 
+    .template-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+    }
+
     .form-check {
       margin-bottom: 0;
 
