@@ -187,8 +187,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       });
     }
 
-    // Check if event is closed due to time
-    const isClosedByTime = event.close_time && new Date() > event.close_time;
+    // Check if event is closed due to time (fall back to event start if no close_time set)
+    const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    const isClosedByTime = new Date() > closeTime;
 
     // Check if event is closed due to no available ticket types
     let hasAvailableTicketTypes = false;
@@ -572,8 +573,9 @@ export const buyTicket = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Invalid domain' });
     }
 
-    // Check if event is closed
-    if (event.close_time && new Date() > event.close_time) {
+    // Check if event is closed (fall back to event start if no close_time set)
+    const buyCloseTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    if (new Date() > buyCloseTime) {
       return res.status(400).json({ error: 'Ticket sales are closed for this event' });
     }
 
