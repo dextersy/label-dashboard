@@ -275,8 +275,10 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
 
     try {
       const canvas = document.createElement('canvas');
-      JsBarcode(canvas, this.release.UPC, {
-        format: 'EAN13',
+      const upc = this.release.UPC.trim();
+      const format = upc.length === 13 ? 'EAN13' : 'UPC';
+      JsBarcode(canvas, upc, {
+        format,
         width: 4,
         height: 200,
         displayValue: true,
