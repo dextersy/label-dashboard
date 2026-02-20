@@ -275,9 +275,17 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
 
     try {
       const canvas = document.createElement('canvas');
-      const upc = this.release.UPC.trim();
-      const format = upc.length === 13 ? 'EAN13' : 'UPC';
-      JsBarcode(canvas, upc, {
+      const value = this.release.UPC.trim();
+      const isAllDigits = /^\d+$/.test(value);
+      let format: string;
+      if (isAllDigits && value.length === 13) {
+        format = 'EAN13';
+      } else if (isAllDigits && value.length === 12) {
+        format = 'UPC';
+      } else {
+        format = 'CODE128';
+      }
+      JsBarcode(canvas, value, {
         format,
         width: 4,
         height: 200,
@@ -294,13 +302,13 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `UPC-${this.release!.UPC}.png`;
+        a.download = `barcode-${this.release!.UPC}.png`;
         a.click();
         URL.revokeObjectURL(url);
       }, 'image/png');
     } catch (e) {
       console.error('Barcode generation error:', e);
-      this.alertMessage.emit({ type: 'error', message: 'Failed to generate barcode. The UPC may be invalid.' });
+      this.alertMessage.emit({ type: 'error', message: 'Failed to generate barcode. The value may be invalid.' });
     }
   }
 
