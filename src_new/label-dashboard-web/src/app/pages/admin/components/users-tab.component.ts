@@ -9,7 +9,8 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, Sear
 @Component({
     selector: 'app-users-tab',
     imports: [CommonModule, FormsModule, PaginatedTableComponent],
-    templateUrl: './users-tab.component.html'
+    templateUrl: './users-tab.component.html',
+    styleUrl: './users-tab.component.scss'
 })
 export class UsersTabComponent implements OnInit {
   // Users
@@ -25,6 +26,13 @@ export class UsersTabComponent implements OnInit {
   loginAttemptsLoading: boolean = false;
   loginAttemptsFilters: any = {};
   loginAttemptsSort: SortInfo | null = null;
+
+  // Sidebar navigation
+  activeSection: string = 'users';
+
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+  }
 
   // Admin invite modal
   showInviteModal: boolean = false;
