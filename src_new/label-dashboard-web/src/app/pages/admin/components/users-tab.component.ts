@@ -37,7 +37,7 @@ export class UsersTabComponent implements OnInit {
 
   // Table column definitions
   usersColumns: TableColumn[] = [
-    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true },
+    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true, cardHeader: true },
     { key: 'first_name', label: 'First Name', type: 'text', searchable: true, sortable: true },
     { key: 'last_name', label: 'Last Name', type: 'text', searchable: true, sortable: true },
     { key: 'email_address', label: 'Email address', type: 'text', searchable: true, sortable: true },

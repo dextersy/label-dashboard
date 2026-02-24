@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, TemplateRef, ContentChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, TemplateRef, ContentChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -24,6 +24,7 @@ export interface TableColumn {
   tabletClass?: string; // CSS classes for tablet responsiveness
   showBreakdownButton?: boolean; // Show breakdown button for earnings columns
   renderHtml?: boolean; // Render formatter output as HTML instead of text
+  cardHeader?: boolean; // Use this column as the card title in mobile view
 }
 
 export interface SearchFilters {
@@ -77,6 +78,28 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
 
   // Expose Math to template
   Math = Math;
+
+  // Kebab menu state
+  openKebabItems = new Set<any>();
+
+  @HostListener('document:click')
+  closeAllKebabs(): void {
+    this.openKebabItems.clear();
+  }
+
+  toggleKebab(item: any, event: Event): void {
+    event.stopPropagation();
+    if (this.openKebabItems.has(item)) {
+      this.openKebabItems.delete(item);
+    } else {
+      this.openKebabItems.clear();
+      this.openKebabItems.add(item);
+    }
+  }
+
+  isKebabOpen(item: any): boolean {
+    return this.openKebabItems.has(item);
+  }
 
   ngOnInit() {
     // Initialize search filters for searchable columns

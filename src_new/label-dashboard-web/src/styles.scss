@@ -637,10 +637,15 @@ h6 {
 
 /* Global table container styling */
 .table-responsive {
-  border: 1px solid #dee2e6;
+  border: none;
   border-radius: 4px;
-  overflow: hidden;
   background-color: #fff;
+}
+
+/* Strip Bootstrap 5's per-cell border-bottom from tbody */
+.table > tbody > tr > td,
+.table > tbody > tr > th {
+  border-bottom-width: 0 !important;
 }
 
 /* Modern table styling - applies to all tables with stronger specificity */
@@ -653,13 +658,13 @@ div .table {
   
   /* Header styling */
   thead {
-    background-color: #f8f9fa !important;
-    
+    background-color: transparent !important;
+
     th {
       border-bottom: 2px solid #dee2e6 !important;
       padding: 12px 15px !important;
-      font-weight: 600 !important;
-      color: #495057 !important;
+      font-weight: 400 !important;
+      color: #9ca3af !important;
       font-size: 14px !important;
       text-transform: uppercase !important;
       letter-spacing: 0.5px !important;
@@ -673,9 +678,9 @@ div .table {
 .table-responsive .table thead th,
 .card .table thead th,
 div .table thead th {
-  background-color: #f8f9fa !important;
-  color: #495057 !important;
-  font-weight: 600 !important;
+  background-color: transparent !important;
+  color: #9ca3af !important;
+  font-weight: 400 !important;
   font-size: 14px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
@@ -687,23 +692,21 @@ div .table thead th {
 .card .table tbody,
 div .table tbody {
     tr {
-      border-bottom: 1px solid #dee2e6 !important;
+      border-bottom: none !important;
       transition: background-color 0.2s ease;
-      
+
       &:hover {
         background-color: #f8f9fa !important;
       }
-      
-      &:last-child {
-        border-bottom: none !important;
-      }
     }
-    
+
     td {
       padding: 15px !important;
       vertical-align: middle !important;
       font-size: 14px !important;
       color: #495057 !important;
+      border-bottom: none !important;
+      border-top: none !important;
       
       /* Text alignment utilities */
       &.text-center {
@@ -891,26 +894,54 @@ div .table tbody {
     tbody {
       tr {
         display: block;
-        border: 1px solid #ddd;
+        position: relative;
+        border: 1px solid #ddd !important;
         border-radius: 4px;
         margin-bottom: 10px;
         padding: 15px;
         background-color: #fff;
         width: 100%;
         box-sizing: border-box;
-        
+
         &:hover {
           background-color: #f8f9fa;
         }
+      }
+
+      // Kebab positioned in the card header area on mobile
+      .actions-column {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        padding: 5px !important;
+        background: transparent !important;
+        border: none !important;
       }
       
       td {
         display: block;
         border: none;
+        background-color: transparent !important;
         padding: 2px !important;
         margin: 2px 0;
         text-align: left !important;
-        
+
+        &.card-header-cell {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1f2937;
+          margin: -15px -15px 10px -15px;
+          padding: 10px 45px 10px 15px !important;
+          border-bottom: 1px solid #ddd !important;
+
+          &:before {
+            display: none !important;
+          }
+        }
+
         &[data-label]:not([data-label=""]):before {
           content: attr(data-label) ": ";
           font-weight: 600;

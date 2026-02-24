@@ -54,7 +54,7 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
 
   private initializeTableColumns(): void {
     this.tableColumns = [
-      { key: 'name', label: 'Donor', searchable: true, sortable: true, renderHtml: true, formatter: (item) => this.getDisplayName(item) },
+      { key: 'name', label: 'Donor', searchable: true, sortable: true, renderHtml: true, formatter: (item) => this.getDisplayName(item), cardHeader: true },
       { key: 'email', label: 'Email', searchable: true, sortable: true, formatter: (item) => item.anonymous ? 'Hidden' : item.email },
       { key: 'amount', label: 'Amount', searchable: false, sortable: true, type: 'number', align: 'right' },
       {

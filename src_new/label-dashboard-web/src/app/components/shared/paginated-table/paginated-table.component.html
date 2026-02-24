@@ -9,21 +9,13 @@
             <ng-container *ngIf="customButtons">
               <ng-container *ngTemplateOutlet="customButtons"></ng-container>
             </ng-container>
-            <button 
+            <button
               *ngIf="showSearch && columns.length > 0"
-              class="btn btn-sm btn-secondary flex-shrink-0"
+              class="btn btn-icon flex-shrink-0"
+              [class.search-active]="showSearchFilters"
               (click)="toggleSearchFilters()"
-              [title]="showSearchFilters ? 'Hide search filters' : 'Show search filters'">
-              <i class="fa fa-search"></i> 
-              {{ showSearchFilters ? 'Hide' : 'Search' }}
-            </button>
-            <button 
-              *ngIf="showSearch && columns.length > 0 && hasActiveFilters()"
-              class="btn btn-sm btn-secondary flex-shrink-0"
-              (click)="clearFilters()"
-              title="Clear all filters">
-              <i class="fa fa-times"></i> 
-              <span class="d-none d-sm-inline">Clear</span>
+              title="Search">
+              <i class="fa fa-search"></i>
             </button>
           </div>
         </div>
@@ -37,53 +29,52 @@
         </div>
       </div>
       
-      <!-- Search filters row (collapsible) -->
-      <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="card-body border-bottom bg-light py-3">
-        <div class="d-flex flex-wrap gap-3 align-items-end search-filters-container">
+      <!-- Search bar -->
+      <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="search-bar-panel">
+        <i class="fa fa-search search-bar-icon"></i>
+        <div class="search-fields-row">
           <div class="search-field" *ngFor="let column of columns" [hidden]="column.searchable === false">
-            <div class="form-group mb-0">
-              <label class="form-label small text-muted mb-1">{{ column.label }}</label>
-              
-              <!-- Text input -->
-              <input 
-                *ngIf="!column.type || column.type === 'text'"
-                type="text"
-                class="form-control form-control-sm"
-                [placeholder]="'Search...'"
-                [value]="searchFilters[column.key] || ''"
-                (input)="onFilterChange(column.key, $any($event.target).value)">
-              
-              <!-- Number input -->
-              <input 
-                *ngIf="column.type === 'number'"
-                type="number"
-                class="form-control form-control-sm"
-                [placeholder]="'Amount...'"
-                [value]="searchFilters[column.key] || ''"
-                (input)="onFilterChange(column.key, $any($event.target).value)">
-              
-              <!-- Date input -->
-              <input 
-                *ngIf="column.type === 'date'"
-                type="date"
-                class="form-control form-control-sm"
-                [value]="searchFilters[column.key] || ''"
-                (input)="onFilterChange(column.key, $any($event.target).value)">
-              
-              <!-- Select input -->
-              <select 
-                *ngIf="column.type === 'select'"
-                class="form-control form-control-sm"
-                [value]="searchFilters[column.key] || ''"
-                (change)="onFilterChange(column.key, $any($event.target).value)">
-                <option value="">All {{ column.label }}</option>
-                <option *ngFor="let option of column.options" [value]="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
+            <input
+              *ngIf="!column.type || column.type === 'text'"
+              type="text"
+              class="form-control form-control-sm"
+              [placeholder]="column.label"
+              [value]="searchFilters[column.key] || ''"
+              (input)="onFilterChange(column.key, $any($event.target).value)">
+
+            <input
+              *ngIf="column.type === 'number'"
+              type="number"
+              class="form-control form-control-sm"
+              [placeholder]="column.label"
+              [value]="searchFilters[column.key] || ''"
+              (input)="onFilterChange(column.key, $any($event.target).value)">
+
+            <input
+              *ngIf="column.type === 'date'"
+              type="date"
+              class="form-control form-control-sm"
+              [value]="searchFilters[column.key] || ''"
+              (input)="onFilterChange(column.key, $any($event.target).value)">
+
+            <select
+              *ngIf="column.type === 'select'"
+              class="form-control form-control-sm"
+              [value]="searchFilters[column.key] || ''"
+              (change)="onFilterChange(column.key, $any($event.target).value)">
+              <option value="">{{ column.label }}</option>
+              <option *ngFor="let option of column.options" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
           </div>
         </div>
+        <button *ngIf="hasActiveFilters()" type="button" class="btn btn-icon search-bar-clear" (click)="clearFilters()" title="Clear filters">
+          <i class="fa fa-filter-circle-xmark"></i>
+        </button>
+        <button type="button" class="btn btn-icon search-bar-close" (click)="toggleSearchFilters()" title="Hide search">
+          <i class="fa fa-times"></i>
+        </button>
       </div>
       <div class="card-body">
         <div *ngIf="loading" class="text-center p-4">
@@ -160,8 +151,9 @@
                       [disabled]="isOperationsDisabled()"
                       (change)="onSelectItem(item, $any($event.target).checked)">
                   </td>
-                  <td *ngFor="let column of columns" 
+                  <td *ngFor="let column of columns"
                       [class]="getColumnClasses(column)"
+                      [class.card-header-cell]="column.cardHeader"
                       [style.text-align]="column.align || 'left'"
                       [attr.data-label]="column.label">
                     <!-- Payment link special handling -->
@@ -208,7 +200,16 @@
                     </span>
                   </td>
                   <td *ngIf="showActionsColumn" class="actions-column">
-                    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
+                    <div class="kebab-container" (click)="$event.stopPropagation()">
+                      <button class="kebab-btn" type="button"
+                              (click)="toggleKebab(item, $event)"
+                              [class.active]="isKebabOpen(item)">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <div class="kebab-dropdown" *ngIf="isKebabOpen(item)">
+                        <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
+                      </div>
+                    </div>
                   </td>
                 </tr>
                 <tr *ngIf="data.length === 0">

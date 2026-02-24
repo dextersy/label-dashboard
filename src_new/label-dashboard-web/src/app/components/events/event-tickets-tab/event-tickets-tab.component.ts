@@ -71,11 +71,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   // Table configuration
   tableColumns: TableColumn[] = [
+    { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true, cardHeader: true },
     { key: 'name', label: 'Name', searchable: true, sortable: true },
     { key: 'email_address', label: 'Email Address', searchable: true, sortable: true },
     { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
-    { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true },
     { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
     { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
     { key: 'platform_fee', label: 'Platform Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getPlatformFee(item) > 0 ? this.formatCurrency(this.getPlatformFee(item)) : '-' },
