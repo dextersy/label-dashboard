@@ -1,13 +1,13 @@
 <div class="row">
   <div class="col-md-8">
-    <app-paginated-table 
+    <app-paginated-table
       title="Users"
       [data]="displayUsers"
       [pagination]="usersPagination"
       [loading]="usersLoading"
       [columns]="usersColumns"
       [showSortableHeaders]="true"
-      [showActionsColumn]="true"
+      [actions]="usersActions"
       [sortInfo]="usersSort"
       (pageChange)="onUsersPageChange($event)"
       (filtersChange)="onUsersFiltersChange($event)"
@@ -16,26 +16,6 @@
         <button class="btn btn-primary btn-sm" (click)="openInviteModal()">
           <i class="fa-solid fa-user-plus"></i> Invite Admin
         </button>
-      </ng-template>
-      <ng-template #actionsContent let-user>
-        <a *ngIf="!user.has_pending_invite"
-           (click)="toggleAdminStatus(user.id)"
-           class="btn btn-sm"
-           [class.btn-primary]="!user.is_admin"
-           [class.btn-danger]="user.is_admin">
-          <i class="fa me-2"
-             [class.fa-user-shield]="!user.is_admin"
-             [class.fa-user-times]="user.is_admin"></i>
-          {{ user.is_admin ? 'Remove Admin' : 'Make Admin' }}
-        </a>
-        <ng-container *ngIf="user.has_pending_invite">
-          <a (click)="resendInvite(user.id)" class="btn btn-sm btn-secondary">
-            <i class="fa-solid fa-envelope me-2"></i>Resend Invitation
-          </a>
-          <a (click)="cancelInvite(user.id)" class="btn btn-sm btn-secondary">
-            <i class="fa-solid fa-ban me-2"></i>Cancel Invitation
-          </a>
-        </ng-container>
       </ng-template>
     </app-paginated-table>
   </div>

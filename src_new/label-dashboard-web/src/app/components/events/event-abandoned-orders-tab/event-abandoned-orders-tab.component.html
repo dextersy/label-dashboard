@@ -9,7 +9,7 @@
     [showSearch]="true"
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
-    [showActionsColumn]="isAdmin"
+    [actions]="isAdmin ? orderActions : []"
     [enableBulkOperations]="isAdmin"
     [bulkOperationsLoading]="bulkOperationsLoading"
     (pageChange)="onPageChange($event)"
@@ -84,35 +84,6 @@
       </div>
     </ng-template>
     
-    <!-- Actions template -->
-    <ng-template #actionsContent let-order let-disabled="disabled">
-      <div class="btn-group" role="group">
-        <button
-          class="btn btn-sm btn-secondary"
-          (click)="onSendTicket(order.id)"
-          [disabled]="disabled || isEventPast()"
-          *ngIf="order.status === 'Payment Confirmed'"
-          title="Send ticket">
-          Send Ticket
-        </button>
-        <button
-          class="btn btn-sm btn-primary"
-          (click)="onMarkAsPaid(order.id)"
-          [disabled]="disabled || isEventPast()"
-          *ngIf="order.status === 'New'"
-          title="Mark as paid">
-          Mark Paid
-        </button>
-        <button
-          class="btn btn-sm btn-danger"
-          (click)="onCancelOrder(order.id)"
-          [disabled]="disabled || isEventPast()"
-          *ngIf="order.status === 'New'"
-          title="Cancel order">
-          Cancel
-        </button>
-      </div>
-    </ng-template>
   </app-paginated-table>
 
   <div class="sticky-bottom" *ngIf="orders.length > 0">

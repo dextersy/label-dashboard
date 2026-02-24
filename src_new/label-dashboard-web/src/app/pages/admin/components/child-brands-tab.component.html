@@ -16,13 +16,13 @@
     [pagination]="pagination"
     [showSearch]="true"
     [showSortableHeaders]="true"
-    [showActionsColumn]="true"
+    [actions]="sublabelActions"
     [sortInfo]="sortInfo"
     (sortChange)="onSortChange($event)"
     (breakdownButtonClick)="onBreakdownButtonClick($event)">
-    
+
     <ng-template #customButtons>
-      <button *ngIf="isSuperAdmin()" 
+      <button *ngIf="isSuperAdmin()"
               class="btn btn-primary btn-sm"
               (click)="openAddSublabelModal()"
               [disabled]="loading || isAnyPollingInProgress()"
@@ -37,59 +37,6 @@
           <i class="fas fa-spinner fa-spin"></i> Verifying {{ domainVerificationState.pendingDomain }}...
         </span>
       </button>
-    </ng-template>
-
-    <ng-template #actionsContent let-item>
-      <div class="d-flex gap-2 flex-wrap">
-        <button
-          class="btn btn-sm btn-secondary btn-icon d-none d-md-inline-block"
-          [disabled]="!hasDomains(item)"
-          (click)="openSublabelDashboard(item)"
-          [title]="hasDomains(item) ? 'Go to ' + item.brand_name + ' dashboard' : 'No domain configured'">
-          <i class="fas fa-external-link-alt"></i>
-        </button>
-        
-        <button
-          class="btn btn-sm btn-secondary btn-icon d-none d-md-inline-block"
-          (click)="openFeeSettingsModal(item)"
-          title="Configure fee settings for {{ item.brand_name }}">
-          <i class="fas fa-dollar-sign"></i>
-        </button>
-        
-        <span 
-          class="d-inline-block d-none d-md-inline-block"
-          [title]="item.balance > 0 ? 'Pay out balance to ' + item.brand_name : 'No balance to pay out'">
-          <button
-            class="btn btn-sm btn-secondary btn-icon"
-            (click)="openPayoutModal(item)"
-            [disabled]="item.balance <= 0">
-            <i class="fas fa-money-bill-wave"></i>
-          </button>
-        </span>
-        
-        <button
-          class="btn btn-sm btn-secondary d-md-none d-block w-100 mb-2"
-          [disabled]="!hasDomains(item)"
-          (click)="openSublabelDashboard(item)">
-          <i class="fas fa-external-link-alt me-2"></i>
-          Go to Dashboard
-        </button>
-        
-        <button
-          class="btn btn-sm btn-secondary d-md-none d-block w-100 mb-2"
-          (click)="openFeeSettingsModal(item)">
-          <i class="fas fa-dollar-sign me-2"></i>
-          Fee Settings
-        </button>
-        
-        <button
-          class="btn btn-sm btn-secondary d-md-none d-block w-100"
-          (click)="openPayoutModal(item)"
-          [disabled]="item.balance <= 0">
-          <i class="fas fa-money-bill-wave me-2"></i>
-          Pay Out (₱{{ item.balance | number:'1.2-2' }})
-        </button>
-      </div>
     </ng-template>
   </app-paginated-table>
 </div>

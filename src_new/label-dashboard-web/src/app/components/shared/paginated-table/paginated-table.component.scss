@@ -214,6 +214,7 @@
 
   .btn {
     display: flex !important;
+    justify-content: flex-start;
     width: 100%;
     text-align: left;
     border-radius: 6px !important;
@@ -230,9 +231,9 @@
 // Ensure table is properly scrollable
 .table-responsive {
   overflow-x: auto;
-  
+
   table {
-    min-width: 100%;
+    width: 100%;
   }
 }
 

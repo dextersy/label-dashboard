@@ -8,7 +8,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
-import { PaginatedTableComponent, TableColumn, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { AddSublabelModalComponent } from '../../../components/admin/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../../components/admin/fee-settings-modal/fee-settings-modal.component';
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/admin/sublabel-payout-modal/sublabel-payout-modal.component';
@@ -57,13 +57,14 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       sortable: true,
       align: 'left'
     },
-    { 
-      key: 'brand_name', 
-      label: 'Brand Name', 
+    {
+      key: 'brand_name',
+      label: 'Brand Name',
       type: 'text',
       searchable: true,
       sortable: true,
-      align: 'left'
+      align: 'left',
+      cardHeader: true
     },
     {
       key: 'status',
@@ -143,6 +144,26 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       sortable: true,
       align: 'right',
       formatter: (item: ChildBrand) => `₱${item.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    }
+  ];
+
+  sublabelActions: TableAction[] = [
+    {
+      icon: 'fas fa-external-link-alt',
+      label: 'Go to Dashboard',
+      hidden: (item) => !this.hasDomains(item),
+      handler: (item) => this.openSublabelDashboard(item)
+    },
+    {
+      icon: 'fas fa-dollar-sign',
+      label: 'Fee Settings',
+      handler: (item) => this.openFeeSettingsModal(item)
+    },
+    {
+      icon: 'fas fa-money-bill-wave',
+      label: 'Pay Out',
+      hidden: (item) => item.balance <= 0,
+      handler: (item) => this.openPayoutModal(item)
     }
   ];
 

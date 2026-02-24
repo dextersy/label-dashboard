@@ -9,7 +9,7 @@
     [showSearch]="true"
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
-    [showActionsColumn]="isAdmin"
+    [actions]="isAdmin ? ticketActions : []"
     [bulkOperationsLoading]="bulkOperationsLoading"
     [rowClassGetter]="getRowClass.bind(this)"
     (pageChange)="onPageChange($event)"
@@ -40,43 +40,6 @@
       </button>
     </ng-template>
     
-    <!-- Actions template -->
-    <ng-template #actionsContent let-ticket let-disabled="disabled">
-      <div class="btn-group" role="group">
-        <button
-          class="btn btn-sm btn-secondary"
-          (click)="onResendTicket(ticket.id)"
-          [disabled]="disabled"
-          *ngIf="isTicketResendable(ticket)"
-          title="Resend ticket">
-          Resend
-        </button>
-        <button
-          class="btn btn-sm btn-secondary"
-          (click)="onTransferTicket(ticket)"
-          [disabled]="disabled"
-          *ngIf="isTicketTransferable(ticket)"
-          title="Transfer ticket to another person">
-          Transfer
-        </button>
-        <button
-          class="btn btn-sm btn-secondary"
-          (click)="onRefundTicket(ticket.id)"
-          [disabled]="disabled"
-          *ngIf="isTicketRefundable(ticket)"
-          title="Refund ticket and return payment to customer">
-          Refund
-        </button>
-        <button
-          class="btn btn-sm btn-danger"
-          (click)="onCancelTicket(ticket.id)"
-          [disabled]="disabled"
-          *ngIf="isTicketCancellable(ticket)"
-          title="Cancel ticket">
-          Cancel
-        </button>
-      </div>
-    </ng-template>
   </app-paginated-table>
 
   <!-- Summary Footer - Matching PHP layout -->

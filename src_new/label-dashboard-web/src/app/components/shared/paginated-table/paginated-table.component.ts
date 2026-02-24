@@ -11,6 +11,14 @@ export interface PaginationInfo {
   has_prev: boolean;
 }
 
+export interface TableAction {
+  icon: string;                          // Full FA class e.g. 'fa-solid fa-trash'
+  label: string;
+  handler: (item: any) => void;
+  type?: 'primary' | 'secondary' | 'danger';
+  hidden?: (item: any) => boolean;       // Return true to hide for a given row
+}
+
 export interface TableColumn {
   key: string;
   label: string;
@@ -52,6 +60,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
   @Input() showSortableHeaders: boolean = false;
   @Input() sortInfo: SortInfo | null = null;
   @Input() showActionsColumn: boolean = false;
+  @Input() actions: TableAction[] = [];  // Structured actions rendered as a list in the kebab menu
   @Input() responsiveMode: 'card' | 'financial' = 'card'; // Choose responsive behavior
   @Input() enableBulkOperations: boolean = false; // Enable bulk operations functionality
   @Input() bulkOperationsLoading: boolean = false; // Loading state for all operations (single and bulk)
@@ -99,6 +108,14 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
 
   isKebabOpen(item: any): boolean {
     return this.openKebabItems.has(item);
+  }
+
+  hasActionsColumn(): boolean {
+    return this.showActionsColumn || this.actions.length > 0;
+  }
+
+  getVisibleActions(item: any): TableAction[] {
+    return this.actions.filter(a => !a.hidden || !a.hidden(item));
   }
 
   ngOnInit() {

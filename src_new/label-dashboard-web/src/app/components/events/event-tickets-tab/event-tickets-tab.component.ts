@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
 import { environment } from '../../../../environments/environment';
 import { TransferTicketModalComponent, TransferData } from '../transfer-ticket-modal/transfer-ticket-modal.component';
@@ -83,6 +83,34 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
     { key: 'date_paid', label: 'Date Paid', sortable: true, type: 'date', formatter: (item) => item.date_paid ? new Date(item.date_paid).toLocaleString() : '-' },
     { key: 'claimed_status', label: 'Claimed', sortable: false, formatter: (item) => `${item.number_of_claimed_entries} / ${item.number_of_entries}` },
+  ];
+
+  ticketActions: TableAction[] = [
+    {
+      icon: 'fa-solid fa-envelope',
+      label: 'Resend',
+      hidden: (item) => !this.isTicketResendable(item),
+      handler: (item) => this.onResendTicket(item.id)
+    },
+    {
+      icon: 'fa-solid fa-right-left',
+      label: 'Transfer',
+      hidden: (item) => !this.isTicketTransferable(item),
+      handler: (item) => this.onTransferTicket(item)
+    },
+    {
+      icon: 'fa-solid fa-rotate-left',
+      label: 'Refund',
+      hidden: (item) => !this.isTicketRefundable(item),
+      handler: (item) => this.onRefundTicket(item.id)
+    },
+    {
+      icon: 'fa-solid fa-ban',
+      label: 'Cancel',
+      type: 'danger',
+      hidden: (item) => !this.isTicketCancellable(item),
+      handler: (item) => this.onCancelTicket(item.id)
+    }
   ];
 
   private subscriptions = new Subscription();

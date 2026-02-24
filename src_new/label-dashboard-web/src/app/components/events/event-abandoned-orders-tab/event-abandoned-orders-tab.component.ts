@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 
 export interface AbandonedOrder {
   id: number;
@@ -57,6 +57,29 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       { value: 'Payment Confirmed', label: 'Payment Confirmed' },
       { value: 'Canceled', label: 'Canceled' }
     ], formatter: (item) => this.getStatusHtml(item.status) },
+  ];
+
+  orderActions: TableAction[] = [
+    {
+      icon: 'fa-solid fa-paper-plane',
+      label: 'Send Ticket',
+      hidden: (item) => item.status !== 'Payment Confirmed' || this.isEventPast(),
+      handler: (item) => this.onSendTicket(item.id)
+    },
+    {
+      icon: 'fa-solid fa-check',
+      label: 'Mark Paid',
+      type: 'primary',
+      hidden: (item) => item.status !== 'New' || this.isEventPast(),
+      handler: (item) => this.onMarkAsPaid(item.id)
+    },
+    {
+      icon: 'fa-solid fa-ban',
+      label: 'Cancel',
+      type: 'danger',
+      hidden: (item) => item.status !== 'New' || this.isEventPast(),
+      handler: (item) => this.onCancelOrder(item.id)
+    }
   ];
 
   private subscriptions = new Subscription();

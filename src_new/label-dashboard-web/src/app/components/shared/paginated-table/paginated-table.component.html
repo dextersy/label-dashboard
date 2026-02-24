@@ -111,7 +111,7 @@
                        class="fa ms-1" 
                        [class]="getSortIcon(column)"></i>
                   </th>
-                  <th *ngIf="showActionsColumn" class="actions-column">Actions</th>
+                  <th *ngIf="hasActionsColumn()" class="actions-column"></th>
                 </tr>
               </thead>
               <tbody>
@@ -199,7 +199,7 @@
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>
-                  <td *ngIf="showActionsColumn" class="actions-column">
+                  <td *ngIf="hasActionsColumn()" class="actions-column">
                     <div class="kebab-container" (click)="$event.stopPropagation()">
                       <button class="kebab-btn" type="button"
                               (click)="toggleKebab(item, $event)"
@@ -207,13 +207,28 @@
                         <i class="fas fa-ellipsis-v"></i>
                       </button>
                       <div class="kebab-dropdown" *ngIf="isKebabOpen(item)">
-                        <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
+                        <!-- Structured actions -->
+                        <ng-container *ngIf="actions.length > 0">
+                          <button *ngFor="let action of getVisibleActions(item)"
+                                  type="button"
+                                  class="btn btn-sm"
+                                  [class.btn-primary]="action.type === 'primary'"
+                                  [class.btn-danger]="action.type === 'danger'"
+                                  [class.btn-secondary]="!action.type || action.type === 'secondary'"
+                                  (click)="action.handler(item); closeAllKebabs()">
+                            <i [class]="action.icon + ' me-2'"></i>{{ action.label }}
+                          </button>
+                        </ng-container>
+                        <!-- Custom template (backwards compat) -->
+                        <ng-container *ngIf="actions.length === 0">
+                          <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
+                        </ng-container>
                       </div>
                     </div>
                   </td>
                 </tr>
                 <tr *ngIf="data.length === 0">
-                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="text-center">No data available.</td>
+                  <td [attr.colspan]="columns.length + (hasActionsColumn() ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="text-center">No data available.</td>
                 </tr>
               </tbody>
             </table>
