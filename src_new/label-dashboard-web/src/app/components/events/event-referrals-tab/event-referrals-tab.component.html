@@ -30,13 +30,13 @@
           <td class="text-end" data-label="Net Sales" [ngClass]="getAmountClass(referrer.net_amount_sold)">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
           <td class="text-center" data-label="Referral Link">
             <button
-              class="btn btn-sm btn-outline-primary me-1"
+              class="btn btn-sm btn-secondary me-1"
               (click)="copyToClipboard(referrer.referral_shortlink)"
               title="Copy referral link">
               <i class="fa fa-copy"></i>
             </button>
             <button
-              class="btn btn-sm btn-outline-primary"
+              class="btn btn-sm btn-secondary"
               (click)="downloadReferralQR(referrer.referral_shortlink, referrer.referral_code)"
               title="Download QR code">
               <i class="fa fa-qrcode"></i>

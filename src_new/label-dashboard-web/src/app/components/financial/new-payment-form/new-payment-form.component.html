@@ -85,7 +85,7 @@
           <input type="hidden" [(ngModel)]="newPaymentForm.payment_method_id" name="payment_method_id">
           
           <div class="text-right">
-            <button type="submit" class="btn btn-success" [disabled]="isSubmittingPayment">
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmittingPayment">
               <span *ngIf="isSubmittingPayment" class="spinner-border spinner-border-sm me-1" role="status"></span>
               <i *ngIf="!isSubmittingPayment" class="fa fa-plus"></i> 
               {{ isSubmittingPayment ? 'Adding Payment...' : 'Add Payment' }}

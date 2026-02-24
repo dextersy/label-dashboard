@@ -26,7 +26,7 @@
       </button>
     </ng-template>
     <ng-template #actionsContent let-pitch let-disabled="disabled">
-      <button #downloadBtn class="btn btn-sm btn-link text-secondary p-1" type="button"
+      <button #downloadBtn class="btn btn-sm btn-ghost text-secondary p-1" type="button"
               (click)="toggleDownloadDropdown($event, pitch.id, downloadBtn)"
               [disabled]="!pitch.songs?.length || isDownloading(pitch.id) || disabled">
         <i class="fas fa-spinner fa-spin me-1" *ngIf="isDownloading(pitch.id)"></i>
@@ -34,10 +34,10 @@
         Download
         <i class="fas fa-caret-down ms-1"></i>
       </button>
-      <button class="btn btn-sm btn-link text-primary p-1" (click)="openEditModal(pitch)" title="Edit" [disabled]="disabled">
+      <button class="btn btn-sm btn-ghost text-primary p-1" (click)="openEditModal(pitch)" title="Edit" [disabled]="disabled">
         <i class="fas fa-edit"></i>
       </button>
-      <button class="btn btn-sm btn-link text-danger p-1" (click)="deletePitch(pitch)" title="Delete" [disabled]="disabled">
+      <button class="btn btn-sm btn-ghost text-danger p-1" (click)="deletePitch(pitch)" title="Delete" [disabled]="disabled">
         <i class="fas fa-trash"></i>
       </button>
     </ng-template>
@@ -74,7 +74,7 @@
           <div class="mb-3">
             <div class="input-group">
               <input type="text" class="form-control" [(ngModel)]="songSearchQuery" (input)="searchSongs()" placeholder="Search songs to add...">
-              <button class="btn btn-outline-secondary" type="button" [disabled]="searchingSongs">
+              <button class="btn btn-secondary" type="button" [disabled]="searchingSongs">
                 <i class="fas fa-search" *ngIf="!searchingSongs"></i>
                 <i class="fas fa-spinner fa-spin" *ngIf="searchingSongs"></i>
               </button>
@@ -116,7 +116,7 @@
                     </small>
                   </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-link text-danger p-1" (click)="removeSong(song)">
+                <button type="button" class="btn btn-sm btn-ghost text-danger p-1" (click)="removeSong(song)">
                   <i class="fas fa-times"></i>
                 </button>
               </div>

@@ -42,7 +42,7 @@
                 class="btn"
                 [ngClass]="{
                   'btn-danger': data?.type === 'danger',
-                  'btn-warning': data?.type === 'warning',
+                  'btn-secondary': data?.type === 'warning',
                   'btn-primary': data?.type === 'info' || !data?.type
                 }"
                 (click)="onConfirm()">

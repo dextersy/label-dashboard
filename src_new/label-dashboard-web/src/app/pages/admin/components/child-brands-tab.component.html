@@ -42,7 +42,7 @@
     <ng-template #actionsContent let-item>
       <div class="d-flex gap-2 flex-wrap">
         <button
-          class="btn btn-sm btn-outline-primary btn-icon-only d-none d-md-inline-block"
+          class="btn btn-sm btn-secondary btn-icon d-none d-md-inline-block"
           [disabled]="!hasDomains(item)"
           (click)="openSublabelDashboard(item)"
           [title]="hasDomains(item) ? 'Go to ' + item.brand_name + ' dashboard' : 'No domain configured'">
@@ -50,7 +50,7 @@
         </button>
         
         <button
-          class="btn btn-sm btn-outline-primary btn-icon-only d-none d-md-inline-block"
+          class="btn btn-sm btn-secondary btn-icon d-none d-md-inline-block"
           (click)="openFeeSettingsModal(item)"
           title="Configure fee settings for {{ item.brand_name }}">
           <i class="fas fa-dollar-sign"></i>
@@ -60,7 +60,7 @@
           class="d-inline-block d-none d-md-inline-block"
           [title]="item.balance > 0 ? 'Pay out balance to ' + item.brand_name : 'No balance to pay out'">
           <button
-            class="btn btn-sm btn-outline-primary btn-icon-only"
+            class="btn btn-sm btn-secondary btn-icon"
             (click)="openPayoutModal(item)"
             [disabled]="item.balance <= 0">
             <i class="fas fa-money-bill-wave"></i>
@@ -68,7 +68,7 @@
         </span>
         
         <button
-          class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2"
+          class="btn btn-sm btn-secondary d-md-none d-block w-100 mb-2"
           [disabled]="!hasDomains(item)"
           (click)="openSublabelDashboard(item)">
           <i class="fas fa-external-link-alt me-2"></i>
@@ -76,14 +76,14 @@
         </button>
         
         <button
-          class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2"
+          class="btn btn-sm btn-secondary d-md-none d-block w-100 mb-2"
           (click)="openFeeSettingsModal(item)">
           <i class="fas fa-dollar-sign me-2"></i>
           Fee Settings
         </button>
         
         <button
-          class="btn btn-sm btn-outline-primary d-md-none d-block w-100"
+          class="btn btn-sm btn-secondary d-md-none d-block w-100"
           (click)="openPayoutModal(item)"
           [disabled]="item.balance <= 0">
           <i class="fas fa-money-bill-wave me-2"></i>

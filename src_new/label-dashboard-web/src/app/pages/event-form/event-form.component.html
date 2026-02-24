@@ -157,7 +157,7 @@
                     [disabled]="isEventPast()">
                   <button 
                     type="button" 
-                    class="btn btn-outline-secondary"
+                    class="btn btn-secondary"
                     (click)="generateSlug()"
                     [disabled]="isEventPast()"
                     title="Auto-generate from title">
@@ -248,7 +248,7 @@
                 </button>
                 <button
                   type="button"
-                  class="btn btn-outline-primary"
+                  class="btn btn-secondary"
                   (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
                   title="Download QR Code">
                   <i class="fa fa-qrcode"></i>
@@ -348,10 +348,10 @@
                   <i class="fa fa-clock"></i> Set suggested time:
                 </small>
                 <div class="d-flex flex-wrap gap-2 mt-2" *ngIf="!closeAtEventStart">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
+                  <button type="button" class="btn btn-sm btn-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
+                  <button type="button" class="btn btn-sm btn-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
+                  <button type="button" class="btn btn-sm btn-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
+                  <button type="button" class="btn btn-sm btn-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
                 </div>
               </div>
 
@@ -530,7 +530,7 @@
                     pattern="[0-9]{6}">
                   <button 
                     type="button" 
-                    class="btn btn-outline-secondary"
+                    class="btn btn-secondary"
                     (click)="copyVerificationPIN()"
                     title="Copy PIN"
                     [disabled]="!eventData.verification_pin">
@@ -538,7 +538,7 @@
                   </button>
                   <button 
                     type="button" 
-                    class="btn btn-outline-secondary"
+                    class="btn btn-secondary"
                     (click)="generateVerificationPIN()"
                     title="Generate random PIN">
                     <i class="fas fa-sync"></i>
@@ -564,7 +564,7 @@
   <!-- Cancel button only shown when creating a new event -->
   <button 
     type="button" 
-    class="btn btn-outline-secondary"
+    class="btn btn-secondary"
     (click)="onCancel()"
     [disabled]="saving"
     *ngIf="isNewEvent">
@@ -575,7 +575,7 @@
   <ng-container *ngIf="isEventDraft()">
     <button 
       type="button" 
-      class="btn btn-outline-primary"
+      class="btn btn-secondary"
       (click)="onSave()"
       [disabled]="saving || isEventPast()">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
@@ -585,7 +585,7 @@
     </button>
     <button 
       type="button" 
-      class="btn btn-success"
+      class="btn btn-primary"
       (click)="onPublish()"
       [disabled]="saving || isEventPast()">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
@@ -609,7 +609,7 @@
     </button>
     <button 
       type="button" 
-      class="btn btn-warning"
+      class="btn btn-secondary"
       (click)="onUnpublish()"
       [disabled]="saving || hasConfirmedTickets() || isEventPast()"
       *ngIf="!hasConfirmedTickets()">

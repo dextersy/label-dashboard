@@ -23,7 +23,7 @@
         [title]="getCustomTicketButtonTooltip()"
         *ngIf="isAdmin">
         <button 
-          class="btn btn-sm btn-outline-primary" 
+          class="btn btn-sm btn-secondary" 
           (click)="onCreateCustomTicket()"
           [disabled]="loading || !canCreateCustomTickets()">
           <i class="fa fa-plus me-1"></i>
@@ -31,7 +31,7 @@
         </button>
       </span>
       <button 
-        class="btn btn-sm btn-outline-primary flex-shrink-0" 
+        class="btn btn-sm btn-secondary flex-shrink-0" 
         (click)="onDownloadCSV()"
         *ngIf="isAdmin"
         [disabled]="loading">
@@ -44,7 +44,7 @@
     <ng-template #actionsContent let-ticket let-disabled="disabled">
       <div class="btn-group" role="group">
         <button
-          class="btn btn-sm btn-outline-primary"
+          class="btn btn-sm btn-secondary"
           (click)="onResendTicket(ticket.id)"
           [disabled]="disabled"
           *ngIf="isTicketResendable(ticket)"
@@ -52,7 +52,7 @@
           Resend
         </button>
         <button
-          class="btn btn-sm btn-outline-info"
+          class="btn btn-sm btn-secondary"
           (click)="onTransferTicket(ticket)"
           [disabled]="disabled"
           *ngIf="isTicketTransferable(ticket)"
@@ -60,7 +60,7 @@
           Transfer
         </button>
         <button
-          class="btn btn-sm btn-outline-warning"
+          class="btn btn-sm btn-secondary"
           (click)="onRefundTicket(ticket.id)"
           [disabled]="disabled"
           *ngIf="isTicketRefundable(ticket)"
@@ -68,7 +68,7 @@
           Refund
         </button>
         <button
-          class="btn btn-sm btn-outline-danger"
+          class="btn btn-sm btn-danger"
           (click)="onCancelTicket(ticket.id)"
           [disabled]="disabled"
           *ngIf="isTicketCancellable(ticket)"

@@ -28,7 +28,7 @@
             <div class="btn-group btn-group-sm mt-1" role="group">
               <button 
                 type="button" 
-                class="btn btn-outline-primary btn-sm btn-icon-only"
+                class="btn btn-secondary btn-sm btn-icon"
                 [disabled]="method.is_default_for_artist"
                 (click)="setDefaultPaymentMethod(method.id)"
                 title="Set as default">
@@ -36,7 +36,7 @@
               </button>
               <button 
                 type="button" 
-                class="btn btn-outline-danger btn-sm btn-icon-only"
+                class="btn btn-danger btn-sm btn-icon"
                 [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                 (click)="deletePaymentMethod(method.id)"
                 [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
@@ -108,7 +108,7 @@
             </label>
           </div>
           
-          <button type="submit" class="btn btn-success btn-sm mt-2">Update Settings</button>
+          <button type="submit" class="btn btn-primary btn-sm mt-2">Update Settings</button>
         </form>
       </div>
     </div>

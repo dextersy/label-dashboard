@@ -146,7 +146,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0">Artist Royalty Splits</h5>
       <button type="button" 
-              class="btn btn-sm btn-outline-primary" 
+              class="btn btn-sm btn-secondary" 
               (click)="addRoyaltyArtist()"
               [disabled]="loadingArtists">
         <i class="fa fa-plus"></i> Add Artist
@@ -219,7 +219,7 @@
             </div>
             <div class="col-md-1">
               <button type="button" 
-                      class="btn btn-sm btn-outline-danger" 
+                      class="btn btn-sm btn-danger" 
                       (click)="removeRoyaltyArtist(i)"
                       [disabled]="royaltyArtists.length <= 1"
                       title="Remove Artist">

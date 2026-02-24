@@ -51,14 +51,14 @@
               readonly>
             <button
               type="button"
-              class="btn btn-outline-secondary d-flex align-items-center"
+              class="btn btn-secondary d-flex align-items-center"
               (click)="copyPublicLink()"
               title="Copy link to clipboard">
               <i class="fa fa-copy"></i>
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary d-flex align-items-center"
+              class="btn btn-secondary d-flex align-items-center"
               (click)="downloadFundraiserQR()"
               title="Download QR Code">
               <i class="fa fa-qrcode"></i>
@@ -66,7 +66,7 @@
             <a
               [href]="getPublicFundraiserUrl()"
               target="_blank"
-              class="btn btn-outline-primary d-flex align-items-center"
+              class="btn btn-secondary d-flex align-items-center"
               title="Open in new tab">
               <i class="fa fa-external-link"></i>
             </a>
@@ -151,7 +151,7 @@
   <!-- Cancel button only shown when creating a new fundraiser -->
   <button
     type="button"
-    class="btn btn-outline-secondary"
+    class="btn btn-secondary"
     (click)="onCancel()"
     [disabled]="saving"
     *ngIf="isNewFundraiser">
@@ -162,7 +162,7 @@
   <ng-container *ngIf="isFundraiserDraft()">
     <button
       type="button"
-      class="btn btn-outline-primary"
+      class="btn btn-secondary"
       (click)="onSave()"
       [disabled]="saving">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
@@ -172,7 +172,7 @@
     </button>
     <button
       type="button"
-      class="btn btn-success"
+      class="btn btn-primary"
       (click)="onPublish()"
       [disabled]="saving">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
@@ -196,7 +196,7 @@
     </button>
     <button
       type="button"
-      class="btn btn-warning"
+      class="btn btn-secondary"
       (click)="onUnpublish()"
       [disabled]="saving || hasDonations()"
       *ngIf="!hasDonations()">
@@ -221,7 +221,7 @@
   <ng-container *ngIf="isFundraiserClosed()">
     <button
       type="button"
-      class="btn btn-success"
+      class="btn btn-primary"
       (click)="onReopen()"
       [disabled]="saving">
       <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>

@@ -27,7 +27,7 @@
         <div class="card-body">
           <h3 class="card-title">Net Music Earnings</h3>
           <h2 [ngClass]="getAmountClass(dashboard?.net_music_earnings ?? 0)">₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</h2>
-          <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('music')">
+          <button class="btn btn-secondary btn-block w-100" (click)="showBreakdown('music')">
             View Details
           </button>
         </div>
@@ -39,7 +39,7 @@
         <div class="card-body">
           <h3 class="card-title">Net Event Earnings</h3>
           <h2 [ngClass]="getAmountClass(dashboard?.net_event_earnings ?? 0)">₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</h2>
-          <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('event')">
+          <button class="btn btn-secondary btn-block w-100" (click)="showBreakdown('event')">
             View Details
           </button>
         </div>
@@ -51,7 +51,7 @@
         <div class="card-body">
           <h3 class="card-title">Net Fundraiser Earnings</h3>
           <h2 [ngClass]="getAmountClass(dashboard?.net_fundraiser_earnings ?? 0)">₱{{ (dashboard?.net_fundraiser_earnings ?? 0) | number:'1.2-2' }}</h2>
-          <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('fundraiser')">
+          <button class="btn btn-secondary btn-block w-100" (click)="showBreakdown('fundraiser')">
             View Details
           </button>
         </div>

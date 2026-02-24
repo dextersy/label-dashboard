@@ -143,7 +143,7 @@
         </td>
         <td>
           <button type="button" 
-                  class="btn btn-outline-danger btn-sm" 
+                  class="btn btn-danger btn-sm" 
                   (click)="removeRow(i)"
                   title="Remove row">
             ×
@@ -169,11 +169,11 @@
               <div class="col-12">
                 <div class="w-100">
                   <div class="btn-group w-100 add-rows-dropdown" role="group">
-                    <button type="button" class="btn btn-outline-primary" (click)="addRows(1)">
+                    <button type="button" class="btn btn-secondary" (click)="addRows(1)">
                       Add Row
                     </button>
                     <button type="button" 
-                            class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" 
+                            class="btn btn-secondary dropdown-toggle dropdown-toggle-split" 
                             (click)="toggleAddRowsDropdown()">
                       <i class="fa fa-caret-up" *ngIf="showAddRowsDropdown"></i>
                       <i class="fa fa-caret-down" *ngIf="!showAddRowsDropdown"></i>
@@ -220,11 +220,11 @@
               </div>
               <div class="add-rows-container">
                 <div class="btn-group add-rows-dropdown" role="group">
-                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="addRows(1)">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="addRows(1)">
                     Add Row
                   </button>
                   <button type="button" 
-                          class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" 
+                          class="btn btn-secondary btn-sm dropdown-toggle dropdown-toggle-split" 
                           (click)="toggleAddRowsDropdown()">
                     <i class="fa fa-caret-up" *ngIf="showAddRowsDropdown"></i>
                     <i class="fa fa-caret-down" *ngIf="!showAddRowsDropdown"></i>
@@ -310,7 +310,7 @@
             <p class="card-text text-muted">Unmatched Rows</p>
             <button 
               type="button" 
-              class="btn btn-outline-danger btn-sm mt-2" 
+              class="btn btn-danger btn-sm mt-2" 
               (click)="downloadUnmatchedCsv()"
               *ngIf="csvTotalUnmatched > 0">
               <i class="fa fa-download me-1"></i>Download CSV
@@ -334,7 +334,7 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h6 class="mb-0">CSV Preview</h6>
-        <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeCsvFile()">
+        <button type="button" class="btn btn-danger btn-sm" (click)="removeCsvFile()">
           <i class="fa fa-times me-2"></i>Remove File
         </button>
       </div>
@@ -429,7 +429,7 @@
                 <!-- Toggle Settings Button -->
                 <div class="d-flex align-items-center justify-content-between mb-2">
                   <button type="button" 
-                          class="btn btn-link p-0 text-decoration-none" 
+                          class="btn btn-ghost p-0 text-decoration-none" 
                           (click)="toggleMobileForm()">
                     <i class="fa" [class.fa-caret-down]="mobileFormCollapsed" [class.fa-caret-up]="!mobileFormCollapsed" style="margin-right: 6px;"></i>
                     <span style="font-size: 14px; color: #666;">Settings</span>
@@ -441,7 +441,7 @@
                 
                 <!-- Import Button -->
                 <button type="button" 
-                        class="btn btn-success btn-lg w-100 mb-2" 
+                        class="btn btn-primary btn-lg w-100 mb-2" 
                         (click)="saveCsvEarnings()" 
                         [disabled]="loading || csvData.length === 0">
                   <i class="fa fa-save me-2"></i>
@@ -451,7 +451,7 @@
                 
                 <!-- Cancel Button -->
                 <button type="button" 
-                        class="btn btn-outline-secondary w-100" 
+                        class="btn btn-secondary w-100" 
                         (click)="removeCsvFile()">
                   <i class="fa fa-times me-2"></i>Cancel
                 </button>
@@ -511,7 +511,7 @@
             <!-- Action Buttons -->
             <div class="d-flex gap-2">
               <button type="button" 
-                      class="btn btn-success btn-lg" 
+                      class="btn btn-primary btn-lg" 
                       (click)="saveCsvEarnings()" 
                       [disabled]="loading || csvData.length === 0">
                 <i class="fa fa-save me-2"></i>
@@ -519,7 +519,7 @@
                 <span *ngIf="csvData.length === 0">No Earnings to Import</span>
               </button>
               <button type="button" 
-                      class="btn btn-outline-secondary" 
+                      class="btn btn-secondary" 
                       (click)="removeCsvFile()">
                 <i class="fa fa-times me-2"></i>Cancel
               </button>
