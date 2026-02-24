@@ -522,8 +522,8 @@ export class PaymentService {
 
       const adminEmails = adminUsers.map((u: any) => u.email_address);
       const donorName = donation.anonymous ? 'Anonymous Donor' : donation.name;
-      const processingFee = donation.processing_fee || 0;
-      const netAmount = donation.amount - processingFee;
+      const platformFee = donation.platform_fee || 0;
+      const netAmount = donation.amount - platformFee;
 
       // Get domain for the brand
       const domains = await Domain.findAll({
@@ -544,7 +544,7 @@ export class PaymentService {
         FUNDRAISER_TITLE: fundraiser.title,
         DONOR_NAME: donorName,
         AMOUNT: `₱${donation.amount.toFixed(2)}`,
-        PLATFORM_FEE: `₱${processingFee.toFixed(2)}`,
+        PLATFORM_FEE: `₱${platformFee.toFixed(2)}`,
         NET_AMOUNT: `₱${netAmount.toFixed(2)}`,
         DATE_PAID: new Date(donation.date_paid).toLocaleString(),
         DASHBOARD_URL: dashboardUrl
@@ -751,8 +751,8 @@ export class PaymentService {
 
       const totalPayment = ticket.price_per_ticket * ticket.number_of_entries;
 
-      // Ensure processing fee is a number
-      const processingFee = parseFloat(ticket.payment_processing_fee) || 0;
+      // Ensure platform fee is a number
+      const platformFee = parseFloat(ticket.platform_fee) || 0;
 
       const ticketTypeName = (ticket as any).ticketType ? (ticket as any).ticketType.name : 'Regular';
 
@@ -761,7 +761,7 @@ export class PaymentService {
         ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
         : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${brand?.brand_name || 'Dashboard'}</div>`;
 
-      const netAmount = totalPayment - processingFee;
+      const netAmount = totalPayment - platformFee;
 
       const templateData = {
         BRAND_NAME: brand?.brand_name || 'Dashboard',
@@ -775,7 +775,7 @@ export class PaymentService {
         TICKET_TYPE: ticketTypeName,
         NUMBER_OF_ENTRIES: ticket.number_of_entries.toString(),
         PAYMENT_AMOUNT: `₱${totalPayment.toFixed(2)}`,
-        PLATFORM_FEE: `₱${processingFee.toFixed(2)}`,
+        PLATFORM_FEE: `₱${platformFee.toFixed(2)}`,
         NET_AMOUNT: `₱${netAmount.toFixed(2)}`,
         DASHBOARD_URL: dashboardUrl
       };
