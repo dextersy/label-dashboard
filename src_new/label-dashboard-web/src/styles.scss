@@ -606,7 +606,7 @@ h6 {
 
   html.nav-open {
     .main-panel {
-      transform: translateX(-300px);
+      transform: translateX(-260px);
     }
 
     body {
@@ -666,8 +666,8 @@ div .table {
       font-weight: 400 !important;
       color: #9ca3af !important;
       font-size: 14px !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
+      text-transform: none !important;
+      letter-spacing: 0.2px !important;
       vertical-align: middle !important;
     }
   }
@@ -682,8 +682,13 @@ div .table thead th {
   color: #9ca3af !important;
   font-weight: 400 !important;
   font-size: 14px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
+  text-transform: none !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Override legacy light-bootstrap-dashboard sidebar nav uppercase */
+.sidebar .nav p {
+  text-transform: none !important;
 }
 
 /* Body styling for all tables */

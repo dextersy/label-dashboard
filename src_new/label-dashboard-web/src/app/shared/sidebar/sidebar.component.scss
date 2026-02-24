@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: 300px;
+  width: 260px;
   overflow-y: auto;
   background: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -18,7 +18,7 @@
 
   // Collapsed state for desktop
   &.collapsed {
-    width: 70px;
+    width: 86px;
     overflow: visible;
 
     .logo {
@@ -31,29 +31,41 @@
     }
 
     .nav li a {
-      padding: 13px 10px;
-      margin: 4px 8px 0;
+      padding: 10px 4px 6px;
+      margin: 10px 4px 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
 
       i {
         float: none;
         margin-right: 0;
-        font-size: 18px;
+        font-size: 20px;
         width: auto;
+        line-height: 1;
       }
 
       p {
-        display: none;
+        display: block;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.2;
+        height: auto;
+        margin-top: 4px;
+        text-align: center;
+        white-space: normal;
+        word-break: break-word;
+        max-width: 78px;
+        letter-spacing: 0;
       }
     }
 
     // In collapsed mode, reset active item to centered layout
     .nav li.active > a,
     .nav li.active .parent-menu-item {
-      margin-left: 8px;
-      padding-left: 10px;
+      margin-left: 4px;
+      padding-left: 4px;
       border-radius: 0;
     }
 
@@ -190,20 +202,20 @@
 /* Remove background highlighting - will use font color instead */
 
 .nav li a {
-  margin: 3px 10px 0;
+  margin: 1px 10px 0;
   border-radius: 0;
   // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: uppercase;
-  line-height: 28px;
+  font-weight: 400;
+  font-size: 13.5px;
+  text-transform: none;
+  line-height: 24px;
   opacity: 0.55;
   position: relative;
-  padding: 11px 16px;
-  letter-spacing: 0.5px;
+  padding: 7px 16px;
+  letter-spacing: 0.2px;
   transition: background 0.15s ease, opacity 0.15s ease;
 }
 
@@ -234,21 +246,21 @@
 }
 
 .nav li a i {
-  font-size: 20px;
+  font-size: 17px;
   float: left;
-  margin-right: 14px;
-  line-height: 28px;
-  width: 24px;
+  margin-right: 12px;
+  line-height: 24px;
+  width: 20px;
   text-align: center;
   // Color is now set dynamically via [style.color] binding
 }
 
 .nav li a p {
   margin: 0;
-  line-height: 28px;
-  font-size: 13px;
-  height: 28px;
-  font-weight: 700;
+  line-height: 24px;
+  font-size: 13.5px;
+  height: 24px;
+  font-weight: 400;
   // Color is now set dynamically via [style.color] binding
 }
 
@@ -693,7 +705,7 @@
   ::ng-deep .dropdown-menu {
     position: fixed !important;
     top: auto !important;
-    left: 70px !important;
+    left: 86px !important;
     right: auto !important;
     width: 350px !important;
     min-width: 350px !important;
@@ -859,11 +871,11 @@
     transform: translateX(0) !important; // Always visible on desktop
 
     &.collapsed {
-      width: 70px;
+      width: 86px;
     }
 
     &.open:not(.collapsed) {
-      width: 300px;
+      width: 260px;
     }
 
     // Expanded sidebar: dropdown should break out and overflow into main panel
@@ -872,9 +884,9 @@
       ::ng-deep .dropdown-menu {
         position: fixed !important;
         left: 12px !important;
-        width: calc(300px - 24px) !important;
-        min-width: calc(300px - 24px) !important;
-        max-width: calc(300px - 24px) !important;
+        width: calc(260px - 24px) !important;
+        min-width: calc(260px - 24px) !important;
+        max-width: calc(260px - 24px) !important;
         max-height: 400px !important;
         z-index: 1050 !important;
         box-sizing: border-box !important;
@@ -898,7 +910,7 @@
 /* Flyout panel styles */
 .flyout-panel {
   position: fixed;
-  left: 70px;
+  left: 86px;
   width: 220px;
   background: #667eea;
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
@@ -964,7 +976,7 @@
 .flyout-backdrop {
   position: fixed;
   top: 0;
-  left: 70px;
+  left: 86px;
   right: 0;
   bottom: 0;
   z-index: 999;
@@ -977,23 +989,23 @@
 
   .submenu-arrow {
     position: absolute;
-    right: 16px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 9px;
-    opacity: 0.5;
+    font-size: 7px;
+    opacity: 0.45;
     transition: transform 0.2s ease, opacity 0.2s ease;
 
     &.rotated {
       transform: translateY(-50%) rotate(180deg);
-      opacity: 0.8;
+      opacity: 0.7;
     }
   }
 }
 
 .submenu {
   list-style: none;
-  padding: 4px 0;
+  padding: 0;
   margin: 0;
   max-height: 0;
   overflow: hidden;
@@ -1002,6 +1014,7 @@
 
   &.expanded {
     max-height: 400px;
+    padding: 4px 0;
   }
 
   li {

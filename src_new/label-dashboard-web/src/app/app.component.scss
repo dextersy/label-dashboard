@@ -87,15 +87,15 @@
 @media (min-width: 992px) {
   // Default state: sidebar collapsed (70px width)
   .wrapper {
-    margin-left: 70px !important;
-    width: calc(100% - 70px) !important;
+    margin-left: 86px !important;
+    width: calc(100% - 86px) !important;
     transition: margin-left 0.3s ease, width 0.3s ease;
   }
 
   // When sidebar is open/expanded: add full margin and constrain width
   .wrapper.sidebar-open {
-    margin-left: 300px !important;
-    width: calc(100% - 300px) !important;
+    margin-left: 260px !important;
+    width: calc(100% - 260px) !important;
   }
 }
 
