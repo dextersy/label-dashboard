@@ -923,14 +923,15 @@ div .table tbody {
       
       td {
         display: block;
+        font-size: 12px !important;
         border: none;
         background-color: transparent !important;
-        padding: 2px !important;
+        padding: 3px 2px !important;
         margin: 2px 0;
         text-align: left !important;
 
         &.card-header-cell {
-          font-size: 14px;
+          font-size: 14px !important;
           font-weight: 600;
           color: #1f2937;
           margin: -15px -15px 10px -15px;
@@ -942,36 +943,42 @@ div .table tbody {
           }
         }
 
-        &[data-label]:not([data-label=""]):before {
-          content: attr(data-label) ": ";
-          font-weight: 600;
-          color: #333;
-          display: inline-block;
-          min-width: 100px;
+        &[data-label]:not([data-label=""]):not(.card-header-cell):not(.cover-cell):not(.actions-cell) {
+          display: grid;
+          grid-template-columns: 50% 50%;
+          align-items: baseline;
+
+          &:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #333;
+            word-break: break-word;
+            padding-right: 8px;
+          }
         }
-        
+
         &:not([data-label]) {
           text-align: center !important;
         }
-        
+
         &.cover-cell {
           text-align: center !important;
           margin-bottom: 10px;
-          
+
           &:before {
             display: none;
           }
-          
+
           .cover-thumbnail {
             width: 60px;
             height: 60px;
           }
         }
-        
+
         &.actions-cell {
           text-align: center !important;
           padding-top: 10px;
-          
+
           &:before {
             display: none;
           }
