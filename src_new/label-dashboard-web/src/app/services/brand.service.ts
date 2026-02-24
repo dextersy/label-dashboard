@@ -81,6 +81,16 @@ export class BrandService {
     });
   }
 
+  static setCssVars(brandColor: string): void {
+    document.documentElement.style.setProperty('--brand-color', brandColor);
+    const hex = brandColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    document.documentElement.style.setProperty('--brand-color-text', luminance > 0.5 ? '#1a1a1a' : '#ffffff');
+  }
+
   getCurrentBrandSettings(): BrandSettings | null {
     return this.brandSettingsSubject.value;
   }

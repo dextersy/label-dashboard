@@ -402,11 +402,6 @@ input.material:not(:focus)::placeholder {
   }
 }
 
-.btn:disabled {
-  border: 1px solid #999999;
-  background-color: #cccccc;
-  color: #666666;
-}
 
 /* ================================= */
 /* UNIFIED LOADING OVERLAY SYSTEM    */
@@ -770,42 +765,6 @@ div .table tbody {
   }
 }
 
-/* Button styling in tables */
-.btn {
-  padding: 6px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  border-radius: 3px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  font-weight: 400;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  user-select: none;
-  
-  &.btn-primary {
-    color: #fff;
-    background-color: #337ab7;
-    border-color: #2e6da4;
-    
-    &:hover {
-      background-color: #286090;
-      border-color: #204d74;
-    }
-  }
-  
-  &.btn-sm {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-  
-  i {
-    margin-right: 4px;
-  }
-}
 
 
 /* Image styling in tables */
