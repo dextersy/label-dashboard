@@ -31,22 +31,35 @@
     }
 
     .nav li a {
-      padding: 15px 10px;
-      margin: 5px 10px 0;
+      padding: 13px 10px;
+      margin: 4px 8px 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
       i {
         float: none;
         margin-right: 0;
-        font-size: 20px;
+        font-size: 18px;
         width: auto;
       }
 
       p {
         display: none;
       }
+    }
+
+    // In collapsed mode, reset active item to centered layout
+    .nav li.active > a,
+    .nav li.active .parent-menu-item {
+      margin-left: 8px;
+      padding-left: 10px;
+      border-radius: 0;
+    }
+
+    // Hide active bar in collapsed mode
+    .nav li.active::before {
+      display: none;
     }
 
     .parent-menu-item {
@@ -79,7 +92,7 @@
 
 .logo {
   position: relative;
-  padding: 15px 0;
+  padding: 24px 0 20px;
   z-index: 4;
   text-align: center;
   border: none !important;
@@ -120,32 +133,36 @@
   // Color is now set dynamically via [style.color] binding
 }
 
-// Workspace Indicator (subtle display under logo)
+// Workspace Indicator — bold uppercase label
 .workspace-indicator {
-  text-align: center;
-  padding: 0 15px 15px;
-  margin: 0 15px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 4px;
+  padding: 8px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   .workspace-icon {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-right: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-right: 8px;
   }
 
   .workspace-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 3px;
   }
 }
 
 // Collapsed sidebar - hide workspace name, show only icon
 .sidebar.collapsed:not(.open) {
   .workspace-indicator {
-    padding: 0 5px 10px;
-    margin: 0 10px 10px;
+    padding: 5px 8px;
+    margin: 8px 8px 12px;
 
     .workspace-icon {
       margin-right: 0;
@@ -173,30 +190,53 @@
 /* Remove background highlighting - will use font color instead */
 
 .nav li a {
-  margin: 5px 12px 0;
-  border-radius: 4px;
+  margin: 3px 10px 0;
+  border-radius: 0;
   // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
-  font-weight: 400;
+  font-weight: 700;
   font-size: 13px;
   text-transform: uppercase;
   line-height: 28px;
-  opacity: 0.7;
+  opacity: 0.55;
   position: relative;
-  padding: 10px 12px;
-  letter-spacing: 0.3px;
+  padding: 11px 16px;
+  letter-spacing: 0.5px;
+  transition: background 0.15s ease, opacity 0.15s ease;
 }
 
 .nav li a:hover {
-  opacity: 1;
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Active item — bold left-edge accent bar */
+.nav li.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Active item — bright and readable */
+.nav li.active > a,
+.nav li.active .parent-menu-item {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.14);
+  margin-left: 0;
+  padding-left: 20px;
+  border-radius: 0;
 }
 
 .nav li a i {
   font-size: 20px;
   float: left;
-  margin-right: 12px;
+  margin-right: 14px;
   line-height: 28px;
   width: 24px;
   text-align: center;
@@ -208,11 +248,8 @@
   line-height: 28px;
   font-size: 13px;
   height: 28px;
+  font-weight: 700;
   // Color is now set dynamically via [style.color] binding
-}
-
-.nav li a:hover {
-  opacity: 1;
 }
 
 /* Mobile responsive styles */
@@ -227,12 +264,12 @@
   }
 }
 
-/* Section divider - visual separation between nav sections */
+/* Section divider - gradient fade line */
 .section-divider {
   display: block;
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 12px 12px 16px 12px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  margin: 16px 8px 20px;
   padding: 0;
   list-style: none;
 }
@@ -937,55 +974,70 @@
 /* Submenu styles */
 .parent-menu-item {
   position: relative;
-  
+
   .submenu-arrow {
     position: absolute;
-    right: 20px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 10px;
-    transition: transform 0.2s ease;
-    
+    font-size: 9px;
+    opacity: 0.5;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+
     &.rotated {
       transform: translateY(-50%) rotate(180deg);
+      opacity: 0.8;
     }
   }
 }
 
 .submenu {
   list-style: none;
-  padding: 0;
+  padding: 4px 0;
   margin: 0;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-  background: rgba(0, 0, 0, 0.05);
-  
+  background: transparent;
+
   &.expanded {
-    max-height: 400px; // Adjust based on expected number of submenu items
+    max-height: 400px;
   }
-  
+
   li {
     width: 100%;
-    // Remove background highlighting for active submenu items
+    position: relative;
+
+    // Left track line
+    &::before {
+      content: '';
+      position: absolute;
+      left: 31px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.12);
+    }
   }
-  
+
   .submenu-item {
     margin: 0;
-    padding: 5px 12px 5px 52px !important;
-    border-radius: 3px;
+    padding: 4px 12px 4px 54px !important;
+    border-radius: 0;
     display: block;
     text-decoration: none;
     font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
     font-weight: 400;
     font-size: 12px;
-    text-transform: none;
+    text-transform: none !important;
+    letter-spacing: 0;
     line-height: 20px;
-    opacity: 0.7;
-    transition: all 0.2s ease;
+    opacity: 0.5;
+    transition: all 0.15s ease;
 
     &:hover {
-      opacity: 1;
+      opacity: 0.85;
+      background: rgba(255, 255, 255, 0.07);
     }
 
     span {
