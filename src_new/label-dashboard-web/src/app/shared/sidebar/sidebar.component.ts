@@ -466,8 +466,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private applyBrandSettings(settings: BrandSettings): void {
     this.brandLogo = settings.logo_url || 'assets/img/Your Logo Here.png';
     this.brandWebsite = settings.brand_website || '#';
-    this.brandColor = settings.brand_color; // Use the actual hex color from the API
-    this.updateTextColorsBasedOnBrightness();
+    this.brandColor = '#e8ecef'; // Fixed light gray sidebar background
+    this.textColor = '#495057';
+    this.iconColor = '#6c757d';
+    this.activeColor = settings.brand_color; // Brand color used for active item highlighting
   }
 
   private updateTextColorsBasedOnBrightness(): void {

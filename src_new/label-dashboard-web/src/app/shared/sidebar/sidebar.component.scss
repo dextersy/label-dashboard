@@ -55,8 +55,6 @@
     // In collapsed mode, reset active item to centered layout
     .nav li.active > a,
     .nav li.active .parent-menu-item {
-      margin-left: 4px;
-      padding-left: 4px;
       border-radius: 0;
     }
 
@@ -88,42 +86,32 @@
   z-index: 4;
 }
 
-// Workspace Indicator — bold uppercase label
+// Workspace watermark — subtle label pinned to the bottom of the sidebar
 .workspace-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px 0 4px;
-  padding: 8px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 7px;
+  padding: 16px 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
 
   .workspace-icon {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.5);
-    margin-right: 8px;
+    font-size: 18px;
+    color: #adb5bd;
   }
 
   .workspace-name {
-    font-size: 10px;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 18px;
+    font-weight: 600;
+    color: #adb5bd;
     text-transform: uppercase;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
   }
 }
 
-// Collapsed sidebar - hide workspace name, show only icon
+// Collapsed sidebar — icon only
 .sidebar.collapsed:not(.open) {
   .workspace-indicator {
-    padding: 5px 8px;
-    margin: 8px 8px 12px;
-
-    .workspace-icon {
-      margin-right: 0;
-      font-size: 16px;
-    }
-
     .workspace-name {
       display: none;
     }
@@ -183,8 +171,6 @@
 .nav li.active .parent-menu-item {
   opacity: 1 !important;
   background: rgba(255, 255, 255, 0.14);
-  margin-left: 0;
-  padding-left: 20px;
   border-radius: 0;
 }
 

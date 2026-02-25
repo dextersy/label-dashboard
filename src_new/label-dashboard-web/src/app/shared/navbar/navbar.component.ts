@@ -119,7 +119,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private applyBrandSettings(settings: BrandSettings): void {
     this.brandLogo = settings.logo_url || '';
     this.brandWebsite = settings.brand_website || '#';
-    this.navbarBg = this.darkenColor(settings.brand_color || '#333333', 0.25);
+    this.navbarBg = this.darkenColor(settings.brand_color || '#333333', 0.45);
   }
 
   private darkenColor(hexColor: string, amount: number): string {
