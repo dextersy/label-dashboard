@@ -1,62 +1,16 @@
 <div class="row">
   <div class="col-md-8">
-    <div class="card">
-      <div class="card-header">
-        <h5>Financial Documents</h5>
-      </div>
-      <div class="card-body">
-        <div *ngIf="documents.length === 0" class="text-center py-5">
-          <i class="far fa-file fa-3x text-muted mb-3"></i>
-          <p class="text-muted">No documents uploaded yet.</p>
-        </div>
-        
-        <div *ngIf="documents.length > 0" class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th style="width: 50px;"></th>
-                <th>Document Title</th>
-                <th>Upload Date</th>
-                <th style="width: 120px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let document of documents" 
-                  (dblclick)="openDocument(document)" 
-                  style="cursor: pointer;"
-                  title="Double-click to view document">
-                <td class="text-center" data-label="">
-                  <i [class]="'fa ' + getFileIcon(document.filename)"></i>
-                </td>
-                <td data-label="Document Title">
-                  <strong>{{ document.title }}</strong><br>
-                  <small class="text-muted">{{ document.filename }}</small>
-                </td>
-                <td data-label="Upload Date">{{ formatDate(document.upload_date) }}</td>
-                <td data-label="Actions">
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button 
-                      type="button" 
-                      class="btn btn-secondary btn-sm"
-                      (click)="openDocument(document)"
-                      title="View document">
-                      <i class="fa fa-eye"></i>
-                    </button>
-                    <button 
-                      type="button" 
-                      class="btn btn-danger btn-sm"
-                      (click)="deleteDocument(document.id)"
-                      title="Delete document">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <app-paginated-table
+      title="Financial Documents"
+      [data]="documents"
+      [pagination]="null"
+      [loading]="false"
+      [columns]="docColumns"
+      [showSearch]="false"
+      [showSortableHeaders]="true"
+      [showActionsColumn]="true"
+      [actions]="docActions">
+    </app-paginated-table>
   </div>
   
   <div class="col-md-4">
