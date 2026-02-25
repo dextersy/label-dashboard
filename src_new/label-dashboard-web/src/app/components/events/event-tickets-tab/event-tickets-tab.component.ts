@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
 import { environment } from '../../../../environments/environment';
 import { TransferTicketModalComponent, TransferData } from '../transfer-ticket-modal/transfer-ticket-modal.component';
@@ -71,11 +71,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   // Table configuration
   tableColumns: TableColumn[] = [
+    { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true, cardHeader: true },
     { key: 'name', label: 'Name', searchable: true, sortable: true },
     { key: 'email_address', label: 'Email Address', searchable: true, sortable: true },
     { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
-    { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true },
     { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
     { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
     { key: 'platform_fee', label: 'Platform Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getPlatformFee(item) > 0 ? this.formatCurrency(this.getPlatformFee(item)) : '-' },
@@ -83,6 +83,34 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
     { key: 'date_paid', label: 'Date Paid', sortable: true, type: 'date', formatter: (item) => item.date_paid ? new Date(item.date_paid).toLocaleString() : '-' },
     { key: 'claimed_status', label: 'Claimed', sortable: false, formatter: (item) => `${item.number_of_claimed_entries} / ${item.number_of_entries}` },
+  ];
+
+  ticketActions: TableAction[] = [
+    {
+      icon: 'fa-solid fa-envelope',
+      label: 'Resend',
+      hidden: (item) => !this.isTicketResendable(item),
+      handler: (item) => this.onResendTicket(item.id)
+    },
+    {
+      icon: 'fa-solid fa-right-left',
+      label: 'Transfer',
+      hidden: (item) => !this.isTicketTransferable(item),
+      handler: (item) => this.onTransferTicket(item)
+    },
+    {
+      icon: 'fa-solid fa-rotate-left',
+      label: 'Refund',
+      hidden: (item) => !this.isTicketRefundable(item),
+      handler: (item) => this.onRefundTicket(item.id)
+    },
+    {
+      icon: 'fa-solid fa-ban',
+      label: 'Cancel',
+      type: 'danger',
+      hidden: (item) => !this.isTicketCancellable(item),
+      handler: (item) => this.onCancelTicket(item.id)
+    }
   ];
 
   private subscriptions = new Subscription();

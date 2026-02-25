@@ -1,7 +1,7 @@
 <div class="event-selection-container">
   <div class="event-selection-row">
     <div class="dropdown" [class.open]="isDropdownOpen">
-    <button class="btn btn-default event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+    <button class="btn btn-secondary event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
       <div class="event-info" *ngIf="selectedEvent">
         <div class="event-poster">
           <img *ngIf="selectedEvent.poster_url; else defaultPoster" 
@@ -65,7 +65,7 @@
             (click)="$event.stopPropagation()"
             #searchInput>
           <button 
-            class="btn btn-link search-clear" 
+            class="btn btn-ghost search-clear" 
             *ngIf="searchTerm"
             (click)="clearSearch(); $event.stopPropagation()">
             <i class="fa fa-times"></i>

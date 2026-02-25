@@ -38,7 +38,7 @@
       </div>
       
       <button type="button" 
-              class="btn btn-primary upload-btn" 
+              class="btn btn-primary" 
               (click)="uploadPhotos()"
               [disabled]="!selectedFiles || selectedFiles.length === 0 || uploading">
         <div class="loading-spinner" *ngIf="uploading"></div>
@@ -55,15 +55,15 @@
       <div class="filter-controls">
         <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn btn-outline-secondary" for="epkFilterAll">All</label>
+          <label class="btn btn-secondary" for="epkFilterAll">All</label>
 
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn btn-outline-info" for="epkFilterVisible">
+          <label class="btn btn-secondary" for="epkFilterVisible">
             <i class="fa fa-globe"></i> Visible in EPK
           </label>
 
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn btn-outline-warning" for="epkFilterHidden">
+          <label class="btn btn-secondary" for="epkFilterHidden">
             <i class="fa fa-eye-slash"></i> Hidden from EPK
           </label>
         </div>
@@ -106,29 +106,29 @@
             
             <div class="photo-overlay">
               <div class="photo-actions">
-                <button class="btn btn-sm btn-info btn-icon-only" 
+                <button class="btn btn-sm btn-secondary btn-icon" 
                         (click)="openLightbox(photo)"
                         title="View photo">
                   <i class="fa fa-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-info btn-icon-only" 
+                <button class="btn btn-sm btn-secondary btn-icon" 
                         (click)="setAsProfilePhoto(photo)"
                         title="Set as profile photo">
                   <i class="fa fa-user"></i>
                 </button>
-                <button class="btn btn-sm btn-icon-only" 
-                        [ngClass]="photo.exclude_from_epk ? 'btn-warning' : 'btn-info'"
+                <button class="btn btn-sm btn-icon" 
+                        [ngClass]="photo.exclude_from_epk ? 'btn-secondary' : 'btn-secondary'"
                         (click)="toggleExcludeFromEPK(photo)"
                         [title]="photo.exclude_from_epk ? 'Excluded from EPK (click to include)' : 'Included in EPK (click to exclude)'">
                   <i class="fa" [ngClass]="photo.exclude_from_epk ? 'fa-eye-slash' : 'fa-globe'"></i>
                 </button>
-                <button class="btn btn-sm btn-info btn-icon-only" 
+                <button class="btn btn-sm btn-secondary btn-icon" 
                         (click)="startEditingCaption(photo)"
                         *ngIf="!editingCaptions[photo.id]"
                         title="Edit caption">
                   <i class="fa fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-danger btn-icon-only" 
+                <button class="btn btn-sm btn-danger btn-icon" 
                         (click)="deletePhoto(photo)"
                         title="Delete photo">
                   <i class="fa fa-trash"></i>
@@ -150,7 +150,7 @@
                         placeholder="Enter photo caption..."
                         rows="2"></textarea>
               <div class="caption-actions">
-                <button class="btn btn-sm btn-success" 
+                <button class="btn btn-sm btn-primary" 
                         (click)="saveCaption(photo)">
                   <i class="fa fa-check"></i> Save
                 </button>

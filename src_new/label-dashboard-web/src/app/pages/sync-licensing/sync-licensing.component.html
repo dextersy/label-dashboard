@@ -1,4 +1,8 @@
 <div class="container-fluid py-4">
+  <div class="page-header mb-3">
+    <app-breadcrumb></app-breadcrumb>
+  </div>
+
   <div class="row mb-4">
     <div class="col">
       <h2 class="mb-0">Sync Licensing</h2>
@@ -14,7 +18,7 @@
     [loading]="loading"
     [columns]="pitchColumns"
     [showSortableHeaders]="true"
-    [showActionsColumn]="true"
+    [actions]="pitchActions"
     [showSearch]="true"
     [sortInfo]="currentSort"
     (pageChange)="onPageChange($event)"
@@ -23,22 +27,6 @@
     <ng-template #customButtons>
       <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
         <i class="fas fa-plus me-2"></i>New Pitch
-      </button>
-    </ng-template>
-    <ng-template #actionsContent let-pitch let-disabled="disabled">
-      <button #downloadBtn class="btn btn-sm btn-link text-secondary p-1" type="button"
-              (click)="toggleDownloadDropdown($event, pitch.id, downloadBtn)"
-              [disabled]="!pitch.songs?.length || isDownloading(pitch.id) || disabled">
-        <i class="fas fa-spinner fa-spin me-1" *ngIf="isDownloading(pitch.id)"></i>
-        <i class="fas fa-download me-1" *ngIf="!isDownloading(pitch.id)"></i>
-        Download
-        <i class="fas fa-caret-down ms-1"></i>
-      </button>
-      <button class="btn btn-sm btn-link text-primary p-1" (click)="openEditModal(pitch)" title="Edit" [disabled]="disabled">
-        <i class="fas fa-edit"></i>
-      </button>
-      <button class="btn btn-sm btn-link text-danger p-1" (click)="deletePitch(pitch)" title="Delete" [disabled]="disabled">
-        <i class="fas fa-trash"></i>
       </button>
     </ng-template>
   </app-paginated-table>
@@ -74,7 +62,7 @@
           <div class="mb-3">
             <div class="input-group">
               <input type="text" class="form-control" [(ngModel)]="songSearchQuery" (input)="searchSongs()" placeholder="Search songs to add...">
-              <button class="btn btn-outline-secondary" type="button" [disabled]="searchingSongs">
+              <button class="btn btn-secondary" type="button" [disabled]="searchingSongs">
                 <i class="fas fa-search" *ngIf="!searchingSongs"></i>
                 <i class="fas fa-spinner fa-spin" *ngIf="searchingSongs"></i>
               </button>
@@ -116,7 +104,7 @@
                     </small>
                   </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-link text-danger p-1" (click)="removeSong(song)">
+                <button type="button" class="btn btn-sm btn-ghost text-danger p-1" (click)="removeSong(song)">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
@@ -141,14 +129,4 @@
 </div>
 <div class="modal-backdrop fade" [class.show]="showPitchModal" *ngIf="showPitchModal"></div>
 
-<!-- Download Dropdown (rendered outside table to avoid overflow clipping) -->
-<div *ngIf="openDownloadDropdownId !== null && dropdownPosition"
-     class="download-dropdown"
-     [style.top.px]="dropdownPosition.top"
-     [style.right.px]="dropdownPosition.right">
-  <a class="download-dropdown-item" href="javascript:void(0)" (click)="downloadMastersById(); closeDownloadDropdown()"><i class="fas fa-music me-2"></i>Masters</a>
-  <a class="download-dropdown-item" href="javascript:void(0)" (click)="downloadLyricsById(); closeDownloadDropdown()"><i class="fas fa-file-alt me-2"></i>Lyrics</a>
-  <a class="download-dropdown-item" href="javascript:void(0)" (click)="downloadBSheetById(); closeDownloadDropdown()"><i class="fas fa-file-excel me-2"></i>B-Sheet</a>
-  <hr class="download-dropdown-divider">
-  <a class="download-dropdown-item" href="javascript:void(0)" (click)="downloadAllById(); closeDownloadDropdown()"><i class="fas fa-file-archive me-2"></i>All</a>
-</div>
+

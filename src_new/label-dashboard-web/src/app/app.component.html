@@ -13,12 +13,12 @@
   </div>
 
   <ng-template #layoutTemplate>
+    <app-navbar></app-navbar>
+
     <div class="wrapper" [class.sidebar-open]="sidebarOpen">
       <app-sidebar></app-sidebar>
 
       <div class="main-panel">
-        <app-navbar></app-navbar>
-
         <!-- App notifications - shown throughout the app -->
         <app-notification-banner></app-notification-banner>
 

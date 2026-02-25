@@ -9,7 +9,7 @@
     [showSearch]="true"
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
-    [showActionsColumn]="isAdmin"
+    [actions]="isAdmin ? ticketActions : []"
     [bulkOperationsLoading]="bulkOperationsLoading"
     [rowClassGetter]="getRowClass.bind(this)"
     (pageChange)="onPageChange($event)"
@@ -23,7 +23,7 @@
         [title]="getCustomTicketButtonTooltip()"
         *ngIf="isAdmin">
         <button 
-          class="btn btn-sm btn-outline-primary" 
+          class="btn btn-sm btn-secondary" 
           (click)="onCreateCustomTicket()"
           [disabled]="loading || !canCreateCustomTickets()">
           <i class="fa fa-plus me-1"></i>
@@ -31,7 +31,7 @@
         </button>
       </span>
       <button 
-        class="btn btn-sm btn-outline-primary flex-shrink-0" 
+        class="btn btn-sm btn-secondary flex-shrink-0" 
         (click)="onDownloadCSV()"
         *ngIf="isAdmin"
         [disabled]="loading">
@@ -40,43 +40,6 @@
       </button>
     </ng-template>
     
-    <!-- Actions template -->
-    <ng-template #actionsContent let-ticket let-disabled="disabled">
-      <div class="btn-group" role="group">
-        <button
-          class="btn btn-sm btn-outline-primary"
-          (click)="onResendTicket(ticket.id)"
-          [disabled]="disabled"
-          *ngIf="isTicketResendable(ticket)"
-          title="Resend ticket">
-          Resend
-        </button>
-        <button
-          class="btn btn-sm btn-outline-info"
-          (click)="onTransferTicket(ticket)"
-          [disabled]="disabled"
-          *ngIf="isTicketTransferable(ticket)"
-          title="Transfer ticket to another person">
-          Transfer
-        </button>
-        <button
-          class="btn btn-sm btn-outline-warning"
-          (click)="onRefundTicket(ticket.id)"
-          [disabled]="disabled"
-          *ngIf="isTicketRefundable(ticket)"
-          title="Refund ticket and return payment to customer">
-          Refund
-        </button>
-        <button
-          class="btn btn-sm btn-outline-danger"
-          (click)="onCancelTicket(ticket.id)"
-          [disabled]="disabled"
-          *ngIf="isTicketCancellable(ticket)"
-          title="Cancel ticket">
-          Cancel
-        </button>
-      </div>
-    </ng-template>
   </app-paginated-table>
 
   <!-- Summary Footer - Matching PHP layout -->

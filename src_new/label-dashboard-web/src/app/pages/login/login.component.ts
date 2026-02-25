@@ -90,7 +90,7 @@ export class LoginComponent implements OnInit {
     this.brandId = brandSettings.id;
     
     // Apply brand styling to the page
-    document.documentElement.style.setProperty('--brand-color', this.brandColor);
+    BrandService.setCssVars(this.brandColor);
     document.title = `${this.brandName} - Login`;
   }
 

@@ -5,7 +5,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">Artists & Royalty Splits</h5>
         <button type="button"
-                class="btn btn-sm btn-outline-primary"
+                class="btn btn-sm btn-secondary"
                 (click)="addRoyaltyArtistFromUI()"
                 [disabled]="loadingArtists || !canModifyArtists">
           <i class="fa fa-plus"></i> Add Artist
@@ -93,7 +93,7 @@
               </div>
               <div class="col-md-1">
                 <button type="button"
-                        class="btn btn-sm btn-outline-danger"
+                        class="btn btn-sm btn-danger"
                         (click)="removeRoyaltyArtist(i)"
                         [disabled]="royaltyArtists.length <= 1 || !canModifyArtists"
                         title="Remove Artist">

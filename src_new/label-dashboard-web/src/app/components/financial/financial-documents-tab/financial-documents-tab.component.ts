@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Document } from '../../../pages/financial/financial.component';
 import { DocumentViewerComponent } from '../../shared/document-viewer/document-viewer.component';
+import { PaginatedTableComponent, TableAction, TableColumn } from '../../shared/paginated-table/paginated-table.component';
 
 @Component({
     selector: 'app-financial-documents-tab',
-    imports: [CommonModule, FormsModule, DocumentViewerComponent],
+    imports: [CommonModule, FormsModule, DocumentViewerComponent, PaginatedTableComponent],
     templateUrl: './financial-documents-tab.component.html',
     styleUrl: './financial-documents-tab.component.scss'
 })
@@ -21,6 +22,52 @@ export class FinancialDocumentsTabComponent {
   // Document viewer state
   selectedDocument: Document | null = null;
   showDocumentViewer: boolean = false;
+
+  get docColumns(): TableColumn[] {
+    return [
+      {
+        key: 'filename',
+        label: '',
+        hideDataLabel: true,
+        renderHtml: true,
+        formatter: (doc: Document) => {
+          const icon = this.getFileIcon(doc.filename);
+          return `<i class="fa ${icon} fa-lg"></i>`;
+        }
+      },
+      {
+        key: 'title',
+        label: 'Document Title',
+        cardHeader: true,
+        renderHtml: true,
+        formatter: (doc: Document) => {
+          return `<strong>${doc.title}</strong><br><small class="text-muted">${doc.filename}</small>`;
+        }
+      },
+      {
+        key: 'upload_date',
+        label: 'Upload Date',
+        searchable: false,
+        formatter: (doc: Document) => this.formatDate(doc.upload_date)
+      }
+    ];
+  }
+
+  get docActions(): TableAction[] {
+    return [
+      {
+        icon: 'fa-solid fa-eye',
+        label: 'View',
+        handler: (doc: Document) => this.openDocument(doc)
+      },
+      {
+        icon: 'fa-solid fa-trash',
+        label: 'Delete',
+        type: 'danger',
+        handler: (doc: Document) => this.deleteDocument(doc.id)
+      }
+    ];
+  }
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-PH');

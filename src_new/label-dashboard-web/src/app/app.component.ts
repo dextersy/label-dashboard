@@ -156,7 +156,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private applyBrandStyling(brandSettings: any): void {
     // Apply brand color as CSS custom property
     if (brandSettings.brand_color) {
-      document.documentElement.style.setProperty('--brand-color', brandSettings.brand_color);
+      BrandService.setCssVars(brandSettings.brand_color);
     }
 
     // Update page title

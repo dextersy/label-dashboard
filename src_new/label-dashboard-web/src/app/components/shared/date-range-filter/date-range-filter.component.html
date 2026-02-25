@@ -5,7 +5,7 @@
     <div class="row align-items-center date-range-header">
       <div class="col-lg-8 col-md-8" [class.col-8]="compact">
         <div class="d-flex align-items-center">
-          <button class="btn btn-link btn-sm text-decoration-none p-0 me-3" 
+          <button class="btn btn-ghost btn-sm text-decoration-none p-0 me-3" 
                   (click)="toggleExpanded()"
                   [title]="isExpanded ? 'Collapse date range options' : 'Expand date range options'">
             <i class="fa fa-calendar me-1"></i>
@@ -33,7 +33,7 @@
               <small>Compare</small>
             </label>
           </div>
-          <button class="btn btn-outline-primary btn-sm me-2" 
+          <button class="btn btn-secondary btn-sm me-2" 
                   (click)="onRefresh()" 
                   [disabled]="loading"
                   [title]="loading ? 'Refreshing data...' : 'Refresh data'">
@@ -41,7 +41,7 @@
             <span class="ms-1 d-none d-md-inline">Refresh</span>
           </button>
           <div class="dropdown" *ngIf="showExport && !compact">
-            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+            <button class="btn btn-secondary btn-sm dropdown-toggle" 
                     type="button" 
                     data-bs-toggle="dropdown">
               <i class="fa fa-download"></i>
@@ -67,7 +67,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'today'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'today'"
+                    [class.btn-secondary]="selectedPreset !== 'today'"
                     (click)="applyDatePreset('today')">
               Today
             </button>
@@ -75,7 +75,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'yesterday'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'yesterday'"
+                    [class.btn-secondary]="selectedPreset !== 'yesterday'"
                     (click)="applyDatePreset('yesterday')">
               Yesterday
             </button>
@@ -83,7 +83,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'last7days'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'last7days'"
+                    [class.btn-secondary]="selectedPreset !== 'last7days'"
                     (click)="applyDatePreset('last7days')">
               Last 7 days
             </button>
@@ -91,7 +91,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'last30days'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'last30days'"
+                    [class.btn-secondary]="selectedPreset !== 'last30days'"
                     (click)="applyDatePreset('last30days')">
               Last 30 days
             </button>
@@ -99,7 +99,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'thismonth'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'thismonth'"
+                    [class.btn-secondary]="selectedPreset !== 'thismonth'"
                     (click)="applyDatePreset('thismonth')">
               This month
             </button>
@@ -107,7 +107,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'lastmonth'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'lastmonth'"
+                    [class.btn-secondary]="selectedPreset !== 'lastmonth'"
                     (click)="applyDatePreset('lastmonth')">
               Last month
             </button>
@@ -115,7 +115,7 @@
                     class="btn" 
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'alltime'"
-                    [class.btn-outline-secondary]="selectedPreset !== 'alltime'"
+                    [class.btn-secondary]="selectedPreset !== 'alltime'"
                     (click)="applyDatePreset('alltime')">
               All Time
             </button>

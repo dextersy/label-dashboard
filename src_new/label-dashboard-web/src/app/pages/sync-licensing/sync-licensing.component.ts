@@ -5,12 +5,13 @@ import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-sync-licensing',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent, BreadcrumbComponent],
   templateUrl: './sync-licensing.component.html',
   styleUrl: './sync-licensing.component.scss'
 })
@@ -31,7 +32,8 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       searchable: true,
       sortable: true,
       renderHtml: true,
-      formatter: (pitch: any) => `<strong>${this.escapeHtml(pitch.title)}</strong>`
+      formatter: (pitch: any) => `<strong>${this.escapeHtml(pitch.title)}</strong>`,
+      cardHeader: true
     },
     {
       key: 'description',
@@ -100,6 +102,44 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   songSearchQuery = '';
   songSearchResults: SongForPitch[] = [];
   searchingSongs = false;
+
+  pitchActions: TableAction[] = [
+    {
+      icon: 'fas fa-music',
+      label: 'Download Masters',
+      hidden: (item) => !item.songs?.length,
+      handler: (item) => this.downloadMasters(item)
+    },
+    {
+      icon: 'fas fa-file-alt',
+      label: 'Download Lyrics',
+      hidden: (item) => !item.songs?.length,
+      handler: (item) => this.downloadLyrics(item)
+    },
+    {
+      icon: 'fas fa-file-excel',
+      label: 'Download B-Sheet',
+      hidden: (item) => !item.songs?.length,
+      handler: (item) => this.downloadBSheet(item)
+    },
+    {
+      icon: 'fas fa-file-archive',
+      label: 'Download All',
+      hidden: (item) => !item.songs?.length,
+      handler: (item) => this.downloadAll(item)
+    },
+    {
+      icon: 'fas fa-edit',
+      label: 'Edit',
+      handler: (item) => this.openEditModal(item)
+    },
+    {
+      icon: 'fas fa-trash',
+      label: 'Delete',
+      type: 'danger',
+      handler: (item) => this.deletePitch(item)
+    }
+  ];
 
   // Download state - tracks which pitch/type combinations are currently downloading
   private downloadingSet = new Set<string>();

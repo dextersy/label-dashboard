@@ -402,11 +402,6 @@ input.material:not(:focus)::placeholder {
   }
 }
 
-.btn:disabled {
-  border: 1px solid #999999;
-  background-color: #cccccc;
-  color: #666666;
-}
 
 /* ================================= */
 /* UNIFIED LOADING OVERLAY SYSTEM    */
@@ -611,7 +606,7 @@ h6 {
 
   html.nav-open {
     .main-panel {
-      transform: translateX(-300px);
+      transform: translateX(-260px);
     }
 
     body {
@@ -628,7 +623,7 @@ h6 {
   }
   
   .main-panel {
-    transform: translateX(0px) !important;
+    transform: none !important;
   }
   
   #bodyClick {
@@ -642,10 +637,15 @@ h6 {
 
 /* Global table container styling */
 .table-responsive {
-  border: 1px solid #dee2e6;
+  border: none;
   border-radius: 4px;
-  overflow: hidden;
   background-color: #fff;
+}
+
+/* Strip Bootstrap 5's per-cell border-bottom from tbody */
+.table > tbody > tr > td,
+.table > tbody > tr > th {
+  border-bottom-width: 0 !important;
 }
 
 /* Modern table styling - applies to all tables with stronger specificity */
@@ -658,16 +658,16 @@ div .table {
   
   /* Header styling */
   thead {
-    background-color: #f8f9fa !important;
-    
+    background-color: transparent !important;
+
     th {
       border-bottom: 2px solid #dee2e6 !important;
       padding: 12px 15px !important;
-      font-weight: 600 !important;
-      color: #495057 !important;
+      font-weight: 400 !important;
+      color: #9ca3af !important;
       font-size: 14px !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
+      text-transform: none !important;
+      letter-spacing: 0.2px !important;
       vertical-align: middle !important;
     }
   }
@@ -678,12 +678,17 @@ div .table {
 .table-responsive .table thead th,
 .card .table thead th,
 div .table thead th {
-  background-color: #f8f9fa !important;
-  color: #495057 !important;
-  font-weight: 600 !important;
+  background-color: transparent !important;
+  color: #9ca3af !important;
+  font-weight: 400 !important;
   font-size: 14px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
+  text-transform: none !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Override legacy light-bootstrap-dashboard sidebar nav uppercase */
+.sidebar .nav p {
+  text-transform: none !important;
 }
 
 /* Body styling for all tables */
@@ -692,23 +697,21 @@ div .table thead th {
 .card .table tbody,
 div .table tbody {
     tr {
-      border-bottom: 1px solid #dee2e6 !important;
+      border-bottom: none !important;
       transition: background-color 0.2s ease;
-      
+
       &:hover {
         background-color: #f8f9fa !important;
       }
-      
-      &:last-child {
-        border-bottom: none !important;
-      }
     }
-    
+
     td {
       padding: 15px !important;
       vertical-align: middle !important;
       font-size: 14px !important;
       color: #495057 !important;
+      border-bottom: none !important;
+      border-top: none !important;
       
       /* Text alignment utilities */
       &.text-center {
@@ -770,42 +773,6 @@ div .table tbody {
   }
 }
 
-/* Button styling in tables */
-.btn {
-  padding: 6px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  border-radius: 3px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  font-weight: 400;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  user-select: none;
-  
-  &.btn-primary {
-    color: #fff;
-    background-color: #337ab7;
-    border-color: #2e6da4;
-    
-    &:hover {
-      background-color: #286090;
-      border-color: #204d74;
-    }
-  }
-  
-  &.btn-sm {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-  
-  i {
-    margin-right: 4px;
-  }
-}
 
 
 /* Image styling in tables */
@@ -817,6 +784,39 @@ div .table tbody {
     border-radius: 4px;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  &.release-cover-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+}
+
+/* Combined release cell (cover art + title + description) */
+.release-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 576px) {
+  .release-cell {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    .release-cover-thumbnail {
+      width: 200px !important;
+      height: 200px !important;
+    }
+
+    .release-cell-text {
+      text-align: center;
+    }
   }
 }
 
@@ -932,56 +932,91 @@ div .table tbody {
     tbody {
       tr {
         display: block;
-        border: 1px solid #ddd;
+        position: relative;
+        border: 1px solid #ddd !important;
         border-radius: 4px;
         margin-bottom: 10px;
         padding: 15px;
         background-color: #fff;
         width: 100%;
         box-sizing: border-box;
-        
+
         &:hover {
           background-color: #f8f9fa;
         }
       }
+
+      // Kebab positioned in the card header area on mobile
+      .actions-column {
+        display: block !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        padding: 5px !important;
+        background: transparent !important;
+        border: none !important;
+      }
       
       td {
         display: block;
+        font-size: 12px !important;
         border: none;
-        padding: 2px !important;
+        background-color: transparent !important;
+        padding: 3px 2px !important;
         margin: 2px 0;
         text-align: left !important;
-        
-        &[data-label]:not([data-label=""]):before {
-          content: attr(data-label) ": ";
+
+        &.card-header-cell {
+          font-size: 14px !important;
           font-weight: 600;
-          color: #333;
-          display: inline-block;
-          min-width: 100px;
+          color: #1f2937;
+          margin: -15px -15px 10px -15px;
+          padding: 10px 45px 10px 15px !important;
+          border-bottom: 1px solid #ddd !important;
+
+          &:before {
+            display: none !important;
+          }
         }
-        
+
+        &[data-label]:not([data-label=""]):not(.card-header-cell):not(.cover-cell):not(.actions-cell) {
+          display: grid;
+          grid-template-columns: 50% 50%;
+          align-items: baseline;
+
+          &:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #333;
+            word-break: break-word;
+            padding-right: 8px;
+          }
+        }
+
         &:not([data-label]) {
           text-align: center !important;
         }
-        
+
         &.cover-cell {
           text-align: center !important;
           margin-bottom: 10px;
-          
+
           &:before {
             display: none;
           }
-          
+
           .cover-thumbnail {
             width: 60px;
             height: 60px;
           }
         }
-        
+
         &.actions-cell {
           text-align: center !important;
           padding-top: 10px;
-          
+
           &:before {
             display: none;
           }

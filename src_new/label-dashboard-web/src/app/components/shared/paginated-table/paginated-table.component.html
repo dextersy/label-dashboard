@@ -9,21 +9,13 @@
             <ng-container *ngIf="customButtons">
               <ng-container *ngTemplateOutlet="customButtons"></ng-container>
             </ng-container>
-            <button 
+            <button
               *ngIf="showSearch && columns.length > 0"
-              class="btn btn-sm btn-outline-primary flex-shrink-0"
+              class="btn btn-icon flex-shrink-0"
+              [class.search-active]="showSearchFilters"
               (click)="toggleSearchFilters()"
-              [title]="showSearchFilters ? 'Hide search filters' : 'Show search filters'">
-              <i class="fa fa-search"></i> 
-              {{ showSearchFilters ? 'Hide' : 'Search' }}
-            </button>
-            <button 
-              *ngIf="showSearch && columns.length > 0 && hasActiveFilters()"
-              class="btn btn-sm btn-outline-secondary flex-shrink-0"
-              (click)="clearFilters()"
-              title="Clear all filters">
-              <i class="fa fa-times"></i> 
-              <span class="d-none d-sm-inline">Clear</span>
+              title="Search">
+              <i class="fa fa-search"></i>
             </button>
           </div>
         </div>
@@ -37,53 +29,52 @@
         </div>
       </div>
       
-      <!-- Search filters row (collapsible) -->
-      <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="card-body border-bottom bg-light py-3">
-        <div class="d-flex flex-wrap gap-3 align-items-end search-filters-container">
+      <!-- Search bar -->
+      <div *ngIf="showSearch && columns.length > 0 && showSearchFilters" class="search-bar-panel">
+        <i class="fa fa-search search-bar-icon"></i>
+        <div class="search-fields-row">
           <div class="search-field" *ngFor="let column of columns" [hidden]="column.searchable === false">
-            <div class="form-group mb-0">
-              <label class="form-label small text-muted mb-1">{{ column.label }}</label>
-              
-              <!-- Text input -->
-              <input 
-                *ngIf="!column.type || column.type === 'text'"
-                type="text"
-                class="form-control form-control-sm"
-                [placeholder]="'Search...'"
-                [value]="searchFilters[column.key] || ''"
-                (input)="onFilterChange(column.key, $any($event.target).value)">
-              
-              <!-- Number input -->
-              <input 
-                *ngIf="column.type === 'number'"
-                type="number"
-                class="form-control form-control-sm"
-                [placeholder]="'Amount...'"
-                [value]="searchFilters[column.key] || ''"
-                (input)="onFilterChange(column.key, $any($event.target).value)">
-              
-              <!-- Date input -->
-              <input 
-                *ngIf="column.type === 'date'"
-                type="date"
-                class="form-control form-control-sm"
-                [value]="searchFilters[column.key] || ''"
-                (input)="onFilterChange(column.key, $any($event.target).value)">
-              
-              <!-- Select input -->
-              <select 
-                *ngIf="column.type === 'select'"
-                class="form-control form-control-sm"
-                [value]="searchFilters[column.key] || ''"
-                (change)="onFilterChange(column.key, $any($event.target).value)">
-                <option value="">All {{ column.label }}</option>
-                <option *ngFor="let option of column.options" [value]="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
+            <input
+              *ngIf="!column.type || column.type === 'text'"
+              type="text"
+              class="form-control form-control-sm"
+              [placeholder]="column.label"
+              [value]="searchFilters[column.key] || ''"
+              (input)="onFilterChange(column.key, $any($event.target).value)">
+
+            <input
+              *ngIf="column.type === 'number'"
+              type="number"
+              class="form-control form-control-sm"
+              [placeholder]="column.label"
+              [value]="searchFilters[column.key] || ''"
+              (input)="onFilterChange(column.key, $any($event.target).value)">
+
+            <input
+              *ngIf="column.type === 'date'"
+              type="date"
+              class="form-control form-control-sm"
+              [value]="searchFilters[column.key] || ''"
+              (input)="onFilterChange(column.key, $any($event.target).value)">
+
+            <select
+              *ngIf="column.type === 'select'"
+              class="form-control form-control-sm"
+              [value]="searchFilters[column.key] || ''"
+              (change)="onFilterChange(column.key, $any($event.target).value)">
+              <option value="">{{ column.label }}</option>
+              <option *ngFor="let option of column.options" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
           </div>
         </div>
+        <button *ngIf="hasActiveFilters()" type="button" class="btn btn-icon search-bar-clear" (click)="clearFilters()" title="Clear filters">
+          <i class="fa fa-filter-circle-xmark"></i>
+        </button>
+        <button type="button" class="btn btn-icon search-bar-close" (click)="toggleSearchFilters()" title="Hide search">
+          <i class="fa fa-times"></i>
+        </button>
       </div>
       <div class="card-body">
         <div *ngIf="loading" class="text-center p-4">
@@ -120,7 +111,7 @@
                        class="fa ms-1" 
                        [class]="getSortIcon(column)"></i>
                   </th>
-                  <th *ngIf="showActionsColumn" class="actions-column">Actions</th>
+                  <th *ngIf="hasActionsColumn()" class="actions-column"></th>
                 </tr>
               </thead>
               <tbody>
@@ -140,7 +131,7 @@
                         </ng-container>
                         <button 
                           type="button" 
-                          class="btn btn-sm btn-outline-secondary ms-2"
+                          class="btn btn-sm btn-secondary ms-2"
                           [disabled]="isOperationsDisabled()"
                           (click)="clearSelection()"
                           title="Clear selection">
@@ -160,17 +151,18 @@
                       [disabled]="isOperationsDisabled()"
                       (change)="onSelectItem(item, $any($event.target).checked)">
                   </td>
-                  <td *ngFor="let column of columns" 
+                  <td *ngFor="let column of columns"
                       [class]="getColumnClasses(column)"
+                      [class.card-header-cell]="column.cardHeader"
                       [style.text-align]="column.align || 'left'"
-                      [attr.data-label]="column.label">
+                      [attr.data-label]="column.hideDataLabel ? '' : column.label">
                     <!-- Payment link special handling -->
                     <span *ngIf="column.key === 'payment_link'">
                       <a 
                         [href]="item[column.key]" 
                         target="_blank" 
                         *ngIf="item[column.key]"
-                        class="btn btn-sm btn-outline-primary">
+                        class="btn btn-sm btn-secondary">
                         <i class="fas fa-external-link-alt"></i>
                       </a>
                       <span *ngIf="!item[column.key]" class="text-muted">-</span>
@@ -182,7 +174,7 @@
                     <!-- Earnings columns with breakdown buttons -->
                     <div *ngIf="column.showBreakdownButton" class="d-flex align-items-center justify-content-end">
                       <span class="me-2">{{ getColumnValue(item, column) }}</span>
-                      <button class="btn btn-sm btn-link text-muted p-1"
+                      <button class="btn btn-sm btn-ghost text-muted p-1"
                               (click)="onBreakdownButtonClick(item, column.key)"
                               title="View breakdown"
                               style="border: none; box-shadow: none;">
@@ -207,12 +199,18 @@
                       {{ getColumnValue(item, column) }}
                     </span>
                   </td>
-                  <td *ngIf="showActionsColumn" class="actions-column">
-                    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
+                  <td *ngIf="hasActionsColumn()" class="actions-column">
+                    <div class="kebab-container" (click)="$event.stopPropagation()">
+                      <button class="kebab-btn" type="button"
+                              (click)="toggleKebab(item, $event)"
+                              [class.active]="isKebabOpen(item)">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 <tr *ngIf="data.length === 0">
-                  <td [attr.colspan]="columns.length + (showActionsColumn ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="text-center">No data available.</td>
+                  <td [attr.colspan]="columns.length + (hasActionsColumn() ? 1 : 0) + (enableBulkOperations ? 1 : 0)" class="text-center">No data available.</td>
                 </tr>
               </tbody>
             </table>
@@ -255,4 +253,26 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Global kebab dropdown — rendered outside the table so it is never clipped by overflow -->
+<div class="kebab-dropdown"
+     *ngIf="openKebabItem !== null && dropdownPosition"
+     [style.top.px]="dropdownPosition?.top"
+     [style.right.px]="dropdownPosition?.right"
+     (click)="$event.stopPropagation()">
+  <ng-container *ngIf="actions.length > 0">
+    <button *ngFor="let action of getVisibleActions(openKebabItem)"
+            type="button"
+            class="btn btn-sm"
+            [class.btn-primary]="action.type === 'primary'"
+            [class.btn-danger]="action.type === 'danger'"
+            [class.btn-secondary]="!action.type || action.type === 'secondary'"
+            (click)="action.handler(openKebabItem); closeAllKebabs()">
+      <i [class]="action.icon + ' me-2'"></i>{{ action.label }}
+    </button>
+  </ng-container>
+  <ng-container *ngIf="actions.length === 0 && actionsContent">
+    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: openKebabItem, disabled: isOperationsDisabled() }"></ng-container>
+  </ng-container>
 </div>

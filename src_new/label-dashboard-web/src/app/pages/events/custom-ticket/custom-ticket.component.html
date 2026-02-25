@@ -169,7 +169,7 @@
                     [disabled]="!priceOverrideEnabled">
                   <button
                     type="button"
-                    class="btn btn-outline-secondary"
+                    class="btn btn-secondary"
                     (click)="enablePriceOverride()"
                     *ngIf="!priceOverrideEnabled"
                     title="Override price">
@@ -177,7 +177,7 @@
                   </button>
                   <button
                     type="button"
-                    class="btn btn-outline-secondary"
+                    class="btn btn-secondary"
                     (click)="disablePriceOverride()"
                     *ngIf="priceOverrideEnabled"
                     title="Use ticket type price">
@@ -258,7 +258,7 @@
                 
                 <button 
                   type="button" 
-                  class="btn btn-outline-secondary"
+                  class="btn btn-secondary"
                   (click)="onCancel()"
                   [disabled]="submitting">
                   Cancel
@@ -266,7 +266,7 @@
 
                 <button 
                   type="button" 
-                  class="btn btn-outline-info"
+                  class="btn btn-secondary"
                   (click)="resetCustomTicketForm()"
                   [disabled]="submitting">
                   <i class="fa fa-undo me-1"></i>
@@ -550,7 +550,7 @@
               </td>
               <td>
                 <button type="button" 
-                        class="btn btn-outline-danger btn-sm" 
+                        class="btn btn-danger btn-sm" 
                         (click)="removeBulkRow(i)"
                         title="Remove row">
                   <i class="fa fa-times"></i>
@@ -571,13 +571,13 @@
                 <div class="row mb-3">
                   <div class="col-12">
                     <div class="btn-group w-100" role="group">
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(1)">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
                         Add Row
                       </button>
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(5)">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
                         Add 5
                       </button>
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(10)">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
                         Add 10
                       </button>
                     </div>
@@ -589,7 +589,7 @@
                   </small>
                 </div>
                 <button type="button" 
-                        class="btn btn-success btn-lg w-100" 
+                        class="btn btn-primary btn-lg w-100" 
                         (click)="onSubmitBulkTickets()" 
                         [disabled]="submitting || bulkTickets.length === 0">
                   <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
@@ -612,13 +612,13 @@
                   </div>
                   <div>
                     <div class="btn-group" role="group">
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(1)">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
                         Add Row
                       </button>
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(5)">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
                         Add 5
                       </button>
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="addBulkRows(10)">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
                         Add 10
                       </button>
                     </div>
@@ -627,13 +627,13 @@
 
                 <div class="d-flex gap-2">
                   <button type="button" 
-                          class="btn btn-outline-secondary" 
+                          class="btn btn-secondary" 
                           (click)="onCancel()"
                           [disabled]="submitting">
                     Cancel
                   </button>
                   <button type="button" 
-                          class="btn btn-success btn-lg" 
+                          class="btn btn-primary btn-lg" 
                           (click)="onSubmitBulkTickets()" 
                           [disabled]="submitting || bulkTickets.length === 0">
                     <i class="fa fa-plus me-2" *ngIf="!submitting"></i>

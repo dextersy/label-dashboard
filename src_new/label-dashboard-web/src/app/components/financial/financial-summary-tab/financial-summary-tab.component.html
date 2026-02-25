@@ -17,7 +17,7 @@
       <div class="card-body">
         <h3 class="card-title">Total Earnings</h3>
         <h2 [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</h2>
-        <button class="btn btn-outline-secondary btn-sm" 
+        <button class="btn btn-secondary btn-sm" 
                 (click)="viewEarningsDetails.emit()">
           View Details
         </button>
@@ -29,7 +29,7 @@
       <div class="card-body">
         <h3 class="card-title">Total Royalties</h3>
         <h2 [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</h2>
-        <button class="btn btn-outline-secondary btn-sm" 
+        <button class="btn btn-secondary btn-sm" 
                 (click)="viewRoyaltiesDetails.emit()">
           View Details
         </button>
@@ -41,7 +41,7 @@
       <div class="card-body">
         <h3 class="card-title">Total Payments</h3>
         <h2 [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</h2>
-        <button class="btn btn-outline-secondary btn-sm" 
+        <button class="btn btn-secondary btn-sm" 
                 (click)="viewPaymentsDetails.emit()">
           View Details
         </button>

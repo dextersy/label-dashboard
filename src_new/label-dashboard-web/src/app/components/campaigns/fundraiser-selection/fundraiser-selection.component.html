@@ -1,7 +1,7 @@
 <div class="fundraiser-selection-container">
   <div class="fundraiser-selection-row">
     <div class="dropdown" [class.open]="isDropdownOpen">
-      <button class="btn btn-default fundraiser-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+      <button class="btn btn-secondary fundraiser-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
         <div class="fundraiser-info" *ngIf="selectedFundraiser">
           <div class="fundraiser-poster">
             <img *ngIf="selectedFundraiser.poster_url; else defaultPoster"
@@ -65,7 +65,7 @@
               (click)="$event.stopPropagation()"
               #searchInput>
             <button
-              class="btn btn-link search-clear"
+              class="btn btn-ghost search-clear"
               *ngIf="searchTerm"
               (click)="clearSearch(); $event.stopPropagation()">
               <i class="fa fa-times"></i>

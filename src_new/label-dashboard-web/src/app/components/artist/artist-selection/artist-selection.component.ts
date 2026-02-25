@@ -199,7 +199,12 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
     if (dropdownButton && dropdownMenu) {
       const rect = dropdownButton.getBoundingClientRect();
-      dropdownMenu.style.top = `${rect.bottom + 2}px`;
+      // The .sidebar has transform:translateX(0) on desktop, making it the containing
+      // block for position:fixed children. Coordinates must be relative to the sidebar,
+      // not the viewport, so subtract the sidebar's own top offset.
+      const sidebar = dropdownMenu.closest('.sidebar') as HTMLElement | null;
+      const cbTop = sidebar?.getBoundingClientRect().top ?? 0;
+      dropdownMenu.style.top = `${rect.bottom - cbTop + 2}px`;
     }
   }
 

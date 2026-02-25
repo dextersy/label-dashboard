@@ -1,100 +1,70 @@
-<div class="row">
-  <div class="col-md-8">
-    <app-paginated-table 
-      title="Users"
-      [data]="displayUsers"
-      [pagination]="usersPagination"
-      [loading]="usersLoading"
-      [columns]="usersColumns"
-      [showSortableHeaders]="true"
-      [showActionsColumn]="true"
-      [sortInfo]="usersSort"
-      (pageChange)="onUsersPageChange($event)"
-      (filtersChange)="onUsersFiltersChange($event)"
-      (sortChange)="onUsersSortChange($event)">
-      <ng-template #customButtons>
-        <button class="btn btn-primary btn-sm" (click)="openInviteModal()">
-          <i class="fa-solid fa-user-plus"></i> Invite Admin
-        </button>
-      </ng-template>
-      <ng-template #actionsContent let-user>
-        <div class="d-flex gap-2 flex-wrap">
-          <!-- Desktop buttons -->
-          <!-- Toggle admin status for regular users -->
-          <a *ngIf="!user.has_pending_invite"
-             (click)="toggleAdminStatus(user.id)" 
-             class="btn btn-icon-only d-none d-md-inline-block"
-             [class.btn-outline-success]="!user.is_admin"
-             [class.btn-outline-danger]="user.is_admin"
-             [title]="user.is_admin ? 'Remove admin' : 'Make admin'">
-            <i class="fa" 
-               [class.fa-user-shield]="!user.is_admin" 
-               [class.fa-user-times]="user.is_admin"></i>
-          </a>
-          
-          <!-- Show resend/cancel options for pending admin invites - Desktop -->
-          <ng-container *ngIf="user.has_pending_invite">
-            <a (click)="resendInvite(user.id)" 
-               class="btn btn-outline-primary btn-icon-only d-none d-md-inline-block"
-               title="Resend invitation">
-              <i class="fa-solid fa-envelope"></i>
-            </a>
-            <a (click)="cancelInvite(user.id)" 
-               class="btn btn-outline-warning btn-icon-only d-none d-md-inline-block"
-               title="Cancel invitation">
-              <i class="fa-solid fa-ban"></i>
-            </a>
-          </ng-container>
-          
-          <!-- Mobile buttons -->
-          <!-- Toggle admin status for regular users -->
-          <a *ngIf="!user.has_pending_invite"
-             (click)="toggleAdminStatus(user.id)" 
-             class="btn btn-sm d-md-none d-block w-100 mb-2"
-             [class.btn-outline-success]="!user.is_admin"
-             [class.btn-outline-danger]="user.is_admin">
-            <i class="fa me-2" 
-               [class.fa-user-shield]="!user.is_admin" 
-               [class.fa-user-times]="user.is_admin"></i>
-            {{ user.is_admin ? 'Remove Admin' : 'Make Admin' }}
-          </a>
-          
-          <!-- Show resend/cancel options for pending admin invites - Mobile -->
-          <ng-container *ngIf="user.has_pending_invite">
-            <a (click)="resendInvite(user.id)" 
-               class="btn btn-sm btn-outline-primary d-md-none d-block w-100 mb-2">
-              <i class="fa-solid fa-envelope me-2"></i>
-              Resend Invitation
-            </a>
-            <a (click)="cancelInvite(user.id)" 
-               class="btn btn-sm btn-outline-warning d-md-none d-block w-100">
-              <i class="fa-solid fa-ban me-2"></i>
-              Cancel Invitation
-            </a>
-          </ng-container>
-        </div>
-      </ng-template>
-    </app-paginated-table>
-  </div>
+<div class="users-tab-layout">
+  <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
+  <nav class="users-tab-sidebar">
+    <div class="sidebar-items">
+      <button
+        type="button"
+        class="sidebar-item"
+        [class.active]="activeSection === 'users'"
+        (click)="setActiveSection('users')">
+        <i class="fa-solid fa-users"></i>
+        <span>Users</span>
+      </button>
+      <button
+        type="button"
+        class="sidebar-item"
+        [class.active]="activeSection === 'login-attempts'"
+        (click)="setActiveSection('login-attempts')">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Login Attempts</span>
+      </button>
+    </div>
+  </nav>
 
-  <div class="col-md-4">
-    <app-paginated-table 
-      title="Recent Login Attempts"
-      [data]="loginAttempts"
-      [pagination]="loginAttemptsPagination"
-      [loading]="loginAttemptsLoading"
-      [columns]="loginAttemptsColumns"
-      [showSortableHeaders]="true"
-      [sortInfo]="loginAttemptsSort"
-      (pageChange)="onLoginAttemptsPageChange($event)"
-      (filtersChange)="onLoginAttemptsFiltersChange($event)"
-      (sortChange)="onLoginAttemptsSortChange($event)">
-    </app-paginated-table>
+  <!-- Main Content Area -->
+  <div class="users-tab-main">
+    <!-- Users Table -->
+    <div *ngIf="activeSection === 'users'">
+      <app-paginated-table
+        title="Users"
+        [data]="displayUsers"
+        [pagination]="usersPagination"
+        [loading]="usersLoading"
+        [columns]="usersColumns"
+        [showSortableHeaders]="true"
+        [actions]="usersActions"
+        [sortInfo]="usersSort"
+        (pageChange)="onUsersPageChange($event)"
+        (filtersChange)="onUsersFiltersChange($event)"
+        (sortChange)="onUsersSortChange($event)">
+        <ng-template #customButtons>
+          <button class="btn btn-primary btn-sm" (click)="openInviteModal()">
+            <i class="fa-solid fa-user-plus"></i> Invite Admin
+          </button>
+        </ng-template>
+      </app-paginated-table>
+    </div>
+
+    <!-- Login Attempts Table -->
+    <div *ngIf="activeSection === 'login-attempts'">
+      <app-paginated-table
+        title="Recent Login Attempts"
+        [data]="loginAttempts"
+        [pagination]="loginAttemptsPagination"
+        [loading]="loginAttemptsLoading"
+        [columns]="loginAttemptsColumns"
+        [showSortableHeaders]="true"
+        [sortInfo]="loginAttemptsSort"
+        (pageChange)="onLoginAttemptsPageChange($event)"
+        (filtersChange)="onLoginAttemptsFiltersChange($event)"
+        (sortChange)="onLoginAttemptsSortChange($event)">
+      </app-paginated-table>
+    </div>
   </div>
 </div>
 
 <!-- Admin Invite Modal -->
-<div class="modal fade" [class.show]="showInviteModal" [style.display]="showInviteModal ? 'block' : 'none'" 
+<div class="modal fade" [class.show]="showInviteModal" [style.display]="showInviteModal ? 'block' : 'none'"
      tabindex="-1" role="dialog" aria-labelledby="inviteAdminModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -106,9 +76,9 @@
         <form (ngSubmit)="sendInvite()">
           <div class="mb-3">
             <label for="email" class="form-label">Email Address *</label>
-            <input type="email" 
-                   class="form-control" 
-                   id="email" 
+            <input type="email"
+                   class="form-control"
+                   id="email"
                    [(ngModel)]="inviteForm.email_address"
                    name="email"
                    required
@@ -116,18 +86,18 @@
           </div>
           <div class="mb-3">
             <label for="firstName" class="form-label">First Name</label>
-            <input type="text" 
-                   class="form-control" 
-                   id="firstName" 
+            <input type="text"
+                   class="form-control"
+                   id="firstName"
                    [(ngModel)]="inviteForm.first_name"
                    name="firstName"
                    placeholder="Enter first name">
           </div>
           <div class="mb-3">
             <label for="lastName" class="form-label">Last Name</label>
-            <input type="text" 
-                   class="form-control" 
-                   id="lastName" 
+            <input type="text"
+                   class="form-control"
+                   id="lastName"
                    [(ngModel)]="inviteForm.last_name"
                    name="lastName"
                    placeholder="Enter last name">
@@ -136,8 +106,8 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeInviteModal()">Cancel</button>
-        <button type="button" 
-                class="btn btn-primary" 
+        <button type="button"
+                class="btn btn-primary"
                 (click)="sendInvite()"
                 [disabled]="inviteLoading || !inviteForm.email_address.trim()">
           <span *ngIf="inviteLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

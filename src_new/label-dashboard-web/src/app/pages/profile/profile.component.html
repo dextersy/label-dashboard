@@ -16,7 +16,7 @@
               <h4 class="card-title mb-0">
                 <i class="fa fa-user"></i> Edit Profile
               </h4>
-              <button class="btn btn-sm btn-outline-secondary" (click)="goBack()">
+              <button class="btn btn-sm btn-secondary" (click)="goBack()">
                 <i class="fa fa-arrow-left"></i> Back to Dashboard
               </button>
             </div>
@@ -159,7 +159,7 @@
                 </div>
                 <button 
                   type="button" 
-                  class="btn btn-outline-primary btn-sm"
+                  class="btn btn-secondary btn-sm"
                   (click)="togglePasswordChange()">
                   <i class="fa fa-key me-2"></i>Change Password
                 </button>
@@ -255,14 +255,14 @@
                   <div class="d-flex justify-content-end gap-2">
                     <button 
                       type="button" 
-                      class="btn btn-outline-secondary"
+                      class="btn btn-secondary"
                       (click)="togglePasswordChange()"
                       [disabled]="changingPassword">
                       Cancel
                     </button>
                     <button 
                       type="submit" 
-                      class="btn btn-warning"
+                      class="btn btn-secondary"
                       [disabled]="changingPassword">
                       <span *ngIf="changingPassword" class="spinner-border spinner-border-sm me-2" role="status"></span>
                       <i *ngIf="!changingPassword" class="fa fa-key me-2"></i>

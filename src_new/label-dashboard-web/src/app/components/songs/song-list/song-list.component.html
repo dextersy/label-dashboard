@@ -49,7 +49,7 @@
         <td><small>{{ song.isrc || '-' }}</small></td>
         <td>
           <div class="btn-group btn-group-sm">
-            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-success" title="Spotify">
+            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-primary" title="Spotify">
               <i class="fab fa-spotify"></i>
             </a>
             <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn btn-dark" title="Apple Music">
@@ -64,7 +64,7 @@
         <td>
           <button
             *ngIf="song.audio_file"
-            class="btn btn-link btn-sm p-0 me-2"
+            class="btn btn-ghost btn-sm p-0 me-2"
             [class.text-warning]="playingSongId === song.id"
             [class.text-info]="pausedSongId === song.id"
             [class.text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
@@ -78,13 +78,13 @@
                [class.fa-spinner]="loadingSongId === song.id"
                [class.fa-spin]="loadingSongId === song.id"></i>
           </button>
-          <button class="btn btn-link btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit" [disabled]="isUploading(song.id)">
+          <button class="btn btn-ghost btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit" [disabled]="isUploading(song.id)">
             <i class="fa fa-edit"></i>
           </button>
-          <button class="btn btn-link btn-sm p-0 me-2" (click)="onUploadAudio(song)" title="Upload Audio" [disabled]="isUploading(song.id) || isRestrictedMode()">
+          <button class="btn btn-ghost btn-sm p-0 me-2" (click)="onUploadAudio(song)" title="Upload Audio" [disabled]="isUploading(song.id) || isRestrictedMode()">
             <i class="fa" [class.fa-upload]="!isUploading(song.id)" [class.fa-spinner]="isUploading(song.id)" [class.fa-spin]="isUploading(song.id)"></i>
           </button>
-          <button *ngIf="!isRestrictedMode()" class="btn btn-link btn-sm p-0 text-danger" (click)="onDelete(song)" title="Delete">
+          <button *ngIf="!isRestrictedMode()" class="btn btn-ghost btn-sm p-0 text-danger" (click)="onDelete(song)" title="Delete">
             <i class="fa fa-trash"></i>
           </button>
         </td>

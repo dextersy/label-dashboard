@@ -5,7 +5,7 @@
     <!-- Desktop action buttons -->
     <div class="header-actions d-none d-md-flex">
       <button *ngIf="canSubmitRelease()"
-              class="btn btn-success btn-sm"
+              class="btn btn-primary btn-sm"
               (click)="onSubmitRelease()"
               [disabled]="submittingRelease"
               title="Submit Release">
@@ -16,7 +16,7 @@
         <span class="ms-1">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
       </button>
       <button *ngIf="isAdmin"
-              class="btn btn-outline-secondary btn-sm"
+              class="btn btn-secondary btn-sm"
               (click)="onDownloadPriorityPitch()"
               [disabled]="downloadingPriorityPitch"
               title="Download Priority Pitch">
@@ -86,7 +86,7 @@
             <span class="detail-label">Barcode (UPC/EAN/Code128)</span>
             <span class="detail-value">
               {{ release.UPC }}
-              <button class="btn btn-outline-secondary btn-sm ms-2"
+              <button class="btn btn-secondary btn-sm ms-2"
                       (click)="downloadBarcode()"
                       title="Download Barcode">
                 <i class="fas fa-barcode"></i>
@@ -156,7 +156,7 @@
           <i class="fas fa-music me-2"></i>Track List
         </h3>
         <button *ngIf="hasMasters()"
-                class="btn btn-outline-secondary btn-sm"
+                class="btn btn-secondary btn-sm"
                 (click)="onDownloadMasters()"
                 [disabled]="downloadingMasters"
                 title="Download Masters">
@@ -182,7 +182,7 @@
           <span class="track-play">
             <button 
               *ngIf="song.audio_file"
-              class="btn btn-link btn-sm p-0" 
+              class="btn btn-ghost btn-sm p-0" 
               [class.text-warning]="isPlaying(song.id)"
               [class.text-info]="isPaused(song.id)"
               [class.text-success]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"

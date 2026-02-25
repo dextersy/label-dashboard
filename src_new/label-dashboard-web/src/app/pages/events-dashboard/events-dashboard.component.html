@@ -16,7 +16,7 @@
   <!-- Error state -->
   <div *ngIf="error" class="alert alert-danger" role="alert">
     <i class="fa fa-exclamation-triangle"></i> {{ error }}
-    <button class="btn btn-sm btn-outline-danger ml-2" (click)="loadDashboardData()">
+    <button class="btn btn-sm btn-danger ml-2" (click)="loadDashboardData()">
       <i class="fas fa-sync"></i> Retry
     </button>
   </div>
@@ -34,10 +34,10 @@
     <!-- Quick Menu + Stats Row -->
     <div class="row mb-4">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
+      <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
         <div class="row">
-          <div class="col-lg-6 col-md-6 col-sm-6 mb-3 mb-lg-0">
+          <div class="col-6">
             <a routerLink="/campaigns/events/new" class="quick-menu-card">
               <div class="quick-menu-icon">
                 <i class="fas fa-calendar-plus"></i>
@@ -45,7 +45,7 @@
               <span class="quick-menu-label">Create New Event</span>
             </a>
           </div>
-          <div class="col-lg-6 col-md-6 col-sm-6 mb-3 mb-lg-0">
+          <div class="col-6">
             <a routerLink="/campaigns/fundraisers/new" class="quick-menu-card">
               <div class="quick-menu-icon">
                 <i class="fas fa-hand-holding-heart"></i>
@@ -57,28 +57,36 @@
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-4 col-md-12">
+      <div class="col-lg-6 col-md-12 d-flex flex-column">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
-            <i class="fas fa-calendar-check"></i>
             <span class="stats-compact-value">{{ dashboardData.stats?.activeEvents || 0 }}</span>
-            <span class="stats-compact-label">Active Events</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-calendar-check"></i>
+              <span class="stats-compact-label">Active Events</span>
+            </div>
           </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/details">
-            <i class="fas fa-hand-holding-heart"></i>
             <span class="stats-compact-value">{{ dashboardData.stats?.activeFundraisers || 0 }}</span>
-            <span class="stats-compact-label">Active Fundraisers</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-hand-holding-heart"></i>
+              <span class="stats-compact-label">Fundraisers</span>
+            </div>
           </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/tickets">
-            <i class="fas fa-ticket-alt"></i>
             <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthSales || 0) }}</span>
-            <span class="stats-compact-label">Ticket Sales</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-ticket-alt"></i>
+              <span class="stats-compact-label">Ticket Sales</span>
+            </div>
           </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/donations">
-            <i class="fas fa-donate"></i>
             <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthDonations || 0) }}</span>
-            <span class="stats-compact-label">Donations</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-donate"></i>
+              <span class="stats-compact-label">Donations</span>
+            </div>
           </div>
         </div>
       </div>
