@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, TemplateRef, ContentChild, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, TemplateRef, ContentChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -51,7 +51,7 @@ export interface SortInfo {
     templateUrl: './paginated-table.component.html',
     styleUrl: './paginated-table.component.scss'
 })
-export class PaginatedTableComponent implements OnInit, OnChanges {
+export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() title: string = '';
   @Input() data: any[] = [];
   @Input() pagination: PaginationInfo | null = null;
@@ -90,25 +90,36 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
   Math = Math;
 
   // Kebab menu state
-  openKebabItems = new Set<any>();
+  openKebabItem: any = null;
+  dropdownPosition: { top: number; right: number } | null = null;
+
+  // Close dropdown on any scroll (capture phase catches scrolling within nested containers too)
+  private readonly scrollCloseHandler = () => this.closeAllKebabs();
 
   @HostListener('document:click')
   closeAllKebabs(): void {
-    this.openKebabItems.clear();
+    this.openKebabItem = null;
+    this.dropdownPosition = null;
   }
 
   toggleKebab(item: any, event: Event): void {
     event.stopPropagation();
-    if (this.openKebabItems.has(item)) {
-      this.openKebabItems.delete(item);
+    if (this.openKebabItem === item) {
+      this.openKebabItem = null;
+      this.dropdownPosition = null;
     } else {
-      this.openKebabItems.clear();
-      this.openKebabItems.add(item);
+      const btn = (event.target as HTMLElement).closest('.kebab-btn') as HTMLElement;
+      const rect = btn.getBoundingClientRect();
+      this.openKebabItem = item;
+      this.dropdownPosition = {
+        top: rect.bottom + 2,
+        right: document.documentElement.clientWidth - rect.right
+      };
     }
   }
 
   isKebabOpen(item: any): boolean {
-    return this.openKebabItems.has(item);
+    return this.openKebabItem === item;
   }
 
   hasActionsColumn(): boolean {
@@ -119,7 +130,12 @@ export class PaginatedTableComponent implements OnInit, OnChanges {
     return this.actions.filter(a => !a.hidden || !a.hidden(item));
   }
 
+  ngOnDestroy(): void {
+    document.removeEventListener('scroll', this.scrollCloseHandler, true);
+  }
+
   ngOnInit() {
+    document.addEventListener('scroll', this.scrollCloseHandler, true);
     // Initialize search filters for searchable columns
     this.columns.forEach(column => {
       if (column.searchable !== false) {

@@ -201,10 +201,10 @@
 }
 
 .kebab-dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
+  position: fixed;
   min-width: 160px;
+  max-height: 60vh;
+  overflow-y: auto;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;

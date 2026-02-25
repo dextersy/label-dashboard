@@ -206,24 +206,6 @@
                               [class.active]="isKebabOpen(item)">
                         <i class="fas fa-ellipsis-v"></i>
                       </button>
-                      <div class="kebab-dropdown" *ngIf="isKebabOpen(item)">
-                        <!-- Structured actions -->
-                        <ng-container *ngIf="actions.length > 0">
-                          <button *ngFor="let action of getVisibleActions(item)"
-                                  type="button"
-                                  class="btn btn-sm"
-                                  [class.btn-primary]="action.type === 'primary'"
-                                  [class.btn-danger]="action.type === 'danger'"
-                                  [class.btn-secondary]="!action.type || action.type === 'secondary'"
-                                  (click)="action.handler(item); closeAllKebabs()">
-                            <i [class]="action.icon + ' me-2'"></i>{{ action.label }}
-                          </button>
-                        </ng-container>
-                        <!-- Custom template (backwards compat) -->
-                        <ng-container *ngIf="actions.length === 0">
-                          <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: item, disabled: isOperationsDisabled() }"></ng-container>
-                        </ng-container>
-                      </div>
                     </div>
                   </td>
                 </tr>
@@ -271,4 +253,26 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Global kebab dropdown — rendered outside the table so it is never clipped by overflow -->
+<div class="kebab-dropdown"
+     *ngIf="openKebabItem !== null && dropdownPosition"
+     [style.top.px]="dropdownPosition?.top"
+     [style.right.px]="dropdownPosition?.right"
+     (click)="$event.stopPropagation()">
+  <ng-container *ngIf="actions.length > 0">
+    <button *ngFor="let action of getVisibleActions(openKebabItem)"
+            type="button"
+            class="btn btn-sm"
+            [class.btn-primary]="action.type === 'primary'"
+            [class.btn-danger]="action.type === 'danger'"
+            [class.btn-secondary]="!action.type || action.type === 'secondary'"
+            (click)="action.handler(openKebabItem); closeAllKebabs()">
+      <i [class]="action.icon + ' me-2'"></i>{{ action.label }}
+    </button>
+  </ng-container>
+  <ng-container *ngIf="actions.length === 0 && actionsContent">
+    <ng-container *ngTemplateOutlet="actionsContent; context: { $implicit: openKebabItem, disabled: isOperationsDisabled() }"></ng-container>
+  </ng-container>
 </div>
