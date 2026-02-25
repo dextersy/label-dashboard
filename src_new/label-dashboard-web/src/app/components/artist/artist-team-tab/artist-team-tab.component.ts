@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
 import { ConfirmationService } from '../../../services/confirmation.service';
+import { PaginatedTableComponent, TableAction, TableColumn } from '../../shared/paginated-table/paginated-table.component';
 
 export interface TeamMember {
   id: number;
@@ -16,7 +17,7 @@ export interface TeamMember {
 
 @Component({
     selector: 'app-artist-team-tab',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent],
     templateUrl: './artist-team-tab.component.html',
     styleUrl: './artist-team-tab.component.scss'
 })
@@ -46,6 +47,54 @@ export class ArtistTeamTabComponent {
     }
   }
 
+  get teamColumns(): TableColumn[] {
+    return [
+      {
+        key: 'name',
+        label: 'Name',
+        cardHeader: true
+      },
+      {
+        key: 'email',
+        label: 'Email'
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        searchable: false,
+        renderHtml: true,
+        formatter: (member: TeamMember) => {
+          const cls = this.getStatusClass(member.status);
+          const icon = this.getStatusIcon(member.status);
+          return `<span class="badge ${cls}"><i class="fa ${icon}"></i> ${member.status}</span>`;
+        }
+      },
+      {
+        key: 'invited_date',
+        label: 'Invited Date',
+        searchable: false,
+        formatter: (member: TeamMember) => this.formatDate(member.invited_date)
+      }
+    ];
+  }
+
+  get teamActions(): TableAction[] {
+    return [
+      {
+        icon: 'fa-solid fa-paper-plane',
+        label: 'Resend Invite',
+        handler: (member: TeamMember) => this.resendInvite(member),
+        hidden: (member: TeamMember) => member.status !== 'Pending'
+      },
+      {
+        icon: 'fa-solid fa-trash',
+        label: 'Remove',
+        type: 'danger',
+        handler: (member: TeamMember) => this.removeMember(member)
+      }
+    ];
+  }
+
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token');
     return new HttpHeaders({
@@ -57,7 +106,7 @@ export class ArtistTeamTabComponent {
     if (!this.artist) return;
 
     this.loading = true;
-    
+
     this.http.get<{teamMembers: TeamMember[]}>(`${environment.apiUrl}/artists/${this.artist.id}/team`, {
       headers: this.getAuthHeaders()
     }).subscribe({
@@ -81,7 +130,6 @@ export class ArtistTeamTabComponent {
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.inviteEmail.trim())) {
       this.alertMessage.emit({
@@ -169,9 +217,7 @@ export class ArtistTeamTabComponent {
       type: 'warning'
     });
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     this.http.delete<{success: boolean, message: string}>(
       `${environment.apiUrl}/artists/${this.artist.id}/team/${member.id}`,
