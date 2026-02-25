@@ -5,18 +5,25 @@
     <div class="row align-items-center date-range-header">
       <div class="col-lg-8 col-md-8" [class.col-8]="compact">
         <div class="d-flex align-items-center">
-          <button class="btn btn-ghost btn-sm text-decoration-none p-0 me-3" 
+          <button class="btn btn-ghost btn-sm text-decoration-none p-0 me-2"
                   (click)="toggleExpanded()"
                   [title]="isExpanded ? 'Collapse date range options' : 'Expand date range options'">
             <i class="fa fa-calendar me-1"></i>
             <strong>{{ getPresetDisplayName() }}</strong>
             <i class="fa ms-1" [class.fa-chevron-down]="!isExpanded" [class.fa-chevron-up]="isExpanded"></i>
           </button>
-          <span class="text-muted small me-3" [class.d-none]="compact" [class.d-sm-inline]="compact">
+          <span class="text-muted small me-2" [class.d-none]="compact" [class.d-sm-inline]="compact">
             {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
             <span class="text-success ms-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
             <span class="text-success ms-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
           </span>
+          <button class="btn btn-ghost btn-sm"
+                  (click)="onRefresh()"
+                  [disabled]="loading"
+                  [title]="loading ? 'Refreshing data...' : 'Refresh data'">
+            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
+            <span class="ms-1 d-none d-md-inline">Refresh</span>
+          </button>
         </div>
       </div>
       
@@ -33,13 +40,6 @@
               <small>Compare</small>
             </label>
           </div>
-          <button class="btn btn-secondary btn-sm me-2" 
-                  (click)="onRefresh()" 
-                  [disabled]="loading"
-                  [title]="loading ? 'Refreshing data...' : 'Refresh data'">
-            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
-            <span class="ms-1 d-none d-md-inline">Refresh</span>
-          </button>
           <div class="dropdown" *ngIf="showExport && !compact">
             <button class="btn btn-secondary btn-sm dropdown-toggle" 
                     type="button" 
