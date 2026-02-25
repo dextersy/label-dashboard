@@ -785,6 +785,39 @@ div .table tbody {
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
+
+  &.release-cover-thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+}
+
+/* Combined release cell (cover art + title + description) */
+.release-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 576px) {
+  .release-cell {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    .release-cover-thumbnail {
+      width: 200px !important;
+      height: 200px !important;
+    }
+
+    .release-cell-text {
+      text-align: center;
+    }
+  }
 }
 
 /* Specialized cell styling */

@@ -10,6 +10,7 @@ import { Song } from '../../../services/song.service';
 import { ReleaseService } from '../../../services/release.service';
 import { downloadFromResponse } from '../../../utils/file-utils';
 import { ConfirmationService } from '../../../services/confirmation.service';
+import { PaginatedTableComponent, TableAction, TableColumn } from '../../shared/paginated-table/paginated-table.component';
 
 export interface ArtistRelease {
   id: number;
@@ -37,7 +38,7 @@ export interface ArtistRelease {
 
 @Component({
     selector: 'app-artist-releases-tab',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent],
     templateUrl: './artist-releases-tab.component.html',
     styleUrl: './artist-releases-tab.component.scss'
 })
@@ -80,6 +81,128 @@ export class ArtistReleasesTabComponent {
     }
   }
 
+  get releaseColumns(): TableColumn[] {
+    return [
+      {
+        key: 'catalog_no',
+        label: 'Catalog #',
+        searchable: false,
+        renderHtml: true,
+        cardHeader: true
+      },
+      {
+        key: 'cover_art',
+        label: 'Release',
+        searchable: false,
+        renderHtml: true,
+        hideDataLabel: true,
+        formatter: (release: ArtistRelease) => {
+          const url = this.getCoverArtUrl(release.cover_art);
+          const alt = release.title.replace(/"/g, '&quot;');
+          const stripped = release.description ? this.stripHtmlTags(release.description) : '';
+          const desc = stripped ? `<div class="release-description">${stripped}</div>` : '';
+          return `<div class="release-cell"><img src="${url}" alt="${alt}" class="release-cover-thumbnail"><div class="release-cell-text"><div class="release-title">${release.title}</div>${desc}</div></div>`;
+        }
+      },
+      {
+        key: 'UPC',
+        label: 'UPC',
+        searchable: false,
+        renderHtml: true,
+        formatter: (release: ArtistRelease) =>
+          `<span class="catalog-number">${release.UPC || '—'}</span>`
+      },
+      {
+        key: 'release_date',
+        label: 'Release Date',
+        searchable: false,
+        formatter: (release: ArtistRelease) => this.formatDate(release.release_date)
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        searchable: false,
+        renderHtml: true,
+        formatter: (release: ArtistRelease) => {
+          const statusClass = this.getStatusClass(release.status);
+          const statusIcon = this.getStatusIcon(release.status);
+          let html = `<span class="badge ${statusClass}"><i class="fa ${statusIcon}"></i> ${release.status}</span>`;
+          if (this.hasValidationIssues(release)) {
+            const tooltip = this.getValidationTooltip(release).replace(/"/g, '&quot;');
+            if (this.hasValidationErrors(release)) {
+              html += ` <i class="fa fa-exclamation-circle text-danger ms-2" title="${tooltip}"></i>`;
+            } else {
+              html += ` <i class="fa fa-exclamation-triangle text-warning ms-2" title="${tooltip}"></i>`;
+            }
+          }
+          return html;
+        }
+      }
+    ];
+  }
+
+  get releaseActions(): TableAction[] {
+    return [
+      {
+        icon: 'fa-solid fa-paper-plane',
+        label: 'Submit for Review',
+        type: 'primary',
+        handler: (release: ArtistRelease) => this.onSubmitForReview(release),
+        hidden: (release: ArtistRelease) => !this.canSubmitForReview(release)
+      },
+      {
+        icon: 'fa-solid fa-edit',
+        label: 'Edit Release',
+        handler: (release: ArtistRelease) => this.onEditRelease(release),
+        hidden: (release: ArtistRelease) => !this.canEditRelease(release)
+      },
+      {
+        icon: 'fa-solid fa-eye',
+        label: 'View Release',
+        handler: (release: ArtistRelease) => this.onEditRelease(release),
+        hidden: (release: ArtistRelease) => this.canEditRelease(release)
+      },
+      {
+        icon: 'fa-solid fa-music',
+        label: 'Manage Track List',
+        handler: (release: ArtistRelease) => this.onManageTrackList(release),
+        hidden: (release: ArtistRelease) => !this.canEditRelease(release)
+      },
+      {
+        icon: 'fa-solid fa-download',
+        label: 'Download Masters',
+        handler: (release: ArtistRelease) => this.onDownloadMasters(release),
+        hidden: (release: ArtistRelease) => !this.hasMasters(release) || this.downloadingMastersId === release.id
+      },
+      {
+        icon: 'fa-solid fa-spinner fa-spin',
+        label: 'Downloading...',
+        type: 'secondary',
+        handler: () => {},
+        hidden: (release: ArtistRelease) => this.downloadingMastersId !== release.id
+      },
+      {
+        icon: 'fa-solid fa-globe',
+        label: 'Include in EPK',
+        handler: (release: ArtistRelease) => this.toggleExcludeFromEPK(release),
+        hidden: (release: ArtistRelease) => !release.exclude_from_epk
+      },
+      {
+        icon: 'fa-solid fa-eye-slash',
+        label: 'Exclude from EPK',
+        handler: (release: ArtistRelease) => this.toggleExcludeFromEPK(release),
+        hidden: (release: ArtistRelease) => !!release.exclude_from_epk
+      },
+      {
+        icon: 'fa-solid fa-trash',
+        label: 'Delete',
+        type: 'danger',
+        handler: (release: ArtistRelease) => this.onDeleteRelease(release),
+        hidden: (release: ArtistRelease) => !this.canDeleteRelease(release)
+      }
+    ];
+  }
+
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('auth_token');
     return new HttpHeaders({
@@ -112,12 +235,10 @@ export class ArtistReleasesTabComponent {
   }
 
   onEditRelease(release: ArtistRelease): void {
-    // Navigate to the edit route instead of opening a dialog
     this.router.navigate(['/music/releases/edit', release.id]);
   }
 
   onManageTrackList(release: ArtistRelease): void {
-    // Navigate to the edit form and select the tracks section
     this.router.navigate(['/music/releases/edit', release.id], {
       queryParams: { section: 'tracks' }
     });
@@ -147,35 +268,23 @@ export class ArtistReleasesTabComponent {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'Live':
-        return 'badge-success';
-      case 'For Submission':
-        return 'badge-info';
-      case 'Pending':
-        return 'badge-warning';
-      case 'Draft':
-        return 'badge-secondary';
-      case 'Taken Down':
-        return 'badge-danger';
-      default:
-        return 'badge-secondary';
+      case 'Live': return 'badge-success';
+      case 'For Submission': return 'badge-info';
+      case 'Pending': return 'badge-warning';
+      case 'Draft': return 'badge-secondary';
+      case 'Taken Down': return 'badge-danger';
+      default: return 'badge-secondary';
     }
   }
 
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'Live':
-        return 'fa-check-circle';
-      case 'For Submission':
-        return 'fa-paper-plane';
-      case 'Pending':
-        return 'fa-clock';
-      case 'Draft':
-        return 'fa-file';
-      case 'Taken Down':
-        return 'fa-ban';
-      default:
-        return 'fa-question-circle';
+      case 'Live': return 'fa-check-circle';
+      case 'For Submission': return 'fa-paper-plane';
+      case 'Pending': return 'fa-clock';
+      case 'Draft': return 'fa-file';
+      case 'Taken Down': return 'fa-ban';
+      default: return 'fa-question-circle';
     }
   }
 
@@ -183,7 +292,6 @@ export class ArtistReleasesTabComponent {
     const releaseValidation = this.validationService.validateRelease(release, true);
     const songsValidation = release.songs ? this.validationService.validateSongs(release.songs) : { errors: [], warnings: [], hasErrors: false, hasWarnings: false };
 
-    // Combine validations
     const combinedValidation = {
       errors: [...releaseValidation.errors, ...songsValidation.errors],
       warnings: [...releaseValidation.warnings, ...songsValidation.warnings],
@@ -214,8 +322,6 @@ export class ArtistReleasesTabComponent {
     if (!this.canSubmitForReview(release)) {
       return;
     }
-
-    // Navigate to the submit section of the edit form
     this.router.navigate(['/music/releases/edit', release.id], {
       queryParams: { section: 'submit' }
     });
@@ -227,32 +333,24 @@ export class ArtistReleasesTabComponent {
 
   stripHtmlTags(html: string): string {
     if (!html) return '';
-
-    // Create a temporary div element to parse HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-
-    // Get text content and clean up extra whitespace
     return tempDiv.textContent || tempDiv.innerText || '';
   }
 
   hasMasters(release: ArtistRelease): boolean {
-    // Check if release has cover art
     if (release.cover_art && release.cover_art.trim() !== '') {
       return true;
     }
-
-    // Check if release has any songs with audio files
     if (release.songs && release.songs.length > 0) {
       return release.songs.some(song => song.audio_file && song.audio_file.trim() !== '');
     }
-
     return false;
   }
 
   onDownloadMasters(release: ArtistRelease): void {
     if (this.downloadingMastersId || !this.hasMasters(release)) {
-      return; // Prevent multiple downloads at once or downloading when no masters
+      return;
     }
 
     this.downloadingMastersId = release.id;
@@ -260,10 +358,7 @@ export class ArtistReleasesTabComponent {
     this.releaseService.downloadMasters(release.id).subscribe({
       next: (response) => {
         this.downloadingMastersId = null;
-
-        // Download using filename from server's Content-Disposition header
         downloadFromResponse(response);
-
         this.alertMessage.emit({
           type: 'success',
           message: 'Masters downloaded successfully!'
@@ -290,7 +385,6 @@ export class ArtistReleasesTabComponent {
     this.releaseService.toggleExcludeFromEPK(release.id).subscribe({
       next: (response) => {
         if (response.success) {
-          // Convert to boolean in case backend returns 0/1
           release.exclude_from_epk = Boolean(response.exclude_from_epk);
           this.alertMessage.emit({
             type: 'success',
@@ -314,12 +408,10 @@ export class ArtistReleasesTabComponent {
   }
 
   canEditRelease(release: ArtistRelease): boolean {
-    // Release can be edited if it's in Draft status or user is an admin
     return release.status === 'Draft';
   }
 
   canDeleteRelease(release: ArtistRelease): boolean {
-    // Only Draft releases can be deleted, and only by admins
     return this.isAdmin && release.status === 'Draft';
   }
 

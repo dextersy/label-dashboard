@@ -155,7 +155,7 @@
                       [class]="getColumnClasses(column)"
                       [class.card-header-cell]="column.cardHeader"
                       [style.text-align]="column.align || 'left'"
-                      [attr.data-label]="column.label">
+                      [attr.data-label]="column.hideDataLabel ? '' : column.label">
                     <!-- Payment link special handling -->
                     <span *ngIf="column.key === 'payment_link'">
                       <a 

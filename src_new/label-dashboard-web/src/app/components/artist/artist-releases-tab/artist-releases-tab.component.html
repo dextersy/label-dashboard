@@ -1,160 +1,45 @@
 <div class="artist-releases-tab">
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5>Artist Releases</h5>
-      <div class="d-flex gap-3 align-items-center">
-        <div class="filter-controls">
-          <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
-            <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
-            <label class="btn btn-secondary" for="epkFilterAll">All</label>
+  <app-paginated-table
+    title="Artist Releases"
+    [data]="filteredReleases"
+    [pagination]="null"
+    [loading]="loading"
+    [columns]="releaseColumns"
+    [showSearch]="false"
+    [showSortableHeaders]="true"
+    [showActionsColumn]="true"
+    [actions]="releaseActions">
 
-            <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
-            <label class="btn btn-secondary" for="epkFilterVisible">
-              <i class="fa fa-globe"></i> Visible in EPK
-            </label>
+    <ng-template #customButtons>
+      <div class="filter-controls">
+        <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-secondary" for="epkFilterAll">All</label>
 
-            <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
-            <label class="btn btn-secondary" for="epkFilterHidden">
-              <i class="fa fa-eye-slash"></i> Hidden from EPK
-            </label>
-          </div>
-          <select class="form-select form-select-sm d-md-none" [(ngModel)]="epkFilter">
-            <option value="all">All</option>
-            <option value="visible">Visible in EPK</option>
-            <option value="hidden">Hidden from EPK</option>
-          </select>
-        </div>
-        <div *ngIf="artist">
-          <button class="btn btn-secondary btn-sm"
-                  [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
-                  (click)="navigateToCreateRelease()">
-            <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
-            <span class="d-none d-md-inline">{{ isAdmin ? 'Create Release' : 'Submit Release' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      
-      <div *ngIf="loading" class="text-center loading">
-        <div class="loading-dots">
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
-      </div>
-      
-      <div *ngIf="!loading && releases.length === 0" class="text-center text-muted empty-releases">
-        <i class="fa fa-music fa-3x"></i>
-        <p>No releases found</p>
-        <small>This artist hasn't released any music yet.</small>
-      </div>
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-secondary" for="epkFilterVisible">
+            <i class="fa fa-globe"></i> <span class="d-none d-lg-inline">Visible in EPK</span>
+          </label>
 
-      <div *ngIf="!loading && releases.length > 0 && filteredReleases.length === 0" class="text-center text-muted empty-releases">
-        <i class="fa fa-filter fa-3x"></i>
-        <p>No releases match the current filter</p>
-        <small>Try changing the EPK visibility filter above</small>
-      </div>
-      
-      <div *ngIf="!loading && filteredReleases.length > 0" class="releases-table-container">
-        <div class="table-responsive">
-          <table class="table releases-table">
-            <thead>
-              <tr>
-                <th>Cover</th>
-                <th>Catalog #</th>
-                <th>UPC</th>
-                <th>Title</th>
-                <th>Release Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let release of filteredReleases">
-                <td class="cover-cell">
-                  <img [src]="getCoverArtUrl(release.cover_art)" 
-                       [alt]="release.title + ' cover'"
-                       class="cover-thumbnail">
-                </td>
-                <td class="catalog-cell">
-                  <span class="catalog-number">{{ release.catalog_no }}</span>
-                </td>
-                <td class="upc-cell">
-                  <span class="catalog-number">{{ release.UPC || '—' }}</span>
-                </td>
-                <td class="title-cell">
-                  <div class="release-title">{{ release.title }}</div>
-                  <div *ngIf="release.description" class="release-description">
-                    {{ stripHtmlTags(release.description || '') }}
-                  </div>
-                </td>
-                <td class="date-cell">
-                  {{ formatDate(release.release_date) }}
-                </td>
-                <td class="status-cell">
-                  <span class="badge" [class]="getStatusClass(release.status)">
-                    <i class="fa" [ngClass]="getStatusIcon(release.status)"></i>
-                    {{ release.status }}
-                  </span>
-                  <ng-container *ngIf="hasValidationIssues(release)">
-                    <i *ngIf="hasValidationErrors(release)"
-                       class="fa fa-exclamation-circle text-danger ms-2"
-                       [title]="getValidationTooltip(release)"
-                       style="cursor: help;"></i>
-                    <i *ngIf="!hasValidationErrors(release)"
-                       class="fa fa-exclamation-triangle text-warning ms-2"
-                       [title]="getValidationTooltip(release)"
-                       style="cursor: help;"></i>
-                  </ng-container>
-                </td>
-                <td class="actions-cell">
-                  <button *ngIf="canSubmitForReview(release)"
-                          class="btn btn-primary btn-sm me-2"
-                          (click)="onSubmitForReview(release)"
-                          title="Go to submit section">
-                    <i class="fa fa-paper-plane me-1"></i>
-                    Submit
-                  </button>
-                  <button class="btn btn-ghost btn-sm p-0 me-2"
-                          (click)="onEditRelease(release)"
-                          [title]="canEditRelease(release) ? 'Edit Release Information' : 'View Release'">
-                    <i class="fa" [ngClass]="canEditRelease(release) ? 'fa-edit' : 'fa-eye'"></i>
-                  </button>
-                  <button *ngIf="canEditRelease(release)"
-                          class="btn btn-ghost btn-sm p-0 me-2"
-                          (click)="onManageTrackList(release)"
-                          title="Manage Track List">
-                    <i class="fa fa-music"></i>
-                  </button>
-                  <button class="btn btn-ghost btn-sm p-0 me-2"
-                          (click)="onDownloadMasters(release)"
-                          [disabled]="downloadingMastersId === release.id || !hasMasters(release)"
-                          [title]="hasMasters(release) ? 'Download Masters' : 'No masters available'">
-                    <i class="fa"
-                       [class.fa-spinner]="downloadingMastersId === release.id"
-                       [class.fa-spin]="downloadingMastersId === release.id"
-                       [class.fa-download]="downloadingMastersId !== release.id"></i>
-                  </button>
-                  <button class="btn btn-ghost btn-sm p-0 me-2"
-                          (click)="toggleExcludeFromEPK(release)"
-                          [ngClass]="release.exclude_from_epk ? 'text-warning' : 'text-info'"
-                          [title]="release.exclude_from_epk ? 'Excluded from EPK - Click to include' : 'Included in EPK - Click to exclude'">
-                    <i class="fa" [ngClass]="release.exclude_from_epk ? 'fa-eye-slash' : 'fa-globe'"></i>
-                  </button>
-                  <button *ngIf="canDeleteRelease(release)"
-                          class="btn btn-ghost btn-sm p-0 text-danger"
-                          (click)="onDeleteRelease(release)"
-                          title="Delete Release">
-                    <i class="fa fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-secondary" for="epkFilterHidden">
+            <i class="fa fa-eye-slash"></i> <span class="d-none d-lg-inline">Hidden from EPK</span>
+          </label>
         </div>
+        <select class="form-select form-select-sm d-md-none" [(ngModel)]="epkFilter">
+          <option value="all">All</option>
+          <option value="visible">Visible in EPK</option>
+          <option value="hidden">Hidden from EPK</option>
+        </select>
       </div>
-      
-    </div>
-  </div>
+      <button *ngIf="artist"
+              class="btn btn-secondary btn-sm"
+              [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
+              (click)="navigateToCreateRelease()">
+        <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
+        <span class="d-none d-md-inline ms-1">{{ isAdmin ? 'Create Release' : 'Submit Release' }}</span>
+      </button>
+    </ng-template>
+
+  </app-paginated-table>
 </div>

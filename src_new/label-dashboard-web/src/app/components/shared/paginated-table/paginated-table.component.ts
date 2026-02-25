@@ -33,6 +33,7 @@ export interface TableColumn {
   showBreakdownButton?: boolean; // Show breakdown button for earnings columns
   renderHtml?: boolean; // Render formatter output as HTML instead of text
   cardHeader?: boolean; // Use this column as the card title in mobile view
+  hideDataLabel?: boolean; // Hide the data-label prefix in mobile card view
 }
 
 export interface SearchFilters {
