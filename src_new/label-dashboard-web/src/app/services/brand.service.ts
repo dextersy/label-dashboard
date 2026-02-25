@@ -89,6 +89,18 @@ export class BrandService {
     const b = parseInt(hex.substring(4, 6), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     document.documentElement.style.setProperty('--brand-color-text', luminance > 0.5 ? '#1a1a1a' : '#ffffff');
+
+    // Precomputed tints (brand color blended with white) for gradient usage
+    document.documentElement.style.setProperty('--brand-color-rgb', `${r}, ${g}, ${b}`);
+    const tint = (c: number, a: number) => Math.round(c * a + 255 * (1 - a));
+    const hex6 = (rv: number, gv: number, bv: number) =>
+      `#${rv.toString(16).padStart(2, '0')}${gv.toString(16).padStart(2, '0')}${bv.toString(16).padStart(2, '0')}`;
+    document.documentElement.style.setProperty('--brand-color-tint-8',  hex6(tint(r, 0.08), tint(g, 0.08), tint(b, 0.08)));
+    document.documentElement.style.setProperty('--brand-color-tint-14', hex6(tint(r, 0.14), tint(g, 0.14), tint(b, 0.14)));
+    document.documentElement.style.setProperty('--brand-color-tint-20', hex6(tint(r, 0.20), tint(g, 0.20), tint(b, 0.20)));
+    document.documentElement.style.setProperty('--brand-color-tint-22', hex6(tint(r, 0.22), tint(g, 0.22), tint(b, 0.22)));
+    document.documentElement.style.setProperty('--brand-color-tint-30', hex6(tint(r, 0.30), tint(g, 0.30), tint(b, 0.30)));
+    document.documentElement.style.setProperty('--brand-color-tint-38', hex6(tint(r, 0.38), tint(g, 0.38), tint(b, 0.38)));
   }
 
   getCurrentBrandSettings(): BrandSettings | null {

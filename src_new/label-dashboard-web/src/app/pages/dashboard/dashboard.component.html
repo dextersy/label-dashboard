@@ -34,10 +34,10 @@
     <!-- Quick Menu + Stats Row -->
     <div class="row mb-4">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-9 col-md-12 mb-3 mb-lg-0">
+      <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
         <div class="row">
-          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+          <div class="col-4">
             <a routerLink="/music/releases/new" class="quick-menu-card">
               <div class="quick-menu-icon">
                 <i class="fas fa-upload"></i>
@@ -45,7 +45,7 @@
               <span class="quick-menu-label">Submit a Release</span>
             </a>
           </div>
-          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+          <div class="col-4">
             <a routerLink="/artist/profile" class="quick-menu-card">
               <div class="quick-menu-icon">
                 <i class="fas fa-user-edit"></i>
@@ -53,7 +53,7 @@
               <span class="quick-menu-label">Update Artist Profile</span>
             </a>
           </div>
-          <div class="col-lg-4 col-md-4 col-sm-12 mb-3 mb-lg-0">
+          <div class="col-4">
             <a routerLink="/financial/summary" class="quick-menu-card">
               <div class="quick-menu-icon">
                 <i class="fas fa-chart-pie"></i>
@@ -65,27 +65,33 @@
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-3 col-md-12">
+      <div class="col-lg-6 col-md-12 d-flex flex-column">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
-            <i class="fas fa-users"></i>
             <span class="stats-compact-value">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
-            <span class="stats-compact-label">Artists</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-users"></i>
+              <span class="stats-compact-label">Artists</span>
+            </div>
           </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/music/releases">
-            <i class="fas fa-compact-disc"></i>
             <span class="stats-compact-value">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
-            <span class="stats-compact-label">Releases</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-compact-disc"></i>
+              <span class="stats-compact-label">Releases</span>
+            </div>
           </div>
           <div class="stats-compact-item"
                [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
                (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
-            <i class="fas fa-music"></i>
             <span class="stats-compact-value stats-compact-value-text">
               {{ dashboardData.stats?.latestRelease?.title || '—' }}
             </span>
-            <span class="stats-compact-label">Latest</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-music"></i>
+              <span class="stats-compact-label">Latest</span>
+            </div>
           </div>
         </div>
       </div>
