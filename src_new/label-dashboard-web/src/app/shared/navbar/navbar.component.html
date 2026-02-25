@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light fixed">
+<nav class="navbar navbar-expand-lg navbar-light fixed" [style.background]="navbarBg">
   <div class="container-fluid">
     <!-- Burger and Context Icons Container -->
     <div class="navbar-left-group">
@@ -7,6 +7,11 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
+
+      <!-- Brand Logo -->
+      <a [href]="brandWebsite" class="navbar-brand-logo" *ngIf="brandLogo">
+        <img [src]="brandLogo" alt="Brand Logo" class="navbar-logo-img">
+      </a>
 
       <!-- Context Icons (Artist) - visible on mobile -->
       <div class="navbar-context-icons">
@@ -32,53 +37,35 @@
       </div>
     </div>
 
-    <!-- Spacer to push content to the right -->
-    <div class="navbar-spacer"></div>
-
-    <!-- Welcome message and admin chip on the right -->
-    <span class="navbar-welcome">
-      <i class="fa-solid fa-user"></i> Welcome, <strong>{{ userFirstName }}</strong>!
-      <span *ngIf="isSuperadmin" class="superadmin-chip">
-        <i class="fa-solid fa-crown"></i> Superadmin
-      </span>
-      <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
-        <i class="fa-solid fa-shield"></i> Admin
-      </span>
-    </span>
-    
-    <!-- Mobile icons (visible on mobile) -->
-    <div class="navbar-mobile-icons">
-      <a class="mobile-icon-link mobile-icon-link-admin" *ngIf="isAdmin" (click)="selectWorkspace('admin')" style="cursor: pointer;" title="Administration">
-        <i class="fa-solid fa-cogs"></i>
-      </a>
-      <a class="mobile-icon-link" routerLink="/profile" title="Edit Profile">
+    <!-- User menu (rightmost) -->
+    <div class="user-menu" [class.open]="userDropdownOpen">
+      <button class="user-menu-trigger" (click)="toggleUserDropdown()">
         <i class="fa-solid fa-user"></i>
-      </a>
-      <a class="mobile-icon-link" (click)="logout()" style="cursor: pointer;" title="Log Out">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </a>
+        <span class="user-name">Welcome, <strong>{{ userFirstName }}</strong>!</span>
+        <span *ngIf="isSuperadmin" class="superadmin-chip">
+          <i class="fa-solid fa-crown"></i> Superadmin
+        </span>
+        <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
+          <i class="fa-solid fa-shield"></i> Admin
+        </span>
+        <i class="fa-solid fa-chevron-down user-menu-arrow"></i>
+      </button>
+
+      <div class="user-dropdown-menu" *ngIf="userDropdownOpen">
+        <a *ngIf="isAdmin" class="user-dropdown-item" (click)="selectWorkspace('admin'); closeUserDropdown()" style="cursor: pointer;">
+          <i class="fas fa-cogs"></i> Administration
+        </a>
+        <a class="user-dropdown-item" routerLink="/profile" (click)="closeUserDropdown()">
+          <i class="fa-solid fa-user"></i> Edit profile
+        </a>
+        <a class="user-dropdown-item" (click)="logout(); closeUserDropdown()" style="cursor: pointer;">
+          <i class="fa-solid fa-right-from-bracket"></i> Log out
+        </a>
+      </div>
     </div>
-    
-    <!-- Desktop menu (visible on desktop) -->
-    <div class="collapse navbar-collapse" id="navigation-example-2">
-      <ul class="navbar-nav">
-        <li class="nav-item" *ngIf="isAdmin">
-          <a class="nav-link nav-link-admin" (click)="selectWorkspace('admin')" style="cursor: pointer;">
-            <i class="fas fa-cogs"></i> Administration
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/profile">
-            <i class="fa-solid fa-user"></i> Edit profile
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" (click)="logout()" style="cursor: pointer;">
-            <i class="fa-solid fa-right-from-bracket"></i> Log out
-          </a>
-        </li>
-      </ul>
-    </div>
+
+    <!-- Backdrop to close user dropdown -->
+    <div class="user-menu-backdrop" *ngIf="userDropdownOpen" (click)="closeUserDropdown()"></div>
   </div>
 </nav>
 

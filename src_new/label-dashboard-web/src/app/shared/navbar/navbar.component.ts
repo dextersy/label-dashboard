@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
+import { BrandService, BrandSettings } from '../../services/brand.service';
 import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
 import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
 import { Subscription } from 'rxjs';
@@ -22,15 +23,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isSuperadmin: boolean = false;
   selectedArtist: Artist | null = null;
   currentWorkspace: WorkspaceType = 'music';
+  navbarBg: string = '#333';
+  brandLogo: string = '';
+  brandWebsite: string = '#';
+  userDropdownOpen: boolean = false;
   private authSubscription: Subscription = new Subscription();
   private workspaceSubscription: Subscription = new Subscription();
+  private brandSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private sidebarService: SidebarService,
     private artistStateService: ArtistStateService,
-    private workspaceService: WorkspaceService
+    private workspaceService: WorkspaceService,
+    private brandService: BrandService
   ) {}
 
   ngOnInit(): void {
@@ -68,6 +75,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.currentWorkspace = workspace;
       })
     );
+
+    // Subscribe to brand settings changes
+    this.brandSubscription.add(
+      this.brandService.brandSettings$.subscribe(settings => {
+        if (settings) {
+          this.applyBrandSettings(settings);
+        }
+      })
+    );
   }
 
   onArtistSelected(event: {artist: Artist, userInitiated: boolean}): void {
@@ -97,6 +113,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.authSubscription.unsubscribe();
     this.workspaceSubscription.unsubscribe();
+    this.brandSubscription.unsubscribe();
+  }
+
+  private applyBrandSettings(settings: BrandSettings): void {
+    this.brandLogo = settings.logo_url || '';
+    this.brandWebsite = settings.brand_website || '#';
+    this.navbarBg = this.darkenColor(settings.brand_color || '#333333', 0.25);
+  }
+
+  private darkenColor(hexColor: string, amount: number): string {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const newR = Math.round(r * (1 - amount));
+    const newG = Math.round(g * (1 - amount));
+    const newB = Math.round(b * (1 - amount));
+    return '#' +
+      newR.toString(16).padStart(2, '0') +
+      newG.toString(16).padStart(2, '0') +
+      newB.toString(16).padStart(2, '0');
   }
 
   // Get artist profile photo URL
@@ -161,6 +198,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarService.toggleSidebar();
+  }
+
+  toggleUserDropdown(): void {
+    this.userDropdownOpen = !this.userDropdownOpen;
+  }
+
+  closeUserDropdown(): void {
+    this.userDropdownOpen = false;
   }
 
   private updateMobileNavClass(): void {

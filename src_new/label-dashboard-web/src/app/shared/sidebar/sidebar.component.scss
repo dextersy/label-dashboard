@@ -1,6 +1,6 @@
 .sidebar {
   position: fixed;
-  top: 0;
+  top: 50px;
   left: 0;
   bottom: 0;
   width: 260px;
@@ -9,7 +9,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   transition: width 0.3s ease, transform 0.3s ease;
-  
+
   // Remove overlays completely
   &:before,
   &:after {
@@ -20,15 +20,6 @@
   &.collapsed {
     width: 86px;
     overflow: visible;
-
-    .logo {
-      padding: 15px 10px;
-      
-      img {
-        width: 50px;
-        transition: width 0.3s ease;
-      }
-    }
 
     .nav li a {
       padding: 10px 4px 6px;
@@ -86,63 +77,15 @@
   }
 }
 
-// Logo collapsed state
-.logo-collapsed {
-  width: 50px !important;
-}
-
 // Removed hardcoded data-color styles - now using dynamic brand color
 
 .sidebar-wrapper {
   position: relative;
   max-height: none;
-  min-height: 100vh;
+  min-height: calc(100vh - 50px);
   overflow: auto;
   width: 100%;
   z-index: 4;
-}
-
-.logo {
-  position: relative;
-  padding: 24px 0 20px;
-  z-index: 4;
-  text-align: center;
-  border: none !important;
-  box-shadow: none !important;
-
-  &::before,
-  &::after {
-    display: none !important;
-  }
-
-  a {
-    border: none !important;
-    box-shadow: none !important;
-    text-decoration: none !important;
-
-    &::before,
-    &::after {
-      display: none !important;
-    }
-  }
-
-  img {
-    width: 100px;
-    max-width: 100%;
-    transition: width 0.3s ease;
-    border: none !important;
-    box-shadow: none !important;
-
-    &::before,
-    &::after {
-      display: none !important;
-    }
-  }
-}
-
-.logo .simple-text {
-  text-decoration: none;
-  // Color is now set dynamically via [style.color] binding
 }
 
 // Workspace Indicator — bold uppercase label
