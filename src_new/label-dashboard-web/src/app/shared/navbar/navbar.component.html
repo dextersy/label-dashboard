@@ -52,6 +52,15 @@
       </button>
 
       <div class="user-dropdown-menu" *ngIf="userDropdownOpen">
+        <div class="user-dropdown-header">
+          <span class="user-dropdown-welcome">Welcome, <strong>{{ userFirstName }}</strong>!</span>
+          <span *ngIf="isSuperadmin" class="superadmin-chip">
+            <i class="fa-solid fa-crown"></i> Superadmin
+          </span>
+          <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
+            <i class="fa-solid fa-shield"></i> Admin
+          </span>
+        </div>
         <a *ngIf="isAdmin" class="user-dropdown-item" (click)="selectWorkspace('admin'); closeUserDropdown()" style="cursor: pointer;">
           <i class="fas fa-cogs"></i> Administration
         </a>

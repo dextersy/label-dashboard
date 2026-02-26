@@ -286,6 +286,32 @@
   transform: rotate(180deg);
 }
 
+.user-dropdown-header {
+  display: none;
+
+  @media (max-width: 1200px) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .user-dropdown-welcome {
+    font-size: 13px;
+    color: #555;
+
+    strong {
+      color: #111;
+    }
+  }
+
+  .admin-chip,
+  .superadmin-chip {
+    align-self: flex-start;
+  }
+}
+
 .user-dropdown-menu {
   position: absolute;
   top: calc(100% + 6px);
