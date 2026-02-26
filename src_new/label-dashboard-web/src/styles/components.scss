@@ -310,7 +310,7 @@ textarea.form-control {
   }
 }
 
-/* Danger Button - filled red */
+/* Danger Button - outline red */
 .btn-danger {
   display: inline-flex;
   align-items: center;
@@ -323,7 +323,7 @@ textarea.form-control {
   touch-action: manipulation;
   cursor: pointer;
   background-image: none;
-  border: 1px solid transparent;
+  border: 1px solid #ef4444;
   padding: 12px 24px;
   font-size: 15px;
   line-height: 1.5;
@@ -331,27 +331,28 @@ textarea.form-control {
   user-select: none;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #ffffff;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-color: transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: #ef4444;
+  background: transparent;
+  box-shadow: none;
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: rgba(239, 68, 68, 0.06);
+    border-color: #dc2626;
+    color: #dc2626;
+    box-shadow: none;
     transform: translateY(-1px);
-    color: #ffffff;
   }
 
   &:active:not(:disabled) {
+    background: rgba(239, 68, 68, 0.12);
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: #9ca3af;
+    background: transparent;
     box-shadow: none;
     transform: none;
   }
@@ -440,8 +441,7 @@ textarea.form-control {
 }
 
 /* Icon Button - transparent, no border or shadow */
-.btn-icon,
-.btn-icon-only {
+.btn-icon {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -478,8 +478,7 @@ textarea.form-control {
 }
 
 /* Icon button with danger color */
-.btn-icon.btn-danger,
-.btn-icon-only.btn-danger {
+.btn-icon.btn-danger {
   color: #ef4444 !important;
   background: transparent !important;
   box-shadow: none !important;
