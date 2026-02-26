@@ -1,11 +1,12 @@
-/* Top albums component styles */
+/* Top albums — horizontal bar chart */
 
-.btn-link {
-  color: #007bff;
-  text-decoration: none;
+.chart-body {
+  height: 280px;
+  position: relative;
 }
 
-.btn-link:hover {
-  color: #0056b3;
-  text-decoration: underline;
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }

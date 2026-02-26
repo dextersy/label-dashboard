@@ -293,6 +293,14 @@
     }
   }
 
+  .stats-compact-cover {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
   .stats-compact-value {
     font-size: 2rem;
     font-weight: 700;

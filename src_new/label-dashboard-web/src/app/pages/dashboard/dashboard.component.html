@@ -85,6 +85,9 @@
           <div class="stats-compact-item"
                [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
                (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
+            <img class="stats-compact-cover"
+                 [src]="dashboardData.stats?.latestRelease?.cover_art || 'assets/img/placeholder.jpg'"
+                 [alt]="dashboardData.stats?.latestRelease?.title || 'Latest release'">
             <span class="stats-compact-value stats-compact-value-text">
               {{ dashboardData.stats?.latestRelease?.title || '—' }}
             </span>
@@ -98,18 +101,18 @@
     </div>
 
     <!-- Dashboard widgets -->
-    <div class="row">
-      <!-- Latest releases -->
-      <div class="col-lg-4 mb-4 mb-lg-0">
+    <!-- Row 1: Latest releases + Top earning releases -->
+    <div class="row mb-4">
+      <div class="col-lg-6 mb-4 mb-lg-0">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
-
-      <!-- Top earning releases -->
-      <div class="col-lg-4 mb-4 mb-lg-0">
+      <div class="col-lg-6">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
+    </div>
 
-      <!-- Balance summary -->
+    <!-- Row 2: Balance summary -->
+    <div class="row">
       <div class="col-lg-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>

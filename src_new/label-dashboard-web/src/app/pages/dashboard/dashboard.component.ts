@@ -17,6 +17,7 @@ interface DashboardStats {
     title: string;
     artist_id: number | null;
     artist_name: string;
+    cover_art: string;
   } | null;
   totalArtists: number;
   totalReleases: number;

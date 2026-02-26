@@ -428,7 +428,7 @@ async function getTopEarningReleasesData(req: AuthRequest) {
         : 'Unknown Artist'
     };
   }).sort((a, b) => b.total_earnings - a.total_earnings)
-    .slice(0, 5); // Take top 5 after sorting by total earnings
+    .slice(0, 6); // Take top 6 after sorting by total earnings
 }
 
 async function getBalanceSummaryData(req: AuthRequest) {
