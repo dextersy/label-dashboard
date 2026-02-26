@@ -10,6 +10,7 @@
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
     [actions]="isAdmin ? orderActions : []"
+    [headerActions]="headerActions"
     [enableBulkOperations]="isAdmin"
     [bulkOperationsLoading]="bulkOperationsLoading"
     (pageChange)="onPageChange($event)"
@@ -17,54 +18,6 @@
     (sortChange)="onSortChange($event)"
     (selectedItemsChange)="onSelectedItemsChange($event)">
     
-    <!-- Custom buttons template -->
-    <ng-template #customButtons>
-      <span 
-        class="d-inline-block flex-shrink-0" 
-        [title]="getCustomTicketButtonTooltip()"
-        *ngIf="isAdmin">
-        <button 
-          type="button" 
-          class="btn btn-sm btn-secondary" 
-          (click)="onCreateCustomTicket()"
-          [disabled]="loading || !canCreateCustomTickets()">
-          <i class="fa fa-plus me-1"></i>
-          Custom Ticket
-        </button>
-      </span>
-      <button 
-        type="button" 
-        class="btn btn-sm btn-secondary flex-shrink-0"
-        (click)="onDownloadCSV()"
-        [disabled]="loading">
-        <i class="fa fa-download me-1"></i>
-        Download CSV
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm btn-secondary flex-shrink-0"
-        (click)="onVerifyPayments()"
-        [disabled]="loading || isEventPast()">
-        <i class="fa fa-check me-1"></i>
-        Verify Payments
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm btn-secondary flex-shrink-0"
-        (click)="onSendPaymentReminders()"
-        [disabled]="loading || isEventPast()">
-        <i class="fa fa-bell me-1"></i>
-        Send Reminders
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm btn-secondary flex-shrink-0"
-        (click)="onCancelAllUnpaid()"
-        [disabled]="loading || isEventPast()">
-        <i class="fa fa-times me-1"></i>
-        Cancel All Unpaid
-      </button>
-    </ng-template>
     
     <!-- Bulk operations template -->
     <ng-template #bulkOperationsContent let-selectedOrders let-disabled="disabled">

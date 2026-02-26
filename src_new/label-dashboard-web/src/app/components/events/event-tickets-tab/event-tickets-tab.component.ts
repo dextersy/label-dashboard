@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
 import { environment } from '../../../../environments/environment';
 import { TransferTicketModalComponent, TransferData } from '../transfer-ticket-modal/transfer-ticket-modal.component';
@@ -84,6 +84,25 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'date_paid', label: 'Date Paid', sortable: true, type: 'date', formatter: (item) => item.date_paid ? new Date(item.date_paid).toLocaleString() : '-' },
     { key: 'claimed_status', label: 'Claimed', sortable: false, formatter: (item) => `${item.number_of_claimed_entries} / ${item.number_of_entries}` },
   ];
+
+  get headerActions(): HeaderAction[] {
+    if (!this.isAdmin) return [];
+    return [
+      {
+        icon: 'fa fa-plus',
+        label: 'Custom Ticket',
+        handler: () => this.onCreateCustomTicket(),
+        disabled: () => this.loading || !this.canCreateCustomTickets(),
+        title: () => this.getCustomTicketButtonTooltip(),
+      },
+      {
+        icon: 'fa fa-download',
+        label: 'Download CSV',
+        handler: () => this.onDownloadCSV(),
+        disabled: () => this.loading,
+      },
+    ];
+  }
 
   ticketActions: TableAction[] = [
     {

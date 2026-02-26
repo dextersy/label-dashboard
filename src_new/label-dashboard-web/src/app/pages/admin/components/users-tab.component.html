@@ -33,15 +33,11 @@
         [columns]="usersColumns"
         [showSortableHeaders]="true"
         [actions]="usersActions"
+        [headerActions]="headerActions"
         [sortInfo]="usersSort"
         (pageChange)="onUsersPageChange($event)"
         (filtersChange)="onUsersFiltersChange($event)"
         (sortChange)="onUsersSortChange($event)">
-        <ng-template #customButtons>
-          <button class="btn btn-primary btn-sm" (click)="openInviteModal()">
-            <i class="fa-solid fa-user-plus"></i> Invite Admin
-          </button>
-        </ng-template>
       </app-paginated-table>
     </div>
 

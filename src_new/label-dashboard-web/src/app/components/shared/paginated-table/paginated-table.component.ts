@@ -19,6 +19,16 @@ export interface TableAction {
   hidden?: (item: any) => boolean;       // Return true to hide for a given row
 }
 
+export interface HeaderAction {
+  icon: string | (() => string);         // FA class, or function for dynamic icons (e.g. spinner)
+  label: string | (() => string);        // Button label, or function for dynamic text
+  handler: () => void;
+  type?: 'primary' | 'secondary' | 'danger';
+  disabled?: () => boolean;
+  hidden?: () => boolean;
+  title?: string | (() => string);
+}
+
 export interface TableColumn {
   key: string;
   label: string;
@@ -66,6 +76,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() enableBulkOperations: boolean = false; // Enable bulk operations functionality
   @Input() bulkOperationsLoading: boolean = false; // Loading state for all operations (single and bulk)
   @Input() rowClassGetter?: (item: any) => string; // Function to get CSS classes for each row
+  @Input() headerActions: HeaderAction[] = []; // Action buttons rendered above the table
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
@@ -93,6 +104,10 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   openKebabItem: any = null;
   dropdownPosition: { top: number; right: number } | null = null;
 
+  // Mobile actions dropdown state
+  mobileActionsOpen: boolean = false;
+  mobileActionsPosition: { top: number; right: number } | null = null;
+
   // Close dropdown on any scroll (capture phase catches scrolling within nested containers too)
   private readonly scrollCloseHandler = () => this.closeAllKebabs();
 
@@ -100,6 +115,24 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   closeAllKebabs(): void {
     this.openKebabItem = null;
     this.dropdownPosition = null;
+    this.mobileActionsOpen = false;
+    this.mobileActionsPosition = null;
+  }
+
+  toggleMobileActions(event: Event): void {
+    event.stopPropagation();
+    if (this.mobileActionsOpen) {
+      this.mobileActionsOpen = false;
+      this.mobileActionsPosition = null;
+    } else {
+      const btn = (event.target as HTMLElement).closest('button') as HTMLElement;
+      const rect = btn.getBoundingClientRect();
+      this.mobileActionsOpen = true;
+      this.mobileActionsPosition = {
+        top: rect.bottom + 2,
+        right: document.documentElement.clientWidth - rect.right
+      };
+    }
   }
 
   toggleKebab(item: any, event: Event): void {
@@ -120,6 +153,27 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   isKebabOpen(item: any): boolean {
     return this.openKebabItem === item;
+  }
+
+  resolveHeaderActionIcon(action: HeaderAction): string {
+    return typeof action.icon === 'function' ? action.icon() : action.icon;
+  }
+
+  resolveHeaderActionLabel(action: HeaderAction): string {
+    return typeof action.label === 'function' ? action.label() : action.label;
+  }
+
+  resolveHeaderActionTitle(action: HeaderAction): string {
+    if (!action.title) return this.resolveHeaderActionLabel(action);
+    return typeof action.title === 'function' ? action.title() : action.title;
+  }
+
+  isHeaderActionHidden(action: HeaderAction): boolean {
+    return action.hidden ? action.hidden() : false;
+  }
+
+  isHeaderActionDisabled(action: HeaderAction): boolean {
+    return action.disabled ? action.disabled() : false;
   }
 
   hasActionsColumn(): boolean {

@@ -23,12 +23,8 @@
     [sortInfo]="currentSort"
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
+    [headerActions]="headerActions"
     (sortChange)="onSortChange($event)">
-    <ng-template #customButtons>
-      <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
-        <i class="fas fa-plus me-2"></i>New Pitch
-      </button>
-    </ng-template>
   </app-paginated-table>
 </div>
 

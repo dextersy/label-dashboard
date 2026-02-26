@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Payment } from '../../../pages/financial/financial.component';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, HeaderAction, SearchFilters } from '../../shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -21,6 +21,17 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   @Output() sortChange = new EventEmitter<{ column: string; direction: 'asc' | 'desc' } | null>();
 
   isAdmin = false;
+
+  get headerActions(): HeaderAction[] {
+    if (!this.isAdmin) return [];
+    return [{
+      icon: 'fas fa-plus',
+      label: 'Add',
+      handler: () => this.navigateToNewPayment(),
+      type: 'primary',
+      title: 'Add new payment',
+    }];
+  }
 
   // Define table columns for search and sort functionality
   paymentsColumns: TableColumn[] = [

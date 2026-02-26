@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { EarningsTableComponent } from '../earnings-table/earnings-table.component';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, HeaderAction, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../shared/date-range-filter/date-range-filter.component';
 import { Earning } from '../../../pages/financial/financial.component';
 import { AuthService } from '../../../services/auth.service';
@@ -32,6 +32,26 @@ export class FinancialEarningsTabComponent {
   isAdmin = false;
   selectedArtist: any = null;
   downloadingCSV = false;
+
+  get headerActions(): HeaderAction[] {
+    const actions: HeaderAction[] = [{
+      icon: () => this.downloadingCSV ? 'fas fa-spinner fa-spin' : 'fas fa-download',
+      label: 'CSV',
+      handler: () => this.downloadCSV(),
+      disabled: () => this.downloadingCSV,
+      title: 'Download earnings as CSV',
+    }];
+    if (this.isAdmin) {
+      actions.push({
+        icon: 'fas fa-plus',
+        label: 'Add',
+        handler: () => this.navigateToNewEarning(),
+        type: 'primary',
+        title: 'Add new earning',
+      });
+    }
+    return actions;
+  }
 
   constructor(
     private router: Router, 

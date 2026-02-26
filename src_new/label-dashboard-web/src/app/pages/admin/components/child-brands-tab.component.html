@@ -17,27 +17,11 @@
     [showSearch]="true"
     [showSortableHeaders]="true"
     [actions]="sublabelActions"
+    [headerActions]="headerActions"
     [sortInfo]="sortInfo"
     (sortChange)="onSortChange($event)"
     (breakdownButtonClick)="onBreakdownButtonClick($event)">
 
-    <ng-template #customButtons>
-      <button *ngIf="isSuperAdmin()"
-              class="btn btn-primary btn-sm"
-              (click)="openAddSublabelModal()"
-              [disabled]="loading || isAnyPollingInProgress()"
-              [title]="getAddSublabelButtonTooltip()">
-        <span *ngIf="!isAnyPollingInProgress()">
-          <i class="fas fa-plus"></i> Add
-        </span>
-        <span *ngIf="sublabelCreationState.inProgress">
-          <i class="fas fa-spinner fa-spin"></i> Creating {{ sublabelCreationState.pendingName }}...
-        </span>
-        <span *ngIf="domainVerificationState.inProgress && !sublabelCreationState.inProgress">
-          <i class="fas fa-spinner fa-spin"></i> Verifying {{ domainVerificationState.pendingDomain }}...
-        </span>
-      </button>
-    </ng-template>
   </app-paginated-table>
 </div>
 

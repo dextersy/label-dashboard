@@ -19,26 +19,11 @@
   [showSortableHeaders]="true"
   [sortInfo]="royaltiesSort"
   [responsiveMode]="'financial'"
+  [headerActions]="headerActions"
   (pageChange)="onPageChange($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">
   
-  <ng-template #customButtons>
-    <button class="btn btn-secondary btn-sm" 
-            (click)="downloadCSV()"
-            [disabled]="downloadingCSV"
-            title="Download royalties as CSV">
-      <i class="fas fa-download" *ngIf="!downloadingCSV"></i>
-      <i class="fas fa-spinner fa-spin" *ngIf="downloadingCSV"></i>
-      CSV
-    </button>
-    <button *ngIf="isAdmin" 
-            class="btn btn-primary btn-sm" 
-            (click)="navigateToNewRoyalty()"
-            title="Add new royalty">
-      <i class="fas fa-plus"></i> Add
-    </button>
-  </ng-template>
   
   <ng-template #tableContent let-data>
     <app-royalties-table [royalties]="data" [showHeader]="true"></app-royalties-table>

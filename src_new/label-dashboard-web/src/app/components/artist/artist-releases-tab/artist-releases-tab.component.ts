@@ -10,7 +10,7 @@ import { Song } from '../../../services/song.service';
 import { ReleaseService } from '../../../services/release.service';
 import { downloadFromResponse } from '../../../utils/file-utils';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, TableAction, TableColumn } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableAction, TableColumn, HeaderAction } from '../../shared/paginated-table/paginated-table.component';
 
 export interface ArtistRelease {
   id: number;
@@ -139,6 +139,16 @@ export class ArtistReleasesTabComponent {
         }
       }
     ];
+  }
+
+  get headerActions(): HeaderAction[] {
+    if (!this.artist) return [];
+    return [{
+      icon: () => this.isAdmin ? 'fas fa-plus' : 'fas fa-upload',
+      label: () => this.isAdmin ? 'Create Release' : 'Submit Release',
+      handler: () => this.navigateToCreateRelease(),
+      title: () => this.isAdmin ? 'Create new release' : 'Submit release for review',
+    }];
   }
 
   get releaseActions(): TableAction[] {

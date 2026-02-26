@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket } from '../../../services/event.service';
 import { CsvService } from '../../../services/csv.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, PaginationInfo, SearchFilters, SortInfo } from '../../shared/paginated-table/paginated-table.component';
 
 export interface AbandonedOrder {
   id: number;
@@ -58,6 +58,45 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
       { value: 'Canceled', label: 'Canceled' }
     ], formatter: (item) => this.getStatusHtml(item.status) },
   ];
+
+  get headerActions(): HeaderAction[] {
+    const actions: HeaderAction[] = [
+      {
+        icon: 'fa fa-download',
+        label: 'Download CSV',
+        handler: () => this.onDownloadCSV(),
+        disabled: () => this.loading,
+      },
+      {
+        icon: 'fa fa-check',
+        label: 'Verify Payments',
+        handler: () => this.onVerifyPayments(),
+        disabled: () => this.loading || this.isEventPast(),
+      },
+      {
+        icon: 'fa fa-bell',
+        label: 'Send Reminders',
+        handler: () => this.onSendPaymentReminders(),
+        disabled: () => this.loading || this.isEventPast(),
+      },
+      {
+        icon: 'fa fa-times',
+        label: 'Cancel All Unpaid',
+        handler: () => this.onCancelAllUnpaid(),
+        disabled: () => this.loading || this.isEventPast(),
+      },
+    ];
+    if (this.isAdmin) {
+      actions.unshift({
+        icon: 'fa fa-plus',
+        label: 'Custom Ticket',
+        handler: () => this.onCreateCustomTicket(),
+        disabled: () => this.loading || !this.canCreateCustomTickets(),
+        title: () => this.getCustomTicketButtonTooltip(),
+      });
+    }
+    return actions;
+  }
 
   orderActions: TableAction[] = [
     {

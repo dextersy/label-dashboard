@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 @Component({
@@ -102,6 +102,15 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   songSearchQuery = '';
   songSearchResults: SongForPitch[] = [];
   searchingSongs = false;
+
+  headerActions: HeaderAction[] = [
+    {
+      icon: 'fas fa-plus',
+      label: 'New Pitch',
+      handler: () => this.openCreateModal(),
+      type: 'primary',
+    }
+  ];
 
   pitchActions: TableAction[] = [
     {

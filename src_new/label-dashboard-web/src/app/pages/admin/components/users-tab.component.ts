@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, User, LoginAttempt } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
     selector: 'app-users-tab',
@@ -42,6 +42,15 @@ export class UsersTabComponent implements OnInit {
     last_name: ''
   };
   inviteLoading: boolean = false;
+
+  headerActions: HeaderAction[] = [
+    {
+      icon: 'fa-solid fa-user-plus',
+      label: 'Invite Admin',
+      handler: () => this.openInviteModal(),
+      type: 'primary',
+    }
+  ];
 
   // Table action definitions
   usersActions: TableAction[] = [

@@ -8,7 +8,8 @@
     [showSearch]="false"
     [showSortableHeaders]="true"
     [showActionsColumn]="true"
-    [actions]="releaseActions">
+    [actions]="releaseActions"
+    [headerActions]="headerActions">
 
     <ng-template #customButtons>
       <div class="filter-controls">
@@ -32,13 +33,6 @@
           <option value="hidden">Hidden from EPK</option>
         </select>
       </div>
-      <button *ngIf="artist"
-              class="btn btn-secondary btn-sm"
-              [title]="isAdmin ? 'Create new release' : 'Submit release for review'"
-              (click)="navigateToCreateRelease()">
-        <i class="fas" [ngClass]="isAdmin ? 'fa-plus' : 'fa-upload'"></i>
-        <span class="d-none d-md-inline ms-1">{{ isAdmin ? 'Create Release' : 'Submit Release' }}</span>
-      </button>
     </ng-template>
 
   </app-paginated-table>

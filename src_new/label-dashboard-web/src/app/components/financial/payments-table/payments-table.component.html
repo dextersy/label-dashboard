@@ -11,12 +11,5 @@
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">
   
-  <ng-template #customButtons>
-    <button *ngIf="isAdmin" 
-            class="btn btn-primary btn-sm" 
-            (click)="navigateToNewPayment()"
-            title="Add new payment">
-      <i class="fas fa-plus"></i> Add
-    </button>
-  </ng-template>
+  [headerActions]="headerActions">
 </app-paginated-table>

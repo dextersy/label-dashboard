@@ -4,11 +4,55 @@
       <div class="card-header">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
           <h5 class="mb-0">{{ title }}</h5>
-          <div class="table-actions d-flex flex-wrap align-items-center gap-2">
-            <!-- Custom buttons slot -->
+          <div class="table-actions d-flex align-items-center gap-2">
+            <!-- Custom controls slot (filter dropdowns, etc.) — always visible -->
             <ng-container *ngIf="customButtons">
               <ng-container *ngTemplateOutlet="customButtons"></ng-container>
             </ng-container>
+
+            <!-- Mobile: single action — show button directly; multiple actions — bento dropdown -->
+            <ng-container *ngIf="headerActions.length === 1 && !isHeaderActionHidden(headerActions[0])">
+              <button
+                type="button"
+                class="btn btn-sm d-sm-none"
+                [class.btn-secondary]="!headerActions[0].type || headerActions[0].type === 'secondary'"
+                [class.btn-primary]="headerActions[0].type === 'primary'"
+                [class.btn-danger]="headerActions[0].type === 'danger'"
+                [disabled]="isHeaderActionDisabled(headerActions[0])"
+                [title]="resolveHeaderActionTitle(headerActions[0])"
+                (click)="headerActions[0].handler()">
+                <i [class]="resolveHeaderActionIcon(headerActions[0])"></i>
+                <span class="ms-1">{{ resolveHeaderActionLabel(headerActions[0]) }}</span>
+              </button>
+            </ng-container>
+            <button
+              *ngIf="headerActions.length > 1"
+              type="button"
+              class="kebab-btn d-sm-none"
+              [class.active]="mobileActionsOpen"
+              (click)="toggleMobileActions($event)"
+              title="Actions">
+              <i class="fas fa-th"></i>
+            </button>
+
+            <!-- Desktop header action buttons (≥ 576px) -->
+            <div class="d-none d-sm-flex align-items-center gap-2" *ngIf="headerActions.length > 0">
+              <ng-container *ngFor="let action of headerActions">
+                <button
+                  *ngIf="!isHeaderActionHidden(action)"
+                  class="btn btn-sm"
+                  [class.btn-secondary]="!action.type || action.type === 'secondary'"
+                  [class.btn-primary]="action.type === 'primary'"
+                  [class.btn-danger]="action.type === 'danger'"
+                  [disabled]="isHeaderActionDisabled(action)"
+                  [title]="resolveHeaderActionTitle(action)"
+                  (click)="action.handler()">
+                  <i [class]="resolveHeaderActionIcon(action)"></i>
+                  <span class="ms-1">{{ resolveHeaderActionLabel(action) }}</span>
+                </button>
+              </ng-container>
+            </div>
+
             <button
               *ngIf="showSearch && columns.length > 0"
               class="btn btn-icon flex-shrink-0"
@@ -253,6 +297,27 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Mobile actions dropdown — same structure as kebab dropdown, rendered outside card -->
+<div class="kebab-dropdown"
+     *ngIf="mobileActionsOpen && mobileActionsPosition && headerActions.length > 0"
+     [style.top.px]="mobileActionsPosition.top"
+     [style.right.px]="mobileActionsPosition.right"
+     (click)="$event.stopPropagation()">
+  <ng-container *ngFor="let action of headerActions">
+    <button
+      *ngIf="!isHeaderActionHidden(action)"
+      type="button"
+      class="btn btn-sm"
+      [class.btn-secondary]="!action.type || action.type === 'secondary'"
+      [class.btn-primary]="action.type === 'primary'"
+      [class.btn-danger]="action.type === 'danger'"
+      [disabled]="isHeaderActionDisabled(action)"
+      (click)="action.handler(); closeAllKebabs()">
+      <i [class]="resolveHeaderActionIcon(action) + ' me-2'"></i>{{ resolveHeaderActionLabel(action) }}
+    </button>
+  </ng-container>
 </div>
 
 <!-- Global kebab dropdown — rendered outside the table so it is never clipped by overflow -->

@@ -8,7 +8,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
-import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { AddSublabelModalComponent } from '../../../components/admin/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../../components/admin/fee-settings-modal/fee-settings-modal.component';
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../../components/admin/sublabel-payout-modal/sublabel-payout-modal.component';
@@ -146,6 +146,22 @@ export class ChildBrandsTabComponent implements OnInit, OnDestroy {
       formatter: (item: ChildBrand) => `₱${item.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     }
   ];
+
+  get headerActions(): HeaderAction[] {
+    return [{
+      icon: () => this.isAnyPollingInProgress() ? 'fas fa-spinner fa-spin' : 'fas fa-plus',
+      label: () => {
+        if (this.sublabelCreationState.inProgress) return `Creating ${this.sublabelCreationState.pendingName}...`;
+        if (this.domainVerificationState.inProgress) return `Verifying ${this.domainVerificationState.pendingDomain}...`;
+        return 'Add';
+      },
+      handler: () => this.openAddSublabelModal(),
+      type: 'primary',
+      disabled: () => this.loading || this.isAnyPollingInProgress(),
+      hidden: () => !this.isSuperAdmin(),
+      title: () => this.getAddSublabelButtonTooltip(),
+    }];
+  }
 
   sublabelActions: TableAction[] = [
     {

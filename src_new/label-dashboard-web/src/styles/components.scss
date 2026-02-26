@@ -4,28 +4,7 @@
 
 /* Global Button Improvements */
 
-/* Mobile button improvements for paginated tables */
-@media (max-width: 575px) {
-  .table-actions {
-    // Force all buttons to be full width on mobile
-    button.btn,
-    .btn,
-    a.btn,
-    span button.btn,
-    span .btn,
-    span a.btn {
-      width: 100% !important;
-      margin: 0 0 0.25rem 0 !important;
-      display: block !important;
-    }
-    
-    // Ensure span wrappers don't interfere
-    span {
-      width: 100% !important;
-      display: block !important;
-    }
-  }
-}
+/* Mobile button improvements for paginated tables handled in paginated-table.component.scss */
 
 /* Modern Card Layouts - Override Bootstrap defaults */
 .card {

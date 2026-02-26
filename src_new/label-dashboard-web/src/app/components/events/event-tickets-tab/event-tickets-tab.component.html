@@ -10,35 +10,13 @@
     [showSortableHeaders]="true"
     [sortInfo]="currentSort"
     [actions]="isAdmin ? ticketActions : []"
+    [headerActions]="headerActions"
     [bulkOperationsLoading]="bulkOperationsLoading"
     [rowClassGetter]="getRowClass.bind(this)"
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
     (sortChange)="onSortChange($event)">
     
-    <!-- Custom buttons template -->
-    <ng-template #customButtons>
-      <span 
-        class="d-inline-block flex-shrink-0" 
-        [title]="getCustomTicketButtonTooltip()"
-        *ngIf="isAdmin">
-        <button 
-          class="btn btn-sm btn-secondary" 
-          (click)="onCreateCustomTicket()"
-          [disabled]="loading || !canCreateCustomTickets()">
-          <i class="fa fa-plus me-1"></i>
-          Custom Ticket
-        </button>
-      </span>
-      <button 
-        class="btn btn-sm btn-secondary flex-shrink-0" 
-        (click)="onDownloadCSV()"
-        *ngIf="isAdmin"
-        [disabled]="loading">
-        <i class="fa fa-download me-1"></i>
-        Download CSV
-      </button>
-    </ng-template>
     
   </app-paginated-table>
 
