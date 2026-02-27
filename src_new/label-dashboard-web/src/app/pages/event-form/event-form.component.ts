@@ -24,6 +24,7 @@ export interface TicketType {
   start_date?: string | null;
   end_date?: string | null;
   disabled?: boolean;
+  special_instructions?: string | null;
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
@@ -776,7 +777,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
     const ticketTypesForApi = this.ticketTypes.map(tt => ({
       ...tt,
       start_date: tt.start_date ? new Date(tt.start_date).toISOString() : null,
-      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null
+      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null,
+      special_instructions: tt.special_instructions ?? null
     }));
 
     const formData: any = {
@@ -845,7 +847,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
     const ticketTypesForApi = this.ticketTypes.map(tt => ({
       ...tt,
       start_date: tt.start_date ? new Date(tt.start_date).toISOString() : null,
-      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null
+      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null,
+      special_instructions: tt.special_instructions ?? null
     }));
 
     const eventData: any = {

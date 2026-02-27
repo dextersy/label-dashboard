@@ -492,7 +492,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
           max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : 0,
           start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
           end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
-          disabled: ticketType.disabled !== undefined ? ticketType.disabled : false
+          disabled: ticketType.disabled !== undefined ? ticketType.disabled : false,
+          special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null
         });
       }
     } else {
@@ -725,7 +726,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
             max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : undefined,
             start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
             end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
-            disabled: ticketType.disabled !== undefined ? ticketType.disabled : undefined
+            disabled: ticketType.disabled !== undefined ? ticketType.disabled : undefined,
+            special_instructions: ticketType.special_instructions !== undefined ? (ticketType.special_instructions ? ticketType.special_instructions.trim() : null) : undefined
           };
           // Remove undefined fields
           Object.keys(updateFields).forEach(key => updateFields[key] === undefined && delete updateFields[key]);
@@ -742,7 +744,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
             max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : 0,
             start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
             end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
-            disabled: ticketType.disabled !== undefined ? ticketType.disabled : false
+            disabled: ticketType.disabled !== undefined ? ticketType.disabled : false,
+            special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null
           });
           if (!created) {
             return res.status(500).json({ error: 'Failed to create new ticket type' });
@@ -1956,7 +1959,8 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
             number_of_entries: ticket.number_of_entries,
             ticket_type: (ticket as any).ticketType ? {
               id: (ticket as any).ticketType.id,
-              name: (ticket as any).ticketType.name
+              name: (ticket as any).ticketType.name,
+              special_instructions: (ticket as any).ticketType.special_instructions || null
             } : undefined
           },
           {

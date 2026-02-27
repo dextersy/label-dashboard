@@ -222,12 +222,12 @@
                     {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} - <strong>{{ formatPriceDisplay(selectedTicketType?.price || event.ticket_price) }}</strong>
                   </span>
                   <div class="form-floating flex-fill">
-                    <input 
-                      type="number" 
-                      min="1" 
-                      [max]="getRemainingTicketsDisplay() || 99" 
-                      step="1" 
-                      class="form-control" 
+                    <input
+                      type="number"
+                      min="1"
+                      [max]="getRemainingTicketsDisplay() || 99"
+                      step="1"
+                      class="form-control"
                       id="number_of_entries"
                       formControlName="number_of_entries"
                       placeholder="Number of tickets"
@@ -236,9 +236,13 @@
                     <label for="number_of_entries">Number of tickets</label>
                   </div>
                 </div>
-                <div class="invalid-feedback d-block" 
+                <div class="invalid-feedback d-block"
                      *ngIf="isFieldInvalid('number_of_entries')">
                   Number of tickets is required.
+                </div>
+                <!-- Special Instructions for selected ticket type -->
+                <div class="d-block text-success mt-1" *ngIf="selectedTicketType?.special_instructions">
+                  <i class="fas fa-info-circle me-1"></i>{{ selectedTicketType?.special_instructions }}
                 </div>
               </div>
 
@@ -270,6 +274,7 @@
                   <li>Please use a name that is shown in any valid ID, as you may be requested to present identification at the gate.</li>
                   <li>Please make sure your email address is correct to make sure that you receive your ticket without any problem.</li>
                   <li>Tickets are non-refundable once paid.</li>
+                  <li *ngIf="selectedTicketType?.special_instructions">For <strong>"{{ selectedTicketType?.name }}"</strong>: {{ selectedTicketType?.special_instructions }}</li>
                 </ul>
               </div>
               
