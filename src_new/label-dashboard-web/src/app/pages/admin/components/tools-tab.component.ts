@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService, EmailLog, EmailDetail } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableAction, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
     selector: 'app-tools-tab',
@@ -18,9 +18,22 @@ export class ToolsTabComponent implements OnInit, OnDestroy {
   selectedEmail: EmailDetail | null = null;
   showEmailModal: boolean = false;
 
+  emailLogsActions: TableAction[] = [
+    {
+      icon: 'fa-solid fa-eye',
+      label: 'View Details',
+      handler: (email: EmailLog) => this.viewEmailContent(email.id)
+    },
+    {
+      icon: 'fa-solid fa-external-link-alt',
+      label: 'Preview in New Window',
+      handler: (email: EmailLog) => this.previewEmail(email.id)
+    }
+  ];
+
   emailLogsColumns: TableColumn[] = [
     { key: 'timestamp', label: 'Timestamp', type: 'date', searchable: true, sortable: true },
-    { key: 'recipients', label: 'Recipients', type: 'text', searchable: true, sortable: true },
+    { key: 'recipients', label: 'Recipients', type: 'text', searchable: true, sortable: true, maxWidth: '200px' },
     { key: 'subject', label: 'Subject', type: 'text', searchable: true, sortable: true },
     { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
       const result = item.result;
