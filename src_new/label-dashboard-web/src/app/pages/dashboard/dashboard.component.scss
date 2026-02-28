@@ -420,6 +420,10 @@
 @media (max-width: 768px) {
   .quick-menu-card {
     min-height: 140px;
+
+    .quick-menu-footer {
+      margin-top: 1.25rem;
+    }
   }
 
   .stats-compact-item {

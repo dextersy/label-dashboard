@@ -201,7 +201,7 @@ export class LoginComponent implements OnInit {
       case 'music':
         return '/dashboard';
       case 'campaigns':
-        return '/campaigns/events/details';
+        return '/campaigns/dashboard';
       case 'admin':
         return '/admin/settings';
       default:

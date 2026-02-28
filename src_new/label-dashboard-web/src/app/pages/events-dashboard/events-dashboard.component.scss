@@ -239,6 +239,10 @@
   .quick-menu-card {
     min-height: 140px;
     padding: 1rem 0.9rem 0.9rem;
+
+    .quick-menu-footer {
+      margin-top: 1.25rem;
+    }
   }
 
   .stats-compact-card {

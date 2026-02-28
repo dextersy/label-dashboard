@@ -159,7 +159,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.router.navigate(['/dashboard']);
         break;
       case 'campaigns':
-        this.router.navigate(['/campaigns/events/details']);
+        this.router.navigate(['/campaigns/dashboard']);
         break;
       case 'labels':
         this.router.navigate(['/labels/earnings']);
