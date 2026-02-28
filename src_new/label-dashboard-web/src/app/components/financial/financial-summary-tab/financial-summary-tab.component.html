@@ -1,5 +1,5 @@
-<div class="row" *ngIf="summary">
-  <div class="col-md-3">
+<div class="row align-items-center" *ngIf="summary">
+  <div class="col-md-4">
     <div class="current-balance-section text-center p-4">
       <h2 class="balance-title">Current Balance</h2>
       <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
@@ -12,39 +12,22 @@
       </button>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="card text-center financial-card">
-      <div class="card-body">
-        <h3 class="card-title">Total Earnings</h3>
-        <h2 [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</h2>
-        <button class="btn btn-secondary btn-sm" 
-                (click)="viewEarningsDetails.emit()">
-          View Details
-        </button>
+  <div class="col-md-8">
+    <div class="financial-summary-card">
+      <div class="financial-summary-item" (click)="viewEarningsDetails.emit()">
+        <span class="financial-item-label">Total Earnings</span>
+        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</span>
+        <a class="financial-item-link">View Details</a>
       </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center financial-card">
-      <div class="card-body">
-        <h3 class="card-title">Total Royalties</h3>
-        <h2 [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</h2>
-        <button class="btn btn-secondary btn-sm" 
-                (click)="viewRoyaltiesDetails.emit()">
-          View Details
-        </button>
+      <div class="financial-summary-item" (click)="viewRoyaltiesDetails.emit()">
+        <span class="financial-item-label">Total Royalties</span>
+        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</span>
+        <a class="financial-item-link">View Details</a>
       </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card text-center financial-card">
-      <div class="card-body">
-        <h3 class="card-title">Total Payments</h3>
-        <h2 [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</h2>
-        <button class="btn btn-secondary btn-sm" 
-                (click)="viewPaymentsDetails.emit()">
-          View Details
-        </button>
+      <div class="financial-summary-item" (click)="viewPaymentsDetails.emit()">
+        <span class="financial-item-label">Total Payments</span>
+        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
+        <a class="financial-item-link">View Details</a>
       </div>
     </div>
   </div>
