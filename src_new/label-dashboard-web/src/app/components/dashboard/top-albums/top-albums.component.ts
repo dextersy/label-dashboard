@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Chart } from 'chart.js/auto';
@@ -24,6 +24,13 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
 
   private chart: Chart | null = null;
   private viewInitialized = false;
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.viewInitialized) {
+      this.buildChart();
+    }
+  }
 
   constructor(private router: Router) {}
 
@@ -83,7 +90,7 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
           backgroundColor: brandColor,
           borderRadius: 4,
           borderSkipped: false,
-          barThickness: 50
+          barThickness: window.innerWidth < 768 ? 24 : 75
         }]
       },
       options: {
