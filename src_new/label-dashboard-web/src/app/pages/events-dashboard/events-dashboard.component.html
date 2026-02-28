@@ -28,36 +28,48 @@
       <h1 class="welcome-greeting">
         Good {{ getTimeOfDay() }}, <span class="welcome-name">{{ userFirstName }}!</span>
       </h1>
-      <p class="welcome-date">{{ today | date:'EEEE, MMMM d, y' }}</p>
+      <p class="welcome-subtitle">This is your <strong>Campaigns</strong> dashboard.</p>
     </div>
 
     <!-- Quick Menu + Stats Row -->
     <div class="row mb-4">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
+      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
         <div class="row">
-          <div class="col-6">
-            <a routerLink="/campaigns/events/new" class="quick-menu-card">
-              <div class="quick-menu-icon">
+          <div class="col-12 col-sm-7 mb-3 mb-sm-0">
+            <a routerLink="/campaigns/events/new" class="quick-menu-card quick-menu-card-primary">
+              <div class="quick-menu-icon-wrap">
                 <i class="fas fa-calendar-plus"></i>
               </div>
-              <span class="quick-menu-label">Create New Event</span>
+              <div class="quick-menu-footer">
+                <div>
+                  <div class="quick-menu-label">Create an Event</div>
+                  <div class="quick-menu-sublabel">Set up tickets, venue &amp; schedule</div>
+                </div>
+                <span class="quick-menu-arrow">↗</span>
+              </div>
             </a>
           </div>
-          <div class="col-6">
+          <div class="col-12 col-sm-5">
             <a routerLink="/campaigns/fundraisers/new" class="quick-menu-card">
-              <div class="quick-menu-icon">
+              <div class="quick-menu-icon-wrap">
                 <i class="fas fa-hand-holding-heart"></i>
               </div>
-              <span class="quick-menu-label">Create New Fundraiser</span>
+              <div class="quick-menu-footer">
+                <div>
+                  <div class="quick-menu-label">New Fundraiser</div>
+                  <div class="quick-menu-sublabel">Launch a campaign for your fans</div>
+                </div>
+                <span class="quick-menu-arrow">↗</span>
+              </div>
             </a>
           </div>
         </div>
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-6 col-md-12 d-flex flex-column">
+      <div class="col-lg-4 col-md-12 d-flex flex-column">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
