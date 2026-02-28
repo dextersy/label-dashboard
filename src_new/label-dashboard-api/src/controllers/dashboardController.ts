@@ -590,15 +590,16 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
     const brandFilter = { brand_id: req.user.brand_id };
     const { Op } = require('sequelize');
 
-    // Get active events count (published events still open for ticket sales)
+    // Get active events count (published events that haven't ended yet).
+    // If close_time is set, use that; otherwise fall back to date_and_time.
     const now = new Date();
     const activeEventsCount = await Event.count({
       where: {
         ...brandFilter,
         status: 'published',
         [Op.or]: [
-          { close_time: null },
-          { close_time: { [Op.gt]: now } }
+          { close_time: { [Op.gt]: now } },
+          { close_time: null, date_and_time: { [Op.gt]: now } }
         ]
       }
     });
