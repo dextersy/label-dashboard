@@ -269,11 +269,12 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
 // Get complete dashboard data
 export const getDashboardData = async (req: AuthRequest, res: Response) => {
   try {
-    const [latestReleases, topEarningReleases, balanceSummary, stats] = await Promise.all([
+    const [latestReleases, topEarningReleases, balanceSummary, stats, releasePipeline] = await Promise.all([
       getLatestReleasesData(req),
       getTopEarningReleasesData(req),
       getBalanceSummaryData(req),
-      getDashboardStatsData(req)
+      getDashboardStatsData(req),
+      getReleasePipelineData(req)
     ]);
 
     const dashboardData: any = {
@@ -284,7 +285,8 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
       latestReleases,
       topEarningReleases,
       balanceSummary,
-      stats
+      stats,
+      releasePipeline
     };
 
     // Add event sales for admin users
@@ -805,4 +807,53 @@ async function getDashboardStatsData(req: AuthRequest) {
     totalArtists,
     totalReleases
   };
+}
+
+async function getReleasePipelineData(req: AuthRequest) {
+  const STATUSES = ['Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'];
+  const brandFilter = { brand_id: req.user.brand_id };
+  const counts: Record<string, number> = Object.fromEntries(STATUSES.map(s => [s, 0]));
+
+  let releases: any[];
+
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    const accessibleArtistIds = artistAccess.map((a: any) => a.artist_id);
+
+    if (accessibleArtistIds.length === 0) {
+      return STATUSES.map(status => ({ status, count: 0 }));
+    }
+
+    releases = await Release.findAll({
+      where: brandFilter,
+      attributes: ['id', 'status'],
+      include: [{
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        attributes: ['artist_id'],
+        where: { artist_id: accessibleArtistIds },
+        required: true
+      }]
+    });
+  } else {
+    releases = await Release.findAll({
+      where: brandFilter,
+      attributes: ['id', 'status']
+    });
+  }
+
+  // Deduplicate by release ID — a release with multiple artists
+  // appears once per artist in the JOIN result.
+  const seenIds = new Set<number>();
+  releases.forEach((r: any) => {
+    if (!seenIds.has(r.id)) {
+      seenIds.add(r.id);
+      if (counts[r.status] !== undefined) counts[r.status]++;
+    }
+  });
+
+  return STATUSES.map(status => ({ status, count: counts[status] }));
 }

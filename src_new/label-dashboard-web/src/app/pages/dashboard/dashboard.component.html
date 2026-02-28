@@ -101,18 +101,21 @@
     </div>
 
     <!-- Dashboard widgets -->
-    <!-- Row 1: Latest releases + Top earning releases -->
+    <!-- Row 1: Latest releases + Release Pipeline -->
     <div class="row mb-4">
       <div class="col-lg-6 mb-4 mb-lg-0">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
       <div class="col-lg-6">
-        <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
+        <app-release-pipeline [stages]="dashboardData.releasePipeline || []"></app-release-pipeline>
       </div>
     </div>
 
-    <!-- Row 2: Balance summary -->
+    <!-- Row 2: Top earning releases + Balance summary -->
     <div class="row">
+      <div class="col-lg-8 mb-4 mb-lg-0">
+        <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
+      </div>
       <div class="col-lg-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>
