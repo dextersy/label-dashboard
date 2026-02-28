@@ -86,7 +86,7 @@
                [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
                (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
             <img class="stats-compact-cover"
-                 [src]="dashboardData.stats?.latestRelease?.cover_art || 'assets/img/placeholder.jpg'"
+                 [src]="getCoverArtUrl(dashboardData.stats?.latestRelease?.cover_art)"
                  [alt]="dashboardData.stats?.latestRelease?.title || 'Latest release'">
             <span class="stats-compact-value stats-compact-value-text">
               {{ dashboardData.stats?.latestRelease?.title || '—' }}

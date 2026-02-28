@@ -761,7 +761,8 @@ async function getDashboardStatsData(req: AuthRequest) {
       catalog_no: latestReleaseResult.catalog_no,
       title: latestReleaseResult.title,
       artist_id: primaryArtist?.id || null,
-      artist_name: primaryArtist?.name || 'Unknown Artist'
+      artist_name: primaryArtist?.name || 'Unknown Artist',
+      cover_art: latestReleaseResult.cover_art || null
     };
   }
 

@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { environment } from 'environments/environment';
 
 export interface LatestRelease {
   id: number;
@@ -54,6 +55,9 @@ export class LatestAlbumsComponent {
   }
 
   getImageSrc(coverArt: string): string {
-    return coverArt && coverArt.trim() !== '' ? coverArt : '/assets/img/placeholder.jpg';
+    if (!coverArt || coverArt.trim() === '') {
+      return '/assets/img/placeholder.jpg';
+    }
+    return coverArt.startsWith('http') ? coverArt : `${environment.apiUrl}/uploads/covers/${coverArt}`;
   }
 }

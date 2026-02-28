@@ -226,6 +226,13 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/artist']);
   }
 
+  getCoverArtUrl(coverArt: string | undefined): string {
+    if (!coverArt || coverArt.trim() === '') {
+      return 'assets/img/placeholder.jpg';
+    }
+    return coverArt.startsWith('http') ? coverArt : `${environment.apiUrl}/uploads/covers/${coverArt}`;
+  }
+
   goToLatestRelease(): void {
     const latestRelease = this.dashboardData?.stats?.latestRelease;
     if (!latestRelease) return;
