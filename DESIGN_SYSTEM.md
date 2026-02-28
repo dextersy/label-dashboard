@@ -112,6 +112,16 @@ All defined in `src/styles/components.scss` as Bootstrap overrides.
 - `.btn-icon` **always** overrides to `background: transparent !important; box-shadow: none !important`
 - If a fixed-square icon button is ever needed, add a `.btn-icon--square` modifier on top of `.btn-icon` rather than a new standalone class
 
+### Blob accent (`.btn-primary` only)
+Primary buttons carry two decorative circular blobs via `::before` / `::after` — the same visual language used by primary quick-link cards and the Current Balance section.
+
+| Pseudo | Size | Position | Opacity |
+|--------|------|----------|---------|
+| `::before` | 70 × 70 px | `top: -25px; right: -15px` | `rgba(255,255,255,0.10)` |
+| `::after` | 40 × 40 px | `bottom: -12px; left: 12px` | `rgba(255,255,255,0.07)` |
+
+The button uses `position: relative; overflow: hidden` to clip the blobs. Both pseudo-elements have `pointer-events: none` so they never block clicks.
+
 ### `.sticky-bottom-panel`
 A sticky save/submit panel used on long forms. Sits at the bottom of its scroll container with a frosted-glass backdrop. Contains `.panel-content` which flex-end aligns the action button.
 
