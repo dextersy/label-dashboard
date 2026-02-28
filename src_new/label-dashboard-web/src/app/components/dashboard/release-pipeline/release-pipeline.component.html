@@ -1,0 +1,70 @@
+<div class="card pipeline-card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <h5 class="mb-0">Release Pipeline</h5>
+    <span class="pipeline-total-badge" *ngIf="total > 0">{{ total }} total</span>
+  </div>
+
+  <div class="card-body">
+    <!-- Empty state -->
+    <div *ngIf="total === 0" class="text-center text-muted py-4">
+      <i class="fas fa-layer-group fa-2x mb-2 d-block"></i>
+      No releases yet
+    </div>
+
+    <ng-container *ngIf="total > 0">
+      <!-- Flow stages -->
+      <div class="flow-row">
+        <ng-container *ngFor="let stage of flowStages; let i = index; let last = last">
+          <div class="stage-card" [class]="'stage-' + getStatusKey(stage.status)" [class.stage-empty]="stage.count === 0">
+            <div class="stage-icon-wrap">
+              <i [class]="getIcon(stage.status)"></i>
+            </div>
+            <div class="stage-count">{{ stage.count }}</div>
+            <div class="stage-name">{{ stage.status }}</div>
+            <div class="stage-pct" *ngIf="stage.count > 0">{{ getPct(stage.count) }}%</div>
+            <div class="stage-fill-bar">
+              <div class="stage-fill-inner" [style.width.%]="getPct(stage.count)"></div>
+            </div>
+          </div>
+          <div class="flow-arrow" *ngIf="!last">
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Taken Down exit row -->
+      <div class="taken-down-row" *ngIf="takenDown.count > 0">
+        <div class="taken-down-line"></div>
+        <div class="taken-down-card">
+          <i class="fas fa-ban"></i>
+          <span class="taken-down-count">{{ takenDown.count }}</span>
+          <span class="taken-down-label">Taken Down</span>
+          <span class="taken-down-pct">{{ getPct(takenDown.count) }}%</span>
+        </div>
+      </div>
+
+      <!-- Distribution bar -->
+      <div class="distribution-bar mt-3">
+        <div
+          *ngFor="let stage of distributionStages"
+          class="distribution-segment"
+          [class]="'segment-' + getStatusKey(stage.status)"
+          [style.flex]="stage.count"
+          [title]="stage.status + ': ' + stage.count + ' (' + getPct(stage.count) + '%)'">
+        </div>
+      </div>
+      <div class="distribution-legend">
+        <div class="legend-item" *ngFor="let stage of distributionStages">
+          <span class="legend-dot" [class]="'dot-' + getStatusKey(stage.status)"></span>
+          <span class="legend-label">{{ stage.status }}</span>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="card-footer text-right">
+    <a (click)="goToReleases()" class="btn-ghost" style="cursor: pointer;">
+      Go to releases <i class="far fa-arrow-alt-circle-right"></i>
+    </a>
+  </div>
+</div>

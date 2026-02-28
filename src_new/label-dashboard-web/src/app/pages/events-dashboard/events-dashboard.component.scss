@@ -10,7 +10,7 @@
   padding: 1rem 0 0.5rem;
 
   .welcome-greeting {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 300;
     color: #1a1a2e;
     margin: 0;
@@ -21,10 +21,10 @@
     }
   }
 
-  .welcome-date {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.25rem 0 0;
+  .welcome-subtitle {
+    font-size: 1rem;
+    color: #9ca3af;
+    margin: 0.2rem 0 0;
     font-weight: 400;
   }
 }
@@ -39,10 +39,12 @@
   margin-bottom: 0.5rem;
 
   &.section-label-lg {
-    font-size: 1rem;
+    font-size: 1.5rem;
+    font-weight: 800;
     text-transform: none;
-    letter-spacing: 0;
+    letter-spacing: -0.3px;
     color: #1a1a2e;
+    margin-bottom: 0.75rem;
   }
 }
 
@@ -50,57 +52,117 @@
 .quick-menu-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(
-    135deg,
-    var(--brand-color-tint-8, #f3f5fd) 0%,
-    var(--brand-color-tint-20, #e0e5fb) 100%
-  );
-  border: 1px solid var(--brand-color-tint-22, #dde3fa);
-  border-radius: 12px;
-  padding: 2rem 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.1rem 1.1rem 1rem;
   text-decoration: none;
-  transition: all 0.25s ease;
   height: 100%;
-  min-height: 140px;
+  min-height: 160px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
 
   &:hover {
-    background: linear-gradient(
-      135deg,
-      var(--brand-color-tint-14, #eaedfc) 0%,
-      var(--brand-color-tint-30, #d1d8f9) 100%
-    );
-    border-color: var(--brand-color-tint-38, #c5cef7);
-    box-shadow: 0 8px 24px rgba(var(--brand-color-rgb, 102, 126, 234), 0.18);
+    border-color: #d1d5db;
     text-decoration: none;
-    transform: translateY(-3px);
+  }
 
-    .quick-menu-icon {
-      transform: scale(1.12);
+  // Primary variant — brand-filled
+  &.quick-menu-card-primary {
+    background: var(--brand-color, #667eea);
+    border-color: transparent;
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+      top: -40px;
+      right: -30px;
+      pointer-events: none;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      bottom: 16px;
+      right: 16px;
+      pointer-events: none;
+    }
+
+    .quick-menu-icon-wrap {
+      background: rgba(0, 0, 0, 0.18);
+      i { color: #fff; }
+    }
+
+    .quick-menu-label   { color: #fff; }
+    .quick-menu-sublabel { color: rgba(255, 255, 255, 0.7); }
+
+    .quick-menu-arrow {
+      background: rgba(0, 0, 0, 0.22);
+      color: #fff;
     }
   }
 
-  .quick-menu-icon {
+  .quick-menu-icon-wrap {
+    width: 54px;
+    height: 54px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 0.75rem;
-    transition: transform 0.25s ease;
+    background: #f3f4f6;
+    border-radius: 12px;
+    flex-shrink: 0;
 
     i {
-      font-size: 3.5rem;
-      color: var(--brand-color, #667eea);
-      transition: color 0.25s ease;
+      font-size: 1.4rem;
+      color: #374151;
     }
   }
 
+  .quick-menu-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
   .quick-menu-label {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: #1a1a2e;
-    text-align: center;
     line-height: 1.2;
+    margin-bottom: 0.25rem;
+  }
+
+  .quick-menu-sublabel {
+    font-size: 1rem;
+    color: #6b7280;
+    line-height: 1.35;
+  }
+
+  .quick-menu-arrow {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--brand-color, #667eea);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    line-height: 1;
   }
 }
 
@@ -175,16 +237,8 @@
 /* Responsive adjustments */
 @media (max-width: 991px) {
   .quick-menu-card {
-    padding: 1.5rem 0.75rem;
-    min-height: 120px;
-
-    .quick-menu-icon i {
-      font-size: 2.5rem;
-    }
-
-    .quick-menu-label {
-      font-size: 0.9rem;
-    }
+    min-height: 140px;
+    padding: 1rem 0.9rem 0.9rem;
   }
 
   .stats-compact-card {
@@ -212,12 +266,5 @@
   .quick-menu-card {
     padding: 1.5rem 0.75rem;
 
-    .quick-menu-icon i {
-      font-size: 2.5rem;
-    }
-
-    .quick-menu-label {
-      font-size: 0.9rem;
-    }
   }
 }
