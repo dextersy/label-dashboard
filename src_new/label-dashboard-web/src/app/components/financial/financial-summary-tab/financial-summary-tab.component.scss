@@ -167,4 +167,28 @@
   .financial-item-value {
     font-size: 18px;
   }
+
+  .financial-summary-card {
+    flex-wrap: wrap;
+  }
+
+  .financial-summary-item {
+    flex: 0 0 50%;
+
+    & + .financial-summary-item {
+      border-left: none;
+    }
+
+    &:nth-child(odd) {
+      border-right: 1px solid #eee;
+    }
+
+    &:last-child:nth-child(odd) {
+      border-right: none;
+    }
+
+    &:nth-child(-n+2) {
+      border-bottom: 1px solid #eee;
+    }
+  }
 }
