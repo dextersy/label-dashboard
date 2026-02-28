@@ -56,6 +56,7 @@ export const sendTicketEmail = async (
     ticket_type?: {
       id: number;
       name: string;
+      special_instructions?: string | null;
     };
   },
   event: {
@@ -120,6 +121,20 @@ export const sendTicketEmail = async (
       brand_name: brand.brand_name || 'Melt Records',
       ticket_type_name: ticket.ticket_type?.name || 'Regular'
     };
+
+    // Add conditional special instructions section
+    const specialInstructions = ticket.ticket_type?.special_instructions;
+    if (specialInstructions && specialInstructions.trim()) {
+      templateData.show_special_instructions = '';
+      templateData['/show_special_instructions'] = '';
+      templateData.special_instructions_ticket_type = ticket.ticket_type?.name || 'Regular';
+      templateData.special_instructions_text = specialInstructions.trim();
+    } else {
+      templateData.show_special_instructions = '<!--';
+      templateData['/show_special_instructions'] = '-->';
+      templateData.special_instructions_ticket_type = '';
+      templateData.special_instructions_text = '';
+    }
 
     // Add conditional sections
     if (event.venue_address && event.venue_address.trim()) {

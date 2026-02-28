@@ -79,6 +79,12 @@
               </small>
             </div>
 
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Special Instructions <span class="text-muted fw-normal">(optional)</span></label>
+              <textarea class="form-control form-control-sm" [(ngModel)]="ticketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
+              <small class="form-text text-muted">Shown to buyers who select this ticket type, and included in their ticket email and PDF.</small>
+            </div>
+
             <div class="d-flex gap-2 justify-content-end">
               <button type="button" class="btn btn-primary btn-sm" (click)="saveEdit(i)" title="Save changes">
                 <i class="fas fa-check"></i>
@@ -112,6 +118,13 @@
             <span *ngIf="!ticketType.start_date && ticketType.end_date">Until {{ ticketType.end_date | date:'short' }}</span>
             <span *ngIf="ticketType.start_date && ticketType.end_date">{{ ticketType.start_date | date:'short' }} - {{ ticketType.end_date | date:'short' }}</span>
             <span *ngIf="!ticketType.start_date && !ticketType.end_date">Always available</span>
+          </small>
+        </div>
+
+        <div class="mb-1" *ngIf="ticketType.special_instructions">
+          <small class="text-muted d-block">
+            <i class="fas fa-info-circle me-1"></i>
+            <em>{{ ticketType.special_instructions }}</em>
           </small>
         </div>
 
@@ -219,6 +232,12 @@
         <small class="form-text text-muted" *ngIf="newTicketType.showDateRange">
           <i class="fa fa-info-circle"></i> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
         </small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Special Instructions <span class="text-muted fw-normal">(optional)</span></label>
+        <textarea class="form-control form-control-sm" [(ngModel)]="newTicketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
+        <small class="form-text text-muted">Shown to buyers who select this ticket type, and included in their ticket email and PDF.</small>
       </div>
 
       <div class="d-flex gap-2 justify-content-end">

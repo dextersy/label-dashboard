@@ -144,10 +144,11 @@
                       [disabled]="isOperationsDisabled()"
                       (change)="onSelectAll($any($event.target).checked)">
                   </th>
-                  <th *ngFor="let column of columns" 
+                  <th *ngFor="let column of columns"
                       [class]="getColumnClasses(column)"
                       [class.sortable]="column.sortable"
                       [style.text-align]="column.align || 'left'"
+                      [style.max-width]="column.maxWidth"
                       (click)="onSort(column)"
                       [style.cursor]="column.sortable ? 'pointer' : 'default'">
                     {{ column.label }}
@@ -199,6 +200,8 @@
                       [class]="getColumnClasses(column)"
                       [class.card-header-cell]="column.cardHeader"
                       [style.text-align]="column.align || 'left'"
+                      [style.max-width]="column.maxWidth"
+                      [style.overflow-wrap]="column.maxWidth ? 'break-word' : null"
                       [attr.data-label]="column.hideDataLabel ? '' : column.label">
                     <!-- Payment link special handling -->
                     <span *ngIf="column.key === 'payment_link'">

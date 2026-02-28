@@ -682,7 +682,8 @@ export class PaymentService {
           number_of_entries: ticket.number_of_entries,
           ticket_type: (ticket as any).ticketType ? {
             id: (ticket as any).ticketType.id,
-            name: (ticket as any).ticketType.name
+            name: (ticket as any).ticketType.name,
+            special_instructions: (ticket as any).ticketType.special_instructions || null
           } : undefined
         },
         {

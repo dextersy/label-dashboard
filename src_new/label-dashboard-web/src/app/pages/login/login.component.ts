@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
 import { AuthService } from '../../services/auth.service';
-import { WorkspaceService } from '../../services/workspace.service';
+import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 
 @Component({
     selector: 'app-login',
@@ -60,7 +60,7 @@ export class LoginComponent implements OnInit {
     // Check if user is already logged in (similar to original PHP check)
     const loggedInUser = localStorage.getItem('auth_token');
     if (loggedInUser) {
-      this.router.navigate([this.getDefaultPageForWorkspace()]);
+      this.router.navigate([this.getDefaultPageForWorkspace(this.authService.isAdmin())]);
     }
 
     this.loadBrandSettings();
@@ -147,7 +147,7 @@ export class LoginComponent implements OnInit {
 
         // Normal login - redirect to workspace default page or specified URL
         if (response.token) {
-          const redirectTo = this.redirectUrl || this.getDefaultPageForWorkspace();
+          const redirectTo = this.redirectUrl || this.getDefaultPageForWorkspace(response.user?.is_admin ?? false);
           this.router.navigate([redirectTo]);
         }
       },
@@ -187,8 +187,16 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  private getDefaultPageForWorkspace(): string {
+  private getDefaultPageForWorkspace(isAdmin: boolean = false): string {
     const workspace = this.workspaceService.currentWorkspace;
+
+    // If the stored workspace requires admin access but the user isn't admin, reset to music
+    const adminOnlyWorkspaces: WorkspaceType[] = ['campaigns', 'labels', 'admin'];
+    if (!isAdmin && adminOnlyWorkspaces.includes(workspace)) {
+      this.workspaceService.setWorkspace('music');
+      return '/dashboard';
+    }
+
     switch (workspace) {
       case 'music':
         return '/dashboard';

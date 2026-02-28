@@ -44,6 +44,7 @@ export interface TableColumn {
   renderHtml?: boolean; // Render formatter output as HTML instead of text
   cardHeader?: boolean; // Use this column as the card title in mobile view
   hideDataLabel?: boolean; // Hide the data-label prefix in mobile card view
+  maxWidth?: string; // Cap column width and wrap text (e.g. '200px')
 }
 
 export interface SearchFilters {
