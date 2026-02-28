@@ -19,16 +19,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.667.0",
-    "axios": "^1.7.2",
-    "nodemailer": "^6.9.13"
+    "@aws-sdk/client-s3": "^3.1000.0",
+    "axios": "^1.13.5",
+    "nodemailer": "^8.0.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.140",
-    "@types/node": "^20.14.10",
-    "@types/nodemailer": "^6.4.15",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^7.0.0",
     "bestzip": "^2.2.1",
     "dotenv": "^16.4.5",
     "typescript": "^5.5.3"
+  },
+  "overrides": {
+    "fast-xml-parser": "^5.3.8"
   }
 }
