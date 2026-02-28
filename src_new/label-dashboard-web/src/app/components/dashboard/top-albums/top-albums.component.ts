@@ -67,8 +67,7 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
       .trim() || '#3b82f6';
 
     const labels = top6.map(r => {
-      const combined = `${r.title} — ${r.artist_name}`;
-      return combined.length > 28 ? combined.slice(0, 28) + '…' : combined;
+      return r.title.length > 14 ? r.title.slice(0, 14) + '…' : r.title;
     });
     const data = top6.map(r => r.total_earnings);
     const fullTitles = top6.map(r => `${r.title} — ${r.artist_name}`);
@@ -84,11 +83,10 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
           backgroundColor: brandColor,
           borderRadius: 4,
           borderSkipped: false,
-          barThickness: 10
+          barThickness: 50
         }]
       },
       options: {
-        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -110,6 +108,17 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
         scales: {
           x: {
             ticks: {
+              font: { size: 11 },
+              color: '#4a5568',
+              maxRotation: 35,
+              minRotation: 0
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            ticks: {
               callback: (value) => {
                 return this.formatCurrencyShort(value as number);
               },
@@ -118,15 +127,6 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
             },
             grid: {
               color: 'rgba(0,0,0,0.05)'
-            }
-          },
-          y: {
-            ticks: {
-              font: { size: 11 },
-              color: '#4a5568'
-            },
-            grid: {
-              display: false
             }
           }
         }
@@ -139,16 +139,15 @@ export class TopAlbumsComponent implements OnChanges, AfterViewInit, OnDestroy {
           const meta = chart.getDatasetMeta(0);
 
           ctx.save();
-          ctx.font = '600 11px "Source Sans 3", sans-serif';
+          ctx.font = '600 10px "Source Sans 3", sans-serif';
           ctx.fillStyle = '#4a5568';
-          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
 
           meta.data.forEach((bar, i) => {
             const value = dataset.data[i] as number;
             const label = formatCurrencyShort(value);
-            const x = bar.x + 6;
-            const y = bar.y;
-            ctx.fillText(label, x, y);
+            ctx.fillText(label, bar.x, bar.y - 3);
           });
 
           ctx.restore();
