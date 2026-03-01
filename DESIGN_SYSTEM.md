@@ -295,6 +295,64 @@ Based on **Light Bootstrap Dashboard** theme (`assets/css/light-bootstrap-dashbo
 ### Mobile bottom nav
 When a mobile workspace navigation bar is present, `:root.has-mobile-nav` is set and content gets `padding-bottom: 70px`. Sticky/floating elements also offset by `70px`.
 
+### Sidebar Submenus & Page Tabs
+
+Many screens are structured as a **parent sidebar item** with **child routes** that each swap the page's content panel. Some screens additionally use an **in-page section navigator** to switch between sub-sections without a route change — the two mechanisms can coexist.
+
+#### Expanded sidebar — inline accordion
+
+A `MenuItem` with a `children` array renders a `.parent-menu-item` anchor and a hidden `<ul class="submenu">` below it. Clicking the parent calls `toggleSubmenu()`, which adds/removes the route from `expandedMenus` and applies the `.expanded` class. The submenu animates open via `max-height: 0 → 400px` (transition `0.3s ease`).
+
+The submenu **auto-expands** whenever a child route is active (`isActiveParentRoute` check inside `isSubmenuExpanded`). If the user explicitly collapses it, the route is stored in `collapsedMenus` so it stays closed even with an active child. A chevron arrow (`.submenu-arrow`) rotates 180° when open.
+
+Child links (`.submenu-item`) are styled at 12 px, indented 54 px, with a 1 px vertical track line drawn by `li::before` at `left: 31px`.
+
+The `MenuItem` tree supports arbitrary nesting — the same rendering template handles all levels.
+
+#### Collapsed desktop sidebar — flyout panel
+
+When the sidebar is in its 86 px icon-only state, clicking a parent item shows a `.flyout-panel` instead of an inline accordion. The flyout is a `position: fixed` panel, 220 px wide, that slides in from `left: 86px` using a `slideIn` keyframe animation. A transparent `.flyout-backdrop` covering the rest of the viewport closes it on click-outside.
+
+#### Sidebar-driven page tabs
+
+When a parent item has child routes, each child route maps to a section of the page template. The page component resolves the active section from the last URL segment and shows the correct content via `*ngIf="activeTab === '...'"`. Tab components live in `src/app/components/<domain>/`.
+
+#### In-page section navigator
+
+For screens that contain multiple logically distinct sections within a single route, a vertical section navigator is rendered alongside the content area. This is an optional pattern used when it makes sense to subdivide a screen without adding sidebar entries or new routes.
+
+Layout structure:
+
+```html
+<div class="*-layout">           <!-- flex container: nav + content side by side -->
+  <nav class="*-sidebar">
+    <div class="sidebar-items">
+      <button class="sidebar-item" [class.active]="activeSection === 'x'" (click)="setActiveSection('x')">
+        <i class="fa fa-..."></i>
+        <span>Label</span>
+      </button>
+    </div>
+  </nav>
+  <div class="*-main">
+    <div *ngIf="activeSection === 'x'">...</div>
+  </div>
+</div>
+```
+
+**Styling:**
+- `.sidebar-items` is `flex-direction: column`, `gap: 4px`
+- `.sidebar-item` buttons have `border-left: 3px solid transparent`; the active state sets `border-left-color: var(--brand-color)` and applies the brand color to icon and text
+- On mobile the nav switches to `flex-direction: row` (horizontal tabs across the top of the content), and `border-left` becomes `border-bottom: 3px solid`
+
+**Optional enhancements:**
+- Items can be `[disabled]` to block progression until preconditions are met (e.g. a wizard-style flow)
+- Status icons (`fa-check-circle`, `fa-exclamation-triangle`, `fa-exclamation-circle`) can be appended inside the button to show per-section completion/warning/error state
+- A cancel or back action can be added as a final `.sidebar-item` with a distinct style (e.g. `.sidebar-item-cancel`)
+
+#### Workspace contexts
+
+The sidebar is workspace-aware via `WorkspaceService`. The four workspaces are `music`, `campaigns`, `labels`, and `admin`. Switching workspace filters `visibleSections` in `SidebarComponent` so only the relevant parent items are shown — each workspace surfaces its own submenu children as top-level entries, making the nav feel flat within that context. The selected workspace is persisted to `localStorage`.
+
 ---
 
 ## Key File Locations
