@@ -1,84 +1,91 @@
-// ── Section Heading ──────────────────────────────────────────────────────────
-.section-heading {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-// ── Current Balance Section (dominant card) ───────────────────────────────────
-.current-balance-section {
-  background: var(--brand-color, #667eea);
-  position: relative;
-  color: white;
-  border-radius: 16px;
-  min-height: 180px;
+// ── In-page layout (mirrors event-form-layout pattern) ────────────────────────
+.expense-report-layout {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.expense-report-sidebar {
+  flex: 0 0 200px;
+  position: sticky;
+  top: 20px;
+
+  .sidebar-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #6c757d;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    width: 100%;
+
+    i {
+      font-size: 16px;
+      width: 18px;
+      text-align: center;
+    }
+
+    span {
+      flex: 1;
+    }
+
+    &:hover {
+      color: #495057;
+    }
+
+    &.active {
+      color: var(--brand-color, #007bff);
+      border-left-color: var(--brand-color, #007bff);
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.expense-report-main {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Balance summary row (compact, below table) ────────────────────────────
+.balance-summary-row {
+  display: flex;
   align-items: center;
-  text-align: center;
-  overflow: hidden;
-  height: 100%;
-
-  &::before {
-    content: '';
-    position: absolute;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.07);
-    top: -40px;
-    right: -30px;
-    pointer-events: none;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    bottom: 16px;
-    right: 16px;
-    pointer-events: none;
-  }
-
-  > * {
-    position: relative;
-    z-index: 1;
-  }
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
 }
 
-.balance-title {
-  font-size: 1.25rem;
+.balance-summary-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.balance-summary-value {
+  font-size: 1.4rem;
   font-weight: 700;
-  color: white;
-  margin-bottom: 8px;
-  margin-top: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #1a1a2e;
 }
 
-.balance-amount {
-  font-size: 3rem;
-  font-weight: 800;
-  color: white;
-  margin-bottom: 8px;
-  margin-top: 0;
-  line-height: 1.1;
-}
-
-.balance-subtitle {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 0;
-  margin-top: 0;
-  font-style: italic;
-  line-height: 1.3;
-}
-
-// ── Compact Stats Card ────────────────────────────────────────────────────────
+// ── Compact Stats Card ─────────────────────────────────────────────────────
 .stats-compact-card {
   background: #fff;
   border: 1px solid #eee;
@@ -135,9 +142,68 @@
   }
 }
 
+// ── Tablet: switch to horizontal tab bar ───────────────────────────────────
+@media (max-width: 1024px) {
+  .expense-report-layout {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .expense-report-main {
+    width: 100%;
+  }
+
+  .expense-report-sidebar {
+    flex: none;
+    position: static;
+    border-bottom: 2px solid #e0e0e0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .sidebar-items {
+      flex-direction: row;
+      min-width: min-content;
+      padding: 0;
+    }
+
+    .sidebar-item {
+      padding: 14px 20px;
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      width: auto;
+
+      &.active {
+        border-left-color: transparent;
+        border-bottom-color: var(--brand-color, #007bff);
+      }
+    }
+  }
+}
+
+// ── Mobile ─────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .balance-amount {
-    font-size: 2rem;
+  .expense-report-sidebar {
+    width: 100%;
+
+    .sidebar-items {
+      width: 100%;
+    }
+
+    .sidebar-item {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  .expense-report-main {
+    margin-top: 1rem;
   }
 
   .stats-compact-item {

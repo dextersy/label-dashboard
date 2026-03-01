@@ -2125,6 +2125,127 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
   }
 };
 
+// ADMIN RECUPERABLE EXPENSE FLOW (date-filtered, by release)
+export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date, page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    // Build release where clause for text filters
+    const releaseWhere: any = { brand_id: req.user.brand_id };
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
+    }
+    if (filters.title && filters.title !== '') {
+      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.title}%` };
+    }
+    const artistNameFilter = filters.artist_name && filters.artist_name !== '' ? (filters.artist_name as string).toLowerCase() : null;
+
+    // Get all brand releases with artists
+    const releases = await Release.findAll({
+      where: releaseWhere,
+      include: [{ model: Artist, as: 'artists', attributes: ['name'], through: { attributes: [] } }]
+    });
+
+    const flowItems = [];
+    let totalNewExpense = 0;
+    let totalRecuperatedExpense = 0;
+
+    for (const release of releases) {
+      // Get expenses for this release within the date range
+      const expenses = await RecuperableExpense.findAll({
+        where: {
+          release_id: release.id,
+          date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
+        }
+      });
+
+      if (expenses.length === 0) continue;
+
+      const newExpense = expenses
+        .filter(e => parseFloat((e.expense_amount || 0).toString()) > 0)
+        .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0);
+
+      const recuperatedExpense = Math.abs(
+        expenses
+          .filter(e => parseFloat((e.expense_amount || 0).toString()) < 0)
+          .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0)
+      );
+
+      const artistNames = (release as any).artists?.map((a: any) => a.name).join(', ') || '';
+
+      if (artistNameFilter && !artistNames.toLowerCase().includes(artistNameFilter)) {
+        continue;
+      }
+
+      flowItems.push({
+        release_id: release.id,
+        catalog_no: release.catalog_no,
+        title: release.title,
+        artist_name: artistNames,
+        new_expense: parseFloat(newExpense.toFixed(2)),
+        recuperated_expense: parseFloat(recuperatedExpense.toFixed(2)),
+        net_change: parseFloat((newExpense - recuperatedExpense).toFixed(2))
+      });
+
+      totalNewExpense += newExpense;
+      totalRecuperatedExpense += recuperatedExpense;
+    }
+
+    // Apply sorting
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['catalog_no', 'title', 'artist_name', 'new_expense', 'recuperated_expense', 'net_change'];
+      const validDirections = ['asc', 'desc'];
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        flowItems.sort((a, b) => {
+          let aValue: any = a[sortBy as keyof typeof a];
+          let bValue: any = b[sortBy as keyof typeof b];
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = (bValue as string).toLowerCase();
+          }
+          return sortDirection === 'desc'
+            ? (aValue < bValue ? 1 : aValue > bValue ? -1 : 0)
+            : (aValue > bValue ? 1 : aValue < bValue ? -1 : 0);
+        });
+      }
+    }
+
+    // Apply pagination
+    const totalRecords = flowItems.length;
+    const paginatedItems = flowItems.slice(offset, offset + pageSize);
+    const totalPages = Math.ceil(totalRecords / pageSize);
+
+    res.json({
+      data: paginatedItems,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: totalRecords,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      },
+      total_new_expense: parseFloat(totalNewExpense.toFixed(2)),
+      total_recuperated_expense: parseFloat(totalRecuperatedExpense.toFixed(2))
+    });
+  } catch (error) {
+    console.error('Get admin recuperable expense flow error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // HELPER: Check if artist is ready for payment and return payment details
 interface ArtistPaymentDetails {
   artist: any;

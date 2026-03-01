@@ -25,7 +25,8 @@ import {
   downloadRoyaltiesCSV,
   getAdminEarningsList,
   getAdminRecuperableExpenseSummary,
-  getAdminPaymentsRoyaltiesArtists
+  getAdminPaymentsRoyaltiesArtists,
+  getAdminRecuperableExpenseFlow
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -86,5 +87,6 @@ router.post('/admin/pay-all-balances', requireAdmin, payAllBalances);
 router.get('/admin/earnings-list', requireAdmin, getAdminEarningsList);
 router.get('/admin/recuperable-expense-summary', requireAdmin, getAdminRecuperableExpenseSummary);
 router.get('/admin/payments-royalties-artists', requireAdmin, getAdminPaymentsRoyaltiesArtists);
+router.get('/admin/recuperable-expense-flow', requireAdmin, getAdminRecuperableExpenseFlow);
 
 export default router;

@@ -5,6 +5,8 @@ import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 
+export type RecuperableExpenseSection = 'balance' | 'flow';
+
 @Component({
   selector: 'app-recuperable-expense-tab',
   standalone: true,
@@ -13,61 +15,57 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, So
   styleUrls: ['./recuperable-expense-tab.component.scss']
 })
 export class RecuperableExpenseTabComponent implements OnInit {
-  loading: boolean = false;
-  startDate: string = '';
-  endDate: string = '';
+  activeSection: RecuperableExpenseSection = 'balance';
 
-  // Date-filtered stats
-  expenseSummary: { total_new_recuperable_expense: number; total_recuperated_expense: number } | null = null;
-
-  // All-time total from table
+  // ── Balance section ───────────────────────────────────────────────────────
   totalRecuperableExpense: number = 0;
 
-  // Paginated table
-  recuperableExpenses: any[] = [];
-  expensesPagination: PaginationInfo | null = null;
-  expensesLoading: boolean = false;
-  expensesFilters: SearchFilters = {};
-  expensesSort: SortInfo | null = null;
+  balanceExpenses: any[] = [];
+  balancePagination: PaginationInfo | null = null;
+  balanceLoading: boolean = false;
+  balanceFilters: SearchFilters = {};
+  balanceSort: SortInfo | null = null;
 
-  expensesColumns: TableColumn[] = [
+  balanceColumns: TableColumn[] = [
+    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
+    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-text', tabletClass: '' },
+    { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
     {
-      key: 'catalog_no',
-      label: 'Catalog No.',
-      type: 'text',
-      searchable: true,
-      sortable: true,
-      mobileClass: 'mobile-hide',
-      tabletClass: ''
-    },
-    {
-      key: 'title',
-      label: 'Release',
-      type: 'text',
-      searchable: true,
-      sortable: true,
-      mobileClass: 'mobile-text',
-      tabletClass: ''
-    },
-    {
-      key: 'artist_name',
-      label: 'Artist',
-      type: 'text',
-      searchable: true,
-      sortable: true,
-      mobileClass: 'mobile-hide',
-      tabletClass: ''
-    },
-    {
-      key: 'remaining_expense',
-      label: 'Remaining Expense (₱)',
-      type: 'number',
-      searchable: true,
-      sortable: true,
-      align: 'right',
+      key: 'remaining_expense', label: 'Remaining Expense (₱)', type: 'number',
+      searchable: true, sortable: true, align: 'right',
       formatter: (item) => this.formatCurrency(item.remaining_expense),
-      mobileClass: 'mobile-narrow mobile-number',
-      tabletClass: ''
+      mobileClass: 'mobile-narrow mobile-number', tabletClass: ''
+    }
+  ];
+
+  // ── Flow section ──────────────────────────────────────────────────────────
+  flowLoading: boolean = false;
+  flowStartDate: string = '';
+  flowEndDate: string = '';
+  totalNewExpense: number = 0;
+  totalRecuperatedExpense: number = 0;
+
+  flowExpenses: any[] = [];
+  flowPagination: PaginationInfo | null = null;
+  flowTableLoading: boolean = false;
+  flowFilters: SearchFilters = {};
+  flowSort: SortInfo | null = null;
+
+  flowColumns: TableColumn[] = [
+    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
+    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-text', tabletClass: '' },
+    { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
+    {
+      key: 'new_expense', label: 'New Expenses (₱)', type: 'number',
+      searchable: false, sortable: true, align: 'right',
+      formatter: (item) => this.formatCurrency(item.new_expense),
+      mobileClass: 'mobile-narrow mobile-number', tabletClass: ''
+    },
+    {
+      key: 'recuperated_expense', label: 'Recuperated (₱)', type: 'number',
+      searchable: false, sortable: true, align: 'right',
+      formatter: (item) => this.formatCurrency(item.recuperated_expense),
+      mobileClass: 'mobile-hide', tabletClass: ''
     }
   ];
 
@@ -77,72 +75,105 @@ export class RecuperableExpenseTabComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadRecuperableExpenses();
+    this.loadBalance();
   }
 
-  loadExpenseSummary(): void {
-    if (!this.startDate || !this.endDate) {
-      return;
-    }
-
-    this.adminService.getAdminRecuperableExpenseSummary(this.startDate, this.endDate).subscribe({
-      next: (summary) => {
-        this.expenseSummary = summary;
-      },
-      error: (error) => {
-        this.notificationService.showError('Error loading expense summary');
-      }
-    });
+  setActiveSection(section: RecuperableExpenseSection): void {
+    this.activeSection = section;
   }
 
-  loadRecuperableExpenses(): void {
-    this.expensesLoading = true;
+  // ── Balance methods ───────────────────────────────────────────────────────
+  loadBalance(): void {
+    this.balanceLoading = true;
 
-    const page = this.expensesPagination?.current_page || 1;
-    const limit = this.expensesPagination?.per_page || 10;
-    const sortBy = this.expensesSort?.column;
-    const sortDirection = this.expensesSort?.direction;
+    const page = this.balancePagination?.current_page || 1;
+    const limit = this.balancePagination?.per_page || 5;
+    const sortBy = this.balanceSort?.column;
+    const sortDirection = this.balanceSort?.direction;
 
-    this.adminService.getRecuperableExpenses(page, limit, this.expensesFilters, sortBy, sortDirection).subscribe({
+    this.adminService.getRecuperableExpenses(page, limit, this.balanceFilters, sortBy, sortDirection).subscribe({
       next: (response) => {
-        this.recuperableExpenses = response.data;
-        this.expensesPagination = response.pagination;
+        this.balanceExpenses = response.data;
+        this.balancePagination = response.pagination;
         this.totalRecuperableExpense = response.summary?.total_recuperable_expense || 0;
-        this.expensesLoading = false;
+        this.balanceLoading = false;
       },
-      error: (error) => {
+      error: () => {
         this.notificationService.showError('Error loading recuperable expenses');
-        this.expensesLoading = false;
+        this.balanceLoading = false;
       }
     });
   }
 
-  onDateRangeChange(dateRange: DateRangeSelection): void {
-    this.startDate = dateRange.startDate;
-    this.endDate = dateRange.endDate;
-    this.loadExpenseSummary();
+  onBalancePageChange(page: number): void {
+    if (this.balancePagination) this.balancePagination.current_page = page;
+    this.loadBalance();
   }
 
-  onExpensesPageChange(page: number): void {
-    if (this.expensesPagination) {
-      this.expensesPagination.current_page = page;
-    }
-    this.loadRecuperableExpenses();
+  onBalanceFiltersChange(filters: SearchFilters): void {
+    this.balanceFilters = filters;
+    if (this.balancePagination) this.balancePagination.current_page = 1;
+    this.loadBalance();
   }
 
-  onExpensesFiltersChange(filters: SearchFilters): void {
-    this.expensesFilters = filters;
-    if (this.expensesPagination) {
-      this.expensesPagination.current_page = 1;
-    }
-    this.loadRecuperableExpenses();
+  onBalanceSortChange(sort: SortInfo | null): void {
+    this.balanceSort = sort;
+    this.loadBalance();
   }
 
-  onExpensesSortChange(sort: SortInfo | null): void {
-    this.expensesSort = sort;
-    this.loadRecuperableExpenses();
+  // ── Flow methods ──────────────────────────────────────────────────────────
+  private loadFlow(): void {
+    if (!this.flowStartDate || !this.flowEndDate) return;
+
+    this.flowTableLoading = true;
+
+    const page = this.flowPagination?.current_page || 1;
+    const limit = this.flowPagination?.per_page || 10;
+    const sortBy = this.flowSort?.column;
+    const sortDirection = this.flowSort?.direction;
+
+    this.adminService.getAdminRecuperableExpenseFlow(this.flowStartDate, this.flowEndDate, page, limit, this.flowFilters, sortBy, sortDirection).subscribe({
+      next: (response) => {
+        this.flowExpenses = response.data;
+        this.flowPagination = response.pagination;
+        this.totalNewExpense = response.total_new_expense;
+        this.totalRecuperatedExpense = response.total_recuperated_expense;
+        this.flowLoading = false;
+        this.flowTableLoading = false;
+      },
+      error: () => {
+        this.notificationService.showError('Error loading recuperable expense flow');
+        this.flowLoading = false;
+        this.flowTableLoading = false;
+      }
+    });
   }
 
+  onFlowDateRangeChange(dateRange: DateRangeSelection): void {
+    this.flowStartDate = dateRange.startDate;
+    this.flowEndDate = dateRange.endDate;
+    this.flowLoading = true;
+    if (this.flowPagination) this.flowPagination.current_page = 1;
+    this.loadFlow();
+  }
+
+  onFlowPageChange(page: number): void {
+    if (this.flowPagination) this.flowPagination.current_page = page;
+    this.loadFlow();
+  }
+
+  onFlowFiltersChange(filters: SearchFilters): void {
+    this.flowFilters = filters;
+    if (this.flowPagination) this.flowPagination.current_page = 1;
+    this.loadFlow();
+  }
+
+  onFlowSortChange(sort: SortInfo | null): void {
+    this.flowSort = sort;
+    this.loadFlow();
+  }
+
+  // ── Shared ────────────────────────────────────────────────────────────────
   formatCurrency(amount: number): string {
     return '₱' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
