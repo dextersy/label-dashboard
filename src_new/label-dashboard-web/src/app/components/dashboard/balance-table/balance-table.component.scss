@@ -1,11 +1,61 @@
-/* Balance table component styles */
+.artist-balance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 
-.btn-link {
-  color: #007bff;
-  text-decoration: none;
+  .artist-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .artist-photo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .artist-name {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .balance-amount {
+    font-weight: bold;
+    font-size: 1rem;
+    white-space: nowrap;
+    margin-left: 8px;
+  }
 }
 
-.btn-link:hover {
-  color: #0056b3;
-  text-decoration: underline;
+@media (max-width: 767.98px) {
+  .artist-balance-item {
+    flex-direction: column;
+    align-items: stretch;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    padding: 10px;
+    height: 100%;
+
+    .artist-info {
+      margin-bottom: 6px;
+    }
+
+    .artist-name {
+      font-size: 0.85rem;
+    }
+
+    .balance-amount {
+      font-size: 1.15rem;
+      text-align: right;
+      margin-left: 0;
+    }
+  }
 }

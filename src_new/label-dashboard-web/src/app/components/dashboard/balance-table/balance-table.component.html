@@ -3,32 +3,23 @@
     <h5>Balance Summary</h5>
   </div>
   <div class="card-body">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Photo</th>
-            <th>Artist</th>
-            <th>Balance</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let artist of artists">
-            <td class="cover-cell">
-              <img [src]="getProfilePhotoUrl(artist.profile_photo)" 
-                   [alt]="artist.name + ' photo'"
-                   class="cover-thumbnail">
-            </td>
-            <td>{{ artist.name }}</td>
-            <td class="text-right" style="font-weight:bold;" [ngClass]="getBalanceClass(artist.balance)">
-              {{ formatCurrency(artist.balance) }}
-            </td>
-          </tr>
-          <tr *ngIf="artists.length === 0">
-            <td colspan="3" class="text-center text-muted">No artists found</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="row row-cols-2 row-cols-md-1 g-2 g-md-0 artist-balance-grid">
+      <div class="col" *ngFor="let artist of artists">
+        <div class="artist-balance-item">
+          <div class="artist-info">
+            <img [src]="getProfilePhotoUrl(artist.profile_photo)"
+                 [alt]="artist.name + ' photo'"
+                 class="artist-photo">
+            <span class="artist-name">{{ artist.name }}</span>
+          </div>
+          <div class="balance-amount" [ngClass]="getBalanceClass(artist.balance)">
+            {{ formatCurrency(artist.balance) }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12" *ngIf="artists.length === 0">
+        <p class="text-center text-muted py-2">No artists found</p>
+      </div>
     </div>
   </div>
   <div class="card-footer text-right">
