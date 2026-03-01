@@ -150,6 +150,8 @@ export const routes: Routes = [
       { path: 'settings', component: AdminComponent, data: { tab: 'settings' } },
       { path: 'reports/music-earnings', component: AdminComponent, data: { tab: 'reports-music-earnings' } },
       { path: 'reports/artist-balances', component: AdminComponent, data: { tab: 'reports-artist-balances' } },
+      { path: 'reports/payments-royalties', component: AdminComponent, data: { tab: 'reports-payments-royalties' } },
+      { path: 'reports/recuperable-expense-balance', component: AdminComponent, data: { tab: 'reports-recuperable-expense-balance' } },
       { path: 'tools/email-logs', component: AdminComponent, data: { tab: 'tools-email-logs' } },
       { path: 'tools/bulk-add-earnings', component: AdminComponent, data: { tab: 'tools-bulk-add-earnings' } },
       { path: 'users', component: AdminComponent, data: { tab: 'users' } }

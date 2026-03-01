@@ -1,0 +1,62 @@
+<app-date-range-filter
+  [compact]="true"
+  [initialPreset]="'last30days'"
+  [showComparison]="false"
+  [showExport]="false"
+  [loading]="expensesLoading"
+  (dateRangeChange)="onDateRangeChange($event)">
+</app-date-range-filter>
+
+<h3 class="section-heading mt-3">Recuperable Expense Balance</h3>
+
+<div class="row mb-4 align-items-stretch">
+  <!-- Dominant card: all-time total -->
+  <div class="col-lg-4 col-md-12 mb-3 mb-lg-0">
+    <div class="current-balance-section p-4">
+      <h2 class="balance-title">Total Recuperable Expense</h2>
+      <h1 class="balance-amount">{{ formatCurrency(totalRecuperableExpense) }}</h1>
+      <p class="balance-subtitle">Outstanding balance across all releases</p>
+    </div>
+  </div>
+
+  <!-- Date-filtered stats -->
+  <div class="col-lg-8 col-md-12" *ngIf="expenseSummary">
+    <div class="stats-compact-card h-100">
+      <div class="stats-compact-item">
+        <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(expenseSummary.total_new_recuperable_expense) }}</span>
+        <div class="stats-compact-meta">
+          <i class="fas fa-plus-circle"></i>
+          <span class="stats-compact-label">New Expenses</span>
+        </div>
+      </div>
+      <div class="stats-compact-item">
+        <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(expenseSummary.total_recuperated_expense) }}</span>
+        <div class="stats-compact-meta">
+          <i class="fas fa-minus-circle"></i>
+          <span class="stats-compact-label">Recuperated</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8 col-md-12" *ngIf="!expenseSummary">
+    <div class="stats-compact-card h-100 d-flex align-items-center justify-content-center">
+      <span class="text-muted">Select a date range to see new and recuperated expenses.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Paginated table -->
+<app-paginated-table
+  title="Recuperable Expenses by Release"
+  [data]="recuperableExpenses"
+  [pagination]="expensesPagination"
+  [loading]="expensesLoading"
+  [columns]="expensesColumns"
+  [showSortableHeaders]="true"
+  [sortInfo]="expensesSort"
+  [responsiveMode]="'financial'"
+  (pageChange)="onExpensesPageChange($event)"
+  (filtersChange)="onExpensesFiltersChange($event)"
+  (sortChange)="onExpensesSortChange($event)">
+</app-paginated-table>

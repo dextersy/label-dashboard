@@ -22,7 +22,10 @@ import {
   getArtistsReadyForPayment,
   payAllBalances,
   downloadEarningsCSV,
-  downloadRoyaltiesCSV
+  downloadRoyaltiesCSV,
+  getAdminEarningsList,
+  getAdminRecuperableExpenseSummary,
+  getAdminPaymentsRoyaltiesArtists
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -80,5 +83,8 @@ router.get('/admin/balance-summary', requireAdmin, getAdminBalanceSummary);
 router.get('/admin/recuperable-expenses', requireAdmin, getAdminRecuperableExpenses);
 router.get('/admin/artists-ready-for-payment', requireAdmin, getArtistsReadyForPayment);
 router.post('/admin/pay-all-balances', requireAdmin, payAllBalances);
+router.get('/admin/earnings-list', requireAdmin, getAdminEarningsList);
+router.get('/admin/recuperable-expense-summary', requireAdmin, getAdminRecuperableExpenseSummary);
+router.get('/admin/payments-royalties-artists', requireAdmin, getAdminPaymentsRoyaltiesArtists);
 
 export default router;

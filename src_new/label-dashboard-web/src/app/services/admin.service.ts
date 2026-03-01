@@ -725,6 +725,43 @@ export class AdminService {
     });
   }
 
+  getAdminEarningsList(startDate: string, endDate: string, page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{earnings: any[], pagination: any}> {
+    let queryParams = `start_date=${startDate}&end_date=${endDate}&page=${page}&limit=${limit}`;
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    return this.http.get<{earnings: any[], pagination: any}>(`${environment.apiUrl}/financial/admin/earnings-list?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getAdminRecuperableExpenseSummary(startDate: string, endDate: string): Observable<{total_new_recuperable_expense: number, total_recuperated_expense: number}> {
+    const params = `start_date=${startDate}&end_date=${endDate}`;
+    return this.http.get<{total_new_recuperable_expense: number, total_recuperated_expense: number}>(`${environment.apiUrl}/financial/admin/recuperable-expense-summary?${params}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getAdminPaymentsRoyaltiesArtists(startDate: string, endDate: string, page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{artists: any[], pagination: any, overall_total_payments: number, overall_total_royalties: number}> {
+    let queryParams = `start_date=${startDate}&end_date=${endDate}&page=${page}&limit=${limit}`;
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+    });
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    return this.http.get<{artists: any[], pagination: any, overall_total_payments: number, overall_total_royalties: number}>(`${environment.apiUrl}/financial/admin/payments-royalties-artists?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Balance Summary
   getArtistBalances(page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: ArtistBalance[], pagination: any, summary: any}> {
     let queryParams = `page=${page}&limit=${limit}`;

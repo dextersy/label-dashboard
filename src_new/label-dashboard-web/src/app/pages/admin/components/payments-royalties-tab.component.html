@@ -1,0 +1,59 @@
+<app-date-range-filter
+  [compact]="true"
+  [initialPreset]="'last30days'"
+  [showComparison]="false"
+  [showExport]="false"
+  [loading]="loading"
+  (dateRangeChange)="onDateRangeChange($event)">
+</app-date-range-filter>
+
+<div *ngIf="loading" class="text-center">
+  <div class="loading-dots">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
+
+<div *ngIf="!loading && startDate">
+
+  <h3 class="section-heading">Payments &amp; Royalties Summary</h3>
+
+  <!-- Compact stats card -->
+  <div class="stats-compact-card mb-4">
+    <div class="stats-compact-item">
+      <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(overallTotalPayments) }}</span>
+      <div class="stats-compact-meta">
+        <i class="fas fa-money-bill"></i>
+        <span class="stats-compact-label">Total Payments</span>
+      </div>
+    </div>
+    <div class="stats-compact-item">
+      <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(overallTotalRoyalties) }}</span>
+      <div class="stats-compact-meta">
+        <i class="fas fa-chart-line"></i>
+        <span class="stats-compact-label">Total Royalties</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginated artist table -->
+  <app-paginated-table
+    title="Artist Breakdown"
+    [data]="artists"
+    [pagination]="artistsPagination"
+    [loading]="artistsLoading"
+    [columns]="artistColumns"
+    [showSortableHeaders]="true"
+    [sortInfo]="artistsSort"
+    [responsiveMode]="'financial'"
+    (pageChange)="onArtistsPageChange($event)"
+    (filtersChange)="onArtistsFiltersChange($event)"
+    (sortChange)="onArtistsSortChange($event)">
+  </app-paginated-table>
+
+</div>
+
+<div *ngIf="!loading && !startDate" class="text-muted mt-3">
+  Select a date range to view payments and royalties.
+</div>

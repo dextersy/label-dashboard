@@ -80,6 +80,8 @@ export class BreadcrumbService {
     '/admin/reports': { label: 'Reports', parent: '/admin' },
     '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
     '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
+    '/admin/reports/payments-royalties': { label: 'Payments & Royalties', parent: '/admin/reports' },
+    '/admin/reports/recuperable-expense-balance': { label: 'Recuperable Expense Balance', parent: '/admin/reports' },
     '/admin/tools': { label: 'Tools', parent: '/admin' },
     '/admin/tools/email-logs': { label: 'Email Logs', parent: '/admin/tools' },
     '/admin/tools/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin/tools' },
