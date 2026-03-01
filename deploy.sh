@@ -238,35 +238,23 @@ EOF
     fi
 }
 
-# Function to upload files via SFTP
+# Function to upload files via tar piped over SSH (faster than SFTP for many files)
+# Compresses locally and streams over a single SSH connection
 upload_files() {
     local source_dir=$1
     local target_dir=$2
     local description=$3
-    
+
     print_status "Uploading $description to $target_dir..."
-    
-    # Create SFTP batch file
-    local sftp_batch=$(mktemp)
-    
-    # SFTP commands
-    cat > "$sftp_batch" << EOF
--mkdir $target_dir
-put -r $source_dir/* $target_dir/
-quit
-EOF
-    
-    # Execute SFTP upload
-    if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+
+    if tar czf - -C "$source_dir" . | \
+        ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+            "$SFTP_USER@$PRODUCTION_HOST" "tar xzf - -C $target_dir"; then
         print_success "$description uploaded successfully"
     else
         print_error "Failed to upload $description"
-        rm -f "$sftp_batch"
         exit 1
     fi
-    
-    # Clean up
-    rm -f "$sftp_batch"
 }
 
 # Clean server directories before upload
@@ -293,20 +281,9 @@ rm -f "$sftp_batch"
 # Phase 1: Upload migration setup with config.js for Sequelize CLI
 cd "$SCRIPT_DIR/src_new/label-dashboard-api"
 print_status "Phase 1: Uploading migration setup..."
-sftp_batch=$(mktemp)
-cat > "$sftp_batch" << EOF
-put package.json $BACKEND_DEPLOY_PATH/
-put package-lock.json $BACKEND_DEPLOY_PATH/
-put .sequelizerc $BACKEND_DEPLOY_PATH/
--mkdir $BACKEND_DEPLOY_PATH/config
-put -r config/* $BACKEND_DEPLOY_PATH/config/
--mkdir $BACKEND_DEPLOY_PATH/migrations
-put -r migrations/* $BACKEND_DEPLOY_PATH/migrations/
-quit
-EOF
-
-sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
-rm -f "$sftp_batch"
+tar czf - package.json package-lock.json .sequelizerc config migrations | \
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+        "$SFTP_USER@$PRODUCTION_HOST" "cd $BACKEND_DEPLOY_PATH && tar xzf -"
 
 # Phase 2: Run database migrations on server using Sequelize CLI
 print_status "Phase 2: Running database migrations on server..."
@@ -367,31 +344,20 @@ print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted successful
 print_status "Phase 6: Deploying frontend application..."
 cd "$SCRIPT_DIR/src_new/label-dashboard-web"
 
-# Upload all files except .htaccess first (preserve maintenance.html)
-sftp_batch=$(mktemp)
-cat > "$sftp_batch" << EOF
-put -r dist-prod/browser/* $FRONTEND_DEPLOY_PATH/
-quit
-EOF
-
-if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+# Upload all files except .htaccess first via tar (preserves maintenance mode during transfer)
+if tar czf - -C dist-prod/browser --exclude='.htaccess' . | \
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+        "$SFTP_USER@$PRODUCTION_HOST" "tar xzf - -C $FRONTEND_DEPLOY_PATH"; then
     print_success "Production files uploaded"
 else
     print_error "Failed to upload production files"
     exit 1
 fi
-rm -f "$sftp_batch"
 
 # Replace .htaccess last to switch from maintenance mode to production
 print_status "Switching from maintenance mode to production..."
-sftp_batch=$(mktemp)
-cat > "$sftp_batch" << EOF
-put dist-prod/browser/.htaccess $FRONTEND_DEPLOY_PATH/
-quit
-EOF
-
-sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
-rm -f "$sftp_batch"
+scp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+    dist-prod/browser/.htaccess "$SFTP_USER@$PRODUCTION_HOST:$FRONTEND_DEPLOY_PATH/.htaccess"
 print_success "✅ Phase 6: Frontend application deployed and live!"
 
 # Phase 7: Final deployment tasks
