@@ -5,11 +5,12 @@ import { Subscription } from 'rxjs';
 import { EventService, Event } from '../../../services/event.service';
 import { QuillModule } from 'ngx-quill';
 import { TestEmailModalComponent, TestEmailData } from '../test-email-modal/test-email-modal.component';
+import { FloatingActionBarComponent } from '../../shared/floating-action-bar/floating-action-bar.component';
 import 'quill/dist/quill.snow.css';
 
 @Component({
     selector: 'app-event-email-tab',
-    imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent],
+    imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent, FloatingActionBarComponent],
     templateUrl: './event-email-tab.component.html',
     styleUrl: './event-email-tab.component.scss'
 })

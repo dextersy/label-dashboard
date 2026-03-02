@@ -114,46 +114,31 @@
   </div>
 </div>
 
-<!-- Sticky Bottom Panel - Outside all containers -->
-<div class="sticky-bottom-panel" *ngIf="selectedEvent">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="panel-content">
-          <div class="d-flex justify-content-between align-items-center w-100">
-            <div class="text-muted">
-              <small>
-                <i class="fas fa-clock me-1"></i>
-                Emails will be sent one by one to preserve deliverability
-              </small>
-            </div>
-            <div class="d-flex gap-2">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                [disabled]="!isFormValid() || sending"
-                (click)="showTestEmailModal()"
-                title="Send a test email to specific addresses first">
-                <i class="fas fa-flask me-2"></i>
-                Send Test Email
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary btn-lg"
-                [disabled]="!isFormValid() || recipientsCount === 0 || sending || loadingCount"
-                (click)="sendEmail()">
-                <span *ngIf="sending" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                <i *ngIf="!sending" class="fas fa-paper-plane me-2"></i>
-                <span *ngIf="sending">Sending Email...</span>
-                <span *ngIf="!sending">Send Email to {{ recipientsCount }} Recipients</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Floating Action Bar -->
+<app-floating-action-bar *ngIf="selectedEvent">
+  <span floatingStart class="text-muted">
+    <small><i class="fas fa-clock me-1"></i>Emails will be sent one by one to preserve deliverability</small>
+  </span>
+  <button
+    type="button"
+    class="btn btn-secondary"
+    [disabled]="!isFormValid() || sending"
+    (click)="showTestEmailModal()"
+    title="Send a test email to specific addresses first">
+    <i class="fas fa-flask me-2"></i>
+    Send Test Email
+  </button>
+  <button
+    type="button"
+    class="btn btn-primary fab-primary-btn"
+    [disabled]="!isFormValid() || recipientsCount === 0 || sending || loadingCount"
+    (click)="sendEmail()">
+    <span *ngIf="sending" class="spinner-border spinner-border-sm me-2" role="status"></span>
+    <i *ngIf="!sending" class="fas fa-paper-plane me-2"></i>
+    <span *ngIf="sending">Sending Email...</span>
+    <span *ngIf="!sending">Send Email to {{ recipientsCount }} Recipients</span>
+  </button>
+</app-floating-action-bar>
 
 <!-- Test Email Modal -->
 <app-test-email-modal 

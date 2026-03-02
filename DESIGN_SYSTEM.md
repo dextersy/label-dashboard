@@ -122,8 +122,25 @@ Primary buttons carry two decorative circular blobs via `::before` / `::after` �
 
 The button uses `position: relative; overflow: hidden` to clip the blobs. Both pseudo-elements have `pointer-events: none` so they never block clicks.
 
-### `.sticky-bottom-panel`
-A sticky save/submit panel used on long forms. Sits at the bottom of its scroll container with a frosted-glass backdrop. Contains `.panel-content` which flex-end aligns the action button.
+### Floating Action Bar (`<app-floating-action-bar>`)
+
+Replaces `.sticky-bottom-panel`. A standalone Angular component (`components/shared/floating-action-bar/`) that renders a sticky frosted-glass bar fixed to the bottom of the scroll area.
+
+**Content slots:**
+
+| Slot | How to target | Visible |
+|------|--------------|---------|
+| Left | `floatingStart` attribute | Desktop (≥992px) — use `d-none d-lg-flex` on the child |
+| Mobile bar info | `floatingBarInfo` attribute | ≤991px — always visible in the bar row even when the drawer is closed; use for compact totals/counts that must remain in view |
+| Secondary | default slot (any child without `fab-primary-btn`) | Both — inline on desktop; collapses into a slide-up drawer on mobile |
+| Primary | `class="... fab-primary-btn"` | Both — always visible |
+
+**Drawer mode** is auto-detected: when both a `.fab-primary-btn` button and secondary-slot children are present, mobile (≤768px) shows a slide-up drawer with a tab caret toggle above the bar. No `@Input()` needed.
+
+**Rules:**
+- Never wrap projected buttons in `<ng-container *ngIf>` — the wrapper becomes the direct child and breaks slot matching. Apply `*ngIf` directly to each `<button>`.
+- Absolutely-positioned popup menus (e.g. Bootstrap dropdown split buttons) are clipped by the drawer's `overflow: hidden`. Use flat buttons inside the drawer for mobile; put the dropdown in the secondary slot inside a `d-none d-lg-flex` container for desktop only.
+- Bar is offset `72px` upward on ≤991px to clear the fixed mobile workspace navigator.
 
 ---
 

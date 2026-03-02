@@ -11,6 +11,7 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
 import { FundraiserSelectionComponent } from '../../components/campaigns/fundraiser-selection/fundraiser-selection.component';
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
+import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 
 @Component({
   selector: 'app-fundraiser-form',
@@ -20,7 +21,8 @@ import { downloadQRCode } from '../../utils/qr-utils';
     FormsModule,
     BreadcrumbComponent,
     FundraiserSelectionComponent,
-    QuillModule
+    QuillModule,
+    FloatingActionBarComponent
   ],
   templateUrl: './fundraiser-form.component.html',
   styleUrl: './fundraiser-form.component.scss'

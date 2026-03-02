@@ -173,22 +173,14 @@
   </form>
 </div>
 
-<!-- Sticky Bottom Panel - Outside all containers -->
-<div class="sticky-bottom-panel" *ngIf="artist">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="panel-content">
-          <button type="button" 
-                  class="btn btn-primary btn-lg" 
-                  [disabled]="saving || !isFormValid()"
-                  (click)="saveProfile()">
-            <div class="loading-spinner" *ngIf="saving"></div>
-            <i class="fa fa-save" *ngIf="!saving"></i>
-            {{ saving ? 'Saving...' : 'Save Changes' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Floating Action Bar -->
+<app-floating-action-bar *ngIf="artist">
+  <button type="button"
+          class="btn btn-primary fab-primary-btn"
+          [disabled]="saving || !isFormValid()"
+          (click)="saveProfile()">
+    <div class="loading-spinner" *ngIf="saving"></div>
+    <i class="fa fa-save" *ngIf="!saving"></i>
+    {{ saving ? 'Saving...' : 'Save Changes' }}
+  </button>
+</app-floating-action-bar>

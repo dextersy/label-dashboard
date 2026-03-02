@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
+import { FloatingActionBarComponent } from '../../shared/floating-action-bar/floating-action-bar.component';
 import { ArtistStateService } from '../../../services/artist-state.service';
 import { environment } from 'environments/environment';
 
@@ -21,7 +22,7 @@ export interface NewArtistData {
 
 @Component({
     selector: 'app-add-new-artist',
-    imports: [CommonModule, FormsModule, BreadcrumbComponent],
+    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent],
     templateUrl: './add-new-artist.component.html',
     styleUrl: './add-new-artist.component.scss'
 })

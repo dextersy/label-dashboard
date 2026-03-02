@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { Artist } from '../artist-selection/artist-selection.component';
 import { environment } from 'environments/environment';
 import { QuillModule } from 'ngx-quill';
+import { FloatingActionBarComponent } from '../../shared/floating-action-bar/floating-action-bar.component';
 
 export interface ArtistProfile extends Artist {
   bio?: string;
@@ -26,7 +27,7 @@ export interface ArtistProfile extends Artist {
 
 @Component({
     selector: 'app-artist-profile-tab',
-    imports: [CommonModule, FormsModule, QuillModule],
+    imports: [CommonModule, FormsModule, QuillModule, FloatingActionBarComponent],
     templateUrl: './artist-profile-tab.component.html',
     styleUrl: './artist-profile-tab.component.scss'
 })

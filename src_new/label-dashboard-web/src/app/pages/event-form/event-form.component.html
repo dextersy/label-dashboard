@@ -519,11 +519,11 @@
   </app-in-page-nav>
 </div>
 
-<!-- Floating Action Buttons (outside scrollable container) -->
-<div class="floating-actions">
+<!-- Floating Action Bar (outside scrollable container) -->
+<app-floating-action-bar>
   <!-- Cancel button only shown when creating a new event -->
-  <button 
-    type="button" 
+  <button
+    type="button"
     class="btn btn-secondary"
     (click)="onCancel()"
     [disabled]="saving"
@@ -531,52 +531,56 @@
     Cancel
   </button>
 
-  <!-- Draft Event Buttons -->
-  <ng-container *ngIf="isEventDraft()">
-    <button 
-      type="button" 
-      class="btn btn-secondary"
-      (click)="onSave()"
-      [disabled]="saving || isEventPast()">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-save" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Save as Draft</span>
-      <span *ngIf="saving">Saving...</span>
-    </button>
-    <button 
-      type="button" 
-      class="btn btn-primary"
-      (click)="onPublish()"
-      [disabled]="saving || isEventPast()">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-rocket" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Publish</span>
-      <span *ngIf="saving">Publishing...</span>
-    </button>
-  </ng-container>
+  <!-- Draft secondary button — *ngIf directly on button so Angular's content projection
+       selector (select=".fab-primary-btn") can match the primary button correctly.
+       ng-container wrappers prevent slot matching because ng-container becomes the direct
+       projected child, not the button inside it. -->
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="onSave()"
+    [disabled]="saving || isEventPast()"
+    *ngIf="isEventDraft()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-save" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Save as Draft</span>
+    <span *ngIf="saving">Saving...</span>
+  </button>
 
-  <!-- Published Event Buttons -->
-  <ng-container *ngIf="isEventPublished()">
-    <button 
-      type="button" 
-      class="btn btn-primary"
-      (click)="onSave()"
-      [disabled]="saving || !isFormDirty() || isEventPast()">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-save" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Save Changes</span>
-      <span *ngIf="saving">Saving...</span>
-    </button>
-    <button 
-      type="button" 
-      class="btn btn-secondary"
-      (click)="onUnpublish()"
-      [disabled]="saving || hasConfirmedTickets() || isEventPast()"
-      *ngIf="!hasConfirmedTickets()">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-eye-slash" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Unpublish</span>
-      <span *ngIf="saving">Unpublishing...</span>
-    </button>
-  </ng-container>
-</div>
+  <!-- Published secondary button -->
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="onUnpublish()"
+    [disabled]="saving || hasConfirmedTickets() || isEventPast()"
+    *ngIf="isEventPublished() && !hasConfirmedTickets()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Unpublish</span>
+    <span *ngIf="saving">Unpublishing...</span>
+  </button>
+
+  <!-- Primary buttons — direct children so ng-content select=".fab-primary-btn" matches -->
+  <button
+    type="button"
+    class="btn btn-primary fab-primary-btn"
+    (click)="onPublish()"
+    [disabled]="saving || isEventPast()"
+    *ngIf="isEventDraft()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-rocket" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Publish</span>
+    <span *ngIf="saving">Publishing...</span>
+  </button>
+  <button
+    type="button"
+    class="btn btn-primary fab-primary-btn"
+    (click)="onSave()"
+    [disabled]="saving || !isFormDirty() || isEventPast()"
+    *ngIf="isEventPublished()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-save" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Save Changes</span>
+    <span *ngIf="saving">Saving...</span>
+  </button>
+</app-floating-action-bar>

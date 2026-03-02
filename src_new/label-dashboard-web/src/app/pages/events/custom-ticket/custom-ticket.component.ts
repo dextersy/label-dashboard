@@ -8,6 +8,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
+import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 
 export interface CustomTicketForm {
   name: string;
@@ -38,7 +39,7 @@ export interface BulkTicketRow {
 
 @Component({
     selector: 'app-custom-ticket',
-    imports: [CommonModule, FormsModule, BreadcrumbComponent],
+    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent],
     templateUrl: './custom-ticket.component.html',
     styleUrl: './custom-ticket.component.scss'
 })

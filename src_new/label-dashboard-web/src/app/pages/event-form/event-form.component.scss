@@ -204,42 +204,6 @@
   }
 }
 
-/* Floating Action Buttons */
-.floating-actions {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
-  padding: 20px 24px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  z-index: 1050;
-
-  button {
-    min-width: 140px;
-    padding: 12px 24px;
-    font-size: 15px;
-    font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    i {
-      margin-right: 8px;
-    }
-  }
-}
-
 /* Tablet */
 @media (max-width: 1024px) {
   .event-form-container {
@@ -295,14 +259,4 @@
     }
   }
 
-  .floating-actions {
-    padding: 12px 16px;
-    flex-direction: column;
-
-    button {
-      width: 100%;
-      min-width: auto;
-      font-size: 14px;
-    }
-  }
 }

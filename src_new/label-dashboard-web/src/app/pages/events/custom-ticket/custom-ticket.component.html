@@ -51,7 +51,8 @@
     </div>
 
     <!-- Single Ticket Form -->
-    <div class="row" *ngIf="canCreateCustomTickets() && currentView === 'single'">
+    <ng-container *ngIf="canCreateCustomTickets() && currentView === 'single'">
+    <div class="row">
       <div class="col-lg-8 col-xl-6">
         <div class="card">
           <div class="card-header">
@@ -245,34 +246,6 @@
                 </div>
               </div>
 
-              <div class="d-flex gap-2">
-                <button 
-                  type="submit" 
-                  class="btn btn-primary"
-                  [disabled]="!customTicketFormRef.form.valid || submitting">
-                  <i class="fa fa-plus me-1" *ngIf="!submitting"></i>
-                  <i class="fa fa-spinner fa-spin me-1" *ngIf="submitting"></i>
-                  <span *ngIf="submitting">Creating...</span>
-                  <span *ngIf="!submitting">Create Ticket</span>
-                </button>
-                
-                <button 
-                  type="button" 
-                  class="btn btn-secondary"
-                  (click)="onCancel()"
-                  [disabled]="submitting">
-                  Cancel
-                </button>
-
-                <button 
-                  type="button" 
-                  class="btn btn-secondary"
-                  (click)="resetCustomTicketForm()"
-                  [disabled]="submitting">
-                  <i class="fa fa-undo me-1"></i>
-                  Reset Form
-                </button>
-              </div>
             </form>
           </div>
         </div>
@@ -329,6 +302,35 @@
         </div>
       </div>
     </div>
+
+    <app-floating-action-bar>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="submitting">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="resetCustomTicketForm()"
+        [disabled]="submitting">
+        <i class="fa fa-undo me-1"></i>
+        Reset Form
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary fab-primary-btn"
+        (click)="onSubmitCustomTicket()"
+        [disabled]="!customTicketFormRef.form.valid || submitting">
+        <i class="fa fa-plus me-1" *ngIf="!submitting"></i>
+        <i class="fa fa-spinner fa-spin me-1" *ngIf="submitting"></i>
+        <span *ngIf="submitting">Creating...</span>
+        <span *ngIf="!submitting">Create Ticket</span>
+      </button>
+    </app-floating-action-bar>
+    </ng-container>
 
     <!-- Bulk Ticket Creation View -->
     <div *ngIf="canCreateCustomTickets() && currentView === 'bulk'">
@@ -561,93 +563,84 @@
         </table>
       </div>
 
-      <!-- Bulk Action Panel -->
-      <div class="sticky-bottom bg-white border-top p-3 mt-3">
-        <div class="container-fluid">
-          <div class="row">
+      <!-- Bulk Action Bar -->
+      <app-floating-action-bar>
+        <!-- Left side: summary + add-row buttons (desktop only) -->
+        <div floatingStart class="d-none d-lg-flex align-items-center gap-4">
+          <div>
+            <strong>Total Amount:</strong>
+            <span class="text-success ms-1">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
+          </div>
+          <div class="text-muted">
+            Tickets: {{ bulkTickets.length }}
+          </div>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
+              Add Row
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
+              Add 5
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
+              Add 10
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile layout (self-contained) -->
+        <div class="d-block d-lg-none w-100">
+          <div class="row mb-3">
             <div class="col-12">
-              <!-- Mobile Layout -->
-              <div class="d-block d-lg-none">
-                <div class="row mb-3">
-                  <div class="col-12">
-                    <div class="btn-group w-100" role="group">
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
-                        Add Row
-                      </button>
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
-                        Add 5
-                      </button>
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
-                        Add 10
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="d-flex align-items-center justify-content-center mb-2">
-                  <small class="text-muted">
-                    Total: ₱{{ getBulkTotal() | number:'1.2-2' }} • {{ bulkTickets.length }} tickets
-                  </small>
-                </div>
-                <button type="button" 
-                        class="btn btn-primary btn-lg w-100" 
-                        (click)="onSubmitBulkTickets()" 
-                        [disabled]="submitting || bulkTickets.length === 0">
-                  <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
-                  <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
-                  <span *ngIf="submitting">Creating...</span>
-                  <span *ngIf="!submitting && bulkTickets.length > 0">Create {{ bulkTickets.length }} Tickets</span>
-                  <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+              <div class="btn-group w-100" role="group">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
+                  Add Row
                 </button>
-              </div>
-
-              <!-- Desktop Layout -->
-              <div class="d-none d-lg-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-4">
-                  <div>
-                    <strong>Total Amount:</strong> 
-                    <span class="text-success">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
-                  </div>
-                  <div class="text-muted">
-                    Tickets: {{ bulkTickets.length }}
-                  </div>
-                  <div>
-                    <div class="btn-group" role="group">
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
-                        Add Row
-                      </button>
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
-                        Add 5
-                      </button>
-                      <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
-                        Add 10
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="d-flex gap-2">
-                  <button type="button" 
-                          class="btn btn-secondary" 
-                          (click)="onCancel()"
-                          [disabled]="submitting">
-                    Cancel
-                  </button>
-                  <button type="button" 
-                          class="btn btn-primary btn-lg" 
-                          (click)="onSubmitBulkTickets()" 
-                          [disabled]="submitting || bulkTickets.length === 0">
-                    <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
-                    <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
-                    <span *ngIf="submitting">Creating...</span>
-                    <span *ngIf="!submitting && bulkTickets.length > 0">Create All Tickets</span>
-                    <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
-                  </button>
-                </div>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
+                  Add 5
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
+                  Add 10
+                </button>
               </div>
             </div>
           </div>
+          <div class="d-flex align-items-center justify-content-center mb-2">
+            <small class="text-muted">
+              Total: ₱{{ getBulkTotal() | number:'1.2-2' }} • {{ bulkTickets.length }} tickets
+            </small>
+          </div>
+          <button type="button"
+                  class="btn btn-primary btn-lg w-100"
+                  (click)="onSubmitBulkTickets()"
+                  [disabled]="submitting || bulkTickets.length === 0">
+            <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
+            <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
+            <span *ngIf="submitting">Creating...</span>
+            <span *ngIf="!submitting && bulkTickets.length > 0">Create {{ bulkTickets.length }} Tickets</span>
+            <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+          </button>
         </div>
-      </div>
+
+        <!-- Desktop right-side buttons -->
+        <div class="d-none d-lg-flex gap-2">
+          <button type="button"
+                  class="btn btn-secondary"
+                  (click)="onCancel()"
+                  [disabled]="submitting">
+            Cancel
+          </button>
+          <button type="button"
+                  class="btn btn-primary btn-lg"
+                  (click)="onSubmitBulkTickets()"
+                  [disabled]="submitting || bulkTickets.length === 0">
+            <i class="fa fa-plus me-2" *ngIf="!submitting"></i>
+            <i class="fa fa-spinner fa-spin me-2" *ngIf="submitting"></i>
+            <span *ngIf="submitting">Creating...</span>
+            <span *ngIf="!submitting && bulkTickets.length > 0">Create All Tickets</span>
+            <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
+          </button>
+        </div>
+      </app-floating-action-bar>
     </div>
 
     <!-- Non-Admin Access Denied -->

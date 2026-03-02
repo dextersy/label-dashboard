@@ -181,29 +181,21 @@
   </form>
 </div>
 
-<!-- Sticky Bottom Panel -->
-<div class="sticky-bottom-panel">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="panel-content">
-          <button type="button" 
-                  class="btn btn-secondary me-2" 
-                  (click)="cancel()"
-                  [disabled]="creating">
-            Cancel
-          </button>
-          <button type="button" 
-                  class="btn btn-primary btn-lg" 
-                  [disabled]="creating || !isFormValid()"
-                  (click)="createArtist()">
-            <i class="fa fa-spinner fa-spin" *ngIf="creating"></i>
-            <i class="fa fa-plus" *ngIf="!creating"></i>
-            {{ creating ? 'Creating...' : 'Create Artist' }}
-          </button>
-        </div>
-      </div>
-    </div>
-    </div>
-  </div>
+<!-- Floating Action Bar -->
+<app-floating-action-bar>
+  <button type="button"
+          class="btn btn-secondary"
+          (click)="cancel()"
+          [disabled]="creating">
+    Cancel
+  </button>
+  <button type="button"
+          class="btn btn-primary fab-primary-btn"
+          [disabled]="creating || !isFormValid()"
+          (click)="createArtist()">
+    <i class="fa fa-spinner fa-spin" *ngIf="creating"></i>
+    <i class="fa fa-plus" *ngIf="!creating"></i>
+    {{ creating ? 'Creating...' : 'Create Artist' }}
+  </button>
+</app-floating-action-bar>
 </div>

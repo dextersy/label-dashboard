@@ -1,0 +1,44 @@
+<!-- fab-start: left-side summary / info slot -->
+<div class="fab-start">
+  <ng-content select="[floatingStart]"></ng-content>
+</div>
+
+<!-- fab-end: MUST appear before the default ng-content div below.
+     Angular matches projection slots in template order — the first matching slot wins.
+     Placing this specific selector (.fab-primary-btn) first ensures primary buttons
+     are captured here rather than falling into the default catch-all slot. -->
+<div class="fab-end" [class.fab-end--visible]="showFabEnd">
+  <!-- floatingBarInfo: shown only on mobile, sits to the left of the primary button.
+       Use this for summary text (totals, counts) that must stay visible when the drawer is closed.
+       On desktop, put the same info in [floatingStart] instead. -->
+  <div class="fab-bar-info">
+    <ng-content select="[floatingBarInfo]"></ng-content>
+  </div>
+  <div #primarySlot class="fab-primary-slot">
+    <ng-content select=".fab-primary-btn"></ng-content>
+  </div>
+</div>
+
+<!-- Toggle tab: on mobile, positioned as a pull-tab above the bar's top edge, centered.
+     Must be a direct child of :host so position:absolute is relative to :host.
+     Hidden on desktop via CSS. -->
+<button
+  class="fab-toggle"
+  *ngIf="drawerMode"
+  type="button"
+  (click)="toggleDrawer()"
+  [attr.aria-expanded]="drawerOpen"
+  aria-label="More options">
+  <i class="fa"
+     [class.fa-chevron-up]="!drawerOpen"
+     [class.fa-chevron-down]="drawerOpen"></i>
+</button>
+
+<!-- Secondary buttons: default ng-content MUST be last.
+     Only content unmatched by the specific slot above lands here. -->
+<div #secondarySlot
+     class="fab-secondary"
+     [class.drawer-mode]="drawerMode"
+     [class.open]="drawerOpen">
+  <ng-content></ng-content>
+</div>

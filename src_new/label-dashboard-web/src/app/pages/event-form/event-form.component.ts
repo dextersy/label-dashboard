@@ -15,6 +15,7 @@ import { TicketTypesComponent } from '../../components/events/ticket-types/ticke
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
+import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 
 export interface TicketType {
   id?: number;
@@ -54,7 +55,8 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner';
     VenueAutocompleteComponent,
     TicketTypesComponent,
     QuillModule,
-    InPageNavComponent
+    InPageNavComponent,
+    FloatingActionBarComponent
   ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
