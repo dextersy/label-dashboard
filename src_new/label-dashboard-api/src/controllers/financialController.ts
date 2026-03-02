@@ -2183,6 +2183,8 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
           .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0)
       );
 
+      if (newExpense === 0 && recuperatedExpense === 0) continue;
+
       const artistNames = (release as any).artists?.map((a: any) => a.name).join(', ') || '';
 
       if (artistNameFilter && !artistNames.toLowerCase().includes(artistNameFilter)) {
