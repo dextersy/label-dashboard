@@ -45,6 +45,14 @@ export interface LabelFinanceBreakdown {
     processing_fees?: number;
     net_earnings: number;
   }>;
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
 }
 
 export interface LabelPaymentMethod {
@@ -98,10 +106,26 @@ export class LabelFinanceService {
     return this.http.get<LabelFinanceDashboard>(`${this.apiUrl}/${brandId}/finance/dashboard`, { params });
   }
 
-  getBreakdown(brandId: number, type: 'music' | 'event' | 'fundraiser', startDate?: string, endDate?: string): Observable<LabelFinanceBreakdown> {
-    let params = new HttpParams().set('type', type);
+  getBreakdown(
+    brandId: number,
+    type: 'music' | 'event' | 'fundraiser',
+    startDate?: string,
+    endDate?: string,
+    page: number = 1,
+    perPage: number = 10,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+    search?: string
+  ): Observable<LabelFinanceBreakdown> {
+    let params = new HttpParams()
+      .set('type', type)
+      .set('page', page.toString())
+      .set('per_page', perPage.toString());
     if (startDate) params = params.set('start_date', startDate);
     if (endDate) params = params.set('end_date', endDate);
+    if (sortBy) params = params.set('sort_by', sortBy);
+    if (sortOrder) params = params.set('sort_order', sortOrder);
+    if (search) params = params.set('search', search);
 
     return this.http.get<LabelFinanceBreakdown>(`${this.apiUrl}/${brandId}/finance/breakdown`, { params });
   }
