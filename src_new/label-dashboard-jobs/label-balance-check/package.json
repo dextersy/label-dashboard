@@ -7,7 +7,7 @@
     "build": "tsc",
     "test:local": "npm run build && node dist/local-test.js",
     "package": "npm run build && bestzip label-balance-check.zip dist node_modules package.json",
-    "deploy": "aws lambda update-function-code --function-name label-balance-check --zip-file fileb://label-balance-check.zip"
+    "deploy": "npm run package && aws lambda update-function-code --function-name label-balance-check --zip-file fileb://label-balance-check.zip"
   },
   "keywords": [
     "aws",

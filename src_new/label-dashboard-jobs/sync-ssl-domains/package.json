@@ -7,7 +7,7 @@
     "build": "tsc",
     "test:local": "npm run build && node dist/local-test.js",
     "package": "npm run build && bestzip sync-ssl-domains.zip dist node_modules package.json",
-    "deploy": "aws lambda update-function-code --function-name sync-ssl-domains --zip-file fileb://sync-ssl-domains.zip"
+    "deploy": "npm run package && aws lambda update-function-code --function-name sync-ssl-domains --zip-file fileb://sync-ssl-domains.zip"
   },
   "keywords": [
     "aws",

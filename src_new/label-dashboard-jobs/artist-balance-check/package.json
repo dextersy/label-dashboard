@@ -7,7 +7,7 @@
     "build": "tsc",
     "test:local": "npm run build && node dist/local-test.js",
     "package": "npm run build && bestzip artist-balance-check.zip dist node_modules package.json",
-    "deploy": "aws lambda update-function-code --function-name artist-balance-check --zip-file fileb://artist-balance-check.zip"
+    "deploy": "npm run package && aws lambda update-function-code --function-name artist-balance-check --zip-file fileb://artist-balance-check.zip"
   },
   "keywords": [
     "aws",
