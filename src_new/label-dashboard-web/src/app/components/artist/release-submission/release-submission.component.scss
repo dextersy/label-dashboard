@@ -1,338 +1,82 @@
 .release-submission-page {
   padding: 20px;
-  padding-bottom: 120px; /* Space for floating buttons */
+  padding-bottom: 120px;
   max-width: 1600px;
   margin: 0 auto;
-  min-height: calc(100vh - 60px); /* Ensure page takes full height minus nav */
+  min-height: calc(100vh - 60px);
 }
 
-/* Two-column layout: Sidebar + Main Content */
-.release-form-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
+/* Main content card */
+.release-form-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 
-/* Sidebar Navigation (Desktop) */
-.release-form-sidebar {
-  flex: 0 0 240px;
-  position: sticky;
-  top: 20px;
+  .form-section {
+    padding: 32px;
 
-  .sidebar-items {
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    p {
+      color: #6c757d;
+      margin-bottom: 24px;
+    }
+  }
+
+  .section-actions {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+    justify-content: space-between;
+    padding-top: 2rem;
+    border-top: 1px solid #dee2e6;
 
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: transparent;
-    border: none;
-    border-left: 3px solid transparent;
-    color: #6c757d;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-align: left;
-    position: relative; /* For positioning status icons on mobile */
+    .btn {
+      box-shadow: none !important;
 
-    i {
-      font-size: 18px;
-      width: 20px;
-      text-align: center;
-    }
-
-    span {
-      flex: 1;
-    }
-
-    &:hover:not(:disabled) {
-      color: #495057;
-    }
-
-    &.active {
-      color: var(--brand-color, #007bff);
-      border-left-color: var(--brand-color, #007bff);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    &:focus {
-      outline: none;
-      box-shadow: inset 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
-
-    .status-icon {
-      font-size: 16px;
-      margin-left: auto;
-
-      &.completed {
-        color: #28a745;
-      }
-
-      &.warning {
-        color: #ffc107;
-      }
-
-      &.error {
-        color: #dc3545;
-      }
-    }
-
-    &.sidebar-item-cancel {
-      margin-top: 1rem;
-      color: #dc3545;
-      border-left-color: transparent;
-
-      &:hover {
-        color: #c82333;
-        background-color: rgba(220, 53, 69, 0.1);
-      }
-    }
-  }
-
-  /* Custom tooltip styles */
-  ::ng-deep .mat-mdc-tooltip {
-    white-space: pre-line !important;
-    max-width: 300px !important;
-    font-size: 12px !important;
-    line-height: 1.4 !important;
-    padding: 8px 12px !important;
-  }
-}/* Main Content Area */
-.release-form-main {
-  flex: 1;
-  min-width: 0; /* Prevent flex item from overflowing */
-
-  .release-form-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-
-    .form-section {
-      padding: 32px;
-
-      h3 {
-        font-size: 20px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #333;
-      }
-
-      p {
-        color: #6c757d;
-        margin-bottom: 24px;
-      }
-    }
-
-    .section-actions {
-      display: flex;
-      justify-content: space-between;
-      padding-top: 2rem;
-      border-top: 1px solid #dee2e6;
-
-      // Navigation buttons - remove box shadow on focus
-      .btn {
+      &:focus {
         box-shadow: none !important;
-        
-        &:focus {
-          box-shadow: none !important;
-        }
       }
+    }
 
-      // First section only has Next button - align it to the right
-      &--next-only {
-        justify-content: flex-end;
-      }
+    &--next-only {
+      justify-content: flex-end;
     }
   }
 }
 
-/* Responsive Design */
-
-/* Tablet - Switch to horizontal layout */
+/* Tablet */
 @media (max-width: 1024px) {
-  .release-form-layout {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .release-form-sidebar {
-    flex: none;
-    position: static;
+  .release-form-container {
     border-radius: 0;
-    box-shadow: none;
-    border-bottom: 2px solid #e0e0e0;
-    background: transparent;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-
-    /* Scrollbar styling */
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e0 transparent;
-
-    &::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #cbd5e0;
-      border-radius: 4px;
-    }
-
-    .sidebar-items {
-      flex-direction: row;
-      min-width: min-content;
-      padding: 0 20px;
-    }
-
-    .sidebar-item {
-      padding: 14px 16px;
-      border-left: none;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-
-      &.active {
-        border-left-color: transparent;
-        border-bottom-color: var(--brand-color, #007bff);
-      }
-    }
-  }
-
-  .release-form-main {
-    .release-form-container {
-      border-radius: 0;
-    }
   }
 }
 
-/* Mobile - Tab Bar (Top) */
+/* Mobile */
 @media (max-width: 768px) {
   .release-submission-page {
     padding: 12px;
     padding-bottom: 100px;
   }
 
-  .release-form-sidebar {
-    position: static;
-    width: 100%;
-    background: transparent;
-    border-bottom: 1px solid #e0e0e0;
-    border-radius: 0;
-    padding: 0;
-    margin-top: 0 !important;
+  .release-form-container {
+    .form-section {
+      padding: 20px;
 
-    .sidebar-items {
-      flex-direction: row;
-      gap: 0;
-      padding: 0;
-      min-width: auto;
-      width: 100%;
+      h3 {
+        font-size: 18px;
+      }
     }
 
-    .sidebar-item {
-      flex: 1;
-      height: auto;
-      min-height: 60px;
-      padding: 14px 4px 10px 4px !important;
-      border: none;
-      border-radius: 0;
-      background-color: transparent;
-      box-shadow: none;
-      outline: none;
-      color: #c7c7cc;
-      display: flex;
+    .section-actions {
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      position: relative;
-      transition: color 0.2s ease;
-      white-space: normal;
 
-      i:first-child {
-        font-size: 20px;
-        width: auto;
-      }
-
-      span {
-        display: block;
-        font-size: 10px;
-        font-weight: 500;
-      }
-
-      .status-icon {
-        position: absolute;
-        top: 6px;
-        right: 50%;
-        transform: translateX(16px);
-        font-size: 8px;
-
-        &.completed { color: #28a745; }
-        &.warning { color: #ffc107; }
-        &.error { color: #dc3545; }
-      }
-
-      &.active {
-        color: var(--brand-color, #007bff);
-        border-left-color: transparent;
-        border-bottom-color: transparent;
-      }
-
-      &:hover:not(:disabled):not(.active) {
-        color: #6c757d;
-      }
-
-      &:disabled {
-        opacity: 0.35;
-      }
-
-      &.sidebar-item-cancel {
-        margin-top: 0;
-        margin-left: auto;
-        flex: 0 0 auto;
-        min-width: 56px;
-        color: #dc3545;
-        border-left: 1px solid #e0e0e0;
-
-        &:hover:not(:disabled) {
-          color: #c82333;
-          background-color: rgba(220, 53, 69, 0.05);
-        }
-      }
-    }
-  }
-
-  .release-form-main {
-    .release-form-container {
-      .form-section {
-        padding: 20px;
-
-        h3 {
-          font-size: 18px;
-        }
-      }
-
-      .section-actions {
-        flex-direction: column;
-
-        .btn {
-          width: 100%;
-        }
+      .btn {
+        width: 100%;
       }
     }
   }

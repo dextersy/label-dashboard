@@ -321,33 +321,83 @@ When a parent item has child routes, each child route maps to a section of the p
 
 For screens that contain multiple logically distinct sections within a single route, a vertical section navigator is rendered alongside the content area. This is an optional pattern used when it makes sense to subdivide a screen without adding sidebar entries or new routes.
 
-Layout structure:
+**Implementation:** Use the `InPageNavComponent` (`app-in-page-nav`) located at `src/app/components/shared/in-page-nav/`. Do not re-implement the layout manually.
 
-```html
-<div class="*-layout">           <!-- flex container: nav + content side by side -->
-  <nav class="*-sidebar">
-    <div class="sidebar-items">
-      <button class="sidebar-item" [class.active]="activeSection === 'x'" (click)="setActiveSection('x')">
-        <i class="fa fa-..."></i>
-        <span>Label</span>
-      </button>
-    </div>
-  </nav>
-  <div class="*-main">
-    <div *ngIf="activeSection === 'x'">...</div>
-  </div>
-</div>
+```typescript
+import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
+
+// In the component class:
+navTabs: InPageNavTab[] = [
+  { id: 'section-a', label: 'Section A', icon: 'fas fa-icon-name' },
+  { id: 'section-b', label: 'Section B', icon: 'fas fa-icon-name' },
+];
+activeSection = 'section-a';
+
+onNavTabChange(id: string): void {
+  this.activeSection = id;
+}
 ```
 
-**Styling:**
-- `.sidebar-items` is `flex-direction: column`, `gap: 4px`
-- `.sidebar-item` buttons have `border-left: 3px solid transparent`; the active state sets `border-left-color: var(--brand-color)` and applies the brand color to icon and text
-- On mobile the nav switches to `flex-direction: row` (horizontal tabs across the top of the content), and `border-left` becomes `border-bottom: 3px solid`
+```html
+<app-in-page-nav [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
+  <div *ngIf="activeSection === 'section-a'">...</div>
+  <div *ngIf="activeSection === 'section-b'">...</div>
+</app-in-page-nav>
+```
 
-**Optional enhancements:**
-- Items can be `[disabled]` to block progression until preconditions are met (e.g. a wizard-style flow)
-- Status icons (`fa-check-circle`, `fa-exclamation-triangle`, `fa-exclamation-circle`) can be appended inside the button to show per-section completion/warning/error state
-- A cancel or back action can be added as a final `.sidebar-item` with a distinct style (e.g. `.sidebar-item-cancel`)
+**Component inputs/outputs:**
+| Property | Type | Description |
+|----------|------|-------------|
+| `tabs` | `InPageNavTab[]` | Array of tab definition objects |
+| `activeTab` | `string` | ID of the currently active tab |
+| `tabChange` | `EventEmitter<string>` | Emits the tab ID when the user clicks a tab |
+
+**Responsive behaviour:**
+- **Desktop (>1024 px):** vertical sidebar, 200 px wide, sticky, `border-left: 3px` active indicator
+- **Tablet (≤1024 px):** horizontal scrollable tab bar at the top, `border-bottom: 3px` active indicator
+- **Mobile (≤768 px):** tabs fill the full width equally (`flex: 1` per tab)
+- **Stack mode (>2 tabs, mobile):** when the `tabs` array has more than 2 entries, the component automatically switches each tab button to a column layout (icon stacked above label, 10 px label text) to conserve horizontal space
+
+**Tab definition (`InPageNavTab`):**
+```typescript
+export interface InPageNavTab {
+  id: string;      // unique identifier matched against activeTab
+  label: string;   // display text
+  icon: string;    // full Font Awesome class string, e.g. 'fas fa-scale-balanced'
+  // Optional:
+  disabled?: boolean;                             // greys out the tab, prevents clicks
+  status?: 'completed' | 'warning' | 'error' | null; // trailing status icon (green/yellow/red)
+  color?: 'danger';                               // renders the tab in red (e.g. a Cancel action)
+  tooltip?: string;                               // hover tooltip; supports \n for multi-line
+}
+```
+
+**Status icons** appear as a small trailing icon inside the tab button:
+- `'completed'` → green check circle (`fa-check-circle`)
+- `'warning'` → yellow warning triangle (`fa-exclamation-triangle`)
+- `'error'` → red error circle (`fa-exclamation-circle`)
+- `null` / `undefined` → no icon
+
+On mobile (stack mode) the status icon is repositioned as an absolute badge in the top-right corner of the button.
+
+**Danger-colored tabs** (`color: 'danger'`) are rendered in red and separated from regular tabs by a margin/border. They should be used for destructive or exit actions (e.g. Cancel). To handle a danger tab's click differently from regular navigation, check the emitted ID in `tabChange`:
+```typescript
+onNavTabChange(id: string): void {
+  if (id === 'cancel') { this.onCancelEditMode(); return; }
+  this.setActiveSection(id as MySection);
+}
+```
+
+**Dynamic tabs (conditional items):** If tabs need to appear/disappear based on runtime state, use a getter instead of a plain array:
+```typescript
+get navTabs(): InPageNavTab[] {
+  const tabs = [ /* base tabs */ ];
+  if (this.someCondition) tabs.push({ id: 'extra', label: 'Extra', icon: 'fas fa-plus' });
+  return tabs;
+}
+```
+
+**Current usages:** `recuperable-expense-tab` (Balance / Expense Flow), `users-tab` (Users / Login Attempts), `event-form` (Details / Pricing / Buy Page / Scanner), `release-submission` (Release Info / Album Credits / Track List / Submit / Cancel — uses status icons, disabled tabs, tooltip, and danger color).
 
 #### Workspace contexts
 
@@ -363,6 +413,7 @@ The sidebar is workspace-aware via `WorkspaceService`. The four workspaces are `
 | `src/styles/components.scss` | Cards, buttons, forms, grid overrides, sticky bottom panel |
 | `src/app/components/shared/paginated-table/` | Main data table component |
 | `src/app/components/shared/date-range-filter/` | Date range filter component |
+| `src/app/components/shared/in-page-nav/` | In-page section navigator (vertical sidebar on desktop, horizontal tabs on mobile) |
 | `src/app/components/shared/confirmation-dialog/` | Reusable confirm dialog |
 | `src/app/components/shared/lightbox/` | Image lightbox (moves to body to escape positioning context) |
 | `src/app/components/shared/audio-player-popup/` | Audio playback overlay |

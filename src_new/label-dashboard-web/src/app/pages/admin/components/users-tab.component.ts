@@ -5,10 +5,11 @@ import { AdminService, User, LoginAttempt } from '../../../services/admin.servic
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 
 @Component({
     selector: 'app-users-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, InPageNavComponent],
     templateUrl: './users-tab.component.html',
     styleUrl: './users-tab.component.scss'
 })
@@ -29,6 +30,11 @@ export class UsersTabComponent implements OnInit {
 
   // Sidebar navigation
   activeSection: string = 'users';
+
+  navTabs: InPageNavTab[] = [
+    { id: 'users', label: 'Users', icon: 'fa-solid fa-users' },
+    { id: 'login-attempts', label: 'Login Attempts', icon: 'fa-solid fa-shield-halved' },
+  ];
 
   setActiveSection(section: string): void {
     this.activeSection = section;

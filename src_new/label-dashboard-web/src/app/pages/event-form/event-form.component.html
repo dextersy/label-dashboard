@@ -16,49 +16,9 @@
     </div>
   </div>
 
-  <div class="event-form-layout">
-    <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
-    <nav class="event-form-sidebar mt-3">
-      <div class="sidebar-items">
-        <button 
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'details'"
-          (click)="setActiveSection('details')">
-          <i class="fa fa-info-circle"></i>
-          <span>Details</span>
-        </button>
-        <button 
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'pricing'"
-          (click)="setActiveSection('pricing')">
-          <i class="fa fa-ticket"></i>
-          <span>Pricing</span>
-        </button>
-        <button 
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'purchase'"
-          (click)="setActiveSection('purchase')">
-          <i class="fa fa-shopping-cart"></i>
-          <span>Buy Page</span>
-        </button>
-        <button 
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'scanner'"
-          (click)="setActiveSection('scanner')"
-          *ngIf="!isEventDraft()">
-          <i class="fa fa-qrcode"></i>
-          <span>Scanner</span>
-        </button>
-      </div>
-    </nav>
+  <app-in-page-nav class="mt-3" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
 
-    <!-- Main Content Area -->
-    <div class="event-form-main">
-      <div class="event-form-container">
+    <div class="event-form-container">
         <!-- Loading State -->
         <div *ngIf="loading" class="loading-container">
           <div class="loading-dots">
@@ -554,9 +514,9 @@
             </div>
           </div>
         </div>
-      </div>
     </div>
-  </div>
+
+  </app-in-page-nav>
 </div>
 
 <!-- Floating Action Buttons (outside scrollable container) -->

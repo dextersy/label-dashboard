@@ -13,63 +13,57 @@
 
         <!-- Music Earnings Breakdown -->
         <div *ngIf="breakdownType === 'music' && childBrand">
-          <div class="row mb-3">
-            <div class="col-sm-8">
-              <strong>Net Music Earnings:</strong>
-            </div>
-            <div class="col-sm-4 text-end">
-              <strong class="text-success" [ngClass]="getAmountClass(childBrand.music_earnings)">₱{{ childBrand.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
-            </div>
-          </div>
-          
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Net Music Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong [ngClass]="getAmountClass(childBrand.music_earnings)">₱{{ childBrand.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <hr>
-          
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Music Earnings Breakdown:</h6>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Gross Music Earnings:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-primary" [ngClass]="getAmountClass(childBrand.music_gross_earnings)">₱{{ childBrand.music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Less: Royalties Due to Artists:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-danger">-₱{{ childBrand.total_royalties.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Less: Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-danger">-₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
-          
+
+          <h6 class="text-muted mb-2">Music Earnings Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Gross Music Earnings:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary" [ngClass]="getAmountClass(childBrand.music_gross_earnings)">₱{{ childBrand.music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Royalties Due to Artists:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ childBrand.total_royalties.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <hr>
-          
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Other Information:</h6>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Artist Payments:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-warning">₱{{ childBrand.artist_payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
-          
+
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Artist Payments:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-warning">₱{{ childBrand.artist_payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <div class="alert alert-info">
             <small>
               <i class="fas fa-info-circle me-1"></i>
@@ -80,63 +74,57 @@
 
         <!-- Event Earnings Breakdown -->
         <div *ngIf="breakdownType === 'event' && childBrand">
-          <div class="row mb-3">
-            <div class="col-sm-8">
-              <strong>Net Event Earnings:</strong>
-            </div>
-            <div class="col-sm-4 text-end">
-              <strong class="text-success">₱{{ childBrand.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
-            </div>
-          </div>
-          
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Net Event Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-success">₱{{ childBrand.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <hr>
-          
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Event Sales (Gross):</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-primary">₱{{ childBrand.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Less: Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-danger">-₱{{ (childBrand.event_sales - childBrand.event_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
-          
+
+          <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Event Sales (Gross):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary">₱{{ childBrand.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ (childBrand.event_sales - childBrand.event_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <hr>
-          
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Other Information:</h6>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Processing Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-info">₱{{ childBrand.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-            
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Estimated Tax (0.5%):</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-secondary">₱{{ childBrand.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
-          
+
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Processing Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ childBrand.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Estimated Tax (0.5%):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-secondary">₱{{ childBrand.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <div class="alert alert-info">
             <small>
               <i class="fas fa-info-circle me-1"></i>
@@ -147,53 +135,50 @@
 
         <!-- Fundraiser Earnings Breakdown -->
         <div *ngIf="breakdownType === 'fundraiser' && childBrand">
-          <div class="row mb-3">
-            <div class="col-sm-8">
-              <strong>Net Fundraiser Earnings:</strong>
-            </div>
-            <div class="col-sm-4 text-end">
-              <strong class="text-success">₱{{ (childBrand.fundraiser_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
-            </div>
-          </div>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Net Fundraiser Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-success">₱{{ (childBrand.fundraiser_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <hr>
 
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Fundraiser Donations Breakdown:</h6>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Donations (Gross):</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-primary">₱{{ (childBrand.fundraiser_gross_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Less: Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-danger">-₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
+          <h6 class="text-muted mb-2">Fundraiser Donations Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Donations (Gross):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary">₱{{ (childBrand.fundraiser_gross_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <hr>
 
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Other Information:</h6>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Processing Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-info">₱{{ (childBrand.fundraiser_processing_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Processing Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ (childBrand.fundraiser_processing_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <div class="alert alert-info">
             <small>
@@ -205,47 +190,42 @@
 
         <!-- Platform Fees Breakdown -->
         <div *ngIf="breakdownType === 'platform_fees' && childBrand">
-          <div class="row mb-3">
-            <div class="col-sm-8">
-              <strong>Total Platform Fees:</strong>
-            </div>
-            <div class="col-sm-4 text-end">
-              <strong class="text-danger">₱{{ childBrand.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
-            </div>
-          </div>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Total Platform Fees:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-danger">₱{{ childBrand.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <hr>
 
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Platform Fees Breakdown by Source:</h6>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Music Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-info">₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Event Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-warning">₱{{ childBrand.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Fundraiser Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-danger">₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
+          <h6 class="text-muted mb-2">Platform Fees Breakdown by Source:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Music Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Event Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-warning">₱{{ childBrand.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Fundraiser Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <div class="alert alert-info">
             <small>
@@ -257,62 +237,56 @@
 
         <!-- Total Event Earnings Breakdown -->
         <div *ngIf="breakdownType === 'total_event' && aggregatedTotals">
-          <div class="row mb-3">
-            <div class="col-sm-8">
-              <strong>Total Event Earnings:</strong>
-            </div>
-            <div class="col-sm-4 text-end">
-              <strong class="text-success">₱{{ aggregatedTotals.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
-            </div>
-          </div>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Total Event Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-success">₱{{ aggregatedTotals.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <hr>
 
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Gross Event Sales:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-primary">₱{{ aggregatedTotals.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Less: Platform Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-danger">-₱{{ aggregatedTotals.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
+          <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Gross Event Sales:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary">₱{{ aggregatedTotals.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ aggregatedTotals.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <hr>
 
-          <div class="mb-3">
-            <h6 class="text-muted mb-2">Other Information:</h6>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Processing Fees:</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-info">₱{{ aggregatedTotals.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-
-            <div class="row mb-2">
-              <div class="col-sm-8">
-                <span class="text-muted">• Total Estimated Tax (0.5%):</span>
-              </div>
-              <div class="col-sm-4 text-end">
-                <span class="text-secondary">₱{{ aggregatedTotals.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
-              </div>
-            </div>
-          </div>
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Processing Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ aggregatedTotals.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Total Estimated Tax (0.5%):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-secondary">₱{{ aggregatedTotals.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           <div class="alert alert-info">
             <small>

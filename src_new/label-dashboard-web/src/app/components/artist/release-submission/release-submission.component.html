@@ -1,6 +1,6 @@
 <div class="release-submission-page">
   <app-breadcrumb></app-breadcrumb>
-  
+
   <!-- Read-Only View for non-Draft releases -->
   <ng-container *ngIf="showReadOnlyView && releaseForView">
     <app-release-view
@@ -11,77 +11,11 @@
       (releaseSubmitted)="onReleaseSubmitted($event)">
     </app-release-view>
   </ng-container>
-  
-  <!-- Edit Form for Draft releases or admin edit mode -->
-  <div class="release-form-layout" *ngIf="!showReadOnlyView">
-    <!-- Sidebar Navigation (Desktop) / Top Navigation (Mobile) -->
-    <nav class="release-form-sidebar mt-3">
-      <div class="sidebar-items">
-        <button
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'info'"
-          [matTooltip]="releaseInfoTooltip"
-          matTooltipPosition="right"
-          (click)="setActiveSection('info')">
-          <i class="fa fa-info-circle"></i>
-          <span>Release Info</span>
-          <i *ngIf="releaseInfoStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
-          <i *ngIf="releaseInfoStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
-          <i *ngIf="releaseInfoStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
-        </button>
-        <button
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'credits'"
-          [disabled]="!canProceedToCredits"
-          [matTooltip]="albumCreditsTooltip"
-          matTooltipPosition="right"
-          (click)="setActiveSection('credits')">
-          <i class="fa fa-users"></i>
-          <span>Album Credits</span>
-          <i *ngIf="albumCreditsStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
-          <i *ngIf="albumCreditsStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
-          <i *ngIf="albumCreditsStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
-        </button>
-        <button
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'tracks'"
-          [disabled]="!canProceedToTracks"
-          [matTooltip]="trackListTooltip"
-          matTooltipPosition="right"
-          (click)="setActiveSection('tracks')">
-          <i class="fa fa-music"></i>
-          <span>Track List</span>
-          <i *ngIf="trackListStatus === 'completed'" class="fa fa-check-circle status-icon completed"></i>
-          <i *ngIf="trackListStatus === 'warning'" class="fa fa-exclamation-triangle status-icon warning"></i>
-          <i *ngIf="trackListStatus === 'error'" class="fa fa-exclamation-circle status-icon error"></i>
-        </button>
-        <button
-          type="button"
-          class="sidebar-item"
-          [class.active]="activeSection === 'submit'"
-          [disabled]="!canProceedToSubmit"
-          *ngIf="isDraftStatus"
-          (click)="setActiveSection('submit')">
-          <i class="fa fa-paper-plane"></i>
-          <span>Submit</span>
-        </button>
-        <button
-          type="button"
-          class="sidebar-item sidebar-item-cancel"
-          *ngIf="canCancelToViewMode"
-          (click)="onCancelEditMode()">
-          <i class="fa fa-times"></i>
-          <span>Cancel</span>
-        </button>
-      </div>
-    </nav>
 
-    <!-- Main Content Area -->
-    <div class="release-form-main">
-      <div class="release-form-container">
+  <!-- Edit Form for Draft releases or admin edit mode -->
+  <app-in-page-nav class="mt-3" *ngIf="!showReadOnlyView" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
+
+    <div class="release-form-container">
       <!-- Release Info Section -->
       <div class="form-section" *ngIf="activeSection === 'info'">
         <h3>Release Information</h3>
@@ -116,7 +50,6 @@
         <h3>Album Credits</h3>
         <p>Manage artists and royalty splits for this release</p>
 
-        <!-- Album Credits Component -->
         <app-album-credits-section
           [artist]="artist"
           [editingRelease]="editingRelease"
@@ -150,7 +83,6 @@
         <h3>Track List</h3>
         <p>Manage the songs for this release</p>
 
-        <!-- Track List Component (always rendered for data processing) -->
         <app-track-list-section
           [style.display]="activeSection === 'tracks' ? 'block' : 'none'"
           [releaseId]="releaseId"
@@ -217,6 +149,6 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+  </app-in-page-nav>
 </div>

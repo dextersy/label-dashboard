@@ -14,6 +14,7 @@ import { VenueAutocompleteComponent, VenueSelection } from '../../components/eve
 import { TicketTypesComponent } from '../../components/events/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
+import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 
 export interface TicketType {
   id?: number;
@@ -52,7 +53,8 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner';
     EventSelectionComponent,
     VenueAutocompleteComponent,
     TicketTypesComponent,
-    QuillModule
+    QuillModule,
+    InPageNavComponent
   ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
@@ -275,6 +277,22 @@ export class EventFormComponent implements OnInit, OnDestroy {
     
     // Add default ticket type for new events
     this.ticketTypes = [createDefaultTicketType()];
+  }
+
+  get navTabs(): InPageNavTab[] {
+    const tabs: InPageNavTab[] = [
+      { id: 'details', label: 'Details', icon: 'fa fa-info-circle' },
+      { id: 'pricing', label: 'Pricing', icon: 'fa fa-ticket' },
+      { id: 'purchase', label: 'Buy Page', icon: 'fa fa-shopping-cart' },
+    ];
+    if (!this.isEventDraft()) {
+      tabs.push({ id: 'scanner', label: 'Scanner', icon: 'fa fa-qrcode' });
+    }
+    return tabs;
+  }
+
+  onNavTabChange(id: string): void {
+    this.setActiveSection(id as EventFormSection);
   }
 
   setActiveSection(section: EventFormSection): void {

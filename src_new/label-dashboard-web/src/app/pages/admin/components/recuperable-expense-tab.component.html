@@ -1,117 +1,91 @@
-<div class="expense-report-layout">
+<app-in-page-nav [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
 
-  <!-- In-page sidebar nav -->
-  <nav class="expense-report-sidebar">
-    <div class="sidebar-items">
-      <button
-        type="button"
-        class="sidebar-item"
-        [class.active]="activeSection === 'balance'"
-        (click)="setActiveSection('balance')">
-        <i class="fas fa-scale-balanced"></i>
-        <span>Balance</span>
-      </button>
-      <button
-        type="button"
-        class="sidebar-item"
-        [class.active]="activeSection === 'flow'"
-        (click)="setActiveSection('flow')">
-        <i class="fas fa-arrows-rotate"></i>
-        <span>Expense Flow</span>
-      </button>
-    </div>
-  </nav>
+  <!-- ── Balance section ────────────────────────────────────────────────── -->
+  <div *ngIf="activeSection === 'balance'">
 
-  <!-- Main content -->
-  <div class="expense-report-main">
+    <app-paginated-table
+      title="Recuperable Expenses by Release"
+      [data]="balanceExpenses"
+      [pagination]="balancePagination"
+      [loading]="balanceLoading"
+      [columns]="balanceColumns"
+      [showSortableHeaders]="true"
+      [sortInfo]="balanceSort"
+      [responsiveMode]="'financial'"
+      (pageChange)="onBalancePageChange($event)"
+      (filtersChange)="onBalanceFiltersChange($event)"
+      (sortChange)="onBalanceSortChange($event)">
+    </app-paginated-table>
 
-    <!-- ── Balance section ──────────────────────────────────────────────── -->
-    <div *ngIf="activeSection === 'balance'">
-
-      <app-paginated-table
-        title="Recuperable Expenses by Release"
-        [data]="balanceExpenses"
-        [pagination]="balancePagination"
-        [loading]="balanceLoading"
-        [columns]="balanceColumns"
-        [showSortableHeaders]="true"
-        [sortInfo]="balanceSort"
-        [responsiveMode]="'financial'"
-        (pageChange)="onBalancePageChange($event)"
-        (filtersChange)="onBalanceFiltersChange($event)"
-        (sortChange)="onBalanceSortChange($event)">
-      </app-paginated-table>
-
-      <div class="row mt-1 justify-content-end">
-        <div class="col-12 col-lg-5">
-          <div class="balance-summary-row">
-            <span class="balance-summary-label">Total Recuperable Expense</span>
-            <span class="balance-summary-value">{{ formatCurrency(totalRecuperableExpense) }}</span>
-          </div>
+    <div class="row mt-1 justify-content-end">
+      <div class="col-12 col-lg-5">
+        <div class="balance-summary-row">
+          <span class="balance-summary-label">Total Recuperable Expense</span>
+          <span class="balance-summary-value">{{ formatCurrency(totalRecuperableExpense) }}</span>
         </div>
       </div>
-
-    </div>
-
-    <!-- ── Flow section ──────────────────────────────────────────────────── -->
-    <div *ngIf="activeSection === 'flow'">
-
-      <app-date-range-filter
-        [compact]="true"
-        [initialPreset]="'last30days'"
-        [showComparison]="false"
-        [showExport]="false"
-        [loading]="flowLoading"
-        (dateRangeChange)="onFlowDateRangeChange($event)">
-      </app-date-range-filter>
-
-      <div *ngIf="flowLoading" class="text-center mt-3">
-        <div class="loading-dots">
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
-      </div>
-
-      <div *ngIf="!flowLoading && flowStartDate">
-        <!-- Summary stats -->
-        <div class="stats-compact-card mb-4">
-          <div class="stats-compact-item">
-            <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(totalNewExpense) }}</span>
-            <div class="stats-compact-meta">
-              <i class="fas fa-plus-circle"></i>
-              <span class="stats-compact-label">New Expenses</span>
-            </div>
-          </div>
-          <div class="stats-compact-item">
-            <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(totalRecuperatedExpense) }}</span>
-            <div class="stats-compact-meta">
-              <i class="fas fa-minus-circle"></i>
-              <span class="stats-compact-label">Recuperated</span>
-            </div>
-          </div>
-        </div>
-
-        <app-paginated-table
-          title="By Release"
-          [data]="flowExpenses"
-          [pagination]="flowPagination"
-          [loading]="flowTableLoading"
-          [columns]="flowColumns"
-          [showSortableHeaders]="true"
-          [sortInfo]="flowSort"
-          [responsiveMode]="'financial'"
-          (pageChange)="onFlowPageChange($event)"
-          (filtersChange)="onFlowFiltersChange($event)"
-          (sortChange)="onFlowSortChange($event)">
-        </app-paginated-table>
-      </div>
-
-      <div *ngIf="!flowLoading && !flowStartDate" class="text-muted mt-3">
-        Select a date range to view recuperable expense flow.
-      </div>
-
     </div>
 
   </div>
-</div>
+
+  <!-- ── Flow section ───────────────────────────────────────────────────── -->
+  <div *ngIf="activeSection === 'flow'">
+
+    <app-date-range-filter
+      [compact]="true"
+      [initialPreset]="'last30days'"
+      [showComparison]="false"
+      [showExport]="false"
+      [loading]="flowLoading"
+      (dateRangeChange)="onFlowDateRangeChange($event)">
+    </app-date-range-filter>
+
+    <div *ngIf="flowLoading" class="text-center mt-3">
+      <div class="loading-dots">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <div *ngIf="!flowLoading && flowStartDate">
+      <!-- Summary stats -->
+      <div class="stats-compact-card mb-4">
+        <div class="stats-compact-item">
+          <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(totalNewExpense) }}</span>
+          <div class="stats-compact-meta">
+            <i class="fas fa-plus-circle"></i>
+            <span class="stats-compact-label">New Expenses</span>
+          </div>
+        </div>
+        <div class="stats-compact-item">
+          <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(totalRecuperatedExpense) }}</span>
+          <div class="stats-compact-meta">
+            <i class="fas fa-minus-circle"></i>
+            <span class="stats-compact-label">Recuperated</span>
+          </div>
+        </div>
+      </div>
+
+      <app-paginated-table
+        title="By Release"
+        [data]="flowExpenses"
+        [pagination]="flowPagination"
+        [loading]="flowTableLoading"
+        [columns]="flowColumns"
+        [showSortableHeaders]="true"
+        [sortInfo]="flowSort"
+        [responsiveMode]="'financial'"
+        (pageChange)="onFlowPageChange($event)"
+        (filtersChange)="onFlowFiltersChange($event)"
+        (sortChange)="onFlowSortChange($event)">
+      </app-paginated-table>
+    </div>
+
+    <div *ngIf="!flowLoading && !flowStartDate" class="text-muted mt-3">
+      Select a date range to view recuperable expense flow.
+    </div>
+
+  </div>
+
+</app-in-page-nav>

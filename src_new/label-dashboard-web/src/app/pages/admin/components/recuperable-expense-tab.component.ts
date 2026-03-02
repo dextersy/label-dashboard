@@ -4,18 +4,24 @@ import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 
 export type RecuperableExpenseSection = 'balance' | 'flow';
 
 @Component({
   selector: 'app-recuperable-expense-tab',
   standalone: true,
-  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent],
+  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent, InPageNavComponent],
   templateUrl: './recuperable-expense-tab.component.html',
   styleUrls: ['./recuperable-expense-tab.component.scss']
 })
 export class RecuperableExpenseTabComponent implements OnInit {
   activeSection: RecuperableExpenseSection = 'balance';
+
+  navTabs: InPageNavTab[] = [
+    { id: 'balance', label: 'Balance', icon: 'fas fa-scale-balanced' },
+    { id: 'flow', label: 'Expense Flow', icon: 'fas fa-arrows-rotate' },
+  ];
 
   // ── Balance section ───────────────────────────────────────────────────────
   totalRecuperableExpense: number = 0;
@@ -80,6 +86,10 @@ export class RecuperableExpenseTabComponent implements OnInit {
 
   setActiveSection(section: RecuperableExpenseSection): void {
     this.activeSection = section;
+  }
+
+  onNavTabChange(id: string): void {
+    this.setActiveSection(id as RecuperableExpenseSection);
   }
 
   // ── Balance methods ───────────────────────────────────────────────────────
