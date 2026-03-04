@@ -59,6 +59,7 @@ export class BreadcrumbService {
     '/campaigns': { label: 'Campaigns', icon: 'fas fa-bullhorn' },
 
     // Events (under campaigns)
+    '/campaigns/dashboard': { label: 'Dashboard', parent: '/campaigns' },
     '/campaigns/events': { label: 'Events', parent: '/campaigns', icon: 'fas fa-ticket-alt' },
     '/campaigns/events/new': { label: 'New Event', parent: '/campaigns/events' },
     '/campaigns/events/details': { label: 'Manage Events', parent: '/campaigns/events' },

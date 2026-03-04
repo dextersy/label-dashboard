@@ -35,6 +35,16 @@
     }
   }
   
+  .breadcrumb-workspace {
+    color: #495057;
+    font-weight: 500;
+
+    i {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+  }
+
   .breadcrumb-current {
     color: #6c757d;
     font-weight: 400;
