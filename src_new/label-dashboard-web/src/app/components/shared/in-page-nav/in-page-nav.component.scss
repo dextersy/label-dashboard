@@ -53,7 +53,9 @@
       color: #495057;
     }
 
-    &.active {
+    &.active,
+    &.active:focus,
+    &.active:focus-visible {
       color: var(--brand-color, #007bff);
       border-left-color: var(--brand-color, #007bff);
     }
@@ -63,9 +65,12 @@
       cursor: not-allowed;
     }
 
-    &:focus {
+    &:focus,
+    &:focus-visible {
       outline: none;
     }
+
+    -webkit-tap-highlight-color: transparent;
 
     // ── Status icons (trailing, desktop) ────────────────────────────────
     .status-icon {
