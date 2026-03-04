@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
-import { FundraiserSelectionComponent } from '../../components/campaigns/fundraiser-selection/fundraiser-selection.component';
+import { FundraiserSelectionComponent } from '../fundraisers/components/fundraiser-selection/fundraiser-selection.component';
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';

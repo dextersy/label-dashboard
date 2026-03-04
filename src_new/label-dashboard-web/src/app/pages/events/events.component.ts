@@ -9,11 +9,11 @@ import { EventService, Event } from '../../services/event.service';
 import { environment } from '../../../environments/environment';
 
 // Import tab components
-import { EventTicketsTabComponent } from '../../components/events/event-tickets-tab/event-tickets-tab.component';
-import { EventAbandonedOrdersTabComponent } from '../../components/events/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
-import { EventReferralsTabComponent } from '../../components/events/event-referrals-tab/event-referrals-tab.component';
-import { EventEmailTabComponent } from '../../components/events/event-email-tab/event-email-tab.component';
-import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
+import { EventTicketsTabComponent } from './components/event-tickets-tab/event-tickets-tab.component';
+import { EventAbandonedOrdersTabComponent } from './components/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
+import { EventReferralsTabComponent } from './components/event-referrals-tab/event-referrals-tab.component';
+import { EventEmailTabComponent } from './components/event-email-tab/event-email-tab.component';
+import { EventSelectionComponent } from './components/event-selection/event-selection.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email';

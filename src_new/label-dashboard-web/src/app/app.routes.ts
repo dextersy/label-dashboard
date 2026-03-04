@@ -3,18 +3,18 @@ import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ArtistComponent } from './pages/artist/artist.component';
 import { SelectArtistComponent } from './pages/select-artist/select-artist.component';
-import { AddNewArtistComponent } from './components/artist/add-new-artist/add-new-artist.component';
+import { AddNewArtistComponent } from './pages/artist/add-new-artist/add-new-artist.component';
 import { FinancialComponent } from './pages/financial/financial.component';
 import { EventsComponent } from './pages/events/events.component';
 import { EventsDashboardComponent } from './pages/events-dashboard/events-dashboard.component';
 import { EventFormComponent } from './pages/event-form/event-form.component';
 import { FundraisersComponent } from './pages/fundraisers/fundraisers.component';
 import { FundraiserFormComponent } from './pages/fundraiser-form/fundraiser-form.component';
-import { ReleaseSubmissionComponent } from './components/artist/release-submission/release-submission.component';
+import { ReleaseSubmissionComponent } from './pages/music/release-submission/release-submission.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { LabelFinanceTabComponent } from './pages/admin/components/label-finance-tab.component';
-import { LabelsEarningsPageComponent } from './pages/labels/labels-earnings.component';
-import { ChildBrandsTabComponent } from './pages/admin/components/child-brands-tab.component';
+import { LabelsComponent } from './pages/labels/labels.component';
+import { LabelsSubLabelsComponent } from './pages/labels/sublabels/sublabels.component';
 import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-found.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
@@ -24,14 +24,14 @@ import { AdminInviteComponent } from './pages/admin-invite/admin-invite.componen
 import { AdminSetupComponent } from './pages/admin-setup/admin-setup.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { CustomTicketComponent } from './pages/events/custom-ticket/custom-ticket.component';
-import { TicketBuyComponent } from './pages/public/ticket-buy.component';
-import { TicketSuccessComponent } from './pages/public/ticket-success.component';
-import { TicketVerifyComponent } from './pages/public/ticket-verify.component';
-import { PublicEventsComponent } from './pages/public/public-events.component';
-import { ArtistEPKComponent } from './pages/public/artist-epk.component';
-import { ReleasePlayerComponent } from './pages/public/release-player.component';
-import { FundraiserComponent } from './pages/public/fundraiser.component';
-import { DonationSuccessComponent } from './pages/public/donation-success.component';
+import { TicketBuyComponent } from './pages/public/ticket-buy/ticket-buy.component';
+import { TicketSuccessComponent } from './pages/public/ticket-success/ticket-success.component';
+import { TicketVerifyComponent } from './pages/public/ticket-verify/ticket-verify.component';
+import { PublicEventsComponent } from './pages/public/public-events/public-events.component';
+import { ArtistEPKComponent } from './pages/public/artist-epk/artist-epk.component';
+import { ReleasePlayerComponent } from './pages/public/release-player/release-player.component';
+import { FundraiserComponent } from './pages/public/fundraiser/fundraiser.component';
+import { DonationSuccessComponent } from './pages/public/donation-success/donation-success.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
@@ -164,8 +164,8 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     children: [
       { path: '', redirectTo: 'earnings', pathMatch: 'full' },
-      { path: 'earnings', component: LabelsEarningsPageComponent },
-      { path: 'sublabels', component: ChildBrandsTabComponent }
+      { path: 'earnings', component: LabelsComponent },
+      { path: 'sublabels', component: LabelsSubLabelsComponent }
     ]
   },
 
