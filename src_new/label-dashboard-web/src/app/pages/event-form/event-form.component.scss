@@ -33,6 +33,42 @@
   overflow: hidden;
 }
 
+/* Draft notification */
+.draft-notification {
+  .draft-notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .draft-caret {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+
+    &.draft-caret--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .draft-notification-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+
+    &.draft-notification-body--open {
+      max-height: 80px;
+    }
+  }
+
+  .draft-notification-body-inner {
+    padding-top: 12px;
+    padding-left: 36px;
+    font-size: 12px;
+  }
+}
+
 /* Form Content */
 .event-form-content {
   padding: 32px;

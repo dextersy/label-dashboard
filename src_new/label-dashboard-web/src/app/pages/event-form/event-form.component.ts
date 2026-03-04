@@ -70,6 +70,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   isAdmin = false;
   pinRefreshed = false;
   activeSection: EventFormSection = 'details';
+  draftExpanded = false;
   availableEvents: Event[] = [];
   
   // Form data

@@ -31,13 +31,21 @@
         <!-- Form Content -->
         <div *ngIf="!loading" class="event-form-content">
           <!-- Draft Mode Info Box -->
-          <div class="alert alert-info d-flex align-items-center mb-4" *ngIf="!isEventPublished()">
-            <i class="fa fa-info-circle me-3 fs-5"></i>
-            <div>
-              <strong>Draft Mode</strong> - This event is not yet visible to the public. 
-              <span class="d-block small mt-1">
+          <div class="alert alert-info draft-notification mb-4" *ngIf="!isEventPublished()">
+            <div class="draft-notification-header" (click)="draftExpanded = !draftExpanded">
+              <div class="d-flex align-items-center gap-3">
+                <i class="fa fa-info-circle fs-5 flex-shrink-0"></i>
+                <div>
+                  <strong>Draft mode</strong>
+                  <span class="d-block small mt-1">This event is not yet visible to the public.</span>
+                </div>
+              </div>
+              <i class="fa fa-chevron-down draft-caret" [class.draft-caret--open]="draftExpanded"></i>
+            </div>
+            <div class="draft-notification-body" [class.draft-notification-body--open]="draftExpanded">
+              <div class="draft-notification-body-inner">
                 Complete the event details and click "Publish" to make it live and generate ticket purchase links.
-              </span>
+              </div>
             </div>
           </div>
 
