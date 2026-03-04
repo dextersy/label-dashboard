@@ -42,7 +42,7 @@
       <div class="card summary-card">
         <div class="card-body text-center">
           <h4 class="card-title text-info" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Music Earnings</p>
+          <p class="card-text text-muted">Total Music Earnings + Royalties</p>
         </div>
       </div>
     </div>
@@ -78,10 +78,13 @@
     </div>
 
     <div class="col-md-6 col-lg">
-      <div class="card summary-card">
+      <div class="card summary-card clickable-card" (click)="openTotalPlatformFeesBreakdown()" style="cursor: pointer;">
         <div class="card-body text-center">
           <h4 class="card-title text-dark" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Platform Fees</p>
+          <p class="card-text text-muted">
+            Total Platform Fees
+            <i class="fas fa-info-circle ms-1" style="font-size: 0.8em;"></i>
+          </p>
         </div>
       </div>
     </div>

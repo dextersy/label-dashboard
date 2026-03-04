@@ -37,7 +37,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   showEarningsBreakdownModal: boolean = false;
   selectedSublabelForBreakdown: ChildBrand | null = null;
   aggregatedTotalsForBreakdown: AggregatedTotals | null = null;
-  earningsBreakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' = 'music';
+  earningsBreakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' | 'total_platform_fees' = 'music';
   showPaymentsModal: boolean = false;
   selectedSublabelForPayments: ChildBrand | null = null;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
@@ -92,13 +92,13 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
         }
       }
     },
-    { 
-      key: 'music_earnings', 
-      label: 'Net Music Earnings', 
+    {
+      key: 'music_earnings',
+      label: 'Net Music Earnings + Royalties',
       type: 'number',
       sortable: true,
       align: 'right',
-      formatter: (item: ChildBrand) => `₱${item.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      formatter: (item: ChildBrand) => `₱${(item.music_earnings + item.total_royalties).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       showBreakdownButton: true
     },
     {
@@ -324,7 +324,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   }
 
   getTotalMusicEarnings(): number {
-    return this.childBrands.reduce((total, brand) => total + brand.music_earnings, 0);
+    return this.childBrands.reduce((total, brand) => total + brand.music_earnings + brand.total_royalties, 0);
   }
 
   getTotalEventEarnings(): number {
@@ -352,6 +352,28 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       event_estimated_tax: this.childBrands.reduce((total, brand) => total + (brand.event_estimated_tax || 0), 0),
       event_earnings: this.childBrands.reduce((total, brand) => total + (brand.event_earnings || 0), 0)
     };
+  }
+
+  // Calculate aggregated totals for platform fees
+  getAggregatedPlatformFeesTotals(): AggregatedTotals {
+    return {
+      event_sales: 0,
+      event_platform_fees: 0,
+      event_processing_fees: 0,
+      event_estimated_tax: 0,
+      event_earnings: 0,
+      music_platform_fees: this.childBrands.reduce((total, brand) => total + (brand.music_platform_fees || 0), 0),
+      aggregated_event_platform_fees: this.childBrands.reduce((total, brand) => total + (brand.event_platform_fees || 0), 0),
+      total_platform_fees: this.childBrands.reduce((total, brand) => total + (brand.platform_fees || 0), 0)
+    };
+  }
+
+  // Open Total Platform Fees breakdown modal
+  openTotalPlatformFeesBreakdown(): void {
+    this.aggregatedTotalsForBreakdown = this.getAggregatedPlatformFeesTotals();
+    this.selectedSublabelForBreakdown = null;
+    this.earningsBreakdownType = 'total_platform_fees';
+    this.showEarningsBreakdownModal = true;
   }
 
   // Superadmin check

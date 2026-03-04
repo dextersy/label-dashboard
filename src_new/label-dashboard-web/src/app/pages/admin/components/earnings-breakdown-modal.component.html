@@ -7,6 +7,7 @@
         <h5 class="modal-title" *ngIf="breakdownType === 'fundraiser'">{{ getFundraiserBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'platform_fees'">{{ getPlatformFeesBreakdownTitle() }}</h5>
         <h5 class="modal-title" *ngIf="breakdownType === 'total_event'">{{ getTotalEventBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'total_platform_fees'">{{ getTotalPlatformFeesBreakdownTitle() }}</h5>
         <button type="button" class="btn-close" (click)="onClose()"></button>
       </div>
       <div class="modal-body">
@@ -292,6 +293,47 @@
             <small>
               <i class="fas fa-info-circle me-1"></i>
               This breakdown shows the aggregated totals across all sublabels. Total Event Earnings = Total Gross Event Sales - Platform Fees. Processing fees and estimated tax are informational and represent additional charges during ticket purchases.
+            </small>
+          </div>
+        </div>
+
+        <!-- Total Platform Fees Breakdown -->
+        <div *ngIf="breakdownType === 'total_platform_fees' && aggregatedTotals">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Total Platform Fees:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-danger">₱{{ (aggregatedTotals.total_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Platform Fees Breakdown by Source:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Music Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ (aggregatedTotals.music_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Event Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-warning">₱{{ (aggregatedTotals.aggregated_event_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              This breakdown shows the aggregated platform fees across all sublabels, split by music and event sources.
             </small>
           </div>
         </div>

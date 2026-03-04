@@ -8,6 +8,9 @@ export interface AggregatedTotals {
   event_processing_fees: number;
   event_estimated_tax: number;
   event_earnings: number;
+  music_platform_fees?: number;
+  aggregated_event_platform_fees?: number;
+  total_platform_fees?: number;
 }
 
 @Component({
@@ -20,7 +23,7 @@ export class EarningsBreakdownModalComponent {
   @Input() show: boolean = false;
   @Input() childBrand: ChildBrand | null = null;
   @Input() aggregatedTotals: AggregatedTotals | null = null;
-  @Input() breakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' = 'music';
+  @Input() breakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' | 'total_platform_fees' = 'music';
   @Output() close = new EventEmitter<void>();
 
   onClose(): void {
@@ -51,6 +54,10 @@ export class EarningsBreakdownModalComponent {
 
   getTotalEventBreakdownTitle(): string {
     return 'Total Event Earnings Breakdown - All Sublabels';
+  }
+
+  getTotalPlatformFeesBreakdownTitle(): string {
+    return 'Total Platform Fees Breakdown - All Sublabels';
   }
 
   getAmountClass(amount: number | undefined): string {
