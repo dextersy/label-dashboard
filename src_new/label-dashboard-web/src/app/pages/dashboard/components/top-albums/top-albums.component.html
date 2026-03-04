@@ -1,0 +1,16 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Top earning releases (all-time)</h5>
+  </div>
+  <div class="card-body chart-body">
+    <div *ngIf="releases.length === 0" class="text-center text-muted py-3">
+      No earnings data found
+    </div>
+    <canvas #earningsChart *ngIf="releases.length > 0"></canvas>
+  </div>
+  <div class="card-footer text-right">
+    <a (click)="goToFinancial()" class="btn-ghost" style="cursor: pointer;">
+      Go to release earnings <i class="far fa-arrow-alt-circle-right"></i>
+    </a>
+  </div>
+</div>

@@ -183,12 +183,14 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         is_available: isAvailable,
         is_sold_out: isSoldOut,
         remaining_tickets: remainingTickets,
-        sold_count: soldCount
+        sold_count: soldCount,
+        special_instructions: ticketType.special_instructions || null
       });
     }
 
-    // Check if event is closed due to time
-    const isClosedByTime = event.close_time && new Date() > event.close_time;
+    // Check if event is closed due to time (fall back to event start if no close_time set)
+    const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    const isClosedByTime = new Date() > closeTime;
 
     // Check if event is closed due to no available ticket types
     let hasAvailableTicketTypes = false;
@@ -549,7 +551,7 @@ export const buyTicket = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketTypes',
-          attributes: ['id', 'name', 'price'],
+          attributes: ['id', 'name', 'price', 'special_instructions'],
           where: { disabled: false }
         }
       ]
@@ -572,8 +574,9 @@ export const buyTicket = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Invalid domain' });
     }
 
-    // Check if event is closed
-    if (event.close_time && new Date() > event.close_time) {
+    // Check if event is closed (fall back to event start if no close_time set)
+    const buyCloseTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    if (new Date() > buyCloseTime) {
       return res.status(400).json({ error: 'Ticket sales are closed for this event' });
     }
 
@@ -647,7 +650,8 @@ export const buyTicket = async (req: Request, res: Response) => {
             number_of_entries: ticket.number_of_entries,
             ticket_type: selectedTicketType ? {
               id: selectedTicketType.id,
-              name: selectedTicketType.name
+              name: selectedTicketType.name,
+              special_instructions: selectedTicketType.special_instructions || null
             } : undefined
           },
           {
@@ -986,6 +990,11 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
       'If you need to change the name for this ticket, please contact us for support.',
       'Do not share this ticket code to anyone else, to avoid unauthorized use.'
     ];
+
+    const specialInstructions = ticket.ticketType?.special_instructions;
+    if (specialInstructions && specialInstructions.trim()) {
+      reminders.push(`For "${ticket.ticketType?.name || 'Regular'}": ${specialInstructions.trim()}`);
+    }
 
     reminders.forEach(reminder => {
       doc.text(`• ${reminder}`, margin + 5, doc.y);

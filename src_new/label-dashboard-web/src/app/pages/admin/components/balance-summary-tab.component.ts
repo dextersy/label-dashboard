@@ -19,14 +19,6 @@ export class BalanceSummaryTabComponent implements OnInit {
   balanceSort: SortInfo | null = null;
   balanceSummary: any = {};
   
-  // Recuperable expenses data
-  recuperableExpenses: any[] = [];
-  expensesPagination: PaginationInfo | null = null;
-  expensesLoading: boolean = false;
-  expensesFilters: SearchFilters = {};
-  expensesSort: SortInfo | null = null;
-  expensesSummary: any = {};
-  
   walletBalance: number = 0;
 
   // Payment confirmation dialog
@@ -41,60 +33,27 @@ export class BalanceSummaryTabComponent implements OnInit {
     { key: 'total_payments', label: 'Total payments (₱)', type: 'number', searchable: true, sortable: true },
     { key: 'total_balance', label: 'Total balance (₱)', type: 'number', searchable: true, sortable: true },
     { key: 'payout_point', label: 'Payout point (₱)', type: 'number', searchable: true, sortable: true },
-    { 
-      key: 'due_for_payment', 
-      label: 'Due for payment', 
-      type: 'select', 
-      searchable: true, 
-      sortable: false, 
-      options: [
-        { value: 'true', label: 'Yes' },
-        { value: 'false', label: 'No' }
-      ]
-    },
-    { 
-      key: 'hold_payouts', 
-      label: 'Payouts paused', 
-      type: 'select', 
-      searchable: true, 
+    {
+      key: 'due_for_payment',
+      label: 'Due for payment',
+      type: 'select',
+      searchable: true,
       sortable: false,
       options: [
         { value: 'true', label: 'Yes' },
         { value: 'false', label: 'No' }
       ]
-    }
-  ];
-
-  // Expenses table columns
-  expensesColumns: TableColumn[] = [
-    { 
-      key: 'catalog_no', 
-      label: 'Catalog No.', 
-      type: 'text', 
-      searchable: true, 
-      sortable: true,
-      mobileClass: 'mobile-hide',
-      tabletClass: ''
     },
-    { 
-      key: 'title', 
-      label: 'Release', 
-      type: 'text', 
-      searchable: true, 
-      sortable: true,
-      mobileClass: 'mobile-text',
-      tabletClass: ''
-    },
-    { 
-      key: 'remaining_expense', 
-      label: 'Remaining Expense (₱)', 
-      type: 'number', 
-      searchable: true, 
-      sortable: true, 
-      align: 'right', 
-      formatter: (item) => this.formatCurrency(item.remaining_expense),
-      mobileClass: 'mobile-narrow mobile-number',
-      tabletClass: ''
+    {
+      key: 'hold_payouts',
+      label: 'Payouts paused',
+      type: 'select',
+      searchable: true,
+      sortable: false,
+      options: [
+        { value: 'true', label: 'Yes' },
+        { value: 'false', label: 'No' }
+      ]
     }
   ];
 
@@ -105,7 +64,6 @@ export class BalanceSummaryTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBalanceData();
-    this.loadRecuperableExpenses();
     this.loadWalletBalance();
   }
 
@@ -127,28 +85,6 @@ export class BalanceSummaryTabComponent implements OnInit {
       error: (error) => {
         this.notificationService.showError('Error loading artist balances');
         this.balanceLoading = false;
-      }
-    });
-  }
-
-  private loadRecuperableExpenses(): void {
-    this.expensesLoading = true;
-    
-    const page = this.expensesPagination?.current_page || 1;
-    const limit = this.expensesPagination?.per_page || 10;
-    const sortBy = this.expensesSort?.column;
-    const sortDirection = this.expensesSort?.direction;
-    
-    this.adminService.getRecuperableExpenses(page, limit, this.expensesFilters, sortBy, sortDirection).subscribe({
-      next: (response) => {
-        this.recuperableExpenses = response.data;
-        this.expensesPagination = response.pagination;
-        this.expensesSummary = response.summary;
-        this.expensesLoading = false;
-      },
-      error: (error) => {
-        this.notificationService.showError('Error loading recuperable expenses');
-        this.expensesLoading = false;
       }
     });
   }
@@ -190,27 +126,6 @@ export class BalanceSummaryTabComponent implements OnInit {
       this.balanceSort = { column, direction: 'asc' };
     }
     this.loadBalanceData();
-  }
-
-  // Expenses table event handlers
-  onExpensesPageChange(page: number): void {
-    if (this.expensesPagination) {
-      this.expensesPagination.current_page = page;
-    }
-    this.loadRecuperableExpenses();
-  }
-
-  onExpensesFiltersChange(filters: SearchFilters): void {
-    this.expensesFilters = filters;
-    if (this.expensesPagination) {
-      this.expensesPagination.current_page = 1;
-    }
-    this.loadRecuperableExpenses();
-  }
-
-  onExpensesSortChange(sort: SortInfo | null): void {
-    this.expensesSort = sort;
-    this.loadRecuperableExpenses();
   }
 
   // Payment methods

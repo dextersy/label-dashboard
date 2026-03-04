@@ -1,15 +1,15 @@
 .sidebar {
   position: fixed;
-  top: 0;
+  top: 50px;
   left: 0;
   bottom: 0;
-  width: 300px;
+  width: 260px;
   overflow-y: auto;
   background: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   transition: width 0.3s ease, transform 0.3s ease;
-  
+
   // Remove overlays completely
   &:before,
   &:after {
@@ -18,35 +18,49 @@
 
   // Collapsed state for desktop
   &.collapsed {
-    width: 70px;
+    width: 86px;
     overflow: visible;
 
-    .logo {
-      padding: 15px 10px;
-      
-      img {
-        width: 50px;
-        transition: width 0.3s ease;
-      }
-    }
-
     .nav li a {
-      padding: 15px 10px;
-      margin: 5px 10px 0;
+      padding: 10px 4px 6px;
+      margin: 10px 4px 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      
+
       i {
         float: none;
         margin-right: 0;
         font-size: 20px;
         width: auto;
+        line-height: 1;
       }
 
       p {
-        display: none;
+        display: block;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.2;
+        height: auto;
+        margin-top: 4px;
+        text-align: center;
+        white-space: normal;
+        word-break: break-word;
+        max-width: 78px;
+        letter-spacing: 0;
       }
+    }
+
+    // In collapsed mode, reset active item to centered layout
+    .nav li.active > a,
+    .nav li.active .parent-menu-item {
+      border-radius: 0;
+    }
+
+    // Hide active bar in collapsed mode
+    .nav li.active::before {
+      display: none;
     }
 
     .parent-menu-item {
@@ -61,97 +75,43 @@
   }
 }
 
-// Logo collapsed state
-.logo-collapsed {
-  width: 50px !important;
-}
-
 // Removed hardcoded data-color styles - now using dynamic brand color
 
 .sidebar-wrapper {
   position: relative;
   max-height: none;
-  min-height: 100vh;
+  min-height: calc(100vh - 50px);
   overflow: auto;
   width: 100%;
   z-index: 4;
 }
 
-.logo {
-  position: relative;
-  padding: 15px 0;
-  z-index: 4;
-  text-align: center;
-  border: none !important;
-  box-shadow: none !important;
-
-  &::before,
-  &::after {
-    display: none !important;
-  }
-
-  a {
-    border: none !important;
-    box-shadow: none !important;
-    text-decoration: none !important;
-
-    &::before,
-    &::after {
-      display: none !important;
-    }
-  }
-
-  img {
-    width: 100px;
-    max-width: 100%;
-    transition: width 0.3s ease;
-    border: none !important;
-    box-shadow: none !important;
-
-    &::before,
-    &::after {
-      display: none !important;
-    }
-  }
-}
-
-.logo .simple-text {
-  text-decoration: none;
-  // Color is now set dynamically via [style.color] binding
-}
-
-// Workspace Indicator (subtle display under logo)
+// Workspace watermark — subtle label pinned to the bottom of the sidebar
 .workspace-indicator {
-  text-align: center;
-  padding: 0 15px 15px;
-  margin: 0 15px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 16px 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
 
   .workspace-icon {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-right: 6px;
+    font-size: 18px;
+    color: #adb5bd;
   }
 
   .workspace-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 18px;
+    font-weight: 600;
+    color: #adb5bd;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 2px;
   }
 }
 
-// Collapsed sidebar - hide workspace name, show only icon
+// Collapsed sidebar — icon only
 .sidebar.collapsed:not(.open) {
   .workspace-indicator {
-    padding: 0 5px 10px;
-    margin: 0 10px 10px;
-
-    .workspace-icon {
-      margin-right: 0;
-      font-size: 16px;
-    }
-
     .workspace-name {
       display: none;
     }
@@ -173,46 +133,64 @@
 /* Remove background highlighting - will use font color instead */
 
 .nav li a {
-  margin: 5px 12px 0;
-  border-radius: 4px;
+  margin: 1px 10px 0;
+  border-radius: 0;
   // Color is now set dynamically via [style.color] binding
   display: block;
   text-decoration: none;
   font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
-  font-size: 13px;
-  text-transform: uppercase;
-  line-height: 28px;
-  opacity: 0.7;
+  font-size: 13.5px;
+  text-transform: none;
+  line-height: 24px;
+  opacity: 0.55;
   position: relative;
-  padding: 10px 12px;
-  letter-spacing: 0.3px;
+  padding: 7px 16px;
+  letter-spacing: 0.2px;
+  transition: background 0.15s ease, opacity 0.15s ease;
 }
 
 .nav li a:hover {
-  opacity: 1;
+  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Active item — bold left-edge accent bar */
+.nav li.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Active item — bright and readable */
+.nav li.active > a,
+.nav li.active .parent-menu-item {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 0;
 }
 
 .nav li a i {
-  font-size: 20px;
+  font-size: 17px;
   float: left;
   margin-right: 12px;
-  line-height: 28px;
-  width: 24px;
+  line-height: 24px;
+  width: 20px;
   text-align: center;
   // Color is now set dynamically via [style.color] binding
 }
 
 .nav li a p {
   margin: 0;
-  line-height: 28px;
-  font-size: 13px;
-  height: 28px;
+  line-height: 24px;
+  font-size: 13.5px;
+  height: 24px;
+  font-weight: 400;
   // Color is now set dynamically via [style.color] binding
-}
-
-.nav li a:hover {
-  opacity: 1;
 }
 
 /* Mobile responsive styles */
@@ -227,12 +205,12 @@
   }
 }
 
-/* Section divider - visual separation between nav sections */
+/* Section divider - gradient fade line */
 .section-divider {
   display: block;
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 12px 12px 16px 12px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  margin: 16px 8px 20px;
   padding: 0;
   list-style: none;
 }
@@ -656,7 +634,7 @@
   ::ng-deep .dropdown-menu {
     position: fixed !important;
     top: auto !important;
-    left: 70px !important;
+    left: 86px !important;
     right: auto !important;
     width: 350px !important;
     min-width: 350px !important;
@@ -822,11 +800,11 @@
     transform: translateX(0) !important; // Always visible on desktop
 
     &.collapsed {
-      width: 70px;
+      width: 86px;
     }
 
     &.open:not(.collapsed) {
-      width: 300px;
+      width: 260px;
     }
 
     // Expanded sidebar: dropdown should break out and overflow into main panel
@@ -835,9 +813,9 @@
       ::ng-deep .dropdown-menu {
         position: fixed !important;
         left: 12px !important;
-        width: calc(300px - 24px) !important;
-        min-width: calc(300px - 24px) !important;
-        max-width: calc(300px - 24px) !important;
+        width: calc(260px - 24px) !important;
+        min-width: calc(260px - 24px) !important;
+        max-width: calc(260px - 24px) !important;
         max-height: 400px !important;
         z-index: 1050 !important;
         box-sizing: border-box !important;
@@ -861,7 +839,7 @@
 /* Flyout panel styles */
 .flyout-panel {
   position: fixed;
-  left: 70px;
+  left: 86px;
   width: 220px;
   background: #667eea;
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15);
@@ -927,7 +905,7 @@
 .flyout-backdrop {
   position: fixed;
   top: 0;
-  left: 70px;
+  left: 86px;
   right: 0;
   bottom: 0;
   z-index: 999;
@@ -937,17 +915,19 @@
 /* Submenu styles */
 .parent-menu-item {
   position: relative;
-  
+
   .submenu-arrow {
     position: absolute;
-    right: 20px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 10px;
-    transition: transform 0.2s ease;
-    
+    font-size: 7px;
+    opacity: 0.45;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+
     &.rotated {
       transform: translateY(-50%) rotate(180deg);
+      opacity: 0.7;
     }
   }
 }
@@ -959,33 +939,47 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
-  background: rgba(0, 0, 0, 0.05);
-  
+  background: transparent;
+
   &.expanded {
-    max-height: 400px; // Adjust based on expected number of submenu items
+    max-height: 400px;
+    padding: 4px 0;
   }
-  
+
   li {
     width: 100%;
-    // Remove background highlighting for active submenu items
+    position: relative;
+
+    // Left track line
+    &::before {
+      content: '';
+      position: absolute;
+      left: 31px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.12);
+    }
   }
-  
+
   .submenu-item {
     margin: 0;
-    padding: 5px 12px 5px 52px !important;
-    border-radius: 3px;
+    padding: 4px 12px 4px 54px !important;
+    border-radius: 0;
     display: block;
     text-decoration: none;
     font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
     font-weight: 400;
     font-size: 12px;
-    text-transform: none;
+    text-transform: none !important;
+    letter-spacing: 0;
     line-height: 20px;
-    opacity: 0.7;
-    transition: all 0.2s ease;
+    opacity: 0.5;
+    transition: all 0.15s ease;
 
     &:hover {
-      opacity: 1;
+      opacity: 0.85;
+      background: rgba(255, 255, 255, 0.07);
     }
 
     span {

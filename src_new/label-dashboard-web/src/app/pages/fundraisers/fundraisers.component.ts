@@ -7,8 +7,8 @@ import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { FundraiserService, Fundraiser } from '../../services/fundraiser.service';
 
-import { FundraiserSelectionComponent } from '../../components/campaigns/fundraiser-selection/fundraiser-selection.component';
-import { FundraiserDonationsTabComponent } from '../../components/campaigns/fundraiser-donations-tab/fundraiser-donations-tab.component';
+import { FundraiserSelectionComponent } from './components/fundraiser-selection/fundraiser-selection.component';
+import { FundraiserDonationsTabComponent } from './components/fundraiser-donations-tab/fundraiser-donations-tab.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 export type FundraisersTabType = 'donations';

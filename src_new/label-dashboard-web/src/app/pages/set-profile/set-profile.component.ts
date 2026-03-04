@@ -146,7 +146,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
         this.brandColor = brandSettings.brand_color;
         
         // Apply brand styling to the page
-        document.documentElement.style.setProperty('--brand-color', this.brandColor);
+        BrandService.setCssVars(this.brandColor);
         document.title = `${this.brandName} - Login`;
       },
       error: (error) => {

@@ -10,7 +10,7 @@
   padding: 1rem 0 0.5rem;
 
   .welcome-greeting {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 300;
     color: #1a1a2e;
     margin: 0;
@@ -21,10 +21,10 @@
     }
   }
 
-  .welcome-date {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.25rem 0 0;
+  .welcome-subtitle {
+    font-size: 1rem;
+    color: #9ca3af;
+    margin: 0.2rem 0 0;
     font-weight: 400;
   }
 }
@@ -39,10 +39,12 @@
   margin-bottom: 0.5rem;
 
   &.section-label-lg {
-    font-size: 1rem;
+    font-size: 1.5rem;
+    font-weight: 800;
     text-transform: none;
-    letter-spacing: 0;
+    letter-spacing: -0.3px;
     color: #1a1a2e;
+    margin-bottom: 0.75rem;
   }
 }
 
@@ -50,51 +52,124 @@
 .quick-menu-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: flex-start;
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 1rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.1rem 1.1rem 1rem;
   text-decoration: none;
-  transition: all 0.2s ease;
   height: 100%;
+  min-height: 160px;
+  position: relative;
+  overflow: hidden;
+  gap: 0.75rem;
+  transition: border-color 0.2s ease;
 
   &:hover {
-    border-color: #ccc;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #d1d5db;
     text-decoration: none;
-    transform: translateY(-2px);
+  }
 
-    .quick-menu-icon {
-      transform: scale(1.1);
+  // Primary variant — brand-filled
+  &.quick-menu-card-primary {
+    background: var(--brand-color, #667eea);
+    border-color: transparent;
+    transition: background-color 0.2s ease;
 
-      i {
-        color: #667eea;
-      }
+    &:hover {
+      background: color-mix(in srgb, var(--brand-color, #667eea) 82%, #ffffff);
+      border-color: transparent;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+      top: -40px;
+      right: -30px;
+      pointer-events: none;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      bottom: 16px;
+      right: 16px;
+      pointer-events: none;
+    }
+
+    .quick-menu-icon-wrap {
+      background: rgba(0, 0, 0, 0.18);
+      i { color: #fff; }
+    }
+
+    .quick-menu-label   { color: #fff; }
+    .quick-menu-sublabel { color: rgba(255, 255, 255, 0.7); }
+
+    .quick-menu-arrow {
+      background: rgba(0, 0, 0, 0.22);
+      color: #fff;
     }
   }
 
-  .quick-menu-icon {
+  .quick-menu-icon-wrap {
+    width: 54px;
+    height: 54px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 0.4rem;
-    transition: transform 0.2s ease;
+    background: #f3f4f6;
+    border-radius: 12px;
+    flex-shrink: 0;
 
     i {
-      font-size: 1.75rem;
-      color: #999;
-      transition: color 0.2s ease;
+      font-size: 1.4rem;
+      color: #374151;
     }
   }
 
+  .quick-menu-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
   .quick-menu-label {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: #1a1a2e;
-    text-align: center;
     line-height: 1.2;
+    margin-bottom: 0.25rem;
+  }
+
+  .quick-menu-sublabel {
+    font-size: 1rem;
+    color: #6b7280;
+    line-height: 1.35;
+  }
+
+  .quick-menu-arrow {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--brand-color, #667eea);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    line-height: 1;
   }
 }
 
@@ -104,20 +179,27 @@
   border: 1px solid #eee;
   border-radius: 12px;
   padding: 0.75rem;
-  height: 100%;
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: stretch;
 }
 
 .stats-compact-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.5rem;
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
   border-radius: 6px;
   transition: background-color 0.2s ease;
+  flex: 1;
+  text-align: center;
+  gap: 0.4rem;
+
+  & + .stats-compact-item {
+    border-left: 1px solid #eee;
+  }
 
   &.stats-compact-item-clickable {
     cursor: pointer;
@@ -127,52 +209,62 @@
     }
   }
 
-  i {
-    font-size: 0.9rem;
-    color: #999;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
   .stats-compact-value {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: 700;
     color: #1a1a2e;
     line-height: 1;
 
     &.stats-compact-value-currency {
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 1.4rem;
+      font-weight: 700;
     }
   }
 
-  .stats-compact-label {
-    font-size: 0.7rem;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    margin-left: auto;
-    flex-shrink: 0;
+  .stats-compact-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    i {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .stats-compact-label {
+      font-size: 0.7rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-weight: 500;
+    }
   }
 }
 
 /* Responsive adjustments */
 @media (max-width: 991px) {
   .quick-menu-card {
-    padding: 0.85rem 0.5rem;
+    min-height: 140px;
+    padding: 1rem 0.9rem 0.9rem;
+    gap: 0;
 
-    .quick-menu-icon i {
-      font-size: 1.5rem;
-    }
-
-    .quick-menu-label {
-      font-size: 0.9rem;
+    .quick-menu-footer {
+      margin-top: 1.25rem;
     }
   }
 
   .stats-compact-card {
     margin-top: 0;
+  }
+
+  .stats-compact-item {
+    .stats-compact-value {
+      font-size: 1.5rem;
+    }
+
+    .stats-compact-value.stats-compact-value-currency {
+      font-size: 1.1rem;
+    }
   }
 }
 
@@ -184,14 +276,7 @@
   }
 
   .quick-menu-card {
-    padding: 1rem 0.75rem;
+    padding: 1.5rem 0.75rem;
 
-    .quick-menu-icon i {
-      font-size: 1.5rem;
-    }
-
-    .quick-menu-label {
-      font-size: 0.9rem;
-    }
   }
 }

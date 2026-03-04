@@ -3,13 +3,7 @@
      [class.collapsed]="isCollapsed && !isMobileView"
      [style.background]="brandColor">
   <div class="sidebar-wrapper">
-    <div class="logo">
-      <a [href]="brandWebsite" class="simple-text" [style.color]="textColor">
-        <img [src]="brandLogo" [class.logo-collapsed]="isCollapsed && !isMobileView" alt="Brand Logo">
-      </a>
-    </div>
-
-    <!-- Current Workspace Indicator -->
+    <!-- Workspace watermark -->
     <div class="workspace-indicator" *ngIf="currentWorkspace">
       <i [class]="getWorkspaceIcon(currentWorkspace)" class="workspace-icon"></i>
       <span class="workspace-name">{{ getWorkspaceLabel(currentWorkspace) }}</span>

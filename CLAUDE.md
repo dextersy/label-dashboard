@@ -94,6 +94,13 @@ The system supports multiple labels/brands through:
 6. **No Automatic Building/Testing**: By default, do not build or test code unless specifically requested by the user. The user will report any build errors or issues that need to be addressed.
 7. **Never Build the App**: Do not run `npm run build`, `npm start`, or any build/test commands. The user will handle building and testing themselves.
 
+## Angular Frontend Reference Documents
+
+Two documents in `src_new/label-dashboard-web/` must be consulted for all Angular frontend work:
+
+- **`FRONTEND_STRUCTURE.md`** — Read this before creating any new Angular file. It defines where files go, naming conventions, placement rules, architectural patterns, and import path depths.
+- **`DESIGN_SYSTEM.md`** — Read the relevant section(s) before implementing or modifying any UI. It covers typography, colors, cards, buttons, forms, tables, loading states, modals, icons, layout shell, and the full API for every shared component (`FloatingActionBarComponent`, `PaginatedTableComponent`, `DateRangeFilterComponent`, `InPageNavComponent`, etc.).
+
 ## Database Configuration
 
 The API connects to MySQL using Sequelize ORM. Database configuration is handled in:

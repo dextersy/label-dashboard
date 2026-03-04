@@ -50,6 +50,7 @@ export interface PublicEvent {
     is_sold_out?: boolean;
     remaining_tickets?: number | null;
     sold_count?: number;
+    special_instructions?: string | null;
   }>;
 }
 

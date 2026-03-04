@@ -1,0 +1,92 @@
+// ── Balance summary row (compact, below table) ────────────────────────────
+.balance-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.balance-summary-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.balance-summary-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+// ── Compact Stats Card ─────────────────────────────────────────────────────
+.stats-compact-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.stats-compact-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 6px;
+  flex: 1;
+  text-align: center;
+  gap: 0.4rem;
+
+  & + .stats-compact-item {
+    border-left: 1px solid #eee;
+  }
+
+  .stats-compact-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1;
+
+    &.stats-compact-value-currency {
+      font-size: 1.5rem;
+    }
+  }
+
+  .stats-compact-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    i {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .stats-compact-label {
+      font-size: 0.7rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-weight: 500;
+    }
+  }
+}
+
+// ── Mobile ─────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .stats-compact-item {
+    .stats-compact-value {
+      font-size: 1.3rem;
+
+      &.stats-compact-value-currency {
+        font-size: 1.1rem;
+      }
+    }
+  }
+}

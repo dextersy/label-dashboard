@@ -270,6 +270,59 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
   }
 };
 
+function applyPaginationSortSearch(
+  breakdown: any[],
+  nameKey: string,
+  currentPage: number,
+  perPage: number,
+  sort_by?: string,
+  sort_order?: string,
+  search?: string,
+  type?: string
+) {
+  // 1. Search filter
+  let filtered = breakdown;
+  if (search && search.trim()) {
+    const term = search.trim().toLowerCase();
+    filtered = breakdown.filter(item =>
+      String(item[nameKey] || '').toLowerCase().includes(term)
+    );
+  }
+
+  // 2. Sort
+  if (sort_by) {
+    const order = sort_order === 'desc' ? -1 : 1;
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = a[sort_by];
+      const bVal = b[sort_by];
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return order * aVal.localeCompare(bVal);
+      }
+      return order * ((aVal ?? 0) - (bVal ?? 0));
+    });
+  }
+
+  // 3. Paginate
+  const total_count = filtered.length;
+  const total_pages = Math.max(1, Math.ceil(total_count / perPage));
+  const safePage = Math.min(currentPage, total_pages);
+  const offset = (safePage - 1) * perPage;
+  const pageSlice = filtered.slice(offset, offset + perPage);
+
+  return {
+    type,
+    breakdown: pageSlice,
+    pagination: {
+      current_page: safePage,
+      total_pages,
+      total_count,
+      per_page: perPage,
+      has_next: safePage < total_pages,
+      has_prev: safePage > 1
+    }
+  };
+}
+
 export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) => {
   try {
     const { brandId } = req.params;
@@ -283,11 +336,19 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       return res.status(403).json({ error: 'Access denied: You can only access data for your own brand' });
     }
 
-    const { start_date, end_date, type } = req.query as {
+    const { start_date, end_date, type, page, per_page, sort_by, sort_order, search } = req.query as {
       start_date?: string;
       end_date?: string;
       type?: 'music' | 'event' | 'fundraiser';
+      page?: string;
+      per_page?: string;
+      sort_by?: string;
+      sort_order?: string;
+      search?: string;
     };
+
+    const currentPage = Math.max(1, parseInt(page || '1', 10));
+    const perPage = Math.max(1, parseInt(per_page || '10', 10));
 
     if (!type || !['music', 'event', 'fundraiser'].includes(type)) {
       return res.status(400).json({ error: 'Type parameter is required (music, event, or fundraiser)' });
@@ -359,7 +420,7 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         }
       }
 
-      res.json({ type: 'music', breakdown });
+      res.json(applyPaginationSortSearch(breakdown, 'release_title', currentPage, perPage, sort_by, sort_order, search, 'music'));
 
     } else if (type === 'event') {
       // Get event earnings breakdown by event
@@ -436,7 +497,7 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         }
       }
 
-      res.json({ type: 'event', breakdown });
+      res.json(applyPaginationSortSearch(breakdown, 'event_name', currentPage, perPage, sort_by, sort_order, search, 'event'));
 
     } else if (type === 'fundraiser') {
       // Get fundraiser earnings breakdown by fundraiser
@@ -490,7 +551,7 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         }
       }
 
-      res.json({ type: 'fundraiser', breakdown });
+      res.json(applyPaginationSortSearch(breakdown, 'fundraiser_name', currentPage, perPage, sort_by, sort_order, search, 'fundraiser'));
     }
 
   } catch (error) {

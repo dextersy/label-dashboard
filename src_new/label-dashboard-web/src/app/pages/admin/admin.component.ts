@@ -8,6 +8,8 @@ import { BalanceSummaryTabComponent } from './components/balance-summary-tab.com
 import { BulkAddEarningsTabComponent } from './components/bulk-add-earnings-tab.component';
 import { UsersTabComponent } from './components/users-tab.component';
 import { ToolsTabComponent } from './components/tools-tab.component';
+import { PaymentsRoyaltiesTabComponent } from './components/payments-royalties-tab.component';
+import { RecuperableExpenseTabComponent } from './components/recuperable-expense-tab.component';
 
 @Component({
     selector: 'app-admin',
@@ -19,7 +21,9 @@ import { ToolsTabComponent } from './components/tools-tab.component';
         BalanceSummaryTabComponent,
         BulkAddEarningsTabComponent,
         UsersTabComponent,
-        ToolsTabComponent
+        ToolsTabComponent,
+        PaymentsRoyaltiesTabComponent,
+        RecuperableExpenseTabComponent
     ],
     templateUrl: './admin.component.html',
     styleUrl: './admin.component.scss'

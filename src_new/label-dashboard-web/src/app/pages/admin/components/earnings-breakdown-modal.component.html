@@ -1,0 +1,348 @@
+<div class="modal fade show" style="display: block;" *ngIf="show" (click)="onBackdropClick($event)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" *ngIf="breakdownType === 'music'">{{ getMusicBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'event'">{{ getEventBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'fundraiser'">{{ getFundraiserBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'platform_fees'">{{ getPlatformFeesBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'total_event'">{{ getTotalEventBreakdownTitle() }}</h5>
+        <h5 class="modal-title" *ngIf="breakdownType === 'total_platform_fees'">{{ getTotalPlatformFeesBreakdownTitle() }}</h5>
+        <button type="button" class="btn-close" (click)="onClose()"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Music Earnings Breakdown -->
+        <div *ngIf="breakdownType === 'music' && childBrand">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Net Music Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong [ngClass]="getAmountClass(childBrand.music_earnings)">₱{{ childBrand.music_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Music Earnings Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Gross Music Earnings:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary" [ngClass]="getAmountClass(childBrand.music_gross_earnings)">₱{{ childBrand.music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Royalties Due to Artists:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ childBrand.total_royalties.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Artist Payments:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-warning">₱{{ childBrand.artist_payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Net Music Earnings = Gross Music Earnings - Royalties Due to Artists - Platform Fees. Artist payments are tracked separately.
+            </small>
+          </div>
+        </div>
+
+        <!-- Event Earnings Breakdown -->
+        <div *ngIf="breakdownType === 'event' && childBrand">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Net Event Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-success">₱{{ childBrand.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Event Sales (Gross):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary">₱{{ childBrand.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ (childBrand.event_sales - childBrand.event_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Processing Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ childBrand.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Estimated Tax (0.5%):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-secondary">₱{{ childBrand.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Net Event Earnings represents the total ticket sales minus platform fees. Processing fees are additional charges applied during ticket purchases. Estimated tax is calculated as 0.5% of gross sales less processing fees.
+            </small>
+          </div>
+        </div>
+
+        <!-- Fundraiser Earnings Breakdown -->
+        <div *ngIf="breakdownType === 'fundraiser' && childBrand">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Net Fundraiser Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-success">₱{{ (childBrand.fundraiser_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Fundraiser Donations Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Donations (Gross):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary">₱{{ (childBrand.fundraiser_gross_earnings || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Processing Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ (childBrand.fundraiser_processing_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Net Fundraiser Earnings represents the total donations minus platform fees. Processing fees are additional charges applied during donation payments.
+            </small>
+          </div>
+        </div>
+
+        <!-- Platform Fees Breakdown -->
+        <div *ngIf="breakdownType === 'platform_fees' && childBrand">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Total Platform Fees:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-danger">₱{{ childBrand.platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Platform Fees Breakdown by Source:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Music Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ childBrand.music_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Event Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-warning">₱{{ childBrand.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Fundraiser Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">₱{{ (childBrand.fundraiser_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Platform fees are charged on music sales, event ticket sales, and fundraiser donations. These fees are deducted from gross revenues before calculating net earnings.
+            </small>
+          </div>
+        </div>
+
+        <!-- Total Event Earnings Breakdown -->
+        <div *ngIf="breakdownType === 'total_event' && aggregatedTotals">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Total Event Earnings:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-success">₱{{ aggregatedTotals.event_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Event Sales Breakdown:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Gross Event Sales:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-primary">₱{{ aggregatedTotals.event_sales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Less: Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-danger">-₱{{ aggregatedTotals.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Other Information:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Total Processing Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ aggregatedTotals.event_processing_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Total Estimated Tax (0.5%):</td>
+                <td class="text-end mobile-number">
+                  <span class="text-secondary">₱{{ aggregatedTotals.event_estimated_tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              This breakdown shows the aggregated totals across all sublabels. Total Event Earnings = Total Gross Event Sales - Platform Fees. Processing fees and estimated tax are informational and represent additional charges during ticket purchases.
+            </small>
+          </div>
+        </div>
+
+        <!-- Total Platform Fees Breakdown -->
+        <div *ngIf="breakdownType === 'total_platform_fees' && aggregatedTotals">
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td><strong>Total Platform Fees:</strong></td>
+                <td class="text-end mobile-number">
+                  <strong class="text-danger">₱{{ (aggregatedTotals.total_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <hr>
+
+          <h6 class="text-muted mb-2">Platform Fees Breakdown by Source:</h6>
+          <table class="table table-financial mb-3">
+            <tbody>
+              <tr>
+                <td class="text-muted">• Music Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-info">₱{{ (aggregatedTotals.music_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="text-muted">• Event Platform Fees:</td>
+                <td class="text-end mobile-number">
+                  <span class="text-warning">₱{{ (aggregatedTotals.aggregated_event_platform_fees || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              This breakdown shows the aggregated platform fees across all sublabels, split by music and event sources.
+            </small>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="show"></div>

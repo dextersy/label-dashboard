@@ -1,0 +1,27 @@
+<div class="ipn-layout" [class.ipn-stack]="stackLayout">
+
+  <nav class="ipn-sidebar">
+    <div class="ipn-items">
+      <button
+        *ngFor="let tab of tabs; trackBy: trackByTabId"
+        type="button"
+        class="ipn-item"
+        [class.active]="activeTab === tab.id"
+        [class.ipn-item--danger]="tab.color === 'danger'"
+        [disabled]="tab.disabled"
+        [matTooltip]="tab.tooltip || ''"
+        (click)="onTabClick(tab)">
+        <i [class]="tab.icon"></i>
+        <span>{{ tab.label }}</span>
+        <i *ngIf="tab.status === 'completed'" class="fa fa-check-circle status-icon status-completed"></i>
+        <i *ngIf="tab.status === 'warning'" class="fa fa-exclamation-triangle status-icon status-warning"></i>
+        <i *ngIf="tab.status === 'error'" class="fa fa-exclamation-circle status-icon status-error"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="ipn-main">
+    <ng-content></ng-content>
+  </div>
+
+</div>

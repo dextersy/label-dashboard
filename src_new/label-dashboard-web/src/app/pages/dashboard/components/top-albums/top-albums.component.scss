@@ -1,0 +1,12 @@
+/* Top albums — vertical bar chart */
+
+.chart-body {
+  height: 300px;
+  position: relative;
+}
+
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}

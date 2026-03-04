@@ -1,6 +1,5 @@
 .event-form-page {
-  padding: 20px;
-  padding-bottom: 120px; /* Space for floating buttons */
+  padding: 0 20px 120px; /* Space for floating buttons */
   max-width: 1600px;
   margin: 0 auto;
   min-height: calc(100vh - 60px); /* Ensure page takes full height minus nav */
@@ -27,77 +26,47 @@
   }
 }
 
-/* Two-column layout: Sidebar + Main Content */
-.event-form-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-/* Sidebar Navigation (Desktop) */
-.event-form-sidebar {
-  flex: 0 0 240px;
-  position: sticky;
-  top: 20px;
-  
-  .sidebar-items {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: transparent;
-    border: none;
-    border-left: 3px solid transparent;
-    color: #6c757d;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-align: left;
-
-    i {
-      font-size: 18px;
-      width: 20px;
-      text-align: center;
-    }
-
-    span {
-      flex: 1;
-    }
-
-    &:hover {
-      color: #495057;
-    }
-
-    &.active {
-      color: #007bff;
-      border-left-color: #007bff;
-    }
-
-    &:focus {
-      outline: none;
-      box-shadow: inset 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
-  }
-}
-
-/* Main Content Area */
-.event-form-main {
-  flex: 1;
-  min-width: 0; /* Prevent flex item from overflowing */
-}
-
 .event-form-container {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+}
+
+/* Draft notification */
+.draft-notification {
+  .draft-notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .draft-caret {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+
+    &.draft-caret--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .draft-notification-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+
+    &.draft-notification-body--open {
+      max-height: 80px;
+    }
+  }
+
+  .draft-notification-body-inner {
+    padding-top: 12px;
+    padding-left: 36px;
+    font-size: 12px;
+  }
 }
 
 /* Form Content */
@@ -271,100 +240,8 @@
   }
 }
 
-/* Floating Action Buttons */
-.floating-actions {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
-  padding: 20px 24px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  z-index: 1050;
-
-  button {
-    min-width: 140px;
-    padding: 12px 24px;
-    font-size: 15px;
-    font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    i {
-      margin-right: 8px;
-    }
-  }
-}
-
-/* Tablet - Switch to horizontal layout */
+/* Tablet */
 @media (max-width: 1024px) {
-  .event-form-layout {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .event-form-sidebar {
-    flex: none;
-    position: static;
-    border-radius: 0;
-    box-shadow: none;
-    border-bottom: 2px solid #e0e0e0;
-    background: #f8f9fa;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    
-    /* Scrollbar styling */
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e0 transparent;
-
-    &::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #cbd5e0;
-      border-radius: 4px;
-    }
-
-    .sidebar-items {
-      flex-direction: row;
-      min-width: min-content;
-      padding: 0 20px;
-    }
-
-    .sidebar-item {
-      padding: 14px 16px;
-      border-left: none;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-
-      &.active {
-        border-left-color: transparent;
-        border-bottom-color: #007bff;
-      }
-    }
-  }
-
-  .event-form-main {
-    border-radius: 0 0 8px 8px;
-  }
-
   .event-form-container {
     border-radius: 0;
   }
@@ -401,75 +278,11 @@
   }
 }
 
-/* Mobile - Tab Bar (Top) */
+/* Mobile */
 @media (max-width: 768px) {
   .event-form-page {
     padding: 12px;
     padding-bottom: 100px; /* Space for floating buttons on mobile */
-  }
-
-  .event-form-sidebar {
-    position: static;
-    width: 100%;
-    background: #fff;
-    border-bottom: 1px solid #e0e0e0;
-    border-radius: 8px 8px 0 0;
-    padding: 0;
-    margin-top: 0 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    .sidebar-items {
-      flex-direction: row;
-      gap: 0;
-      padding: 0;
-      min-width: auto;
-      width: 100%;
-    }
-
-    .sidebar-item {
-      flex: 1;
-      height: auto;
-      min-height: 56px;
-      padding: 12px 4px 8px 4px;
-      border: none;
-      border-radius: 0;
-      background-color: transparent;
-      color: #8e8e93;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      position: relative;
-      transition: color 0.2s ease;
-      white-space: normal;
-
-      i {
-        font-size: 20px;
-        width: auto;
-      }
-
-      span {
-        display: block;
-        font-size: 10px;
-        font-weight: 500;
-      }
-
-      &.active {
-        color: #007bff;
-        border-left-color: transparent;
-        border-bottom-color: transparent;
-        background-color: rgba(0, 123, 255, 0.05);
-      }
-
-      &:hover:not(:disabled):not(.active) {
-        color: #6c757d;
-      }
-
-      &:disabled {
-        opacity: 0.35;
-      }
-    }
   }
 
   .event-form-content {
@@ -482,14 +295,4 @@
     }
   }
 
-  .floating-actions {
-    padding: 12px 16px;
-    flex-direction: column;
-
-    button {
-      width: 100%;
-      min-width: auto;
-      font-size: 14px;
-    }
-  }
 }

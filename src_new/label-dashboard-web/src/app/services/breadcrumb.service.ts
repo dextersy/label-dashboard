@@ -25,6 +25,7 @@ export class BreadcrumbService {
   // Menu structure for breadcrumb generation
   private menuStructure: Record<string, MenuItemBase> = {
     '/dashboard': { label: 'Dashboard', icon: 'fas fa-chart-line' },
+    '/music/sync-licensing': { label: 'Sync Licensing', icon: 'fa-file-contract fas'},
     
     // Artist section
     '/artist': { label: 'Artist', icon: 'fas fa-headphones' },
@@ -58,6 +59,7 @@ export class BreadcrumbService {
     '/campaigns': { label: 'Campaigns', icon: 'fas fa-bullhorn' },
 
     // Events (under campaigns)
+    '/campaigns/dashboard': { label: 'Dashboard', parent: '/campaigns' },
     '/campaigns/events': { label: 'Events', parent: '/campaigns', icon: 'fas fa-ticket-alt' },
     '/campaigns/events/new': { label: 'New Event', parent: '/campaigns/events' },
     '/campaigns/events/details': { label: 'Manage Events', parent: '/campaigns/events' },
@@ -79,6 +81,8 @@ export class BreadcrumbService {
     '/admin/reports': { label: 'Reports', parent: '/admin' },
     '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
     '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
+    '/admin/reports/payments-royalties': { label: 'Payments & Royalties', parent: '/admin/reports' },
+    '/admin/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/admin/reports' },
     '/admin/tools': { label: 'Tools', parent: '/admin' },
     '/admin/tools/email-logs': { label: 'Email Logs', parent: '/admin/tools' },
     '/admin/tools/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin/tools' },

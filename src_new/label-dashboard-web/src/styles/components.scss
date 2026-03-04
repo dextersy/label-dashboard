@@ -3,65 +3,8 @@
 /* ================================= */
 
 /* Global Button Improvements */
-.btn-outline-primary:disabled {
-  i {
-    color: #6c757d !important;
-  }
-}
 
-/* Mobile button improvements for paginated tables */
-@media (max-width: 575px) {
-  .table-actions {
-    // Force all buttons to be full width on mobile
-    button.btn,
-    .btn,
-    a.btn,
-    span button.btn,
-    span .btn,
-    span a.btn {
-      width: 100% !important;
-      margin: 0 0 0.25rem 0 !important;
-      display: block !important;
-    }
-    
-    // Ensure span wrappers don't interfere
-    span {
-      width: 100% !important;
-      display: block !important;
-    }
-  }
-}
-
-/* Icon-only buttons styling */
-.btn-icon-only {
-  border: none !important;
-  padding: 0.375rem !important;
-  background: transparent !important;
-  color: var(--bs-primary) !important;
-  
-  &:hover {
-    background-color: rgba(13, 110, 253, 0.1) !important;
-    border: none !important;
-    color: var(--bs-primary) !important;
-  }
-  
-  &:focus {
-    box-shadow: 0 0 0 0.125rem rgba(var(--bs-primary-rgb), 0.25);
-    border: none !important;
-    color: var(--bs-primary) !important;
-  }
-  
-  &:disabled {
-    background-color: transparent !important;
-    border: none !important;
-    color: #6c757d !important;
-    opacity: 0.65;
-    
-    i {
-      color: #6c757d !important;
-    }
-  }
-}
+/* Mobile button improvements for paginated tables handled in paginated-table.component.scss */
 
 /* Modern Card Layouts - Override Bootstrap defaults */
 .card {
@@ -284,47 +227,64 @@ textarea.form-control {
   user-select: none;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #ffffff;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: var(--brand-color-text, #ffffff);
+  background: var(--brand-color, #3b82f6);
   border-color: transparent;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  
-  &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
-    transform: translateY(-1px);
-    color: #ffffff;
+  position: relative;
+  overflow: hidden;
+
+  // Decorative blobs — subtle depth accent (same language as primary quick-link cards)
+  &::before {
+    content: '';
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    top: -25px;
+    right: -15px;
+    pointer-events: none;
   }
-  
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    bottom: -12px;
+    left: 12px;
+    pointer-events: none;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #ffffff);
+    transform: translateY(-1px);
+    color: var(--brand-color-text, #ffffff);
+  }
+
   &:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     background: #9ca3af;
+    border: none;
     box-shadow: none;
     transform: none;
   }
-  
+
   i {
     margin-right: 8px;
     font-size: 14px;
   }
 }
 
-/* Modern Secondary/Outline Button - Borderless style */
-.btn-secondary,
-.btn-outline-primary,
-.btn-outline-secondary,
-.btn-outline-success,
-.btn-outline-info,
-.btn-outline-warning,
-.btn-outline-danger,
-.btn-light,
-.btn-default {
+/* Secondary Button - white, borderless shadow style */
+.btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -375,49 +335,115 @@ textarea.form-control {
   }
 }
 
-/* Color variants for borderless buttons */
-.btn-outline-primary {
-  color: #3b82f6;
-  
-  &:hover:not(:disabled) {
-    color: #2563eb;
-    background-color: rgba(59, 130, 246, 0.05);
-  }
-}
-
-.btn-outline-success {
-  color: #10b981;
-  
-  &:hover:not(:disabled) {
-    color: #059669;
-    background-color: rgba(16, 185, 129, 0.05);
-  }
-}
-
-.btn-outline-info {
-  color: #06b6d4;
-  
-  &:hover:not(:disabled) {
-    color: #0891b2;
-    background-color: rgba(6, 182, 212, 0.05);
-  }
-}
-
-.btn-outline-warning {
-  color: #f59e0b;
-  
-  &:hover:not(:disabled) {
-    color: #d97706;
-    background-color: rgba(245, 158, 11, 0.05);
-  }
-}
-
-.btn-outline-danger {
+/* Danger Button - outline red */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid #ef4444;
+  padding: 12px 24px;
+  font-size: 15px;
+  line-height: 1.5;
+  border-radius: 8px;
+  user-select: none;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: #ef4444;
-  
+  background: transparent;
+  box-shadow: none;
+
   &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.06);
+    border-color: #dc2626;
     color: #dc2626;
-    background-color: rgba(239, 68, 68, 0.05);
+    box-shadow: none;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    background: rgba(239, 68, 68, 0.12);
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transform: none;
+  }
+
+  i {
+    margin-right: 8px;
+    font-size: 14px;
+  }
+}
+
+/* Ghost Button - text only, no background */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  border-radius: 6px;
+  user-select: none;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+  color: #374151;
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    color: #111827;
+    text-decoration: none;
+    box-shadow: none;
+    transform: none;
+  }
+
+  &:active:not(:disabled) {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.text-danger {
+    color: #ef4444;
+
+    &:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.08);
+      color: #dc2626;
+    }
+  }
+
+  i {
+    margin-right: 6px;
+    font-size: 13px;
   }
 }
 
@@ -431,86 +457,61 @@ textarea.form-control {
   }
 }
 
-/* Icon-only buttons - Completely borderless and shadowless */
-.btn-icon-only {
+/* Large button variant */
+.btn-lg {
+  padding: 16px 32px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  letter-spacing: 0 !important;
+}
+
+/* Icon Button - transparent, no border or shadow */
+.btn-icon {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
   padding: 8px !important;
   color: inherit;
-  
+
   &:hover:not(:disabled) {
     background: rgba(0, 0, 0, 0.05) !important;
     box-shadow: none !important;
     transform: none !important;
   }
-  
+
   &:active:not(:disabled) {
     background: rgba(0, 0, 0, 0.1) !important;
     box-shadow: none !important;
     transform: none !important;
   }
-  
+
   &:focus {
     background: rgba(0, 0, 0, 0.05) !important;
     box-shadow: none !important;
   }
-  
+
   &:disabled {
     background: transparent !important;
     color: #9ca3af !important;
     box-shadow: none !important;
     transform: none !important;
   }
-  
+
   i {
     margin: 0 !important;
   }
 }
 
-/* Specific styling for different button types when icon-only */
-.btn-outline-primary.btn-icon-only {
-  color: #3b82f6 !important;
-  
-  &:hover:not(:disabled) {
-    color: #2563eb !important;
-    background: rgba(59, 130, 246, 0.1) !important;
-  }
-}
-
-.btn-outline-success.btn-icon-only {
-  color: #10b981 !important;
-  
-  &:hover:not(:disabled) {
-    color: #059669 !important;
-    background: rgba(16, 185, 129, 0.1) !important;
-  }
-}
-
-.btn-outline-danger.btn-icon-only {
+/* Icon button with danger color */
+.btn-icon.btn-danger {
   color: #ef4444 !important;
-  
+  background: transparent !important;
+  box-shadow: none !important;
+
   &:hover:not(:disabled) {
     color: #dc2626 !important;
     background: rgba(239, 68, 68, 0.1) !important;
-  }
-}
-
-.btn-outline-info.btn-icon-only {
-  color: #06b6d4 !important;
-  
-  &:hover:not(:disabled) {
-    color: #0891b2 !important;
-    background: rgba(6, 182, 212, 0.1) !important;
-  }
-}
-
-.btn-outline-warning.btn-icon-only {
-  color: #f59e0b !important;
-  
-  &:hover:not(:disabled) {
-    color: #d97706 !important;
-    background: rgba(245, 158, 11, 0.1) !important;
   }
 }
 
@@ -588,82 +589,3 @@ textarea.form-control {
   }
 }
 
-/* ================================= */
-/* STICKY BOTTOM PANEL               */
-/* ================================= */
-
-// Sticky bottom panel for forms
-.sticky-bottom-panel {
-  position: sticky !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
-  z-index: 1050 !important; // Higher than Bootstrap modals
-  transform: none !important;
-  contain: none !important;
-  
-  .panel-content {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding: 20px 0;
-    
-    .btn {
-      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
-      border: none;
-      padding: 16px 32px;
-      font-size: 16px;
-      font-weight: 600;
-      min-width: 160px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      
-      &:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4), 0 6px 16px rgba(0, 0, 0, 0.2);
-      }
-      
-      &:active:not(:disabled) {
-        transform: translateY(-1px);
-      }
-      
-      &:disabled {
-        transform: none;
-        box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3), 0 2px 6px rgba(0, 0, 0, 0.1);
-      }
-      
-      i {
-        margin-right: 10px;
-        font-size: 16px;
-      }
-    }
-  }
-}
-
-// Responsive adjustments for sticky panel
-@media (max-width: 768px) {
-  .sticky-bottom-panel {
-    .panel-content {
-      justify-content: center;
-      padding: 16px 0;
-      
-      .btn {
-        width: calc(100% - 32px);
-        max-width: 300px;
-        padding: 14px 24px;
-        font-size: 15px;
-        min-width: auto;
-      }
-      
-      // Ensure button containers take full width on mobile
-      .d-flex {
-        width: 100%;
-        justify-content: center;
-      }
-    }
-  }
-}

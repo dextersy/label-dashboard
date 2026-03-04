@@ -1,16 +1,21 @@
-<nav aria-label="breadcrumb" *ngIf="breadcrumbs.length > 0">
+<nav aria-label="breadcrumb" *ngIf="workspaceLabel || breadcrumbs.length > 0">
   <ol class="breadcrumb">
-    <li *ngFor="let crumb of breadcrumbs; let last = last" 
-        class="breadcrumb-item" 
+    <li class="breadcrumb-item" *ngIf="workspaceLabel">
+      <span class="breadcrumb-workspace">
+        <i [class]="workspaceIcon" class="me-1"></i>{{ workspaceLabel }}
+      </span>
+    </li>
+    <li *ngFor="let crumb of filteredBreadcrumbs; let last = last"
+        class="breadcrumb-item"
         [class.active]="last">
-      
-      <a *ngIf="!last && crumb.route" 
-         [routerLink]="crumb.route" 
+
+      <a *ngIf="!last && crumb.route"
+         [routerLink]="crumb.route"
          class="breadcrumb-link">
         <i *ngIf="crumb.icon" [class]="crumb.icon" class="me-1"></i>
         {{ crumb.label }}
       </a>
-      
+
       <span *ngIf="last" class="breadcrumb-current">
         <i *ngIf="crumb.icon" [class]="crumb.icon" class="me-1"></i>
         {{ crumb.label }}

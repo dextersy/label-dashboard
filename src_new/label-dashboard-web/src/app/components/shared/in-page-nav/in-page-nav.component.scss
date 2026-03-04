@@ -1,0 +1,219 @@
+// ── Host ────────────────────────────────────────────────────────────────────
+:host {
+  display: block;
+}
+
+// ── Desktop layout ───────────────────────────────────────────────────────────
+.ipn-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.ipn-sidebar {
+  flex: 0 0 200px;
+  position: sticky;
+  top: 20px;
+
+  .ipn-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ipn-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #6c757d;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    width: 100%;
+    position: relative;
+
+    i {
+      font-size: 16px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+    }
+
+    &:hover:not(:disabled) {
+      color: #495057;
+    }
+
+    &.active,
+    &.active:focus,
+    &.active:focus-visible {
+      color: var(--brand-color, #007bff);
+      border-left-color: var(--brand-color, #007bff);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus,
+    &:focus-visible {
+      outline: none;
+    }
+
+    -webkit-tap-highlight-color: transparent;
+
+    // ── Status icons (trailing, desktop) ────────────────────────────────
+    .status-icon {
+      font-size: 14px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .status-completed { color: #28a745; }
+    .status-warning   { color: #ffc107; }
+    .status-error     { color: #dc3545; }
+
+    // ── Danger-colored tab (e.g. Cancel) ────────────────────────────────
+    &.ipn-item--danger {
+      margin-top: 1rem;
+      color: #dc3545;
+      border-left-color: transparent;
+
+      &:hover:not(:disabled) {
+        color: #c82333;
+        background-color: rgba(220, 53, 69, 0.1);
+      }
+
+      &.active {
+        color: #dc3545;
+        border-left-color: transparent;
+      }
+    }
+  }
+}
+
+.ipn-main {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Tablet: switch to horizontal tab bar ─────────────────────────────────────
+@media (max-width: 1024px) {
+  .ipn-layout {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .ipn-sidebar {
+    flex: none;
+    position: static;
+    border-bottom: 2px solid #e0e0e0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .ipn-items {
+      flex-direction: row;
+      min-width: min-content;
+      padding: 0;
+    }
+
+    .ipn-item {
+      padding: 14px 20px;
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      width: auto;
+
+      &.active {
+        border-left-color: transparent;
+        border-bottom-color: var(--brand-color, #007bff);
+      }
+
+      &.ipn-item--danger {
+        margin-top: 0;
+        margin-left: auto;
+        border-left: 1px solid #e0e0e0;
+        border-bottom: none;
+      }
+    }
+  }
+
+  .ipn-main {
+    width: 100%;
+  }
+}
+
+// ── Mobile ───────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .ipn-sidebar {
+    width: 100%;
+
+    .ipn-items {
+      width: 100%;
+    }
+
+    .ipn-item {
+      flex: 1;
+      justify-content: center;
+
+      // Danger item: don't stretch, push to end
+      &.ipn-item--danger {
+        flex: 0 0 auto;
+        margin-left: auto;
+        min-width: 56px;
+        border-left: 1px solid #e0e0e0;
+        border-bottom: none;
+        color: #dc3545;
+      }
+    }
+  }
+
+  .ipn-main {
+    margin-top: 1rem;
+  }
+
+  // Stack mode: >2 tabs — icon stacks above label
+  .ipn-stack .ipn-sidebar .ipn-item {
+    flex-direction: column;
+    gap: 3px;
+    min-height: 60px;
+    padding: 14px 4px 10px !important;
+
+    i:first-child {
+      font-size: 20px;
+      width: auto;
+    }
+
+    span {
+      font-size: 10px;
+      font-weight: 500;
+      flex: unset;
+    }
+
+    // Status icon: badge in top-right corner
+    .status-icon {
+      position: absolute;
+      top: 6px;
+      right: 50%;
+      transform: translateX(16px);
+      font-size: 8px;
+      margin-left: 0;
+    }
+  }
+}

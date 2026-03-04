@@ -80,7 +80,7 @@ export class ResetPasswordComponent implements OnInit {
         this.brandColor = brandSettings.brand_color;
         
         // Apply brand styling to the page
-        document.documentElement.style.setProperty('--brand-color', this.brandColor);
+        BrandService.setCssVars(this.brandColor);
         document.title = `${this.brandName} - Reset Password`;
       },
       error: (error) => {

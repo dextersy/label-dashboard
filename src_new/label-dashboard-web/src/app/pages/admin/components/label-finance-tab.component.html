@@ -13,57 +13,36 @@
   </div>
 
   <!-- Dashboard Metrics -->
-  <div class="row mb-4">
-    <div class="col-lg col-md-6 mb-3 mb-lg-0">
-      <div class="current-balance-section text-center p-4 h-100">
+  <div class="row mb-4 align-items-center">
+    <div class="col-lg-4 col-md-12 mb-3 mb-lg-0">
+      <div class="current-balance-section text-center p-4">
         <h2 class="balance-title">Receivable Balance</h2>
         <h1 class="balance-amount" [ngClass]="getAmountClass(dashboard?.receivable_balance ?? 0)">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
         <p class="balance-subtitle">Net earnings - payments received</p>
       </div>
     </div>
 
-    <div class="col-lg col-md-6 mb-3 mb-lg-0">
-      <div class="card text-center financial-card h-100">
-        <div class="card-body">
-          <h3 class="card-title">Net Music Earnings</h3>
-          <h2 [ngClass]="getAmountClass(dashboard?.net_music_earnings ?? 0)">₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</h2>
-          <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('music')">
-            View Details
-          </button>
+    <div class="col-lg-8 col-md-12">
+      <div class="financial-summary-card">
+        <div class="financial-summary-item" (click)="showBreakdown('music')">
+          <span class="financial-item-label">Net Music Earnings</span>
+          <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.net_music_earnings ?? 0)">₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</span>
+          <a class="financial-item-link">View Details</a>
         </div>
-      </div>
-    </div>
-
-    <div class="col-lg col-md-6 mb-3 mb-lg-0">
-      <div class="card text-center financial-card h-100">
-        <div class="card-body">
-          <h3 class="card-title">Net Event Earnings</h3>
-          <h2 [ngClass]="getAmountClass(dashboard?.net_event_earnings ?? 0)">₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</h2>
-          <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('event')">
-            View Details
-          </button>
+        <div class="financial-summary-item" (click)="showBreakdown('event')">
+          <span class="financial-item-label">Net Event Earnings</span>
+          <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.net_event_earnings ?? 0)">₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</span>
+          <a class="financial-item-link">View Details</a>
         </div>
-      </div>
-    </div>
-
-    <div class="col-lg col-md-6 mb-3 mb-lg-0">
-      <div class="card text-center financial-card h-100">
-        <div class="card-body">
-          <h3 class="card-title">Net Fundraiser Earnings</h3>
-          <h2 [ngClass]="getAmountClass(dashboard?.net_fundraiser_earnings ?? 0)">₱{{ (dashboard?.net_fundraiser_earnings ?? 0) | number:'1.2-2' }}</h2>
-          <button class="btn btn-outline-secondary btn-block w-100" (click)="showBreakdown('fundraiser')">
-            View Details
-          </button>
+        <div class="financial-summary-item" (click)="showBreakdown('fundraiser')">
+          <span class="financial-item-label">Net Fundraiser Earnings</span>
+          <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.net_fundraiser_earnings ?? 0)">₱{{ (dashboard?.net_fundraiser_earnings ?? 0) | number:'1.2-2' }}</span>
+          <a class="financial-item-link">View Details</a>
         </div>
-      </div>
-    </div>
-
-    <div class="col-lg col-md-6 mb-3 mb-lg-0">
-      <div class="card text-center financial-card h-100">
-        <div class="card-body">
-          <h3 class="card-title">Total Payments</h3>
-          <h2 [ngClass]="getAmountClass(dashboard?.total_payments ?? 0)">₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</h2>
-          <p class="text-muted small">Payments received</p>
+        <div class="financial-summary-item">
+          <span class="financial-item-label">Total Payments</span>
+          <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.total_payments ?? 0)">₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</span>
+          <span class="financial-item-sublabel">Payments received</span>
         </div>
       </div>
     </div>
@@ -166,7 +145,7 @@
 
   <!-- Breakdown Modal -->
   <div class="modal fade show" appModalToBody *ngIf="showBreakdownModal" tabindex="-1" style="display: block;">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">
@@ -175,67 +154,19 @@
           <button type="button" class="btn-close" (click)="closeBreakdownModal()"></button>
         </div>
         <div class="modal-body">
-          <div *ngIf="breakdown?.breakdown && (breakdown?.breakdown?.length || 0) > 0">
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <ng-container *ngIf="breakdownType === 'music'">
-                      <th>Release</th>
-                      <th>Gross Earnings</th>
-                      <th>Royalties</th>
-                      <th>Platform Fees</th>
-                      <th>Net Earnings</th>
-                    </ng-container>
-                    <ng-container *ngIf="breakdownType === 'event'">
-                      <th>Event</th>
-                      <th>Sales</th>
-                      <th>Platform Fees</th>
-                      <th>Processing Fees</th>
-                      <th>Net Earnings</th>
-                    </ng-container>
-                    <ng-container *ngIf="breakdownType === 'fundraiser'">
-                      <th>Fundraiser</th>
-                      <th>Gross Donations</th>
-                      <th>Platform Fees</th>
-                      <th>Processing Fees</th>
-                      <th>Net Earnings</th>
-                    </ng-container>
-                  </tr>
-                </thead>
-                <tbody>
-                  <ng-container *ngFor="let item of breakdown?.breakdown || []">
-                    <tr>
-                      <ng-container *ngIf="breakdownType === 'music'">
-                        <td>{{ item.release_title }}</td>
-                        <td [ngClass]="getAmountClass(item.gross_earnings)">₱{{ item.gross_earnings | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.royalties)">₱{{ item.royalties | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.platform_fees)">₱{{ item.platform_fees | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.net_earnings)">₱{{ item.net_earnings | number:'1.2-2' }}</td>
-                      </ng-container>
-                      <ng-container *ngIf="breakdownType === 'event'">
-                        <td>{{ item.event_name }}</td>
-                        <td [ngClass]="getAmountClass(item.sales)">₱{{ item.sales | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.platform_fees)">₱{{ item.platform_fees | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.processing_fees)">₱{{ item.processing_fees | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.net_earnings)">₱{{ item.net_earnings | number:'1.2-2' }}</td>
-                      </ng-container>
-                      <ng-container *ngIf="breakdownType === 'fundraiser'">
-                        <td>{{ item.fundraiser_name }}</td>
-                        <td [ngClass]="getAmountClass(item.gross_earnings)">₱{{ item.gross_earnings | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.platform_fees)">₱{{ item.platform_fees | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.processing_fees)">₱{{ item.processing_fees | number:'1.2-2' }}</td>
-                        <td [ngClass]="getAmountClass(item.net_earnings)">₱{{ item.net_earnings | number:'1.2-2' }}</td>
-                      </ng-container>
-                    </tr>
-                  </ng-container>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div *ngIf="!breakdown?.breakdown || (breakdown?.breakdown?.length || 0) === 0" class="text-center text-muted">
-            <p>No {{ breakdownType }} data available for the selected date range.</p>
-          </div>
+          <app-paginated-table
+            [title]="''"
+            [data]="breakdown?.breakdown || []"
+            [columns]="currentBreakdownColumns"
+            [pagination]="breakdownPagination"
+            [loading]="breakdownLoading"
+            [showSortableHeaders]="true"
+            [responsiveMode]="'financial'"
+            [sortInfo]="breakdownSort"
+            (pageChange)="onBreakdownPageChange($event)"
+            (sortChange)="onBreakdownSortChange($event)"
+            (filtersChange)="onBreakdownFiltersChange($event)">
+          </app-paginated-table>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="closeBreakdownModal()">Close</button>

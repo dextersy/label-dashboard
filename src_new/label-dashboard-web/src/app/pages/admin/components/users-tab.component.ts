@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, User, LoginAttempt } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 
 @Component({
     selector: 'app-users-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent],
-    templateUrl: './users-tab.component.html'
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, InPageNavComponent],
+    templateUrl: './users-tab.component.html',
+    styleUrl: './users-tab.component.scss'
 })
 export class UsersTabComponent implements OnInit {
   // Users
@@ -26,6 +28,18 @@ export class UsersTabComponent implements OnInit {
   loginAttemptsFilters: any = {};
   loginAttemptsSort: SortInfo | null = null;
 
+  // Sidebar navigation
+  activeSection: string = 'users';
+
+  navTabs: InPageNavTab[] = [
+    { id: 'users', label: 'Users', icon: 'fa-solid fa-users' },
+    { id: 'login-attempts', label: 'Login Attempts', icon: 'fa-solid fa-shield-halved' },
+  ];
+
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+  }
+
   // Admin invite modal
   showInviteModal: boolean = false;
   inviteForm = {
@@ -35,9 +49,49 @@ export class UsersTabComponent implements OnInit {
   };
   inviteLoading: boolean = false;
 
+  headerActions: HeaderAction[] = [
+    {
+      icon: 'fa-solid fa-user-plus',
+      label: 'Invite Admin',
+      handler: () => this.openInviteModal(),
+      type: 'primary',
+    }
+  ];
+
+  // Table action definitions
+  usersActions: TableAction[] = [
+    {
+      icon: 'fa-solid fa-user-shield',
+      label: 'Make Admin',
+      type: 'primary',
+      hidden: (user) => user.is_admin || user.has_pending_invite,
+      handler: (user) => this.toggleAdminStatus(user.id)
+    },
+    {
+      icon: 'fa-solid fa-user-times',
+      label: 'Remove Admin',
+      type: 'danger',
+      hidden: (user) => !user.is_admin || user.has_pending_invite,
+      handler: (user) => this.toggleAdminStatus(user.id)
+    },
+    {
+      icon: 'fa-solid fa-envelope',
+      label: 'Resend Invitation',
+      hidden: (user) => !user.has_pending_invite,
+      handler: (user) => this.resendInvite(user.id)
+    },
+    {
+      icon: 'fa-solid fa-ban',
+      label: 'Cancel Invitation',
+      type: 'danger',
+      hidden: (user) => !user.has_pending_invite,
+      handler: (user) => this.cancelInvite(user.id)
+    }
+  ];
+
   // Table column definitions
   usersColumns: TableColumn[] = [
-    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true },
+    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true, cardHeader: true },
     { key: 'first_name', label: 'First Name', type: 'text', searchable: true, sortable: true },
     { key: 'last_name', label: 'Last Name', type: 'text', searchable: true, sortable: true },
     { key: 'email_address', label: 'Email address', type: 'text', searchable: true, sortable: true },

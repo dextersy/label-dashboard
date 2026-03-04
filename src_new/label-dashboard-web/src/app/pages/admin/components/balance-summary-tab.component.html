@@ -124,37 +124,6 @@
   </div>
 </div>
 
-<!-- Recuperable Expenses Section -->
-<div class="row mt-5">
-  <div class="col-md-8">
-    <app-paginated-table 
-      title="Recuperable Expenses"
-      [data]="recuperableExpenses"
-      [pagination]="expensesPagination"
-      [loading]="expensesLoading"
-      [columns]="expensesColumns"
-      [showSortableHeaders]="true"
-      [sortInfo]="expensesSort"
-      [responsiveMode]="'financial'"
-      (pageChange)="onExpensesPageChange($event)"
-      (filtersChange)="onExpensesFiltersChange($event)"
-      (sortChange)="onExpensesSortChange($event)">
-    </app-paginated-table>
-  </div>
-
-  <div class="col-md-4">
-    <!-- Total Recuperable Expense Card -->
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0">Total Recuperable Expense</h5>
-      </div>
-      <div class="card-body text-center">
-        <h3><strong [style.color]="(expensesSummary?.total_recuperable_expense || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(expensesSummary?.total_recuperable_expense || 0) }}</strong></h3>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Payment Confirmation Dialog -->
 <app-payment-confirmation-dialog 
   *ngIf="showPaymentDialog"

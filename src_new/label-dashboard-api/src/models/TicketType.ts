@@ -10,6 +10,7 @@ interface TicketTypeAttributes {
   start_date?: Date | null;
   end_date?: Date | null;
   disabled?: boolean;
+  special_instructions?: string | null;
 }
 
 interface TicketTypeCreationAttributes extends Optional<TicketTypeAttributes, 'id'> {}
@@ -23,6 +24,7 @@ class TicketType extends Model<TicketTypeAttributes, TicketTypeCreationAttribute
   public start_date?: Date | null;
   public end_date?: Date | null;
   public disabled?: boolean;
+  public special_instructions?: string | null;
 
   // Association properties
   public event?: any;
@@ -158,6 +160,10 @@ TicketType.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    special_instructions: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {

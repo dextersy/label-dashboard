@@ -6,8 +6,8 @@ import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
-import { ArtistSelectionComponent } from '../../components/artist/artist-selection/artist-selection.component';
-import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
+import { ArtistSelectionComponent } from '../../components/shared/artist-selection/artist-selection.component';
+import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -179,7 +179,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
               adminOnly: true,
               children: [
                 { route: '/admin/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
-                { route: '/admin/reports/artist-balances', title: 'Artist Balances', adminOnly: true }
+                { route: '/admin/reports/artist-balances', title: 'Artist Balances', adminOnly: true },
+                { route: '/admin/reports/payments-royalties', title: 'Payments & Royalties', adminOnly: true },
+                { route: '/admin/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
               ]
             },
             {
@@ -466,8 +468,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private applyBrandSettings(settings: BrandSettings): void {
     this.brandLogo = settings.logo_url || 'assets/img/Your Logo Here.png';
     this.brandWebsite = settings.brand_website || '#';
-    this.brandColor = settings.brand_color; // Use the actual hex color from the API
-    this.updateTextColorsBasedOnBrightness();
+    this.brandColor = '#e8ecef'; // Fixed light gray sidebar background
+    this.textColor = '#495057';
+    this.iconColor = '#6c757d';
+    this.activeColor = settings.brand_color; // Brand color used for active item highlighting
   }
 
   private updateTextColorsBasedOnBrightness(): void {

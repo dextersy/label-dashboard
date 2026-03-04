@@ -51,14 +51,14 @@
               readonly>
             <button
               type="button"
-              class="btn btn-outline-secondary d-flex align-items-center"
+              class="btn btn-secondary d-flex align-items-center"
               (click)="copyPublicLink()"
               title="Copy link to clipboard">
               <i class="fa fa-copy"></i>
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary d-flex align-items-center"
+              class="btn btn-secondary d-flex align-items-center"
               (click)="downloadFundraiserQR()"
               title="Download QR Code">
               <i class="fa fa-qrcode"></i>
@@ -66,7 +66,7 @@
             <a
               [href]="getPublicFundraiserUrl()"
               target="_blank"
-              class="btn btn-outline-primary d-flex align-items-center"
+              class="btn btn-secondary d-flex align-items-center"
               title="Open in new tab">
               <i class="fa fa-external-link"></i>
             </a>
@@ -146,88 +146,86 @@
   </div>
 </div>
 
-<!-- Floating Action Buttons -->
-<div class="floating-actions">
+<!-- Floating Action Bar -->
+<app-floating-action-bar>
   <!-- Cancel button only shown when creating a new fundraiser -->
   <button
     type="button"
-    class="btn btn-outline-secondary"
+    class="btn btn-secondary"
     (click)="onCancel()"
     [disabled]="saving"
     *ngIf="isNewFundraiser">
     Cancel
   </button>
 
-  <!-- Draft Fundraiser Buttons -->
-  <ng-container *ngIf="isFundraiserDraft()">
-    <button
-      type="button"
-      class="btn btn-outline-primary"
-      (click)="onSave()"
-      [disabled]="saving">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-save" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Save as Draft</span>
-      <span *ngIf="saving">Saving...</span>
-    </button>
-    <button
-      type="button"
-      class="btn btn-success"
-      (click)="onPublish()"
-      [disabled]="saving">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-rocket" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Publish</span>
-      <span *ngIf="saving">Publishing...</span>
-    </button>
-  </ng-container>
+  <!-- Secondary buttons — *ngIf applied directly so ng-container doesn't become the
+       projected child (which would prevent select=".fab-primary-btn" from matching). -->
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="onSave()"
+    [disabled]="saving"
+    *ngIf="isFundraiserDraft()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-save" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Save as Draft</span>
+    <span *ngIf="saving">Saving...</span>
+  </button>
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="onUnpublish()"
+    [disabled]="saving || hasDonations()"
+    *ngIf="isFundraiserPublished() && !hasDonations()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Unpublish</span>
+    <span *ngIf="saving">Unpublishing...</span>
+  </button>
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="onClose()"
+    [disabled]="saving"
+    *ngIf="isFundraiserPublished()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-lock" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Close Fundraiser</span>
+    <span *ngIf="saving">Closing...</span>
+  </button>
 
-  <!-- Published Fundraiser Buttons -->
-  <ng-container *ngIf="isFundraiserPublished()">
-    <button
-      type="button"
-      class="btn btn-primary"
-      (click)="onSave()"
-      [disabled]="saving || !isFormDirty()">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-save" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Save Changes</span>
-      <span *ngIf="saving">Saving...</span>
-    </button>
-    <button
-      type="button"
-      class="btn btn-warning"
-      (click)="onUnpublish()"
-      [disabled]="saving || hasDonations()"
-      *ngIf="!hasDonations()">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-eye-slash" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Unpublish</span>
-      <span *ngIf="saving">Unpublishing...</span>
-    </button>
-    <button
-      type="button"
-      class="btn btn-secondary"
-      (click)="onClose()"
-      [disabled]="saving">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-lock" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Close Fundraiser</span>
-      <span *ngIf="saving">Closing...</span>
-    </button>
-  </ng-container>
-
-  <!-- Closed Fundraiser -->
-  <ng-container *ngIf="isFundraiserClosed()">
-    <button
-      type="button"
-      class="btn btn-success"
-      (click)="onReopen()"
-      [disabled]="saving">
-      <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-      <i class="fa fa-unlock" *ngIf="!saving"></i>
-      <span *ngIf="!saving">Reopen Fundraiser</span>
-      <span *ngIf="saving">Reopening...</span>
-    </button>
-  </ng-container>
-</div>
+  <!-- Primary buttons — direct children for ng-content select=".fab-primary-btn" to work -->
+  <button
+    type="button"
+    class="btn btn-primary fab-primary-btn"
+    (click)="onPublish()"
+    [disabled]="saving"
+    *ngIf="isFundraiserDraft()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-rocket" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Publish</span>
+    <span *ngIf="saving">Publishing...</span>
+  </button>
+  <button
+    type="button"
+    class="btn btn-primary fab-primary-btn"
+    (click)="onSave()"
+    [disabled]="saving || !isFormDirty()"
+    *ngIf="isFundraiserPublished()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-save" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Save Changes</span>
+    <span *ngIf="saving">Saving...</span>
+  </button>
+  <button
+    type="button"
+    class="btn btn-primary fab-primary-btn"
+    (click)="onReopen()"
+    [disabled]="saving"
+    *ngIf="isFundraiserClosed()">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-unlock" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Reopen Fundraiser</span>
+    <span *ngIf="saving">Reopening...</span>
+  </button>
+</app-floating-action-bar>

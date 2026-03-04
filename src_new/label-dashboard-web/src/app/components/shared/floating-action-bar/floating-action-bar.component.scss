@@ -1,0 +1,290 @@
+// ============================================================
+// HOST — sticky frosted-glass bar
+// ============================================================
+:host {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 1050;
+}
+
+// ============================================================
+// DESKTOP LAYOUT
+// DOM order: [fab-start] [fab-end] [fab-toggle] [fab-secondary]
+// Visual order via CSS `order`: [fab-start(1)] [fab-secondary(2)] [fab-end(3)]
+// fab-secondary's margin-left:auto pushes it + fab-end to the right.
+// ============================================================
+
+.fab-start {
+  order: 1;
+  display: flex;
+  align-items: center;
+  padding: 20px 12px 20px 24px;
+  flex-shrink: 0;
+}
+
+// fab-end contains the primary button slot.
+// Hidden by default; shown when a .fab-primary-btn button is projected.
+.fab-end {
+  order: 3;
+  display: none;
+  flex-shrink: 0;
+
+  &.fab-end--visible {
+    display: flex;
+    align-items: center;
+    padding: 20px 80px 20px 12px;
+  }
+}
+
+// fab-bar-info is a mobile-only summary slot — hidden on desktop.
+// On mobile it sits to the left of the primary button inside fab-end.
+.fab-bar-info {
+  display: none;
+}
+
+// fab-secondary contains secondary buttons (default slot).
+// Sits between fab-start and fab-end visually via order:2.
+.fab-secondary {
+  order: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 12px;
+  margin-left: auto; // push this + fab-end to the far right
+  flex-shrink: 0;
+}
+
+.fab-primary-slot {
+  display: flex;
+  align-items: center;
+}
+
+// floatingBarInfo slot: shown only on mobile (inside fab-end row).
+// Hidden here on desktop — callers put the same info in [floatingStart] for desktop.
+.fab-bar-info {
+  display: none;
+}
+
+// Toggle caret is hidden on desktop
+.fab-toggle {
+  display: none;
+}
+
+// ============================================================
+// DESKTOP BUTTON POLISH
+// ============================================================
+:host ::ng-deep .fab-secondary > button,
+:host ::ng-deep .fab-primary-slot > button {
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  i { margin-right: 8px; }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// ============================================================
+// MOBILE: workspace navigator offset
+// .mobile-bottom-nav is position:fixed; bottom:0; ~72px tall; shown ≤991px.
+// Also show fab-bar-info at this breakpoint — it matches when Bootstrap's
+// d-none d-lg-flex hides the [floatingStart] content (lg = 992px).
+// ============================================================
+@media (max-width: 991px) {
+  :host {
+    bottom: 72px;
+  }
+
+  // Bar-info becomes visible once floatingStart is hidden.
+  // The ≤768px block below overrides these with flex:1 for the drawer layout.
+  .fab-bar-info {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #6c757d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 12px;
+
+    &:empty {
+      display: none;
+    }
+  }
+}
+
+// ============================================================
+// MOBILE: drawer behaviour (≤768px)
+// ============================================================
+@media (max-width: 768px) {
+
+  // Switch host to a vertical flex column.
+  // Sticky bottom: the bottom edge stays at the viewport bottom;
+  // the drawer (order:-1) grows the bar upward when opened.
+  // align-items:stretch overrides the desktop center so children fill full width.
+  :host {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  // fab-start slot content uses Bootstrap d-none d-lg-flex; nothing to do here.
+  .fab-start {
+    display: none;
+  }
+
+  // ----------------------------------------------------------
+  // fab-end: the always-visible row (bar-info + primary button on mobile)
+  // ----------------------------------------------------------
+  .fab-end {
+    order: unset;
+
+    &.fab-end--visible {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+  }
+
+  // fab-bar-info: visible on mobile, sits left of the primary button.
+  // flex:1 takes available space; :empty collapses it when unused so
+  // the primary button stays full-width (as on pages without bar-info).
+  .fab-bar-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &:empty {
+      display: none;
+      flex: 0;
+    }
+  }
+
+  // Primary slot fills the remaining row width
+  .fab-primary-slot {
+    flex: 1;
+  }
+
+  :host ::ng-deep .fab-primary-slot > button {
+    width: 100%;
+    font-size: 13px;
+    font-weight: 500;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { transform: none; }
+  }
+
+  // ----------------------------------------------------------
+  // Toggle tab — pull-handle sitting above the bar's top edge, centered.
+  // position:absolute on a child of :host{position:sticky} is relative to :host.
+  // bottom:100% places the tab's bottom edge at :host's top edge.
+  // ----------------------------------------------------------
+  .fab-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px 18px 4px;
+    border-radius: 10px 10px 0 0;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: none;
+    background: #ffffff;
+    cursor: pointer;
+    color: #374151;
+    // Side shadows only — no bottom shadow so it visually merges with the bar
+    box-shadow: -2px -3px 8px rgba(0, 0, 0, 0.05), 2px -3px 8px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+
+    i { font-size: 11px; margin: 0; }
+
+    &:hover {
+      background: #f9fafb;
+    }
+  }
+
+  // ----------------------------------------------------------
+  // fab-secondary — in-flow drawer, stacked above the button row.
+  // order:-1 ensures it appears above .fab-end in the column layout.
+  // max-height 0→open animates the reveal. No position:absolute means
+  // no box-shadow artifact leaking out when collapsed.
+  // ----------------------------------------------------------
+  .fab-secondary {
+    order: unset;
+    margin-left: 0;
+
+    // DRAWER MODE: in-flow, above the button row via order:-1.
+    &.drawer-mode {
+      order: -1;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+      background: rgba(255, 255, 255, 0.99);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 16px;
+
+      &.open {
+        max-height: 400px;
+        padding: 12px 16px;
+      }
+    }
+
+    // NON-DRAWER MODE: all default-slot content stacks normally
+    // (used by custom-ticket which owns its own internal mobile layout)
+    &:not(.drawer-mode) {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 0;
+      gap: 8px;
+    }
+  }
+
+  // Drawer buttons: full width, smaller font on mobile, no hover lift
+  :host ::ng-deep .fab-secondary.drawer-mode > button {
+    width: 100%;
+    font-size: 13px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  :host ::ng-deep .fab-secondary:not(.drawer-mode) > button {
+    width: 100%;
+    font-size: 14px;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { transform: none; }
+  }
+}

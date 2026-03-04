@@ -1,0 +1,39 @@
+<div class="artist-releases-tab">
+  <app-paginated-table
+    title="Artist Releases"
+    [data]="filteredReleases"
+    [pagination]="null"
+    [loading]="loading"
+    [columns]="releaseColumns"
+    [showSearch]="false"
+    [showSortableHeaders]="true"
+    [showActionsColumn]="true"
+    [actions]="releaseActions"
+    [headerActions]="headerActions">
+
+    <ng-template #customButtons>
+      <div class="filter-controls">
+        <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-secondary" for="epkFilterAll">All</label>
+
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-secondary" for="epkFilterVisible">
+            <i class="fa fa-globe"></i> <span class="d-none d-lg-inline">Visible in EPK</span>
+          </label>
+
+          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
+          <label class="btn btn-secondary" for="epkFilterHidden">
+            <i class="fa fa-eye-slash"></i> <span class="d-none d-lg-inline">Hidden from EPK</span>
+          </label>
+        </div>
+        <select class="form-select form-select-sm d-md-none" [(ngModel)]="epkFilter">
+          <option value="all">All</option>
+          <option value="visible">Visible in EPK</option>
+          <option value="hidden">Hidden from EPK</option>
+        </select>
+      </div>
+    </ng-template>
+
+  </app-paginated-table>
+</div>

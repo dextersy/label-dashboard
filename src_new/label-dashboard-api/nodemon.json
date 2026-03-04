@@ -13,6 +13,6 @@
     "NODE_ENV": "development"
   },
   "colours": true,
-  "legacyWatch": false,
+  "legacyWatch": true,
   "delay": 1000
 }

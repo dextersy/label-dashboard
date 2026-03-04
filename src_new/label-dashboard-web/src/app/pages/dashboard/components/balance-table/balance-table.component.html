@@ -1,0 +1,30 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Balance Summary</h5>
+  </div>
+  <div class="card-body">
+    <div class="row row-cols-2 row-cols-md-1 g-2 g-md-0 artist-balance-grid">
+      <div class="col" *ngFor="let artist of artists">
+        <div class="artist-balance-item">
+          <div class="artist-info">
+            <img [src]="getProfilePhotoUrl(artist.profile_photo)"
+                 [alt]="artist.name + ' photo'"
+                 class="artist-photo">
+            <span class="artist-name">{{ artist.name }}</span>
+          </div>
+          <div class="balance-amount" [ngClass]="getBalanceClass(artist.balance)">
+            {{ formatCurrency(artist.balance) }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12" *ngIf="artists.length === 0">
+        <p class="text-center text-muted py-2">No artists found</p>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer text-right">
+    <a (click)="goToFinancial()" class="btn-ghost" style="cursor: pointer;">
+      Go to financial overview <i class="far fa-arrow-alt-circle-right"></i>
+    </a>
+  </div>
+</div>

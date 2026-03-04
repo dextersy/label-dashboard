@@ -1,0 +1,30 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Latest releases</h5>
+  </div>
+  <div class="card-body">
+    <div *ngIf="releases.length === 0" class="text-center text-muted py-3">
+      No releases found
+    </div>
+    <div class="release-tiles" *ngIf="releases.length > 0">
+      <div class="release-tile" *ngFor="let release of releases.slice(0, 4)">
+        <span class="release-tile-date text-muted">
+          {{ release.release_date | date:'MMM d, y' }}
+        </span>
+        <img
+          [src]="getImageSrc(release.cover_art)"
+          [alt]="release.title"
+          class="release-tile-cover">
+        <span class="release-tile-title" [title]="release.title">{{ release.title }}</span>
+        <a class="btn-ghost btn-sm release-tile-link" style="cursor: pointer;" (click)="goToRelease(release)">
+          See release <i class="far fa-arrow-alt-circle-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer text-right">
+    <a (click)="goToReleases()" class="btn-ghost" style="cursor: pointer;">
+      Go to releases <i class="far fa-arrow-alt-circle-right"></i>
+    </a>
+  </div>
+</div>

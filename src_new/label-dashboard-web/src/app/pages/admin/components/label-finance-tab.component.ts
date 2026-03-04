@@ -8,10 +8,11 @@ import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
+import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
     selector: 'app-label-finance-tab',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective, PaginatedTableComponent],
     templateUrl: './label-finance-tab.component.html',
     styleUrl: './label-finance-tab.component.scss'
 })
@@ -23,6 +24,42 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   breakdown: LabelFinanceBreakdown | null = null;
   breakdownType: 'music' | 'event' | 'fundraiser' = 'music';
   showBreakdownModal = false;
+
+  breakdownLoading = false;
+  breakdownPagination: PaginationInfo | null = null;
+  breakdownPage = 1;
+  breakdownSort: SortInfo | null = null;
+  breakdownFilters: { [key: string]: string } = {};
+
+  readonly musicColumns: TableColumn[] = [
+    { key: 'release_title', label: 'Release', sortable: true },
+    { key: 'gross_earnings', label: 'Gross Earnings', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.gross_earnings) },
+    { key: 'royalties', label: 'Royalties', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.royalties) },
+    { key: 'platform_fees', label: 'Platform Fees', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.platform_fees) },
+    { key: 'net_earnings', label: 'Net Earnings', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-number', renderHtml: true, formatter: (item: any) => { const v = item.net_earnings; return `<span class="${v < 0 ? 'text-danger' : ''}">${this.formatCurrency(v)}</span>`; } },
+  ];
+
+  readonly eventColumns: TableColumn[] = [
+    { key: 'event_name', label: 'Event', sortable: true },
+    { key: 'sales', label: 'Sales', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.sales) },
+    { key: 'platform_fees', label: 'Platform Fees', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.platform_fees) },
+    { key: 'processing_fees', label: 'Processing Fees', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.processing_fees) },
+    { key: 'net_earnings', label: 'Net Earnings', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-number', renderHtml: true, formatter: (item: any) => { const v = item.net_earnings; return `<span class="${v < 0 ? 'text-danger' : ''}">${this.formatCurrency(v)}</span>`; } },
+  ];
+
+  readonly fundraiserColumns: TableColumn[] = [
+    { key: 'fundraiser_name', label: 'Fundraiser', sortable: true },
+    { key: 'gross_earnings', label: 'Gross Donations', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.gross_earnings) },
+    { key: 'platform_fees', label: 'Platform Fees', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.platform_fees) },
+    { key: 'processing_fees', label: 'Processing Fees', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.processing_fees) },
+    { key: 'net_earnings', label: 'Net Earnings', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-number', renderHtml: true, formatter: (item: any) => { const v = item.net_earnings; return `<span class="${v < 0 ? 'text-danger' : ''}">${this.formatCurrency(v)}</span>`; } },
+  ];
+
+  get currentBreakdownColumns(): TableColumn[] {
+    return this.breakdownType === 'music' ? this.musicColumns
+         : this.breakdownType === 'event'  ? this.eventColumns
+         : this.fundraiserColumns;
+  }
 
   paymentMethods: LabelPaymentMethod[] = [];
   payments: LabelPayment[] = [];
@@ -116,23 +153,73 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     }
 
     this.breakdownType = type;
+    this.breakdown = null;
+    this.breakdownPage = 1;
+    this.breakdownSort = null;
+    this.breakdownFilters = {};
+    this.breakdownPagination = null;
+    this.showBreakdownModal = true;
+    this.loadBreakdown();
+  }
+
+  private loadBreakdown(): void {
+    if (!this.brandId) return;
+
+    const nameKey = this.breakdownType === 'music' ? 'release_title'
+                  : this.breakdownType === 'event'  ? 'event_name'
+                  : 'fundraiser_name';
+    const search = this.breakdownFilters[nameKey] || undefined;
+
+    this.breakdownLoading = true;
     this.subscriptions.add(
-      this.labelFinanceService.getBreakdown(this.brandId, type, this.startDate, this.endDate)
-        .subscribe({
-          next: (data) => {
-            this.breakdown = data;
-            this.showBreakdownModal = true;
-          },
-          error: (error) => {
-            console.error('Error loading breakdown:', error);
-            this.notificationService.showError('Failed to load breakdown data');
-          }
-        })
+      this.labelFinanceService.getBreakdown(
+        this.brandId,
+        this.breakdownType,
+        this.startDate,
+        this.endDate,
+        this.breakdownPage,
+        10,
+        this.breakdownSort?.column,
+        this.breakdownSort?.direction,
+        search
+      ).subscribe({
+        next: (data) => {
+          this.breakdown = data;
+          this.breakdownPagination = data.pagination;
+          this.breakdownLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading breakdown:', error);
+          this.notificationService.showError('Failed to load breakdown data');
+          this.breakdownLoading = false;
+        }
+      })
     );
+  }
+
+  onBreakdownPageChange(page: number): void {
+    this.breakdownPage = page;
+    this.loadBreakdown();
+  }
+
+  onBreakdownSortChange(sort: SortInfo | null): void {
+    this.breakdownSort = sort;
+    this.breakdownPage = 1;
+    this.loadBreakdown();
+  }
+
+  onBreakdownFiltersChange(filters: { [key: string]: string }): void {
+    this.breakdownFilters = filters;
+    this.breakdownPage = 1;
+    this.loadBreakdown();
   }
 
   closeBreakdownModal(): void {
     this.showBreakdownModal = false;
+  }
+
+  formatCurrency(value: number): string {
+    return `₱${(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   private loadPaymentMethods(): void {

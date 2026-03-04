@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ArtistRelease } from '../components/artist/artist-releases-tab/artist-releases-tab.component';
+import { ArtistRelease } from '../pages/artist/components/artist-releases-tab/artist-releases-tab.component';
 import { Song } from './song.service';
 
 export interface ValidationError {

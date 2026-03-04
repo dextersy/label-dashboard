@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { LatestAlbumsComponent, LatestRelease } from '../../components/dashboard/latest-albums/latest-albums.component';
-import { TopAlbumsComponent, TopEarningRelease } from '../../components/dashboard/top-albums/top-albums.component';
-import { BalanceTableComponent, ArtistBalance } from '../../components/dashboard/balance-table/balance-table.component';
+import { LatestAlbumsComponent, LatestRelease } from './components/latest-albums/latest-albums.component';
+import { TopAlbumsComponent, TopEarningRelease } from './components/top-albums/top-albums.component';
+import { BalanceTableComponent, ArtistBalance } from './components/balance-table/balance-table.component';
+import { ReleasePipelineComponent, PipelineStage } from './components/release-pipeline/release-pipeline.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { ArtistStateService } from '../../services/artist-state.service';
@@ -17,6 +18,7 @@ interface DashboardStats {
     title: string;
     artist_id: number | null;
     artist_name: string;
+    cover_art: string;
   } | null;
   totalArtists: number;
   totalReleases: number;
@@ -31,6 +33,7 @@ interface DashboardData {
   topEarningReleases: TopEarningRelease[];
   balanceSummary: ArtistBalance[];
   stats?: DashboardStats;
+  releasePipeline: PipelineStage[];
 }
 
 @Component({
@@ -41,6 +44,7 @@ interface DashboardData {
         LatestAlbumsComponent,
         TopAlbumsComponent,
         BalanceTableComponent,
+        ReleasePipelineComponent,
         BreadcrumbComponent
     ],
     templateUrl: './dashboard.component.html',
@@ -223,6 +227,13 @@ export class DashboardComponent implements OnInit {
     
     // Navigate to the artist selection page
     this.router.navigate(['/artist']);
+  }
+
+  getCoverArtUrl(coverArt: string | undefined): string {
+    if (!coverArt || coverArt.trim() === '') {
+      return 'assets/img/placeholder.jpg';
+    }
+    return coverArt.startsWith('http') ? coverArt : `${environment.apiUrl}/uploads/covers/${coverArt}`;
   }
 
   goToLatestRelease(): void {

@@ -1,52 +1,45 @@
+// Current Balance Section - flat brand color with decorative blobs (matches primary quick link style)
 .current-balance-section {
-  background: linear-gradient(135deg, var(--brand-color, #007bff) 0%, color-mix(in srgb, var(--brand-color, #007bff) 80%, black) 100%);
+  background: var(--brand-color, #667eea);
   position: relative;
   color: white !important;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  border-radius: 16px;
   min-height: 180px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
   overflow: hidden;
-}
 
-.current-balance-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 70%, transparent 100%);
-  pointer-events: none;
-  z-index: 1;
-}
+  &::before {
+    content: '';
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    top: -40px;
+    right: -30px;
+    pointer-events: none;
+  }
 
-.current-balance-section::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.3);
-  z-index: 2;
-}
+  &::after {
+    content: '';
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    bottom: 16px;
+    right: 16px;
+    pointer-events: none;
+  }
 
-.current-balance-section > * {
-  position: relative;
-  z-index: 3;
-}
-
-.current-balance-section:hover {
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transform: translateY(-12px);
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 .balance-title {
@@ -77,17 +70,73 @@
   line-height: 1.3;
 }
 
-.financial-card {
-  margin-bottom: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  text-align: center;
+// Combined Financial Summary Card
+.financial-summary-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
 }
 
-.financial-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+.financial-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  flex: 1;
+  text-align: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+
+  & + .financial-summary-item {
+    border-left: 1px solid #eee;
+  }
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  &:last-child {
+    cursor: default;
+  }
+}
+
+.financial-item-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.financial-item-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a2e;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.financial-item-link {
+  font-size: 0.78rem;
+  color: var(--brand-color, #667eea);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.financial-item-sublabel {
+  font-size: 0.78rem;
+  color: #aaa;
 }
 
 .card {
@@ -135,4 +184,38 @@
 
 .modal-backdrop.fade.show {
   opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .balance-amount {
+    font-size: 2rem;
+  }
+
+  .financial-item-value {
+    font-size: 18px;
+  }
+
+  .financial-summary-card {
+    flex-wrap: wrap;
+  }
+
+  .financial-summary-item {
+    flex: 0 0 50%;
+
+    & + .financial-summary-item {
+      border-left: none;
+    }
+
+    &:nth-child(odd) {
+      border-right: 1px solid #eee;
+    }
+
+    &:last-child:nth-child(odd) {
+      border-right: none;
+    }
+
+    &:nth-child(-n+2) {
+      border-bottom: 1px solid #eee;
+    }
+  }
 }

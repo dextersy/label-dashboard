@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ArtistStateService } from '../../services/artist-state.service';
-import { Artist } from '../../components/artist/artist-selection/artist-selection.component';
+import { Artist } from '../../models/artist.model';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from 'environments/environment';
 

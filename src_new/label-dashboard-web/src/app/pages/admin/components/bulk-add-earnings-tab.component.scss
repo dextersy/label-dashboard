@@ -50,17 +50,6 @@
   }
 }
 
-// Sticky panel improvements
-.sticky-bottom-panel {
-  background-color: #ffffff;
-  border-top: 1px solid #dee2e6;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  
-  .panel-content {
-    padding: 1rem 0;
-  }
-}
-
 // CSV upload area styling
 .csv-upload-area {
   border: 2px dashed #dee2e6;
@@ -208,6 +197,11 @@
   }
 }
 
+// Remove Bootstrap's auto-generated caret on the split button — we use an FA icon instead
+.btn-group .btn-secondary.dropdown-toggle-split::after {
+  display: none;
+}
+
 // Simple dropdown menu using Angular structural directives
 .add-rows-container {
   position: relative;
@@ -260,12 +254,6 @@
         padding: 0.5rem 0.25rem;
         font-size: 0.875rem;
       }
-    }
-  }
-  
-  .sticky-bottom-panel {
-    .panel-content {
-      padding: 0.75rem 0;
     }
   }
 }

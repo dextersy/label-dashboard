@@ -1677,6 +1677,185 @@ export const getAdminPaymentsRoyaltiesSummary = async (req: AuthRequest, res: Re
   }
 };
 
+export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date, page = '1', limit = '10', sortBy, sortDirection, release_title, description, type } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    // Get all releases for the brand
+    const releaseWhere: any = { brand_id: req.user.brand_id };
+    if (release_title && release_title !== '') {
+      releaseWhere.title = { [require('sequelize').Op.like]: `%${release_title}%` };
+    }
+    const releases = await Release.findAll({ where: releaseWhere, attributes: ['id'] });
+    const releaseIds = releases.map((r: any) => r.id);
+
+    if (releaseIds.length === 0) {
+      return res.json({ earnings: [], pagination: { current_page: 1, total_pages: 0, total_count: 0, per_page: pageSize, has_next: false, has_prev: false } });
+    }
+
+    // Build earnings where clause
+    const earningsWhere: any = {
+      release_id: releaseIds,
+      date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
+    };
+    if (description && description !== '') {
+      earningsWhere.description = { [require('sequelize').Op.like]: `%${description}%` };
+    }
+    if (type && type !== '') {
+      earningsWhere.type = type;
+    }
+
+    // Build order clause
+    const validSortColumns: { [key: string]: string } = { date_recorded: 'date_recorded', amount: 'amount', type: 'type', description: 'description' };
+    const orderColumn = sortBy && validSortColumns[sortBy as string] ? validSortColumns[sortBy as string] : 'date_recorded';
+    const orderDir = sortDirection === 'asc' ? 'ASC' : 'DESC';
+
+    const { count, rows } = await (Earning as any).findAndCountAll({
+      where: earningsWhere,
+      include: [{ model: Release, as: 'release', attributes: ['title', 'catalog_no'] }],
+      order: [[orderColumn, orderDir]],
+      limit: pageSize,
+      offset
+    });
+
+    const totalPages = Math.ceil(count / pageSize);
+    res.json({
+      earnings: rows.map((e: any) => ({
+        id: e.id,
+        date_recorded: e.date_recorded,
+        release_title: e.release?.title || '',
+        catalog_no: e.release?.catalog_no || '',
+        description: e.description,
+        type: e.type,
+        amount: parseFloat(e.amount || 0)
+      })),
+      pagination: { current_page: pageNum, total_pages: totalPages, total_count: count, per_page: pageSize, has_next: pageNum < totalPages, has_prev: pageNum > 1 }
+    });
+  } catch (error) {
+    console.error('Get admin earnings list error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAdminRecuperableExpenseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date } = req.query;
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const totalNewRecuperableExpense = await RecuperableExpense.sum('expense_amount', {
+      where: {
+        brand_id: req.user.brand_id,
+        expense_amount: { [require('sequelize').Op.gt]: 0 },
+        date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
+      }
+    }) || 0;
+
+    const totalRecuperatedExpense = await RecuperableExpense.sum('expense_amount', {
+      where: {
+        brand_id: req.user.brand_id,
+        expense_amount: { [require('sequelize').Op.lt]: 0 },
+        date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
+      }
+    }) || 0;
+
+    res.json({
+      total_new_recuperable_expense: totalNewRecuperableExpense,
+      total_recuperated_expense: Math.abs(totalRecuperatedExpense)
+    });
+  } catch (error) {
+    console.error('Get admin recuperable expense summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAdminPaymentsRoyaltiesArtists = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date, page = '1', limit = '10', sortBy, sortDirection, artist_name } = req.query;
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+
+    const artistWhere: any = { brand_id: req.user.brand_id };
+    if (artist_name && artist_name !== '') {
+      artistWhere.name = { [require('sequelize').Op.like]: `%${artist_name}%` };
+    }
+
+    const artists = await Artist.findAll({ where: artistWhere });
+
+    const artistSummaries: any[] = [];
+    let overallTotalPayments = 0;
+    let overallTotalRoyalties = 0;
+
+    for (const artist of artists) {
+      const totalPayments = await Payment.sum('amount', {
+        where: { artist_id: artist.id, date_paid: { [require('sequelize').Op.between]: [start_date, end_date] } }
+      }) || 0;
+
+      const totalRoyalties = await Royalty.sum('amount', {
+        where: { artist_id: artist.id, date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] } }
+      }) || 0;
+
+      if (totalPayments > 0 || totalRoyalties > 0) {
+        artistSummaries.push({ artist_id: artist.id, artist_name: artist.name, total_payments: totalPayments, total_royalties: totalRoyalties });
+        overallTotalPayments += totalPayments;
+        overallTotalRoyalties += totalRoyalties;
+      }
+    }
+
+    // Apply sorting
+    const validSortCols = ['artist_name', 'total_payments', 'total_royalties'];
+    if (sortBy && validSortCols.includes(sortBy as string)) {
+      const dir = sortDirection === 'asc' ? 1 : -1;
+      artistSummaries.sort((a, b) => {
+        const aVal = a[sortBy as string];
+        const bVal = b[sortBy as string];
+        if (typeof aVal === 'string') return dir * aVal.localeCompare(bVal);
+        return dir * (aVal - bVal);
+      });
+    }
+
+    const totalCount = artistSummaries.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const offset = (pageNum - 1) * pageSize;
+    const paginatedArtists = artistSummaries.slice(offset, offset + pageSize);
+
+    res.json({
+      artists: paginatedArtists,
+      pagination: { current_page: pageNum, total_pages: totalPages, total_count: totalCount, per_page: pageSize, has_next: pageNum < totalPages, has_prev: pageNum > 1 },
+      overall_total_payments: overallTotalPayments,
+      overall_total_royalties: overallTotalRoyalties
+    });
+  } catch (error) {
+    console.error('Get admin payments royalties artists error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Helper function to send earning notifications (matching PHP logic)
 async function sendEarningNotifications(earning: any, brandId: number, recuperationInfo: any = null) {
   try {
@@ -1993,9 +2172,13 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
       releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.title}%` };
     }
 
-    // Get all releases for the brand
+    // Add artist_name filter (applied post-query)
+    const artistNameFilter = filters.artist_name && filters.artist_name !== '' ? (filters.artist_name as string).toLowerCase() : null;
+
+    // Get all releases for the brand, including their artists
     const releases = await Release.findAll({
-      where: releaseWhere
+      where: releaseWhere,
+      include: [{ model: Artist, as: 'artists', attributes: ['name'], through: { attributes: [] } }]
     });
 
     const releaseExpenses = [];
@@ -2010,10 +2193,18 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
       const recuperableBalance = expenses.reduce((sum, expense) => sum + parseFloat((expense.expense_amount || 0).toString()), 0);
 
       if (recuperableBalance > 0) {
+        const artistNames = (release as any).artists?.map((a: any) => a.name).join(', ') || '';
+
+        // Apply artist_name filter
+        if (artistNameFilter && !artistNames.toLowerCase().includes(artistNameFilter)) {
+          continue;
+        }
+
         const expenseItem = {
           release_id: release.id,
           catalog_no: release.catalog_no,
           title: release.title,
+          artist_name: artistNames,
           remaining_expense: parseFloat(recuperableBalance.toFixed(2))
         };
         
@@ -2033,7 +2224,7 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
 
     // Apply sorting
     if (sortBy && sortDirection) {
-      const validSortColumns = ['catalog_no', 'title', 'remaining_expense'];
+      const validSortColumns = ['catalog_no', 'title', 'artist_name', 'remaining_expense'];
       const validDirections = ['asc', 'desc'];
       
       if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
@@ -2076,6 +2267,129 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
     });
   } catch (error) {
     console.error('Get admin recuperable expenses error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ADMIN RECUPERABLE EXPENSE FLOW (date-filtered, by release)
+export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { start_date, end_date, page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    // Build release where clause for text filters
+    const releaseWhere: any = { brand_id: req.user.brand_id };
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
+    }
+    if (filters.title && filters.title !== '') {
+      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.title}%` };
+    }
+    const artistNameFilter = filters.artist_name && filters.artist_name !== '' ? (filters.artist_name as string).toLowerCase() : null;
+
+    // Get all brand releases with artists
+    const releases = await Release.findAll({
+      where: releaseWhere,
+      include: [{ model: Artist, as: 'artists', attributes: ['name'], through: { attributes: [] } }]
+    });
+
+    const flowItems = [];
+    let totalNewExpense = 0;
+    let totalRecuperatedExpense = 0;
+
+    for (const release of releases) {
+      // Get expenses for this release within the date range
+      const expenses = await RecuperableExpense.findAll({
+        where: {
+          release_id: release.id,
+          date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
+        }
+      });
+
+      if (expenses.length === 0) continue;
+
+      const newExpense = expenses
+        .filter(e => parseFloat((e.expense_amount || 0).toString()) > 0)
+        .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0);
+
+      const recuperatedExpense = Math.abs(
+        expenses
+          .filter(e => parseFloat((e.expense_amount || 0).toString()) < 0)
+          .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0)
+      );
+
+      if (newExpense === 0 && recuperatedExpense === 0) continue;
+
+      const artistNames = (release as any).artists?.map((a: any) => a.name).join(', ') || '';
+
+      if (artistNameFilter && !artistNames.toLowerCase().includes(artistNameFilter)) {
+        continue;
+      }
+
+      flowItems.push({
+        release_id: release.id,
+        catalog_no: release.catalog_no,
+        title: release.title,
+        artist_name: artistNames,
+        new_expense: parseFloat(newExpense.toFixed(2)),
+        recuperated_expense: parseFloat(recuperatedExpense.toFixed(2)),
+        net_change: parseFloat((newExpense - recuperatedExpense).toFixed(2))
+      });
+
+      totalNewExpense += newExpense;
+      totalRecuperatedExpense += recuperatedExpense;
+    }
+
+    // Apply sorting
+    if (sortBy && sortDirection) {
+      const validSortColumns = ['catalog_no', 'title', 'artist_name', 'new_expense', 'recuperated_expense', 'net_change'];
+      const validDirections = ['asc', 'desc'];
+      if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
+        flowItems.sort((a, b) => {
+          let aValue: any = a[sortBy as keyof typeof a];
+          let bValue: any = b[sortBy as keyof typeof b];
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = (bValue as string).toLowerCase();
+          }
+          return sortDirection === 'desc'
+            ? (aValue < bValue ? 1 : aValue > bValue ? -1 : 0)
+            : (aValue > bValue ? 1 : aValue < bValue ? -1 : 0);
+        });
+      }
+    }
+
+    // Apply pagination
+    const totalRecords = flowItems.length;
+    const paginatedItems = flowItems.slice(offset, offset + pageSize);
+    const totalPages = Math.ceil(totalRecords / pageSize);
+
+    res.json({
+      data: paginatedItems,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: totalRecords,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      },
+      total_new_expense: parseFloat(totalNewExpense.toFixed(2)),
+      total_recuperated_expense: parseFloat(totalRecuperatedExpense.toFixed(2))
+    });
+  } catch (error) {
+    console.error('Get admin recuperable expense flow error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

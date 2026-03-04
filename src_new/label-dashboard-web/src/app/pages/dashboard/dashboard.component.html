@@ -16,7 +16,7 @@
   <!-- Error state -->
   <div *ngIf="error" class="alert alert-danger" role="alert">
     <i class="fa fa-exclamation-triangle"></i> {{ error }}
-    <button class="btn btn-sm btn-outline-danger ml-2" (click)="loadDashboardData()">
+    <button class="btn btn-sm btn-danger ml-2" (click)="loadDashboardData()">
       <i class="fas fa-sync"></i> Retry
     </button>
   </div>
@@ -28,82 +28,112 @@
       <h1 class="welcome-greeting">
         Good {{ getTimeOfDay() }}, <span class="welcome-name">{{ userFirstName }}! ✨</span>
       </h1>
-      <p class="welcome-date">{{ today | date:'EEEE, MMMM d, y' }}</p>
+      <p class="welcome-subtitle">This is your <strong>Music</strong> dashboard.</p>
     </div>
 
     <!-- Quick Menu + Stats Row -->
     <div class="row mb-4">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-9 col-md-12 mb-3 mb-lg-0">
+      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
         <div class="row">
-          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
-            <a routerLink="/music/releases/new" class="quick-menu-card">
-              <div class="quick-menu-icon">
+          <div class="col-12 col-sm-6 mb-3 mb-sm-0">
+            <a routerLink="/music/releases/new" class="quick-menu-card quick-menu-card-primary">
+              <div class="quick-menu-icon-wrap">
                 <i class="fas fa-upload"></i>
               </div>
-              <span class="quick-menu-label">Submit a Release</span>
+              <div class="quick-menu-footer">
+                <div>
+                  <div class="quick-menu-label">Submit a Release</div>
+                  <div class="quick-menu-sublabel">Distribute new music across all platforms</div>
+                </div>
+                <span class="quick-menu-arrow">↗</span>
+              </div>
             </a>
           </div>
-          <div class="col-lg-4 col-md-4 col-sm-6 mb-3 mb-lg-0">
+          <div class="col-6 col-sm-3">
             <a routerLink="/artist/profile" class="quick-menu-card">
-              <div class="quick-menu-icon">
+              <div class="quick-menu-icon-wrap">
                 <i class="fas fa-user-edit"></i>
               </div>
-              <span class="quick-menu-label">Update Artist Profile</span>
+              <div class="quick-menu-footer">
+                <div>
+                  <div class="quick-menu-label">Update Profile</div>
+                  <div class="quick-menu-sublabel">Edit bio, links &amp; press photos</div>
+                </div>
+                <span class="quick-menu-arrow">↗</span>
+              </div>
             </a>
           </div>
-          <div class="col-lg-4 col-md-4 col-sm-12 mb-3 mb-lg-0">
+          <div class="col-6 col-sm-3">
             <a routerLink="/financial/summary" class="quick-menu-card">
-              <div class="quick-menu-icon">
+              <div class="quick-menu-icon-wrap">
                 <i class="fas fa-chart-pie"></i>
               </div>
-              <span class="quick-menu-label">View Financial Summary</span>
+              <div class="quick-menu-footer">
+                <div>
+                  <div class="quick-menu-label">View Financials</div>
+                  <div class="quick-menu-sublabel">Revenue, royalties &amp; statements</div>
+                </div>
+                <span class="quick-menu-arrow">↗</span>
+              </div>
             </a>
           </div>
         </div>
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-3 col-md-12">
+      <div class="col-lg-4 col-md-12 d-flex flex-column">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
-            <i class="fas fa-users"></i>
             <span class="stats-compact-value">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
-            <span class="stats-compact-label">Artists</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-users"></i>
+              <span class="stats-compact-label">Artists</span>
+            </div>
           </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/music/releases">
-            <i class="fas fa-compact-disc"></i>
             <span class="stats-compact-value">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
-            <span class="stats-compact-label">Releases</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-compact-disc"></i>
+              <span class="stats-compact-label">Releases</span>
+            </div>
           </div>
           <div class="stats-compact-item"
                [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
                (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
-            <i class="fas fa-music"></i>
+            <img class="stats-compact-cover"
+                 [src]="getCoverArtUrl(dashboardData.stats?.latestRelease?.cover_art)"
+                 [alt]="dashboardData.stats?.latestRelease?.title || 'Latest release'">
             <span class="stats-compact-value stats-compact-value-text">
               {{ dashboardData.stats?.latestRelease?.title || '—' }}
             </span>
-            <span class="stats-compact-label">Latest</span>
+            <div class="stats-compact-meta">
+              <i class="fas fa-music"></i>
+              <span class="stats-compact-label">Latest</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Dashboard widgets -->
-    <div class="row">
-      <!-- Latest releases -->
-      <div class="col-lg-4 mb-4 mb-lg-0">
+    <!-- Row 1: Latest releases + Release Pipeline -->
+    <div class="row mb-4">
+      <div class="col-lg-6 mb-4 mb-lg-0">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
+      <div class="col-lg-6">
+        <app-release-pipeline [stages]="dashboardData.releasePipeline || []"></app-release-pipeline>
+      </div>
+    </div>
 
-      <!-- Top earning releases -->
-      <div class="col-lg-4 mb-4 mb-lg-0">
+    <!-- Row 2: Top earning releases + Balance summary -->
+    <div class="row">
+      <div class="col-lg-8 mb-4 mb-lg-0">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
-
-      <!-- Balance summary -->
       <div class="col-lg-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>

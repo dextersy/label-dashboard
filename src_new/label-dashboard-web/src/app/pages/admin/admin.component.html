@@ -25,6 +25,16 @@
           <app-balance-summary-tab></app-balance-summary-tab>
         </div>
 
+        <!-- Reports - Payments & Royalties Tab -->
+        <div *ngIf="activeTab === 'reports-payments-royalties'">
+          <app-payments-royalties-tab></app-payments-royalties-tab>
+        </div>
+
+        <!-- Reports - Recuperable Expense Balance Tab -->
+        <div *ngIf="activeTab === 'reports-recuperable-expense-balance'">
+          <app-recuperable-expense-tab></app-recuperable-expense-tab>
+        </div>
+
         <!-- Tools - Email Logs Tab -->
         <div *ngIf="activeTab === 'tools-email-logs'">
           <app-tools-tab></app-tools-tab>

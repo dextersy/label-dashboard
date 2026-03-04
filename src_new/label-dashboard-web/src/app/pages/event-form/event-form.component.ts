@@ -9,11 +9,13 @@ import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { EventPublishedService } from '../../services/event-published.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
-import { EventSelectionComponent } from '../../components/events/event-selection/event-selection.component';
-import { VenueAutocompleteComponent, VenueSelection } from '../../components/events/venue-autocomplete/venue-autocomplete.component';
-import { TicketTypesComponent } from '../../components/events/ticket-types/ticket-types.component';
+import { EventSelectionComponent } from '../events/components/event-selection/event-selection.component';
+import { VenueAutocompleteComponent, VenueSelection } from '../events/components/venue-autocomplete/venue-autocomplete.component';
+import { TicketTypesComponent } from '../events/components/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
+import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
+import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 
 export interface TicketType {
   id?: number;
@@ -24,6 +26,7 @@ export interface TicketType {
   start_date?: string | null;
   end_date?: string | null;
   disabled?: boolean;
+  special_instructions?: string | null;
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
@@ -51,7 +54,9 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner';
     EventSelectionComponent,
     VenueAutocompleteComponent,
     TicketTypesComponent,
-    QuillModule
+    QuillModule,
+    InPageNavComponent,
+    FloatingActionBarComponent
   ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
@@ -65,6 +70,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   isAdmin = false;
   pinRefreshed = false;
   activeSection: EventFormSection = 'details';
+  draftExpanded = false;
   availableEvents: Event[] = [];
   
   // Form data
@@ -274,6 +280,22 @@ export class EventFormComponent implements OnInit, OnDestroy {
     
     // Add default ticket type for new events
     this.ticketTypes = [createDefaultTicketType()];
+  }
+
+  get navTabs(): InPageNavTab[] {
+    const tabs: InPageNavTab[] = [
+      { id: 'details', label: 'Details', icon: 'fa fa-info-circle' },
+      { id: 'pricing', label: 'Pricing', icon: 'fa fa-ticket' },
+      { id: 'purchase', label: 'Buy Page', icon: 'fa fa-shopping-cart' },
+    ];
+    if (!this.isEventDraft()) {
+      tabs.push({ id: 'scanner', label: 'Scanner', icon: 'fa fa-qrcode' });
+    }
+    return tabs;
+  }
+
+  onNavTabChange(id: string): void {
+    this.setActiveSection(id as EventFormSection);
   }
 
   setActiveSection(section: EventFormSection): void {
@@ -776,7 +798,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
     const ticketTypesForApi = this.ticketTypes.map(tt => ({
       ...tt,
       start_date: tt.start_date ? new Date(tt.start_date).toISOString() : null,
-      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null
+      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null,
+      special_instructions: tt.special_instructions ?? null
     }));
 
     const formData: any = {
@@ -845,7 +868,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
     const ticketTypesForApi = this.ticketTypes.map(tt => ({
       ...tt,
       start_date: tt.start_date ? new Date(tt.start_date).toISOString() : null,
-      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null
+      end_date: tt.end_date ? new Date(tt.end_date).toISOString() : null,
+      special_instructions: tt.special_instructions ?? null
     }));
 
     const eventData: any = {

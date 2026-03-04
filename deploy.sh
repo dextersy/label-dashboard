@@ -47,6 +47,28 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# ── Timing ───────────────────────────────────────────────────────────────────
+DEPLOY_START=$(date +%s)
+PHASE_START=0
+declare -a PHASE_NAMES=()
+declare -a PHASE_DURATIONS=()
+
+format_duration() {
+    local secs=$1
+    local mins=$((secs / 60))
+    local rem=$((secs % 60))
+    if [ "$mins" -gt 0 ]; then echo "${mins}m ${rem}s"; else echo "${rem}s"; fi
+}
+
+start_phase() { PHASE_START=$(date +%s); }
+
+end_phase() {
+    local name=$1
+    PHASE_DURATIONS+=("$(( $(date +%s) - PHASE_START ))")
+    PHASE_NAMES+=("$name")
+}
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/deploy.config"
@@ -106,6 +128,7 @@ check_directory "$SCRIPT_DIR/src_new/label-dashboard-api" "API"
 check_directory "$SCRIPT_DIR/src_new/label-dashboard-web" "Web"
 
 # Build API
+start_phase
 if [ "$SKIP_BUILD" = true ]; then
     print_warning "Skipping API build (--skip-build flag specified)"
     cd "$SCRIPT_DIR/src_new/label-dashboard-api"
@@ -113,6 +136,7 @@ if [ "$SKIP_BUILD" = true ]; then
         print_error "API dist directory not found and build was skipped. Please build first or run without --skip-build"
         exit 1
     fi
+    end_phase "Build: API (skipped)"
 else
     print_status "Building API..."
     cd "$SCRIPT_DIR/src_new/label-dashboard-api"
@@ -138,9 +162,11 @@ else
     fi
 
     print_success "API build completed"
+    end_phase "Build: API"
 fi
 
 # Build Web
+start_phase
 if [ "$SKIP_BUILD" = true ]; then
     print_warning "Skipping Web build (--skip-build flag specified)"
     cd "$SCRIPT_DIR/src_new/label-dashboard-web"
@@ -148,6 +174,7 @@ if [ "$SKIP_BUILD" = true ]; then
         print_error "Web dist-prod directory not found and build was skipped. Please build first or run without --skip-build"
         exit 1
     fi
+    end_phase "Build: Web (skipped)"
 else
     print_status "Building Web application..."
     cd "$SCRIPT_DIR/src_new/label-dashboard-web"
@@ -181,12 +208,12 @@ else
         print_warning "To fix this, set GOOGLE_MAPS_API_KEY environment variable or add GOOGLE_MAPS_API_KEY_CONFIG to deploy.config"
     else
         print_status "Using Google Maps API key from $GOOGLE_MAPS_API_KEY_SOURCE"
-        
+
         # Create production environment file from template
         if [ -f "src/environments/environment.prod.example.ts" ]; then
             print_status "Creating production environment file from template..."
             cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
-            
+
             # Replace the placeholder with actual API key
             sed -i "s/YOUR_PRODUCTION_GOOGLE_PLACES_API_KEY_HERE/$GOOGLE_MAPS_API_KEY/g" src/environments/environment.prod.ts
             print_success "Environment file configured with API key"
@@ -211,6 +238,7 @@ else
     fi
 
     print_success "Web build completed"
+    end_phase "Build: Web"
 fi
 
 # Function to clean directory on server
@@ -238,38 +266,27 @@ EOF
     fi
 }
 
-# Function to upload files via SFTP
+# Function to upload files via tar piped over SSH (faster than SFTP for many files)
+# Compresses locally and streams over a single SSH connection
 upload_files() {
     local source_dir=$1
     local target_dir=$2
     local description=$3
-    
+
     print_status "Uploading $description to $target_dir..."
-    
-    # Create SFTP batch file
-    local sftp_batch=$(mktemp)
-    
-    # SFTP commands
-    cat > "$sftp_batch" << EOF
--mkdir $target_dir
-put -r $source_dir/* $target_dir/
-quit
-EOF
-    
-    # Execute SFTP upload
-    if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+
+    if tar czf - -C "$source_dir" . | \
+        ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+            "$SFTP_USER@$PRODUCTION_HOST" "tar xzf - -C $target_dir"; then
         print_success "$description uploaded successfully"
     else
         print_error "Failed to upload $description"
-        rm -f "$sftp_batch"
         exit 1
     fi
-    
-    # Clean up
-    rm -f "$sftp_batch"
 }
 
 # Clean server directories before upload
+start_phase
 clean_directory "$BACKEND_DEPLOY_PATH" "API server"
 clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
 
@@ -289,34 +306,27 @@ else
     print_warning "Failed to activate maintenance mode (non-critical)"
 fi
 rm -f "$sftp_batch"
+end_phase "Prepare: Clean & maintenance mode"
 
 # Phase 1: Upload migration setup with config.js for Sequelize CLI
+start_phase
 cd "$SCRIPT_DIR/src_new/label-dashboard-api"
 print_status "Phase 1: Uploading migration setup..."
-sftp_batch=$(mktemp)
-cat > "$sftp_batch" << EOF
-put package.json $BACKEND_DEPLOY_PATH/
-put package-lock.json $BACKEND_DEPLOY_PATH/
-put .sequelizerc $BACKEND_DEPLOY_PATH/
--mkdir $BACKEND_DEPLOY_PATH/config
-put -r config/* $BACKEND_DEPLOY_PATH/config/
--mkdir $BACKEND_DEPLOY_PATH/migrations
-put -r migrations/* $BACKEND_DEPLOY_PATH/migrations/
-quit
-EOF
-
-sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
-rm -f "$sftp_batch"
+tar czf - package.json package-lock.json .sequelizerc config migrations | \
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+        "$SFTP_USER@$PRODUCTION_HOST" "cd $BACKEND_DEPLOY_PATH && tar xzf -"
+end_phase "Phase 1: Upload migration setup"
 
 # Phase 2: Run database migrations on server using Sequelize CLI
+start_phase
 print_status "Phase 2: Running database migrations on server..."
 ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
     echo "Navigating to API directory for migrations..."
     cd $BACKEND_DEPLOY_PATH
-    
+
     echo "Installing dependencies for migrations..."
     npm install --production
-    
+
     echo "Running database migrations..."
     NODE_ENV=production npx sequelize-cli db:migrate
 EOF
@@ -327,8 +337,10 @@ if [ $? -ne 0 ]; then
 fi
 
 print_success "Database migrations completed successfully"
+end_phase "Phase 2: Database migrations"
 
 # Phase 3: Remove config.js to avoid conflicts with compiled API
+start_phase
 print_status "Phase 3: Removing config.js to avoid conflicts..."
 ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
     echo "Removing config.js to prevent conflicts with compiled API..."
@@ -337,21 +349,25 @@ ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST
 EOF
 
 print_success "Conflicting config files removed"
+end_phase "Phase 3: Config conflicts resolved"
 
 # Phase 4: Upload compiled API service files
+start_phase
 print_status "Phase 4: Uploading compiled API service files..."
 upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
+end_phase "Phase 4: Upload API dist files"
 
 # Phase 5: Restart PM2 application with compiled API
+start_phase
 print_status "Phase 5: Restarting PM2 application: $PM2_APP_NAME"
 
 ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
     echo "Navigating to API directory..."
     cd $BACKEND_DEPLOY_PATH
-    
+
     echo "Restarting PM2 application: $PM2_APP_NAME"
     pm2 restart $PM2_APP_NAME || pm2 start app.js --name $PM2_APP_NAME
-    
+
     echo "Checking PM2 status..."
     pm2 status
 EOF
@@ -362,39 +378,32 @@ if [ $? -ne 0 ]; then
 fi
 
 print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted successfully"
+end_phase "Phase 5: PM2 restart"
 
 # Phase 6: Upload Web files (keeping maintenance.html)
+start_phase
 print_status "Phase 6: Deploying frontend application..."
 cd "$SCRIPT_DIR/src_new/label-dashboard-web"
 
-# Upload all files except .htaccess first (preserve maintenance.html)
-sftp_batch=$(mktemp)
-cat > "$sftp_batch" << EOF
-put -r dist-prod/browser/* $FRONTEND_DEPLOY_PATH/
-quit
-EOF
-
-if sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"; then
+# Upload all files except .htaccess first via tar (preserves maintenance mode during transfer)
+if tar czf - -C dist-prod/browser --exclude='.htaccess' . | \
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+        "$SFTP_USER@$PRODUCTION_HOST" "tar xzf - -C $FRONTEND_DEPLOY_PATH"; then
     print_success "Production files uploaded"
 else
     print_error "Failed to upload production files"
     exit 1
 fi
-rm -f "$sftp_batch"
 
 # Replace .htaccess last to switch from maintenance mode to production
 print_status "Switching from maintenance mode to production..."
-sftp_batch=$(mktemp)
-cat > "$sftp_batch" << EOF
-put dist-prod/browser/.htaccess $FRONTEND_DEPLOY_PATH/
-quit
-EOF
-
-sftp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no -b "$sftp_batch" "$SFTP_USER@$PRODUCTION_HOST"
-rm -f "$sftp_batch"
+scp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+    dist-prod/browser/.htaccess "$SFTP_USER@$PRODUCTION_HOST:$FRONTEND_DEPLOY_PATH/.htaccess"
 print_success "✅ Phase 6: Frontend application deployed and live!"
+end_phase "Phase 6: Deploy frontend"
 
 # Phase 7: Final deployment tasks
+start_phase
 print_status "Phase 7: Completing final deployment tasks..."
 
 # Upload tmp folder if it exists
@@ -471,15 +480,15 @@ fi
 rm -f "$sftp_batch"
 
 print_success "✅ Phase 7: Final deployment tasks completed"
+end_phase "Phase 7: Final tasks"
 
 # Final deployment summary
-print_success "🎉 7-Phase Deployment completed successfully!"
-print_success "✅ Phase 1: Migration setup uploaded"
-print_success "✅ Phase 2: Database migrations executed"
-print_success "✅ Phase 3: Config conflicts resolved"
-print_success "✅ Phase 4: API service deployed to $BACKEND_DEPLOY_PATH"
-print_success "✅ Phase 5: PM2 application '$PM2_APP_NAME' restarted"
-print_success "✅ Phase 6: Frontend application deployed to $FRONTEND_DEPLOY_PATH"
-print_success "✅ Phase 7: Final deployment tasks completed"
-
-print_status "Deployment finished!"
+DEPLOY_TOTAL=$(( $(date +%s) - DEPLOY_START ))
+echo ""
+print_success "🎉 Deployment completed in $(format_duration $DEPLOY_TOTAL)"
+echo ""
+for i in "${!PHASE_NAMES[@]}"; do
+    print_success "  ✅ ${PHASE_NAMES[$i]} — $(format_duration ${PHASE_DURATIONS[$i]})"
+done
+echo ""
+print_status "Total deployment time: $(format_duration $DEPLOY_TOTAL)"

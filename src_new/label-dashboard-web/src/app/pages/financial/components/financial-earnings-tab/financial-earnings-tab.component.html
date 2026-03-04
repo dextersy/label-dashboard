@@ -1,0 +1,32 @@
+<!-- Date Range Filter -->
+<div class="row mb-3">
+  <div class="col-md-12">
+    <app-date-range-filter 
+      [compact]="true"
+      [loading]="loading"
+      (dateRangeChange)="onDateRangeChange($event)"
+      (refresh)="onRefresh()">
+    </app-date-range-filter>
+  </div>
+</div>
+
+<app-paginated-table 
+  title="Earnings History"
+  [data]="earnings"
+  [pagination]="pagination"
+  [loading]="loading"
+  [columns]="earningsColumns"
+  [showSortableHeaders]="true"
+  [sortInfo]="earningsSort"
+  [responsiveMode]="'financial'"
+  [headerActions]="headerActions"
+  (pageChange)="onPageChange($event)"
+  (filtersChange)="filtersChange.emit($event)"
+  (sortChange)="sortChange.emit($event)">
+  
+  
+  <ng-template #tableContent let-data>
+    <app-earnings-table [earnings]="data" [showHeader]="true"></app-earnings-table>
+  </ng-template>
+  
+</app-paginated-table>
