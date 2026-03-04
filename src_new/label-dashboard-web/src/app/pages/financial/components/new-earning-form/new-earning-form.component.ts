@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FinancialService } from '../../../services/financial.service';
+import { FinancialService } from '../../../../services/financial.service';
 
 @Component({
     selector: 'app-new-earning-form',

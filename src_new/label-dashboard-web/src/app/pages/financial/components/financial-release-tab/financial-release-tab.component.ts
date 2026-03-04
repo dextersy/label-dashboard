@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ReleaseInfo } from '../../financial.component';
 import { ReleaseExpensesDialogComponent } from '../release-expenses-dialog/release-expenses-dialog.component';
 import { AddExpenseDialogComponent } from '../add-expense-dialog/add-expense-dialog.component';
-import { FinancialService } from '../../../services/financial.service';
-import { NotificationService } from '../../../services/notification.service';
+import { FinancialService } from '../../../../services/financial.service';
+import { NotificationService } from '../../../../services/notification.service';
 
 interface SongCollaboratorRoyalty {
   id: number;
