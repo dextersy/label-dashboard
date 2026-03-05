@@ -185,6 +185,32 @@
   align-items: stretch;
 }
 
+.stats-compact-group {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+}
+
+.stats-compact-caret {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d5db;
+  font-size: 1.3rem;
+  padding: 0 0.1rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.stats-group-divider {
+  width: 2px;
+  background: #e5e7eb;
+  margin: 0.5rem 0.5rem;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
 .stats-compact-item {
   display: flex;
   flex-direction: column;
@@ -197,16 +223,17 @@
   text-align: center;
   gap: 0.4rem;
 
-  & + .stats-compact-item {
-    border-left: 1px solid #eee;
-  }
-
   &.stats-compact-item-clickable {
     cursor: pointer;
 
     &:hover {
       background-color: #f8f9fa;
     }
+  }
+
+  i {
+    font-size: 0.85rem;
+    color: #bbb;
   }
 
   .stats-compact-value {
@@ -221,23 +248,12 @@
     }
   }
 
-  .stats-compact-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-
-    i {
-      font-size: 0.8rem;
-      color: #999;
-    }
-
-    .stats-compact-label {
-      font-size: 0.7rem;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      font-weight: 500;
-    }
+  .stats-compact-label {
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 500;
   }
 }
 
@@ -264,6 +280,10 @@
 
     .stats-compact-value.stats-compact-value-currency {
       font-size: 1.1rem;
+    }
+
+    i {
+      font-size: 1rem;
     }
   }
 }
