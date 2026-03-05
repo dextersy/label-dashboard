@@ -73,7 +73,7 @@ SongCollaborator.init(
     streaming_royalty_percentage: {
       type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
-      defaultValue: 0.500,
+      defaultValue: 0,
     },
     streaming_royalty_type: {
       type: DataTypes.ENUM('Revenue', 'Profit'),
@@ -83,7 +83,7 @@ SongCollaborator.init(
     sync_royalty_percentage: {
       type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
-      defaultValue: 0.500,
+      defaultValue: 0,
     },
     sync_royalty_type: {
       type: DataTypes.ENUM('Revenue', 'Profit'),
@@ -93,7 +93,7 @@ SongCollaborator.init(
     download_royalty_percentage: {
       type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
-      defaultValue: 0.500,
+      defaultValue: 0,
     },
     download_royalty_type: {
       type: DataTypes.ENUM('Revenue', 'Profit'),
@@ -103,7 +103,7 @@ SongCollaborator.init(
     physical_royalty_percentage: {
       type: DataTypes.DECIMAL(4, 3),
       allowNull: false,
-      defaultValue: 0.200,
+      defaultValue: 0,
     },
     physical_royalty_type: {
       type: DataTypes.ENUM('Revenue', 'Profit'),

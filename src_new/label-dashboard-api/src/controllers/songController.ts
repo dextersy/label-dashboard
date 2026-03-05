@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
+import { Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand, ReleaseArtist } from '../models';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 import { analyzeAudio } from '../utils/audioAnalyzer';
 import { Readable } from 'stream';
@@ -203,21 +203,36 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       track_number: nextTrackNumber
     });
 
-    // Auto-add release artists as collaborators (non-editable)
+    // Load all release_artist rows for this release into a map (artist_id → record)
+    const raRows = await ReleaseArtist.findAll({ where: { release_id: Number(release_id) } });
+    const raMap = new Map(raRows.map(ra => [ra.artist_id, ra]));
+
+    // Auto-add release artists as collaborators, seeding royalty splits from release_artist
     const releaseArtists = (release as any).artists || [];
     for (const artist of releaseArtists) {
+      const ra = raMap.get(Number(artist.id));
       await SongCollaborator.create({
         song_id: song.id!,
-        artist_id: Number(artist.id)
+        artist_id: Number(artist.id),
+        ...(ra ? {
+          streaming_royalty_percentage: ra.streaming_royalty_percentage,
+          streaming_royalty_type:       ra.streaming_royalty_type,
+          sync_royalty_percentage:      ra.sync_royalty_percentage,
+          sync_royalty_type:            ra.sync_royalty_type,
+          download_royalty_percentage:  ra.download_royalty_percentage,
+          download_royalty_type:        ra.download_royalty_type,
+          physical_royalty_percentage:  ra.physical_royalty_percentage,
+          physical_royalty_type:        ra.physical_royalty_type,
+        } : {})
       });
     }
 
-    // Add additional collaborators if provided (excluding duplicates)
+    // Add additional collaborators if provided (excluding duplicates).
+    // These are not release artists so they have no release_artist entry — splits default to 0.
     if (collaborators && Array.isArray(collaborators)) {
       const releaseArtistIds = releaseArtists.map((a: any) => Number(a.id));
       for (const collab of collaborators) {
         const collabArtistId = Number(collab.artist_id);
-        // Skip if this artist is already added as a release artist
         if (!releaseArtistIds.includes(collabArtistId)) {
           await SongCollaborator.create({
             song_id: song.id!,
@@ -391,11 +406,26 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
         // Delete existing collaborators
         await SongCollaborator.destroy({ where: { song_id: id } });
 
-        // Re-add release artists (always present)
+        // Load all release_artist rows for this release into a map (artist_id → record)
+        const raRows = await ReleaseArtist.findAll({ where: { release_id: Number(release.id) } });
+        const raMap = new Map(raRows.map(ra => [ra.artist_id, ra]));
+
+        // Re-add release artists, seeding royalty splits from release_artist
         for (const artist of releaseArtists) {
+          const ra = raMap.get(Number(artist.id));
           await SongCollaborator.create({
             song_id: Number(id),
-            artist_id: Number(artist.id)
+            artist_id: Number(artist.id),
+            ...(ra ? {
+              streaming_royalty_percentage: ra.streaming_royalty_percentage,
+              streaming_royalty_type:       ra.streaming_royalty_type,
+              sync_royalty_percentage:      ra.sync_royalty_percentage,
+              sync_royalty_type:            ra.sync_royalty_type,
+              download_royalty_percentage:  ra.download_royalty_percentage,
+              download_royalty_type:        ra.download_royalty_type,
+              physical_royalty_percentage:  ra.physical_royalty_percentage,
+              physical_royalty_type:        ra.physical_royalty_type,
+            } : {})
           });
         }
       } else {
@@ -403,11 +433,11 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
         await SongCollaborator.destroy({ where: { song_id: id } });
       }
 
-      // Add additional collaborators (excluding duplicates)
+      // Add additional collaborators (excluding duplicates).
+      // These are not release artists so they have no release_artist entry — splits default to 0.
       if (Array.isArray(collaborators)) {
         for (const collab of collaborators) {
           const collabArtistId = Number(collab.artist_id);
-          // Skip if this artist is already added as a release artist
           if (!releaseArtistIds.includes(collabArtistId)) {
             await SongCollaborator.create({
               song_id: Number(id),
