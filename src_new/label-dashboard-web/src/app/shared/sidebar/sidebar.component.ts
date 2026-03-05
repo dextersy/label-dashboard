@@ -702,7 +702,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   onWorkspaceIndicatorClick(): void {
-    if (this.isCollapsed && !this.isMobileView) {
+    if (this.isCollapsed && !this.isMobileView && this.availableWorkspaces.length > 1) {
       this.openWorkspaceSwitchModal();
     }
   }

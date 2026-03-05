@@ -6,13 +6,13 @@
     <!-- Workspace watermark -->
     <div class="workspace-indicator"
          *ngIf="currentWorkspace"
-         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView"
+         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaces.length > 1"
          (click)="onWorkspaceIndicatorClick()"
-         [title]="isCollapsed && !isMobileView ? 'Switch workspace' : ''">
+         [title]="isCollapsed && !isMobileView && availableWorkspaces.length > 1 ? 'Switch workspace' : ''">
       <i [class]="getWorkspaceIcon(currentWorkspace)" class="workspace-icon"></i>
       <span class="workspace-name">{{ getWorkspaceLabel(currentWorkspace) }}</span>
     </div>
-    <button class="workspace-switch-btn" (click)="openWorkspaceSwitchModal()">
+    <button class="workspace-switch-btn" *ngIf="availableWorkspaces.length > 1" (click)="openWorkspaceSwitchModal()">
       <i class="fas fa-exchange-alt"></i> Switch workspace
     </button>
 
