@@ -87,59 +87,16 @@
 
     <!-- Payment History -->
     <div class="col-lg-8">
-      <div class="card h-100">
-        <div class="card-header">
-          <h5 class="mb-0">Payment History</h5>
-        </div>
-        <div class="card-body">
-          <div *ngIf="payments.length === 0" class="text-center text-muted">
-            <i class="fas fa-money-bill-wave fa-3x mb-3"></i>
-            <p>No payments recorded yet.</p>
-          </div>
-          <div *ngIf="payments.length > 0">
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Payment Method</th>
-                    <th>Reference</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let payment of payments">
-                    <td>{{ payment.date_paid | date:'MMM dd, yyyy' }}</td>
-                    <td>{{ payment.description || 'Payment received' }}</td>
-                    <td [ngClass]="getAmountClass(payment.amount)">₱{{ payment.amount | number:'1.2-2' }}</td>
-                    <td>{{ formatPaymentMethod(payment) }}</td>
-                    <td>{{ payment.reference_number || 'N/A' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Pagination -->
-            <nav *ngIf="paymentsResponse?.pagination && (paymentsResponse?.pagination?.total_pages || 0) > 1">
-              <ul class="pagination justify-content-center">
-                <li class="page-item" [class.disabled]="!paymentsResponse?.pagination?.has_prev">
-                  <button class="page-link" (click)="loadPayments((paymentsResponse?.pagination?.current_page || 1) - 1)"
-                          [disabled]="!paymentsResponse?.pagination?.has_prev">Previous</button>
-                </li>
-                <li class="page-item" *ngFor="let page of getPageNumbers()"
-                    [class.active]="page === paymentsResponse?.pagination?.current_page">
-                  <button class="page-link" (click)="loadPayments(page)">{{ page }}</button>
-                </li>
-                <li class="page-item" [class.disabled]="!paymentsResponse?.pagination?.has_next">
-                  <button class="page-link" (click)="loadPayments((paymentsResponse?.pagination?.current_page || 1) + 1)"
-                          [disabled]="!paymentsResponse?.pagination?.has_next">Next</button>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-      </div>
+      <app-paginated-table
+        title="Payment History"
+        [data]="payments"
+        [columns]="paymentColumns"
+        [pagination]="paymentsResponse?.pagination || null"
+        [loading]="paymentsLoading"
+        [showSortableHeaders]="true"
+        [responsiveMode]="'card'"
+        (pageChange)="onPaymentsPageChange($event)">
+      </app-paginated-table>
     </div>
   </div>
 

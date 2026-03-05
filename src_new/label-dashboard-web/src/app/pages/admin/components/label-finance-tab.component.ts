@@ -64,6 +64,15 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   paymentMethods: LabelPaymentMethod[] = [];
   payments: LabelPayment[] = [];
   paymentsResponse: LabelPaymentsResponse | null = null;
+  paymentsLoading = false;
+
+  readonly paymentColumns: TableColumn[] = [
+    { key: 'date_paid', label: 'Date', sortable: false, formatter: (item: any) => new Date(item.date_paid).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }), hideDataLabel: true },
+    { key: 'description', label: 'Description', sortable: false, cardHeader: true, formatter: (item: any) => item.description || 'Payment received' , hideDataLabel: true},
+    { key: 'amount', label: 'Amount', sortable: false, align: 'right', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.amount), hideDataLabel: true },
+    { key: 'payment_method', label: 'Payment Method', sortable: false, tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatPaymentMethod(item), hideDataLabel: true },
+    { key: 'reference_number', label: 'Reference', sortable: false, mobileClass: 'mobile-hide', formatter: (item: any) => item.reference_number || 'N/A', hideDataLabel: true },
+  ];
 
   showAddPaymentMethodModal = false;
   newPaymentMethod: any = {}; // Using 'any' to allow bank_selection property
@@ -219,7 +228,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return `₱${(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₱${(Number(value) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   private loadPaymentMethods(): void {
@@ -239,19 +248,26 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   loadPayments(page: number = 1): void {
     if (!this.brandId) return;
 
+    this.paymentsLoading = true;
     this.subscriptions.add(
       this.labelFinanceService.getPayments(this.brandId, page, 10, 'date_paid', 'desc', this.startDate, this.endDate)
         .subscribe({
           next: (response) => {
             this.paymentsResponse = response;
             this.payments = response.payments;
+            this.paymentsLoading = false;
           },
           error: (error) => {
             console.error('Error loading payments:', error);
             this.notificationService.showError('Failed to load payments');
+            this.paymentsLoading = false;
           }
         })
     );
+  }
+
+  onPaymentsPageChange(page: number): void {
+    this.loadPayments(page);
   }
 
   openAddPaymentMethodModal(): void {
@@ -310,31 +326,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   //   // Implementation would go here when delete method is available
   // }
 
-  getPageNumbers(): number[] {
-    if (!this.paymentsResponse?.pagination) return [];
-    
-    const totalPages = this.paymentsResponse.pagination.total_pages;
-    const currentPage = this.paymentsResponse.pagination.current_page;
-    
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    const halfRange = Math.floor(maxPagesToShow / 2);
-    
-    let start = Math.max(1, currentPage - halfRange);
-    let end = Math.min(totalPages, start + maxPagesToShow - 1);
-    
-    if (end - start + 1 < maxPagesToShow) {
-      start = Math.max(1, end - maxPagesToShow + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
-  }
-
-  formatPaymentMethod(payment: LabelPayment): string {
+formatPaymentMethod(payment: LabelPayment): string {
     // Prioritize PaymentMethod data over legacy paid_thru_* fields
     if (payment.paymentMethod) {
       const { type, account_name, account_number_or_email } = payment.paymentMethod;
