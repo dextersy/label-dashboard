@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/shared/artist-selection/artist-selection.component';
+import { ModalToBodyDirective } from '../../directives/modal-to-body.directive';
 import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -29,7 +30,7 @@ interface MenuSection {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent, ModalToBodyDirective],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -59,6 +60,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   currentWorkspace: WorkspaceType = 'music';
   visibleSections: MenuSection[] = [];
   isInitialized = false;
+  availableWorkspaces: WorkspaceType[] = [];
+
+  // Workspace switch modal
+  showWorkspaceSwitchModal = false;
   
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
@@ -354,6 +359,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+        this.availableWorkspaces = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
       })
     );
 
@@ -693,5 +699,31 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   getWorkspaceLabel(workspace: WorkspaceType): string {
     return this.workspaceService.getWorkspaceLabel(workspace);
+  }
+
+  onWorkspaceIndicatorClick(): void {
+    if (this.isCollapsed && !this.isMobileView) {
+      this.openWorkspaceSwitchModal();
+    }
+  }
+
+  openWorkspaceSwitchModal(): void {
+    this.showWorkspaceSwitchModal = true;
+  }
+
+  closeWorkspaceSwitchModal(): void {
+    this.showWorkspaceSwitchModal = false;
+  }
+
+  switchWorkspace(workspace: WorkspaceType): void {
+    this.workspaceService.setWorkspace(workspace);
+    this.closeWorkspaceSwitchModal();
+    this.sidebarService.closeOnMobileNavigation();
+    switch (workspace) {
+      case 'music':     this.router.navigate(['/dashboard']); break;
+      case 'campaigns': this.router.navigate(['/campaigns/dashboard']); break;
+      case 'labels':    this.router.navigate(['/labels/earnings']); break;
+      case 'admin':     this.router.navigate(['/admin/settings']); break;
+    }
   }
 }

@@ -4,10 +4,17 @@
      [style.background]="brandColor">
   <div class="sidebar-wrapper">
     <!-- Workspace watermark -->
-    <div class="workspace-indicator" *ngIf="currentWorkspace">
+    <div class="workspace-indicator"
+         *ngIf="currentWorkspace"
+         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView"
+         (click)="onWorkspaceIndicatorClick()"
+         [title]="isCollapsed && !isMobileView ? 'Switch workspace' : ''">
       <i [class]="getWorkspaceIcon(currentWorkspace)" class="workspace-icon"></i>
       <span class="workspace-name">{{ getWorkspaceLabel(currentWorkspace) }}</span>
     </div>
+    <button class="workspace-switch-btn" (click)="openWorkspaceSwitchModal()">
+      <i class="fas fa-exchange-alt"></i> Switch workspace
+    </button>
 
     <ul class="nav" *ngIf="isInitialized">
       <!-- Iterate through sections -->
@@ -127,7 +134,32 @@
 </div>
 
 <!-- Flyout backdrop (for closing flyout when clicking outside) -->
-<div class="flyout-backdrop" 
+<div class="flyout-backdrop"
      *ngIf="isCollapsed && !isMobileView && flyoutMenu"
      (click)="closeFlyout()">
 </div>
+
+<!-- Workspace Switch Modal -->
+<div class="modal fade show" appModalToBody *ngIf="showWorkspaceSwitchModal" tabindex="-1" style="display: block;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 px-4 pt-4 pb-2">
+        <h5 class="modal-title workspace-switch-modal-title">Switch Workspace</h5>
+        <button type="button" class="btn-close" (click)="closeWorkspaceSwitchModal()"></button>
+      </div>
+      <div class="modal-body px-4 pb-4 pt-2">
+        <div class="workspace-options">
+          <button *ngFor="let ws of availableWorkspaces"
+                  class="workspace-option-btn"
+                  [class.active]="ws === currentWorkspace"
+                  (click)="switchWorkspace(ws)">
+            <i [class]="getWorkspaceIcon(ws)"></i>
+            <span>{{ getWorkspaceLabel(ws) }}</span>
+            <i *ngIf="ws === currentWorkspace" class="fas fa-check ms-auto"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" appModalToBody *ngIf="showWorkspaceSwitchModal"></div>
