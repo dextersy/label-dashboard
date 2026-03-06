@@ -8,16 +8,28 @@ set -e  # Exit on any error
 
 # Parse command line arguments
 SKIP_BUILD=false
+MIGRATIONS_MODE="auto"  # auto | skip | force
 for arg in "$@"; do
     case $arg in
         --skip-build)
             SKIP_BUILD=true
             shift
             ;;
+        --skip-migrations)
+            MIGRATIONS_MODE="skip"
+            shift
+            ;;
+        --force-migrations)
+            MIGRATIONS_MODE="force"
+            shift
+            ;;
         *)
             # Unknown option
-            echo "Usage: $0 [--skip-build]"
-            echo "  --skip-build    Skip the build step for both API and Web applications"
+            echo "Usage: $0 [--skip-build] [--skip-migrations] [--force-migrations]"
+            echo "  --skip-build        Skip the build step for both API and Web applications"
+            echo "  --skip-migrations   Always skip database migrations"
+            echo "  --force-migrations  Always run database migrations"
+            echo "  (default)           Auto-detect: run migrations only if new files exist"
             exit 1
             ;;
     esac
@@ -68,6 +80,35 @@ end_phase() {
     PHASE_NAMES+=("$name")
 }
 # ─────────────────────────────────────────────────────────────────────────────
+
+# Returns 0 (true) if there are pending migrations, 1 (false) if up to date
+has_pending_migrations() {
+    local local_migrations
+    local remote_migrations
+    local_migrations=$(ls "$SCRIPT_DIR/src_new/label-dashboard-api/migrations/" 2>/dev/null | sort | paste -sd,)
+    remote_migrations=$(ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" \
+        "ls $BACKEND_DEPLOY_PATH/migrations/ 2>/dev/null | sort | paste -sd," 2>/dev/null || echo "")
+
+    if [ "$local_migrations" = "$remote_migrations" ]; then
+        return 1  # no new migrations
+    else
+        return 0  # new migrations found
+    fi
+}
+
+# Returns 0 (true) if npm install needs to run, 1 (false) if dependencies are unchanged
+needs_npm_install() {
+    local local_hash remote_hash
+    local_hash=$(md5sum "$SCRIPT_DIR/src_new/label-dashboard-api/package-lock.json" 2>/dev/null | awk '{print $1}')
+    remote_hash=$(ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" \
+        "md5sum $BACKEND_DEPLOY_PATH/package-lock.json 2>/dev/null | awk '{print \$1}'" 2>/dev/null || echo "")
+
+    if [ "$local_hash" = "$remote_hash" ] && [ -n "$local_hash" ]; then
+        return 1  # unchanged
+    else
+        return 0  # install needed
+    fi
+}
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -285,9 +326,39 @@ upload_files() {
     fi
 }
 
+# Both checks must happen BEFORE clean_directory wipes the server state
+RUN_MIGRATIONS=false
+if [ "$MIGRATIONS_MODE" = "force" ]; then
+    print_status "Migrations forced via --force-migrations"
+    RUN_MIGRATIONS=true
+elif [ "$MIGRATIONS_MODE" = "skip" ]; then
+    print_warning "Migrations skipped via --skip-migrations"
+else
+    print_status "Auto-detecting pending migrations..."
+    if has_pending_migrations; then
+        print_status "New migration files detected — migrations will run"
+        RUN_MIGRATIONS=true
+    else
+        print_warning "No new migration files detected — skipping migrations"
+    fi
+fi
+
+RUN_NPM_INSTALL=false
+print_status "Auto-detecting dependency changes..."
+if needs_npm_install; then
+    print_status "package-lock.json changed — npm install will run"
+    RUN_NPM_INSTALL=true
+else
+    print_warning "Dependencies unchanged — skipping npm install"
+fi
+
 # Clean server directories before upload
 start_phase
-clean_directory "$BACKEND_DEPLOY_PATH" "API server"
+# Backend: exclude node_modules from the wipe so it can be reused when dependencies haven't changed
+print_status "Cleaning API server directory (preserving node_modules)..."
+ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" \
+    "find $BACKEND_DEPLOY_PATH -maxdepth 1 -mindepth 1 ! -name 'node_modules' ! -name '.*' -exec rm -rf {} + 2>/dev/null; mkdir -p $BACKEND_DEPLOY_PATH"
+print_success "API server directory cleaned"
 clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
 
 # Deploy maintenance page and .htaccess after cleaning
@@ -308,53 +379,79 @@ fi
 rm -f "$sftp_batch"
 end_phase "Prepare: Clean & maintenance mode"
 
-# Phase 1: Upload migration setup with config.js for Sequelize CLI
-start_phase
-cd "$SCRIPT_DIR/src_new/label-dashboard-api"
-print_status "Phase 1: Uploading migration setup..."
-tar czf - package.json package-lock.json .sequelizerc config migrations | \
-    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
-        "$SFTP_USER@$PRODUCTION_HOST" "cd $BACKEND_DEPLOY_PATH && tar xzf -"
-end_phase "Phase 1: Upload migration setup"
+if [ "$RUN_MIGRATIONS" = true ]; then
+    # Phase 1: Upload migration setup with config.js for Sequelize CLI
+    start_phase
+    cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+    print_status "Phase 1: Uploading migration setup..."
+    tar czf - package.json package-lock.json .sequelizerc config migrations | \
+        ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+            "$SFTP_USER@$PRODUCTION_HOST" "cd $BACKEND_DEPLOY_PATH && tar xzf -"
+    end_phase "Phase 1: Upload migration setup"
 
-# Phase 2: Run database migrations on server using Sequelize CLI
-start_phase
-print_status "Phase 2: Running database migrations on server..."
-ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
-    echo "Navigating to API directory for migrations..."
-    cd $BACKEND_DEPLOY_PATH
+    # Phase 2: Run database migrations on server using Sequelize CLI
+    start_phase
+    print_status "Phase 2: Running database migrations on server..."
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+        echo "Navigating to API directory for migrations..."
+        cd $BACKEND_DEPLOY_PATH
 
-    echo "Installing dependencies for migrations..."
-    npm install --production
+        if [ "$RUN_NPM_INSTALL" = true ]; then
+            echo "Installing dependencies for migrations..."
+            npm install --production
+        else
+            echo "Dependencies unchanged — skipping npm install"
+        fi
 
-    echo "Running database migrations..."
-    NODE_ENV=production npx sequelize-cli db:migrate
+        echo "Running database migrations..."
+        NODE_ENV=production npx sequelize-cli db:migrate
 EOF
 
-if [ $? -ne 0 ]; then
-    print_error "Database migrations failed"
-    exit 1
+    if [ $? -ne 0 ]; then
+        print_error "Database migrations failed"
+        exit 1
+    fi
+
+    print_success "Database migrations completed successfully"
+    end_phase "Phase 2: Database migrations"
+
+    # Phase 3: Remove config.js to avoid conflicts with compiled API
+    start_phase
+    print_status "Phase 3: Removing config.js to avoid conflicts..."
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+        echo "Removing config.js to prevent conflicts with compiled API..."
+        rm -f $BACKEND_DEPLOY_PATH/config/config.js
+        rm -f $BACKEND_DEPLOY_PATH/config/database.js
+EOF
+
+    print_success "Conflicting config files removed"
+    end_phase "Phase 3: Config conflicts resolved"
+else
+    # Migrations skipped — but still need package.json on server to run npm install
+    start_phase
+    print_status "Phases 1-3: Skipping migrations — uploading package files and migrations folder..."
+    cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+    # package.json + package-lock.json: needed for npm install below
+    # migrations/: not needed by npm, but must be present on the server so the
+    #              next deploy's auto-detection can compare filenames correctly
+    tar czf - package.json package-lock.json migrations | \
+        ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+            "$SFTP_USER@$PRODUCTION_HOST" "cd $BACKEND_DEPLOY_PATH && tar xzf -"
+    if [ "$RUN_NPM_INSTALL" = true ]; then
+        ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
+        cd $BACKEND_DEPLOY_PATH
+        npm install --production
+EOF
+    else
+        print_warning "Dependencies unchanged — skipping npm install"
+    fi
+    end_phase "Phases 1-3: Migrations skipped"
 fi
-
-print_success "Database migrations completed successfully"
-end_phase "Phase 2: Database migrations"
-
-# Phase 3: Remove config.js to avoid conflicts with compiled API
-start_phase
-print_status "Phase 3: Removing config.js to avoid conflicts..."
-ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST" << EOF
-    echo "Removing config.js to prevent conflicts with compiled API..."
-    rm -f $BACKEND_DEPLOY_PATH/config/config.js
-    rm -f $BACKEND_DEPLOY_PATH/config/database.js
-EOF
-
-print_success "Conflicting config files removed"
-end_phase "Phase 3: Config conflicts resolved"
 
 # Phase 4: Upload compiled API service files
 start_phase
 print_status "Phase 4: Uploading compiled API service files..."
-upload_files "dist" "$BACKEND_DEPLOY_PATH" "API dist files"
+upload_files "$SCRIPT_DIR/src_new/label-dashboard-api/dist" "$BACKEND_DEPLOY_PATH" "API dist files"
 end_phase "Phase 4: Upload API dist files"
 
 # Phase 5: Restart PM2 application with compiled API
