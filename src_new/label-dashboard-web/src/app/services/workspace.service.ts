@@ -3,6 +3,20 @@ import { BehaviorSubject } from 'rxjs';
 
 export type WorkspaceType = 'music' | 'campaigns' | 'labels' | 'admin';
 
+export interface WorkspaceInfo {
+  type: WorkspaceType;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+const WORKSPACE_CONFIG: Record<WorkspaceType, Omit<WorkspaceInfo, 'type'>> = {
+  music:     { label: 'Music',          icon: 'fas fa-music',              description: 'Artist information, music releases, and financial' },
+  campaigns: { label: 'Campaigns',      icon: 'fas fa-bullhorn',            description: 'Event tickets and fundraisers' },
+  labels:    { label: 'Labels',         icon: 'fas fa-tags',                description: 'Label and sublabel information' },
+  admin:     { label: 'Administration', icon: 'fas fa-cogs',                description: 'System settings and administration' },
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,6 +34,36 @@ export class WorkspaceService {
   setWorkspace(workspace: WorkspaceType): void {
     this.currentWorkspaceSubject.next(workspace);
     this.saveWorkspaceToStorage(workspace);
+  }
+
+  getWorkspaceInfo(workspace: WorkspaceType): WorkspaceInfo {
+    return { type: workspace, ...WORKSPACE_CONFIG[workspace] };
+  }
+
+  getWorkspaceLabel(workspace: WorkspaceType): string {
+    return WORKSPACE_CONFIG[workspace].label;
+  }
+
+  getWorkspaceIcon(workspace: WorkspaceType): string {
+    return WORKSPACE_CONFIG[workspace].icon;
+  }
+
+  /**
+   * Get available workspaces based on user permissions
+   */
+  getAvailableWorkspaces(isAdmin: boolean = false): WorkspaceType[] {
+    // Returns workspaces for the toolbar (admin is accessed via upper right menu)
+    const workspaces: WorkspaceType[] = ['music'];
+
+    if (isAdmin) {
+      workspaces.push('campaigns', 'labels');
+    }
+
+    return workspaces;
+  }
+
+  getAvailableWorkspaceInfos(isAdmin: boolean = false): WorkspaceInfo[] {
+    return this.getAvailableWorkspaces(isAdmin).map(ws => this.getWorkspaceInfo(ws));
   }
 
   private loadWorkspaceFromStorage(): WorkspaceType {
@@ -43,39 +87,5 @@ export class WorkspaceService {
 
   private isValidWorkspace(value: string): boolean {
     return ['music', 'campaigns', 'labels', 'admin'].includes(value);
-  }
-
-  getWorkspaceLabel(workspace: WorkspaceType): string {
-    switch (workspace) {
-      case 'music': return 'Music';
-      case 'campaigns': return 'Campaigns';
-      case 'labels': return 'Labels';
-      case 'admin': return 'Administration';
-      default: return 'Music';
-    }
-  }
-
-  getWorkspaceIcon(workspace: WorkspaceType): string {
-    switch (workspace) {
-      case 'music': return 'fas fa-music';
-      case 'campaigns': return 'fas fa-bullhorn';
-      case 'labels': return 'fas fa-tags';
-      case 'admin': return 'fas fa-cogs';
-      default: return 'fas fa-music';
-    }
-  }
-
-  /**
-   * Get available workspaces based on user permissions
-   */
-  getAvailableWorkspaces(isAdmin: boolean = false): WorkspaceType[] {
-    // Returns workspaces for the toolbar (admin is accessed via upper right menu)
-    const workspaces: WorkspaceType[] = ['music'];
-
-    if (isAdmin) {
-      workspaces.push('campaigns', 'labels');
-    }
-
-    return workspaces;
   }
 }

@@ -5,7 +5,7 @@ import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
-import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
+import { WorkspaceService, WorkspaceType, WorkspaceInfo } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/shared/artist-selection/artist-selection.component';
 import { ModalToBodyDirective } from '../../directives/modal-to-body.directive';
 import { Artist } from '../../models/artist.model';
@@ -60,7 +60,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   currentWorkspace: WorkspaceType = 'music';
   visibleSections: MenuSection[] = [];
   isInitialized = false;
-  availableWorkspaces: WorkspaceType[] = [];
+  availableWorkspaceInfos: WorkspaceInfo[] = [];
 
   // Workspace switch modal
   showWorkspaceSwitchModal = false;
@@ -359,7 +359,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
-        this.availableWorkspaces = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
+        this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
       })
     );
 
@@ -693,16 +693,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarService.closeOnMobileNavigation();
   }
 
-  getWorkspaceIcon(workspace: WorkspaceType): string {
-    return this.workspaceService.getWorkspaceIcon(workspace);
-  }
-
-  getWorkspaceLabel(workspace: WorkspaceType): string {
-    return this.workspaceService.getWorkspaceLabel(workspace);
+  getWorkspaceInfo(workspace: WorkspaceType): WorkspaceInfo {
+    return this.workspaceService.getWorkspaceInfo(workspace);
   }
 
   onWorkspaceIndicatorClick(): void {
-    if (this.isCollapsed && !this.isMobileView && this.availableWorkspaces.length > 1) {
+    if (this.isCollapsed && !this.isMobileView && this.availableWorkspaceInfos.length > 1) {
       this.openWorkspaceSwitchModal();
     }
   }

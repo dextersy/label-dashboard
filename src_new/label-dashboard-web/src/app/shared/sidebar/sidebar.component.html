@@ -6,13 +6,13 @@
     <!-- Workspace watermark -->
     <div class="workspace-indicator"
          *ngIf="currentWorkspace"
-         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaces.length > 1"
+         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1"
          (click)="onWorkspaceIndicatorClick()"
-         [title]="isCollapsed && !isMobileView && availableWorkspaces.length > 1 ? 'Switch workspace' : ''">
-      <i [class]="getWorkspaceIcon(currentWorkspace)" class="workspace-icon"></i>
-      <span class="workspace-name">{{ getWorkspaceLabel(currentWorkspace) }}</span>
+         [title]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1 ? 'Switch workspace' : ''">
+      <i [class]="getWorkspaceInfo(currentWorkspace).icon" class="workspace-icon"></i>
+      <span class="workspace-name">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
     </div>
-    <button class="workspace-switch-btn" *ngIf="availableWorkspaces.length > 1" (click)="openWorkspaceSwitchModal()">
+    <button class="workspace-switch-btn" *ngIf="availableWorkspaceInfos.length > 1" (click)="openWorkspaceSwitchModal()">
       <i class="fas fa-exchange-alt"></i> Switch workspace
     </button>
 
@@ -141,7 +141,7 @@
 
 <!-- Workspace Switch Modal -->
 <div class="modal fade show" appModalToBody *ngIf="showWorkspaceSwitchModal" tabindex="-1" style="display: block;">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header border-0 px-4 pt-4 pb-2">
         <h5 class="modal-title workspace-switch-modal-title">Switch Workspace</h5>
@@ -149,13 +149,14 @@
       </div>
       <div class="modal-body px-4 pb-4 pt-2">
         <div class="workspace-options">
-          <button *ngFor="let ws of availableWorkspaces"
+          <button *ngFor="let info of availableWorkspaceInfos"
                   class="workspace-option-btn"
-                  [class.active]="ws === currentWorkspace"
-                  (click)="switchWorkspace(ws)">
-            <i [class]="getWorkspaceIcon(ws)"></i>
-            <span>{{ getWorkspaceLabel(ws) }}</span>
-            <i *ngIf="ws === currentWorkspace" class="fas fa-check ms-auto"></i>
+                  [class.active]="info.type === currentWorkspace"
+                  (click)="switchWorkspace(info.type)">
+            <i *ngIf="info.type === currentWorkspace" class="fas fa-check workspace-option-check"></i>
+            <i [class]="info.icon" class="workspace-option-icon"></i>
+            <span class="workspace-option-name">{{ info.label }}</span>
+            <span class="workspace-option-desc">{{ info.description }}</span>
           </button>
         </div>
       </div>
