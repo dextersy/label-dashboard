@@ -64,7 +64,7 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false, special_instructions = null } = req.body;
+    const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false, special_instructions = null, special_instructions_for_scanner = null } = req.body;
 
     if (!event_id || !name || price === undefined) {
       return res.status(400).json({ 
@@ -144,7 +144,8 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       start_date: startDate,
       end_date: endDate,
       disabled: disabled,
-      special_instructions: special_instructions ? special_instructions.trim() : null
+      special_instructions: special_instructions ? special_instructions.trim() : null,
+      special_instructions_for_scanner: special_instructions_for_scanner ? special_instructions_for_scanner.trim() : null
     });
 
     res.status(201).json({
@@ -164,7 +165,7 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const { name, price, max_tickets, start_date, end_date, disabled, special_instructions } = req.body;
+    const { name, price, max_tickets, start_date, end_date, disabled, special_instructions, special_instructions_for_scanner } = req.body;
 
     const ticketTypeId = parseInt(id as string, 10);
 
@@ -279,6 +280,10 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
 
     if (special_instructions !== undefined) {
       updateData.special_instructions = special_instructions ? special_instructions.trim() : null;
+    }
+
+    if (special_instructions_for_scanner !== undefined) {
+      updateData.special_instructions_for_scanner = special_instructions_for_scanner ? special_instructions_for_scanner.trim() : null;
     }
 
     await ticketType.update(updateData);

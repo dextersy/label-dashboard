@@ -264,6 +264,7 @@ export class PublicService {
       ticketType?: {
         id: number;
         name: string;
+        special_instructions_for_scanner?: string | null;
       };
     };
   }> {

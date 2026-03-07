@@ -493,7 +493,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
           start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
           end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
           disabled: ticketType.disabled !== undefined ? ticketType.disabled : false,
-          special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null
+          special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null,
+          special_instructions_for_scanner: ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null
         });
       }
     } else {
@@ -727,7 +728,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
             start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
             end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
             disabled: ticketType.disabled !== undefined ? ticketType.disabled : undefined,
-            special_instructions: ticketType.special_instructions !== undefined ? (ticketType.special_instructions ? ticketType.special_instructions.trim() : null) : undefined
+            special_instructions: ticketType.special_instructions !== undefined ? (ticketType.special_instructions ? ticketType.special_instructions.trim() : null) : undefined,
+            special_instructions_for_scanner: ticketType.special_instructions_for_scanner !== undefined ? (ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null) : undefined
           };
           // Remove undefined fields
           Object.keys(updateFields).forEach(key => updateFields[key] === undefined && delete updateFields[key]);
@@ -745,7 +747,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
             start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
             end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
             disabled: ticketType.disabled !== undefined ? ticketType.disabled : false,
-            special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null
+            special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null,
+            special_instructions_for_scanner: ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null
           });
           if (!created) {
             return res.status(500).json({ error: 'Failed to create new ticket type' });

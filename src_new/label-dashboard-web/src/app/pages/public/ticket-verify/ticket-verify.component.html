@@ -129,6 +129,11 @@
               <div class="entries-subtitle">{{ currentTicket?.name }}</div>
               <div class="entries-ticket-type" *ngIf="currentTicket?.ticketType">
                 <strong>{{ currentTicket.ticketType.name }}</strong>
+                <!-- Scanner Instructions -->
+                <div *ngIf="currentTicket?.ticketType?.special_instructions_for_scanner" class="mt-2 small">
+                  <i class="fa fa-exclamation-triangle me-1"></i>
+                  <strong>Note:</strong> {{ currentTicket.ticketType.special_instructions_for_scanner }}
+                </div>
               </div>
             </div>
                           

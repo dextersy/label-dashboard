@@ -85,6 +85,12 @@
               <small class="form-text text-muted">Shown to buyers who select this ticket type, and included in their ticket email and PDF.</small>
             </div>
 
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Scanner Instructions <span class="text-muted fw-normal">(optional)</span></label>
+              <textarea class="form-control form-control-sm" [(ngModel)]="ticketType.special_instructions_for_scanner" rows="2" placeholder="e.g. Please check ID or proof of enrollment as student."></textarea>
+              <small class="form-text text-muted">Shown to the scanner operator when checking in a ticket of this type.</small>
+            </div>
+
             <div class="d-flex gap-2 justify-content-end">
               <button type="button" class="btn btn-primary btn-sm" (click)="saveEdit(i)" title="Save changes">
                 <i class="fas fa-check"></i>
@@ -238,6 +244,12 @@
         <label class="form-label small fw-semibold">Special Instructions <span class="text-muted fw-normal">(optional)</span></label>
         <textarea class="form-control form-control-sm" [(ngModel)]="newTicketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
         <small class="form-text text-muted">Shown to buyers who select this ticket type, and included in their ticket email and PDF.</small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Scanner Instructions <span class="text-muted fw-normal">(optional)</span></label>
+        <textarea class="form-control form-control-sm" [(ngModel)]="newTicketType.special_instructions_for_scanner" rows="2" placeholder="e.g. Please check ID or proof of enrollment as student."></textarea>
+        <small class="form-text text-muted">Shown to the scanner operator when checking in a ticket of this type.</small>
       </div>
 
       <div class="d-flex gap-2 justify-content-end">

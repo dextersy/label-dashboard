@@ -11,6 +11,7 @@ interface TicketTypeAttributes {
   end_date?: Date | null;
   disabled?: boolean;
   special_instructions?: string | null;
+  special_instructions_for_scanner?: string | null;
 }
 
 interface TicketTypeCreationAttributes extends Optional<TicketTypeAttributes, 'id'> {}
@@ -25,6 +26,7 @@ class TicketType extends Model<TicketTypeAttributes, TicketTypeCreationAttribute
   public end_date?: Date | null;
   public disabled?: boolean;
   public special_instructions?: string | null;
+  public special_instructions_for_scanner?: string | null;
 
   // Association properties
   public event?: any;
@@ -162,6 +164,10 @@ TicketType.init(
       defaultValue: false,
     },
     special_instructions: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    special_instructions_for_scanner: {
       type: DataTypes.TEXT,
       allowNull: true,
     },

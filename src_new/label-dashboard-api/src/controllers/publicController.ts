@@ -444,7 +444,7 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketType',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price', 'special_instructions_for_scanner']
         },
         { model: EventReferrer, as: 'referrer' }
       ]
@@ -504,7 +504,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         ticketType: (ticket as any).ticketType ? {
           id: (ticket as any).ticketType.id,
           name: (ticket as any).ticketType.name,
-          price: (ticket as any).ticketType.price
+          price: (ticket as any).ticketType.price,
+          special_instructions_for_scanner: (ticket as any).ticketType.special_instructions_for_scanner || null
         } : null
       }
     });

@@ -13,6 +13,7 @@ export interface TicketType {
   end_date?: string | null;
   disabled?: boolean;
   special_instructions?: string | null;
+  special_instructions_for_scanner?: string | null;
   sold_tickets?: number;
   pending_tickets?: number;
   remaining_tickets?: number | null;
@@ -31,6 +32,7 @@ function createNewTicketTypeForm() {
     end_date: null,
     disabled: false,
     special_instructions: null as string | null,
+    special_instructions_for_scanner: null as string | null,
     showDateRange: false,
     isFree: false,
     isUnlimited: true
@@ -236,6 +238,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       end_date: this.newTicketType.showDateRange && this.newTicketType.end_date ? this.formatDateForAPI(this.newTicketType.end_date) : null,
       disabled: this.newTicketType.disabled,
       special_instructions: this.newTicketType.special_instructions ? this.newTicketType.special_instructions.trim() : null,
+      special_instructions_for_scanner: this.newTicketType.special_instructions_for_scanner ? this.newTicketType.special_instructions_for_scanner.trim() : null,
       showDateRange: this.newTicketType.showDateRange,
       isFree: this.newTicketType.isFree,
       isUnlimited: this.newTicketType.isUnlimited

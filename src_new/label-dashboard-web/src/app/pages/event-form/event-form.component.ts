@@ -27,6 +27,7 @@ export interface TicketType {
   end_date?: string | null;
   disabled?: boolean;
   special_instructions?: string | null;
+  special_instructions_for_scanner?: string | null;
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
