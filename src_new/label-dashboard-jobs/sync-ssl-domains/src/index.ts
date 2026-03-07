@@ -649,6 +649,17 @@ class SSLDomainSyncService {
         }
 
         result.ssl_domains_after = sslDomainsBefore.length;
+
+        // Send email notification even when no orphaned domains were removed
+        const hasChanges = result.errors.length > 0 || result.domains_removed.length > 0 || result.domains_set_unverified.length > 0;
+        if (hasChanges && this.sendErrorNotif) {
+          console.log('\n[EMAIL] Sending error/removal notification...');
+          await this.sendEmailNotification(result, true);
+        } else if (!hasChanges && this.sendSuccessNotif) {
+          console.log('\n[EMAIL] Sending success notification...');
+          await this.sendEmailNotification(result, false);
+        }
+
         return result;
       }
 
