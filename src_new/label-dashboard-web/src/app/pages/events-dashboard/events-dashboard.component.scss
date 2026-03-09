@@ -257,6 +257,236 @@
   }
 }
 
+/* Upcoming Events Empty State */
+.upcoming-empty {
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #9ca3af;
+  font-size: 0.9rem;
+
+  .upcoming-empty-icon {
+    font-size: 1.1rem;
+    color: #d1d5db;
+  }
+
+  a { color: var(--brand-color, #667eea); }
+}
+
+/* Upcoming Events Widget */
+.upcoming-events-widget {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+  }
+}
+
+.upcoming-featured {
+  flex: 1 1 55%;
+  min-height: 180px;
+  border-radius: 16px;
+  background: #1a1a2e;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  position: relative;
+
+  &.has-poster .upcoming-featured-overlay {
+    background: linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.4) 100%);
+  }
+}
+
+.upcoming-featured-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(26,26,46,0.96) 0%, rgba(26,26,46,0.82) 100%);
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.upcoming-featured-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.upcoming-featured-info {
+  flex: 1;
+}
+
+.upcoming-secondary {
+  flex: 1 1 45%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upcoming-small-card {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.upcoming-small-date {
+  flex-shrink: 0;
+}
+
+.upcoming-small-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Date badge */
+.upcoming-date-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-color, #667eea);
+  border-radius: 10px;
+  padding: 0.45rem 0.65rem;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.upcoming-small-date {
+  .upcoming-date-day,
+  .upcoming-date-month {
+    color: var(--brand-color, #667eea);
+  }
+
+  .upcoming-date-day {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .upcoming-date-month {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.upcoming-date-day {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  display: block;
+  text-align: center;
+}
+
+.upcoming-date-month {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  text-align: center;
+}
+
+/* Titles */
+.upcoming-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.2rem;
+
+  &.upcoming-title-lg {
+    font-size: 1.35rem;
+    color: #fff;
+    white-space: normal;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+  }
+}
+
+/* Meta line */
+.upcoming-meta {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 0;
+
+  i { font-size: 0.7rem; }
+}
+
+.upcoming-small-info .upcoming-meta {
+  color: #9ca3af;
+}
+
+/* Action buttons */
+.upcoming-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+
+  &.upcoming-actions-sm {
+    margin-top: 0.6rem;
+  }
+}
+
+.upcoming-btn-manage {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
+  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+
+  &:hover {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+  }
+}
+
+.upcoming-btn-tickets {
+  background: var(--brand-color, #667eea);
+  color: #fff;
+  border: none;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+
+  &:hover {
+    background: color-mix(in srgb, var(--brand-color, #667eea) 85%, #000);
+    color: #fff;
+  }
+}
+
+.upcoming-small-card {
+  .upcoming-btn-manage {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+
+    &:hover {
+      background: #e5e7eb;
+      color: #1a1a2e;
+    }
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 991px) {
   .quick-menu-card {

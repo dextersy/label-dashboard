@@ -672,6 +672,26 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       }, 0);
     }
 
+    // Get upcoming published events (nearest 3 with future date)
+    const upcomingEventsRaw = await Event.findAll({
+      where: {
+        ...brandFilter,
+        status: 'published',
+        date_and_time: { [Op.gt]: now }
+      },
+      order: [['date_and_time', 'ASC']],
+      limit: 3,
+      attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url', 'status']
+    });
+
+    const upcomingEvents = upcomingEventsRaw.map(e => ({
+      id: e.id,
+      title: e.title,
+      date_and_time: e.date_and_time,
+      venue: e.venue,
+      poster_url: e.poster_url || null
+    }));
+
     // Get event sales and fundraiser donations data (reuse existing functions)
     const [eventSales, fundraiserDonations] = await Promise.all([
       getEventSalesData(req),
@@ -689,6 +709,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         thisMonthSales: thisMonthSales,
         thisMonthDonations: thisMonthDonations
       },
+      upcomingEvents,
       eventSales,
       fundraiserDonations
     });

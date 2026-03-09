@@ -6,6 +6,7 @@ import { EventSalesChartComponent, EventSales } from '../dashboard/components/ev
 import { FundraiserDonationsChartComponent, FundraiserDonations } from '../dashboard/components/fundraiser-donations-chart/fundraiser-donations-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
+import { EventService } from '../../services/event.service';
 import { environment } from 'environments/environment';
 
 interface CampaignsDashboardStats {
@@ -15,12 +16,21 @@ interface CampaignsDashboardStats {
   thisMonthDonations: number;
 }
 
+export interface UpcomingEvent {
+  id: number;
+  title: string;
+  date_and_time: string;
+  venue: string;
+  poster_url: string | null;
+}
+
 interface CampaignsDashboardData {
   user: {
     firstName: string;
     isAdmin: boolean;
   };
   stats: CampaignsDashboardStats;
+  upcomingEvents: UpcomingEvent[];
   eventSales: EventSales[];
   fundraiserDonations: FundraiserDonations[];
 }
@@ -46,7 +56,8 @@ export class EventsDashboardComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -79,6 +90,21 @@ export class EventsDashboardComponent implements OnInit {
     if (hour < 12) return 'morning';
     if (hour < 17) return 'afternoon';
     return 'evening';
+  }
+
+  navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets'): void {
+    this.eventService.setSelectedEvent(event as any);
+    this.router.navigate([`/campaigns/events/${route}`]);
+  }
+
+  formatEventDate(dateStr: string): string {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  formatEventTime(dateStr: string): string {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
 
   formatCurrency(amount: number): string {

@@ -107,6 +107,78 @@
       </div>
     </div>
 
+    <!-- Upcoming Events -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h6 class="section-label">Upcoming Events</h6>
+        <!-- Empty state -->
+        <div class="upcoming-empty" *ngIf="!dashboardData.upcomingEvents?.length">
+          <i class="fas fa-calendar-alt upcoming-empty-icon"></i>
+          <span>No upcoming events. <a routerLink="/campaigns/events/new">Create one?</a></span>
+        </div>
+
+        <div class="upcoming-events-widget" *ngIf="dashboardData.upcomingEvents?.length">
+
+          <!-- Featured (nearest) event -->
+          <div class="upcoming-featured"
+               [style.background-image]="dashboardData.upcomingEvents[0].poster_url ? 'url(' + dashboardData.upcomingEvents[0].poster_url + ')' : null"
+               [class.has-poster]="dashboardData.upcomingEvents[0].poster_url">
+            <div class="upcoming-featured-overlay">
+              <div class="upcoming-featured-body">
+                <div class="upcoming-date-badge">
+                  <span class="upcoming-date-day">{{ dashboardData.upcomingEvents[0].date_and_time | date:'d' }}</span>
+                  <span class="upcoming-date-month">{{ dashboardData.upcomingEvents[0].date_and_time | date:'MMM' }}</span>
+                </div>
+                <div class="upcoming-featured-info">
+                  <div class="upcoming-title upcoming-title-lg">{{ dashboardData.upcomingEvents[0].title }}</div>
+                  <div class="upcoming-meta">
+                    <i class="fas fa-clock"></i> {{ formatEventTime(dashboardData.upcomingEvents[0].date_and_time) }}
+                    &nbsp;·&nbsp;
+                    <i class="fas fa-map-marker-alt"></i> {{ dashboardData.upcomingEvents[0].venue }}
+                  </div>
+                </div>
+              </div>
+              <div class="upcoming-actions">
+                <button class="btn btn-sm upcoming-btn-manage" (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'details')">
+                  <i class="fas fa-cog me-1"></i> Manage
+                </button>
+                <button class="btn btn-sm upcoming-btn-tickets" (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
+                  <i class="fas fa-ticket-alt me-1"></i> View tickets
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smaller upcoming events -->
+          <div class="upcoming-secondary" *ngIf="dashboardData.upcomingEvents.length > 1">
+            <div class="upcoming-small-card" *ngFor="let event of dashboardData.upcomingEvents.slice(1)">
+              <div class="upcoming-small-date">
+                <span class="upcoming-date-day">{{ event.date_and_time | date:'d' }}</span>
+                <span class="upcoming-date-month">{{ event.date_and_time | date:'MMM' }}</span>
+              </div>
+              <div class="upcoming-small-info">
+                <div class="upcoming-title">{{ event.title }}</div>
+                <div class="upcoming-meta">
+                  <i class="fas fa-clock"></i> {{ formatEventTime(event.date_and_time) }}
+                  &nbsp;·&nbsp;
+                  <i class="fas fa-map-marker-alt"></i> {{ event.venue }}
+                </div>
+                <div class="upcoming-actions upcoming-actions-sm">
+                  <button class="btn btn-sm upcoming-btn-manage" (click)="navigateToEvent(event, 'details')">
+                    <i class="fas fa-cog me-1"></i> Manage
+                  </button>
+                  <button class="btn btn-sm upcoming-btn-tickets" (click)="navigateToEvent(event, 'tickets')">
+                    <i class="fas fa-ticket-alt me-1"></i> View tickets
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- Event Sales Charts -->
     <div class="row mb-4">
       <div class="col-12">
