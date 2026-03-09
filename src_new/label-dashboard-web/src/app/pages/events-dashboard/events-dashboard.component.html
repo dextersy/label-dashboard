@@ -107,9 +107,11 @@
       </div>
     </div>
 
-    <!-- Upcoming Events -->
+    <!-- Upcoming Events + Ongoing Fundraisers -->
     <div class="row mb-4">
-      <div class="col-12">
+
+      <!-- Upcoming Events (2/3) -->
+      <div class="col-lg-8 col-12 mb-3 mb-lg-0">
         <h6 class="section-label">Upcoming Events</h6>
         <!-- Empty state -->
         <div class="upcoming-empty" *ngIf="!dashboardData.upcomingEvents?.length">
@@ -177,6 +179,48 @@
 
         </div>
       </div>
+
+      <!-- Ongoing Fundraisers (1/3) -->
+      <div class="col-lg-4 col-12 d-flex flex-column">
+        <h6 class="section-label">Ongoing Fundraisers</h6>
+
+        <!-- Empty state -->
+        <div class="upcoming-empty flex-grow-1" *ngIf="!dashboardData.ongoingFundraisers?.items?.length">
+          <i class="fas fa-hand-holding-heart upcoming-empty-icon"></i>
+          <span>No active fundraisers. <a routerLink="/campaigns/fundraisers/new">Start one?</a></span>
+        </div>
+
+        <div class="fundraiser-widget" *ngIf="dashboardData.ongoingFundraisers?.items?.length">
+          <div class="fundraiser-cards-row">
+            <div class="fundraiser-card" *ngFor="let fundraiser of dashboardData.ongoingFundraisers.items">
+              <div class="fundraiser-card-thumb"
+                   [style.background-image]="fundraiser.poster_url ? 'url(' + fundraiser.poster_url + ')' : null"
+                   [class.has-poster]="fundraiser.poster_url">
+                <div class="fundraiser-live-badge">
+                  <span class="fundraiser-live-dot"></span> Live
+                </div>
+              </div>
+              <div class="fundraiser-card-body">
+                <div class="fundraiser-card-title">{{ fundraiser.title }}</div>
+                <div class="fundraiser-card-raised">
+                  <span class="fundraiser-raised-label">Total raised</span>
+                  <span class="fundraiser-raised-value">{{ formatCurrency(fundraiser.total_raised) }}</span>
+                </div>
+                <button class="btn btn-sm fundraiser-btn-manage" (click)="navigateToFundraiser(fundraiser)">
+                  <i class="fas fa-cog me-1"></i> Manage
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- More fundraisers indicator -->
+          <div class="fundraiser-more" *ngIf="dashboardData.ongoingFundraisers.total > 2" (click)="navigateToFundraiser(dashboardData.ongoingFundraisers.items[0])">
+            <i class="fas fa-hand-holding-heart me-1"></i>
+            + {{ dashboardData.ongoingFundraisers.total - 2 }} more active fundraiser{{ dashboardData.ongoingFundraisers.total - 2 === 1 ? '' : 's' }}
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Event Sales Charts -->

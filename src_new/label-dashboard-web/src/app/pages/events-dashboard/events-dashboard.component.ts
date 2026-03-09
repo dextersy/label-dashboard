@@ -7,6 +7,7 @@ import { FundraiserDonationsChartComponent, FundraiserDonations } from '../dashb
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { EventService } from '../../services/event.service';
+import { FundraiserService } from '../../services/fundraiser.service';
 import { environment } from 'environments/environment';
 
 interface CampaignsDashboardStats {
@@ -14,6 +15,13 @@ interface CampaignsDashboardStats {
   activeFundraisers: number;
   thisMonthSales: number;
   thisMonthDonations: number;
+}
+
+export interface OngoingFundraiser {
+  id: number;
+  title: string;
+  poster_url: string | null;
+  total_raised: number;
 }
 
 export interface UpcomingEvent {
@@ -30,6 +38,7 @@ interface CampaignsDashboardData {
     isAdmin: boolean;
   };
   stats: CampaignsDashboardStats;
+  ongoingFundraisers: { items: OngoingFundraiser[]; total: number };
   upcomingEvents: UpcomingEvent[];
   eventSales: EventSales[];
   fundraiserDonations: FundraiserDonations[];
@@ -57,7 +66,8 @@ export class EventsDashboardComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     private brandService: BrandService,
-    private eventService: EventService
+    private eventService: EventService,
+    private fundraiserService: FundraiserService
   ) {}
 
   ngOnInit(): void {
@@ -90,6 +100,11 @@ export class EventsDashboardComponent implements OnInit {
     if (hour < 12) return 'morning';
     if (hour < 17) return 'afternoon';
     return 'evening';
+  }
+
+  navigateToFundraiser(fundraiser: OngoingFundraiser): void {
+    this.fundraiserService.setSelectedFundraiser(fundraiser as any);
+    this.router.navigate(['/campaigns/fundraisers/details']);
   }
 
   navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets'): void {

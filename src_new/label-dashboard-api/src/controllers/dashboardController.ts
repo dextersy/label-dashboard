@@ -672,6 +672,41 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       }, 0);
     }
 
+    // Get ongoing (published) fundraisers — return first 2 with total raised + total count
+    const [ongoingFundraisersRaw, totalOngoingFundraisers] = await Promise.all([
+      Fundraiser.findAll({
+        where: { ...brandFilter, status: 'published' },
+        order: [['id', 'DESC']],
+        limit: 2,
+        attributes: ['id', 'title', 'poster_url']
+      }),
+      Fundraiser.count({ where: { ...brandFilter, status: 'published' } })
+    ]);
+
+    const ongoingFundraisersItems = await Promise.all(
+      ongoingFundraisersRaw.map(async (f) => {
+        const donations = await Donation.findAll({
+          where: { fundraiser_id: f.id, payment_status: 'paid' },
+          attributes: ['amount']
+        });
+        const totalRaised = donations.reduce((sum, d) => {
+          const amount = parseFloat(d.amount?.toString() || '0');
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+        return {
+          id: f.id,
+          title: f.title,
+          poster_url: f.poster_url || null,
+          total_raised: totalRaised
+        };
+      })
+    );
+
+    const ongoingFundraisers = {
+      items: ongoingFundraisersItems,
+      total: totalOngoingFundraisers
+    };
+
     // Get upcoming published events (nearest 3 with future date)
     const upcomingEventsRaw = await Event.findAll({
       where: {
@@ -709,6 +744,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         thisMonthSales: thisMonthSales,
         thisMonthDonations: thisMonthDonations
       },
+      ongoingFundraisers,
       upcomingEvents,
       eventSales,
       fundraiserDonations
