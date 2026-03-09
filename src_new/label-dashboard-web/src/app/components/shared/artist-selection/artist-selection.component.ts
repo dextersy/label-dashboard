@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, OnDestroy, Output, EventEmitter, Input, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, OnChanges, OnDestroy, Output, EventEmitter, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -8,32 +8,34 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Artist } from '../../../models/artist.model';
+import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 
 export type { Artist };
 
 @Component({
     selector: 'app-artist-selection',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ModalToBodyDirective],
     templateUrl: './artist-selection.component.html',
     styleUrl: './artist-selection.component.scss'
 })
 export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentArtist: Artist | null = null;
   @Output() artistSelected = new EventEmitter<{artist: Artist, userInitiated: boolean}>();
-  @ViewChild('dropdownMenu') dropdownMenu?: ElementRef;
 
   artists: Artist[] = [];
   filteredArtists: Artist[] = [];
   selectedArtist: Artist | null = null;
   loading = false;
-  isDropdownOpen = false;
+  isModalOpen = false;
   isAdmin = false;
   searchTerm: string = '';
   isNewArtistMode = false;
+  currentPage = 0;
+  readonly pageSize = 5;
   private refreshSubscription: Subscription = new Subscription();
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private router: Router,
     private artistStateService: ArtistStateService
   ) {}
@@ -41,17 +43,20 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit(): void {
     this.loadArtists();
 
-    // Subscribe to refresh triggers
     this.refreshSubscription.add(
       this.artistStateService.refreshArtists$.subscribe((selectArtistId) => {
         this.refreshArtistsAndSelect(selectArtistId);
       })
     );
 
-    // Check initial route
+    this.refreshSubscription.add(
+      this.artistStateService.openModal$.subscribe(() => {
+        this.openModal();
+      })
+    );
+
     this.checkNewArtistMode();
 
-    // Subscribe to route changes
     this.refreshSubscription.add(
       this.router.events.pipe(
         filter(event => event instanceof NavigationEnd)
@@ -59,26 +64,12 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
         this.checkNewArtistMode();
       })
     );
-
-    // Listen to sidebar scroll events to reposition dropdown
-    setTimeout(() => {
-      const sidebar = document.querySelector('.sidebar') as HTMLElement;
-      if (sidebar) {
-        sidebar.addEventListener('scroll', () => {
-          if (this.isDropdownOpen) {
-            this.positionDropdown();
-          }
-        });
-      }
-    }, 500);
   }
 
   ngOnChanges(): void {
     if (this.currentArtist) {
-      // Update selected artist with current artist data (including updated profile info)
       this.selectedArtist = this.currentArtist;
-      
-      // Also update the artist in the artists array if it exists
+
       if (this.artists.length > 0) {
         const index = this.artists.findIndex(artist => artist.id === this.currentArtist!.id);
         if (index !== -1) {
@@ -101,37 +92,34 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
   loadArtists(): void {
     this.loading = true;
-    
+
     this.http.get<{artists: Artist[], isAdmin: boolean}>(`${environment.apiUrl}/artists`, {
       headers: this.getAuthHeaders()
     }).subscribe({
       next: (data) => {
         this.artists = data.artists;
         this.isAdmin = data.isAdmin;
-        this.filterArtists(); // Initialize filtered list
-        
-        // Try to restore from localStorage first
+        this.filterArtists();
+
         const savedArtistId = this.getSavedArtistId();
         let artistToSelect: Artist | null = null;
-        
+
         if (savedArtistId && this.artists.length > 0) {
           artistToSelect = this.artists.find(artist => artist.id === savedArtistId) || null;
         }
-        
-        // Fallback to currentArtist prop if no saved selection or saved artist not found
+
         if (!artistToSelect && this.currentArtist) {
           artistToSelect = this.artists.find(artist => artist.id === this.currentArtist!.id) || null;
         }
-        
-        // Final fallback to first artist
+
         if (!artistToSelect && this.artists.length > 0) {
           artistToSelect = this.artists[0];
         }
-        
+
         if (artistToSelect) {
           this.selectArtist(artistToSelect, false);
         }
-        
+
         this.loading = false;
       },
       error: (error) => {
@@ -143,94 +131,81 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
   selectArtist(artist: Artist, userInitiated: boolean = false): void {
     this.selectedArtist = artist;
-    this.isDropdownOpen = false;
+    this.isModalOpen = false;
     this.saveArtistId(artist.id);
     this.artistSelected.emit({artist, userInitiated});
   }
 
-  toggleDropdown(): void {
-    if (!this.isDropdownOpen) {
-      // Clear search when opening dropdown
+  openModal(): void {
+    if (!this.isNewArtistMode) {
       this.searchTerm = '';
+      this.currentPage = 0;
       this.filterArtists();
-
-      // Open dropdown first so Angular can render it
-      this.isDropdownOpen = true;
-
-      // Position dropdown immediately after Angular renders it
-      requestAnimationFrame(() => {
-        this.positionDropdown();
-
-        // Focus on search input
-        setTimeout(() => {
-          const searchInput = document.querySelector('.artist-search-input') as HTMLInputElement;
-          if (searchInput) {
-            searchInput.focus();
-          }
-        }, 50);
-      });
-    } else {
-      this.isDropdownOpen = false;
+      this.isModalOpen = true;
     }
   }
 
-  @HostListener('window:resize')
-  @HostListener('window:scroll', ['$event'])
-  onWindowChange(): void {
-    if (this.isDropdownOpen) {
-      this.positionDropdown();
-    }
+  closeModal(): void {
+    this.isModalOpen = false;
   }
 
-  private positionDropdown(): void {
-    const dropdownButton = document.querySelector('.artist-dropdown-btn') as HTMLElement;
-    const dropdownMenu = document.querySelector('.artist-selection-container .dropdown-menu') as HTMLElement;
-
-    if (dropdownButton && dropdownMenu) {
-      const rect = dropdownButton.getBoundingClientRect();
-      // The .sidebar has transform:translateX(0) on desktop, making it the containing
-      // block for position:fixed children. Coordinates must be relative to the sidebar,
-      // not the viewport, so subtract the sidebar's own top offset.
-      const sidebar = dropdownMenu.closest('.sidebar') as HTMLElement | null;
-      const cbTop = sidebar?.getBoundingClientRect().top ?? 0;
-      dropdownMenu.style.top = `${rect.bottom - cbTop + 2}px`;
+  @HostListener('window:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.isModalOpen) {
+      this.closeModal();
     }
   }
 
   onSearchChange(): void {
+    this.currentPage = 0;
     this.filterArtists();
   }
 
   filterArtists(): void {
+    let results: Artist[];
     if (!this.searchTerm.trim()) {
-      this.filteredArtists = [...this.artists];
+      results = [...this.artists];
     } else {
       const searchLower = this.searchTerm.toLowerCase();
-      this.filteredArtists = this.artists.filter(artist => 
+      results = this.artists.filter(artist =>
         artist.name.toLowerCase().includes(searchLower) ||
         (artist.band_members && artist.band_members.toLowerCase().includes(searchLower))
       );
     }
+    // Always keep selected artist at the top
+    if (this.selectedArtist) {
+      const idx = results.findIndex(a => a.id === this.selectedArtist!.id);
+      if (idx > 0) {
+        results.unshift(...results.splice(idx, 1));
+      }
+    }
+    this.filteredArtists = results;
+  }
+
+  get pagedArtists(): Artist[] {
+    const start = this.currentPage * this.pageSize;
+    return this.filteredArtists.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredArtists.length / this.pageSize);
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+    }
   }
 
   addNewArtist(): void {
-    this.isDropdownOpen = false;
+    this.isModalOpen = false;
     this.router.navigate(['/artist/new']);
-  }
-
-  onSearchKeydown(event: KeyboardEvent): void {
-    // Allow users to navigate with arrow keys
-    if (event.key === 'ArrowDown' && this.filteredArtists.length > 0) {
-      event.preventDefault();
-      // Focus first artist in the list
-      const firstArtistElement = document.querySelector('.dropdown-menu li:not(.search-container):not(.divider):not(.no-results) a') as HTMLElement;
-      if (firstArtistElement) {
-        firstArtistElement.focus();
-      }
-    }
-    if (event.key === 'Escape') {
-      this.isDropdownOpen = false;
-    }
   }
 
   refreshArtists(): void {
@@ -239,16 +214,15 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
   refreshArtistsAndSelect(selectArtistId: number | null): void {
     this.loading = true;
-    
+
     this.http.get<{artists: Artist[], isAdmin: boolean}>(`${environment.apiUrl}/artists`, {
       headers: this.getAuthHeaders()
     }).subscribe({
       next: (data) => {
         this.artists = data.artists;
         this.isAdmin = data.isAdmin;
-        this.filterArtists(); // Initialize filtered list
-        
-        // If a specific artist ID was provided, select that artist
+        this.filterArtists();
+
         if (selectArtistId) {
           const artistToSelect = this.artists.find(artist => artist.id === selectArtistId);
           if (artistToSelect) {
@@ -257,8 +231,7 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
             return;
           }
         }
-        
-        // Otherwise follow the normal selection logic
+
         this.restoreArtistSelection();
         this.loading = false;
       },
@@ -270,24 +243,21 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private restoreArtistSelection(): void {
-    // Try to restore from localStorage first
     const savedArtistId = this.getSavedArtistId();
     let artistToSelect: Artist | null = null;
-    
+
     if (savedArtistId && this.artists.length > 0) {
       artistToSelect = this.artists.find(artist => artist.id === savedArtistId) || null;
     }
-    
-    // Fallback to currentArtist prop if no saved selection or saved artist not found
+
     if (!artistToSelect && this.currentArtist) {
       artistToSelect = this.artists.find(artist => artist.id === this.currentArtist!.id) || null;
     }
-    
-    // Final fallback to first artist
+
     if (!artistToSelect && this.artists.length > 0) {
       artistToSelect = this.artists[0];
     }
-    
+
     if (artistToSelect) {
       this.selectArtist(artistToSelect, false);
     }
@@ -312,16 +282,14 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getProfilePhotoUrl(artist: Artist): string {
-    // Use gallery image if available (profile_photo_id)
     if (artist.profilePhotoImage?.path) {
       return artist.profilePhotoImage.path;
     }
-    
-    // Fallback to legacy profile_photo field
+
     if (artist.profile_photo) {
       return artist.profile_photo.startsWith('http') ? artist.profile_photo : `${environment.apiUrl}/uploads/artists/${artist.profile_photo}`;
     }
-    
+
     return 'assets/img/placeholder.jpg';
   }
 

@@ -196,6 +196,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
+  openArtistModal(): void {
+    this.artistStateService.triggerOpenModal();
+  }
+
   toggleSidebar(): void {
     this.sidebarService.toggleSidebar();
   }
