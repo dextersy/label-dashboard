@@ -30,6 +30,8 @@ export interface UpcomingEvent {
   date_and_time: string;
   venue: string;
   poster_url: string | null;
+  tickets_sold: number;
+  net_earnings: number;
 }
 
 interface CampaignsDashboardData {

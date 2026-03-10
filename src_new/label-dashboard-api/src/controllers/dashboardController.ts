@@ -719,13 +719,30 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url', 'status']
     });
 
-    const upcomingEvents = upcomingEventsRaw.map(e => ({
-      id: e.id,
-      title: e.title,
-      date_and_time: e.date_and_time,
-      venue: e.venue,
-      poster_url: e.poster_url || null
-    }));
+    const paidStatuses = ['Payment Confirmed', 'Ticket sent.'];
+    const upcomingEvents = await Promise.all(
+      upcomingEventsRaw.map(async (e) => {
+        const tickets = await Ticket.findAll({
+          where: { event_id: e.id, status: paidStatuses },
+          attributes: ['number_of_entries', 'price_per_ticket', 'payment_processing_fee', 'platform_fee']
+        });
+        const ticketsSold = tickets.reduce((sum, t) => sum + (t.number_of_entries || 0), 0);
+        const netEarnings = tickets.reduce((sum, t) => {
+          const gross = (t.price_per_ticket || 0) * (t.number_of_entries || 0);
+          const fees = (t.payment_processing_fee || 0) + (t.platform_fee || 0);
+          return sum + gross - fees;
+        }, 0);
+        return {
+          id: e.id,
+          title: e.title,
+          date_and_time: e.date_and_time,
+          venue: e.venue,
+          poster_url: e.poster_url || null,
+          tickets_sold: ticketsSold,
+          net_earnings: netEarnings
+        };
+      })
+    );
 
     // Get event sales and fundraiser donations data (reuse existing functions)
     const [eventSales, fundraiserDonations] = await Promise.all([

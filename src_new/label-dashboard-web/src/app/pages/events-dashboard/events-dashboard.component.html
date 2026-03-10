@@ -138,6 +138,11 @@
                     &nbsp;·&nbsp;
                     <i class="fas fa-map-marker-alt"></i> {{ dashboardData.upcomingEvents[0].venue }}
                   </div>
+                  <div class="upcoming-ticket-stats">
+                    <span class="upcoming-stat"><i class="fas fa-ticket-alt"></i> {{ dashboardData.upcomingEvents[0].tickets_sold }} sold</span>
+                    <span class="upcoming-stat-divider">·</span>
+                    <span class="upcoming-stat"><i class="fas fa-peso-sign"></i> {{ formatCurrency(dashboardData.upcomingEvents[0].net_earnings) }} net</span>
+                  </div>
                 </div>
               </div>
               <div class="upcoming-actions">
@@ -164,6 +169,11 @@
                   <i class="fas fa-clock"></i> {{ formatEventTime(event.date_and_time) }}
                   &nbsp;·&nbsp;
                   <i class="fas fa-map-marker-alt"></i> {{ event.venue }}
+                </div>
+                <div class="upcoming-ticket-stats upcoming-ticket-stats-sm">
+                  <span class="upcoming-stat"><i class="fas fa-ticket-alt"></i> {{ event.tickets_sold }} sold</span>
+                  <span class="upcoming-stat-divider">·</span>
+                  <span class="upcoming-stat"><i class="fas fa-peso-sign"></i> {{ formatCurrency(event.net_earnings) }} net</span>
                 </div>
                 <div class="upcoming-actions upcoming-actions-sm">
                   <button class="btn btn-sm upcoming-btn-manage" (click)="navigateToEvent(event, 'details')">

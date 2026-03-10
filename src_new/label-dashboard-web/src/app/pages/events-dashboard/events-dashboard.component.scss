@@ -404,7 +404,7 @@
 
 /* Titles */
 .upcoming-title {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #1a1a2e;
   white-space: nowrap;
@@ -423,15 +423,42 @@
 
 /* Meta line */
 .upcoming-meta {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: rgba(255,255,255,0.6);
   margin-bottom: 0;
 
-  i { font-size: 0.7rem; }
+  i { font-size: 0.84rem; }
 }
 
 .upcoming-small-info .upcoming-meta {
   color: #9ca3af;
+}
+
+/* Ticket stats row */
+.upcoming-ticket-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.75);
+
+  i { font-size: 0.82rem; }
+
+  &.upcoming-ticket-stats-sm {
+    color: #9ca3af;
+    margin-top: 0.25rem;
+  }
+}
+
+.upcoming-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.upcoming-stat-divider {
+  opacity: 0.5;
 }
 
 /* Action buttons */
