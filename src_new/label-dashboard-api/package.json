@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon",
-    "dev:debug": "nodemon --inspect",
+    "dev": "cross-env NODE_ENV=development tsx watch src/app.ts",
+    "dev:debug": "cross-env NODE_ENV=development tsx watch --inspect src/app.ts",
     "build": "tsc && cp -r src/assets dist",
     "start": "node dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -65,9 +65,11 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
-    "nodemon": "^3.1.10"
+    "cross-env": "^10.1.0",
+    "nodemon": "^3.1.10",
+    "tsx": "^4.21.0"
   },
   "overrides": {
-    "minimatch": "^9.0.6"
+    "minimatch": "^5.1.6"
   }
 }

@@ -14,5 +14,6 @@
   },
   "colours": true,
   "legacyWatch": true,
+  "pollingInterval": 500,
   "delay": 1000
 }
