@@ -326,8 +326,8 @@
 <!-- Global kebab dropdown — rendered outside the table so it is never clipped by overflow -->
 <div class="kebab-dropdown"
      *ngIf="openKebabItem !== null && dropdownPosition"
-     [style.top.px]="dropdownPosition?.top"
-     [style.right.px]="dropdownPosition?.right"
+     [style.top.px]="dropdownPosition.top"
+     [style.right.px]="dropdownPosition.right"
      (click)="$event.stopPropagation()">
   <ng-container *ngIf="actions.length > 0">
     <button *ngFor="let action of getVisibleActions(openKebabItem)"

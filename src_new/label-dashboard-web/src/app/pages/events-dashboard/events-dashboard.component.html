@@ -76,13 +76,13 @@
           <div class="stats-compact-group">
             <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
               <i class="fas fa-calendar-check"></i>
-              <span class="stats-compact-value">{{ dashboardData.stats?.activeEvents || 0 }}</span>
+              <span class="stats-compact-value">{{ dashboardData.stats.activeEvents || 0 }}</span>
               <span class="stats-compact-label">Active Events</span>
             </div>
             <span class="stats-compact-caret">›</span>
             <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/tickets">
               <i class="fas fa-ticket-alt"></i>
-              <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthSales || 0) }}</span>
+              <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats.thisMonthSales || 0) }}</span>
               <span class="stats-compact-label">Ticket Sales</span>
             </div>
           </div>
@@ -93,13 +93,13 @@
           <div class="stats-compact-group">
             <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/details">
               <i class="fas fa-hand-holding-heart"></i>
-              <span class="stats-compact-value">{{ dashboardData.stats?.activeFundraisers || 0 }}</span>
+              <span class="stats-compact-value">{{ dashboardData.stats.activeFundraisers || 0 }}</span>
               <span class="stats-compact-label">Active Fundraisers</span>
             </div>
             <span class="stats-compact-caret">›</span>
             <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/donations">
               <i class="fas fa-donate"></i>
-              <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthDonations || 0) }}</span>
+              <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats.thisMonthDonations || 0) }}</span>
               <span class="stats-compact-label">Donations</span>
             </div>
           </div>

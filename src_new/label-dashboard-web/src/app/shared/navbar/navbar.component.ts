@@ -6,14 +6,13 @@ import { SidebarService } from '../../services/sidebar.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { BrandService, BrandSettings } from '../../services/brand.service';
-import { ArtistSelectionComponent } from '../../components/shared/artist-selection/artist-selection.component';
 import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-navbar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
+    imports: [CommonModule, RouterModule],
     templateUrl: './navbar.component.html',
     styleUrl: './navbar.component.scss'
 })
