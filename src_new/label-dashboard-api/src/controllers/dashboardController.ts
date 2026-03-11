@@ -729,8 +729,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         const ticketsSold = tickets.reduce((sum, t) => sum + (t.number_of_entries || 0), 0);
         const netEarnings = tickets.reduce((sum, t) => {
           const gross = (t.price_per_ticket || 0) * (t.number_of_entries || 0);
-          const fees = (t.payment_processing_fee || 0) + (t.platform_fee || 0);
-          return sum + gross - fees;
+          return sum + gross - (t.platform_fee || 0);
         }, 0);
         return {
           id: e.id,
