@@ -77,7 +77,6 @@ export class BreadcrumbService {
     
     // Admin section
     '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
-    '/admin/settings': { label: 'Settings', parent: '/admin' },
     '/admin/reports': { label: 'Reports', parent: '/admin' },
     '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
     '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
@@ -92,6 +91,7 @@ export class BreadcrumbService {
     '/labels': { label: 'Labels', icon: 'fas fa-tags' },
     '/labels/earnings': { label: 'My Label Earnings', parent: '/labels' },
     '/labels/sublabels': { label: 'Sublabels', parent: '/labels' },
+    '/labels/setup': { label: 'Label Setup', parent: '/labels' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

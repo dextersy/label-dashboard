@@ -36,6 +36,7 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
 import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
+import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -146,8 +147,8 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'settings', pathMatch: 'full' },
-      { path: 'settings', component: AdminComponent, data: { tab: 'settings' } },
+      { path: '', redirectTo: 'reports/music-earnings', pathMatch: 'full' },
+      { path: 'settings', redirectTo: '/labels/setup', pathMatch: 'full' },
       { path: 'reports/music-earnings', component: AdminComponent, data: { tab: 'reports-music-earnings' } },
       { path: 'reports/artist-balances', component: AdminComponent, data: { tab: 'reports-artist-balances' } },
       { path: 'reports/payments-royalties', component: AdminComponent, data: { tab: 'reports-payments-royalties' } },
@@ -165,7 +166,8 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'earnings', pathMatch: 'full' },
       { path: 'earnings', component: LabelsComponent },
-      { path: 'sublabels', component: LabelsSubLabelsComponent }
+      { path: 'sublabels', component: LabelsSubLabelsComponent },
+      { path: 'setup', component: LabelSetupComponent }
     ]
   },
 

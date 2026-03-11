@@ -168,7 +168,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.router.navigate(['/labels/earnings']);
         break;
       case 'admin':
-        this.router.navigate(['/admin/settings']);
+        this.router.navigate(['/admin/reports/music-earnings']);
         break;
       default:
         this.router.navigate(['/dashboard']);

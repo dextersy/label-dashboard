@@ -222,7 +222,7 @@ export class LoginComponent implements OnInit {
       case 'campaigns':
         return '/campaigns/dashboard';
       case 'admin':
-        return '/admin/settings';
+        return '/admin/reports/music-earnings';
       default:
         return '/dashboard';
     }

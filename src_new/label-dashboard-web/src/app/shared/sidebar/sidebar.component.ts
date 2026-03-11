@@ -164,6 +164,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Labels',
           adminOnly: true,
           children: [
+            { route: '/labels/setup', title: 'Label Setup', adminOnly: true },
             { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true },
             { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true }
           ]
@@ -180,7 +181,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Admin',
           adminOnly: true,
           children: [
-            { route: '/admin/settings', title: 'Settings', adminOnly: true },
             {
               route: '/admin/reports',
               title: 'Reports',
@@ -281,6 +281,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
                     case '/labels/sublabels':
                       icon = 'fas fa-layer-group';
                       break;
+                    case '/labels/setup':
+                      icon = 'fas fa-sliders';
+                      break;
                   }
                   return {
                     ...child,
@@ -305,9 +308,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 // Assign appropriate icons based on the route
                 let icon = 'fas fa-cogs'; // default
                 switch (child.route) {
-                  case '/admin/settings':
-                    icon = 'fas fa-palette';
-                    break;
                   case '/admin/reports':
                     icon = 'fas fa-chart-bar';
                     break;
@@ -745,7 +745,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       case 'music':     this.router.navigate(['/dashboard']); break;
       case 'campaigns': this.router.navigate(['/campaigns/dashboard']); break;
       case 'labels':    this.router.navigate(['/labels/earnings']); break;
-      case 'admin':     this.router.navigate(['/admin/settings']); break;
+      case 'admin':     this.router.navigate(['/admin/reports/music-earnings']); break;
     }
   }
 }
