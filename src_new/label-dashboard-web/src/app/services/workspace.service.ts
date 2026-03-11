@@ -68,11 +68,6 @@ export class WorkspaceService {
       workspaces.push('labels');
     }
 
-    // Always ensure at least one workspace is available
-    if (workspaces.length === 0) {
-      workspaces.push('music');
-    }
-
     return workspaces;
   }
 

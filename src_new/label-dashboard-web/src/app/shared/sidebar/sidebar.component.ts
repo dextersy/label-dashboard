@@ -498,9 +498,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     // If current workspace is no longer available, fall back to first available
     const available = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
-    if (!available.includes(this.currentWorkspace)) {
-      const fallback = available[0] || 'music';
-      this.workspaceService.setWorkspace(fallback);
+    if (!available.includes(this.currentWorkspace) && available.length > 0) {
+      this.workspaceService.setWorkspace(available[0]);
     }
 
     // Re-render visible sections with updated feature flags

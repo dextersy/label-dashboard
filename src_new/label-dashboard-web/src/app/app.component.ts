@@ -187,13 +187,16 @@ export class AppComponent implements OnInit, OnDestroy {
     const standaloneRoutes = ['/login', '/domain-not-found', '/forgot-password', '/reset-password', '/set-profile'];
     const standaloneRoutePrefixes = ['/invite', '/public', '/artist/epk/preview'];
 
+    // Strip query params before matching
+    const urlPath = this.router.url.split('?')[0];
+
     // Check exact matches
-    if (standaloneRoutes.includes(this.router.url) || this.router.url === '/') {
+    if (standaloneRoutes.includes(urlPath) || urlPath === '/') {
       return true;
     }
 
     // Check route prefixes (for routes like /invite/accept and /public)
-    if (standaloneRoutePrefixes.some(prefix => this.router.url.startsWith(prefix))) {
+    if (standaloneRoutePrefixes.some(prefix => urlPath.startsWith(prefix))) {
       return true;
     }
 

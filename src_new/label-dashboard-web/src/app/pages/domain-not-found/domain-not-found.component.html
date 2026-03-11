@@ -7,11 +7,11 @@
       <div class="spinner"></div>
     </div>
     
-    <div *ngIf="!isChecking" class="error-state">
+    <div *ngIf="!isChecking && reason !== 'no-workspace'" class="error-state">
       <div class="icon">🌐</div>
       <h1>Oops! We can't find this domain</h1>
       <p>The domain <strong>{{ currentDomain }}</strong> isn't configured in our system yet.</p>
-      
+
       <div class="suggestions">
         <h3>What you can do:</h3>
         <ul>
@@ -19,10 +19,29 @@
           <li>Contact your administrator to set up this domain</li>
         </ul>
       </div>
-      
+
       <div class="help-text">
         <p>Need help? <a href="mailto:support@melt-records.com">Contact your system administrator or support team.</a></p>
       </div>
+    </div>
+
+    <div *ngIf="!isChecking && reason === 'no-workspace'" class="error-state">
+      <div class="icon">🔒</div>
+      <h1>No workspace available</h1>
+      <p>Your account doesn't have access to any workspace on this label.</p>
+
+      <div class="suggestions">
+        <h3>What you can do:</h3>
+        <ul>
+          <li>Contact your label administrator to enable workspace access</li>
+        </ul>
+      </div>
+
+      <div class="help-text">
+        <p>Need help? <a href="mailto:support@melt-records.com">Contact your system administrator or support team.</a></p>
+      </div>
+
+      <button class="btn btn-outline-secondary mt-3" (click)="logout()"><i class="fas fa-sign-out-alt me-2"></i>Log in to another account</button>
     </div>
   </div>
   
