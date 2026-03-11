@@ -72,6 +72,10 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-top: 0.5rem;
+
+  @media (max-width: 575px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .feature-card {
