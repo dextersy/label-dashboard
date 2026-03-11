@@ -111,6 +111,11 @@ export class OnboardingService {
     this.steps = this.steps.filter(step =>
       this.isMobile ? step.showOnMobile : step.showOnDesktop
     );
+
+    // Filter out steps for workspaces that are not available to this user
+    this.steps = this.steps.filter(step =>
+      !step.workspace || this.availableWorkspaces.includes(step.workspace)
+    );
   }
 
   /**
@@ -255,12 +260,27 @@ export class OnboardingService {
   }
 
   /**
+   * Returns true if a step's workspace is available to the current user.
+   * Steps with no workspace property are always considered available.
+   */
+  private isStepAvailable(step: OnboardingStep): boolean {
+    return !step.workspace || this.availableWorkspaces.includes(step.workspace);
+  }
+
+  /**
    * Go to next step
    */
   nextStep(): void {
     const currentIndex = this.currentStepSubject.value;
-    if (currentIndex < this.steps.length - 1) {
-      const nextStep = this.steps[currentIndex + 1];
+
+    // Find the next step whose workspace is available, skipping any that are not
+    let nextIndex = currentIndex + 1;
+    while (nextIndex < this.steps.length && !this.isStepAvailable(this.steps[nextIndex])) {
+      nextIndex++;
+    }
+
+    if (nextIndex < this.steps.length) {
+      const nextStep = this.steps[nextIndex];
 
       // Switch workspace if the next step requires a different workspace
       if (nextStep.workspace) {
@@ -289,7 +309,7 @@ export class OnboardingService {
         }, 50);
       }
 
-      this.currentStepSubject.next(currentIndex + 1);
+      this.currentStepSubject.next(nextIndex);
     } else {
       this.completeOnboarding();
     }
@@ -300,8 +320,15 @@ export class OnboardingService {
    */
   previousStep(): void {
     const currentIndex = this.currentStepSubject.value;
-    if (currentIndex > 0) {
-      this.currentStepSubject.next(currentIndex - 1);
+
+    // Find the previous step whose workspace is available, skipping any that are not
+    let prevIndex = currentIndex - 1;
+    while (prevIndex >= 0 && !this.isStepAvailable(this.steps[prevIndex])) {
+      prevIndex--;
+    }
+
+    if (prevIndex >= 0) {
+      this.currentStepSubject.next(prevIndex);
     }
   }
 
