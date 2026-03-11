@@ -497,8 +497,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
 
     // If current workspace is no longer available, fall back to first available
+    // Note: 'admin' workspace is always available to admins but not in the toolbar list
     const available = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
-    if (!available.includes(this.currentWorkspace) && available.length > 0) {
+    if (this.currentWorkspace !== 'admin' && !available.includes(this.currentWorkspace) && available.length > 0) {
       this.workspaceService.setWorkspace(available[0]);
     }
 

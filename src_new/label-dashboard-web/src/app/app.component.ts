@@ -20,7 +20,7 @@ import { SidebarService } from './services/sidebar.service';
 import { ConnectionMonitorService } from './services/connection-monitor.service';
 import { AppNotificationService } from './services/app-notification.service';
 import { OnboardingService } from './services/onboarding.service';
-import { WorkspaceService } from './services/workspace.service';
+import { WorkspaceService, WorkspaceType } from './services/workspace.service';
 import { PendingInviteNotificationProvider } from './services/notification-providers/pending-invite-notification.provider';
 import { filter } from 'rxjs/operators';
 
@@ -110,7 +110,12 @@ export class AppComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event) => {
-        this.currentRoute = (event as NavigationEnd).url;
+        const url = (event as NavigationEnd).url;
+        this.currentRoute = url;
+        const workspace = this.getWorkspaceFromUrl(url);
+        if (workspace !== this.workspaceService.currentWorkspace) {
+          this.workspaceService.setWorkspace(workspace);
+        }
       });
     
     // Global sublabel completion listener - works regardless of current page
@@ -174,6 +179,14 @@ export class AppComponent implements OnInit, OnDestroy {
         shortcutIcon.href = brandSettings.favicon_url;
       }
     }
+  }
+
+  private getWorkspaceFromUrl(url: string): WorkspaceType {
+    const path = url.split('?')[0];
+    if (path.startsWith('/admin')) return 'admin';
+    if (path.startsWith('/campaigns')) return 'campaigns';
+    if (path.startsWith('/labels')) return 'labels';
+    return 'music';
   }
 
   isStandalonePage(): boolean {
