@@ -11,7 +11,7 @@ import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord } from '../utils/lightsailDNSService';
-import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
+import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain, checkDomainInSSLCertificate } from '../utils/sslManagementService';
 import { clearOriginsCache } from '../middleware/csrf';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
@@ -769,18 +769,35 @@ const verifyDomainAsync = async (
       // All verified domains should have SSL certificates added
       if (shouldAutoAddToSSL(domainName)) {
         try {
-          console.log(`[Async][SSL] Attempting to add ${domainName} to SSL certificate`);
-          const sslResult = await addDomainToSSL(domainName);
-          logSSLOperation(domainName as string, sslResult);
-          
-          finalStatus = sslResult.success ? 'Connected' : 'No SSL';
-          sslConfigured = sslResult.success;
-          sslMessage = sslResult.message;
-          
-          if (sslResult.success) {
-            resultMessage = 'Domain verified and SSL certificate updated successfully';
+          // Check if domain is already in the SSL certificate before attempting to add it.
+          // Running add-ssl-domain.sh (Certbot) unnecessarily can fail due to rate limits or
+          // the script returning non-zero when the domain is already present.
+          const alreadyInCert = await checkDomainInSSLCertificate(domainName);
+
+          if (alreadyInCert) {
+            const certCheckResult = {
+              success: true,
+              message: 'Domain already present in SSL certificate',
+              note: 'Skipped add-ssl-domain.sh — domain already in certificate'
+            };
+            logSSLOperation(domainName, certCheckResult);
+            finalStatus = 'Connected';
+            sslConfigured = true;
+            sslMessage = certCheckResult.message;
+            resultMessage = 'Domain verified and SSL certificate confirmed';
           } else {
-            resultMessage = `Domain points to correct IP but SSL certificate update failed: ${sslResult.error || 'SSL certificate update failed'}`;
+            const sslResult = await addDomainToSSL(domainName);
+            logSSLOperation(domainName as string, sslResult);
+
+            finalStatus = sslResult.success ? 'Connected' : 'No SSL';
+            sslConfigured = sslResult.success;
+            sslMessage = sslResult.message;
+
+            if (sslResult.success) {
+              resultMessage = 'Domain verified and SSL certificate updated successfully';
+            } else {
+              resultMessage = `Domain points to correct IP but SSL certificate update failed: ${sslResult.error || 'SSL certificate update failed'}`;
+            }
           }
         } catch (sslError) {
           console.error(`[Async][SSL] Error during SSL certificate update for ${domainName}:`, sslError);
