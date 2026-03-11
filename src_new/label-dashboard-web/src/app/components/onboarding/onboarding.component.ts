@@ -68,7 +68,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     }
   }
 
-  private updateHighlightPosition(): void {
+  private updateHighlightPosition(retryCount = 0): void {
     if (!this.currentStep || !this.currentStep.targetElement) {
       // Center position for steps without target elements
       this.highlightStyle = {};
@@ -82,7 +82,14 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
     const element = document.querySelector(this.currentStep.targetElement) as HTMLElement;
     if (!element) {
-      console.warn(`Target element not found: ${this.currentStep.targetElement}`);
+      if (retryCount < 10) {
+        // Element not in DOM yet (e.g. waiting for *ngIf / data load); retry
+        setTimeout(() => this.updateHighlightPosition(retryCount + 1), 300);
+      } else {
+        console.warn(`Target element not found after retries: ${this.currentStep.targetElement}`);
+        // Clear stale highlight so the previous step's box isn't shown
+        this.highlightStyle = {};
+      }
       return;
     }
 
