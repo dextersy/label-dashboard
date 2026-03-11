@@ -36,12 +36,15 @@
             ],
             "styles": [
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
+              "src/assets/css/light-bootstrap-dashboard.css",
               "src/styles.scss"
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
               "quill",
-              "quill-delta"
+              "quill-delta",
+              "qrcode",
+              "jsbarcode"
             ]
           },
           "configurations": {
@@ -56,13 +59,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "3mb",
-                  "maximumError": "3.5mb"
+                  "maximumWarning": "3.5mb",
+                  "maximumError": "4mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "15kb",
-                  "maximumError": "30kb"
+                  "maximumWarning": "28kb",
+                  "maximumError": "50kb"
                 }
               ],
               "outputHashing": "all"
@@ -94,13 +97,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "3mb",
-                  "maximumError": "3.5mb"
+                  "maximumWarning": "3.5mb",
+                  "maximumError": "4mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kb",
-                  "maximumError": "15kb"
+                  "maximumWarning": "28kb",
+                  "maximumError": "50kb"
                 }
               ],
               "outputHashing": "all"
@@ -150,12 +153,15 @@
             ],
             "styles": [
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
+              "src/assets/css/light-bootstrap-dashboard.css",
               "src/styles.scss"
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
               "quill",
-              "quill-delta"
+              "quill-delta",
+              "qrcode",
+              "jsbarcode"
             ]
           }
         }
