@@ -22,6 +22,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isSuperadmin: boolean = false;
   selectedArtist: Artist | null = null;
   currentWorkspace: WorkspaceType = 'music';
+  availableWorkspaces: WorkspaceType[] = [];
   navbarBg: string = '#333';
   brandLogo: string = '';
   brandWebsite: string = '#';
@@ -51,6 +52,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
           // Note: Workspace is now automatically restored from localStorage by WorkspaceService
           // No need to force it to 'music' here
 
+          this.refreshAvailableWorkspaces();
           // Update body class based on whether mobile nav is shown
           this.updateMobileNavClass();
         } else {
@@ -80,6 +82,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.brandService.brandSettings$.subscribe(settings => {
         if (settings) {
           this.applyBrandSettings(settings);
+          this.refreshAvailableWorkspaces();
+          this.updateMobileNavClass();
         }
       })
     );
@@ -180,14 +184,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return this.workspaceService.getWorkspaceIcon(workspace);
   }
 
-  get availableWorkspaces(): WorkspaceType[] {
-    // Return workspaces for the toolbar (admin is accessed via upper right menu)
-    const workspaces: WorkspaceType[] = ['music'];
-    if (this.isAdmin) {
-      workspaces.push('campaigns');
-      workspaces.push('labels');
-    }
-    return workspaces;
+  private refreshAvailableWorkspaces(): void {
+    this.availableWorkspaces = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
   }
 
   logout(): void {

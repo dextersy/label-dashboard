@@ -1,5 +1,5 @@
 import express from 'express';
-import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings } from '../controllers/brandController';
+import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles } from '../controllers/brandController';
 import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById } from '../controllers/labelPaymentController';
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
@@ -42,6 +42,10 @@ router.post('/:brandId/sublabels', authenticateToken, requireSuperAdmin, createS
 // Fee settings routes
 router.get('/:brandId/fee-settings', authenticateToken, requireAdmin, getFeeSettings);
 router.put('/:brandId/fee-settings', authenticateToken, requireAdmin, updateFeeSettings);
+
+// Feature toggle routes
+router.get('/:brandId/feature-toggles', authenticateToken, requireAdmin, getFeatureToggles);
+router.put('/:brandId/feature-toggles', authenticateToken, requireAdmin, updateFeatureToggles);
 
 // Label payment methods routes
 router.post('/:brandId/payment-methods', authenticateToken, requireAdmin, addLabelPaymentMethod);

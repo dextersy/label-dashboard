@@ -11,6 +11,7 @@ import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.compo
 import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, PaginationInfo, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { AddSublabelModalComponent } from '../../admin/components/add-sublabel-modal/add-sublabel-modal.component';
 import { FeeSettingsModalComponent } from '../../admin/components/fee-settings-modal/fee-settings-modal.component';
+import { FeatureTogglesModalComponent } from '../../admin/components/feature-toggles-modal/feature-toggles-modal.component';
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../admin/components/sublabel-payout-modal/sublabel-payout-modal.component';
 import { EarningsBreakdownModalComponent, AggregatedTotals } from '../../admin/components/earnings-breakdown-modal.component';
 import { SublabelPaymentsModalComponent } from '../../admin/components/sublabel-payments-modal.component';
@@ -18,7 +19,7 @@ import { FeeSettings } from '../../../services/admin.service';
 
 @Component({
     selector: 'app-labels-sublabels',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, BreadcrumbComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, BreadcrumbComponent],
     templateUrl: './sublabels.component.html',
     styleUrls: ['./sublabels.component.scss']
 })
@@ -32,6 +33,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   showAddSublabelModal: boolean = false;
   showFeeSettingsModal: boolean = false;
   selectedSublabelForFees: ChildBrand | null = null;
+  showFeatureTogglesModal: boolean = false;
+  selectedSublabelForToggles: ChildBrand | null = null;
   showPayoutModal: boolean = false;
   selectedSublabelForPayout: ChildBrand | null = null;
   showEarningsBreakdownModal: boolean = false;
@@ -174,6 +177,11 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       icon: 'fas fa-dollar-sign',
       label: 'Fee Settings',
       handler: (item) => this.openFeeSettingsModal(item)
+    },
+    {
+      icon: 'fas fa-toggle-on',
+      label: 'Toggle Features',
+      handler: (item) => this.openFeatureTogglesModal(item)
     },
     {
       icon: 'fas fa-money-bill-wave',
@@ -527,6 +535,21 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     this.closeFeeSettingsModal();
     // Optionally refresh the data if needed
     // this.loadChildBrands();
+  }
+
+  // Feature Toggles Modal handlers
+  openFeatureTogglesModal(childBrand: ChildBrand): void {
+    this.selectedSublabelForToggles = childBrand;
+    this.showFeatureTogglesModal = true;
+  }
+
+  closeFeatureTogglesModal(): void {
+    this.showFeatureTogglesModal = false;
+    this.selectedSublabelForToggles = null;
+  }
+
+  onFeatureTogglesSaved(): void {
+    this.closeFeatureTogglesModal();
   }
 
   // Payout Modal handlers

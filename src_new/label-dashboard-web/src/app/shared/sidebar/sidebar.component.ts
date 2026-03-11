@@ -62,6 +62,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isInitialized = false;
   availableWorkspaceInfos: WorkspaceInfo[] = [];
 
+  // Feature toggle state (from brand settings)
+  featureSublabels: boolean = true;
+
   // Workspace switch modal
   showWorkspaceSwitchModal = false;
   
@@ -260,22 +263,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [
             {
               id: 'labels-top-level',
-              items: labelsItem.children?.map(child => {
-                // Assign appropriate icons based on the route
-                let icon = 'fas fa-tags'; // default
-                switch (child.route) {
-                  case '/labels/earnings':
-                    icon = 'fas fa-coins';
-                    break;
-                  case '/labels/sublabels':
-                    icon = 'fas fa-layer-group';
-                    break;
-                }
-                return {
-                  ...child,
-                  icon: icon
-                };
-              }) || []
+              items: (labelsItem.children || [])
+                .filter(child => {
+                  // Hide Sublabels item when feature is disabled
+                  if (child.route === '/labels/sublabels' && !this.featureSublabels) {
+                    return false;
+                  }
+                  return true;
+                })
+                .map(child => {
+                  // Assign appropriate icons based on the route
+                  let icon = 'fas fa-tags'; // default
+                  switch (child.route) {
+                    case '/labels/earnings':
+                      icon = 'fas fa-coins';
+                      break;
+                    case '/labels/sublabels':
+                      icon = 'fas fa-layer-group';
+                      break;
+                  }
+                  return {
+                    ...child,
+                    icon: icon
+                  };
+                })
             }
           ];
         } else {
@@ -478,6 +489,22 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.textColor = '#495057';
     this.iconColor = '#6c757d';
     this.activeColor = settings.brand_color; // Brand color used for active item highlighting
+
+    // Apply feature flags
+    this.featureSublabels = settings.feature_sublabels !== false;
+
+    // Refresh available workspaces (feature flags may affect which workspaces are visible)
+    this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
+
+    // If current workspace is no longer available, fall back to first available
+    const available = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
+    if (!available.includes(this.currentWorkspace)) {
+      const fallback = available[0] || 'music';
+      this.workspaceService.setWorkspace(fallback);
+    }
+
+    // Re-render visible sections with updated feature flags
+    this.updateVisibleSections();
   }
 
   private updateTextColorsBasedOnBrightness(): void {

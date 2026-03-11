@@ -71,6 +71,12 @@ export interface EmailLog {
   result: 'Success' | 'Failed';
 }
 
+export interface FeatureToggles {
+  feature_music_workspace: boolean;
+  feature_campaigns_workspace: boolean;
+  feature_sublabels: boolean;
+}
+
 export interface ChildBrand {
   brand_id: number;
   brand_name: string;
@@ -93,6 +99,9 @@ export interface ChildBrand {
   balance: number;
   status?: string;
   domains?: Domain[];
+  feature_music_workspace?: boolean;
+  feature_campaigns_workspace?: boolean;
+  feature_sublabels?: boolean;
 }
 
 export interface CreateSublabelResponse {
@@ -921,6 +930,19 @@ export class AdminService {
 
   updateFeeSettings(brandId: number, feeSettings: Partial<FeeSettings>): Observable<any> {
     return this.http.put(`${environment.apiUrl}/brands/${brandId}/fee-settings`, feeSettings, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Feature Toggles Management
+  getFeatureToggles(brandId: number): Observable<FeatureToggles> {
+    return this.http.get<FeatureToggles>(`${environment.apiUrl}/brands/${brandId}/feature-toggles`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateFeatureToggles(brandId: number, toggles: FeatureToggles): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/feature-toggles`, toggles, {
       headers: this.getAuthHeaders()
     });
   }

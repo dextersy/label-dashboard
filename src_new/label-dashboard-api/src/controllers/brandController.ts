@@ -38,9 +38,10 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         model: Brand,
         as: 'brand',
         attributes: [
-          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 
+          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
           'favicon_url', 'paymongo_wallet_id', 'payment_processing_fee_for_payouts',
-          'release_submission_url', 'catalog_prefix'
+          'release_submission_url', 'catalog_prefix',
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels'
         ]
       }]
     });
@@ -62,7 +63,10 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         brand_website: brand.brand_website,
         favicon_url: brand.favicon_url,
         release_submission_url: brand.release_submission_url,
-        catalog_prefix: brand.catalog_prefix || 'REL'
+        catalog_prefix: brand.catalog_prefix || 'REL',
+        feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
+        feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+        feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels)
       }
     });
 
@@ -322,6 +326,69 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error updating fee settings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getFeatureToggles = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+
+    const brand = await Brand.findByPk(brandId as string);
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    res.json({
+      feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
+      feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+      feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels)
+    });
+
+  } catch (error) {
+    console.error('Error fetching feature toggles:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateFeatureToggles = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+    const { feature_music_workspace, feature_campaigns_workspace, feature_sublabels } = req.body;
+
+    const brand = await Brand.findByPk(brandId as string);
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Validate that values are booleans
+    if (feature_music_workspace !== undefined && typeof feature_music_workspace !== 'boolean') {
+      return res.status(400).json({ error: 'feature_music_workspace must be a boolean' });
+    }
+    if (feature_campaigns_workspace !== undefined && typeof feature_campaigns_workspace !== 'boolean') {
+      return res.status(400).json({ error: 'feature_campaigns_workspace must be a boolean' });
+    }
+    if (feature_sublabels !== undefined && typeof feature_sublabels !== 'boolean') {
+      return res.status(400).json({ error: 'feature_sublabels must be a boolean' });
+    }
+
+    await brand.update({
+      feature_music_workspace: feature_music_workspace !== undefined ? feature_music_workspace : brand.feature_music_workspace,
+      feature_campaigns_workspace: feature_campaigns_workspace !== undefined ? feature_campaigns_workspace : brand.feature_campaigns_workspace,
+      feature_sublabels: feature_sublabels !== undefined ? feature_sublabels : brand.feature_sublabels
+    });
+
+    res.json({
+      message: 'Feature toggles updated successfully',
+      feature_music_workspace: brand.feature_music_workspace !== false,
+      feature_campaigns_workspace: brand.feature_campaigns_workspace !== false,
+      feature_sublabels: brand.feature_sublabels !== false
+    });
+
+  } catch (error) {
+    console.error('Error updating feature toggles:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

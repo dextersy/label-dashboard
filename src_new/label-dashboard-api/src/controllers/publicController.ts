@@ -1606,8 +1606,9 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         model: Brand,
         as: 'brand',
         attributes: [
-          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 
-          'favicon_url', 'release_submission_url', 'catalog_prefix'
+          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
+          'favicon_url', 'release_submission_url', 'catalog_prefix',
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels'
         ]
       }]
     });
@@ -1616,17 +1617,21 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Brand not found for this domain' });
     }
 
+    const brand = domainRecord.brand;
     res.json({
       domain: domainRecord.domain_name,
       brand: {
-        id: domainRecord.brand.id,
-        name: domainRecord.brand.brand_name,
-        logo_url: domainRecord.brand.logo_url,
-        brand_color: domainRecord.brand.brand_color,
-        brand_website: domainRecord.brand.brand_website,
-        favicon_url: domainRecord.brand.favicon_url,
-        release_submission_url: domainRecord.brand.release_submission_url,
-        catalog_prefix: domainRecord.brand.catalog_prefix
+        id: brand.id,
+        name: brand.brand_name,
+        logo_url: brand.logo_url,
+        brand_color: brand.brand_color,
+        brand_website: brand.brand_website,
+        favicon_url: brand.favicon_url,
+        release_submission_url: brand.release_submission_url,
+        catalog_prefix: brand.catalog_prefix,
+        feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
+        feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+        feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels)
       }
     });
   } catch (error) {

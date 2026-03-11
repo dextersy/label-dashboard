@@ -109,6 +109,15 @@
   (saved)="onFeeSettingsSaved($event)">
 </app-fee-settings-modal>
 
+<!-- Feature Toggles Modal -->
+<app-feature-toggles-modal
+  [show]="showFeatureTogglesModal"
+  [brandId]="selectedSublabelForToggles?.brand_id || null"
+  [sublabelName]="selectedSublabelForToggles?.brand_name || ''"
+  (close)="closeFeatureTogglesModal()"
+  (saved)="onFeatureTogglesSaved()">
+</app-feature-toggles-modal>
+
 <!-- Payout Modal -->
 <app-sublabel-payout-modal
   #payoutModal

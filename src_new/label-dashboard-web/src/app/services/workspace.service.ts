@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { BrandService } from './brand.service';
 
 export type WorkspaceType = 'music' | 'campaigns' | 'labels' | 'admin';
 
@@ -25,7 +26,7 @@ export class WorkspaceService {
   private currentWorkspaceSubject = new BehaviorSubject<WorkspaceType>(this.loadWorkspaceFromStorage());
   public currentWorkspace$ = this.currentWorkspaceSubject.asObservable();
 
-  constructor() {}
+  constructor(private brandService: BrandService) {}
 
   get currentWorkspace(): WorkspaceType {
     return this.currentWorkspaceSubject.value;
@@ -49,14 +50,27 @@ export class WorkspaceService {
   }
 
   /**
-   * Get available workspaces based on user permissions
+   * Get available workspaces based on user permissions and brand feature flags
    */
   getAvailableWorkspaces(isAdmin: boolean = false): WorkspaceType[] {
     // Returns workspaces for the toolbar (admin is accessed via upper right menu)
-    const workspaces: WorkspaceType[] = ['music'];
+    const settings = this.brandService.getCurrentBrandSettings();
+    const workspaces: WorkspaceType[] = [];
+
+    if (settings?.feature_music_workspace !== false) {
+      workspaces.push('music');
+    }
 
     if (isAdmin) {
-      workspaces.push('campaigns', 'labels');
+      if (settings?.feature_campaigns_workspace !== false) {
+        workspaces.push('campaigns');
+      }
+      workspaces.push('labels');
+    }
+
+    // Always ensure at least one workspace is available
+    if (workspaces.length === 0) {
+      workspaces.push('music');
     }
 
     return workspaces;

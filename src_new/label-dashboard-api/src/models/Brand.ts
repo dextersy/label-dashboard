@@ -23,6 +23,9 @@ interface BrandAttributes {
   fundraiser_transaction_fixed_fee?: number;
   fundraiser_revenue_percentage_fee?: number;
   fundraiser_fee_revenue_type?: 'net' | 'gross';
+  feature_music_workspace?: boolean;
+  feature_campaigns_workspace?: boolean;
+  feature_sublabels?: boolean;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -49,6 +52,9 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public fundraiser_transaction_fixed_fee?: number;
   public fundraiser_revenue_percentage_fee?: number;
   public fundraiser_fee_revenue_type?: 'net' | 'gross';
+  public feature_music_workspace?: boolean;
+  public feature_campaigns_workspace?: boolean;
+  public feature_sublabels?: boolean;
 
   // Association properties
   public parentBrand?: Brand;
@@ -220,6 +226,21 @@ Brand.init(
       type: DataTypes.ENUM('net', 'gross'),
       allowNull: true,
       defaultValue: 'net'
+    },
+    feature_music_workspace: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    feature_campaigns_workspace: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    feature_sublabels: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
   },
   {
