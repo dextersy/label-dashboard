@@ -200,19 +200,24 @@ export class LoginComponent implements OnInit {
   }
 
   private getDefaultPageForWorkspace(isAdmin: boolean = false): string {
-    const workspace = this.workspaceService.currentWorkspace;
-
     // If the stored workspace requires admin access but the user isn't admin, reset to music
     const adminOnlyWorkspaces: WorkspaceType[] = ['campaigns', 'labels', 'admin'];
-    if (!isAdmin && adminOnlyWorkspaces.includes(workspace)) {
+    if (!isAdmin && adminOnlyWorkspaces.includes(this.workspaceService.currentWorkspace)) {
       this.workspaceService.setWorkspace('music');
     }
 
+    const settings = this.brandService.getCurrentBrandSettings();
+
     // For non-admin users, check if the music workspace is enabled
-    if (!isAdmin) {
-      const settings = this.brandService.getCurrentBrandSettings();
-      if (settings?.feature_music_workspace === false) {
-        return '/domain-not-found';
+    if (!isAdmin && settings?.feature_music_workspace === false) {
+      return '/domain-not-found';
+    }
+
+    // If the current workspace is music but music is disabled, switch to the first available workspace
+    if (this.workspaceService.currentWorkspace === 'music' && settings?.feature_music_workspace === false) {
+      const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(isAdmin);
+      if (availableWorkspaces.length > 0) {
+        this.workspaceService.setWorkspace(availableWorkspaces[0]);
       }
     }
 
