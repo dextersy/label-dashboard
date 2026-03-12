@@ -216,7 +216,7 @@
                     </span>
                     
                     <!-- HTML rendering for columns with renderHtml flag (status badges, formatted text, etc.) -->
-                    <span *ngIf="column.renderHtml && !column.showBreakdownButton" [innerHTML]="getColumnValue(item, column)"></span>
+                    <span *ngIf="column.renderHtml && !column.showBreakdownButton" class="html-cell" [innerHTML]="getColumnValue(item, column)"></span>
 
                     <!-- Earnings columns with breakdown buttons -->
                     <div *ngIf="column.showBreakdownButton" class="d-flex align-items-center justify-content-end">

@@ -168,6 +168,11 @@
   }
 }
 
+// HTML cell — block so flex/block children are width-constrained
+.html-cell {
+  display: block;
+}
+
 // Actions column styling
 .actions-column {
   width: 48px;
