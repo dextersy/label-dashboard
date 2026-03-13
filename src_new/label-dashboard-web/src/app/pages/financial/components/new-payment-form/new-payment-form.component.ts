@@ -35,7 +35,7 @@ export class NewPaymentFormComponent implements OnInit, OnChanges {
   ensureDateIsToday(): void {
     if (!this.newPaymentForm || !this.newPaymentForm.date_paid) {
       if (this.newPaymentForm) {
-        this.newPaymentForm.date_paid = new Date().toISOString().split('T')[0];
+        this.newPaymentForm.date_paid = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
       }
     }
   }

@@ -129,7 +129,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
   @ViewChild('newPaymentFormComponent') newPaymentFormComponent?: NewPaymentFormComponent;
   
   private static getTodaysDate(): string {
-    return new Date().toISOString().split('T')[0];
+    return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   }
   
   selectedArtist: Artist | null = null;

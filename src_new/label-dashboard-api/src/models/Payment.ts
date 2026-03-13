@@ -58,7 +58,7 @@ Payment.init(
       allowNull: false,
     },
     date_paid: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     paid_thru_type: {

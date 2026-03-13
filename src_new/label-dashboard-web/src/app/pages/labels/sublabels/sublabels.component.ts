@@ -186,7 +186,6 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     {
       icon: 'fas fa-money-bill-wave',
       label: 'Pay Out',
-      hidden: (item) => item.balance <= 0,
       handler: (item) => this.openPayoutModal(item)
     }
   ];
@@ -554,10 +553,6 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   // Payout Modal handlers
   openPayoutModal(childBrand: ChildBrand): void {
-    if (childBrand.balance <= 0) {
-      this.notificationService.showWarning('This sublabel has no balance to pay out');
-      return;
-    }
     this.selectedSublabelForPayout = childBrand;
     this.showPayoutModal = true;
   }
