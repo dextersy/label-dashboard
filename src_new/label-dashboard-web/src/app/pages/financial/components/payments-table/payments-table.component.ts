@@ -2,8 +2,10 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Payment } from '../../financial.component';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, HeaderAction, SearchFilters } from '../../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../../services/auth.service';
+import { FinancialService } from '../../../../services/financial.service';
+import { NotificationService } from '../../../../services/notification.service';
 
 @Component({
     selector: 'app-payments-table',
@@ -19,8 +21,26 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<{ column: string; direction: 'asc' | 'desc' } | null>();
+  @Output() refresh = new EventEmitter<void>();
 
   isAdmin = false;
+
+  rowActions: TableAction[] = [
+    {
+      icon: 'fas fa-check-circle',
+      label: 'Mark as succeeded',
+      type: 'secondary',
+      hidden: (payment: Payment) => !this.isAdmin || payment.status === 'succeeded',
+      handler: (payment: Payment) => this.updateStatus(payment, 'succeeded')
+    },
+    {
+      icon: 'fas fa-ban',
+      label: 'Void payment',
+      type: 'danger',
+      hidden: (payment: Payment) => !this.isAdmin || payment.status === 'failed',
+      handler: (payment: Payment) => this.updateStatus(payment, 'failed')
+    }
+  ];
 
   get headerActions(): HeaderAction[] {
     if (!this.isAdmin) return [];
@@ -103,7 +123,9 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private financialService: FinancialService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
@@ -181,6 +203,16 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     const hasLegacyData = payment.paid_thru_type && payment.paid_thru_type.trim() !== '';
     
     return !hasPaymentMethod && !hasLegacyData;
+  }
+
+  async updateStatus(payment: Payment, status: 'succeeded' | 'failed'): Promise<void> {
+    try {
+      await this.financialService.updatePaymentStatus(payment.id, status);
+      this.notificationService.showSuccess(status === 'succeeded' ? 'Payment marked as succeeded' : 'Payment voided');
+      this.refresh.emit();
+    } catch {
+      this.notificationService.showError('Failed to update payment status');
+    }
   }
 
   navigateToNewPayment(): void {

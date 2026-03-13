@@ -23,6 +23,7 @@ export class FinancialPaymentsTabComponent {
   @Output() paymentsPageChange = new EventEmitter<number>();
   @Output() paymentsFiltersChange = new EventEmitter<SearchFilters>();
   @Output() paymentsSortChange = new EventEmitter<{ column: string; direction: 'asc' | 'desc' } | null>();
+  @Output() paymentsRefresh = new EventEmitter<void>();
   @Input() payoutSettings: PayoutSettings | null = null;
   @Input() supportedBanks: { bank_code: string; bank_name: string }[] = [];
   @Input() addPaymentMethodForm: any = {};

@@ -84,7 +84,8 @@
             [onSetDefaultPaymentMethod]="onSetDefaultPaymentMethod.bind(this)"
             (paymentsPageChange)="onPaymentsPageChange($event)"
             (paymentsFiltersChange)="onPaymentsFiltersChange($event)"
-            (paymentsSortChange)="onPaymentsSortChange($event)">
+            (paymentsSortChange)="onPaymentsSortChange($event)"
+            (paymentsRefresh)="loadPaymentsPage(1, paymentsFilters, paymentsSort)">
           </app-financial-payments-tab>
         </div>
         

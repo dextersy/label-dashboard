@@ -1045,6 +1045,38 @@ export const getPayments = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Update payment status (admin only)
+export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['succeeded', 'failed'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status must be succeeded or failed' });
+    }
+
+    const payment = await Payment.findOne({
+      where: { id },
+      include: [{ model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } }]
+    });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    await payment.update({ status });
+    res.json({ payment });
+  } catch (error) {
+    console.error('Update payment status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Get payment by ID
 export const getPaymentById = async (req: AuthRequest, res: Response) => {
   try {

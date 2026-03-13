@@ -151,6 +151,12 @@ export class FinancialService {
     };
   }
 
+  async updatePaymentStatus(paymentId: number, status: 'succeeded' | 'failed'): Promise<void> {
+    await firstValueFrom(this.http.patch(`${environment.apiUrl}/financial/payments/${paymentId}/status`, { status }, {
+      headers: this.getAuthHeaders()
+    }));
+  }
+
   async getPaymentMethods(artistId: number): Promise<PaymentMethod[]> {
     const response = await firstValueFrom(this.http.get<{paymentMethods: any[]}>(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
       headers: this.getAuthHeaders()

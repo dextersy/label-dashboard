@@ -247,7 +247,8 @@
                     </span>
                   </td>
                   <td *ngIf="hasActionsColumn()" class="actions-column">
-                    <div class="kebab-container" (click)="$event.stopPropagation()">
+                    <div class="kebab-container" (click)="$event.stopPropagation()"
+                         *ngIf="actionsContent || getVisibleActions(item).length > 0">
                       <button class="kebab-btn" type="button"
                               (click)="toggleKebab(item, $event)"
                               [class.active]="isKebabOpen(item)">

@@ -432,7 +432,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadPaymentsPage(page: number, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
+  async loadPaymentsPage(page: number = 1, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
     if (!this.selectedArtist) return;
     this.paymentsLoading = true;
     try {
