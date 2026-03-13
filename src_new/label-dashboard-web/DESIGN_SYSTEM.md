@@ -243,14 +243,20 @@ Drawer mode is **auto-detected** via `MutationObserver` on projected content —
 - `.mobile-text` — wrappable text cell
 - `.tablet-hide` / `.tablet-narrow` — same for `≤768px`
 
-### Badges (in tables)
+### Status Dots (in tables)
 
 ```html
-<span class="badge badge-success">Active</span>
+<span class="status-dot status-success">Active</span>
 ```
-Pill shape: `border-radius: 12px`, `padding: 6px 10px`, `font-size: 11px`, uppercase.
+A small colored circle (`7px`) beside colored text. Both circle and text share the same semantic color. Defined in `src/styles/components.scss`.
 
-Available: `badge-success`, `badge-warning`, `badge-danger`, `badge-secondary`, `badge-primary`, `badge-info`.
+| Modifier | Color | Use |
+|----------|-------|-----|
+| `status-success`   | green `#16a34a`  | Succeeded, Live, Paid, Accepted |
+| `status-warning`   | amber `#d97706`  | Pending, Draft, Awaiting |
+| `status-danger`    | red `#dc2626`    | Failed, Taken Down |
+| `status-secondary` | gray `#6b7280`   | Canceled, Refunded, Unknown |
+| `status-info`      | cyan `#0891b2`   | For Submission, Informational |
 
 ---
 

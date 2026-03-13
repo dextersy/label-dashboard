@@ -187,13 +187,10 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   formatStatus(status: string | undefined): string {
     switch (status) {
-      case 'pending':
-        return '<span class="badge bg-warning text-dark">Pending</span>';
-      case 'failed':
-        return '<span class="badge bg-danger">Failed</span>';
+      case 'pending':   return '<span class="status-dot status-warning">Pending</span>';
+      case 'failed':    return '<span class="status-dot status-danger">Failed</span>';
       case 'succeeded':
-      default:
-        return '<span class="badge bg-success">Succeeded</span>';
+      default:          return '<span class="status-dot status-success">Succeeded</span>';
     }
   }
 

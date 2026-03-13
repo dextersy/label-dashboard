@@ -491,14 +491,10 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   getStatusHtml(status: string): string {
     const text = this.getStatusText(status);
     switch (status) {
-      case 'New':
-        return `<span class="badge bg-warning text-dark">${text}</span>`;
-      case 'Payment Confirmed':
-        return `<span class="badge bg-success">${text}</span>`;
-      case 'Canceled':
-        return `<span class="badge bg-secondary">${text}</span>`;
-      default:
-        return `<span class="badge bg-secondary">${text}</span>`;
+      case 'New':               return `<span class="status-dot status-warning">${text}</span>`;
+      case 'Payment Confirmed': return `<span class="status-dot status-success">${text}</span>`;
+      case 'Canceled':          return `<span class="status-dot status-secondary">${text}</span>`;
+      default:                  return `<span class="status-dot status-secondary">${text}</span>`;
     }
   }
 
