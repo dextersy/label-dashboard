@@ -332,3 +332,53 @@ tr.text-muted {
     color: #adb5bd !important;
   }
 }
+
+// Mobile column group merging — secondary values hidden on desktop
+.mobile-group-secondary {
+  display: none;
+}
+
+@media (max-width: 576px) {
+  // Hide non-main group columns (th + td) on mobile
+  .mobile-group-hidden {
+    display: none !important;
+  }
+
+  // Secondary value lines inside the main group cell
+  .mobile-group-secondary {
+    display: block;
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+
+  // Amount secondary: right-align and bold to match the column's normal style
+  .mobile-group-secondary-amount {
+    font-weight: 600;
+    color: #333;
+    font-size: 12px;
+  }
+}
+
+// Merged cell row — financial section headers (mobile only)
+.merged-cell-row {
+  display: none;
+}
+
+@media (max-width: 576px) {
+  .merged-cell-row {
+    display: table-row;
+  }
+
+  .merged-cell {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 6px 12px !important;
+  }
+}
