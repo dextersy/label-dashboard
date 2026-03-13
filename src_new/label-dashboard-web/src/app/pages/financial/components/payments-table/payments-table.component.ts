@@ -55,40 +55,43 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   // Define table columns for search and sort functionality
   paymentsColumns: TableColumn[] = [
-    { 
-      key: 'date_paid', 
-      label: 'Date', 
-      type: 'date', 
-      searchable: true, 
+    {
+      key: 'date_paid',
+      label: 'Date',
+      type: 'date',
+      searchable: true,
       sortable: true,
+      mobileGroup: 'summary',
       mobileClass: 'mobile-narrow',
       tabletClass: ''
     },
-    { 
-      key: 'description', 
-      label: 'Description', 
-      type: 'text', 
-      searchable: true, 
+    {
+      key: 'description',
+      label: 'Description',
+      type: 'text',
+      searchable: true,
       sortable: true,
+      mobileGroup: 'summary',
+      mobileGroupMain: true,
       mobileClass: 'mobile-text',
       tabletClass: ''
     },
-    { 
-      key: 'paid_thru_type', 
-      label: 'Method', 
-      type: 'text', 
-      searchable: true, 
+    {
+      key: 'paid_thru_type',
+      label: 'Method',
+      type: 'text',
+      searchable: true,
       sortable: true,
       formatter: (payment: any) => this.formatPaymentMethod(payment),
       mobileClass: '',
       tabletClass: 'tablet-hide'
     },
-    { 
-      key: 'amount', 
-      label: 'Amount', 
-      type: 'number', 
-      searchable: true, 
-      sortable: true, 
+    {
+      key: 'amount',
+      label: 'Amount',
+      type: 'number',
+      searchable: true,
+      sortable: true,
       align: 'right',
       mobileClass: 'mobile-narrow mobile-number',
       tabletClass: ''
@@ -116,6 +119,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
       sortable: true,
       formatter: (payment: any) => this.formatStatus(payment.status),
       renderHtml: true,
+      mobileGroup: 'summary',
       mobileClass: 'mobile-narrow',
       tabletClass: ''
     }

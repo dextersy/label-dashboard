@@ -10,7 +10,7 @@
   </div>
 </div>
 
-<app-paginated-table 
+<app-paginated-table
   title="Royalties History"
   [data]="royalties"
   [pagination]="pagination"
@@ -23,10 +23,4 @@
   (pageChange)="onPageChange($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">
-  
-  
-  <ng-template #tableContent let-data>
-    <app-royalties-table [royalties]="data" [showHeader]="true"></app-royalties-table>
-  </ng-template>
-  
 </app-paginated-table>

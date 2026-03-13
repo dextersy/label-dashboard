@@ -49,14 +49,15 @@ export class SublabelPaymentsModalComponent implements OnChanges {
   totalProcessingFees: number = 0;
 
   columns: TableColumn[] = [
-    { key: 'date_paid', label: 'Date', type: 'date', sortable: true, searchable: false },
-    { key: 'description', label: 'Description', type: 'text', sortable: true, searchable: false },
+    { key: 'date_paid', label: 'Date', type: 'date', sortable: true, searchable: false, mobileGroup: 'summary' },
+    { key: 'description', label: 'Description', type: 'text', sortable: true, searchable: false, mobileGroup: 'summary', mobileGroupMain: true },
     {
       key: 'paid_thru_type',
       label: 'Method',
       type: 'text',
       sortable: false,
       searchable: false,
+      mobileGroup: 'summary',
       formatter: (payment: SublabelPayment) => this.getPaymentMethodDisplay(payment)
     },
     { key: 'amount', label: 'Amount', type: 'number', sortable: true, searchable: false, align: 'right' },
@@ -73,6 +74,7 @@ export class SublabelPaymentsModalComponent implements OnChanges {
       sortable: true,
       searchable: false,
       renderHtml: true,
+      mobileGroup: 'summary',
       formatter: (payment: SublabelPayment) => this.formatStatus(payment.status)
     }
   ];
