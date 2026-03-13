@@ -49,6 +49,7 @@
                   <th>Payment Method</th>
                   <th class="text-end">Amount</th>
                   <th class="text-end">Processing Fee</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,6 +75,11 @@
                     </span>
                     <span class="text-muted" *ngIf="!payment.payment_processing_fee">
                       -
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="getStatusBadgeClass(payment.status)">
+                      {{ getStatusLabel(payment.status) }}
                     </span>
                   </td>
                 </tr>

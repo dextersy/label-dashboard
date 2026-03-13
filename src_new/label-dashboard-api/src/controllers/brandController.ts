@@ -989,6 +989,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
       const payments = await LabelPayment.sum('amount', {
         where: {
           brand_id: childBrand.id,
+          status: 'succeeded',
           ...(start_date && end_date ? {
             date_paid: {
               [Op.between]: [new Date(start_date), new Date(end_date)]
@@ -1141,6 +1142,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
         artistPayments = await Payment.sum('amount', {
           where: {
             artist_id: { [Op.in]: artistIdList },
+            status: 'succeeded',
             ...(start_date && end_date ? {
               date_paid: {
                 [Op.between]: [new Date(start_date), new Date(end_date)]

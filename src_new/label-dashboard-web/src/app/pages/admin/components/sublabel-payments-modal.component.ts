@@ -10,6 +10,7 @@ export interface SublabelPayment {
   date_paid: string;
   payment_processing_fee?: number;
   reference_number?: string;
+  status?: string;
 
   // Legacy fields
   paid_thru_type?: string;
@@ -123,6 +124,24 @@ export class SublabelPaymentsModalComponent implements OnChanges {
       return isNaN(parsed) ? 0 : parsed;
     }
     return 0;
+  }
+
+  getStatusBadgeClass(status: string | undefined): string {
+    switch (status) {
+      case 'pending': return 'badge bg-warning text-dark';
+      case 'failed': return 'badge bg-danger';
+      case 'succeeded':
+      default: return 'badge bg-success';
+    }
+  }
+
+  getStatusLabel(status: string | undefined): string {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'failed': return 'Failed';
+      case 'succeeded':
+      default: return 'Succeeded';
+    }
   }
 
   formatDate(dateString: string): string {

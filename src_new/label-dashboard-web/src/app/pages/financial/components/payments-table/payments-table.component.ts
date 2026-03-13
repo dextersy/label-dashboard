@@ -73,15 +73,31 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
       mobileClass: 'mobile-narrow mobile-number',
       tabletClass: ''
     },
-    { 
-      key: 'payment_processing_fee', 
-      label: 'Fee', 
-      type: 'number', 
-      searchable: true, 
-      sortable: true, 
+    {
+      key: 'payment_processing_fee',
+      label: 'Fee',
+      type: 'number',
+      searchable: true,
+      sortable: true,
       align: 'right',
       mobileClass: 'mobile-narrow mobile-number',
       tabletClass: 'tablet-hide'
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'succeeded', label: 'Succeeded' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'failed', label: 'Failed' }
+      ],
+      searchable: true,
+      sortable: true,
+      formatter: (payment: any) => this.formatStatus(payment.status),
+      renderHtml: true,
+      mobileClass: 'mobile-narrow',
+      tabletClass: ''
     }
   ];
 
@@ -145,6 +161,18 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     }
     
     return payment.paid_thru_type;
+  }
+
+  formatStatus(status: string | undefined): string {
+    switch (status) {
+      case 'pending':
+        return '<span class="badge bg-warning text-dark">Pending</span>';
+      case 'failed':
+        return '<span class="badge bg-danger">Failed</span>';
+      case 'succeeded':
+      default:
+        return '<span class="badge bg-success">Succeeded</span>';
+    }
   }
 
   isNonCashPayment(payment: Payment): boolean {

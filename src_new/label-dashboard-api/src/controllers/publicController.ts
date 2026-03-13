@@ -1105,6 +1105,23 @@ export const ticketPaymentWebhook = async (req: Request, res: Response) => {
   }
 };
 
+export const transferWebhook = async (req: Request, res: Response) => {
+  try {
+    const signature = req.headers['paymongo-signature'] as string;
+    const payload = req.body;
+
+    // Process transfer status update webhook
+    const isValid = await paymentService.processTransferWebhook(payload, signature);
+
+    // Always respond with 200 OK - PayMongo expects this to mark the webhook delivered
+    res.status(200).json({ received: true, processed: isValid });
+  } catch (error) {
+    console.error('Transfer webhook error:', error);
+    // Still respond with 200 to prevent PayMongo from retrying
+    res.status(200).json({ received: true, processed: false, error: 'Processing failed' });
+  }
+};
+
 export const checkPin = async (req: Request, res: Response) => {
   try {
     const { event_id, pin } = req.body;

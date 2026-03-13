@@ -676,7 +676,7 @@ export const getArtistBalance = async (req: AuthRequest, res: Response) => {
 
     // Calculate total payments
     const totalPayments = await Payment.sum('amount', {
-      where: { artist_id: artistId }
+      where: { artist_id: artistId, status: 'succeeded' }
     }) || 0;
 
     const balance = totalRoyalties - totalPayments;

@@ -63,6 +63,8 @@ export interface Payment {
     account_name: string;
     account_number_or_email: string;
   };
+  status?: string;
+  reference_number?: string;
 }
 
 export interface PaymentMethod {

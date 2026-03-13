@@ -211,6 +211,7 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
       artistPayments = await Payment.sum('amount', {
         where: {
           artist_id: { [Op.in]: artistIdList },
+          status: 'succeeded',
           ...(startDateFilter && endDateFilter ? {
             date_paid: {
               [Op.between]: [startDateFilter, endDateFilter]
@@ -224,6 +225,7 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
     const totalPayments = await LabelPayment.sum('amount', {
       where: {
         brand_id: req.user.brand_id,
+        status: 'succeeded',
         ...(startDateFilter && endDateFilter ? {
           date_paid: {
             [Op.between]: [startDateFilter, endDateFilter]

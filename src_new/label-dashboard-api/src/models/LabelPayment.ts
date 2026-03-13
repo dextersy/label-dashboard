@@ -13,6 +13,8 @@ interface LabelPaymentAttributes {
   payment_method_id?: number;
   reference_number?: string;
   payment_processing_fee?: number;
+  status?: string;
+  paymongo_transfer_id?: string;
 }
 
 interface LabelPaymentCreationAttributes extends Optional<LabelPaymentAttributes, 'id'> {}
@@ -29,6 +31,8 @@ class LabelPayment extends Model<LabelPaymentAttributes, LabelPaymentCreationAtt
   public payment_method_id?: number;
   public reference_number?: string;
   public payment_processing_fee?: number;
+  public status?: string;
+  public paymongo_transfer_id?: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -89,6 +93,15 @@ LabelPayment.init(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       defaultValue: 0,
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'succeeded', 'failed'),
+      allowNull: false,
+      defaultValue: 'succeeded',
+    },
+    paymongo_transfer_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
   },
   {

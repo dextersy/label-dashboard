@@ -61,7 +61,8 @@ export const getArtistsDuePayment = async (req: Request, res: Response) => {
         // Calculate total payments made
         const totalPayments = await Payment.sum('amount', {
           where: {
-            artist_id: artist.id
+            artist_id: artist.id,
+            status: 'succeeded'
           }
         }) || 0;
 
@@ -348,7 +349,8 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
         // Calculate total payments made to this sublabel from label_payment table
         const payments = await LabelPayment.sum('amount', {
           where: {
-            brand_id: sublabel.id
+            brand_id: sublabel.id,
+            status: 'succeeded'
           }
         }) || 0;
 

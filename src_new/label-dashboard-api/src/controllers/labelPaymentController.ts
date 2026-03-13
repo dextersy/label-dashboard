@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { LabelPaymentMethod, LabelPayment, Brand } from '../models';
 import { PaymentService } from '../utils/paymentService';
-import { sendSublabelPaymentNotification } from '../utils/emailService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -235,13 +234,14 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
     let finalAmount = amount;
     let finalProcessingFee = payment_processing_fee || 0;
     let finalReferenceNumber = reference_number;
+    let finalTransferId: string | undefined = undefined;
 
     // Handle Paymongo payment processing for non-manual payments
     if (payment_method_id && payment_method_id !== '-1' && manualPayment !== '1') {
       try {
         const paymentService = new PaymentService();
         const parentBrand = await Brand.findByPk(req.user.brand_id);
-        
+
         if (!parentBrand || !parentBrand.paymongo_wallet_id) {
           return res.status(400).json({ error: 'Brand wallet not configured for payments' });
         }
@@ -251,20 +251,23 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
         const transferAmount = amount - processingFee;
 
         // Send money through Paymongo
-        const referenceNumber = await paymentService.sendMoneyTransfer(
+        const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+        const transferResult = await paymentService.sendMoneyTransfer(
           req.user.brand_id,
           payment_method_id,
           transferAmount,
           description,
-          true // isLabelPayment = true
+          true, // isLabelPayment = true
+          callbackUrl
         );
 
-        if (!referenceNumber) {
+        if (!transferResult) {
           return res.status(400).json({ error: 'Payment processing failed' });
         }
 
         finalProcessingFee = processingFee;
-        finalReferenceNumber = referenceNumber;
+        finalReferenceNumber = transferResult.referenceNumber;
+        finalTransferId = transferResult.transferId;
       } catch (error) {
         console.error('Paymongo payment error:', error);
         return res.status(500).json({ error: 'Payment processing failed' });
@@ -278,7 +281,9 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
       description,
       date_paid: new Date(date_paid),
       reference_number: finalReferenceNumber,
-      payment_processing_fee: finalProcessingFee
+      payment_processing_fee: finalProcessingFee,
+      status: finalTransferId ? 'pending' : 'succeeded',
+      paymongo_transfer_id: finalTransferId
     };
 
     // Set payment_method_id if provided, otherwise fall back to legacy fields
@@ -305,46 +310,22 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
 
     const payment = await LabelPayment.create(paymentData);
 
-    // Send payment notification email to sublabel admins
-    try {
-      // Get parent brand info for email formatting
-      const parentBrand = await Brand.findByPk(req.user.brand_id);
-      
-      // Load payment method data if payment_method_id is set
-      let paymentMethodData = null;
-      if (payment.payment_method_id) {
-        const paymentMethod = await LabelPaymentMethod.findByPk(payment.payment_method_id);
-        if (paymentMethod) {
-          paymentMethodData = {
-            type: paymentMethod.type,
-            account_name: paymentMethod.account_name,
-            account_number_or_email: paymentMethod.account_number_or_email
-          };
+    // Send email notification for manual payments (Paymongo webhooks handle non-manual ones)
+    if (!finalTransferId) {
+      try {
+        const reloadedPayment = await LabelPayment.findByPk(payment.id, {
+          include: [
+            { model: Brand, as: 'brand', include: [{ model: Brand, as: 'parentBrand' }] },
+            { model: LabelPaymentMethod, as: 'paymentMethod', required: false }
+          ]
+        });
+        if (reloadedPayment) {
+          const paymentService = new PaymentService();
+          await paymentService.notifyLabelPaymentStatus(reloadedPayment, 'succeeded');
         }
+      } catch (notifyError) {
+        console.error('Failed to send manual label payment notification:', notifyError);
       }
-
-      await sendSublabelPaymentNotification(
-        targetBrandId,
-        targetBrand.brand_name,
-        {
-          amount: parseFloat(finalAmount.toFixed(2)),
-          description: description || '',
-          payment_processing_fee: finalProcessingFee,
-          paid_thru_type: paid_thru_type || '',
-          paid_thru_account_name: paid_thru_account_name || '',
-          paid_thru_account_number: paid_thru_account_number || '',
-          paymentMethod: paymentMethodData
-        },
-        {
-          name: parentBrand?.brand_name,
-          brand_color: parentBrand?.brand_color,
-          logo_url: parentBrand?.logo_url,
-          id: parentBrand?.id || req.user.brand_id
-        }
-      );
-    } catch (emailError) {
-      console.error('Failed to send sublabel payment notification:', emailError);
-      // Continue with the response even if email fails
     }
 
     res.status(201).json({
