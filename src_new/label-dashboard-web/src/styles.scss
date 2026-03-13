@@ -83,6 +83,27 @@
   z-index: 1040;
 }
 
+/* On mobile, keep modals within the safe area between navbar (50px) and bottom nav (~70px) */
+@media (max-width: 991px) {
+  .modal {
+    padding-top: 50px !important;
+    padding-bottom: 100px !important;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - 50px - 100px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .modal-body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 !important;
+    min-height: 0 !important;
+  }
+}
+
 /* Prevent scrolling when modals are open */
 body.modal-open {
   overflow: hidden !important;
