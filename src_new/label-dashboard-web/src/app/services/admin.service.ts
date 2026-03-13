@@ -1007,8 +1007,18 @@ export class AdminService {
     });
   }
 
-  getSublabelPayments(brandId: number): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments`, {
+  getSublabelPayments(brandId: number, page: number = 1, limit: number = 10, sortBy?: string, sortDirection?: string): Observable<any> {
+    let params = `page=${page}&limit=${limit}`;
+    if (sortBy && sortDirection) {
+      params += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments?${params}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateSublabelPaymentStatus(brandId: number, paymentId: number, status: 'succeeded' | 'failed'): Observable<any> {
+    return this.http.patch(`${environment.apiUrl}/brands/${brandId}/payments/${paymentId}/status`, { status }, {
       headers: this.getAuthHeaders()
     });
   }

@@ -412,24 +412,30 @@ export const getLabelPayments = async (req: AuthRequest, res: Response) => {
     }
 
     // Get payments with pagination and filters
-    const { count, rows: payments } = await LabelPayment.findAndCountAll({
-      where,
-      include: [
-        {
-          model: LabelPaymentMethod,
-          as: 'paymentMethod',
-          required: false // Left join - include payments without payment methods
-        }
-      ],
-      order: orderClause,
-      limit: pageSize,
-      offset: offset
-    });
+    const [{ count, rows: payments }, totalAmount, totalProcessingFees] = await Promise.all([
+      LabelPayment.findAndCountAll({
+        where,
+        include: [
+          {
+            model: LabelPaymentMethod,
+            as: 'paymentMethod',
+            required: false
+          }
+        ],
+        order: orderClause,
+        limit: pageSize,
+        offset: offset
+      }),
+      LabelPayment.sum('amount', { where }),
+      LabelPayment.sum('payment_processing_fee', { where })
+    ]);
 
     const totalPages = Math.ceil(count / pageSize);
 
-    res.json({ 
+    res.json({
       payments,
+      totalAmount: totalAmount || 0,
+      totalProcessingFees: totalProcessingFees || 0,
       pagination: {
         current_page: pageNum,
         total_pages: totalPages,
@@ -489,6 +495,45 @@ export const getLabelPaymentById = async (req: AuthRequest, res: Response) => {
     res.json({ payment });
   } catch (error) {
     console.error('Get label payment by ID error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateLabelPaymentStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { brandId, id } = req.params;
+    const { status } = req.body;
+    const targetBrandId = parseInt(brandId, 10);
+
+    const validStatuses = ['succeeded', 'failed'];
+    if (!status || !validStatuses.includes(status as string)) {
+      return res.status(400).json({ error: 'Status must be succeeded or failed' });
+    }
+
+    // Verify the brand is accessible (own brand or child brand)
+    if (targetBrandId !== req.user.brand_id) {
+      const targetBrand = await Brand.findOne({
+        where: { id: targetBrandId, parent_brand: req.user.brand_id }
+      });
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Sublabel not found or not accessible' });
+      }
+    }
+
+    const payment = await LabelPayment.findOne({ where: { id, brand_id: targetBrandId } });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    await payment.update({ status });
+    res.json({ payment });
+  } catch (error) {
+    console.error('Update label payment status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

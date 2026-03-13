@@ -1056,7 +1056,7 @@ export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
     const { status } = req.body;
 
     const validStatuses = ['succeeded', 'failed'];
-    if (!status || !validStatuses.includes(status)) {
+    if (!status || !validStatuses.includes(status as string)) {
       return res.status(400).json({ error: 'Status must be succeeded or failed' });
     }
 
