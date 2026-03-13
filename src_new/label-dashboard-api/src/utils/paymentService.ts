@@ -259,25 +259,26 @@ export class PaymentService {
         return false;
       }
 
-      const eventType = payload.data.attributes.type; // 'transfer.paid' or 'transfer.failed'
-      const eventData = payload.data.attributes.data;
+      // PayMongo sends wallet_transaction events with attributes directly on payload.data.attributes
+      const attrs = payload.data.attributes;
+      const walletEventType = attrs.type; // e.g. 'send_money'
 
-      if (!eventData || eventData.type !== 'transfer') {
-        this.webhookLog('ERROR: Not a transfer event, type: ' + (eventData?.type || 'unknown'));
+      if (walletEventType !== 'send_money') {
+        this.webhookLog('ERROR: Not a send_money transfer event, type: ' + (walletEventType || 'unknown'));
         return false;
       }
 
-      const transferId = eventData.id;
-      const referenceNumber = eventData.attributes?.reference_number;
-      const transferStatus = eventData.attributes?.status;
+      const transferId = attrs.transfer_id || payload.data.id;
+      const referenceNumber = attrs.reference_number;
+      const transferStatus = attrs.status;
 
       let newStatus: 'succeeded' | 'failed';
-      if (eventType === 'transfer.paid' || transferStatus === 'succeeded') {
+      if (transferStatus === 'succeeded') {
         newStatus = 'succeeded';
-      } else if (eventType === 'transfer.failed' || transferStatus === 'failed') {
+      } else if (transferStatus === 'failed') {
         newStatus = 'failed';
       } else {
-        this.webhookLog('ERROR: Unknown transfer event type: ' + eventType);
+        this.webhookLog('ERROR: Unknown transfer status: ' + transferStatus);
         return false;
       }
 

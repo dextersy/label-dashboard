@@ -143,7 +143,9 @@ export class FinancialService {
           type: payment.paymentMethod.type,
           account_name: payment.paymentMethod.account_name,
           account_number_or_email: payment.paymentMethod.account_number_or_email
-        } : undefined
+        } : undefined,
+        status: payment.status,
+        reference_number: payment.reference_number
       })),
       pagination: response?.pagination || {}
     };
