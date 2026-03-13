@@ -507,7 +507,7 @@ export const updateLabelPaymentStatus = async (req: AuthRequest, res: Response) 
 
     const { brandId, id } = req.params;
     const { status } = req.body;
-    const targetBrandId = parseInt(brandId, 10);
+    const targetBrandId = parseInt(brandId as string, 10);
 
     const validStatuses = ['succeeded', 'failed'];
     if (!status || !validStatuses.includes(status as string)) {
