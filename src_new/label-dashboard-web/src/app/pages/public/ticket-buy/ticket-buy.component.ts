@@ -217,6 +217,13 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     this.calculateTotal();
   }
 
+  selectTicketTypeCard(ticketType: any) {
+    if (ticketType.is_sold_out) return;
+    this.selectedTicketType = ticketType;
+    this.ticketForm.patchValue({ ticket_type_id: ticketType.id });
+    this.calculateTotal();
+  }
+
   calculateTotal() {
     const numberOfTickets = this.ticketForm.get('number_of_entries')?.value || 0;
     const ticketPrice = this.selectedTicketType?.price || this.event?.ticket_price || 0;

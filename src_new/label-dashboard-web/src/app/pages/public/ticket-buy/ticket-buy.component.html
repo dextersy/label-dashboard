@@ -178,59 +178,50 @@
             <!-- Ticket Type Selection -->
             <div class="ticket-type-container fadeIn fourth" *ngIf="event.ticketTypes && getAvailableTicketTypes().length > 1">
               <h6><strong>Select ticket type</strong></h6>
-              <div class="input-group">
-                <div class="form-floating flex-fill">
-                  <select
-                    class="form-control"
-                    id="ticket_type_id"
-                    formControlName="ticket_type_id"
-                    (change)="onTicketTypeChange()">
-                    <ng-container *ngFor="let ticketType of event.ticketTypes">
-                      <option *ngIf="ticketType.is_available !== false"
-                              [value]="ticketType.id"
-                              [disabled]="ticketType.is_sold_out"
-                              [style.font-style]="ticketType.is_sold_out ? 'italic' : 'normal'"
-                              [style.color]="ticketType.is_sold_out ? '#6c757d' : 'inherit'">
-                        {{ ticketType.name }} - {{ formatPriceDisplay(ticketType.price) }}
-                        <span *ngIf="ticketType.is_sold_out"> (Sold Out)</span>
-                      </option>
-                    </ng-container>
-                  </select>
-                  <label for="ticket_type_id">Ticket type</label>
+              <div class="ticket-type-cards">
+                <div
+                  *ngFor="let ticketType of getAvailableTicketTypes()"
+                  class="ticket-type-card"
+                  [class.selected]="selectedTicketType?.id === ticketType.id"
+                  [class.sold-out]="ticketType.is_sold_out"
+                  (click)="selectTicketTypeCard(ticketType)">
+                  <div class="ticket-type-name">{{ ticketType.name }}</div>
+                  <div class="ticket-type-price">{{ formatPriceDisplay(ticketType.price) }}</div>
+                  <span *ngIf="ticketType.is_sold_out" class="sold-out-badge">Sold Out</span>
+                  <div *ngIf="!ticketType.is_sold_out && event.show_tickets_remaining && ticketType.remaining_tickets != null"
+                       class="ticket-type-remaining">
+                    {{ ticketType.remaining_tickets }} left
+                  </div>
                 </div>
               </div>
             </div>
 
+            <!-- Ticket type special instructions -->
+            <div class="d-block text-success mb-3" *ngIf="selectedTicketType?.special_instructions">
+              <i class="fas fa-info-circle me-1"></i>{{ selectedTicketType?.special_instructions }}
+            </div>
+
             <!-- Number of Tickets -->
-            <h6 class="fadeIn fourth"><strong>How many tickets are you getting?</strong></h6>
             <small class="fadeIn fourth" *ngIf="event.show_tickets_remaining && getRemainingTicketsDisplay()">
               <strong>{{ getRemainingTicketsDisplay() }}</strong> tickets available.
             </small>
             <div class="ticket-quantity-container fadeIn fourth">
-              <div class="input-group">
-                <span class="input-group-text">
-                  {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} - <strong>{{ formatPriceDisplay(selectedTicketType?.price || event.ticket_price) }}</strong>
-                </span>
-                <div class="form-floating flex-fill">
-                  <input
-                    type="number"
-                    min="1"
-                    [max]="getRemainingTicketsDisplay() || 99"
-                    step="1"
-                    class="form-control"
-                    id="number_of_entries"
-                    formControlName="number_of_entries"
-                    placeholder="Number of tickets"
-                    (input)="calculateTotal()"
-                    [class.is-invalid]="isFieldInvalid('number_of_entries')">
-                  <label for="number_of_entries">Number of tickets</label>
-                </div>
+              <div class="form-floating">
+                <input
+                  type="number"
+                  min="1"
+                  [max]="getRemainingTicketsDisplay() || 99"
+                  step="1"
+                  class="form-control"
+                  id="number_of_entries"
+                  formControlName="number_of_entries"
+                  placeholder="Number of tickets"
+                  (input)="calculateTotal()"
+                  [class.is-invalid]="isFieldInvalid('number_of_entries')">
+                <label for="number_of_entries">Number of tickets</label>
               </div>
               <div class="invalid-feedback d-block" *ngIf="isFieldInvalid('number_of_entries')">
                 Number of tickets is required.
-              </div>
-              <div class="d-block text-success mt-1" *ngIf="selectedTicketType?.special_instructions">
-                <i class="fas fa-info-circle me-1"></i>{{ selectedTicketType?.special_instructions }}
               </div>
             </div>
 
