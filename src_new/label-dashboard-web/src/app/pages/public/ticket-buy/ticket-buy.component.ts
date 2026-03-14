@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, SecurityContext } from '@angular/core';
+import { Component, OnInit, OnDestroy, SecurityContext, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeStyle } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
@@ -35,6 +35,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 export class TicketBuyComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
+  @ViewChild('posterImg') posterImg?: ElementRef<HTMLImageElement>;
+
   event: PublicEvent | null = null;
   ticketForm: FormGroup;
   isLoading = false;
@@ -444,6 +446,19 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     } else {
       this.emailTypoResult = null;
     }
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
+    if (window.innerWidth <= 768) return;
+    const translate = -(window.scrollY * 0.2);
+    this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+  }
+
+  getHeroBgImageStyle(): SafeStyle | null {
+    if (!this.event?.poster_url) return null;
+    return this.sanitizer.bypassSecurityTrustStyle(`url(${this.event.poster_url})`);
   }
 
   /**

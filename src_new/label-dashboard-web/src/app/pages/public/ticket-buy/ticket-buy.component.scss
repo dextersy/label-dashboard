@@ -101,23 +101,108 @@ h2 {
 
 // Remove the duplicate .public-page since it's already defined above
 
-.header-section {
-  padding: 10px;
+/* ============================================
+   SPLIT LAYOUT — sticky poster left, content right
+   ============================================ */
+
+.page-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
   width: 100%;
 }
 
-.body-section {
-  padding: 10px;
-  width: 100%;
+/* Left: sticky poster panel (~50%) */
+.poster-panel {
+  width: 50%;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+  }
+
+  &:hover .view-full-image-btn {
+    opacity: 1;
+  }
+
+  .poster-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    will-change: transform;
+  }
+}
+
+/* Right: scrollable content panel */
+.content-panel {
+  flex: 1;
+  min-width: 0;
   background-color: #ffffff;
+  padding: 4rem 5rem;
+}
+
+.event-info-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.form-section {
+  padding: 2rem 0;
+}
+
+/* Mobile: stack vertically */
+@media (max-width: 768px) {
+  .page-layout {
+    flex-direction: column;
+  }
+
+  .poster-panel {
+    width: 100%;
+    height: 260px;
+    position: relative;
+    top: auto;
+  }
+
+  .content-panel {
+    padding: 1.25rem 1rem;
+  }
+
+  .event-info-section {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .form-section {
+    padding: 0.75rem 0;
+  }
+
+  .name-container,
+  .email-container,
+  .contact-number-container,
+  .ticket-quantity-container,
+  .referral-code-container {
+    margin-bottom: 0.75rem;
+  }
 }
 
 .wrapper {
   margin: 0 auto;
-  display: flex;
-  align-items: center;
-  flex-direction: column; 
-  justify-content: center;
+  display: block;
   width: 100%;
   padding: 0px;
 }
@@ -224,10 +309,10 @@ input.error {
 /* Bootstrap Form Controls - Consistent styling for all form fields */
 .name-container,
 .email-container,
-.contact-number-container, 
+.contact-number-container,
 .ticket-quantity-container,
 .referral-code-container {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   
   // Override Bootstrap form-floating height constraints
   .form-floating {
@@ -533,6 +618,12 @@ input.material:not(:focus)::placeholder {
 }
 
 /* FOR POSTER IMAGE */
+.event-poster-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .event-poster {
   object-fit: cover; /* Do not scale the image */
   object-position: center; /* Center the image within the element */
@@ -554,6 +645,9 @@ input.material:not(:focus)::placeholder {
 
   .event-poster-container {
     padding: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -685,6 +779,110 @@ input.material:not(:focus)::placeholder {
 
   @media (max-width: 768px) {
     padding-top: 56px;
+  }
+}
+
+/* ============================================
+   DESKTOP HERO - Poster as full-bleed background
+   ============================================ */
+
+.header-section.has-hero {
+  @media (min-width: 769px) {
+    position: relative;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    min-height: 420px;
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+}
+
+/* Dark gradient overlay */
+.hero-overlay {
+  display: none;
+
+  @media (min-width: 769px) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0.50) 100%);
+    z-index: 1;
+  }
+}
+
+/* Content wrapper sits above overlay */
+.hero-content-wrapper {
+  position: relative;
+  z-index: 2;
+}
+
+/* White text in hero mode (desktop only) */
+.has-hero {
+  @media (min-width: 769px) {
+    .hero-content-wrapper {
+      h1, h5, h6, p, small {
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      a {
+        color: rgba(180, 220, 255, 0.95) !important;
+      }
+
+      // Event details box — glassmorphism style
+      .event-details {
+        background-color: rgba(255, 255, 255, 0.10) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+
+        span, .fw-semibold {
+          color: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        a {
+          color: rgba(150, 210, 255, 0.95) !important;
+        }
+      }
+
+      // Description text
+      .description-text {
+        color: rgba(255, 255, 255, 0.88) !important;
+
+        ::ng-deep p, ::ng-deep * {
+          color: rgba(255, 255, 255, 0.88) !important;
+        }
+      }
+    }
+  }
+}
+
+/* View poster button — corner of hero on desktop */
+.hero-lightbox-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: white;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-family: Arial, sans-serif !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.70);
+    border-color: rgba(255, 255, 255, 0.65);
+  }
+
+  i {
+    font-size: 0.8rem;
   }
 }
 
