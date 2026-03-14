@@ -315,6 +315,13 @@
   border-radius: 0;
 }
 
+@media (min-width: 769px) {
+  .no-poster .content-panel {
+    max-width: 50%;
+    margin: 0 auto;
+  }
+}
+
 /* ============================================
    MOBILE
    ============================================ */

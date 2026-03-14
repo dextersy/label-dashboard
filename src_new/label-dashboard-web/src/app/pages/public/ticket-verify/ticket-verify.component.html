@@ -18,7 +18,7 @@
 </div>
 
 <div class="public-page">
-  <div class="page-layout">
+  <div class="page-layout" [class.no-poster]="!currentEvent?.poster_url">
 
     <!-- Left: Sticky poster panel -->
     <div class="poster-panel" *ngIf="currentEvent?.poster_url">

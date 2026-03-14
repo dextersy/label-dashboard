@@ -155,6 +155,13 @@ h2 {
   padding: 4rem 5rem;
 }
 
+@media (min-width: 769px) {
+  .no-poster .content-panel {
+    max-width: 50%;
+    margin: 0 auto;
+  }
+}
+
 .event-info-section {
   padding-bottom: 1.25rem;
 }

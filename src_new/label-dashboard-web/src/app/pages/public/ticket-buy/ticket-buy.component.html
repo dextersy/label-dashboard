@@ -32,7 +32,7 @@
        class="wrapper fadeInDown"
        [class.with-countdown]="event.show_countdown">
 
-    <div class="page-layout">
+    <div class="page-layout" [class.no-poster]="!event.poster_url">
 
       <!-- Left: Sticky poster panel -->
       <div class="poster-panel" *ngIf="event.poster_url" (click)="openLightbox()">
