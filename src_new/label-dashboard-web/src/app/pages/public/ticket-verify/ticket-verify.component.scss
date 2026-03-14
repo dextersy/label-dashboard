@@ -1,127 +1,240 @@
-/* Match PHP verification page styling exactly */
+:host {
+  display: block;
+  min-height: 100vh;
+}
 
-/* BASIC - from style.css */
-body {
+/* ============================================
+   PAGE BASE
+   ============================================ */
+
+.public-page {
   background-color: #fafafa;
-  font-family: "Poppins", sans-serif;
-  height: 100vh;
-}
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 
-/* STRUCTURE - from style.css */
-.wrapper {
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  flex-direction: column; 
-  justify-content: center;
-  width: 100%;
-  padding: 0px;
-}
+  h1, h2, h3, h4, h5, h6 {
+    font-family: Arial, sans-serif;
+  }
 
-/* Bootstrap card styling (keep original Bootstrap 4 classes) */
-.card {
-  box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
-}
+  h1 {
+    font-size: 2.25em;
+    font-weight: bold;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
 
-/* Loading overlay - exact match */
-.loading {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 10px solid #656565;
-  border-top-color: orange;
-  animation: loading 1s linear infinite;
-  margin: 0 auto;
-}
+  h5 {
+    font-size: 1em;
+    font-weight: normal;
+  }
 
-@keyframes loading {
-  to {
-    transform: rotate(360deg);
+  // Keep FontAwesome icons correct
+  .fa, .fas, .far, .fab, .fal,
+  i.fa, i.fas, i.far, i.fab, i.fal,
+  .fa::before, i.fa::before {
+    font-family: "Font Awesome 7 Free", "Font Awesome 7 Brands" !important;
   }
 }
 
-.loading-overlay {
-  opacity: 0.5; 
-  background: #FFF; 
-  width: 100%;
-  height: 100%; 
-  z-index: 10;
-  top: 0; 
-  left: 0; 
-  position: fixed; 
+/* ============================================
+   SPLIT LAYOUT — poster left, content right
+   ============================================ */
+
+.page-layout {
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Left: sticky poster panel */
+.poster-panel {
+  width: 45%;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+  }
+
+  .poster-fill {
+    position: absolute;
+    top: -10%;
+    left: 0;
+    width: 100%;
+    height: 120%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+}
+
+/* Right: scrollable content panel */
+.content-panel {
+  flex: 1;
+  min-width: 0;
+  background-color: #ffffff;
+  padding: 4rem 5rem;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
 }
 
-/* QR Code button styling - exact match from PHP */
+.event-info-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Scanner/forms section — constrain width, centered */
+.scanner-section {
+  max-width: 460px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================
+   FORM CONTROLS
+   ============================================ */
+
+/* Floating label inputs */
+.form-floating > .form-control {
+  height: 3.75rem;
+  padding-top: 1.625rem;
+  padding-bottom: 0.625rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+
+  &:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.2);
+    outline: none;
+  }
+}
+
+.form-floating > label {
+  padding-top: 1rem;
+}
+
+/* Prominent ticket code input */
+.ticket-code-input {
+  height: 3.75rem !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  letter-spacing: 0.2em !important;
+  border: 2px solid #ced4da !important;
+  border-right: 0 !important;
+  border-radius: 0.375rem 0 0 0.375rem !important;
+
+  &:focus {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.2) !important;
+  }
+}
+
+/* Standard lg control height */
+.form-control-lg {
+  height: 3.75rem;
+  font-size: 1.1rem;
+  border: 1px solid #ced4da;
+
+  &:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.2);
+    outline: none;
+  }
+}
+
+/* QR scan button — matches ticket code input height */
 #btnScanQR {
-  font-size: 24px;
-  border-top: 1px solid #ced4da;
-  border-right: 1px solid #ced4da;
-  border-bottom: 1px solid #ced4da;
-  border-left: 0px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  border-color: #ced4da;
-  background-color: white;
-  padding: 13px 10px 12px 10px;
-}
+  height: 3.75rem;
+  font-size: 1.25rem;
+  padding: 0 1.1rem;
+  border: 2px solid #ced4da;
+  border-left: 0;
+  border-radius: 0 0.375rem 0.375rem 0;
+  background-color: #fff;
+  color: #495057;
 
-#ticketCode {
-  border-right: 0px;
-}
-
-/* Error input styling */
-input.error {
-  border: 1px solid red !important;
+  &:hover:not(:disabled) {
+    background-color: #f8f9fa;
+  }
 }
 
 .field-error-message {
-  font-size: 14px;
-  color: #ff0000;
+  font-size: 13px;
+  color: #dc3545;
+  margin-top: 0.25rem;
 }
 
-/* Camera container - full screen overlay */
-#cameraContainer {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: black;
-  z-index: 999;
+/* ============================================
+   PERSISTENT RESULT ALERT
+   ============================================ */
+
+.result-alert {
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+
+  i.fa {
+    font-size: 2.75rem;
+  }
+
+  h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  &--success {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
+    color: #155724;
+
+    i.fa { color: #28a745; }
+  }
+
+  &--error {
+    background-color: #f8d7da;
+    border: 2px solid #dc3545;
+    color: #721c24;
+
+    i.fa { color: #dc3545; }
+  }
 }
 
-/* Disabled button styling */
-.btn:disabled {
-  border: 1px solid #999999;
-  background-color: #cccccc;
-  color: #666666;
+/* ============================================
+   ENTRIES DISPLAY — large number for gate staff
+   ============================================ */
+
+.checkin-section {
+  margin-top: 1rem;
 }
 
-/* Auto-hide alerts - matches PHP setTimeout */
-#alert-box {
-  animation: fadeOut 0.5s ease-out 2.5s forwards;
-}
-
-/* Prominent entries display for gate staff */
 .entries-display {
-  margin: 20px 0;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
+  margin: 1rem 0 1.5rem;
+  padding: 1.5rem;
+  background: #f8fff9;
+  border-radius: 12px;
   border: 3px solid #28a745;
 }
 
 .entries-label {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: bold;
   color: #28a745;
-  margin-bottom: 10px;
   letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
 }
 
 .entries-number {
@@ -129,192 +242,114 @@ input.error {
   font-weight: 900;
   color: #28a745;
   line-height: 1;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-  margin: 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0.25rem 0;
 }
 
 .entries-subtitle {
-  font-size: 18px;
+  font-size: 1rem;
   font-weight: bold;
   color: #28a745;
-  margin-top: 10px;
   text-transform: uppercase;
+  margin-top: 0.5rem;
 }
 
 .entries-ticket-type {
-  font-size: 16px;
+  font-size: 0.9rem;
   color: #007bff;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(0, 123, 255, 0.1);
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(0, 123, 255, 0.08);
   border-radius: 6px;
-  border: 1px solid rgba(0, 123, 255, 0.3);
+  border: 1px solid rgba(0, 123, 255, 0.2);
 }
 
-/* Improve contrast for blue background text */
-.bg-primary {
-  background-color: #007bff !important;
+/* ============================================
+   LOADING
+   ============================================ */
+
+.loading {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 8px solid #e9ecef;
+  border-top-color: orange;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
 }
 
-.text-light {
-  color: #f8f9fa !important;
-  font-weight: 300;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    display: none;
-  }
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Mobile responsiveness - from PHP CSS */
-@media only screen and (max-device-width: 400px) {
-  .wrapper {
-    height: auto !important;
-    padding: 0px;
+/* ============================================
+   CAMERA / QR SCANNER OVERLAY
+   ============================================ */
+
+#cameraContainer {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #000;
+  z-index: 999;
+}
+
+#btnCancelScan {
+  display: block;
+  width: 100%;
+  border-radius: 0;
+}
+
+/* ============================================
+   MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .page-layout {
+    flex-direction: column;
   }
-  
-  .wrapper, .header-section, .container {
-    padding: 0px;
+
+  .poster-panel {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    top: auto;
   }
-  
-  /* Adjust entries display for mobile */
+
+  .content-panel {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .scanner-section {
+    max-width: 100%;
+  }
+
   .entries-number {
-    font-size: 80px !important;
+    font-size: 80px;
   }
-  
+
   .entries-display {
-    padding: 15px !important;
+    padding: 1rem;
   }
 }
 
-/* Additional mobile responsiveness */
-@media only screen and (max-width: 600px) {
+@media (max-width: 480px) {
   .entries-number {
-    font-size: 100px;
-  }
-  
-  .entries-display {
-    margin: 15px 0;
-    padding: 15px;
-  }
-  
-  .entries-label {
-    font-size: 14px;
-  }
-  
-  .entries-subtitle {
-    font-size: 16px;
-  }
-}
-
-/* Remove Angular Material styling conflicts */
-::ng-deep {
-  /* Ensure Bootstrap classes take precedence */
-  .form-control {
-    border: 1px solid #ced4da !important;
-    border-radius: 0.25rem !important;
-  }
-  
-  .form-control-lg {
-    padding: 0.5rem 1rem !important;
-    font-size: 1.25rem !important;
-    line-height: 1.5 !important;
-    border-radius: 0.3rem !important;
-  }
-  
-  .btn {
-    border-radius: 0.25rem !important;
-  }
-  
-  .btn-lg {
-    padding: 0.5rem 1rem !important;
-    font-size: 1.25rem !important;
-    line-height: 1.5 !important;
-    border-radius: 0.3rem !important;
-  }
-  
-  .btn-primary {
-    background-color: #007bff !important;
-    border-color: #007bff !important;
-  }
-  
-  .btn-block {
-    display: block !important;
-    width: 100% !important;
-  }
-  
-  .alert {
-    padding: 0.75rem 1.25rem !important;
-    margin-bottom: 1rem !important;
-    border: 1px solid transparent !important;
-    border-radius: 0.25rem !important;
-  }
-  
-  .alert-success {
-    color: #155724 !important;
-    background-color: #d4edda !important;
-    border-color: #c3e6cb !important;
-  }
-  
-  .alert-danger {
-    color: #721c24 !important;
-    background-color: #f8d7da !important;
-    border-color: #f5c6cb !important;
-  }
-  
-  .alert-info {
-    color: #0c5460 !important;
-    background-color: #d1ecf1 !important;
-    border-color: #bee5eb !important;
-  }
-  
-  .text-center {
-    text-align: center !important;
-  }
-  
-  .form-group {
-    margin-bottom: 1rem !important;
-  }
-  
-  .input-group {
-    position: relative !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: stretch !important;
-    width: 100% !important;
-  }
-  
-  .input-group > .form-control {
-    position: relative !important;
-    flex: 1 1 auto !important;
-    width: 1% !important;
-    min-width: 0 !important;
-    margin-bottom: 0 !important;
-  }
-  
-  .input-group-addon {
-    padding: 0.375rem 0.75rem !important;
-    margin-bottom: 0 !important;
-    font-size: 1rem !important;
-    font-weight: 400 !important;
-    line-height: 1.5 !important;
-    color: #495057 !important;
-    text-align: center !important;
-    background-color: #e9ecef !important;
-    border: 1px solid #ced4da !important;
-    border-radius: 0.25rem !important;
-    display: flex !important;
-    align-items: center !important;
-    padding: 0 !important;
-  }
-  
-  .input-group-addon:last-child {
-    border-bottom-left-radius: 0 !important;
-    border-top-left-radius: 0 !important;
+    font-size: 64px;
   }
 }
