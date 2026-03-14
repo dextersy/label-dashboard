@@ -277,14 +277,15 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           if (response.ticket.remaining_entries > 0) {
             this.showInputForm = false;
             this.showCheckInForm = true;
-            this.checkInForm.patchValue({ 
-              entriesToClaim: Math.min(1, response.ticket.remaining_entries) 
+            this.checkInForm.patchValue({
+              entriesToClaim: Math.min(1, response.ticket.remaining_entries)
             });
             this.checkInForm.get('entriesToClaim')?.setValidators([
-              Validators.required, 
-              Validators.min(1), 
+              Validators.required,
+              Validators.min(1),
               Validators.max(response.ticket.remaining_entries)
             ]);
+            setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
           } else {
             // Scenario 3: Ticket found but no remaining entries
             this.showPersistentError('All entries for this ticket have been claimed.');
