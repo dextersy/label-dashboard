@@ -26,9 +26,9 @@ export class SummaryViewTabComponent implements OnInit {
   earningsSort: SortInfo | null = null;
 
   earningsColumns: TableColumn[] = [
-    { key: 'date_recorded', label: 'Date', type: 'text', searchable: false, sortable: true },
-    { key: 'release_title', label: 'Release', type: 'text', searchable: true, sortable: false },
-    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: false },
+    { key: 'date_recorded', label: 'Date', type: 'text', searchable: false, sortable: true, mobileGroup: 'details' },
+    { key: 'release_title', label: 'Release', type: 'text', searchable: true, sortable: false, mobileGroup: 'details' },
+    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: false, mobileGroup: 'details', mobileGroupMain: true },
     { key: 'type', label: 'Type', type: 'text', searchable: true, sortable: true },
     { key: 'amount', label: 'Amount (₱)', type: 'number', searchable: false, sortable: true, align: 'right', formatter: (item) => this.formatCurrency(item.amount) }
   ];

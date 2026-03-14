@@ -33,9 +33,9 @@ export class RecuperableExpenseTabComponent implements OnInit {
   balanceSort: SortInfo | null = null;
 
   balanceColumns: TableColumn[] = [
-    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
-    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-text', tabletClass: '' },
-    { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
+    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileGroup: 'release' },
+    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileGroup: 'release', mobileGroupMain: true },
+    { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true, mobileGroup: 'release' },
     {
       key: 'remaining_expense', label: 'Remaining Expense (₱)', type: 'number',
       searchable: true, sortable: true, align: 'right',
@@ -58,9 +58,9 @@ export class RecuperableExpenseTabComponent implements OnInit {
   flowSort: SortInfo | null = null;
 
   flowColumns: TableColumn[] = [
-    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
-    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-text', tabletClass: '' },
-    { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide', tabletClass: '' },
+    { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileGroup: 'release' },
+    { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileGroup: 'release', mobileGroupMain: true },
+    { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true, mobileGroup: 'release' },
     {
       key: 'new_expense', label: 'New Expenses (₱)', type: 'number',
       searchable: false, sortable: true, align: 'right',
