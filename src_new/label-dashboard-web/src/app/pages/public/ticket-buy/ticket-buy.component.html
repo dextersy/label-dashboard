@@ -202,6 +202,10 @@
             </div>
 
             <!-- Number of Tickets -->
+            <div *ngIf="getAvailableTicketTypes().length <= 1" class="single-ticket-type-display fadeIn fourth mb-3">
+              {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} &mdash;
+              <strong>{{ formatPriceDisplay(selectedTicketType?.price ?? event.ticket_price) }}</strong>
+            </div>
             <small class="fadeIn fourth" *ngIf="event.show_tickets_remaining && getRemainingTicketsDisplay()">
               <strong>{{ getRemainingTicketsDisplay() }}</strong> tickets available.
             </small>

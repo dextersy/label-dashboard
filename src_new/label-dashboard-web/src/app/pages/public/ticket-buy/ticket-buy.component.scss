@@ -405,6 +405,14 @@ input.error {
   }
 }
 
+/* Single ticket type display (when only one type) */
+.single-ticket-type-display {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
 /* Ticket type card selection */
 .ticket-type-container {
   margin-bottom: 1.5rem;
