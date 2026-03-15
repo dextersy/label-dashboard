@@ -93,6 +93,7 @@ The system supports multiple labels/brands through:
 5. **Never Modify Legacy**: Do not change files in `src/` (legacy PHP code)
 6. **No Automatic Building/Testing**: By default, do not build or test code unless specifically requested by the user. The user will report any build errors or issues that need to be addressed.
 7. **Never Build the App**: Do not run `npm run build`, `npm start`, or any build/test commands. The user will handle building and testing themselves.
+8. **S3 Cleanup**: Whenever a new S3 file upload is implemented (any new model field stored in S3), always update `getUsedS3Urls` in `src_new/label-dashboard-api/src/controllers/systemController.ts` to include that field. This prevents the S3 cleanup job from deleting files that are still in use.
 
 ## Angular Frontend Reference Documents
 
