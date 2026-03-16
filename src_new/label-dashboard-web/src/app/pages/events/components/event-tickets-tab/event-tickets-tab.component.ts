@@ -455,15 +455,17 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
             ticket.contact_number || '',
             ticket.number_of_entries.toString(),
             ticket.ticket_code,
-            ticket.referrer_name || '', // Include referrer info
+            ticket.ticket_type || '',
+            ticket.scanner_instructions || '',
+            ticket.referrer_name || '',
             '' // Notes column (empty in PHP version)
           ]);
 
           const filename = `${response.event_title.replace(/\s+/g, '_')}_tickets.csv`;
-          
+
           this.csvService.downloadCsv({
             title: `Ticket list for ${response.event_title}`,
-            headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Referred By', 'Notes'],
+            headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Ticket Type', 'Scanner Instructions', 'Referred By', 'Notes'],
             data: csvData,
             filename: filename
           });

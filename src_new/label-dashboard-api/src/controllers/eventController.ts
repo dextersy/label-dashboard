@@ -2729,8 +2729,8 @@ export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => 
         status: 'Ticket sent.' // Only confirmed tickets like the main view
       },
       include: [
-        { 
-          model: Event, 
+        {
+          model: Event,
           as: 'event',
           attributes: ['title']
         },
@@ -2738,6 +2738,12 @@ export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => 
           model: EventReferrer,
           as: 'referrer',
           attributes: ['name'],
+          required: false
+        },
+        {
+          model: TicketType,
+          as: 'ticketType',
+          attributes: ['name', 'special_instructions_for_scanner'],
           required: false
         }
       ],
@@ -2751,6 +2757,8 @@ export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => 
       contact_number: ticket.contact_number || '',
       number_of_entries: ticket.number_of_entries,
       ticket_code: ticket.ticket_code,
+      ticket_type: ticket.ticketType?.name || '',
+      scanner_instructions: ticket.ticketType?.special_instructions_for_scanner || '',
       referrer_name: ticket.referrer?.name || '',
       notes: '' // Empty notes column to match PHP format
     }));
@@ -2794,8 +2802,8 @@ export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Respon
         status: ['New', 'Payment Confirmed'] // Pending tickets statuses
       },
       include: [
-        { 
-          model: Event, 
+        {
+          model: Event,
           as: 'event',
           attributes: ['title']
         },
@@ -2803,6 +2811,12 @@ export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Respon
           model: EventReferrer,
           as: 'referrer',
           attributes: ['name'],
+          required: false
+        },
+        {
+          model: TicketType,
+          as: 'ticketType',
+          attributes: ['name', 'special_instructions_for_scanner'],
           required: false
         }
       ],
@@ -2816,6 +2830,8 @@ export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Respon
       contact_number: ticket.contact_number || '',
       number_of_entries: ticket.number_of_entries,
       ticket_code: '', // Empty ticket code for pending orders
+      ticket_type: ticket.ticketType?.name || '',
+      scanner_instructions: ticket.ticketType?.special_instructions_for_scanner || '',
       referrer_name: ticket.referrer?.name || '',
       notes: '', // Empty notes column to match PHP format
       status: ticket.status
