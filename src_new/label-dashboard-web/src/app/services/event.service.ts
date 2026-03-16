@@ -860,6 +860,13 @@ export class EventService {
     );
   }
   
+  getPaymentConfig(): Observable<{ min_card: number | null; min_dob: number | null }> {
+    return this.http.get<{ min_card: number | null; min_dob: number | null }>(
+      `${environment.apiUrl}/events/payment-config`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   private handleError(error: any): Observable<never> {
     console.error('Event service error:', error);
     

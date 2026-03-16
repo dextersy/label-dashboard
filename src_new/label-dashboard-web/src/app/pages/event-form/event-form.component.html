@@ -420,6 +420,17 @@
                     </label>
                   </div>
                 </div>
+                <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))" class="alert alert-info mt-2 mb-0">
+                  <strong>Minimum transaction requirements</strong>
+                  <ul class="mb-0 mt-1 ps-3">
+                    <li *ngIf="paymentConfig?.min_card && eventData.supports_card">
+                      Credit card payments available for transactions {{ formatMinAmount(paymentConfig!.min_card!) }} and above.
+                    </li>
+                    <li *ngIf="paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob)">
+                      Unionbank and Direct Online Banking available for transactions {{ formatMinAmount(paymentConfig!.min_dob!) }} and above.
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
             <div class="mt-4 text-end">

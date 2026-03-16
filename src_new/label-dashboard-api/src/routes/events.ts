@@ -26,7 +26,8 @@ import {
   exportEventPendingTicketsCsv,
   upload,
   publishEvent,
-  unpublishEvent
+  unpublishEvent,
+  getPaymentConfig
 } from '../controllers/eventController';
 import {
   getTicketTypes,
@@ -45,6 +46,9 @@ router.use(authenticateToken);
 // Event CRUD operations
 router.get('/', getEvents);
 router.post('/', requireAdmin, upload.single('poster'), createEvent);
+
+// Payment config (must be before /:id routes)
+router.get('/payment-config', getPaymentConfig);
 
 // Event management operations (specific routes first)
 router.post('/set-selected', setSelectedEvent);

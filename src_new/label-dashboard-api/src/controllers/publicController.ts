@@ -691,12 +691,15 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     // Handle PAID tickets (PayMongo checkout flow)
-    // Prepare payment methods based on event settings
+    // Prepare payment methods based on event settings and minimum amount requirements
+    const MIN_AMOUNT_CARD = process.env.MIN_AMOUNT_CARD ? parseFloat(process.env.MIN_AMOUNT_CARD) : null;
+    const MIN_AMOUNT_DOB  = process.env.MIN_AMOUNT_DOB  ? parseFloat(process.env.MIN_AMOUNT_DOB)  : null;
+
     const paymentMethods: string[] = [];
-    if (event.supports_card) paymentMethods.push('card');
+    if (event.supports_card && (MIN_AMOUNT_CARD === null || totalAmount >= MIN_AMOUNT_CARD)) paymentMethods.push('card');
     if (event.supports_gcash) paymentMethods.push('gcash');
-    if (event.supports_ubp) paymentMethods.push('dob_ubp');
-    if (event.supports_dob) paymentMethods.push('dob');
+    if (event.supports_ubp  && (MIN_AMOUNT_DOB  === null || totalAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob_ubp');
+    if (event.supports_dob  && (MIN_AMOUNT_DOB  === null || totalAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob');
     if (event.supports_qrph) paymentMethods.push('qrph');
     if (event.supports_maya) paymentMethods.push('paymaya');
     if (event.supports_grabpay) paymentMethods.push('grab_pay');

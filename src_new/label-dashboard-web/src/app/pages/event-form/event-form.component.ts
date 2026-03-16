@@ -122,6 +122,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
   
   // Expose Math for template
   Math = Math;
+
+  paymentConfig: { min_card: number | null; min_dob: number | null } | null = null;
   
   // Quill editor config
   quillConfig = {
@@ -154,6 +156,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+      })
+    );
+
+    // Load payment config (minimum amounts for card/DOB)
+    this.subscriptions.add(
+      this.eventService.getPaymentConfig().subscribe(config => {
+        this.paymentConfig = config;
       })
     );
 
@@ -1038,5 +1047,9 @@ export class EventFormComponent implements OnInit, OnDestroy {
       console.error('Error formatting date for input:', isoString, error);
       return '';
     }
+  }
+
+  formatMinAmount(amount: number): string {
+    return 'P' + amount.toLocaleString('en-PH', { maximumFractionDigits: 0 });
   }
 }

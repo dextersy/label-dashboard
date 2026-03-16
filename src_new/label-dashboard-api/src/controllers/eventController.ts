@@ -2987,3 +2987,9 @@ export const unpublishEvent = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getPaymentConfig = async (req: AuthRequest, res: Response) => {
+  const minCard = process.env.MIN_AMOUNT_CARD ? parseFloat(process.env.MIN_AMOUNT_CARD) : null;
+  const minDob  = process.env.MIN_AMOUNT_DOB  ? parseFloat(process.env.MIN_AMOUNT_DOB)  : null;
+  res.json({ min_card: minCard, min_dob: minDob });
+};
