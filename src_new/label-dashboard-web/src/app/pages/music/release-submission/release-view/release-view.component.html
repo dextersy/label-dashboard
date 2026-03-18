@@ -155,29 +155,25 @@
         <h3 class="section-title mb-0">
           <i class="fas fa-music me-2"></i>Track List
         </h3>
-        <div class="d-flex gap-2">
-          <button *ngIf="hasMasters()"
-                  class="btn btn-secondary btn-sm"
-                  (click)="onDownloadMasters()"
-                  [disabled]="downloadingMasters"
-                  title="Download Masters (WAV)">
-            <i class="fa"
-               [class.fa-spinner]="downloadingMasters"
-               [class.fa-spin]="downloadingMasters"
-               [class.fa-download]="!downloadingMasters"></i>
-            {{ downloadingMasters ? 'Downloading...' : 'Download WAV' }}
-          </button>
-          <button *ngIf="hasMp3s()"
-                  class="btn btn-secondary btn-sm"
-                  (click)="onDownloadMp3s()"
-                  [disabled]="downloadingMp3s"
-                  title="Download MP3s">
-            <i class="fa"
-               [class.fa-spinner]="downloadingMp3s"
-               [class.fa-spin]="downloadingMp3s"
-               [class.fa-download]="!downloadingMp3s"></i>
-            {{ downloadingMp3s ? 'Downloading...' : 'Download MP3' }}
-          </button>
+        <div *ngIf="hasMasters() || hasMp3s()" class="masters-dropdown" style="position: relative;">
+          <span class="masters-dropdown-toggle"
+                (click)="mastersDropdownOpen = !mastersDropdownOpen"
+                [class.disabled]="downloadingMasters || downloadingMp3s">
+            <i class="fa me-1"
+               [class.fa-spinner]="downloadingMasters || downloadingMp3s"
+               [class.fa-spin]="downloadingMasters || downloadingMp3s"
+               [class.fa-download]="!downloadingMasters && !downloadingMp3s"></i>
+            {{ downloadingMasters ? 'Downloading WAV...' : downloadingMp3s ? 'Downloading MP3...' : 'Download Masters' }}
+            <i class="fa fa-caret-down ms-1" *ngIf="!downloadingMasters && !downloadingMp3s"></i>
+          </span>
+          <div class="masters-dropdown-menu" *ngIf="mastersDropdownOpen">
+            <div *ngIf="hasMasters()" class="masters-dropdown-item" (click)="onDownloadMasters(); mastersDropdownOpen = false">
+              WAV
+            </div>
+            <div *ngIf="hasMp3s()" class="masters-dropdown-item" (click)="onDownloadMp3s(); mastersDropdownOpen = false">
+              MP3
+            </div>
+          </div>
         </div>
       </div>
       
