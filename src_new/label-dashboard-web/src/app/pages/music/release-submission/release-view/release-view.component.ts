@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { Release, ReleaseService } from '../../../../services/release.service';
+import { SongService } from '../../../../services/song.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import JsBarcode from 'jsbarcode';
@@ -29,6 +30,13 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   // Download masters state
   downloadingMasters = false;
 
+  // Download MP3s state
+  downloadingMp3s = false;
+
+  // Per-song download state
+  downloadingSongMaster: { [songId: number]: boolean } = {};
+  downloadingSongMp3: { [songId: number]: boolean } = {};
+
   // Download priority pitch state
   downloadingPriorityPitch = false;
 
@@ -43,7 +51,8 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   constructor(
     private audioPlayerService: AudioPlayerService,
     private sanitizer: DomSanitizer,
-    private releaseService: ReleaseService
+    private releaseService: ReleaseService,
+    private songService: SongService
   ) {}
 
   ngOnInit(): void {
@@ -239,6 +248,65 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
           type: 'error',
           message: errorMessage
         });
+      }
+    });
+  }
+
+  hasMp3s(): boolean {
+    if (!this.release?.songs?.length) return false;
+    return this.release.songs.some(song => song.audio_file_mp3 && song.audio_file_mp3.trim() !== '');
+  }
+
+  onDownloadMp3s(): void {
+    if (this.downloadingMp3s || !this.release) return;
+
+    this.downloadingMp3s = true;
+
+    this.releaseService.downloadMp3s(this.release.id).subscribe({
+      next: (response) => {
+        this.downloadingMp3s = false;
+        downloadFromResponse(response);
+        this.alertMessage.emit({ type: 'success', message: 'MP3s downloaded successfully!' });
+      },
+      error: (error) => {
+        console.error('Error downloading MP3s:', error);
+        this.downloadingMp3s = false;
+        const errorMessage = error.status === 404 ? 'No MP3s available for this release.' : 'Failed to download MP3s.';
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
+      }
+    });
+  }
+
+  onDownloadSongMaster(song: any): void {
+    if (!song.id || this.downloadingSongMaster[song.id]) return;
+    this.downloadingSongMaster[song.id] = true;
+
+    this.songService.downloadSongMaster(song.id).subscribe({
+      next: (response) => {
+        this.downloadingSongMaster[song.id] = false;
+        downloadFromResponse(response);
+      },
+      error: (error) => {
+        this.downloadingSongMaster[song.id] = false;
+        const errorMessage = error.status === 404 ? `No WAV master available for "${song.title}".` : `Failed to download master for "${song.title}".`;
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
+      }
+    });
+  }
+
+  onDownloadSongMp3(song: any): void {
+    if (!song.id || this.downloadingSongMp3[song.id]) return;
+    this.downloadingSongMp3[song.id] = true;
+
+    this.songService.downloadSongMp3(song.id).subscribe({
+      next: (response) => {
+        this.downloadingSongMp3[song.id] = false;
+        downloadFromResponse(response);
+      },
+      error: (error) => {
+        this.downloadingSongMp3[song.id] = false;
+        const errorMessage = error.status === 404 ? `No MP3 available for "${song.title}".` : `Failed to download MP3 for "${song.title}".`;
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
       }
     });
   }

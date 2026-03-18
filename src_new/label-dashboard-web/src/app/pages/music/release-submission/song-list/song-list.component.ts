@@ -16,10 +16,14 @@ export class SongListComponent implements OnInit, OnDestroy {
   @Input() isAdmin: boolean = false;
   @Input() releaseStatus: string = 'Draft';
   @Input() uploadProgress: { [songId: number]: number } = {};
+  @Input() downloadingSongMaster: { [songId: number]: boolean } = {};
+  @Input() downloadingSongMp3: { [songId: number]: boolean } = {};
   @Output() editSong = new EventEmitter<Song>();
   @Output() deleteSong = new EventEmitter<Song>();
   @Output() uploadAudio = new EventEmitter<Song>();
   @Output() reorderSongs = new EventEmitter<Song[]>();
+  @Output() downloadMaster = new EventEmitter<Song>();
+  @Output() downloadMp3 = new EventEmitter<Song>();
 
   playingSongId: number | null = null;
   loadingSongId: number | null = null;
@@ -58,6 +62,14 @@ export class SongListComponent implements OnInit, OnDestroy {
 
   onUploadAudio(song: Song): void {
     this.uploadAudio.emit(song);
+  }
+
+  onDownloadMaster(song: Song): void {
+    this.downloadMaster.emit(song);
+  }
+
+  onDownloadMp3(song: Song): void {
+    this.downloadMp3.emit(song);
   }
 
   onDrop(event: CdkDragDrop<Song[]>): void {

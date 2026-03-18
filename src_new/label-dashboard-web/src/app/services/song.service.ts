@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -37,6 +37,7 @@ export interface Song {
   duration?: number;
   lyrics?: string;
   audio_file?: string;
+  audio_file_mp3?: string;
   isrc?: string;
   spotify_link?: string;
   apple_music_link?: string;
@@ -164,5 +165,21 @@ export class SongService {
       { songOrder },
       { headers: this.getAuthHeaders() }
     );
+  }
+
+  downloadSongMaster(songId: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/songs/${songId}/download-master`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob',
+      observe: 'response'
+    });
+  }
+
+  downloadSongMp3(songId: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/songs/${songId}/download-mp3`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob',
+      observe: 'response'
+    });
   }
 }

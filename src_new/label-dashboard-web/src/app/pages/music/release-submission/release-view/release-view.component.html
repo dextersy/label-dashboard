@@ -155,17 +155,30 @@
         <h3 class="section-title mb-0">
           <i class="fas fa-music me-2"></i>Track List
         </h3>
-        <button *ngIf="hasMasters()"
-                class="btn btn-secondary btn-sm"
-                (click)="onDownloadMasters()"
-                [disabled]="downloadingMasters"
-                title="Download Masters">
-          <i class="fa"
-             [class.fa-spinner]="downloadingMasters"
-             [class.fa-spin]="downloadingMasters"
-             [class.fa-download]="!downloadingMasters"></i>
-          {{ downloadingMasters ? 'Downloading...' : 'Download Masters' }}
-        </button>
+        <div class="d-flex gap-2">
+          <button *ngIf="hasMasters()"
+                  class="btn btn-secondary btn-sm"
+                  (click)="onDownloadMasters()"
+                  [disabled]="downloadingMasters"
+                  title="Download Masters (WAV)">
+            <i class="fa"
+               [class.fa-spinner]="downloadingMasters"
+               [class.fa-spin]="downloadingMasters"
+               [class.fa-download]="!downloadingMasters"></i>
+            {{ downloadingMasters ? 'Downloading...' : 'Download WAV' }}
+          </button>
+          <button *ngIf="hasMp3s()"
+                  class="btn btn-secondary btn-sm"
+                  (click)="onDownloadMp3s()"
+                  [disabled]="downloadingMp3s"
+                  title="Download MP3s">
+            <i class="fa"
+               [class.fa-spinner]="downloadingMp3s"
+               [class.fa-spin]="downloadingMp3s"
+               [class.fa-download]="!downloadingMp3s"></i>
+            {{ downloadingMp3s ? 'Downloading...' : 'Download MP3' }}
+          </button>
+        </div>
       </div>
       
       <div class="track-list" *ngIf="release.songs?.length; else noTracks">
@@ -175,6 +188,7 @@
           <span class="track-title">Title</span>
           <span class="track-collaborators">Collaborators</span>
           <span class="track-duration">Duration</span>
+          <span class="track-download">Download</span>
         </div>
         
         <div class="track-row" *ngFor="let song of release.songs; let i = index">
@@ -205,6 +219,30 @@
           </span>
           <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
           <span class="track-duration">{{ formatDuration(song.duration) }}</span>
+          <span class="track-download">
+            <button
+              *ngIf="song.audio_file"
+              class="btn btn-ghost btn-sm p-0 me-2 text-primary"
+              [disabled]="downloadingSongMaster[song.id]"
+              (click)="onDownloadSongMaster(song)"
+              title="Download WAV">
+              <i class="fa"
+                 [class.fa-download]="!downloadingSongMaster[song.id]"
+                 [class.fa-spinner]="downloadingSongMaster[song.id]"
+                 [class.fa-spin]="downloadingSongMaster[song.id]"></i>
+            </button>
+            <button
+              *ngIf="song.audio_file_mp3"
+              class="btn btn-ghost btn-sm p-0 text-success"
+              [disabled]="downloadingSongMp3[song.id]"
+              (click)="onDownloadSongMp3(song)"
+              title="Download MP3">
+              <i class="fa"
+                 [class.fa-music]="!downloadingSongMp3[song.id]"
+                 [class.fa-spinner]="downloadingSongMp3[song.id]"
+                 [class.fa-spin]="downloadingSongMp3[song.id]"></i>
+            </button>
+          </span>
         </div>
       </div>
       <ng-template #noTracks>

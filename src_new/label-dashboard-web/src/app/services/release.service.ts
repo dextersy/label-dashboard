@@ -164,6 +164,14 @@ export class ReleaseService {
     });
   }
 
+  downloadMp3s(releaseId: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.baseUrl}/releases/${releaseId}/download-mp3s`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob',
+      observe: 'response'
+    });
+  }
+
   downloadPriorityPitch(releaseId: number): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.baseUrl}/releases/${releaseId}/download-priority-pitch`, {
       headers: this.getAuthHeaders(),

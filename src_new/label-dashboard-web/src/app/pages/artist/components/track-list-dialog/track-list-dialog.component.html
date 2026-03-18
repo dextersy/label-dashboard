@@ -32,12 +32,24 @@
               class="btn btn-sm btn-primary me-2"
               (click)="onDownloadMasters()"
               [disabled]="downloadingMasters"
-              title="Download masters (cover art + audio files)">
+              title="Download masters (cover art + WAV audio files)">
               <i class="fa me-1"
                  [class.fa-spinner]="downloadingMasters"
                  [class.fa-spin]="downloadingMasters"
                  [class.fa-download]="!downloadingMasters"></i>
-              {{ downloadingMasters ? 'Downloading...' : 'Download' }}
+              {{ downloadingMasters ? 'Downloading...' : 'Download WAV' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary me-2"
+              (click)="onDownloadMp3s()"
+              [disabled]="downloadingMp3s"
+              title="Download MP3s">
+              <i class="fa me-1"
+                 [class.fa-spinner]="downloadingMp3s"
+                 [class.fa-spin]="downloadingMp3s"
+                 [class.fa-download]="!downloadingMp3s"></i>
+              {{ downloadingMp3s ? 'Downloading...' : 'Download MP3' }}
             </button>
             <button
               type="button"
@@ -143,10 +155,14 @@
           [isAdmin]="isAdmin"
           [releaseStatus]="releaseStatus"
           [uploadProgress]="uploadProgress"
+          [downloadingSongMaster]="downloadingSongMaster"
+          [downloadingSongMp3]="downloadingSongMp3"
           (editSong)="onEditSong($event)"
           (deleteSong)="onDeleteSong($event)"
           (uploadAudio)="onUploadAudio($event)"
-          (reorderSongs)="onReorderSongs($event)">
+          (reorderSongs)="onReorderSongs($event)"
+          (downloadMaster)="onDownloadSongMaster($event)"
+          (downloadMp3)="onDownloadSongMp3($event)">
         </app-song-list>
       </div>
       <div class="modal-footer">

@@ -12,6 +12,7 @@ import {
   addReleaseExpense,
   generateCatalogNumber,
   downloadMasters,
+  downloadMp3s,
   downloadPriorityPitch
 } from '../controllers/releaseController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -56,6 +57,9 @@ router.post('/:id/expenses', requireAdmin, addReleaseExpense);
 
 // Download masters (cover art + audio files)
 router.get('/:id/download-masters', downloadMasters);
+
+// Download MP3s
+router.get('/:id/download-mp3s', downloadMp3s);
 
 // Download Priority Pitch document (admin only)
 router.get('/:id/download-priority-pitch', requireAdmin, downloadPriorityPitch);

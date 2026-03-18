@@ -35,6 +35,9 @@ export class TrackListDialogComponent implements OnChanges {
   isAdmin = false;
   uploadProgress: { [songId: number]: number } = {};
   downloadingMasters = false;
+  downloadingMp3s = false;
+  downloadingSongMaster: { [songId: number]: boolean } = {};
+  downloadingSongMp3: { [songId: number]: boolean } = {};
 
   // Add Existing Song state
   showExistingSongPicker = false;
@@ -371,28 +374,72 @@ export class TrackListDialogComponent implements OnChanges {
     this.releaseService.downloadMasters(this.releaseId).subscribe({
       next: (response) => {
         this.downloadingMasters = false;
-
-        // Download using filename from server's Content-Disposition header
         downloadFromResponse(response);
-
-        this.alertMessage.emit({
-          type: 'success',
-          message: 'Masters downloaded successfully!'
-        });
+        this.alertMessage.emit({ type: 'success', message: 'Masters downloaded successfully!' });
       },
       error: (error) => {
         console.error('Error downloading masters:', error);
         this.downloadingMasters = false;
+        const errorMessage = error.status === 404 ? 'No masters available for this release.' : 'Failed to download masters.';
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
+      }
+    });
+  }
 
-        let errorMessage = 'Failed to download masters.';
-        if (error.status === 404) {
-          errorMessage = 'No masters available for this release.';
-        }
+  onDownloadMp3s(): void {
+    if (!this.releaseId || this.downloadingMp3s) {
+      return;
+    }
 
-        this.alertMessage.emit({
-          type: 'error',
-          message: errorMessage
-        });
+    this.downloadingMp3s = true;
+
+    this.releaseService.downloadMp3s(this.releaseId).subscribe({
+      next: (response) => {
+        this.downloadingMp3s = false;
+        downloadFromResponse(response);
+        this.alertMessage.emit({ type: 'success', message: 'MP3s downloaded successfully!' });
+      },
+      error: (error) => {
+        console.error('Error downloading MP3s:', error);
+        this.downloadingMp3s = false;
+        const errorMessage = error.status === 404 ? 'No MP3s available for this release.' : 'Failed to download MP3s.';
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
+      }
+    });
+  }
+
+  onDownloadSongMaster(song: Song): void {
+    if (!song.id || this.downloadingSongMaster[song.id]) return;
+    this.downloadingSongMaster[song.id] = true;
+
+    this.songService.downloadSongMaster(song.id).subscribe({
+      next: (response) => {
+        this.downloadingSongMaster[song.id!] = false;
+        downloadFromResponse(response);
+        this.alertMessage.emit({ type: 'success', message: `"${song.title}" master downloaded!` });
+      },
+      error: (error) => {
+        this.downloadingSongMaster[song.id!] = false;
+        const errorMessage = error.status === 404 ? `No WAV master available for "${song.title}".` : `Failed to download master for "${song.title}".`;
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
+      }
+    });
+  }
+
+  onDownloadSongMp3(song: Song): void {
+    if (!song.id || this.downloadingSongMp3[song.id]) return;
+    this.downloadingSongMp3[song.id] = true;
+
+    this.songService.downloadSongMp3(song.id).subscribe({
+      next: (response) => {
+        this.downloadingSongMp3[song.id!] = false;
+        downloadFromResponse(response);
+        this.alertMessage.emit({ type: 'success', message: `"${song.title}" MP3 downloaded!` });
+      },
+      error: (error) => {
+        this.downloadingSongMp3[song.id!] = false;
+        const errorMessage = error.status === 404 ? `No MP3 available for "${song.title}".` : `Failed to download MP3 for "${song.title}".`;
+        this.alertMessage.emit({ type: 'error', message: errorMessage });
       }
     });
   }

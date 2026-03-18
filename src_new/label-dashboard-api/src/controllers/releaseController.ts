@@ -1053,6 +1053,121 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Download MP3s for a release as a ZIP file
+export const downloadMp3s = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user || !req.user.brand_id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!process.env.S3_BUCKET_MASTERS) {
+      console.error('Missing required S3 environment variables');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    const { id } = req.params;
+    const releaseId = parseInt(id as string, 10);
+
+    if (isNaN(releaseId)) {
+      return res.status(400).json({ error: 'Invalid release ID' });
+    }
+
+    const release = await Release.findOne({
+      where: { id: releaseId, brand_id: req.user.brand_id },
+      include: [{ model: Artist, as: 'artists' }]
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const releaseSongs = await ReleaseSong.findAll({
+      where: { release_id: releaseId },
+      include: [{
+        model: Song,
+        as: 'song',
+        where: { audio_file_mp3: { [require('sequelize').Op.ne]: null } },
+        required: true
+      }],
+      order: [['track_number', 'ASC']]
+    });
+
+    if (releaseSongs.length === 0) {
+      return res.status(404).json({ error: 'No MP3s available for this release' });
+    }
+
+    const songs = releaseSongs.map((rs: any) => ({
+      ...rs.song.toJSON(),
+      track_number: rs.track_number
+    }));
+    const artists = (release as any).artists || [];
+
+    const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
+    const rawFileName = `${release.catalog_no} - ${artistName} - ${release.title} (MP3)`;
+
+    let sanitizedFileName = rawFileName
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!sanitizedFileName || sanitizedFileName.length === 0) {
+      sanitizedFileName = `release-${releaseId}-mp3`;
+    }
+
+    sanitizedFileName += '.zip';
+    const escapedFileName = sanitizedFileName.replace(/"/g, '\\"');
+    const encodedFileName = encodeURIComponent(rawFileName + '.zip');
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${escapedFileName}"; filename*=UTF-8''${encodedFileName}`);
+
+    const archive = archiver('zip', { zlib: { level: 6 } });
+
+    archive.on('error', (err) => {
+      console.error('Archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to create zip file' });
+      }
+    });
+
+    archive.pipe(res);
+
+    for (const song of songs) {
+      if (song.audio_file_mp3) {
+        try {
+          const trackNumberPadded = String(song.track_number).padStart(2, '0');
+          const audioFileName = `${artistName} - ${release.title} - ${trackNumberPadded} - ${song.title}.mp3`
+            .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          await headS3Object({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Key: song.audio_file_mp3
+          });
+
+          const audioResult = await getS3ObjectStream({
+            Bucket: process.env.S3_BUCKET_MASTERS!,
+            Key: song.audio_file_mp3
+          });
+
+          archive.append(audioResult.Body, { name: audioFileName });
+        } catch (error) {
+          console.error(`Error adding song ${song.id} MP3 to zip:`, error);
+        }
+      }
+    }
+
+    await archive.finalize();
+
+  } catch (error) {
+    console.error('Download MP3s error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+};
+
 // Download Priority Pitch as a DOCX file
 export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => {
   try {
