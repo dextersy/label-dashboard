@@ -1060,7 +1060,7 @@ export const downloadMp3s = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (!process.env.S3_BUCKET_MASTERS) {
+    if (!process.env.S3_BUCKET || !process.env.S3_BUCKET_MASTERS) {
       console.error('Missing required S3 environment variables');
       return res.status(500).json({ error: 'Server configuration error' });
     }
@@ -1131,6 +1131,30 @@ export const downloadMp3s = async (req: AuthRequest, res: Response) => {
     });
 
     archive.pipe(res);
+
+    // Add cover art if available
+    if (release.cover_art && release.cover_art.startsWith('https://')) {
+      try {
+        const coverArtUrl = new URL(release.cover_art);
+        const coverArtKey = coverArtUrl.pathname.substring(1);
+        const coverArtExtension = path.extname(coverArtKey) || '.jpg';
+        const coverArtFileName = `cover${coverArtExtension}`;
+
+        await headS3Object({
+          Bucket: process.env.S3_BUCKET!,
+          Key: coverArtKey
+        });
+
+        const coverArtResult = await getS3ObjectStream({
+          Bucket: process.env.S3_BUCKET!,
+          Key: coverArtKey
+        });
+
+        archive.append(coverArtResult.Body, { name: coverArtFileName });
+      } catch (error) {
+        console.error('Error adding cover art to MP3 zip:', error);
+      }
+    }
 
     for (const song of songs) {
       if (song.audio_file_mp3) {
