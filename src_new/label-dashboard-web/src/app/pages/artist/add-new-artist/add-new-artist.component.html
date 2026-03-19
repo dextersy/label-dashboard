@@ -1,9 +1,7 @@
 <div class="add-new-artist-page">
+  <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="page-header mb-3">
-      <app-breadcrumb></app-breadcrumb>
-    </div>
+
     
     <!-- Alert Messages -->
     <div *ngIf="alertMessage" class="alert" [class.alert-success]="alertMessage.type === 'success'" [class.alert-danger]="alertMessage.type === 'error'" role="alert">
