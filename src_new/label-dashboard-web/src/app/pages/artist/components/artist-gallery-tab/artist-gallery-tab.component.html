@@ -52,7 +52,16 @@
   <div class="card gallery-section">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5>Photo Gallery</h5>
-      <div class="filter-controls">
+      <div class="filter-controls d-flex align-items-center gap-2">
+        <button class="btn btn-sm"
+                [class.btn-primary]="reorderMode"
+                [class.btn-secondary]="!reorderMode"
+                (click)="toggleReorderMode()"
+                [disabled]="savingReorder">
+          <div class="loading-spinner" *ngIf="savingReorder"></div>
+          <i class="fa fa-arrows-alt" *ngIf="!savingReorder"></i>
+          {{ reorderMode ? 'Done' : 'Reorder' }}
+        </button>
         <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
           <label class="btn btn-secondary" for="epkFilterAll">All</label>
@@ -96,19 +105,28 @@
         <small>Try changing the EPK visibility filter above</small>
       </div>
       
-      <div *ngIf="!loading && filteredPhotos.length > 0" class="photo-grid">
-        <div class="photo-item" *ngFor="let photo of filteredPhotos">
+      <div *ngIf="!loading && filteredPhotos.length > 0"
+           class="photo-grid"
+           [class.reorder-mode]="reorderMode"
+           cdkDropList
+           [cdkDropListDisabled]="!reorderMode"
+           (cdkDropListDropped)="onDrop($event)">
+        <div class="photo-item" *ngFor="let photo of filteredPhotos" cdkDrag [cdkDragDisabled]="!reorderMode">
           <div class="photo-container" [class.excluded]="photo.exclude_from_epk">
             <img [src]="getPhotoUrl(photo)"
                  [alt]="photo.caption || 'Artist photo'"
                  class="photo-image"
                  (dblclick)="onPhotoDoubleClick(photo)">
 
+            <div class="drag-handle" *ngIf="reorderMode" cdkDragHandle>
+              <i class="fa fa-grip-vertical"></i>
+            </div>
+
             <div class="hidden-badge" *ngIf="photo.exclude_from_epk" title="Hidden from EPK">
               <i class="fa fa-eye-slash"></i>
             </div>
 
-            <div class="photo-overlay">
+            <div class="photo-overlay" *ngIf="!reorderMode">
               <div class="photo-actions">
                 <button class="btn btn-sm btn-secondary btn-icon" 
                         (click)="openLightbox(photo)"

@@ -9,6 +9,7 @@ import fs from 'fs';
 import { promisify } from 'util';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import crypto from 'crypto';
+import { sequelize } from '../config/database';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -766,8 +767,8 @@ export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
 
     const photos = await ArtistImage.findAll({
       where: { artist_id: artistId },
-      order: [['date_uploaded', 'DESC']],
-      attributes: ['id', 'path', 'credits', 'date_uploaded', 'exclude_from_epk']
+      order: [['display_order', 'ASC'], ['date_uploaded', 'DESC']],
+      attributes: ['id', 'path', 'credits', 'date_uploaded', 'exclude_from_epk', 'display_order']
     });
 
     // Transform the response to match frontend expectations
@@ -793,7 +794,8 @@ export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
         caption: photo.credits || '',
         upload_date: photo.date_uploaded,
         url: photoUrl,
-        exclude_from_epk: photo.exclude_from_epk
+        exclude_from_epk: photo.exclude_from_epk,
+        display_order: photo.display_order
       };
     });
 
@@ -826,6 +828,14 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
+    // Get current max display_order for this artist
+    const maxOrderResult = await ArtistImage.findOne({
+      where: { artist_id: artistId },
+      order: [['display_order', 'DESC']],
+      attributes: ['display_order']
+    });
+    let nextOrder = (maxOrderResult?.display_order ?? 0) + 1;
+
     const uploadedPhotos = [];
 
     for (const file of req.files as Express.Multer.File[]) {
@@ -848,7 +858,8 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
           path: result.Location,
           credits: '', // Empty caption initially
           artist_id: parseInt(id as string),
-          date_uploaded: new Date()
+          date_uploaded: new Date(),
+          display_order: nextOrder++
         });
 
         uploadedPhotos.push({
@@ -871,6 +882,64 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Upload artist photos error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Reorder artist photos
+export const reorderArtistPhotos = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const artistId = parseInt(id as string, 10);
+    const { photoIds } = req.body;
+
+    if (!Array.isArray(photoIds) || photoIds.length === 0) {
+      return res.status(400).json({ error: 'photoIds must be a non-empty array' });
+    }
+
+    // Verify artist exists and user has access
+    const artist = await Artist.findOne({
+      where: {
+        id: artistId,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Verify all photos belong to this artist
+    const photos = await ArtistImage.findAll({
+      where: { artist_id: artistId },
+      attributes: ['id']
+    });
+    const artistPhotoIds = new Set(photos.map(p => p.id));
+
+    for (const photoId of photoIds) {
+      if (!artistPhotoIds.has(photoId)) {
+        return res.status(400).json({ error: `Photo ${photoId} does not belong to this artist` });
+      }
+    }
+
+    // Update display_order in a transaction
+    const t = await sequelize.transaction();
+    try {
+      for (let i = 0; i < photoIds.length; i++) {
+        await ArtistImage.update(
+          { display_order: i + 1 },
+          { where: { id: photoIds[i] }, transaction: t }
+        );
+      }
+      await t.commit();
+    } catch (err) {
+      await t.rollback();
+      throw err;
+    }
+
+    res.json({ success: true, message: 'Photos reordered successfully' });
+  } catch (error) {
+    console.error('Reorder artist photos error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
