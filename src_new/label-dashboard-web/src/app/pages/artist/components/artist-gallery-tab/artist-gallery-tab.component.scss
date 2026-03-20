@@ -140,7 +140,26 @@
       position: relative;
       overflow: hidden;
       background-color: #f8f9fa;
-      
+
+      &.excluded .photo-image {
+        opacity: 0.45;
+        filter: grayscale(0.5);
+      }
+
+      .hidden-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+        z-index: 1;
+        pointer-events: none;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
+        padding: 4px 6px;
+        line-height: 1;
+      }
+
       .photo-image {
         width: 100%;
         height: 200px;

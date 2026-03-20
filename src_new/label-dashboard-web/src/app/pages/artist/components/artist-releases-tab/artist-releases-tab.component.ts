@@ -126,6 +126,9 @@ export class ArtistReleasesTabComponent {
         formatter: (release: ArtistRelease) => {
           const statusClass = this.getStatusClass(release.status);
           let html = `<span class="${statusClass}">${release.status}</span>`;
+          if (release.exclude_from_epk) {
+            html += ` <i class="fa fa-eye-slash text-muted ms-2" title="Hidden from EPK"></i>`;
+          }
           if (this.hasValidationIssues(release)) {
             const tooltip = this.getValidationTooltip(release).replace(/"/g, '&quot;');
             if (this.hasValidationErrors(release)) {

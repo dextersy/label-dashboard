@@ -98,12 +98,16 @@
       
       <div *ngIf="!loading && filteredPhotos.length > 0" class="photo-grid">
         <div class="photo-item" *ngFor="let photo of filteredPhotos">
-          <div class="photo-container">
-            <img [src]="getPhotoUrl(photo)" 
+          <div class="photo-container" [class.excluded]="photo.exclude_from_epk">
+            <img [src]="getPhotoUrl(photo)"
                  [alt]="photo.caption || 'Artist photo'"
                  class="photo-image"
                  (dblclick)="onPhotoDoubleClick(photo)">
-            
+
+            <div class="hidden-badge" *ngIf="photo.exclude_from_epk" title="Hidden from EPK">
+              <i class="fa fa-eye-slash"></i>
+            </div>
+
             <div class="photo-overlay">
               <div class="photo-actions">
                 <button class="btn btn-sm btn-secondary btn-icon" 
