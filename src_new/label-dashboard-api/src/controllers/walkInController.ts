@@ -89,7 +89,7 @@ export const createWalkInType = async (req: AuthRequest, res: Response) => {
 // PUT /events/walk-in-types/:id
 export const updateWalkInType = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { name, price, max_slots } = req.body;
 
     const walkInType = await WalkInType.findByPk(id, {
@@ -117,7 +117,7 @@ export const updateWalkInType = async (req: AuthRequest, res: Response) => {
 // DELETE /events/walk-in-types/:id
 export const deleteWalkInType = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const walkInType = await WalkInType.findByPk(id, {
       include: [{ model: Event, as: 'event' }]
