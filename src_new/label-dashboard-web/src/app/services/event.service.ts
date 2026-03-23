@@ -56,6 +56,10 @@ export interface Event {
   supports_grabpay: boolean;
   max_tickets?: number;
   ticket_naming: string;
+  walk_in_enabled?: boolean;
+  walk_in_supports_cash?: boolean;
+  walk_in_supports_gcash?: boolean;
+  walk_in_supports_card?: boolean;
   tickets?: EventTicket[];
   referrers?: EventReferrer[];
   google_place_id?: string | null;
@@ -865,6 +869,39 @@ export class EventService {
       `${environment.apiUrl}/events/payment-config`,
       { headers: this.getAuthHeaders() }
     );
+  }
+
+  // Walk-in type CRUD methods
+  getWalkInTypes(eventId: number): Observable<{ walkInTypes: any[] }> {
+    return this.http.get<{ walkInTypes: any[] }>(`${environment.apiUrl}/events/walk-in-types`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString() }
+    }).pipe(catchError(this.handleError));
+  }
+
+  createWalkInType(data: { event_id: number; name: string; price: number; max_slots: number }): Observable<{ walkInType: any }> {
+    return this.http.post<{ walkInType: any }>(`${environment.apiUrl}/events/walk-in-types`, data, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  updateWalkInType(id: number, data: { name: string; price: number; max_slots: number }): Observable<{ walkInType: any }> {
+    return this.http.put<{ walkInType: any }>(`${environment.apiUrl}/events/walk-in-types/${id}`, data, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  deleteWalkInType(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${environment.apiUrl}/events/walk-in-types/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  getWalkInTransactions(eventId: number, page: number = 1, perPage: number = 15): Observable<{ transactions: any[], pagination: any }> {
+    return this.http.get<{ transactions: any[], pagination: any }>(`${environment.apiUrl}/events/walk-in-transactions`, {
+      headers: this.getAuthHeaders(),
+      params: { event_id: eventId.toString(), page: page.toString(), per_page: perPage.toString() }
+    }).pipe(catchError(this.handleError));
   }
 
   private handleError(error: any): Observable<never> {

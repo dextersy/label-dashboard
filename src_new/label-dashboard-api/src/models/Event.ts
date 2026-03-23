@@ -34,6 +34,10 @@ interface EventAttributes {
   venue_website?: string;
   venue_maps_url?: string;
   status: 'draft' | 'published';
+  walk_in_enabled: boolean;
+  walk_in_supports_cash: boolean;
+  walk_in_supports_gcash: boolean;
+  walk_in_supports_card: boolean;
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -71,6 +75,10 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public venue_website?: string;
   public venue_maps_url?: string;
   public status!: 'draft' | 'published';
+  public walk_in_enabled!: boolean;
+  public walk_in_supports_cash!: boolean;
+  public walk_in_supports_gcash!: boolean;
+  public walk_in_supports_card!: boolean;
 
   // Association properties
   public brand?: any;
@@ -230,6 +238,26 @@ Event.init(
       type: DataTypes.ENUM('draft', 'published'),
       allowNull: false,
       defaultValue: 'draft',
+    },
+    walk_in_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    walk_in_supports_cash: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    walk_in_supports_gcash: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    walk_in_supports_card: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

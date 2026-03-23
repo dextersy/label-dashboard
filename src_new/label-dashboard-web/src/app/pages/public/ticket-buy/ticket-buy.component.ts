@@ -234,6 +234,13 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return this.event !== null;
   }
 
+  hasAvailableWalkInSlots(): boolean {
+    if (!this.event?.walkInTypes || this.event.walkInTypes.length === 0) return false;
+    return this.event.walkInTypes.some(wit =>
+      wit.remaining_slots === null || wit.remaining_slots > 0
+    );
+  }
+
   canBuyTickets(): boolean {
     if (!this.event) return false;
 

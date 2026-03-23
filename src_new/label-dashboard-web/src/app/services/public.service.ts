@@ -33,6 +33,12 @@ export interface PublicEvent {
   venue_phone?: string;
   venue_website?: string;
   venue_maps_url?: string;
+  walk_in_enabled?: boolean;
+  walkInTypes?: Array<{
+    name: string;
+    price: number;
+    remaining_slots: number | null;
+  }>;
   brand?: {
     id: number;
     name: string;
@@ -434,6 +440,47 @@ export class PublicService {
   }> {
     // POST with empty body - endpoint will use cookie for authentication
     return this.http.post<any>(`${this.apiUrl}/public/tickets/details`, {}, { withCredentials: true });
+  }
+
+  /**
+   * Get walk-in types for scanner (PIN-protected)
+   */
+  getWalkInTypes(eventId: number, pin: string): Observable<{
+    walkInTypes: Array<{
+      id: number;
+      name: string;
+      price: number;
+      max_slots: number;
+      sold_count: number;
+      remaining_slots: number | null;
+    }>;
+    payment_methods: {
+      cash: boolean;
+      gcash: boolean;
+      card: boolean;
+    };
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/public/walk-in/types`, {
+      event_id: eventId,
+      pin
+    });
+  }
+
+  /**
+   * Register a walk-in transaction (PIN-protected)
+   */
+  registerWalkIn(data: {
+    event_id: number;
+    pin: string;
+    payment_method: string;
+    payment_reference?: string;
+    items: Array<{ walk_in_type_id: number; quantity: number }>;
+  }): Observable<{
+    success: boolean;
+    message: string;
+    transaction: any;
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/public/walk-in/register`, data);
   }
 
   /**

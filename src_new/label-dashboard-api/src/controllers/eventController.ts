@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Event, Ticket, EventReferrer, Brand, Domain, TicketType } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -565,7 +565,12 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_website,
       venue_maps_url,
       status,
-      ticketTypes
+      ticketTypes,
+      walkInTypes,
+      walk_in_enabled,
+      walk_in_supports_cash,
+      walk_in_supports_gcash,
+      walk_in_supports_card
     } = req.body;
 
     // Parse ticketTypes if it's a JSON string (from FormData)
@@ -576,6 +581,17 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       } catch (error) {
         console.error('Failed to parse ticketTypes JSON:', error);
         return res.status(400).json({ error: 'Invalid ticketTypes format' });
+      }
+    }
+
+    // Parse walkInTypes if it's a JSON string (from FormData)
+    let parsedWalkInTypes = walkInTypes;
+    if (typeof walkInTypes === 'string') {
+      try {
+        parsedWalkInTypes = JSON.parse(walkInTypes);
+      } catch (error) {
+        console.error('Failed to parse walkInTypes JSON:', error);
+        return res.status(400).json({ error: 'Invalid walkInTypes format' });
       }
     }
 
@@ -684,7 +700,11 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_phone: venue_phone !== undefined ? (venue_phone === '' ? null : venue_phone) : event.venue_phone,
       venue_website: venue_website !== undefined ? (venue_website === '' ? null : venue_website) : event.venue_website,
       venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url,
-      status: status !== undefined ? status : event.status
+      status: status !== undefined ? status : event.status,
+      walk_in_enabled: walk_in_enabled !== undefined ? walk_in_enabled : event.walk_in_enabled,
+      walk_in_supports_cash: walk_in_supports_cash !== undefined ? walk_in_supports_cash : event.walk_in_supports_cash,
+      walk_in_supports_gcash: walk_in_supports_gcash !== undefined ? walk_in_supports_gcash : event.walk_in_supports_gcash,
+      walk_in_supports_card: walk_in_supports_card !== undefined ? walk_in_supports_card : event.walk_in_supports_card
     });
 
     // Update ticket types if provided in request
@@ -753,6 +773,45 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
           if (!created) {
             return res.status(500).json({ error: 'Failed to create new ticket type' });
           }
+        }
+      }
+    }
+
+    // Update walk-in types if provided in request
+    if (parsedWalkInTypes && Array.isArray(parsedWalkInTypes)) {
+      const requestedWalkInIds = parsedWalkInTypes.filter((wt: any) => wt.id).map((wt: any) => parseInt(wt.id, 10)).filter(Boolean);
+      const existingWalkInTypes = await WalkInType.findAll({ where: { event_id: event.id } });
+      const existingWalkInIds = existingWalkInTypes.map((wt: any) => wt.id);
+
+      // Find walk-in types to delete (in DB but not in request)
+      const walkInIdsToDelete = existingWalkInIds.filter((id: number) => !requestedWalkInIds.includes(id));
+
+      for (const id of walkInIdsToDelete) {
+        // Check if there are transactions using this type
+        const transactionCount = await WalkInTransactionItem.count({
+          where: { walk_in_type_id: id }
+        });
+        if (transactionCount > 0) {
+          return res.status(400).json({ error: 'Cannot delete walk-in type that has transactions' });
+        }
+        await WalkInType.destroy({ where: { id, event_id: event.id } });
+      }
+
+      // Update or create walk-in types
+      for (const walkInType of parsedWalkInTypes) {
+        if (walkInType.id) {
+          const updateFields: any = {};
+          if (walkInType.name !== undefined) updateFields.name = walkInType.name.trim();
+          if (walkInType.price !== undefined) updateFields.price = parseFloat(walkInType.price);
+          if (walkInType.max_slots !== undefined) updateFields.max_slots = parseInt(walkInType.max_slots);
+          await WalkInType.update(updateFields, { where: { id: walkInType.id, event_id: event.id } });
+        } else {
+          await WalkInType.create({
+            event_id: event.id,
+            name: walkInType.name?.trim() || '',
+            price: walkInType.price !== undefined ? parseFloat(walkInType.price) : 0,
+            max_slots: walkInType.max_slots !== undefined ? parseInt(walkInType.max_slots) : 0
+          });
         }
       }
     }

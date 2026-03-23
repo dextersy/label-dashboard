@@ -153,6 +153,12 @@ h2 {
   min-width: 0;
   background-color: #ffffff;
   padding: 4rem 5rem;
+
+  &.closed-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 }
 
 @media (min-width: 769px) {
@@ -867,10 +873,10 @@ input.material:not(:focus)::placeholder {
 
 /* Countdown notification spacing */
 .wrapper.with-countdown {
-  padding-top: 64px;
+  padding-top: 48px;
 
   @media (max-width: 768px) {
-    padding-top: 56px;
+    padding-top: 42px;
   }
 }
 

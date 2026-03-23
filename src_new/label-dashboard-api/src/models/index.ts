@@ -33,6 +33,9 @@ import Fundraiser from './Fundraiser';
 import Donation from './Donation';
 import SyncLicensingPitch from './SyncLicensingPitch';
 import SyncLicensingPitchSong from './SyncLicensingPitchSong';
+import WalkInType from './WalkInType';
+import WalkInTransaction from './WalkInTransaction';
+import WalkInTransactionItem from './WalkInTransactionItem';
 
 // Define relationships
 // Brand relationships
@@ -113,6 +116,8 @@ Event.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 Event.hasMany(Ticket, { foreignKey: 'event_id', as: 'tickets' });
 Event.hasMany(EventReferrer, { foreignKey: 'event_id', as: 'referrers' });
 Event.hasMany(TicketType, { foreignKey: 'event_id', as: 'ticketTypes' });
+Event.hasMany(WalkInType, { foreignKey: 'event_id', as: 'walkInTypes' });
+Event.hasMany(WalkInTransaction, { foreignKey: 'event_id', as: 'walkInTransactions' });
 
 // EventReferrer relationships
 EventReferrer.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
@@ -247,6 +252,19 @@ Song.belongsToMany(SyncLicensingPitch, {
 // Brand relationships to SyncLicensingPitch
 Brand.hasMany(SyncLicensingPitch, { foreignKey: 'brand_id', as: 'syncLicensingPitches' });
 
+// WalkInType relationships
+WalkInType.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+WalkInType.hasMany(WalkInTransactionItem, { foreignKey: 'walk_in_type_id', as: 'transactionItems' });
+
+// WalkInTransaction relationships
+WalkInTransaction.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+WalkInTransaction.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredByUser' });
+WalkInTransaction.hasMany(WalkInTransactionItem, { foreignKey: 'walk_in_transaction_id', as: 'items' });
+
+// WalkInTransactionItem relationships
+WalkInTransactionItem.belongsTo(WalkInTransaction, { foreignKey: 'walk_in_transaction_id', as: 'transaction' });
+WalkInTransactionItem.belongsTo(WalkInType, { foreignKey: 'walk_in_type_id', as: 'walkInType' });
+
 // Export all models
 export {
   sequelize,
@@ -282,6 +300,9 @@ export {
   Donation,
   SyncLicensingPitch,
   SyncLicensingPitchSong,
+  WalkInType,
+  WalkInTransaction,
+  WalkInTransactionItem,
 };
 
 // Initialize database connection

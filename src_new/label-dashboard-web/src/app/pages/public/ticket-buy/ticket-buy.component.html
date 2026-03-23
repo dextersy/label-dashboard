@@ -30,7 +30,7 @@
   <!-- Content shown only when event is loaded -->
   <div *ngIf="!isLoading && !isError && event"
        class="wrapper fadeInDown"
-       [class.with-countdown]="event.show_countdown">
+       [class.with-countdown]="event.show_countdown && canBuyTickets()">
 
     <div class="page-layout" [class.no-poster]="!event.poster_url">
 
@@ -46,7 +46,7 @@
       </div>
 
       <!-- Right: All content -->
-      <div class="content-panel">
+      <div class="content-panel" [class.closed-state]="!canBuyTickets()">
 
         <!-- Event info -->
         <div class="event-info-section">
@@ -70,15 +70,42 @@
 
             <small [innerHTML]="sanitizeHtml(event.description)" style="font-size: 1rem;" class="description-text"></small>
           </div>
-          <div *ngIf="!canBuyTickets()">
-            <h1 style="font-size:2.5rem;font-weight:bold;">Sorry, we're closed...</h1>
-            <h1 style="font-size:1.5rem;font-style:italic;">— but the door's still open!</h1>
-            <h3>&nbsp;</h3>
-            <h5>Online ticket sales for <b>{{ event.title }}</b> has already ended. 🥲</h5>
-            <h5>But don't worry — tickets or walk-in may still be available at the show!</h5>
-            <p>
-              Please check <strong>{{ event.brand?.name || 'the event organizer' }}</strong> social media or the event page for more information.
-            </p>
+          <div *ngIf="!canBuyTickets()" class="text-center">
+            <h1>Online ticket sales for <strong>{{ event.title }}</strong> has ended.</h1>
+
+            <!-- Walk-in available -->
+            <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()">
+              <div class="alert alert-info text-center mt-4 mb-3" style="font-size: 1.2rem;">
+                <i class="fas fa-walking me-2"></i>
+                <strong>Walk-in tickets are available at the venue!</strong>
+                <hr class="my-2">
+                <div *ngFor="let wit of event.walkInTypes">
+                  <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0" class="mb-1">
+                    <strong>{{ wit.name }}</strong> — {{ formatPriceDisplay(wit.price) }}
+                    <span *ngIf="wit.remaining_slots !== null" class="text-muted">({{ wit.remaining_slots }} slots available)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="event-details mt-3 mb-3 p-3 text-start" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="mb-2">
+                  <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
+                </div>
+                <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
+                  <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
+                    🗺️ View on Google Maps
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- No walk-in -->
+            <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()">
+              <small class="text-muted mt-2 d-block">Tickets or walk-in may still be available at the show. Please check <strong>{{ event.brand?.name || 'the event organizer' }}</strong> social media for more information.</small>
+            </div>
           </div>
         </div>
 

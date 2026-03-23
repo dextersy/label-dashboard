@@ -60,7 +60,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   availableEvents: EventSelection[] = [];
 
   tabs = [
-    { id: 'tickets' as EventsTabType, label: 'Tickets', icon: 'fas fa-ticket-alt' },
+    { id: 'tickets' as EventsTabType, label: 'Tickets & Walk-Ins', icon: 'fas fa-ticket-alt' },
     { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'fa-solid fa-shopping-cart' },
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'fa-solid fa-user-plus' },
     { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'fas fa-envelope', adminOnly: true }

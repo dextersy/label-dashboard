@@ -16,6 +16,7 @@ import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
+import { EventWalkInSettingsComponent } from '../events/components/event-walk-in-settings/event-walk-in-settings.component';
 
 export interface TicketType {
   id?: number;
@@ -43,7 +44,7 @@ export function createDefaultTicketType(): TicketType {
   };
 }
 
-export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner';
+export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 'walk-in';
 
 @Component({
   selector: 'app-event-form',
@@ -57,7 +58,8 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner';
     TicketTypesComponent,
     QuillModule,
     InPageNavComponent,
-    FloatingActionBarComponent
+    FloatingActionBarComponent,
+    EventWalkInSettingsComponent
   ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
@@ -105,15 +107,22 @@ export class EventFormComponent implements OnInit, OnDestroy {
     // Scanner settings
     verification_pin: '',
     ticket_naming: 'ticket',
-    status: 'draft'
+    status: 'draft',
+    // Walk-in settings
+    walk_in_enabled: false,
+    walk_in_supports_cash: false,
+    walk_in_supports_gcash: false,
+    walk_in_supports_card: false
   };
   
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   currentVenueSelection: VenueSelection | null = null;
   ticketTypes: TicketType[] = [];
+  walkInTypes: any[] = [];
   originalEventData: any = null;
   originalTicketTypes: TicketType[] = [];
+  originalWalkInTypes: any[] = [];
   slugManuallyEdited = false;
   
   // UI state
@@ -285,9 +294,14 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_grabpay: true,
       verification_pin: '',
       ticket_naming: 'ticket',
-      status: 'draft'
+      status: 'draft',
+      // Walk-in settings
+      walk_in_enabled: false,
+      walk_in_supports_cash: false,
+      walk_in_supports_gcash: false,
+      walk_in_supports_card: false
     };
-    
+
     // Add default ticket type for new events
     this.ticketTypes = [createDefaultTicketType()];
   }
@@ -298,6 +312,9 @@ export class EventFormComponent implements OnInit, OnDestroy {
       { id: 'pricing', label: 'Pricing', icon: 'fa fa-ticket' },
       { id: 'purchase', label: 'Buy Page', icon: 'fa fa-shopping-cart' },
     ];
+    if (!this.isNewEvent) {
+      tabs.push({ id: 'walk-in', label: 'Walk-In', icon: 'fas fa-walking' });
+    }
     if (!this.isEventDraft()) {
       tabs.push({ id: 'scanner', label: 'Scanner', icon: 'fa fa-qrcode' });
     }
@@ -319,14 +336,22 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   goToNextTab(): void {
-    const tabOrder: EventFormSection[] = ['details', 'pricing', 'purchase', 'scanner'];
+    const tabOrder: EventFormSection[] = ['details', 'pricing', 'purchase', 'walk-in', 'scanner'];
     const currentIndex = tabOrder.indexOf(this.activeSection);
-    
+
     if (currentIndex >= 0 && currentIndex < tabOrder.length - 1) {
       const nextTab = tabOrder[currentIndex + 1];
+      // Skip walk-in tab for new events
+      if (nextTab === 'walk-in' && this.isNewEvent) {
+        // Jump to scanner if not draft, otherwise stay
+        if (!this.isEventDraft()) {
+          this.setActiveSection('scanner');
+        }
+        return;
+      }
       // Skip scanner tab if event is draft
       if (nextTab === 'scanner' && this.isEventDraft()) {
-        return; // Stay on current tab if scanner is not available
+        return;
       }
       this.setActiveSection(nextTab);
     }
@@ -371,6 +396,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
             // Update originalEventData to match current form state (what was just saved)
             this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
             this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+            // Reload walk-in types from server to get IDs for newly created ones
+            this.loadWalkInTypes();
             // Clear the selected poster file since it's now uploaded
             this.selectedPosterFile = null;
             // Clear the PIN refreshed flag
@@ -686,7 +713,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       return rest;
     });
     const ticketTypesChanged = JSON.stringify(stripUiFields(this.ticketTypes)) !== JSON.stringify(stripUiFields(this.originalTicketTypes));
-    return eventDataChanged || ticketTypesChanged || this.selectedPosterFile !== null;
+    const walkInTypesChanged = JSON.stringify(this.walkInTypes) !== JSON.stringify(this.originalWalkInTypes);
+    return eventDataChanged || ticketTypesChanged || walkInTypesChanged || this.selectedPosterFile !== null;
   }
 
   async onUnpublish(): Promise<void> {
@@ -834,7 +862,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_grabpay: this.eventData.supports_grabpay,
       verification_pin: this.eventData.verification_pin || '',
       ticket_naming: this.eventData.ticket_naming || 'ticket',
-      ticketTypes: ticketTypesForApi
+      ticketTypes: ticketTypesForApi,
+      // Walk-in settings
+      walk_in_enabled: this.eventData.walk_in_enabled,
+      walk_in_supports_cash: this.eventData.walk_in_supports_cash,
+      walk_in_supports_gcash: this.eventData.walk_in_supports_gcash,
+      walk_in_supports_card: this.eventData.walk_in_supports_card,
+      walkInTypes: this.walkInTypes
     };
 
     if (this.currentVenueSelection) {
@@ -859,7 +893,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
     const eventData = this.prepareEventData(status);
 
     Object.keys(eventData).forEach(key => {
-      if (key === 'ticketTypes') {
+      if (key === 'ticketTypes' || key === 'walkInTypes') {
         formData.append(key, JSON.stringify(eventData[key]));
       } else if (eventData[key] !== null && eventData[key] !== undefined) {
         formData.append(key, eventData[key].toString());
@@ -904,7 +938,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_grabpay: this.eventData.supports_grabpay,
       verification_pin: this.eventData.verification_pin || '',
       ticket_naming: this.eventData.ticket_naming || 'ticket',
-      ticketTypes: ticketTypesForApi
+      ticketTypes: ticketTypesForApi,
+      // Walk-in settings
+      walk_in_enabled: this.eventData.walk_in_enabled,
+      walk_in_supports_cash: this.eventData.walk_in_supports_cash,
+      walk_in_supports_gcash: this.eventData.walk_in_supports_gcash,
+      walk_in_supports_card: this.eventData.walk_in_supports_card,
+      walkInTypes: this.walkInTypes
     };
 
     if (this.currentVenueSelection) {
@@ -953,7 +993,12 @@ export class EventFormComponent implements OnInit, OnDestroy {
       supports_grabpay: event.supports_grabpay,
       verification_pin: event.verification_pin || '',
       ticket_naming: event.ticket_naming || 'ticket',
-      status: (event as any).status || 'draft'
+      status: (event as any).status || 'draft',
+      // Walk-in settings
+      walk_in_enabled: !!event.walk_in_enabled,
+      walk_in_supports_cash: !!event.walk_in_supports_cash,
+      walk_in_supports_gcash: !!event.walk_in_supports_gcash,
+      walk_in_supports_card: !!event.walk_in_supports_card
     };
 
     // Initialize description character count from loaded content
@@ -980,6 +1025,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
     if (this.eventId) {
       this.loadTicketTypes();
+      this.loadWalkInTypes();
     }
 
     if (event.poster_url) {
@@ -1007,6 +1053,27 @@ export class EventFormComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error loading ticket types:', error);
           this.notificationService.showError('Failed to load ticket types');
+        }
+      })
+    );
+  }
+
+  private loadWalkInTypes(): void {
+    if (!this.eventId) return;
+
+    this.subscriptions.add(
+      this.eventService.getWalkInTypes(this.eventId).subscribe({
+        next: (response) => {
+          this.walkInTypes = (response.walkInTypes || []).map((wt: any) => ({
+            id: wt.id,
+            name: wt.name,
+            price: wt.price,
+            max_slots: wt.max_slots
+          }));
+          this.originalWalkInTypes = JSON.parse(JSON.stringify(this.walkInTypes));
+        },
+        error: (error) => {
+          console.error('Error loading walk-in types:', error);
         }
       })
     );
@@ -1052,4 +1119,5 @@ export class EventFormComponent implements OnInit, OnDestroy {
   formatMinAmount(amount: number): string {
     return 'P' + amount.toLocaleString('en-PH', { maximumFractionDigits: 0 });
   }
+
 }

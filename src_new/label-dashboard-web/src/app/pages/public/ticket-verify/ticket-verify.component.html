@@ -63,8 +63,131 @@
         </form>
       </div>
 
+      <!-- Mode Tabs (only show if walk-in is enabled) -->
+      <div class="d-flex justify-content-center mb-4" *ngIf="isPinValidated && walkInEnabled">
+        <div class="btn-group view-toggle" role="group" aria-label="Mode toggle">
+          <button type="button"
+                  class="btn"
+                  [class.active]="activeMode === 'scan'"
+                  (click)="switchMode('scan')"
+                  [attr.aria-pressed]="activeMode === 'scan'">
+            <i class="fa fa-qrcode me-2"></i>Scan Tickets
+          </button>
+          <button type="button"
+                  class="btn"
+                  [class.active]="activeMode === 'walk-in'"
+                  (click)="switchMode('walk-in')"
+                  [attr.aria-pressed]="activeMode === 'walk-in'">
+            <i class="fa fa-walking me-2"></i>Walk-Ins
+          </button>
+        </div>
+      </div>
+
+      <!-- Walk-In Interface -->
+      <div class="scanner-section" *ngIf="isPinValidated && activeMode === 'walk-in' && walkInEnabled">
+
+        <!-- Loading -->
+        <div *ngIf="walkInLoading" class="text-center py-4">
+          <div class="loading"></div>
+        </div>
+
+        <!-- Registration Success -->
+        <div *ngIf="walkInRegistered" class="result-alert result-alert--success text-center">
+          <i class="fa fa-3x fa-check-circle"></i>
+          <h4 class="mt-2"><strong>{{ walkInRegisteredMessage }}</strong></h4>
+          <p class="mb-0">Walk-in has been registered.</p>
+        </div>
+        <div *ngIf="walkInRegistered" class="mt-3">
+          <button type="button" class="btn btn-primary btn-lg w-100" (click)="resetWalkIn()">
+            <i class="fa fa-plus"></i> Register Another Walk-In
+          </button>
+        </div>
+
+        <!-- Walk-In Type Selection -->
+        <div *ngIf="!walkInLoading && !walkInRegistered">
+
+          <!-- Transient Alerts -->
+          <div class="alert alert-danger" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
+
+          <p class="text-muted mb-3">Tap a type to select it. Tap again to add more.</p>
+
+          <div class="walk-in-types">
+            <div *ngFor="let type of walkInTypes"
+                 class="walk-in-type-card"
+                 [class.selected]="getWalkInQty(type.id) > 0"
+                 [class.sold-out]="type.remaining_slots === 0"
+                 (click)="type.remaining_slots !== 0 && onWalkInTypeTap(type)">
+              <div class="walk-in-type-info">
+                <div class="walk-in-type-name">{{ type.name }}</div>
+                <div class="walk-in-type-price">{{ formatWalkInPrice(type.price) }}</div>
+                <div class="walk-in-type-slots" *ngIf="type.remaining_slots !== null && type.remaining_slots !== undefined">
+                  <span *ngIf="type.remaining_slots > 0">{{ type.remaining_slots }} slots left</span>
+                  <span *ngIf="type.remaining_slots === 0" class="text-danger fw-bold">Sold Out</span>
+                </div>
+              </div>
+              <div class="walk-in-type-qty" *ngIf="getWalkInQty(type.id) > 0" (click)="$event.stopPropagation()">
+                <button class="btn btn-sm btn-outline-secondary qty-btn" (click)="decrementWalkIn(type.id, $event)">
+                  <i class="fa fa-minus"></i>
+                </button>
+                <span class="qty-value">{{ getWalkInQty(type.id) }}</span>
+                <button class="btn btn-sm btn-outline-secondary qty-btn" (click)="incrementWalkIn(type.id, $event)">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="mt-3" *ngIf="hasWalkInSelections()">
+            <label class="form-label fw-semibold">Payment Method</label>
+            <div class="d-flex gap-2 flex-wrap">
+              <button *ngIf="walkInPaymentMethods.cash"
+                      class="btn payment-method-btn"
+                      [class.btn-primary]="walkInPaymentMethod === 'cash'"
+                      [class.btn-outline-secondary]="walkInPaymentMethod !== 'cash'"
+                      (click)="walkInPaymentMethod = 'cash'">
+                <i class="fa fa-money-bill-wave me-1"></i> Cash
+              </button>
+              <button *ngIf="walkInPaymentMethods.gcash"
+                      class="btn payment-method-btn"
+                      [class.btn-primary]="walkInPaymentMethod === 'gcash'"
+                      [class.btn-outline-secondary]="walkInPaymentMethod !== 'gcash'"
+                      (click)="walkInPaymentMethod = 'gcash'">
+                <i class="fa fa-mobile-alt me-1"></i> GCash
+              </button>
+              <button *ngIf="walkInPaymentMethods.card"
+                      class="btn payment-method-btn"
+                      [class.btn-primary]="walkInPaymentMethod === 'card'"
+                      [class.btn-outline-secondary]="walkInPaymentMethod !== 'card'"
+                      (click)="walkInPaymentMethod = 'card'">
+                <i class="fa fa-credit-card me-1"></i> Card
+              </button>
+            </div>
+
+            <!-- Optional payment reference -->
+            <div class="mt-2" *ngIf="walkInPaymentMethod === 'gcash' || walkInPaymentMethod === 'card'">
+              <input type="text" class="form-control" placeholder="Reference # (optional)"
+                     [(ngModel)]="walkInPaymentReference">
+            </div>
+          </div>
+
+          <!-- Total & Register -->
+          <div class="walk-in-total-bar" *ngIf="hasWalkInSelections()">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold fs-5">Total</span>
+              <span class="fw-bold fs-4">{{ formatWalkInPrice(getWalkInTotal()) }}</span>
+            </div>
+            <button class="btn btn-success btn-lg w-100"
+                    [disabled]="!walkInPaymentMethod || walkInLoading"
+                    (click)="registerWalkIn()">
+              <i class="fa fa-check-circle me-1"></i> Register Walk-In
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Verification Interface -->
-      <div class="scanner-section" *ngIf="isPinValidated">
+      <div class="scanner-section" *ngIf="isPinValidated && (activeMode === 'scan' || !walkInEnabled)">
 
         <!-- Transient Alerts -->
         <div class="alert alert-danger" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>

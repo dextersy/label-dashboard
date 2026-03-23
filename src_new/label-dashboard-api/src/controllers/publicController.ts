@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem } from '../models';
+import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -214,6 +215,24 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     // Get display price from ticket types
     const priceDisplay = getEventDisplayPriceSync(event);
 
+    // Build walk-in info if enabled
+    let walkInTypes: any[] | undefined;
+    if (event.walk_in_enabled) {
+      const witList = await WalkInType.findAll({
+        where: { event_id: eventId },
+        order: [['id', 'ASC']]
+      });
+      walkInTypes = [];
+      for (const wit of witList) {
+        const remainingSlots = await wit.getRemainingSlots();
+        walkInTypes.push({
+          name: wit.name,
+          price: wit.price,
+          remaining_slots: remainingSlots
+        });
+      }
+    }
+
     res.json({
       event: {
         id: event.id,
@@ -246,6 +265,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         venue_phone: event.venue_phone,
         venue_website: event.venue_website,
         venue_maps_url: event.venue_maps_url,
+        walk_in_enabled: event.walk_in_enabled || false,
+        walkInTypes,
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
@@ -1348,6 +1369,33 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Build walk-in info if enabled
+    let walkInInfo: any = undefined;
+    if (event.walk_in_enabled) {
+      const walkInTypes = await WalkInType.findAll({
+        where: { event_id: event.id },
+        order: [['id', 'ASC']]
+      });
+
+      const processedWalkInTypes = [];
+      for (const wit of walkInTypes) {
+        const soldCount = await wit.getSoldCount();
+        const remainingSlots = await wit.getRemainingSlots();
+        processedWalkInTypes.push({
+          id: wit.id,
+          name: wit.name,
+          price: wit.price,
+          max_slots: wit.max_slots,
+          remaining_slots: remainingSlots
+        });
+      }
+
+      walkInInfo = {
+        enabled: true,
+        types: processedWalkInTypes
+      };
+    }
+
     res.json({
       event: {
         id: event.id,
@@ -1355,6 +1403,8 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
         date_and_time: event.date_and_time,
         venue: event.venue,
         poster_url: event.poster_url,
+        walk_in_enabled: event.walk_in_enabled || false,
+        walk_in: walkInInfo,
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
@@ -3116,5 +3166,236 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
     if (!res.headersSent) {
       res.status(500).json({ error: 'Internal server error' });
     }
+  }
+};
+
+// Get walk-in types for scanner (PIN-protected)
+export const getWalkInTypesPublic = async (req: Request, res: Response) => {
+  try {
+    const { event_id, pin } = req.body;
+
+    if (!event_id || !pin) {
+      return res.status(400).json({ error: 'Event ID and PIN are required' });
+    }
+
+    const requestDomain = getRequestDomain(req);
+
+    const event = await Event.findOne({
+      where: { id: event_id },
+      include: [{
+        model: Brand,
+        as: 'brand',
+        include: [{
+          model: Domain,
+          as: 'domains',
+          attributes: ['domain_name']
+        }]
+      }]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Validate domain
+    if (event.brand && event.brand.domains && requestDomain) {
+      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
+      if (!eventBrandDomains.includes(requestDomain)) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+    } else {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Verify PIN
+    if (pin !== event.verification_pin) {
+      return res.status(403).json({ error: 'Invalid PIN' });
+    }
+
+    if (!event.walk_in_enabled) {
+      return res.status(400).json({ error: 'Walk-in is not enabled for this event' });
+    }
+
+    const walkInTypes = await WalkInType.findAll({
+      where: { event_id: event.id },
+      order: [['id', 'ASC']]
+    });
+
+    const processedTypes = [];
+    for (const wit of walkInTypes) {
+      const soldCount = await wit.getSoldCount();
+      const remainingSlots = await wit.getRemainingSlots();
+
+      processedTypes.push({
+        id: wit.id,
+        name: wit.name,
+        price: wit.price,
+        max_slots: wit.max_slots,
+        sold_count: soldCount,
+        remaining_slots: remainingSlots
+      });
+    }
+
+    res.json({
+      walkInTypes: processedTypes,
+      payment_methods: {
+        cash: event.walk_in_supports_cash,
+        gcash: event.walk_in_supports_gcash,
+        card: event.walk_in_supports_card
+      }
+    });
+  } catch (error) {
+    console.error('Get walk-in types public error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Register walk-in transaction (PIN-protected)
+export const registerWalkIn = async (req: Request, res: Response) => {
+  try {
+    const { event_id, pin, payment_method, payment_reference, items } = req.body;
+
+    if (!event_id || !pin || !payment_method || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Event ID, PIN, payment method, and items are required' });
+    }
+
+    const validMethods = ['cash', 'gcash', 'card'];
+    if (!validMethods.includes(payment_method)) {
+      return res.status(400).json({ error: 'Invalid payment method' });
+    }
+
+    const requestDomain = getRequestDomain(req);
+
+    const event = await Event.findOne({
+      where: { id: event_id },
+      include: [{
+        model: Brand,
+        as: 'brand',
+        include: [{
+          model: Domain,
+          as: 'domains',
+          attributes: ['domain_name']
+        }]
+      }]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Validate domain
+    if (event.brand && event.brand.domains && requestDomain) {
+      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
+      if (!eventBrandDomains.includes(requestDomain)) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+    } else {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Verify PIN
+    if (pin !== event.verification_pin) {
+      return res.status(403).json({ error: 'Invalid PIN' });
+    }
+
+    if (!event.walk_in_enabled) {
+      return res.status(400).json({ error: 'Walk-in is not enabled for this event' });
+    }
+
+    // Validate payment method is enabled
+    if (payment_method === 'cash' && !event.walk_in_supports_cash) {
+      return res.status(400).json({ error: 'Cash payment is not enabled for walk-in' });
+    }
+    if (payment_method === 'gcash' && !event.walk_in_supports_gcash) {
+      return res.status(400).json({ error: 'GCash payment is not enabled for walk-in' });
+    }
+    if (payment_method === 'card' && !event.walk_in_supports_card) {
+      return res.status(400).json({ error: 'Card payment is not enabled for walk-in' });
+    }
+
+    // Validate items and check slot availability
+    let totalAmount = 0;
+    const validatedItems: Array<{ walk_in_type_id: number; quantity: number; price_per_unit: number }> = [];
+
+    for (const item of items) {
+      if (!item.walk_in_type_id || !item.quantity || item.quantity < 1) {
+        return res.status(400).json({ error: 'Each item must have walk_in_type_id and quantity >= 1' });
+      }
+
+      const walkInType = await WalkInType.findOne({
+        where: { id: item.walk_in_type_id, event_id: event.id }
+      });
+
+      if (!walkInType) {
+        return res.status(400).json({ error: `Walk-in type ${item.walk_in_type_id} not found` });
+      }
+
+      // Check slot availability
+      if (walkInType.max_slots > 0) {
+        const remainingSlots = await walkInType.getRemainingSlots();
+        if (remainingSlots !== null && item.quantity > remainingSlots) {
+          return res.status(400).json({
+            error: `Not enough slots for "${walkInType.name}". Only ${remainingSlots} remaining.`
+          });
+        }
+      }
+
+      const pricePerUnit = walkInType.price;
+      totalAmount += pricePerUnit * item.quantity;
+      validatedItems.push({
+        walk_in_type_id: walkInType.id,
+        quantity: item.quantity,
+        price_per_unit: pricePerUnit
+      });
+    }
+
+    // Find the user who registered this (system user for the brand)
+    const systemUser = await User.findOne({
+      where: { brand_id: event.brand_id, is_admin: true }
+    });
+
+    if (!systemUser) {
+      return res.status(500).json({ error: 'No admin user found for brand' });
+    }
+
+    // Create transaction and items in a DB transaction
+    const t = await sequelize.transaction();
+    try {
+      const transaction = await WalkInTransaction.create({
+        event_id: event.id,
+        payment_method,
+        payment_reference: payment_reference || null,
+        total_amount: totalAmount,
+        registered_by: systemUser.id
+      }, { transaction: t });
+
+      for (const item of validatedItems) {
+        await WalkInTransactionItem.create({
+          walk_in_transaction_id: transaction.id,
+          walk_in_type_id: item.walk_in_type_id,
+          quantity: item.quantity,
+          price_per_unit: item.price_per_unit
+        }, { transaction: t });
+      }
+
+      await t.commit();
+
+      res.json({
+        success: true,
+        message: 'Walk-in registered successfully',
+        transaction: {
+          id: transaction.id,
+          total_amount: totalAmount,
+          payment_method,
+          items: validatedItems
+        }
+      });
+    } catch (txError) {
+      await t.rollback();
+      throw txError;
+    }
+  } catch (error) {
+    console.error('Register walk-in error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

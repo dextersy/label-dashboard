@@ -136,7 +136,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           children: [
             { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true },
-            { route: '/campaigns/events/tickets', title: 'Tickets', adminOnly: true },
+            { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true },
             { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true },
             { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true },
             { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true }

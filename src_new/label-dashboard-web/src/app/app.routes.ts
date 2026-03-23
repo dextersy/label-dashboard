@@ -122,6 +122,7 @@ export const routes: Routes = [
       { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'events/abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'events/referrals', component: EventsComponent, data: { tab: 'referrals' } },
+      { path: 'events/walk-in', redirectTo: 'events/tickets', pathMatch: 'full' },
       { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
       // Fundraisers

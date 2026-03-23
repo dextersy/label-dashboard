@@ -36,6 +36,13 @@ import {
   deleteTicketType,
   getAvailableTicketTypes
 } from '../controllers/ticketTypeController';
+import {
+  getWalkInTypes,
+  createWalkInType,
+  updateWalkInType,
+  deleteWalkInType,
+  getWalkInTransactions
+} from '../controllers/walkInController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -75,6 +82,13 @@ router.get('/ticket-types/available', getAvailableTicketTypes);
 router.post('/ticket-types', requireAdmin, createTicketType);
 router.put('/ticket-types/:id', requireAdmin, updateTicketType);
 router.delete('/ticket-types/:id', requireAdmin, deleteTicketType);
+
+// Walk-in type operations (specific routes before /:id)
+router.get('/walk-in-types', getWalkInTypes);
+router.post('/walk-in-types', requireAdmin, createWalkInType);
+router.put('/walk-in-types/:id', requireAdmin, updateWalkInType);
+router.delete('/walk-in-types/:id', requireAdmin, deleteWalkInType);
+router.get('/walk-in-transactions', getWalkInTransactions);
 
 // Email operations (specific routes before /:id)
 router.get('/ticket-holders-count', getEventTicketHoldersCount);

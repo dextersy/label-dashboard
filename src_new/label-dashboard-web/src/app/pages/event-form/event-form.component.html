@@ -457,6 +457,18 @@
             </div>
           </div>
 
+          <!-- Walk-In Settings Section -->
+          <div class="form-section" *ngIf="activeSection === 'walk-in' && !isNewEvent">
+            <h3>Walk-In</h3>
+            <p>Configure walk-in registration and payment settings</p>
+
+            <app-event-walk-in-settings
+              [eventData]="eventData"
+              [isAdmin]="isAdmin"
+              [(walkInTypes)]="walkInTypes">
+            </app-event-walk-in-settings>
+          </div>
+
           <!-- Scanner Section -->
           <div class="form-section" *ngIf="activeSection === 'scanner' && !isEventDraft()">
             <h3>Scanner & Verification</h3>
