@@ -6,8 +6,6 @@ import {
   verifyTicket,
   ticketPaymentWebhook,
   transferWebhook,
-  checkPin,
-  checkInTicket,
   getBrandByDomain,
   getEventForPublic,
   getPublicEventInfo,
@@ -22,9 +20,7 @@ import {
   streamPublicAudio,
   getReleasePlayer,
   getFundraiserForPublic,
-  makeDonation,
-  getWalkInTypesPublic,
-  registerWalkIn
+  makeDonation
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 
@@ -61,13 +57,6 @@ router.post('/tickets/details', publicRateLimit, getTicketDetails);
 router.get('/tickets/pdf', publicRateLimit, downloadTicketPDF);
 router.post('/tickets/buy', ticketPurchaseRateLimit, buyTicket);
 router.post('/tickets/verify', publicRateLimit, verifyTicket);
-router.post('/tickets/check-pin', publicRateLimit, checkPin);
-router.post('/tickets/check-in', publicRateLimit, checkInTicket);
-
-// Walk-in scanner endpoints (PIN-protected)
-router.post('/walk-in/types', publicRateLimit, getWalkInTypesPublic);
-router.post('/walk-in/register', publicRateLimit, registerWalkIn);
-
 // Webhook endpoints (PayMongo) - no rate limiting for webhooks as they come from trusted sources
 router.post('/webhook/payment', ticketPaymentWebhook);
 router.post('/webhook/transfer', transferWebhook);

@@ -1,8 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { PublicService, TicketDetails, TicketVerificationRequest, PublicEvent } from '../../../services/public.service';
+import { PublicService, TicketDetails, PublicEvent } from '../../../services/public.service';
 
 
 @Component({

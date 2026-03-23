@@ -301,6 +301,9 @@
 
       <!-- Footer -->
       <div class="text-center" style="padding-top: 2.5rem; padding-bottom: 1rem;">
+        <p *ngIf="isPinValidated" class="mb-1" style="font-size: 12px; color: #999;">
+          <i class="fa fa-circle" style="color: #28a745; font-size: 8px; vertical-align: middle; margin-right: 4px;"></i>Logged in. (<a href="javascript:void(0)" (click)="logoutScanner()" style="color: #999;">Log out?</a>)
+        </p>
         <p>
           <span style="font-size:12px; font-weight:bold;">Powered by Melt Records Dashboard.</span>
         </p>

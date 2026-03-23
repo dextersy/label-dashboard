@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -79,11 +79,6 @@ export interface TicketPurchaseResponse {
   message: string;
 }
 
-export interface TicketVerificationRequest {
-  ticket_code: string;
-  event_id?: number;
-}
-
 export interface TicketDetails {
   ticket_code: string;
   name: string;
@@ -97,19 +92,6 @@ export interface TicketDetails {
     date_and_time: string;
     venue: string;
   };
-}
-
-export interface TicketVerificationResponse {
-  valid: boolean;
-  ticket?: TicketDetails;
-  message: string;
-}
-
-export interface CheckInRequest {
-  event_id: number;
-  verification_pin: string;
-  ticket_code: string;
-  entries_to_claim: number;
 }
 
 export interface CheckInResponse {
@@ -188,129 +170,10 @@ export class PublicService {
   }
 
   /**
-   * Verify a ticket by code
-   */
-  verifyTicket(request: TicketVerificationRequest): Observable<TicketVerificationResponse> {
-    return this.http.post<TicketVerificationResponse>(`${this.apiUrl}/public/tickets/verify`, request);
-  }
-
-  /**
    * Get brand information by domain
    */
   getBrandByDomain(domain: string): Observable<BrandInfo> {
     return this.http.get<BrandInfo>(`${this.apiUrl}/public/brand/domain/${domain}`);
-  }
-
-  /**
-   * Check verification PIN for an event
-   */
-  checkPin(eventId: number, pin: string): Observable<{
-    valid: boolean;
-    message: string;
-    event?: {
-      id: number;
-      title: string;
-      date_and_time: string;
-      venue: string;
-      poster_url?: string;
-      brand?: {
-        id: number;
-        name: string;
-        color: string;
-        logo_url: string;
-      };
-    };
-  }> {
-    return this.http.post<{
-      valid: boolean;
-      message: string;
-      event?: {
-        id: number;
-        title: string;
-        date_and_time: string;
-        venue: string;
-        poster_url?: string;
-        brand?: {
-          id: number;
-          name: string;
-          color: string;
-          logo_url: string;
-        };
-      };
-    }>(`${this.apiUrl}/public/tickets/check-pin`, {
-      event_id: eventId,
-      pin
-    });
-  }
-
-  /**
-   * Get ticket details by code and event
-   * Uses unified endpoint that supports both cookie and code-based authentication
-   */
-  getTicketFromCode(eventId: number, verificationPin: string, ticketCode: string): Observable<{
-    ticket: {
-      id: number;
-      ticket_code: string;
-      name: string;
-      email_address: string;
-      number_of_entries: number;
-      number_of_claimed_entries: number;
-      remaining_entries: number;
-      status: string;
-      event: {
-        id: number;
-        title: string;
-        date_and_time: string;
-        venue: string;
-      };
-      referrer?: {
-        name: string;
-        code: string;
-      };
-      ticketType?: {
-        id: number;
-        name: string;
-        special_instructions_for_scanner?: string | null;
-      };
-    };
-  }> {
-    return this.http.post<{
-      ticket: {
-        id: number;
-        ticket_code: string;
-        name: string;
-        email_address: string;
-        number_of_entries: number;
-        number_of_claimed_entries: number;
-        remaining_entries: number;
-        status: string;
-        event: {
-          id: number;
-          title: string;
-          date_and_time: string;
-          venue: string;
-        };
-        referrer?: {
-          name: string;
-          code: string;
-        };
-        ticketType?: {
-          id: number;
-          name: string;
-        };
-      };
-    }>(`${this.apiUrl}/public/tickets/details`, {
-      event_id: eventId,
-      verification_pin: verificationPin,
-      ticket_code: ticketCode
-    });
-  }
-
-  /**
-   * Check in ticket entries
-   */
-  checkInTicket(request: CheckInRequest): Observable<CheckInResponse> {
-    return this.http.post<CheckInResponse>(`${this.apiUrl}/public/tickets/check-in`, request);
   }
 
   /**
@@ -443,47 +306,6 @@ export class PublicService {
   }
 
   /**
-   * Get walk-in types for scanner (PIN-protected)
-   */
-  getWalkInTypes(eventId: number, pin: string): Observable<{
-    walkInTypes: Array<{
-      id: number;
-      name: string;
-      price: number;
-      max_slots: number;
-      sold_count: number;
-      remaining_slots: number | null;
-    }>;
-    payment_methods: {
-      cash: boolean;
-      gcash: boolean;
-      card: boolean;
-    };
-  }> {
-    return this.http.post<any>(`${this.apiUrl}/public/walk-in/types`, {
-      event_id: eventId,
-      pin
-    });
-  }
-
-  /**
-   * Register a walk-in transaction (PIN-protected)
-   */
-  registerWalkIn(data: {
-    event_id: number;
-    pin: string;
-    payment_method: string;
-    payment_reference?: string;
-    items: Array<{ walk_in_type_id: number; quantity: number }>;
-  }): Observable<{
-    success: boolean;
-    message: string;
-    transaction: any;
-  }> {
-    return this.http.post<any>(`${this.apiUrl}/public/walk-in/register`, data);
-  }
-
-  /**
    * Download ticket PDF (uses cookie for authentication)
    * Returns Observable for error handling
    */
@@ -531,5 +353,98 @@ export class PublicService {
     message: string;
   }> {
     return this.http.post<any>(`${this.apiUrl}/public/donation/donate`, request);
+  }
+
+  // ─── Scanner Session Methods ───
+
+  private scannerHeaders(token: string): { headers: HttpHeaders } {
+    return { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) };
+  }
+
+  scannerLogin(eventId: number, pin: string): Observable<{
+    token: string;
+    event: {
+      id: number;
+      title: string;
+      date_and_time: string;
+      venue: string;
+      poster_url?: string;
+      brand?: {
+        id: number;
+        name: string;
+        color: string;
+        logo_url: string;
+      };
+    };
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/scanner/login`, { event_id: eventId, pin });
+  }
+
+  scannerGetTicket(token: string, ticketCode: string): Observable<{
+    ticket: {
+      id: number;
+      ticket_code: string;
+      name: string;
+      email_address: string;
+      number_of_entries: number;
+      number_of_claimed_entries: number;
+      remaining_entries: number;
+      status: string;
+      event: {
+        id: number;
+        title: string;
+        date_and_time: string;
+        venue: string;
+      };
+      referrer?: {
+        name: string;
+        code: string;
+      };
+      ticketType?: {
+        id: number;
+        name: string;
+        price: number;
+        special_instructions_for_scanner?: string | null;
+      };
+    };
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/scanner/ticket`, { ticket_code: ticketCode }, this.scannerHeaders(token));
+  }
+
+  scannerCheckIn(token: string, ticketCode: string, entriesToClaim: number): Observable<CheckInResponse> {
+    return this.http.post<CheckInResponse>(`${this.apiUrl}/scanner/check-in`, {
+      ticket_code: ticketCode,
+      entries_to_claim: entriesToClaim
+    }, this.scannerHeaders(token));
+  }
+
+  scannerGetWalkInTypes(token: string): Observable<{
+    walkInTypes: Array<{
+      id: number;
+      name: string;
+      price: number;
+      max_slots: number;
+      sold_count: number;
+      remaining_slots: number | null;
+    }>;
+    payment_methods: {
+      cash: boolean;
+      gcash: boolean;
+      card: boolean;
+    };
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/scanner/walk-in/types`, {}, this.scannerHeaders(token));
+  }
+
+  scannerRegisterWalkIn(token: string, data: {
+    payment_method: string;
+    payment_reference?: string;
+    items: Array<{ walk_in_type_id: number; quantity: number }>;
+  }): Observable<{
+    success: boolean;
+    message: string;
+    transaction: any;
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/scanner/walk-in/register`, data, this.scannerHeaders(token));
   }
 }

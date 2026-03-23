@@ -20,6 +20,12 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     }
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
+
+    // Reject non-user tokens (e.g. scanner tokens) from accessing authenticated routes
+    if (decoded.type && decoded.type !== 'user') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
     const user = await User.findByPk(decoded.userId);
     
     if (!user) {
