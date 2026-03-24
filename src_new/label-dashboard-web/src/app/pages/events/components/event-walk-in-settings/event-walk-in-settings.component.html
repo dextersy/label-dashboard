@@ -55,6 +55,28 @@
       </div>
     </div>
 
+    <!-- Maximum Walk-In Count -->
+    <div class="card mb-3" *ngIf="isAdmin">
+      <div class="card-header">
+        <strong>Maximum Walk-Ins</strong>
+      </div>
+      <div class="card-body">
+        <small class="text-muted d-block mb-2">Set a cap on the total number of walk-in registrations allowed (across all types).</small>
+        <div class="d-flex align-items-center gap-3">
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   id="walkInMaxCountUnlimited"
+                   [ngModel]="isMaxCountUnlimited"
+                   (ngModelChange)="onMaxCountUnlimitedChange($event)">
+            <label class="form-check-label" for="walkInMaxCountUnlimited">Unlimited</label>
+          </div>
+          <div *ngIf="!isMaxCountUnlimited" class="input-group" style="max-width: 200px;">
+            <input type="number" class="form-control" [(ngModel)]="eventData.walk_in_max_count" min="1" placeholder="Max count">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Walk-In Types -->
     <div class="card mb-3">
       <div class="card-header d-flex align-items-center justify-content-between">

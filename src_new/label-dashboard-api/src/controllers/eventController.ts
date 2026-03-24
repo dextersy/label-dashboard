@@ -570,7 +570,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       walk_in_enabled,
       walk_in_supports_cash,
       walk_in_supports_gcash,
-      walk_in_supports_card
+      walk_in_supports_card,
+      walk_in_max_count
     } = req.body;
 
     // Parse ticketTypes if it's a JSON string (from FormData)
@@ -704,7 +705,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       walk_in_enabled: walk_in_enabled !== undefined ? walk_in_enabled : event.walk_in_enabled,
       walk_in_supports_cash: walk_in_supports_cash !== undefined ? walk_in_supports_cash : event.walk_in_supports_cash,
       walk_in_supports_gcash: walk_in_supports_gcash !== undefined ? walk_in_supports_gcash : event.walk_in_supports_gcash,
-      walk_in_supports_card: walk_in_supports_card !== undefined ? walk_in_supports_card : event.walk_in_supports_card
+      walk_in_supports_card: walk_in_supports_card !== undefined ? walk_in_supports_card : event.walk_in_supports_card,
+      walk_in_max_count: walk_in_max_count !== undefined ? walk_in_max_count : event.walk_in_max_count
     });
 
     // Update ticket types if provided in request

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -15,11 +15,14 @@ export interface WalkInType {
     templateUrl: './event-walk-in-settings.component.html',
     styleUrl: './event-walk-in-settings.component.scss'
 })
-export class EventWalkInSettingsComponent {
+export class EventWalkInSettingsComponent implements OnChanges {
   @Input() isAdmin: boolean = false;
   @Input() eventData: any = null;
   @Input() walkInTypes: WalkInType[] = [];
   @Output() walkInTypesChange = new EventEmitter<WalkInType[]>();
+
+  // Max count toggle
+  isMaxCountUnlimited = true;
 
   // Add/edit form
   showNewForm = false;
@@ -31,6 +34,19 @@ export class EventWalkInSettingsComponent {
     isFree: true,
     isUnlimited: true
   };
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['eventData'] && this.eventData) {
+      this.isMaxCountUnlimited = !this.eventData.walk_in_max_count || this.eventData.walk_in_max_count === 0;
+    }
+  }
+
+  onMaxCountUnlimitedChange(unlimited: boolean): void {
+    this.isMaxCountUnlimited = unlimited;
+    if (unlimited) {
+      this.eventData.walk_in_max_count = 0;
+    }
+  }
 
   startAddNew(): void {
     this.editingIndex = null;

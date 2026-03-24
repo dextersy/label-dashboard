@@ -109,7 +109,15 @@
           <!-- Transient Alerts -->
           <div class="alert alert-danger" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
 
-          <p class="text-muted mb-3">Tap a type to select it. Tap again to add more.</p>
+          <p class="text-muted mb-3" *ngIf="walkInMaxCount <= 0 || getWalkInRemainingCount()! > 0">Tap a type to select it. Tap again to add more.</p>
+
+          <!-- Walk-In Max Count Info -->
+          <p class="text-muted mb-3 small" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount()! > 0">
+            <i class="fa fa-info-circle me-1"></i>{{ walkInTotalSoldCount }} / {{ walkInMaxCount }} walk-ins registered &middot; <strong>{{ getWalkInRemainingCount() }} left</strong>
+          </p>
+          <p class="text-danger mb-3" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount() === 0 && !hasWalkInSelections()">
+            <i class="fa fa-ban me-1"></i> Walk-in limit has been reached.
+          </p>
 
           <div class="walk-in-types">
             <div *ngFor="let type of walkInTypes"

@@ -38,6 +38,7 @@ interface EventAttributes {
   walk_in_supports_cash: boolean;
   walk_in_supports_gcash: boolean;
   walk_in_supports_card: boolean;
+  walk_in_max_count: number;
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -79,6 +80,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public walk_in_supports_cash!: boolean;
   public walk_in_supports_gcash!: boolean;
   public walk_in_supports_card!: boolean;
+  public walk_in_max_count!: number;
 
   // Association properties
   public brand?: any;
@@ -258,6 +260,11 @@ Event.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    walk_in_max_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
   },
   {

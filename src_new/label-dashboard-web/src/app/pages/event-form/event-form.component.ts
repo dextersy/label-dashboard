@@ -112,7 +112,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
     walk_in_enabled: false,
     walk_in_supports_cash: false,
     walk_in_supports_gcash: false,
-    walk_in_supports_card: false
+    walk_in_supports_card: false,
+    walk_in_max_count: 0
   };
   
   selectedPosterFile: File | null = null;
@@ -299,7 +300,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       walk_in_enabled: false,
       walk_in_supports_cash: false,
       walk_in_supports_gcash: false,
-      walk_in_supports_card: false
+      walk_in_supports_card: false,
+      walk_in_max_count: 0
     };
 
     // Add default ticket type for new events
@@ -868,6 +870,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       walk_in_supports_cash: this.eventData.walk_in_supports_cash,
       walk_in_supports_gcash: this.eventData.walk_in_supports_gcash,
       walk_in_supports_card: this.eventData.walk_in_supports_card,
+      walk_in_max_count: this.eventData.walk_in_max_count || 0,
       walkInTypes: this.walkInTypes
     };
 
@@ -944,6 +947,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       walk_in_supports_cash: this.eventData.walk_in_supports_cash,
       walk_in_supports_gcash: this.eventData.walk_in_supports_gcash,
       walk_in_supports_card: this.eventData.walk_in_supports_card,
+      walk_in_max_count: this.eventData.walk_in_max_count || 0,
       walkInTypes: this.walkInTypes
     };
 
@@ -998,7 +1002,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
       walk_in_enabled: !!event.walk_in_enabled,
       walk_in_supports_cash: !!event.walk_in_supports_cash,
       walk_in_supports_gcash: !!event.walk_in_supports_gcash,
-      walk_in_supports_card: !!event.walk_in_supports_card
+      walk_in_supports_card: !!event.walk_in_supports_card,
+      walk_in_max_count: event.walk_in_max_count || 0
     };
 
     // Initialize description character count from loaded content

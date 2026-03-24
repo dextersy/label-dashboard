@@ -81,6 +81,8 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   walkInSelections: Map<number, number> = new Map(); // type_id -> quantity
   walkInPaymentMethod: string = '';
   walkInPaymentReference: string = '';
+  walkInMaxCount: number = 0; // 0 = unlimited
+  walkInTotalSoldCount: number = 0;
   walkInLoading = false;
   walkInRegistered = false;
   walkInRegisteredMessage = '';
@@ -180,6 +182,8 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           this.walkInEnabled = true;
           this.walkInTypes = response.walkInTypes;
           this.walkInPaymentMethods = response.payment_methods;
+          this.walkInMaxCount = response.walk_in_max_count || 0;
+          this.walkInTotalSoldCount = response.total_sold_count || 0;
           if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
           else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
           else if (this.walkInPaymentMethods.card) this.walkInPaymentMethod = 'card';
@@ -233,6 +237,8 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           this.walkInEnabled = true;
           this.walkInTypes = response.walkInTypes;
           this.walkInPaymentMethods = response.payment_methods;
+          this.walkInMaxCount = response.walk_in_max_count || 0;
+          this.walkInTotalSoldCount = response.total_sold_count || 0;
           if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
           else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
           else if (this.walkInPaymentMethods.card) this.walkInPaymentMethod = 'card';
@@ -565,6 +571,8 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (response) => {
           this.walkInTypes = response.walkInTypes;
           this.walkInPaymentMethods = response.payment_methods;
+          this.walkInMaxCount = response.walk_in_max_count || 0;
+          this.walkInTotalSoldCount = response.total_sold_count || 0;
           // Auto-select first available payment method
           if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
           else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
@@ -585,6 +593,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   onWalkInTypeTap(type: any): void {
     const currentQty = this.walkInSelections.get(type.id) || 0;
     if (type.remaining_slots !== null && type.remaining_slots !== undefined && currentQty + 1 > type.remaining_slots) return;
+    if (this.isWalkInMaxReached()) return;
     this.walkInSelections.set(type.id, currentQty + 1);
   }
 
@@ -593,6 +602,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     const type = this.walkInTypes.find(t => t.id === typeId);
     const current = this.walkInSelections.get(typeId) || 0;
     if (type && type.remaining_slots !== null && type.remaining_slots !== undefined && current + 1 > type.remaining_slots) return;
+    if (this.isWalkInMaxReached()) return;
     this.walkInSelections.set(typeId, current + 1);
   }
 
@@ -623,6 +633,26 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
 
   hasWalkInSelections(): boolean {
     return this.walkInSelections.size > 0;
+  }
+
+  /** Total quantity currently selected in this transaction */
+  getWalkInSelectedTotal(): number {
+    let total = 0;
+    for (const qty of this.walkInSelections.values()) {
+      total += qty;
+    }
+    return total;
+  }
+
+  /** Whether the general max count has been reached (considering sold + currently selected) */
+  isWalkInMaxReached(): boolean {
+    if (this.walkInMaxCount <= 0) return false;
+    return (this.walkInTotalSoldCount + this.getWalkInSelectedTotal()) >= this.walkInMaxCount;
+  }
+
+  getWalkInRemainingCount(): number | null {
+    if (this.walkInMaxCount <= 0) return null;
+    return Math.max(0, this.walkInMaxCount - this.walkInTotalSoldCount);
   }
 
   registerWalkIn(): void {

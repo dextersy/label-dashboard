@@ -254,9 +254,11 @@ export const scannerGetWalkInTypes = async (req: ScannerRequest, res: Response) 
     });
 
     const processedTypes = [];
+    let totalSoldCount = 0;
     for (const wit of walkInTypes) {
       const soldCount = await wit.getSoldCount();
       const remainingSlots = await wit.getRemainingSlots();
+      totalSoldCount += soldCount;
 
       processedTypes.push({
         id: wit.id,
@@ -274,7 +276,9 @@ export const scannerGetWalkInTypes = async (req: ScannerRequest, res: Response) 
         cash: event.walk_in_supports_cash,
         gcash: event.walk_in_supports_gcash,
         card: event.walk_in_supports_card
-      }
+      },
+      walk_in_max_count: event.walk_in_max_count,
+      total_sold_count: totalSoldCount
     });
   } catch (error) {
     console.error('Scanner get walk-in types error:', error);
@@ -346,6 +350,25 @@ export const scannerRegisterWalkIn = async (req: ScannerRequest, res: Response) 
         quantity: item.quantity,
         price_per_unit: pricePerUnit
       });
+    }
+
+    // Enforce general walk-in max count (across all types)
+    if (event.walk_in_max_count > 0) {
+      const totalItemQty = validatedItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      // Get current total sold count across all walk-in types for this event
+      const walkInTypesForEvent = await WalkInType.findAll({ where: { event_id: event.id } });
+      let currentTotalSold = 0;
+      for (const wit of walkInTypesForEvent) {
+        currentTotalSold += await wit.getSoldCount();
+      }
+
+      const remaining = event.walk_in_max_count - currentTotalSold;
+      if (totalItemQty > remaining) {
+        return res.status(400).json({
+          error: `Walk-in limit reached. Only ${remaining} walk-in${remaining === 1 ? '' : 's'} remaining out of ${event.walk_in_max_count} total.`
+        });
+      }
     }
 
     const systemUser = await User.findOne({

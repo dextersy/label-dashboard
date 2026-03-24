@@ -432,6 +432,8 @@ export class PublicService {
       gcash: boolean;
       card: boolean;
     };
+    walk_in_max_count: number;
+    total_sold_count: number;
   }> {
     return this.http.post<any>(`${this.apiUrl}/scanner/walk-in/types`, {}, this.scannerHeaders(token));
   }
