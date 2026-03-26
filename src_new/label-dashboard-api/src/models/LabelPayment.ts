@@ -15,6 +15,7 @@ interface LabelPaymentAttributes {
   payment_processing_fee?: number;
   status?: string;
   paymongo_transfer_id?: string;
+  failure_reason?: string;
 }
 
 interface LabelPaymentCreationAttributes extends Optional<LabelPaymentAttributes, 'id'> {}
@@ -33,6 +34,7 @@ class LabelPayment extends Model<LabelPaymentAttributes, LabelPaymentCreationAtt
   public payment_processing_fee?: number;
   public status?: string;
   public paymongo_transfer_id?: string;
+  public failure_reason?: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -101,6 +103,10 @@ LabelPayment.init(
     },
     paymongo_transfer_id: {
       type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    failure_reason: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
   },

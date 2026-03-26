@@ -271,6 +271,8 @@ export class PaymentService {
       const transferId = attrs.transfer_id || payload.data.id;
       const referenceNumber = attrs.reference_number;
       const transferStatus = attrs.status;
+      const providerError = attrs.provider_error;
+      const providerErrorCode = attrs.provider_error_code;
 
       let newStatus: 'succeeded' | 'failed';
       if (transferStatus === 'succeeded') {
@@ -282,7 +284,15 @@ export class PaymentService {
         return false;
       }
 
-      this.webhookLog(`Updating transfer ${transferId || referenceNumber} -> ${newStatus}`);
+      // Build failure reason string from provider error fields
+      let failureReason: string | null = null;
+      if (newStatus === 'failed' && (providerErrorCode || providerError)) {
+        failureReason = providerErrorCode && providerError
+          ? `${providerErrorCode}: ${providerError}`
+          : (providerError || providerErrorCode);
+      }
+
+      this.webhookLog(`Updating transfer ${transferId || referenceNumber} -> ${newStatus}${failureReason ? ` (reason: ${failureReason})` : ''}`);
 
       const paymentInclude = [
         { model: Artist, as: 'artist', include: [{ model: Brand, as: 'brand' }] },
@@ -318,11 +328,17 @@ export class PaymentService {
       }
 
       if (foundPayment) {
-        await foundPayment.update({ status: newStatus });
+        await foundPayment.update({
+          status: newStatus,
+          failure_reason: newStatus === 'failed' ? failureReason : null,
+        });
         this.webhookLog('Successfully updated artist payment status to ' + newStatus);
         await this.notifyArtistPaymentStatus(foundPayment, newStatus);
       } else if (foundLabelPayment) {
-        await foundLabelPayment.update({ status: newStatus });
+        await foundLabelPayment.update({
+          status: newStatus,
+          failure_reason: newStatus === 'failed' ? failureReason : null,
+        });
         this.webhookLog('Successfully updated label payment status to ' + newStatus);
         await this.notifyLabelPaymentStatus(foundLabelPayment, newStatus);
       }

@@ -65,6 +65,7 @@ export interface Payment {
   };
   status?: string;
   reference_number?: string;
+  failure_reason?: string;
 }
 
 export interface PaymentMethod {

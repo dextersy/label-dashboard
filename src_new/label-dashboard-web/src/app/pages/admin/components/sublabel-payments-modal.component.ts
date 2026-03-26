@@ -13,6 +13,7 @@ export interface SublabelPayment {
   payment_processing_fee?: number;
   reference_number?: string;
   status?: string;
+  failure_reason?: string;
 
   // Legacy fields
   paid_thru_type?: string;
@@ -75,7 +76,7 @@ export class SublabelPaymentsModalComponent implements OnChanges {
       searchable: false,
       renderHtml: true,
       mobileGroup: 'summary',
-      formatter: (payment: SublabelPayment) => this.formatStatus(payment.status)
+      formatter: (payment: SublabelPayment) => this.formatStatus(payment.status, payment.failure_reason)
     }
   ];
 
@@ -174,10 +175,16 @@ export class SublabelPaymentsModalComponent implements OnChanges {
     return 'N/A';
   }
 
-  formatStatus(status: string | undefined): string {
+  formatStatus(status: string | undefined, failureReason?: string): string {
     switch (status) {
       case 'pending': return '<span class="status-dot status-warning">Pending</span>';
-      case 'failed':  return '<span class="status-dot status-danger">Failed</span>';
+      case 'failed': {
+        let html = '<span class="status-dot status-danger">Failed</span>';
+        if (failureReason) {
+          html += `<br><span class="text-muted small">${failureReason}</span>`;
+        }
+        return html;
+      }
       case 'succeeded':
       default:        return '<span class="status-dot status-success">Succeeded</span>';
     }

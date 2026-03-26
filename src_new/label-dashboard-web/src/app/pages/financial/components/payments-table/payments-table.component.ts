@@ -117,7 +117,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
       ],
       searchable: true,
       sortable: true,
-      formatter: (payment: any) => this.formatStatus(payment.status),
+      formatter: (payment: any) => this.formatStatus(payment.status, payment.failure_reason),
       renderHtml: true,
       mobileGroup: 'summary',
       mobileClass: 'mobile-narrow',
@@ -189,10 +189,16 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     return payment.paid_thru_type;
   }
 
-  formatStatus(status: string | undefined): string {
+  formatStatus(status: string | undefined, failureReason?: string): string {
     switch (status) {
       case 'pending':   return '<span class="status-dot status-warning">Pending</span>';
-      case 'failed':    return '<span class="status-dot status-danger">Failed</span>';
+      case 'failed': {
+        let html = '<span class="status-dot status-danger">Failed</span>';
+        if (failureReason) {
+          html += `<br><span class="text-muted small">${failureReason}</span>`;
+        }
+        return html;
+      }
       case 'succeeded':
       default:          return '<span class="status-dot status-success">Succeeded</span>';
     }

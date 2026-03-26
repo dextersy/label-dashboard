@@ -145,7 +145,8 @@ export class FinancialService {
           account_number_or_email: payment.paymentMethod.account_number_or_email
         } : undefined,
         status: payment.status,
-        reference_number: payment.reference_number
+        reference_number: payment.reference_number,
+        failure_reason: payment.failure_reason
       })),
       pagination: response?.pagination || {}
     };
