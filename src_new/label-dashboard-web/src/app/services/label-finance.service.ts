@@ -75,6 +75,7 @@ export interface LabelPayment {
   payment_method_id?: number;
   reference_number?: string;
   payment_processing_fee?: number;
+  status?: string;
   failure_reason?: string;
   paymentMethod?: LabelPaymentMethod;
 }

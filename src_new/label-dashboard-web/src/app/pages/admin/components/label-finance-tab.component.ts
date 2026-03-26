@@ -72,6 +72,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     { key: 'amount', label: 'Amount', sortable: false, align: 'right', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.amount), hideDataLabel: true },
     { key: 'payment_method', label: 'Payment Method', sortable: false, tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatPaymentMethod(item), hideDataLabel: true },
     { key: 'reference_number', label: 'Reference', sortable: false, mobileClass: 'mobile-hide', formatter: (item: any) => item.reference_number || 'N/A', hideDataLabel: true },
+    { key: 'status', label: 'Status', sortable: false, renderHtml: true, hideDataLabel: true, formatter: (item: any) => this.formatStatus(item.status, item.failure_reason) },
   ];
 
   showAddPaymentMethodModal = false;
@@ -361,6 +362,21 @@ formatPaymentMethod(payment: LabelPayment): string {
     }
     
     return payment.paid_thru_type;
+  }
+
+  formatStatus(status: string | undefined, failureReason?: string): string {
+    switch (status) {
+      case 'pending': return '<span class="status-dot status-warning">Pending</span>';
+      case 'failed': {
+        let html = '<span class="status-dot status-danger">Failed</span>';
+        if (failureReason) {
+          html += `<br><span class="text-muted small">${failureReason}</span>`;
+        }
+        return html;
+      }
+      case 'succeeded':
+      default:        return '<span class="status-dot status-success">Succeeded</span>';
+    }
   }
 
   getAmountClass(amount: number | undefined): string {
