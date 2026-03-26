@@ -55,7 +55,7 @@ const configureCors = () => {
     },
     credentials: true, // Allow cookies if needed in the future
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
     exposedHeaders: ['Content-Length', 'X-Request-Id', 'Content-Disposition'],
     maxAge: 600 // Cache preflight requests for 10 minutes
   });
