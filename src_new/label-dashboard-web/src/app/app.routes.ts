@@ -37,6 +37,7 @@ import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
 import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
+import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -117,8 +118,8 @@ export const routes: Routes = [
       // Events
       { path: 'events', redirectTo: 'events/details', pathMatch: 'full' },
       { path: 'events/dashboard', redirectTo: '/campaigns/dashboard', pathMatch: 'full' }, // Legacy redirect
-      { path: 'events/new', component: EventFormComponent },
-      { path: 'events/details', component: EventFormComponent },
+      { path: 'events/new', component: EventFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
+      { path: 'events/details', component: EventFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'events/abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'events/referrals', component: EventsComponent, data: { tab: 'referrals' } },

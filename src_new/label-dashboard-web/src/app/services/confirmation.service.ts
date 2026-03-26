@@ -7,6 +7,7 @@ export interface ConfirmationDialogData {
   confirmText?: string;
   cancelText?: string;
   type?: 'danger' | 'warning' | 'info';
+  primaryAction?: 'confirm' | 'cancel';
 }
 
 export interface ConfirmationDialogState {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,6 +14,7 @@ import { VenueAutocompleteComponent, VenueSelection } from '../events/components
 import { TicketTypesComponent } from '../events/components/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
+import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 import { EventWalkInSettingsComponent } from '../events/components/event-walk-in-settings/event-walk-in-settings.component';
@@ -64,7 +65,7 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
 })
-export class EventFormComponent implements OnInit, OnDestroy {
+export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   eventId: number | null = null;
   event: any = null;
   loading = false;
@@ -150,6 +151,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
   descriptionCharCount = 0;
 
   private subscriptions = new Subscription();
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isFormDirty()) {
+      event.preventDefault();
+    }
+  }
 
   constructor(
     private route: ActivatedRoute,
