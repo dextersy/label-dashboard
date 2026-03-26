@@ -465,9 +465,20 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   @HostListener('window:scroll')
   onWindowScroll() {
     if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
-    if (window.innerWidth <= 768) return;
-    const translate = -(window.scrollY * 0.2);
-    this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      const panel = this.posterImg.nativeElement.parentElement;
+      if (!panel) return;
+      const rect = panel.getBoundingClientRect();
+      // Only apply parallax while the poster is visible
+      if (rect.bottom < 0) return;
+      // Translate image down to counteract container scrolling up — makes it appear slower
+      const translate = window.scrollY * 0.5;
+      this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+    } else {
+      const translate = -(window.scrollY * 0.2);
+      this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+    }
   }
 
   getHeroBgImageStyle(): SafeStyle | null {

@@ -187,6 +187,11 @@ h2 {
     height: 260px;
     position: relative;
     top: auto;
+
+    .poster-fill {
+      height: 200%;
+      top: -50%;
+    }
   }
 
   .content-panel {
