@@ -8,7 +8,7 @@ import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
-import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn, HeaderAction } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
     selector: 'app-label-finance-tab',
@@ -65,6 +65,17 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   payments: LabelPayment[] = [];
   paymentsResponse: LabelPaymentsResponse | null = null;
   paymentsLoading = false;
+
+  get paymentHeaderActions(): HeaderAction[] {
+    return [{
+      icon: () => this.paymentsLoading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      label: '',
+      handler: () => this.loadPayments(this.paymentsResponse?.pagination?.current_page ?? 1),
+      type: 'secondary',
+      title: 'Refresh payments',
+      disabled: () => this.paymentsLoading,
+    }];
+  }
 
   readonly paymentColumns: TableColumn[] = [
     { key: 'date_paid', label: 'Date', sortable: false, formatter: (item: any) => new Date(item.date_paid).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }), hideDataLabel: true },

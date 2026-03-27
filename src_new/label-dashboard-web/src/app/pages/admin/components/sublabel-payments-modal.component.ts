@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, SearchFilters } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters } from '../../../components/shared/paginated-table/paginated-table.component';
 
 export interface SublabelPayment {
   id: number;
@@ -79,6 +79,17 @@ export class SublabelPaymentsModalComponent implements OnChanges {
       formatter: (payment: SublabelPayment) => this.formatStatus(payment.status, payment.failure_reason)
     }
   ];
+
+  get headerActions(): HeaderAction[] {
+    return [{
+      icon: () => this.loading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      label: '',
+      handler: () => this.loadPayments(this.pagination?.current_page ?? 1),
+      type: 'secondary',
+      title: 'Refresh payments',
+      disabled: () => this.loading,
+    }];
+  }
 
   rowActions: TableAction[] = [
     {

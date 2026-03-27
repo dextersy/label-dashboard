@@ -91,6 +91,7 @@
         title="Payment History"
         [data]="payments"
         [columns]="paymentColumns"
+        [headerActions]="paymentHeaderActions"
         [pagination]="paymentsResponse?.pagination || null"
         [loading]="paymentsLoading"
         [showSortableHeaders]="true"

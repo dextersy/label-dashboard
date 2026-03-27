@@ -43,14 +43,24 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   ];
 
   get headerActions(): HeaderAction[] {
-    if (!this.isAdmin) return [];
-    return [{
-      icon: 'fas fa-plus',
-      label: 'Add',
-      handler: () => this.navigateToNewPayment(),
-      type: 'primary',
-      title: 'Add new payment',
+    const actions: HeaderAction[] = [{
+      icon: () => this.loading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      label: '',
+      handler: () => this.refresh.emit(),
+      type: 'secondary',
+      title: 'Refresh payments',
+      disabled: () => this.loading,
     }];
+    if (this.isAdmin) {
+      actions.push({
+        icon: 'fas fa-plus',
+        label: 'Add',
+        handler: () => this.navigateToNewPayment(),
+        type: 'primary',
+        title: 'Add new payment',
+      });
+    }
+    return actions;
   }
 
   // Define table columns for search and sort functionality
