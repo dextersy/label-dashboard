@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
@@ -61,7 +61,8 @@ export const getArtistsDuePayment = async (req: Request, res: Response) => {
         // Calculate total payments made
         const totalPayments = await Payment.sum('amount', {
           where: {
-            artist_id: artist.id
+            artist_id: artist.id,
+            status: 'succeeded'
           }
         }) || 0;
 
@@ -261,6 +262,25 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
       if (release.cover_art) allUrls.add(release.cover_art);
     });
 
+    // 7. Fundraiser URLs (poster_url)
+    const fundraisers = await Fundraiser.findAll({
+      attributes: ['id', 'title', 'poster_url', 'brand_id']
+    });
+
+    fundraisers.forEach(fundraiser => {
+      if (fundraiser.poster_url) allUrls.add(fundraiser.poster_url);
+    });
+
+    // 8. Song audio files (audio_file, audio_file_mp3)
+    const songs = await Song.findAll({
+      attributes: ['id', 'title', 'audio_file', 'audio_file_mp3']
+    });
+
+    songs.forEach(song => {
+      if (song.audio_file) allUrls.add(song.audio_file);
+      if (song.audio_file_mp3) allUrls.add(song.audio_file_mp3);
+    });
+
     // Convert Set to Array and filter out empty/null values
     const urlsArray = Array.from(allUrls).filter(url => url && url.trim().length > 0);
 
@@ -273,7 +293,9 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
       artistCount: artists.length,
       imageCount: artistImages.length,
       documentCount: artistDocuments.length,
-      releaseCount: releases.length
+      releaseCount: releases.length,
+      fundraiserCount: fundraisers.length,
+      songCount: songs.length
     });
 
     res.json({
@@ -285,7 +307,9 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
         artists: artists.length,
         artist_images: artistImages.length,
         artist_documents: artistDocuments.length,
-        releases: releases.length
+        releases: releases.length,
+        fundraisers: fundraisers.length,
+        songs: songs.length
       }
     });
 
@@ -348,7 +372,8 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
         // Calculate total payments made to this sublabel from label_payment table
         const payments = await LabelPayment.sum('amount', {
           where: {
-            brand_id: sublabel.id
+            brand_id: sublabel.id,
+            status: 'succeeded'
           }
         }) || 0;
 

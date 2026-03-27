@@ -29,7 +29,8 @@ import {
   getAdminEarningsList,
   getAdminRecuperableExpenseSummary,
   getAdminPaymentsRoyaltiesArtists,
-  getAdminRecuperableExpenseFlow
+  getAdminRecuperableExpenseFlow,
+  updatePaymentStatus
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -71,6 +72,7 @@ router.get('/royalties', getRoyalties);
 router.post('/payments', requireAdmin, addPayment);
 router.get('/payments', getPayments);
 router.get('/payments/:id', getPaymentById);
+router.patch('/payments/:id/status', requireAdmin, updatePaymentStatus);
 router.get('/artists/:artist_id/payments', getPaymentsByArtist);
 
 

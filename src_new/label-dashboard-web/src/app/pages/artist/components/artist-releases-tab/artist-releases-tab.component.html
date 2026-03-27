@@ -12,18 +12,18 @@
     [headerActions]="headerActions">
 
     <ng-template #customButtons>
-      <div class="filter-controls">
-        <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
+      <div class="filter-controls d-flex align-items-center">
+        <div class="btn-group d-none d-md-flex" role="group">
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn btn-secondary" for="epkFilterAll">All</label>
+          <label class="btn btn-sm btn-secondary" for="epkFilterAll">All</label>
 
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn btn-secondary" for="epkFilterVisible">
+          <label class="btn btn-sm btn-secondary" for="epkFilterVisible">
             <i class="fa fa-globe"></i> <span class="d-none d-lg-inline">Visible in EPK</span>
           </label>
 
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn btn-secondary" for="epkFilterHidden">
+          <label class="btn btn-sm btn-secondary" for="epkFilterHidden">
             <i class="fa fa-eye-slash"></i> <span class="d-none d-lg-inline">Hidden from EPK</span>
           </label>
         </div>

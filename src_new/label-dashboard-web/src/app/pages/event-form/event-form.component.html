@@ -420,6 +420,17 @@
                     </label>
                   </div>
                 </div>
+                <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))" class="alert alert-info mt-2 mb-0">
+                  <strong>Minimum transaction requirements</strong>
+                  <ul class="mb-0 mt-1 ps-3">
+                    <li *ngIf="paymentConfig?.min_card && eventData.supports_card">
+                      Credit card payments available for transactions {{ formatMinAmount(paymentConfig!.min_card!) }} and above.
+                    </li>
+                    <li *ngIf="paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob)">
+                      Unionbank and Direct Online Banking available for transactions {{ formatMinAmount(paymentConfig!.min_dob!) }} and above.
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
             <div class="mt-4 text-end">
@@ -444,6 +455,18 @@
                 Next: Buy Page <i class="fas fa-arrow-right ms-1"></i>
               </button>
             </div>
+          </div>
+
+          <!-- Walk-In Settings Section -->
+          <div class="form-section" *ngIf="activeSection === 'walk-in' && !isNewEvent">
+            <h3>Walk-In</h3>
+            <p>Configure walk-in registration and payment settings</p>
+
+            <app-event-walk-in-settings
+              [eventData]="eventData"
+              [isAdmin]="isAdmin"
+              [(walkInTypes)]="walkInTypes">
+            </app-event-walk-in-settings>
           </div>
 
           <!-- Scanner Section -->

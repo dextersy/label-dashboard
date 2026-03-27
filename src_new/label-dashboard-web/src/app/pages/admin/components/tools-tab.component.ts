@@ -33,14 +33,20 @@ export class ToolsTabComponent implements OnInit, OnDestroy {
 
   emailLogsColumns: TableColumn[] = [
     { key: 'timestamp', label: 'Timestamp', type: 'date', searchable: true, sortable: true },
-    { key: 'recipients', label: 'Recipients', type: 'text', searchable: true, sortable: true, maxWidth: '200px' },
+    { key: 'recipients', label: 'Recipients', type: 'text', searchable: true, sortable: true, maxWidth: '200px', renderHtml: true, formatter: (item) => {
+      const recipients = (item.recipients || '').split(',').map((r: string) => r.trim()).filter((r: string) => r);
+      if (recipients.length <= 2) {
+        return recipients.join('<br>');
+      }
+      return recipients.slice(0, 2).join('<br>') + `<br><small><em>+ ${recipients.length - 2} more recipient${recipients.length - 2 > 1 ? 's' : ''}</em></small>`;
+    }},
     { key: 'subject', label: 'Subject', type: 'text', searchable: true, sortable: true },
     { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
       const result = item.result;
       if (result === 'Success' || result === 'Successful') {
-        return `<span class="badge bg-success">${result}</span>`;
+        return `<span class="status-dot status-success">${result}</span>`;
       } else if (result === 'Failed') {
-        return `<span class="badge bg-danger">${result}</span>`;
+        return `<span class="status-dot status-danger">${result}</span>`;
       }
       return result;
     }}

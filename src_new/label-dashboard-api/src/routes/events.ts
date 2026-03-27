@@ -26,7 +26,8 @@ import {
   exportEventPendingTicketsCsv,
   upload,
   publishEvent,
-  unpublishEvent
+  unpublishEvent,
+  getPaymentConfig
 } from '../controllers/eventController';
 import {
   getTicketTypes,
@@ -35,6 +36,13 @@ import {
   deleteTicketType,
   getAvailableTicketTypes
 } from '../controllers/ticketTypeController';
+import {
+  getWalkInTypes,
+  createWalkInType,
+  updateWalkInType,
+  deleteWalkInType,
+  getWalkInTransactions
+} from '../controllers/walkInController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -45,6 +53,9 @@ router.use(authenticateToken);
 // Event CRUD operations
 router.get('/', getEvents);
 router.post('/', requireAdmin, upload.single('poster'), createEvent);
+
+// Payment config (must be before /:id routes)
+router.get('/payment-config', getPaymentConfig);
 
 // Event management operations (specific routes first)
 router.post('/set-selected', setSelectedEvent);
@@ -71,6 +82,13 @@ router.get('/ticket-types/available', getAvailableTicketTypes);
 router.post('/ticket-types', requireAdmin, createTicketType);
 router.put('/ticket-types/:id', requireAdmin, updateTicketType);
 router.delete('/ticket-types/:id', requireAdmin, deleteTicketType);
+
+// Walk-in type operations (specific routes before /:id)
+router.get('/walk-in-types', getWalkInTypes);
+router.post('/walk-in-types', requireAdmin, createWalkInType);
+router.put('/walk-in-types/:id', requireAdmin, updateWalkInType);
+router.delete('/walk-in-types/:id', requireAdmin, deleteWalkInType);
+router.get('/walk-in-transactions', getWalkInTransactions);
 
 // Email operations (specific routes before /:id)
 router.get('/ticket-holders-count', getEventTicketHoldersCount);

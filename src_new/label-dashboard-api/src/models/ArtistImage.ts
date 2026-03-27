@@ -8,9 +8,10 @@ interface ArtistImageAttributes {
   artist_id: number;
   date_uploaded: Date;
   exclude_from_epk: boolean;
+  display_order?: number;
 }
 
-interface ArtistImageCreationAttributes extends Optional<ArtistImageAttributes, 'id' | 'exclude_from_epk'> {}
+interface ArtistImageCreationAttributes extends Optional<ArtistImageAttributes, 'id' | 'exclude_from_epk' | 'display_order'> {}
 
 class ArtistImage extends Model<ArtistImageAttributes, ArtistImageCreationAttributes> implements ArtistImageAttributes {
   public id!: number;
@@ -19,6 +20,7 @@ class ArtistImage extends Model<ArtistImageAttributes, ArtistImageCreationAttrib
   public artist_id!: number;
   public date_uploaded!: Date;
   public exclude_from_epk!: boolean;
+  public display_order?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -51,6 +53,10 @@ ArtistImage.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    display_order: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
   },
   {

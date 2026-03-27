@@ -4,10 +4,17 @@
      [style.background]="brandColor">
   <div class="sidebar-wrapper">
     <!-- Workspace watermark -->
-    <div class="workspace-indicator" *ngIf="currentWorkspace">
-      <i [class]="getWorkspaceIcon(currentWorkspace)" class="workspace-icon"></i>
-      <span class="workspace-name">{{ getWorkspaceLabel(currentWorkspace) }}</span>
+    <div class="workspace-indicator"
+         *ngIf="currentWorkspace"
+         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1"
+         (click)="onWorkspaceIndicatorClick()"
+         [title]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1 ? 'Switch workspace' : ''">
+      <i [class]="getWorkspaceInfo(currentWorkspace).icon" class="workspace-icon"></i>
+      <span class="workspace-name">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
     </div>
+    <button class="workspace-switch-btn" *ngIf="availableWorkspaceInfos.length > 1" (click)="openWorkspaceSwitchModal()">
+      <i class="fas fa-exchange-alt"></i> Switch workspace
+    </button>
 
     <ul class="nav" *ngIf="isInitialized">
       <!-- Iterate through sections -->
@@ -127,7 +134,33 @@
 </div>
 
 <!-- Flyout backdrop (for closing flyout when clicking outside) -->
-<div class="flyout-backdrop" 
+<div class="flyout-backdrop"
      *ngIf="isCollapsed && !isMobileView && flyoutMenu"
      (click)="closeFlyout()">
 </div>
+
+<!-- Workspace Switch Modal -->
+<div class="modal fade show" appModalToBody *ngIf="showWorkspaceSwitchModal" tabindex="-1" style="display: block;">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0 px-4 pt-4 pb-2">
+        <h5 class="modal-title workspace-switch-modal-title">Switch Workspace</h5>
+        <button type="button" class="btn-close" (click)="closeWorkspaceSwitchModal()"></button>
+      </div>
+      <div class="modal-body px-4 pb-4 pt-2">
+        <div class="workspace-options">
+          <button *ngFor="let info of availableWorkspaceInfos"
+                  class="workspace-option-btn"
+                  [class.active]="info.type === currentWorkspace"
+                  (click)="switchWorkspace(info.type)">
+            <i *ngIf="info.type === currentWorkspace" class="fas fa-check workspace-option-check"></i>
+            <i [class]="info.icon" class="workspace-option-icon"></i>
+            <span class="workspace-option-name">{{ info.label }}</span>
+            <span class="workspace-option-desc">{{ info.description }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" appModalToBody *ngIf="showWorkspaceSwitchModal"></div>

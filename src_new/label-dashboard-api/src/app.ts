@@ -55,7 +55,7 @@ const configureCors = () => {
     },
     credentials: true, // Allow cookies if needed in the future
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
     exposedHeaders: ['Content-Length', 'X-Request-Id', 'Content-Disposition'],
     maxAge: 600 // Cache preflight requests for 10 minutes
   });
@@ -133,7 +133,8 @@ const startServer = async () => {
       { name: 'system', path: './routes/system' },
       { name: 'songs', path: './routes/songs' },
       { name: 'songwriters', path: './routes/songwriters' },
-      { name: 'syncLicensing', path: './routes/syncLicensing' }
+      { name: 'syncLicensing', path: './routes/syncLicensing' },
+      { name: 'scanner', path: './routes/scanner' }
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -186,6 +187,7 @@ const startServer = async () => {
     const songRoutes = routes.songs;
     const songwriterRoutes = routes.songwriters;
     const syncLicensingRoutes = routes.syncLicensing;
+    const scannerRoutes = routes.scanner;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -208,6 +210,9 @@ const startServer = async () => {
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);
+
+    // Scanner API Routes (login is public, other routes use scanner JWT middleware)
+    app.use('/api/scanner', scannerRoutes);
 
     // System API Routes (system user authentication required)
     app.use('/api/system', systemRoutes);

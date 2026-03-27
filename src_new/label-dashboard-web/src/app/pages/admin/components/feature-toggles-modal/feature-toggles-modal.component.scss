@@ -1,0 +1,241 @@
+.modal {
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal-dialog {
+  margin: 1.75rem auto;
+  max-width: 680px;
+}
+
+.modal-content {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  opacity: 0.5;
+  padding: 0.25rem;
+  cursor: pointer;
+
+  &::before {
+    content: '×';
+  }
+
+  &:hover,
+  &:focus {
+    opacity: 0.75;
+  }
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+// Feature card grid
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+
+  @media (max-width: 575px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem 1.25rem;
+  border: 2px solid #dee2e6;
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  outline: none;
+
+  &:hover {
+    border-color: #adb5bd;
+    background: #f8f9fa;
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px rgba(var(--brand-color-rgb, 102, 126, 234), 0.3);
+  }
+
+  &.active {
+    border-color: var(--brand-color, #667eea);
+    background: var(--brand-color-tint-8, rgba(102, 126, 234, 0.08));
+
+    .feature-icon i {
+      color: var(--brand-color, #667eea);
+    }
+
+    .feature-name {
+      color: #212529;
+    }
+  }
+
+  &:not(.active) {
+    .feature-icon i {
+      color: #adb5bd;
+    }
+
+    .feature-name {
+      color: #6c757d;
+    }
+
+    .feature-desc {
+      color: #adb5bd;
+    }
+  }
+}
+
+// Enabled badge (checkmark circle, top-right)
+.feature-badge-enabled {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--brand-color, #667eea);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+}
+
+// Disabled badge (text pill, top-right)
+.feature-badge-disabled {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #6c757d;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.feature-icon {
+  margin-bottom: 0.75rem;
+
+  i {
+    font-size: 2rem;
+    transition: color 0.15s ease;
+  }
+}
+
+.feature-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.35rem;
+  transition: color 0.15s ease;
+}
+
+.feature-desc {
+  font-size: 0.75rem;
+  color: #6c757d;
+  line-height: 1.35;
+}
+
+// Alert
+.alert {
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  color: #0c5460;
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+}
+
+// Buttons
+.btn {
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+
+  &:hover:not(:disabled) {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
+}
+
+.btn-secondary {
+  color: #6c757d;
+  background-color: transparent;
+  border-color: #6c757d;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+}
+
+.me-2 { margin-right: 0.5rem !important; }

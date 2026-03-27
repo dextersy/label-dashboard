@@ -1,0 +1,104 @@
+<div class="modal" appModalToBody [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-toggle-on me-2"></i>Toggle Features — {{ sublabelName }}
+        </h5>
+        <button type="button" class="btn-close" (click)="onClose()" [disabled]="loading || saving"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Loading state -->
+        <div class="text-center py-5" *ngIf="loading">
+          <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+          <p class="text-muted mt-2 mb-0">Loading feature settings...</p>
+        </div>
+
+        <ng-container *ngIf="!loading">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Control which workspaces and features are available on this sublabel's domain. Click a card to toggle a feature. Changes take effect after saving.
+          </div>
+
+          <!-- Feature cards grid -->
+          <div class="feature-grid">
+
+            <!-- Music Workspace -->
+            <button
+              type="button"
+              class="feature-card"
+              [class.active]="toggles.feature_music_workspace"
+              (click)="toggleFeature('feature_music_workspace')">
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_music_workspace">
+                Disabled
+              </div>
+              <div class="feature-badge-enabled" *ngIf="toggles.feature_music_workspace">
+                <i class="fas fa-check"></i>
+              </div>
+              <div class="feature-icon">
+                <i class="fas fa-music"></i>
+              </div>
+              <div class="feature-name">Music Workspace</div>
+              <div class="feature-desc">Artist info, releases, and financial</div>
+            </button>
+
+            <!-- Campaigns Workspace -->
+            <button
+              type="button"
+              class="feature-card"
+              [class.active]="toggles.feature_campaigns_workspace"
+              (click)="toggleFeature('feature_campaigns_workspace')">
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_campaigns_workspace">
+                Disabled
+              </div>
+              <div class="feature-badge-enabled" *ngIf="toggles.feature_campaigns_workspace">
+                <i class="fas fa-check"></i>
+              </div>
+              <div class="feature-icon">
+                <i class="fas fa-bullhorn"></i>
+              </div>
+              <div class="feature-name">Campaigns Workspace</div>
+              <div class="feature-desc">Events and fundraisers</div>
+            </button>
+
+            <!-- Sublabels -->
+            <button
+              type="button"
+              class="feature-card"
+              [class.active]="toggles.feature_sublabels"
+              (click)="toggleFeature('feature_sublabels')">
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_sublabels">
+                Disabled
+              </div>
+              <div class="feature-badge-enabled" *ngIf="toggles.feature_sublabels">
+                <i class="fas fa-check"></i>
+              </div>
+              <div class="feature-icon">
+                <i class="fas fa-tags"></i>
+              </div>
+              <div class="feature-name">Sublabels</div>
+              <div class="feature-desc">Sublabels management in Labels workspace</div>
+            </button>
+
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="loading || saving">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="loading || saving">
+          <span *ngIf="saving">
+            <i class="fas fa-spinner fa-spin me-2"></i>Saving...
+          </span>
+          <span *ngIf="!saving">
+            <i class="fas fa-save me-2"></i>Save Changes
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop" appModalToBody [class.show]="show" *ngIf="show" (click)="onClose()"></div>

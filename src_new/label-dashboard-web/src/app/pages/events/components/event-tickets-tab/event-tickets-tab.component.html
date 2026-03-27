@@ -1,82 +1,140 @@
 <div class="event-tickets-tab">
-  <!-- Paginated Table -->
-  <app-paginated-table
-    title=""
-    [data]="tickets"
-    [pagination]="pagination"
-    [loading]="loading"
-    [columns]="tableColumns"
-    [showSearch]="true"
-    [showSortableHeaders]="true"
-    [sortInfo]="currentSort"
-    [actions]="isAdmin ? ticketActions : []"
-    [headerActions]="headerActions"
-    [bulkOperationsLoading]="bulkOperationsLoading"
-    [rowClassGetter]="getRowClass.bind(this)"
-    (pageChange)="onPageChange($event)"
-    (filtersChange)="onFiltersChange($event)"
-    (sortChange)="onSortChange($event)">
-    
-    
-  </app-paginated-table>
-
-  <!-- Summary Footer - Matching PHP layout -->
-  <div class="sticky-bottom mt-3" *ngIf="summary">
-    <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
-      <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
-        <strong class="text-primary fs-5">Totals</strong>
-        
-        <span class="summary-stat" title="Checked in guests vs total tickets">
-          <i class="fas fa-user text-success me-2"></i> 
-          {{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}
-        </span>
-        
-        <span class="summary-stat" title="Total revenue">
-          <i class="fas fa-money-bill text-info me-2"></i> 
-          ₱{{ (summary.total_revenue | number:'1.2-2') }}
-        </span>
-        
-        <!-- Superadmin-specific stats (matching PHP condition for admin_email env variable) -->
-        <ng-container *ngIf="isSuperadmin()">
-          <span class="summary-stat text-muted" title="Total processing fee">
-            <i class="fas fa-credit-card me-2"></i> 
-            -₱{{ (summary.total_processing_fee || 0) | number:'1.2-2' }}
-          </span>
-          
-          <span class="summary-stat text-muted" title="Net amount">
-            <i class="fas fa-plus me-2"></i> 
-            ₱{{ (summary.net_revenue || 0) | number:'1.2-2' }}
-          </span>
-          
-          <span class="summary-stat text-muted" title="Tax">
-            <i class="fas fa-percentage me-2"></i> 
-            -₱{{ (summary.tax || 0) | number:'1.2-2' }}
-          </span>
-          
-          <span class="summary-stat text-muted" title="Admin grand total">
-            <i class="fas fa-plus-square me-2"></i> 
-            <strong>₱{{ (summary.admin_grand_total || 0) | number:'1.2-2' }}</strong>
-          </span>
-        </ng-container>
-        
-        <span class="summary-stat" title="Platform fee">
-          <i class="fas fa-money-bill text-warning me-2"></i> 
-          -₱{{ (summary.platform_fee | number:'1.2-2') }}
-        </span>
-        
-        <span class="summary-stat-highlight" title="Grand total">
-          <i class="fas fa-plus-square me-2"></i> 
-          <strong>₱{{ (summary.grand_total | number:'1.2-2') }}</strong>
-        </span>
+  <!-- Sub-tab toggle -->
+  <div class="row mb-4" *ngIf="isAdmin">
+    <div class="col-12">
+      <div class="d-flex justify-content-center align-items-center flex-column">
+        <div class="btn-group view-toggle" role="group" aria-label="View toggle">
+          <button type="button"
+                  class="btn"
+                  [class.active]="activeSubTab === 'tickets'"
+                  (click)="setSubTab('tickets')"
+                  [attr.aria-pressed]="activeSubTab === 'tickets'">
+            <i class="fa fa-ticket-alt me-2"></i>Tickets
+          </button>
+          <button type="button"
+                  class="btn"
+                  [class.active]="activeSubTab === 'walk-in'"
+                  (click)="setSubTab('walk-in')"
+                  [attr.aria-pressed]="activeSubTab === 'walk-in'">
+            <i class="fa fa-walking me-2"></i>Walk-In Transactions
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Transfer Ticket Modal -->
-  <app-transfer-ticket-modal
-    [ticket]="selectedTicketForTransfer"
-    [show]="showTransferModal"
-    (transferConfirmed)="onTransferConfirmed($event)"
-    #transferModal>
-  </app-transfer-ticket-modal>
+  <!-- Tickets sub-tab -->
+  <div *ngIf="activeSubTab === 'tickets'">
+    <!-- Paginated Table -->
+    <app-paginated-table
+      title=""
+      [data]="tickets"
+      [pagination]="pagination"
+      [loading]="loading"
+      [columns]="tableColumns"
+      [showSearch]="true"
+      [showSortableHeaders]="true"
+      [sortInfo]="currentSort"
+      [actions]="isAdmin ? ticketActions : []"
+      [headerActions]="headerActions"
+      [bulkOperationsLoading]="bulkOperationsLoading"
+      [rowClassGetter]="getRowClass.bind(this)"
+      (pageChange)="onPageChange($event)"
+      (filtersChange)="onFiltersChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-paginated-table>
+
+    <!-- Summary Footer - Matching PHP layout -->
+    <div class="sticky-bottom mt-3" *ngIf="summary">
+      <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+          <strong class="text-primary fs-5">Totals</strong>
+
+          <span class="summary-stat" title="Checked in guests vs total tickets">
+            <i class="fas fa-user text-success me-2"></i>
+            {{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}
+          </span>
+
+          <span class="summary-stat" title="Total revenue">
+            <i class="fas fa-money-bill text-info me-2"></i>
+            ₱{{ (summary.total_revenue | number:'1.2-2') }}
+          </span>
+
+          <!-- Superadmin-specific stats (matching PHP condition for admin_email env variable) -->
+          <ng-container *ngIf="isSuperadmin()">
+            <span class="summary-stat text-muted" title="Total processing fee">
+              <i class="fas fa-credit-card me-2"></i>
+              -₱{{ (summary.total_processing_fee || 0) | number:'1.2-2' }}
+            </span>
+
+            <span class="summary-stat text-muted" title="Net amount">
+              <i class="fas fa-plus me-2"></i>
+              ₱{{ (summary.net_revenue || 0) | number:'1.2-2' }}
+            </span>
+
+            <span class="summary-stat text-muted" title="Tax">
+              <i class="fas fa-percentage me-2"></i>
+              -₱{{ (summary.tax || 0) | number:'1.2-2' }}
+            </span>
+
+            <span class="summary-stat text-muted" title="Admin grand total">
+              <i class="fas fa-plus-square me-2"></i>
+              <strong>₱{{ (summary.admin_grand_total || 0) | number:'1.2-2' }}</strong>
+            </span>
+          </ng-container>
+
+          <span class="summary-stat" title="Platform fee">
+            <i class="fas fa-money-bill text-warning me-2"></i>
+            -₱{{ (summary.platform_fee | number:'1.2-2') }}
+          </span>
+
+          <span class="summary-stat-highlight" title="Grand total">
+            <i class="fas fa-plus-square me-2"></i>
+            <strong>₱{{ (summary.grand_total | number:'1.2-2') }}</strong>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer Ticket Modal -->
+    <app-transfer-ticket-modal
+      [ticket]="selectedTicketForTransfer"
+      [show]="showTransferModal"
+      (transferConfirmed)="onTransferConfirmed($event)"
+      #transferModal>
+    </app-transfer-ticket-modal>
+  </div>
+
+  <!-- Walk-In Transactions sub-tab -->
+  <div *ngIf="activeSubTab === 'walk-in'">
+    <app-paginated-table
+      title=""
+      [data]="walkInTransactions"
+      [pagination]="walkInPagination"
+      [loading]="walkInTransactionsLoading"
+      [columns]="walkInColumns"
+      [showSearch]="false"
+      [showSortableHeaders]="true"
+      (pageChange)="onWalkInPageChange($event)" >
+    </app-paginated-table>
+
+    <!-- Summary Footer -->
+    <div class="sticky-bottom mt-3" *ngIf="walkInTypes.length > 0">
+      <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+          <strong class="text-primary fs-5">Totals</strong>
+
+          <span class="summary-stat" title="Walk-ins registered">
+            <i class="fas fa-walking text-success me-2"></i>
+            {{ getWalkInTotalSold() }}
+          </span>
+
+          <span class="summary-stat-highlight" title="Walk-in revenue">
+            <i class="fas fa-money-bill me-2"></i>
+            <strong>{{ formatWalkInPrice(getWalkInTotalRevenue()) }}</strong>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

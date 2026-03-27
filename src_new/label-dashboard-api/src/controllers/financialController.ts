@@ -1042,8 +1042,7 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       paid_thru_account_number,
       payment_method_id,
       reference_number,
-      payment_processing_fee,
-      send_notification = true
+      payment_processing_fee
     } = req.body;
     
     const artistIdNum = parseInt(artist_id, 10);
@@ -1070,13 +1069,14 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
     let finalAmount = amount;
     let finalProcessingFee = payment_processing_fee || 0;
     let finalReferenceNumber = reference_number;
+    let finalTransferId: string | undefined = undefined;
 
     // Handle Paymongo payment processing for non-manual payments
     if (payment_method_id && payment_method_id !== '-1' && req.body.manualPayment !== '1') {
       try {
         const paymentService = new PaymentService();
         const brand = artist.brand;
-        
+
         if (!brand || !brand.paymongo_wallet_id) {
           return res.status(400).json({ error: 'Brand wallet not configured for payments' });
         }
@@ -1086,19 +1086,23 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
         const transferAmount = amount - processingFee;
 
         // Send money through Paymongo
-        const referenceNumber = await paymentService.sendMoneyTransfer(
+        const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+        const transferResult = await paymentService.sendMoneyTransfer(
           brand.id,
           payment_method_id,
           transferAmount,
-          description
+          description,
+          false,
+          callbackUrl
         );
 
-        if (!referenceNumber) {
+        if (!transferResult) {
           return res.status(400).json({ error: 'Payment processing failed' });
         }
 
         finalProcessingFee = processingFee;
-        finalReferenceNumber = referenceNumber;
+        finalReferenceNumber = transferResult.referenceNumber;
+        finalTransferId = transferResult.transferId;
       } catch (error) {
         console.error('Paymongo payment error:', error);
         return res.status(500).json({ error: 'Payment processing failed' });
@@ -1112,7 +1116,9 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       description,
       date_paid: new Date(date_paid),
       reference_number: finalReferenceNumber,
-      payment_processing_fee: finalProcessingFee
+      payment_processing_fee: finalProcessingFee,
+      status: finalTransferId ? 'pending' : 'succeeded',
+      paymongo_transfer_id: finalTransferId
     };
 
     // Set payment_method_id if provided, otherwise fall back to legacy fields
@@ -1128,56 +1134,21 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
 
     const payment = await Payment.create(paymentData);
 
-    // Send payment notification if requested
-    if (send_notification) {
-      // Get artist team members
-      const { ArtistAccess, User, Brand } = require('../models');
-      const artistAccess = await ArtistAccess.findAll({
-        where: {
-          artist_id: artistIdNum,
-          status: 'Accepted' // SECURITY: Only send notifications to accepted users
-        },
-        include: [{ model: User, as: 'user' }]
-      });
-
-      const recipients = artistAccess.map(access => access.user.email_address);
-
-      if (recipients.length > 0) {
-        // Get brand info for proper email formatting
-        const brand = await Brand.findByPk(req.user.brand_id);
-        
-        // Load payment method data if payment_method_id is set
-        let paymentMethodData = null;
-        if (payment.payment_method_id) {
-          const paymentMethod = await PaymentMethod.findByPk(payment.payment_method_id);
-          if (paymentMethod) {
-            paymentMethodData = {
-              type: paymentMethod.type,
-              account_name: paymentMethod.account_name,
-              account_number_or_email: paymentMethod.account_number_or_email
-            };
-          }
+    // Send email notification for manual payments (Paymongo webhooks handle non-manual ones)
+    if (!finalTransferId) {
+      try {
+        const reloadedPayment = await Payment.findByPk(payment.id, {
+          include: [
+            { model: Artist, as: 'artist', include: [{ model: Brand, as: 'brand' }] },
+            { model: PaymentMethod, as: 'paymentMethod', required: false }
+          ]
+        });
+        if (reloadedPayment) {
+          const paymentService = new PaymentService();
+          await paymentService.notifyArtistPaymentStatus(reloadedPayment, 'succeeded');
         }
-        
-        await sendPaymentNotification(
-          recipients,
-          artist.name,
-          {
-            amount: parseFloat(amount),
-            description: description || '',
-            payment_processing_fee: finalProcessingFee,
-            paid_thru_type: paid_thru_type || 'Not specified',
-            paid_thru_account_name: paid_thru_account_name || '',
-            paid_thru_account_number: paid_thru_account_number || '',
-            paymentMethod: paymentMethodData
-          },
-          {
-            name: brand?.brand_name || brand?.name,
-            brand_color: brand?.brand_color,
-            logo_url: brand?.logo_url,
-            id: brand?.id || req.user.brand_id
-          }
-        );
+      } catch (notifyError) {
+        console.error('Failed to send manual payment notification:', notifyError);
       }
     }
 
@@ -1216,6 +1187,38 @@ export const getPayments = async (req: AuthRequest, res: Response) => {
     res.json({ payments });
   } catch (error) {
     console.error('Get payments error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Update payment status (admin only)
+export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['succeeded', 'failed'];
+    if (!status || !validStatuses.includes(status as string)) {
+      return res.status(400).json({ error: 'Status must be succeeded or failed' });
+    }
+
+    const payment = await Payment.findOne({
+      where: { id },
+      include: [{ model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } }]
+    });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    await payment.update({ status });
+    res.json({ payment });
+  } catch (error) {
+    console.error('Update payment status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -1294,18 +1297,23 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
       const searchDate = new Date(filters.date_paid as string);
       const nextDay = new Date(searchDate);
       nextDay.setDate(nextDay.getDate() + 1);
-      
+
       where.date_paid = {
         [require('sequelize').Op.gte]: searchDate,
         [require('sequelize').Op.lt]: nextDay
       };
     }
 
+    const validStatuses = ['pending', 'succeeded', 'failed'];
+    if (filters.status && filters.status !== '' && validStatuses.includes(filters.status as string)) {
+      where.status = filters.status;
+    }
+
     // Build order clause
     let orderClause: any[] = [['date_paid', 'DESC']]; // Default order
     
     if (sortBy && sortDirection) {
-      const validSortColumns = ['date_paid', 'description', 'paid_thru_type', 'amount', 'payment_processing_fee'];
+      const validSortColumns = ['date_paid', 'description', 'paid_thru_type', 'amount', 'payment_processing_fee', 'status'];
       const validDirections = ['asc', 'desc'];
       
       if (validSortColumns.includes(sortBy as string) && validDirections.includes((sortDirection as string).toLowerCase())) {
@@ -1385,7 +1393,7 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       }) || 0;
 
       const totalPayments = await Payment.sum('amount', {
-        where: { artist_id: artistIdNum }
+        where: { artist_id: artistIdNum, status: 'succeeded' }
       }) || 0;
 
       // Calculate total earnings for this artist by first finding releases, then summing earnings
@@ -1446,6 +1454,7 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       const totalRoyalties = (royaltiesResult[0] as any)?.total || 0;
 
       const paymentsResult = await Payment.findAll({
+        where: { status: 'succeeded' },
         include: [{
           model: Artist,
           as: 'artist',
@@ -1609,6 +1618,7 @@ export const getAdminPaymentsRoyaltiesSummary = async (req: AuthRequest, res: Re
       const totalPayments = await Payment.sum('amount', {
         where: {
           artist_id: artist.id,
+          status: 'succeeded',
           date_paid: {
             [require('sequelize').Op.between]: [start_date, end_date]
           }
@@ -1813,7 +1823,7 @@ export const getAdminPaymentsRoyaltiesArtists = async (req: AuthRequest, res: Re
 
     for (const artist of artists) {
       const totalPayments = await Payment.sum('amount', {
-        where: { artist_id: artist.id, date_paid: { [require('sequelize').Op.between]: [start_date, end_date] } }
+        where: { artist_id: artist.id, status: 'succeeded', date_paid: { [require('sequelize').Op.between]: [start_date, end_date] } }
       }) || 0;
 
       const totalRoyalties = await Royalty.sum('amount', {
@@ -2010,7 +2020,7 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
 
         // Get total payments for artist
         const totalPayments = parseFloat((await Payment.sum('amount', {
-          where: { artist_id: artist.id }
+          where: { artist_id: artist.id, status: 'succeeded' }
         }) || 0).toFixed(2));
 
         const totalBalance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
@@ -2408,7 +2418,7 @@ const getArtistPaymentDetails = async (artist: any): Promise<ArtistPaymentDetail
   }) || 0).toFixed(2));
 
   const totalPayments = parseFloat((await Payment.sum('amount', {
-    where: { artist_id: artist.id }
+    where: { artist_id: artist.id, status: 'succeeded' }
   }) || 0).toFixed(2));
 
   const balance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
@@ -2472,8 +2482,8 @@ export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response)
   }
 };
 
-// HELPER: Process individual payment with Paymongo and email notification
-const processArtistPayment = async (artist: any, balance: number, brandId: number) => {
+// HELPER: Process individual payment with Paymongo
+const processArtistPayment = async (artist: any, balance: number, brandId: number, callbackUrl?: string) => {
   // Get payment methods for the artist
   const paymentMethods = await PaymentMethod.findAll({
     where: { artist_id: artist.id }
@@ -2485,15 +2495,16 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
 
   // Use the first available payment method
   const paymentMethod = paymentMethods[0];
-  
+
   let finalAmount = balance;
   let finalProcessingFee = 0;
   let finalReferenceNumber = null;
+  let finalTransferId: string | undefined = undefined;
 
   // Handle Paymongo payment processing
   try {
     const paymentService = new PaymentService();
-    
+
     // Get brand info for wallet configuration
     const brand = await Brand.findByPk(brandId);
     if (!brand || !brand.paymongo_wallet_id) {
@@ -2505,19 +2516,22 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
     const transferAmount = balance - processingFee;
 
     // Send money through Paymongo
-    const referenceNumber = await paymentService.sendMoneyTransfer(
+    const transferResult = await paymentService.sendMoneyTransfer(
       brand.id,
       paymentMethod.id,
       transferAmount,
-      'Batch payment - All balances'
+      'Batch payment - All balances',
+      false,
+      callbackUrl
     );
 
-    if (!referenceNumber) {
+    if (!transferResult) {
       throw new Error('Payment processing failed');
     }
 
     finalProcessingFee = processingFee;
-    finalReferenceNumber = referenceNumber;
+    finalReferenceNumber = transferResult.referenceNumber;
+    finalTransferId = transferResult.transferId;
   } catch (error) {
     console.error('Paymongo payment error for artist', artist.name, ':', error);
     throw error;
@@ -2531,53 +2545,10 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
     date_paid: new Date(),
     payment_method_id: paymentMethod.id,
     reference_number: finalReferenceNumber,
-    payment_processing_fee: finalProcessingFee
+    payment_processing_fee: finalProcessingFee,
+    status: finalTransferId ? 'pending' : 'succeeded',
+    paymongo_transfer_id: finalTransferId
   });
-
-  // Send payment notification email
-  try {
-    // Get artist team members
-    const { ArtistAccess, User, Brand } = require('../models');
-    const artistAccess = await ArtistAccess.findAll({
-      where: {
-        artist_id: artist.id,
-        status: 'Accepted' // SECURITY: Only send notifications to accepted users
-      },
-      include: [{ model: User, as: 'user' }]
-    });
-
-    const recipients = artistAccess.map(access => access.user.email_address);
-
-    if (recipients.length > 0) {
-      // Get brand info for proper email formatting
-      const brand = await Brand.findByPk(brandId);
-      
-      await sendPaymentNotification(
-        recipients,
-        artist.name,
-        {
-          amount: balance,
-          description: 'Batch payment - All balances',
-          payment_processing_fee: finalProcessingFee,
-          // Don't set legacy paid_thru_* fields for batch payments
-          paymentMethod: {
-            type: paymentMethod.type,
-            account_name: paymentMethod.account_name,
-            account_number_or_email: paymentMethod.account_number_or_email
-          }
-        },
-        {
-          name: brand?.brand_name || brand?.name,
-          brand_color: brand?.brand_color,
-          logo_url: brand?.logo_url,
-          id: brand?.id || brandId
-        }
-      );
-    }
-  } catch (emailError) {
-    console.error('Email notification error for artist', artist.name, ':', emailError);
-    // Don't fail the payment if email fails
-  }
 
   return {
     artist_id: artist.id,
@@ -2613,9 +2584,10 @@ export const payAllBalances = async (req: AuthRequest, res: Response) => {
       if (paymentDetails.isReadyForPayment) {
         try {
           const paymentResult = await processArtistPayment(
-            artist, 
-            paymentDetails.balance, 
-            req.user.brand_id
+            artist,
+            paymentDetails.balance,
+            req.user.brand_id,
+            `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`
           );
           
           payments.push(paymentResult);

@@ -125,8 +125,10 @@ export class ArtistReleasesTabComponent {
         renderHtml: true,
         formatter: (release: ArtistRelease) => {
           const statusClass = this.getStatusClass(release.status);
-          const statusIcon = this.getStatusIcon(release.status);
-          let html = `<span class="badge ${statusClass}"><i class="fa ${statusIcon}"></i> ${release.status}</span>`;
+          let html = `<span class="${statusClass}">${release.status}</span>`;
+          if (release.exclude_from_epk) {
+            html += ` <i class="fa fa-eye-slash text-muted ms-2" title="Hidden from EPK"></i>`;
+          }
           if (this.hasValidationIssues(release)) {
             const tooltip = this.getValidationTooltip(release).replace(/"/g, '&quot;');
             if (this.hasValidationErrors(release)) {
@@ -278,12 +280,12 @@ export class ArtistReleasesTabComponent {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'Live': return 'badge-success';
-      case 'For Submission': return 'badge-info';
-      case 'Pending': return 'badge-warning';
-      case 'Draft': return 'badge-secondary';
-      case 'Taken Down': return 'badge-danger';
-      default: return 'badge-secondary';
+      case 'Live':           return 'status-dot status-success';
+      case 'For Submission': return 'status-dot status-info';
+      case 'Pending':        return 'status-dot status-warning';
+      case 'Draft':          return 'status-dot status-secondary';
+      case 'Taken Down':     return 'status-dot status-danger';
+      default:               return 'status-dot status-secondary';
     }
   }
 

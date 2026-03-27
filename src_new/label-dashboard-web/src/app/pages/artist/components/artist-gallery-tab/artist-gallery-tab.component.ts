@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { Artist } from '../../../../models/artist.model';
 import { environment } from 'environments/environment';
 import { LightboxComponent } from '../../../../components/shared/lightbox/lightbox.component';
@@ -14,11 +15,12 @@ export interface ArtistPhoto {
   upload_date: string;
   url: string;
   exclude_from_epk: boolean;
+  display_order?: number;
 }
 
 @Component({
     selector: 'app-artist-gallery-tab',
-    imports: [CommonModule, FormsModule, LightboxComponent],
+    imports: [CommonModule, FormsModule, LightboxComponent, DragDropModule],
     templateUrl: './artist-gallery-tab.component.html',
     styleUrl: './artist-gallery-tab.component.scss'
 })
@@ -36,6 +38,10 @@ export class ArtistGalleryTabComponent {
   editingCaptions: { [key: number]: boolean } = {};
   editingCaptionTexts: { [key: number]: string } = {};
   
+  // Reorder mode
+  reorderMode = false;
+  savingReorder = false;
+
   // Lightbox properties
   showLightbox = false;
   lightboxImageUrl = '';
@@ -365,6 +371,63 @@ export class ArtistGalleryTabComponent {
     this.lightboxImageUrl = '';
     this.lightboxImageAlt = '';
     this.lightboxCaption = '';
+  }
+
+  toggleReorderMode(): void {
+    this.reorderMode = !this.reorderMode;
+  }
+
+  onDrop(event: CdkDragDrop<ArtistPhoto[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+
+    // Apply reorder to the filtered list, then map back to full photos array
+    const filtered = this.filteredPhotos;
+    moveItemInArray(filtered, event.previousIndex, event.currentIndex);
+
+    // Rebuild photos array with reordered filtered items in place
+    if (this.epkFilter === 'all') {
+      this.photos = [...filtered];
+    } else {
+      // Replace matching items in the full array while keeping non-matching ones in place
+      const result: ArtistPhoto[] = [];
+      let filteredIdx = 0;
+      for (const photo of this.photos) {
+        const inFiltered = this.epkFilter === 'visible' ? !photo.exclude_from_epk : photo.exclude_from_epk;
+        if (inFiltered) {
+          result.push(filtered[filteredIdx++]);
+        } else {
+          result.push(photo);
+        }
+      }
+      this.photos = result;
+    }
+
+    this.savePhotoOrder();
+  }
+
+  private savePhotoOrder(): void {
+    if (!this.artist) return;
+
+    this.savingReorder = true;
+    const photoIds = this.photos.map(p => p.id);
+
+    this.http.put<{success: boolean, message: string}>(
+      `${environment.apiUrl}/artists/${this.artist.id}/photos/reorder`,
+      { photoIds },
+      { headers: this.getAuthHeaders() }
+    ).subscribe({
+      next: (response) => {
+        this.savingReorder = false;
+        if (!response.success) {
+          this.alertMessage.emit({ type: 'error', message: 'Failed to save photo order.' });
+        }
+      },
+      error: (error) => {
+        console.error('Error saving photo order:', error);
+        this.savingReorder = false;
+        this.alertMessage.emit({ type: 'error', message: 'Failed to save photo order.' });
+      }
+    });
   }
 
   onPhotoDoubleClick(photo: ArtistPhoto): void {

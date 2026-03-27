@@ -13,6 +13,9 @@ interface PaymentAttributes {
   payment_method_id?: number;
   reference_number?: string;
   payment_processing_fee?: number;
+  status?: string;
+  paymongo_transfer_id?: string;
+  failure_reason?: string;
 }
 
 interface PaymentCreationAttributes extends Optional<PaymentAttributes, 'id'> {}
@@ -29,6 +32,9 @@ class Payment extends Model<PaymentAttributes, PaymentCreationAttributes> implem
   public payment_method_id?: number;
   public reference_number?: string;
   public payment_processing_fee?: number;
+  public status?: string;
+  public paymongo_transfer_id?: string;
+  public failure_reason?: string;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -54,7 +60,7 @@ Payment.init(
       allowNull: false,
     },
     date_paid: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     paid_thru_type: {
@@ -81,6 +87,19 @@ Payment.init(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       defaultValue: 0,
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'succeeded', 'failed'),
+      allowNull: false,
+      defaultValue: 'succeeded',
+    },
+    paymongo_transfer_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    failure_reason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {

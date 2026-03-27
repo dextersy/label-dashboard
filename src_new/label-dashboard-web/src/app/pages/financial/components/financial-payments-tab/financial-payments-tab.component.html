@@ -7,7 +7,8 @@
       [sortInfo]="paymentsSort"
       (pageChange)="paymentsPageChange.emit($event)"
       (filtersChange)="paymentsFiltersChange.emit($event)"
-      (sortChange)="paymentsSortChange.emit($event)">
+      (sortChange)="paymentsSortChange.emit($event)"
+      (refresh)="paymentsRefresh.emit()">
     </app-payments-table>
   </div>
   

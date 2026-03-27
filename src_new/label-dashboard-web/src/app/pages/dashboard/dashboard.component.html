@@ -1,8 +1,5 @@
+<app-breadcrumb></app-breadcrumb>
 <div class="container-fluid">
-  <!-- Page Header -->
-  <div class="page-header mb-3">
-    <app-breadcrumb></app-breadcrumb>
-  </div>
 
   <!-- Loading state -->
   <div *ngIf="loading" class="text-center py-5">
@@ -87,32 +84,26 @@
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
+            <i class="fas fa-users"></i>
             <span class="stats-compact-value">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
-            <div class="stats-compact-meta">
-              <i class="fas fa-users"></i>
-              <span class="stats-compact-label">Artists</span>
-            </div>
+            <span class="stats-compact-label">Artists</span>
           </div>
           <div class="stats-compact-item stats-compact-item-clickable" routerLink="/music/releases">
+            <i class="fas fa-compact-disc"></i>
             <span class="stats-compact-value">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
-            <div class="stats-compact-meta">
-              <i class="fas fa-compact-disc"></i>
-              <span class="stats-compact-label">Releases</span>
-            </div>
+            <span class="stats-compact-label">Releases</span>
           </div>
           <div class="stats-compact-item"
                [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
                (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
+            <i class="fas fa-music"></i>
             <img class="stats-compact-cover"
                  [src]="getCoverArtUrl(dashboardData.stats?.latestRelease?.cover_art)"
                  [alt]="dashboardData.stats?.latestRelease?.title || 'Latest release'">
             <span class="stats-compact-value stats-compact-value-text">
               {{ dashboardData.stats?.latestRelease?.title || '—' }}
             </span>
-            <div class="stats-compact-meta">
-              <i class="fas fa-music"></i>
-              <span class="stats-compact-label">Latest</span>
-            </div>
+            <span class="stats-compact-label">Latest</span>
           </div>
         </div>
       </div>

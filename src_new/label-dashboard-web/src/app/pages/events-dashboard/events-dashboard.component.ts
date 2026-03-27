@@ -6,6 +6,8 @@ import { EventSalesChartComponent, EventSales } from '../dashboard/components/ev
 import { FundraiserDonationsChartComponent, FundraiserDonations } from '../dashboard/components/fundraiser-donations-chart/fundraiser-donations-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
+import { EventService } from '../../services/event.service';
+import { FundraiserService } from '../../services/fundraiser.service';
 import { environment } from 'environments/environment';
 
 interface CampaignsDashboardStats {
@@ -15,12 +17,31 @@ interface CampaignsDashboardStats {
   thisMonthDonations: number;
 }
 
+export interface OngoingFundraiser {
+  id: number;
+  title: string;
+  poster_url: string | null;
+  total_raised: number;
+}
+
+export interface UpcomingEvent {
+  id: number;
+  title: string;
+  date_and_time: string;
+  venue: string;
+  poster_url: string | null;
+  tickets_sold: number;
+  net_earnings: number;
+}
+
 interface CampaignsDashboardData {
   user: {
     firstName: string;
     isAdmin: boolean;
   };
   stats: CampaignsDashboardStats;
+  ongoingFundraisers: { items: OngoingFundraiser[]; total: number };
+  upcomingEvents: UpcomingEvent[];
   eventSales: EventSales[];
   fundraiserDonations: FundraiserDonations[];
 }
@@ -46,7 +67,9 @@ export class EventsDashboardComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private eventService: EventService,
+    private fundraiserService: FundraiserService
   ) {}
 
   ngOnInit(): void {
@@ -79,6 +102,26 @@ export class EventsDashboardComponent implements OnInit {
     if (hour < 12) return 'morning';
     if (hour < 17) return 'afternoon';
     return 'evening';
+  }
+
+  navigateToFundraiser(fundraiser: OngoingFundraiser): void {
+    this.fundraiserService.setSelectedFundraiser(fundraiser as any);
+    this.router.navigate(['/campaigns/fundraisers/details']);
+  }
+
+  navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets'): void {
+    this.eventService.setSelectedEvent(event as any);
+    this.router.navigate([`/campaigns/events/${route}`]);
+  }
+
+  formatEventDate(dateStr: string): string {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  formatEventTime(dateStr: string): string {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
 
   formatCurrency(amount: number): string {

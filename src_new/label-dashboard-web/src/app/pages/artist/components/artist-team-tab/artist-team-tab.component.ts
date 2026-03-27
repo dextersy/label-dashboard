@@ -66,7 +66,7 @@ export class ArtistTeamTabComponent {
         formatter: (member: TeamMember) => {
           const cls = this.getStatusClass(member.status);
           const icon = this.getStatusIcon(member.status);
-          return `<span class="badge ${cls}"><i class="fa ${icon}"></i> ${member.status}</span>`;
+          return `<span class="${cls}">${member.status}</span>`;
         }
       },
       {
@@ -257,7 +257,7 @@ export class ArtistTeamTabComponent {
   }
 
   getStatusClass(status: string): string {
-    return status === 'Accepted' ? 'badge-success' : 'badge-warning';
+    return status === 'Accepted' ? 'status-dot status-success' : 'status-dot status-warning';
   }
 
   getStatusIcon(status: string): string {

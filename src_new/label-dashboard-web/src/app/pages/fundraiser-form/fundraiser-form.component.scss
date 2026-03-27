@@ -1,8 +1,14 @@
 .fundraiser-form-page {
   padding: 0 20px 120px;
-  max-width: 900px;
-  margin: 0 auto;
   min-height: calc(100vh - 60px);
+
+  .page-header,
+  .fundraiser-form-container,
+  .loading-container {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 
   .page-header {
     @media (max-width: 768px) {

@@ -19,18 +19,23 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Add Authorization header for authenticated requests
-    let authReq = req;
+    let headers: { [key: string]: string } = {};
     const token = this.authService.getToken();
-    
+
+    // Skip ngrok browser warning interstitial (causes CORS preflight redirects)
+    if (req.url.includes('ngrok')) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+    }
+
     // Only add auth header if token exists and is not null/undefined
     // Also skip auth for public endpoints
-    if (token && token !== 'null' && token !== 'undefined' && !req.url.includes('/public/')) {
-      authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+    if (token && token !== 'null' && token !== 'undefined' && !req.url.includes('/public/') && !req.url.includes('/scanner/')) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
+
+    const authReq = Object.keys(headers).length > 0
+      ? req.clone({ setHeaders: headers })
+      : req;
 
     return next.handle(authReq).pipe(
       tap((response: any) => {
@@ -56,8 +61,9 @@ export class AuthInterceptor implements HttpInterceptor {
 
         // Handle 401 Unauthorized and 403 Forbidden errors for protected endpoints only
         // Don't handle auth errors for public API calls or login attempts - let components handle them
-        if ((error.status === 401 || error.status === 403) && 
-            !req.url.includes('/public/') && 
+        if ((error.status === 401 || error.status === 403) &&
+            !req.url.includes('/public/') &&
+            !req.url.includes('/scanner/') &&
             !req.url.includes('/auth/login')) {
           // Force logout and clear the user session
           this.authService.forceLogout();

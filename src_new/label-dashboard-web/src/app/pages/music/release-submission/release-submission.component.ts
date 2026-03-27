@@ -40,6 +40,7 @@ export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   artist: Artist | null = null;
   private subscriptions: Subscription = new Subscription();
+  private programmaticArtistChange = false;
 
   private _activeSection: ReleaseSubmissionSection = 'info';
   private sectionFromQueryParam: ReleaseSubmissionSection | null = null;
@@ -86,10 +87,37 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to artist state changes
+    // Subscribe to artist state changes.
+    // - First emission: capture initial artist (component load).
+    // - Programmatic change (Fix 1): update artist + initialArtistId without side-effects.
+    // - User-driven change (Fix 2 & 3): navigate away (edit) or reinit form (new release).
+    let initialArtistId: number | null | undefined = undefined;
     this.subscriptions.add(
       this.artistStateService.selectedArtist$.subscribe(artist => {
+        if (this.programmaticArtistChange) {
+          this.programmaticArtistChange = false;
+          this.artist = artist;
+          initialArtistId = artist?.id ?? null;
+          return;
+        }
+
+        if (initialArtistId === undefined) {
+          // First emission on subscribe — just capture artist without triggering nav
+          this.artist = artist;
+          initialArtistId = artist?.id ?? null;
+          return;
+        }
+
+        // User-driven artist switch
+        const newArtistId = artist?.id ?? null;
         this.artist = artist;
+        if (newArtistId !== initialArtistId) {
+          initialArtistId = newArtistId;
+          // Navigate to the releases list for the newly selected artist.
+          // Covers both editing an existing release and creating a new one — in both
+          // cases staying on this page would show stale or mismatched artist data.
+          this.router.navigate(['/music/releases']);
+        }
       })
     );
 
@@ -142,7 +170,25 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         
         // Set the release data for editing
         this.releaseId = releaseId;
-        
+
+        // Fix 1: sync navbar/sidebar artist state from the release's primary artist.
+        // This handles the case where the user navigated here from the dashboard by clicking
+        // a release that belongs to a different artist than the currently selected one.
+        const rawArtist = response.release.artists?.[0] as any;
+        const releaseArtist: Artist | undefined = rawArtist ? {
+          id: rawArtist.id,
+          name: rawArtist.name,
+          profile_photo: rawArtist.profile_photo ?? '',
+          band_members: rawArtist.band_members,
+          profile_photo_id: rawArtist.profile_photo_id,
+          profilePhotoImage: rawArtist.profilePhotoImage
+        } : undefined;
+        if (releaseArtist && releaseArtist.id !== this.artistStateService.getSelectedArtist()?.id) {
+          localStorage.setItem('selected_artist_id', String(releaseArtist.id));
+          this.programmaticArtistChange = true;
+          this.artistStateService.setSelectedArtist(releaseArtist);
+        }
+
         // Check if this is a non-draft release - show read-only view
         if (response.release.status !== 'Draft') {
           this.showReadOnlyView = true;

@@ -10,6 +10,8 @@ import {
   uploadAudio,
   reorderSongs,
   streamAudio,
+  downloadSongMaster,
+  downloadSongMp3,
   addExistingSongToRelease,
   searchSongsInBrand
 } from '../controllers/songController';
@@ -68,5 +70,9 @@ router.post('/:id/audio', upload.single('audio'), uploadAudio);
 
 // Stream audio file
 router.get('/:id/audio', streamAudio);
+
+// Download individual song files
+router.get('/:id/download-master', downloadSongMaster);
+router.get('/:id/download-mp3', downloadSongMp3);
 
 export default router;

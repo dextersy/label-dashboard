@@ -414,16 +414,18 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
             ticket.contact_number || '',
             ticket.number_of_entries.toString(),
             '', // Ticket code (empty for pending orders)
-            ticket.referrer_name || '', // Include referrer info
+            ticket.ticket_type || '',
+            ticket.scanner_instructions || '',
+            ticket.referrer_name || '',
             '', // Notes column (empty in PHP version)
             ticket.status
           ]);
 
           const filename = `${response.event_title.replace(/\s+/g, '_')}_tickets_pending.csv`;
-          
+
           this.csvService.downloadCsv({
             title: `Pending tickets for ${response.event_title}`,
-            headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Referred By', 'Notes', 'Status'],
+            headers: ['Name', 'Email Address', 'Contact Number', 'No. of Tickets', 'Ticket Code', 'Ticket Type', 'Scanner Instructions', 'Referred By', 'Notes', 'Status'],
             data: csvData,
             filename: filename
           });
@@ -491,14 +493,10 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   getStatusHtml(status: string): string {
     const text = this.getStatusText(status);
     switch (status) {
-      case 'New':
-        return `<span class="badge bg-warning text-dark">${text}</span>`;
-      case 'Payment Confirmed':
-        return `<span class="badge bg-success">${text}</span>`;
-      case 'Canceled':
-        return `<span class="badge bg-secondary">${text}</span>`;
-      default:
-        return `<span class="badge bg-secondary">${text}</span>`;
+      case 'New':               return `<span class="status-dot status-warning">${text}</span>`;
+      case 'Payment Confirmed': return `<span class="status-dot status-success">${text}</span>`;
+      case 'Canceled':          return `<span class="status-dot status-secondary">${text}</span>`;
+      default:                  return `<span class="status-dot status-secondary">${text}</span>`;
     }
   }
 

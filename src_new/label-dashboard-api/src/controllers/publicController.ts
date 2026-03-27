@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem } from '../models';
+import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -9,41 +10,11 @@ import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import { getRequestDomain } from '../utils/requestUtils';
 import archiver from 'archiver';
 import path from 'path';
 
 const paymentService = new PaymentService();
-
-// Helper function to extract domain from request
-const getRequestDomain = (req: Request): string => {
-  let requestDomain = '';
-
-  // Try Origin header first (for CORS/XHR requests - contains the frontend domain)
-  const originHeader = req.get('origin') || '';
-  if (originHeader) {
-    try {
-      const url = new URL(originHeader);
-      requestDomain = url.hostname;
-    } catch (error) {
-      console.error('Invalid origin header:', originHeader);
-    }
-  }
-
-  // Fallback to Referer header (for navigation/redirect - also contains frontend domain)
-  if (!requestDomain) {
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    if (refererUrl) {
-      try {
-        const url = new URL(refererUrl);
-        requestDomain = url.hostname;
-      } catch (error) {
-        console.error('Invalid referer URL:', refererUrl);
-      }
-    }
-  }
-
-  return requestDomain;
-};
 
 // Helper function to determine if countdown should be shown for an event
 const shouldShowCountdown = (event: any): boolean => {
@@ -214,6 +185,24 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     // Get display price from ticket types
     const priceDisplay = getEventDisplayPriceSync(event);
 
+    // Build walk-in info if enabled
+    let walkInTypes: any[] | undefined;
+    if (event.walk_in_enabled) {
+      const witList = await WalkInType.findAll({
+        where: { event_id: eventId },
+        order: [['id', 'ASC']]
+      });
+      walkInTypes = [];
+      for (const wit of witList) {
+        const remainingSlots = await wit.getRemainingSlots();
+        walkInTypes.push({
+          name: wit.name,
+          price: wit.price,
+          remaining_slots: remainingSlots
+        });
+      }
+    }
+
     res.json({
       event: {
         id: event.id,
@@ -246,6 +235,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         venue_phone: event.venue_phone,
         venue_website: event.venue_website,
         venue_maps_url: event.venue_maps_url,
+        walk_in_enabled: event.walk_in_enabled || false,
+        walkInTypes,
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
@@ -444,7 +435,7 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketType',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price', 'special_instructions_for_scanner']
         },
         { model: EventReferrer, as: 'referrer' }
       ]
@@ -504,7 +495,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         ticketType: (ticket as any).ticketType ? {
           id: (ticket as any).ticketType.id,
           name: (ticket as any).ticketType.name,
-          price: (ticket as any).ticketType.price
+          price: (ticket as any).ticketType.price,
+          special_instructions_for_scanner: (ticket as any).ticketType.special_instructions_for_scanner || null
         } : null
       }
     });
@@ -690,12 +682,15 @@ export const buyTicket = async (req: Request, res: Response) => {
     }
 
     // Handle PAID tickets (PayMongo checkout flow)
-    // Prepare payment methods based on event settings
+    // Prepare payment methods based on event settings and minimum amount requirements
+    const MIN_AMOUNT_CARD = process.env.MIN_AMOUNT_CARD ? parseFloat(process.env.MIN_AMOUNT_CARD) : null;
+    const MIN_AMOUNT_DOB  = process.env.MIN_AMOUNT_DOB  ? parseFloat(process.env.MIN_AMOUNT_DOB)  : null;
+
     const paymentMethods: string[] = [];
-    if (event.supports_card) paymentMethods.push('card');
+    if (event.supports_card && (MIN_AMOUNT_CARD === null || totalAmount >= MIN_AMOUNT_CARD)) paymentMethods.push('card');
     if (event.supports_gcash) paymentMethods.push('gcash');
-    if (event.supports_ubp) paymentMethods.push('dob_ubp');
-    if (event.supports_dob) paymentMethods.push('dob');
+    if (event.supports_ubp  && (MIN_AMOUNT_DOB  === null || totalAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob_ubp');
+    if (event.supports_dob  && (MIN_AMOUNT_DOB  === null || totalAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob');
     if (event.supports_qrph) paymentMethods.push('qrph');
     if (event.supports_maya) paymentMethods.push('paymaya');
     if (event.supports_grabpay) paymentMethods.push('grab_pay');
@@ -1104,181 +1099,20 @@ export const ticketPaymentWebhook = async (req: Request, res: Response) => {
   }
 };
 
-export const checkPin = async (req: Request, res: Response) => {
+export const transferWebhook = async (req: Request, res: Response) => {
   try {
-    const { event_id, pin } = req.body;
+    const signature = req.headers['paymongo-signature'] as string;
+    const payload = req.body;
 
-    if (!event_id || !pin) {
-      return res.status(400).json({ error: 'Event ID and PIN are required' });
-    }
+    // Process transfer status update webhook
+    const isValid = await paymentService.processTransferWebhook(payload, signature);
 
-    // Extract domain from request for multibrand validation
-    const requestDomain = getRequestDomain(req);
-
-    const event = await Event.findOne({
-      where: { id: event_id },
-      include: [{
-        model: Brand,
-        as: 'brand',
-        include: [{
-          model: Domain,
-          as: 'domains',
-          attributes: ['domain_name']
-        }]
-      }]
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Validate that the event belongs to the brand associated with the current domain
-    if (event.brand && event.brand.domains && requestDomain) {
-      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
-      if (!isDomainValid) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
-    } else {
-      // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Use the actual verification PIN from the event
-    if (pin !== event.verification_pin) {
-      return res.status(403).json({ error: 'Invalid PIN' });
-    }
-
-    res.json({ 
-      valid: true, 
-      message: 'PIN verified successfully',
-      event: {
-        id: event.id,
-        title: event.title,
-        date_and_time: event.date_and_time,
-        venue: event.venue,
-        poster_url: event.poster_url,
-        brand: event.brand ? {
-          id: event.brand.id,
-          name: event.brand.brand_name,
-          color: event.brand.brand_color,
-          logo_url: event.brand.logo_url
-        } : null
-      }
-    });
+    // Always respond with 200 OK - PayMongo expects this to mark the webhook delivered
+    res.status(200).json({ received: true, processed: isValid });
   } catch (error) {
-    console.error('Check PIN error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-// Check in ticket entries (equivalent to PHP action.verify.php)
-export const checkInTicket = async (req: Request, res: Response) => {
-  try {
-    const { event_id, verification_pin, ticket_code, entries_to_claim } = req.body;
-
-    if (!event_id || !ticket_code || !verification_pin || !entries_to_claim) {
-      return res.status(400).json({ error: 'Event ID, ticket code, verification PIN, and entries to claim are required' });
-    }
-
-    // Parse entries_to_claim as integer to prevent string concatenation
-    const entriesToClaimNum = parseInt(entries_to_claim, 10);
-    
-    if (isNaN(entriesToClaimNum) || entriesToClaimNum < 1) {
-      return res.status(400).json({ error: 'Entries to claim must be a valid number greater than 0' });
-    }
-
-    // Extract domain from request for multibrand validation
-    const requestDomain = getRequestDomain(req);
-
-    const ticket = await Ticket.findOne({
-      where: { 
-        event_id,
-        ticket_code: ticket_code.toUpperCase()
-      },
-      include: [
-        { 
-          model: Event, 
-          as: 'event',
-          include: [{
-            model: Brand,
-            as: 'brand',
-            include: [{
-              model: Domain,
-              as: 'domains',
-              attributes: ['domain_name']
-            }]
-          }]
-        }
-      ]
-    });
-
-    if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' });
-    }
-
-    // Validate that the event belongs to the brand associated with the current domain
-    if (ticket.event.brand && ticket.event.brand.domains && requestDomain) {
-      const eventBrandDomains = ticket.event.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
-      if (!isDomainValid) {
-        return res.status(404).json({ error: 'Ticket not found' });
-      }
-    } else {
-      // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(404).json({ error: 'Ticket not found' });
-    }
-
-    // Verify PIN matches the event's verification PIN
-    if (verification_pin !== ticket.event.verification_pin) {
-      return res.status(403).json({ error: 'Invalid verification PIN' });
-    }
-
-    // Only allow check-in for confirmed tickets (matching PHP logic)
-    if (ticket.status !== 'Ticket sent.') {
-      return res.status(400).json({ error: 'Ticket is not confirmed and cannot be checked in' });
-    }
-
-    // Calculate remaining entries - model now handles type conversion automatically
-    const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
-
-    if (entriesToClaimNum > remainingEntries) {
-      return res.status(400).json({ 
-        error: `Cannot claim ${entriesToClaimNum} entries. Only ${remainingEntries} entries remaining.` 
-      });
-    }
-
-    // Update claimed entries (matching PHP logic) - model ensures numeric addition
-    const newClaimedEntries = ticket.number_of_claimed_entries + entriesToClaimNum;
-    await ticket.update({
-      number_of_claimed_entries: newClaimedEntries
-    });
-
-    const updatedRemainingEntries = ticket.number_of_entries - newClaimedEntries;
-
-    res.json({
-      success: true,
-      message: `Successfully checked in ${entriesToClaimNum} ${entriesToClaimNum === 1 ? 'entry' : 'entries'}`,
-      ticket: {
-        id: ticket.id,
-        ticket_code: ticket.ticket_code,
-        name: ticket.name,
-        number_of_entries: ticket.number_of_entries,
-        number_of_claimed_entries: newClaimedEntries,
-        remaining_entries: updatedRemainingEntries,
-        event: {
-          id: ticket.event.id,
-          title: ticket.event.title,
-          date_and_time: ticket.event.date_and_time,
-          venue: ticket.event.venue
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Check in ticket error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Transfer webhook error:', error);
+    // Still respond with 200 to prevent PayMongo from retrying
+    res.status(200).json({ received: true, processed: false, error: 'Processing failed' });
   }
 };
 
@@ -1327,6 +1161,33 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Build walk-in info if enabled
+    let walkInInfo: any = undefined;
+    if (event.walk_in_enabled) {
+      const walkInTypes = await WalkInType.findAll({
+        where: { event_id: event.id },
+        order: [['id', 'ASC']]
+      });
+
+      const processedWalkInTypes = [];
+      for (const wit of walkInTypes) {
+        const soldCount = await wit.getSoldCount();
+        const remainingSlots = await wit.getRemainingSlots();
+        processedWalkInTypes.push({
+          id: wit.id,
+          name: wit.name,
+          price: wit.price,
+          max_slots: wit.max_slots,
+          remaining_slots: remainingSlots
+        });
+      }
+
+      walkInInfo = {
+        enabled: true,
+        types: processedWalkInTypes
+      };
+    }
+
     res.json({
       event: {
         id: event.id,
@@ -1334,6 +1195,8 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
         date_and_time: event.date_and_time,
         venue: event.venue,
         poster_url: event.poster_url,
+        walk_in_enabled: event.walk_in_enabled || false,
+        walk_in: walkInInfo,
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
@@ -1605,8 +1468,9 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         model: Brand,
         as: 'brand',
         attributes: [
-          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website', 
-          'favicon_url', 'release_submission_url', 'catalog_prefix'
+          'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
+          'favicon_url', 'release_submission_url', 'catalog_prefix',
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels'
         ]
       }]
     });
@@ -1615,17 +1479,21 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Brand not found for this domain' });
     }
 
+    const brand = domainRecord.brand;
     res.json({
       domain: domainRecord.domain_name,
       brand: {
-        id: domainRecord.brand.id,
-        name: domainRecord.brand.brand_name,
-        logo_url: domainRecord.brand.logo_url,
-        brand_color: domainRecord.brand.brand_color,
-        brand_website: domainRecord.brand.brand_website,
-        favicon_url: domainRecord.brand.favicon_url,
-        release_submission_url: domainRecord.brand.release_submission_url,
-        catalog_prefix: domainRecord.brand.catalog_prefix
+        id: brand.id,
+        name: brand.brand_name,
+        logo_url: brand.logo_url,
+        brand_color: brand.brand_color,
+        brand_website: brand.brand_website,
+        favicon_url: brand.favicon_url,
+        release_submission_url: brand.release_submission_url,
+        catalog_prefix: brand.catalog_prefix,
+        feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
+        feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+        feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels)
       }
     });
   } catch (error) {
@@ -2203,12 +2071,12 @@ export const getArtistEPK = async (req: Request, res: Response) => {
     // Get artist's media gallery using ArtistImage model
     // Exclude images marked as exclude_from_epk
     const gallery = await ArtistImage.findAll({
-      where: { 
+      where: {
         artist_id: artistId,
         exclude_from_epk: false
       },
       attributes: ['id', 'path', 'credits', 'date_uploaded'],
-      order: [['date_uploaded', 'DESC']]
+      order: [['display_order', 'ASC'], ['date_uploaded', 'DESC']]
     });
 
     // Get artist's releases using the proper many-to-many relationship
@@ -2875,7 +2743,7 @@ export const downloadArtistPhotos = async (req: Request, res: Response) => {
         exclude_from_epk: false
       },
       attributes: ['id', 'path', 'credits', 'date_uploaded'],
-      order: [['date_uploaded', 'DESC']],
+      order: [['display_order', 'ASC'], ['date_uploaded', 'DESC']],
       limit: 5
     });
 
@@ -3092,3 +2960,4 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
     }
   }
 };
+

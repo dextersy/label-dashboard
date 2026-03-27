@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BrandService } from '../../services/brand.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-domain-not-found',
@@ -12,17 +13,29 @@ import { BrandService } from '../../services/brand.service';
 export class DomainNotFoundComponent implements OnInit {
   currentDomain: string = '';
   isChecking: boolean = true;
+  reason: string | null = null;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private authService: AuthService
   ) {
     this.currentDomain = window.location.hostname;
   }
 
   ngOnInit(): void {
+    this.reason = this.route.snapshot.queryParamMap.get('reason');
+    if (this.reason === 'no-workspace') {
+      this.isChecking = false;
+      return;
+    }
     this.checkDomainStatus();
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   private checkDomainStatus(): void {

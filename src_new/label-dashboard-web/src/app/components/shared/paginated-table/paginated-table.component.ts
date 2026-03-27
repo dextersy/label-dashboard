@@ -45,6 +45,9 @@ export interface TableColumn {
   cardHeader?: boolean; // Use this column as the card title in mobile view
   hideDataLabel?: boolean; // Hide the data-label prefix in mobile card view
   maxWidth?: string; // Cap column width and wrap text (e.g. '200px')
+  mergeCell?: boolean; // When item[key] is truthy, render row as a full-width merged cell (mobile only)
+  mobileGroup?: string; // Collapse this column into the group's main column on mobile
+  mobileGroupMain?: boolean; // This column is the prominent one; other group members render as secondary text inside it
 }
 
 export interface SearchFilters {
@@ -88,6 +91,8 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;
   @ContentChild('customButtons', { static: false }) customButtons!: TemplateRef<any>;
   @ContentChild('bulkOperationsContent', { static: false }) bulkOperationsContent!: TemplateRef<any>;
+
+  displayColumns: TableColumn[] = [];
 
   searchFilters: SearchFilters = {};
   private searchTimeout: any;
@@ -189,10 +194,15 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
     document.removeEventListener('scroll', this.scrollCloseHandler, true);
   }
 
+  private updateDisplayColumns(): void {
+    this.displayColumns = this.columns.filter(c => !c.mergeCell);
+  }
+
   ngOnInit() {
     document.addEventListener('scroll', this.scrollCloseHandler, true);
+    this.updateDisplayColumns();
     // Initialize search filters for searchable columns
-    this.columns.forEach(column => {
+    this.displayColumns.forEach(column => {
       if (column.searchable !== false) {
         this.searchFilters[column.key] = '';
       }
@@ -200,6 +210,9 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['columns']) {
+      this.updateDisplayColumns();
+    }
     // Clear selection when data changes (e.g., after refresh, filter, or bulk operations)
     if (changes['data'] && !changes['data'].firstChange) {
       this.clearSelection();
@@ -284,7 +297,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   clearFilters(): void {
     this.searchFilters = {};
-    this.columns.forEach(column => {
+    this.displayColumns.forEach(column => {
       if (column.searchable !== false) {
         this.searchFilters[column.key] = '';
       }
@@ -371,6 +384,39 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
         }
         return value.toString();
     }
+  }
+
+  isNonMainGroupColumn(column: TableColumn): boolean {
+    return !!column.mobileGroup && !column.mobileGroupMain;
+  }
+
+  getMobileGroupBefore(mainCol: TableColumn): TableColumn[] {
+    if (!mainCol.mobileGroup || !mainCol.mobileGroupMain) return [];
+    const mainIdx = this.displayColumns.indexOf(mainCol);
+    return this.displayColumns.filter(
+      (c, i) => c.mobileGroup === mainCol.mobileGroup && !c.mobileGroupMain && i < mainIdx
+    );
+  }
+
+  getMobileGroupAfter(mainCol: TableColumn): TableColumn[] {
+    if (!mainCol.mobileGroup || !mainCol.mobileGroupMain) return [];
+    const mainIdx = this.displayColumns.indexOf(mainCol);
+    return this.displayColumns.filter(
+      (c, i) => c.mobileGroup === mainCol.mobileGroup && !c.mobileGroupMain && i > mainIdx
+    );
+  }
+
+  getMergeCellValue(item: any): string | null {
+    const col = this.columns.find(c => c.mergeCell);
+    if (!col) return null;
+    const val = item[col.key];
+    return val ? String(val) : null;
+  }
+
+  getTotalColspan(): number {
+    return this.displayColumns.length
+      + (this.hasActionsColumn() ? 1 : 0)
+      + (this.enableBulkOperations ? 1 : 0);
   }
 
   getPageNumbers(): number[] {

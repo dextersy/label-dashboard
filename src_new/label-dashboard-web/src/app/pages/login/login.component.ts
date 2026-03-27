@@ -60,7 +60,7 @@ export class LoginComponent implements OnInit {
     // Check if user is already logged in (similar to original PHP check)
     const loggedInUser = localStorage.getItem('auth_token');
     if (loggedInUser) {
-      this.router.navigate([this.getDefaultPageForWorkspace(this.authService.isAdmin())]);
+      this.navigateToDefaultPage(this.authService.isAdmin());
     }
 
     this.loadBrandSettings();
@@ -147,8 +147,11 @@ export class LoginComponent implements OnInit {
 
         // Normal login - redirect to workspace default page or specified URL
         if (response.token) {
-          const redirectTo = this.redirectUrl || this.getDefaultPageForWorkspace(response.user?.is_admin ?? false);
-          this.router.navigate([redirectTo]);
+          if (this.redirectUrl) {
+            this.router.navigate([this.redirectUrl]);
+          } else {
+            this.navigateToDefaultPage(response.user?.is_admin ?? false);
+          }
         }
       },
       error: (error) => {
@@ -187,23 +190,44 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  private getDefaultPageForWorkspace(isAdmin: boolean = false): string {
-    const workspace = this.workspaceService.currentWorkspace;
+  private navigateToDefaultPage(isAdmin: boolean): void {
+    const page = this.getDefaultPageForWorkspace(isAdmin);
+    if (page === '/domain-not-found') {
+      this.router.navigate([page], { queryParams: { reason: 'no-workspace' } });
+    } else {
+      this.router.navigate([page]);
+    }
+  }
 
+  private getDefaultPageForWorkspace(isAdmin: boolean = false): string {
     // If the stored workspace requires admin access but the user isn't admin, reset to music
     const adminOnlyWorkspaces: WorkspaceType[] = ['campaigns', 'labels', 'admin'];
-    if (!isAdmin && adminOnlyWorkspaces.includes(workspace)) {
+    if (!isAdmin && adminOnlyWorkspaces.includes(this.workspaceService.currentWorkspace)) {
       this.workspaceService.setWorkspace('music');
-      return '/dashboard';
     }
 
-    switch (workspace) {
+    const settings = this.brandService.getCurrentBrandSettings();
+
+    // For non-admin users, check if the music workspace is enabled
+    if (!isAdmin && settings?.feature_music_workspace === false) {
+      return '/domain-not-found';
+    }
+
+    // If the current workspace is music but music is disabled, switch to the first available workspace
+    if (this.workspaceService.currentWorkspace === 'music' && settings?.feature_music_workspace === false) {
+      const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(isAdmin);
+      if (availableWorkspaces.length > 0) {
+        this.workspaceService.setWorkspace(availableWorkspaces[0]);
+      }
+    }
+
+    switch (this.workspaceService.currentWorkspace) {
       case 'music':
         return '/dashboard';
       case 'campaigns':
         return '/campaigns/dashboard';
       case 'admin':
-        return '/admin/settings';
+        return '/admin/reports/music-earnings';
       default:
         return '/dashboard';
     }

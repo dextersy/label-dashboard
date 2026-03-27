@@ -1,20 +1,11 @@
 <div class="admin-page">
+  <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="page-header mb-3">
-      <app-breadcrumb></app-breadcrumb>
-    </div>
-    
     <!-- Main Content -->
     <div class="row">
       <div class="col-12">
         
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
-        <!-- Settings Tab -->
-        <div *ngIf="activeTab === 'settings'">
-          <app-brand-settings-tab></app-brand-settings-tab>
-        </div>
-
         <!-- Reports - Music Earnings Tab -->
         <div *ngIf="activeTab === 'reports-music-earnings'">
           <app-summary-view-tab></app-summary-view-tab>

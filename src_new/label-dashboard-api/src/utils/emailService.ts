@@ -193,12 +193,12 @@ export const processTemplate = (template: string, data: Record<string, any>): st
 };
 
 export const sendBrandedEmail = async (
-  email: string,
+  recipients: string | string[],
   templateName: string,
   templateData: Record<string, any>,
   brandId: number
 ): Promise<boolean> => {
-  
+
   // Load the email template
   const template = loadEmailTemplate(templateName);
   if (!template) {
@@ -208,7 +208,7 @@ export const sendBrandedEmail = async (
 
   // Process template with data
   const htmlBody = processTemplate(template, templateData);
-    
+
   // Determine subject based on template
   let subject = '';
   switch (templateName) {
@@ -249,33 +249,48 @@ export const sendBrandedEmail = async (
       subject = 'Notification';
   }
 
+  // Normalize recipients to array
+  const recipientList = Array.isArray(recipients) ? recipients : [recipients];
+
   try {
     // Fetch brand information to use brand name as "From" name
     const brand = await Brand.findByPk(brandId);
     const fromName = brand?.brand_name || 'Dashboard';
     const fromEmail = process.env.FROM_EMAIL;
-    
+
     // Quote the display name if it contains special characters like parentheses
     const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
-    
-    const mailOptions = {
-      from: `${quotedFromName} <${fromEmail}>`,
-      to: email,
-      subject,
-      html: htmlBody,
-    };
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log('Branded email sent successfully:', result.messageId);
-    
-    // Log successful email attempt
-    await logEmailAttempt([email], subject, htmlBody, true, brandId);
-    return true;
+    let allSucceeded = true;
+
+    // Send to each recipient individually
+    for (const email of recipientList) {
+      try {
+        const mailOptions = {
+          from: `${quotedFromName} <${fromEmail}>`,
+          to: email,
+          subject,
+          html: htmlBody,
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log('Branded email sent successfully:', result.messageId);
+      } catch (error) {
+        console.error(`Branded email sending failed for ${email}:`, error);
+        allSucceeded = false;
+      }
+    }
+
+    // Log once with all recipients grouped
+    await logEmailAttempt(recipientList, subject, htmlBody, allSucceeded, brandId);
+
+    return allSucceeded;
   } catch (error) {
     console.error('Branded email sending failed:', error);
-    
+
     // Log failed email attempt
-    await logEmailAttempt([email], subject, htmlBody, false, brandId);
+    await logEmailAttempt(recipientList, subject, htmlBody, false, brandId);
+
     return false;
   }
 };
@@ -299,7 +314,7 @@ export const sendTeamInviteEmail = async (
   return await sendBrandedEmail(email, 'invite_email', templateData, brandInfo?.id || 1);
 };
 
-// Send artist update notification email to specific recipient
+// Send artist update notification email to specific recipient(s)
 export const sendArtistUpdateEmail = async (
   email: string,
   artistName: string,
@@ -359,38 +374,53 @@ export const sendArtistUpdateNotifications = async (
   try {
     // Get brand administrators
     const adminEmails = await getBrandAdministrators(brandInfo?.id || 1);
-    
+
     // Combine team member emails and admin emails, removing duplicates
     const allRecipients = [...new Set([...teamEmails, ...adminEmails])];
-    
+
     if (allRecipients.length === 0) {
       console.log('No recipients found for artist update notification');
       return false;
     }
 
-    let allSuccessful = true;
-    
-    // Send notification to each recipient
-    for (const email of allRecipients) {
-      try {
-        const success = await sendArtistUpdateEmail(
-          email,
-          artistName,
-          updaterName,
-          changes,
-          dashboardUrl,
-          brandInfo
-        );
-        if (!success) {
-          allSuccessful = false;
-        }
-      } catch (emailError) {
-        console.error(`Failed to send artist update email to ${email}:`, emailError);
-        allSuccessful = false;
-      }
-    }
+    // Generate changed items HTML
+    const changedItemsHtml = changes.map(change => {
+      return `
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+          <tr>
+            <td align="left" valign="top" style="padding: 10px 0;">
+              <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                <tr>
+                  <td valign="top" align="left" style="width: 30%; padding-right: 10px;">
+                    <div class="pc-font-alt" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; color: #333333;">
+                      ${change.field}:
+                    </div>
+                  </td>
+                  <td valign="top" align="left" style="width: 70%;">
+                    <div class="pc-font-alt" style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333;">
+                      <div style="color: #999999; text-decoration: line-through;">${change.oldValue || '(empty)'}</div>
+                      <div style="color: #000000; font-weight: bold;">${change.newValue || '(empty)'}</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      `;
+    }).join('');
 
-    return allSuccessful;
+    const templateData = {
+      artist_name: artistName,
+      member_name: updaterName,
+      changed_items: changedItemsHtml,
+      url: dashboardUrl,
+      brand_color: brandInfo?.brand_color || '#1595e7',
+      logo: brandInfo?.logo_url || ''
+    };
+
+    // sendBrandedEmail handles the loop + grouped logging internally
+    return await sendBrandedEmail(allRecipients, 'artist_update_email', templateData, brandInfo?.id || 1);
   } catch (error) {
     console.error('Error sending artist update notifications:', error);
     return false;
@@ -671,6 +701,50 @@ export const sendPaymentNotification = async (
     return await sendEmail(recipients, subject, template, brand.id);
   } catch (error) {
     console.error('Error sending payment notification:', error);
+    return false;
+  }
+};
+
+// Send payment failed notification to brand admins
+export const sendPaymentFailedAdminNotification = async (
+  brandId: number,
+  recipientName: string,
+  payment: {
+    amount: number;
+    description?: string;
+    reference_number?: string;
+  }
+): Promise<boolean> => {
+  try {
+    const recipients = await getBrandAdministrators(brandId);
+
+    if (recipients.length === 0) {
+      console.log('No administrators found for brand, skipping payment failed notification');
+      return false;
+    }
+
+    const brand = await Brand.findByPk(brandId);
+    const brandName = brand?.brand_name || 'Your Label';
+
+    const subject = `A payment to ${recipientName} has failed`;
+    const body = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h3>Payment Failed</h3>
+        <p>A payment transfer to <strong>${recipientName}</strong> has failed.</p>
+        <p><strong>Details:</strong></p>
+        <ul>
+          <li>Amount: ₱${payment.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</li>
+          ${payment.description ? `<li>Description: ${payment.description}</li>` : ''}
+          ${payment.reference_number ? `<li>Reference: ${payment.reference_number}</li>` : ''}
+        </ul>
+        <p>Please log in to your dashboard to review and retry the payment.</p>
+        <p style="color: #666; font-size: 12px;">This is an automated message from ${brandName}.</p>
+      </div>
+    `;
+
+    return await sendEmail(recipients, subject, body, brandId);
+  } catch (error) {
+    console.error('Error sending payment failed admin notification:', error);
     return false;
   }
 };
@@ -1034,21 +1108,22 @@ export const sendEmailWithInlineImages = async (
   brandId: number,
   textBody?: string,
   eventContext?: { eventTitle: string; messageContent: string; isTestEmail: boolean }
-): Promise<boolean> => {
-  let success = false;
-  
+): Promise<{ successCount: number; failedCount: number }> => {
+  let successCount = 0;
+  let failedCount = 0;
+
   try {
     // Process inline images
     const { html: processedHtml, attachments } = processInlineImages(htmlBody);
-    
+
     // Fetch brand information to use brand name as "From" name
     const brand = await Brand.findByPk(brandId);
     const fromName = brand?.brand_name || 'Dashboard';
     const fromEmail = process.env.FROM_EMAIL;
-    
+
     // Quote the display name if it contains special characters like parentheses
     const quotedFromName = /[()<>@,;:\\".\[\]]/.test(fromName) ? `"${fromName}"` : fromName;
-    
+
     // Generate appropriate text version
     let finalTextBody = textBody;
     if (!finalTextBody) {
@@ -1056,26 +1131,34 @@ export const sendEmailWithInlineImages = async (
       const htmlToConvert = eventContext ? eventContext.messageContent : processedHtml;
       finalTextBody = htmlToText(htmlToConvert);
     }
-    
-    const mailOptions = {
-      from: `${quotedFromName} <${fromEmail}>`,
-      to: recipients.join(', '),
-      subject,
-      html: processedHtml,
-      text: finalTextBody,
-      attachments: attachments // Include inline attachments
-    };
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log('Email with inline images sent successfully:', result.messageId);
-    success = true;
+    // Send to each recipient individually
+    for (const email of recipients) {
+      try {
+        const mailOptions = {
+          from: `${quotedFromName} <${fromEmail}>`,
+          to: email,
+          subject,
+          html: processedHtml,
+          text: finalTextBody,
+          attachments: attachments
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        console.log('Email with inline images sent successfully:', result.messageId);
+        successCount++;
+      } catch (error) {
+        console.error(`Email sending with inline images failed for ${email}:`, error);
+        failedCount++;
+      }
+    }
   } catch (error) {
     console.error('Email sending with inline images failed:', error);
-    success = false;
+    failedCount = recipients.length;
   }
 
-  // Log the email attempt
-  await logEmailAttempt(recipients, subject, htmlBody, success, brandId);
-  
-  return success;
+  // Log once with all recipients grouped
+  await logEmailAttempt(recipients, subject, htmlBody, failedCount === 0, brandId);
+
+  return { successCount, failedCount };
 };

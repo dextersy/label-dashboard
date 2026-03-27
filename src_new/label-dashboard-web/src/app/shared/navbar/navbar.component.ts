@@ -6,14 +6,13 @@ import { SidebarService } from '../../services/sidebar.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { BrandService, BrandSettings } from '../../services/brand.service';
-import { ArtistSelectionComponent } from '../../components/shared/artist-selection/artist-selection.component';
 import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-navbar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
+    imports: [CommonModule, RouterModule],
     templateUrl: './navbar.component.html',
     styleUrl: './navbar.component.scss'
 })
@@ -23,6 +22,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isSuperadmin: boolean = false;
   selectedArtist: Artist | null = null;
   currentWorkspace: WorkspaceType = 'music';
+  availableWorkspaces: WorkspaceType[] = [];
   navbarBg: string = '#333';
   brandLogo: string = '';
   brandWebsite: string = '#';
@@ -52,6 +52,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
           // Note: Workspace is now automatically restored from localStorage by WorkspaceService
           // No need to force it to 'music' here
 
+          this.refreshAvailableWorkspaces();
           // Update body class based on whether mobile nav is shown
           this.updateMobileNavClass();
         } else {
@@ -81,6 +82,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.brandService.brandSettings$.subscribe(settings => {
         if (settings) {
           this.applyBrandSettings(settings);
+          this.refreshAvailableWorkspaces();
+          this.updateMobileNavClass();
         }
       })
     );
@@ -165,7 +168,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.router.navigate(['/labels/earnings']);
         break;
       case 'admin':
-        this.router.navigate(['/admin/settings']);
+        this.router.navigate(['/admin/reports/music-earnings']);
         break;
       default:
         this.router.navigate(['/dashboard']);
@@ -181,19 +184,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return this.workspaceService.getWorkspaceIcon(workspace);
   }
 
-  get availableWorkspaces(): WorkspaceType[] {
-    // Return workspaces for the toolbar (admin is accessed via upper right menu)
-    const workspaces: WorkspaceType[] = ['music'];
-    if (this.isAdmin) {
-      workspaces.push('campaigns');
-      workspaces.push('labels');
-    }
-    return workspaces;
+  private refreshAvailableWorkspaces(): void {
+    this.availableWorkspaces = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
   }
 
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  openArtistModal(): void {
+    this.artistStateService.triggerOpenModal();
   }
 
   toggleSidebar(): void {

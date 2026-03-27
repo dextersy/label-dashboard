@@ -199,16 +199,11 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
 
   getStatusBadgeClass(status: string): string {
     switch (status) {
-      case 'paid':
-        return 'badge bg-success';
-      case 'pending':
-        return 'badge bg-warning text-dark';
-      case 'failed':
-        return 'badge bg-danger';
-      case 'refunded':
-        return 'badge bg-secondary';
-      default:
-        return 'badge bg-secondary';
+      case 'paid':     return 'status-dot status-success';
+      case 'pending':  return 'status-dot status-warning';
+      case 'failed':   return 'status-dot status-danger';
+      case 'refunded': return 'status-dot status-secondary';
+      default:         return 'status-dot status-secondary';
     }
   }
 

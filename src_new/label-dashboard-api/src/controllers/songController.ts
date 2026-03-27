@@ -929,6 +929,123 @@ export const streamAudio = async (req: AuthRequest, res: Response) => {
   }
 };
 
+/**
+ * Build a download filename for a song: "Artist - Album - 01 - Song Title.ext"
+ * Falls back gracefully if release/artist info is not available.
+ */
+async function buildSongDownloadFileName(song: any, ext: string): Promise<{ raw: string; sanitized: string }> {
+  // Find the first release this song belongs to, and its artist
+  const releaseSong = await ReleaseSong.findOne({
+    where: { song_id: song.id },
+    include: [{
+      model: Release,
+      as: 'release',
+      include: [{ model: Artist, as: 'artists' }]
+    }],
+    order: [['track_number', 'ASC']]
+  });
+
+  let raw: string;
+  if (releaseSong) {
+    const release = (releaseSong as any).release;
+    const artistName = release?.artists?.length > 0 ? release.artists[0].name : 'Unknown Artist';
+    const trackNumberPadded = String(releaseSong.track_number).padStart(2, '0');
+    raw = `${artistName} - ${release?.title || 'Unknown Album'} - ${trackNumberPadded} - ${song.title}${ext}`;
+  } else {
+    raw = `${song.title}${ext}`;
+  }
+
+  const sanitized = raw.replace(/[^a-zA-Z0-9\s\-_.]/g, '').replace(/\s+/g, ' ').trim() || `song-${song.id}${ext}`;
+  return { raw, sanitized };
+}
+
+// Download the WAV master file for a single song
+export const downloadSongMaster = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    if (!song.audio_file) {
+      return res.status(404).json({ error: 'No WAV master available for this song' });
+    }
+
+    const key = song.audio_file;
+    const ext = require('path').extname(key) || '.wav';
+    const { raw: rawFileName, sanitized: sanitizedFileName } = await buildSongDownloadFileName(song, ext);
+    const encodedFileName = encodeURIComponent(rawFileName);
+
+    const headData = await headS3Object({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: key });
+    const fileSize = headData.ContentLength || 0;
+
+    res.setHeader('Content-Type', 'audio/wav');
+    res.setHeader('Content-Length', fileSize);
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFileName.replace(/"/g, '\\"')}"; filename*=UTF-8''${encodedFileName}`);
+
+    const streamResult = await getS3ObjectStream({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: key });
+    streamResult.Body.pipe(res);
+
+    res.on('error', (error) => {
+      console.error('Stream error:', error);
+    });
+
+  } catch (error) {
+    console.error('Download song master error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download song master' });
+    }
+  }
+};
+
+// Download the MP3 file for a single song
+export const downloadSongMp3 = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const song = await Song.findOne({
+      where: { id, brand_id: req.user.brand_id }
+    });
+
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    if (!song.audio_file_mp3) {
+      return res.status(404).json({ error: 'No MP3 available for this song' });
+    }
+
+    const key = song.audio_file_mp3;
+    const { raw: rawFileName, sanitized: sanitizedFileName } = await buildSongDownloadFileName(song, '.mp3');
+    const encodedFileName = encodeURIComponent(rawFileName);
+
+    const headData = await headS3Object({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: key });
+    const fileSize = headData.ContentLength || 0;
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', fileSize);
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFileName.replace(/"/g, '\\"')}"; filename*=UTF-8''${encodedFileName}`);
+
+    const streamResult = await getS3ObjectStream({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: key });
+    streamResult.Body.pipe(res);
+
+    res.on('error', (error) => {
+      console.error('Stream error:', error);
+    });
+
+  } catch (error) {
+    console.error('Download song MP3 error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download song MP3' });
+    }
+  }
+};
+
 // Add an existing song to a release
 export const addExistingSongToRelease = async (req: AuthRequest, res: Response) => {
   try {

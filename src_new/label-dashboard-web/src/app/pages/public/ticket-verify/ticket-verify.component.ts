@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { PublicService, CheckInRequest } from '../../../services/public.service';
+import { PublicService } from '../../../services/public.service';
 import { BrandService, BrandSettings } from '../../../services/brand.service';
 
 // Angular Material imports
@@ -22,6 +22,7 @@ import { Html5Qrcode, Html5QrcodeResult } from 'html5-qrcode';
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        FormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
@@ -44,7 +45,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   // Component state
   currentBrand: BrandSettings | null = null;
   eventId: number | null = null;
-  verificationPin: string = '';
+  scannerToken: string = '';
   isPinValidated = false;
   isLoading = false;
   isScanning = false;
@@ -65,12 +66,26 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   showPersistentAlert = false;
   persistentAlertType: 'success' | 'error' = 'success';
   persistentAlertMessage = '';
-  
+
   private alertTimeout?: any;
-  
+
   // Scanner state
   scannerSupported = false;
   cameraPermissionGranted = false;
+
+  // Walk-in state
+  activeMode: 'scan' | 'walk-in' = 'scan';
+  walkInEnabled = false;
+  walkInTypes: any[] = [];
+  walkInPaymentMethods: { cash: boolean; gcash: boolean; card: boolean } = { cash: false, gcash: false, card: false };
+  walkInSelections: Map<number, number> = new Map(); // type_id -> quantity
+  walkInPaymentMethod: string = '';
+  walkInPaymentReference: string = '';
+  walkInMaxCount: number = 0; // 0 = unlimited
+  walkInTotalSoldCount: number = 0;
+  walkInLoading = false;
+  walkInRegistered = false;
+  walkInRegisteredMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -104,6 +119,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
         this.eventId = params['id'] ? parseInt(params['id'], 10) : null;
         if (this.eventId) {
           this.loadEventInfo();
+          this.tryRestoreSession();
         }
       });
 
@@ -149,6 +165,95 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
+  private tryRestoreSession(): void {
+    if (!this.eventId) return;
+
+    const storedToken = localStorage.getItem(`scanner_token_${this.eventId}`);
+    if (!storedToken) return;
+
+    // Validate token by making a lightweight API call
+    this.publicService.scannerGetWalkInTypes(storedToken)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // Token is valid - restore session
+          this.scannerToken = storedToken;
+          this.isPinValidated = true;
+          this.walkInEnabled = true;
+          this.walkInTypes = response.walkInTypes;
+          this.walkInPaymentMethods = response.payment_methods;
+          this.walkInMaxCount = response.walk_in_max_count || 0;
+          this.walkInTotalSoldCount = response.total_sold_count || 0;
+          if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
+          else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
+          else if (this.walkInPaymentMethods.card) this.walkInPaymentMethod = 'card';
+        },
+        error: (err) => {
+          if (err.status === 400) {
+            // Walk-in not enabled, but token itself is valid (domain/event check passed in middleware)
+            this.scannerToken = storedToken;
+            this.isPinValidated = true;
+            this.walkInEnabled = false;
+          } else {
+            // Token invalid/expired - clear it
+            this.clearSession();
+          }
+        }
+      });
+  }
+
+  logoutScanner(): void {
+    this.clearSession();
+    this.resetUIState();
+    this.activeMode = 'scan';
+    this.walkInEnabled = false;
+    this.walkInTypes = [];
+    this.walkInSelections.clear();
+    this.pinForm.reset();
+  }
+
+  private clearSession(): void {
+    if (this.eventId) {
+      localStorage.removeItem(`scanner_token_${this.eventId}`);
+    }
+    this.scannerToken = '';
+    this.isPinValidated = false;
+  }
+
+  private handleScannerError(error: any): void {
+    if (error.status === 401 || error.status === 403) {
+      this.clearSession();
+      this.showError('Session expired. Please enter PIN again.');
+    }
+  }
+
+  private checkWalkInStatus(): void {
+    if (!this.scannerToken) return;
+
+    this.publicService.scannerGetWalkInTypes(this.scannerToken)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.walkInEnabled = true;
+          this.walkInTypes = response.walkInTypes;
+          this.walkInPaymentMethods = response.payment_methods;
+          this.walkInMaxCount = response.walk_in_max_count || 0;
+          this.walkInTotalSoldCount = response.total_sold_count || 0;
+          if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
+          else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
+          else if (this.walkInPaymentMethods.card) this.walkInPaymentMethod = 'card';
+        },
+        error: (err: any) => {
+          if (err.status === 401 || err.status === 403) {
+            this.handleScannerError(err);
+          } else {
+            // Walk-in not enabled for this event - that's fine
+            this.walkInEnabled = false;
+          }
+        }
+      });
+  }
+
   validatePin(): void {
     if (!this.pinForm.valid || !this.eventId) {
       return;
@@ -157,18 +262,18 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     const pin = this.pinForm.get('pin')?.value;
     this.isLoading = true;
 
-    this.publicService.checkPin(this.eventId, pin)
+    this.publicService.scannerLogin(this.eventId, pin)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response.valid && response.event) {
-            this.isPinValidated = true;
-            this.verificationPin = pin;
-            this.currentEvent = response.event;
-            this.showSuccess("You're in! You can now scan tickets below.");
-          } else {
-            this.showError('Invalid PIN. Please try again.');
-          }
+          this.isPinValidated = true;
+          this.scannerToken = response.token;
+          this.currentEvent = response.event;
+          // Persist token in localStorage
+          localStorage.setItem(`scanner_token_${this.eventId}`, response.token);
+          this.showSuccess("You're in! You can now scan tickets below.");
+          // Check walk-in status
+          this.checkWalkInStatus();
           this.isLoading = false;
         },
         error: (error) => {
@@ -252,12 +357,12 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   lookupTicket(): void {
-    if (!this.ticketForm.valid || !this.eventId || !this.verificationPin) {
+    if (!this.ticketForm.valid || !this.eventId || !this.scannerToken) {
       return;
     }
 
     const ticketCode = this.ticketForm.get('ticketCode')?.value.toUpperCase().trim();
-    
+
     // Validate ticket code format
     if (!ticketCode.match(/^[A-Z0-9]{5}$/)) {
       this.showPersistentError('Ticket not found.');
@@ -267,73 +372,75 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoading = true;
     this.resetUIState();
 
-    this.publicService.getTicketFromCode(this.eventId, this.verificationPin, ticketCode)
+    this.publicService.scannerGetTicket(this.scannerToken, ticketCode)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.currentTicket = response.ticket;
-          
+
           // Scenario 1: Ticket found with remaining entries - show check-in form
           if (response.ticket.remaining_entries > 0) {
             this.showInputForm = false;
             this.showCheckInForm = true;
-            this.checkInForm.patchValue({ 
-              entriesToClaim: Math.min(1, response.ticket.remaining_entries) 
+            this.checkInForm.patchValue({
+              entriesToClaim: Math.min(1, response.ticket.remaining_entries)
             });
             this.checkInForm.get('entriesToClaim')?.setValidators([
-              Validators.required, 
-              Validators.min(1), 
+              Validators.required,
+              Validators.min(1),
               Validators.max(response.ticket.remaining_entries)
             ]);
+            setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
           } else {
             // Scenario 3: Ticket found but no remaining entries
             this.showPersistentError('All entries for this ticket have been claimed.');
           }
-          
+
           this.isLoading = false;
         },
         error: (error) => {
-          // Scenario 2: Ticket not found
-          this.showPersistentError('Ticket not found.');
+          if (error.status === 401 || error.status === 403) {
+            this.handleScannerError(error);
+          } else {
+            // Scenario 2: Ticket not found
+            this.showPersistentError('Ticket not found.');
+          }
           this.isLoading = false;
         }
       });
   }
 
   checkInTicket(): void {
-    if (!this.checkInForm.valid || !this.currentTicket || !this.eventId || !this.verificationPin) {
+    if (!this.checkInForm.valid || !this.currentTicket || !this.scannerToken) {
       return;
     }
 
     const entriesToClaim = this.checkInForm.get('entriesToClaim')?.value;
     this.isLoading = true;
 
-    const request: CheckInRequest = {
-      event_id: this.eventId,
-      verification_pin: this.verificationPin,
-      ticket_code: this.currentTicket.ticket_code,
-      entries_to_claim: entriesToClaim
-    };
-
-    this.publicService.checkInTicket(request)
+    this.publicService.scannerCheckIn(this.scannerToken, this.currentTicket.ticket_code, entriesToClaim)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.currentTicket = response.ticket;
-          this.lastCheckInEntries = entriesToClaim; // Store the number of entries that were checked in
+          this.lastCheckInEntries = entriesToClaim;
           this.showPersistentSuccess(response.message);
           this.checkInForm.patchValue({ entriesToClaim: 1 });
           this.isLoading = false;
         },
         error: (error) => {
-          this.showError(error.error?.error || 'Failed to check in ticket.');
+          if (error.status === 401 || error.status === 403) {
+            this.handleScannerError(error);
+          } else {
+            this.showError(error.error?.error || 'Failed to check in ticket.');
+          }
           this.isLoading = false;
         }
       });
   }
 
   claimAllEntries(): void {
-    if (!this.currentTicket || !this.eventId || !this.verificationPin) {
+    if (!this.currentTicket || !this.scannerToken) {
       return;
     }
 
@@ -344,14 +451,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.isLoading = true;
 
-    const request: CheckInRequest = {
-      event_id: this.eventId,
-      verification_pin: this.verificationPin,
-      ticket_code: this.currentTicket.ticket_code,
-      entries_to_claim: allRemainingEntries
-    };
-
-    this.publicService.checkInTicket(request)
+    this.publicService.scannerCheckIn(this.scannerToken, this.currentTicket.ticket_code, allRemainingEntries)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -362,7 +462,11 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           this.isLoading = false;
         },
         error: (error) => {
-          this.showError(error.error?.error || 'Failed to claim all entries.');
+          if (error.status === 401 || error.status === 403) {
+            this.handleScannerError(error);
+          } else {
+            this.showError(error.error?.error || 'Failed to claim all entries.');
+          }
           this.isLoading = false;
         }
       });
@@ -447,6 +551,157 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getBrandColor(): string {
     return this.currentBrand?.brand_color || this.currentEvent?.brand?.color || '#6f42c1';
+  }
+
+  // Walk-In Methods
+  switchMode(mode: 'scan' | 'walk-in'): void {
+    this.activeMode = mode;
+    if (mode === 'walk-in' && this.walkInTypes.length === 0) {
+      this.loadWalkInTypes();
+    }
+  }
+
+  private loadWalkInTypes(): void {
+    if (!this.scannerToken) return;
+
+    this.walkInLoading = true;
+    this.publicService.scannerGetWalkInTypes(this.scannerToken)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.walkInTypes = response.walkInTypes;
+          this.walkInPaymentMethods = response.payment_methods;
+          this.walkInMaxCount = response.walk_in_max_count || 0;
+          this.walkInTotalSoldCount = response.total_sold_count || 0;
+          // Auto-select first available payment method
+          if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
+          else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
+          else if (this.walkInPaymentMethods.card) this.walkInPaymentMethod = 'card';
+          this.walkInLoading = false;
+        },
+        error: (error: any) => {
+          if (error.status === 401 || error.status === 403) {
+            this.handleScannerError(error);
+          } else {
+            this.showError('Failed to load walk-in types.');
+          }
+          this.walkInLoading = false;
+        }
+      });
+  }
+
+  onWalkInTypeTap(type: any): void {
+    const currentQty = this.walkInSelections.get(type.id) || 0;
+    if (type.remaining_slots !== null && type.remaining_slots !== undefined && currentQty + 1 > type.remaining_slots) return;
+    if (this.isWalkInMaxReached()) return;
+    this.walkInSelections.set(type.id, currentQty + 1);
+  }
+
+  incrementWalkIn(typeId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    const type = this.walkInTypes.find(t => t.id === typeId);
+    const current = this.walkInSelections.get(typeId) || 0;
+    if (type && type.remaining_slots !== null && type.remaining_slots !== undefined && current + 1 > type.remaining_slots) return;
+    if (this.isWalkInMaxReached()) return;
+    this.walkInSelections.set(typeId, current + 1);
+  }
+
+  decrementWalkIn(typeId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    const current = this.walkInSelections.get(typeId) || 0;
+    if (current <= 1) {
+      this.walkInSelections.delete(typeId);
+    } else {
+      this.walkInSelections.set(typeId, current - 1);
+    }
+  }
+
+  getWalkInQty(typeId: number): number {
+    return this.walkInSelections.get(typeId) || 0;
+  }
+
+  getWalkInTotal(): number {
+    let total = 0;
+    for (const [typeId, qty] of this.walkInSelections) {
+      const type = this.walkInTypes.find(t => t.id === typeId);
+      if (type) {
+        total += type.price * qty;
+      }
+    }
+    return total;
+  }
+
+  hasWalkInSelections(): boolean {
+    return this.walkInSelections.size > 0;
+  }
+
+  /** Total quantity currently selected in this transaction */
+  getWalkInSelectedTotal(): number {
+    let total = 0;
+    for (const qty of this.walkInSelections.values()) {
+      total += qty;
+    }
+    return total;
+  }
+
+  /** Whether the general max count has been reached (considering sold + currently selected) */
+  isWalkInMaxReached(): boolean {
+    if (this.walkInMaxCount <= 0) return false;
+    return (this.walkInTotalSoldCount + this.getWalkInSelectedTotal()) >= this.walkInMaxCount;
+  }
+
+  getWalkInRemainingCount(): number | null {
+    if (this.walkInMaxCount <= 0) return null;
+    return Math.max(0, this.walkInMaxCount - this.walkInTotalSoldCount);
+  }
+
+  registerWalkIn(): void {
+    if (!this.scannerToken || !this.walkInPaymentMethod || !this.hasWalkInSelections()) return;
+
+    const items: Array<{ walk_in_type_id: number; quantity: number }> = [];
+    for (const [typeId, qty] of this.walkInSelections) {
+      items.push({ walk_in_type_id: typeId, quantity: qty });
+    }
+
+    this.walkInLoading = true;
+    this.publicService.scannerRegisterWalkIn(this.scannerToken, {
+      payment_method: this.walkInPaymentMethod,
+      payment_reference: this.walkInPaymentReference || undefined,
+      items
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response) => {
+        this.walkInLoading = false;
+        this.walkInRegistered = true;
+        this.walkInRegisteredMessage = response.message;
+        // Reset selections
+        this.walkInSelections.clear();
+        this.walkInPaymentReference = '';
+        // Refresh types to update remaining counts
+        this.loadWalkInTypes();
+      },
+      error: (error) => {
+        if (error.status === 401 || error.status === 403) {
+          this.handleScannerError(error);
+        } else {
+          this.showError(error.error?.error || 'Failed to register walk-in.');
+        }
+        this.walkInLoading = false;
+      }
+    });
+  }
+
+  resetWalkIn(): void {
+    this.walkInRegistered = false;
+    this.walkInRegisteredMessage = '';
+    this.walkInSelections.clear();
+    this.walkInPaymentReference = '';
+  }
+
+  formatWalkInPrice(price: number): string {
+    if (!price || price === 0) return 'FREE';
+    return '₱' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   formatDate(dateString: string): string {

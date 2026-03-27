@@ -243,14 +243,20 @@ Drawer mode is **auto-detected** via `MutationObserver` on projected content —
 - `.mobile-text` — wrappable text cell
 - `.tablet-hide` / `.tablet-narrow` — same for `≤768px`
 
-### Badges (in tables)
+### Status Dots (in tables)
 
 ```html
-<span class="badge badge-success">Active</span>
+<span class="status-dot status-success">Active</span>
 ```
-Pill shape: `border-radius: 12px`, `padding: 6px 10px`, `font-size: 11px`, uppercase.
+A small colored circle (`7px`) beside colored text. Both circle and text share the same semantic color. Defined in `src/styles/components.scss`.
 
-Available: `badge-success`, `badge-warning`, `badge-danger`, `badge-secondary`, `badge-primary`, `badge-info`.
+| Modifier | Color | Use |
+|----------|-------|-----|
+| `status-success`   | green `#16a34a`  | Succeeded, Live, Paid, Accepted |
+| `status-warning`   | amber `#d97706`  | Pending, Draft, Awaiting |
+| `status-danger`    | red `#dc2626`    | Failed, Taken Down |
+| `status-secondary` | gray `#6b7280`   | Canceled, Refunded, Unknown |
+| `status-info`      | cyan `#0891b2`   | For Submission, Informational |
 
 ---
 
@@ -286,6 +292,40 @@ The primary data display component. Selector: `app-paginated-table`.
 - `hideDataLabel: true` — suppress `data-label` prefix on mobile
 - `mobileClass` / `tabletClass` — CSS class strings for responsive hiding
 - `showBreakdownButton: true` — adds a pie chart icon button to the cell, emits `breakdownButtonClick`
+- `mergeCell: true` — marks this column as a **mobile-only section-header trigger**. The column is hidden from `<thead>` and normal data cells. When `item[key]` is truthy, that row renders as a single full-width cell (`.merged-cell`) visible only at ≤576 px. Rows where the value is falsy render normally.
+- `mobileGroup: string` — group identifier for **mobile column merging**. Columns sharing the same `mobileGroup` value collapse on mobile: non-main columns' `<th>` and `<td>` are hidden (`.mobile-group-hidden`), and their values are rendered as secondary lines inside the main column's cell.
+- `mobileGroupMain: true` — designates this column as the primary column of its `mobileGroup`. Its label appears in the column header on all screen sizes. Secondary values from other group members are injected above (before) or below (after) the main value based on their position in the `columns` array. Secondary values that have `renderHtml: true` are rendered with `[innerHTML]`.
+
+> **Mobile column merging example** — payments table merges date, description, and status; amount stays separate:
+> ```typescript
+> columns = [
+>   { key: 'date',        label: 'Date',        type: 'date',   mobileGroup: 'summary' },
+>   { key: 'description', label: 'Description', type: 'text',   mobileGroup: 'summary', mobileGroupMain: true },
+>   { key: 'amount',      label: 'Amount',       type: 'number', align: 'right' },
+>   { key: 'status',      label: 'Status',                       mobileGroup: 'summary', renderHtml: true,
+>     formatter: (item) => `<span class="status-dot ...">${item.status}</span>` },
+> ];
+> // Mobile cell for "description" column renders:
+> //   Jan 1, 2024          ← date (secondary, before)
+> //   Streaming royalties  ← description (main)
+> //   ● Succeeded          ← status HTML (secondary, after)
+> ```
+
+> **Section-header row example** — inject labelled dividers into the data array:
+> ```typescript
+> columns = [
+>   { key: 'sectionLabel', label: '', mergeCell: true },
+>   { key: 'date',         label: 'Date',   type: 'date' },
+>   { key: 'description',  label: 'Description' },
+>   { key: 'amount',       label: 'Amount', type: 'number' },
+> ];
+> data = [
+>   { sectionLabel: 'Album Royalties' },
+>   { date: '2024-01-01', description: 'Streaming', amount: 1000 },
+>   { sectionLabel: 'Live Events' },
+>   { date: '2024-02-01', description: 'Concert', amount: 2500 },
+> ];
+> ```
 
 ### `HeaderAction` dynamic properties
 Both `icon`, `label`, and `title` accept either a plain string or a `() => string` function — useful for toggling spinner icons or changing button text during loading states.

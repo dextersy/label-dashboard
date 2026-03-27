@@ -61,7 +61,7 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
   payoutData: SubLabelPayoutData = {
     amount: 0,
     description: '',
-    date_paid: new Date().toISOString().split('T')[0],
+    date_paid: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
     payment_method_id: undefined,
     paid_thru_type: '',
     paid_thru_account_name: '',
@@ -158,7 +158,7 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
     this.payoutData = {
       amount: 0,
       description: '',
-      date_paid: new Date().toISOString().split('T')[0],
+      date_paid: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
       payment_method_id: undefined,
       paid_thru_type: '',
       paid_thru_account_name: '',

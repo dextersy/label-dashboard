@@ -173,7 +173,7 @@ export const getBalanceSummary = async (req: AuthRequest, res: Response) => {
 
         // Get total payments for artist
         const totalPayments = await Payment.sum('amount', {
-          where: { artist_id: artist.id }
+          where: { artist_id: artist.id, status: 'succeeded' }
         }) || 0;
 
         const balance = totalRoyalties - totalPayments;
@@ -472,7 +472,7 @@ async function getBalanceSummaryData(req: AuthRequest) {
       }) || 0;
 
       const totalPayments = await Payment.sum('amount', {
-        where: { artist_id: artist.id }
+        where: { artist_id: artist.id, status: 'succeeded' }
       }) || 0;
 
       const balance = totalRoyalties - totalPayments;
@@ -672,6 +672,77 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       }, 0);
     }
 
+    // Get ongoing (published) fundraisers — return first 2 with total raised + total count
+    const [ongoingFundraisersRaw, totalOngoingFundraisers] = await Promise.all([
+      Fundraiser.findAll({
+        where: { ...brandFilter, status: 'published' },
+        order: [['id', 'DESC']],
+        limit: 2,
+        attributes: ['id', 'title', 'poster_url']
+      }),
+      Fundraiser.count({ where: { ...brandFilter, status: 'published' } })
+    ]);
+
+    const ongoingFundraisersItems = await Promise.all(
+      ongoingFundraisersRaw.map(async (f) => {
+        const donations = await Donation.findAll({
+          where: { fundraiser_id: f.id, payment_status: 'paid' },
+          attributes: ['amount']
+        });
+        const totalRaised = donations.reduce((sum, d) => {
+          const amount = parseFloat(d.amount?.toString() || '0');
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+        return {
+          id: f.id,
+          title: f.title,
+          poster_url: f.poster_url || null,
+          total_raised: totalRaised
+        };
+      })
+    );
+
+    const ongoingFundraisers = {
+      items: ongoingFundraisersItems,
+      total: totalOngoingFundraisers
+    };
+
+    // Get upcoming published events (nearest 3 with future date)
+    const upcomingEventsRaw = await Event.findAll({
+      where: {
+        ...brandFilter,
+        status: 'published',
+        date_and_time: { [Op.gt]: now }
+      },
+      order: [['date_and_time', 'ASC']],
+      limit: 3,
+      attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url', 'status']
+    });
+
+    const paidStatuses = ['Payment Confirmed', 'Ticket sent.'];
+    const upcomingEvents = await Promise.all(
+      upcomingEventsRaw.map(async (e) => {
+        const tickets = await Ticket.findAll({
+          where: { event_id: e.id, status: paidStatuses },
+          attributes: ['number_of_entries', 'price_per_ticket', 'payment_processing_fee', 'platform_fee']
+        });
+        const ticketsSold = tickets.reduce((sum, t) => sum + (t.number_of_entries || 0), 0);
+        const netEarnings = tickets.reduce((sum, t) => {
+          const gross = (t.price_per_ticket || 0) * (t.number_of_entries || 0);
+          return sum + gross - (t.platform_fee || 0);
+        }, 0);
+        return {
+          id: e.id,
+          title: e.title,
+          date_and_time: e.date_and_time,
+          venue: e.venue,
+          poster_url: e.poster_url || null,
+          tickets_sold: ticketsSold,
+          net_earnings: netEarnings
+        };
+      })
+    );
+
     // Get event sales and fundraiser donations data (reuse existing functions)
     const [eventSales, fundraiserDonations] = await Promise.all([
       getEventSalesData(req),
@@ -689,6 +760,8 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         thisMonthSales: thisMonthSales,
         thisMonthDonations: thisMonthDonations
       },
+      ongoingFundraisers,
+      upcomingEvents,
       eventSales,
       fundraiserDonations
     });

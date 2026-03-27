@@ -1,7 +1,9 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters } from '../../../components/shared/paginated-table/paginated-table.component';
 
 export interface SublabelPayment {
   id: number;
@@ -10,6 +12,8 @@ export interface SublabelPayment {
   date_paid: string;
   payment_processing_fee?: number;
   reference_number?: string;
+  status?: string;
+  failure_reason?: string;
 
   // Legacy fields
   paid_thru_type?: string;
@@ -28,7 +32,7 @@ export interface SublabelPayment {
 
 @Component({
     selector: 'app-sublabel-payments-modal',
-    imports: [CommonModule],
+    imports: [CommonModule, PaginatedTableComponent],
     templateUrl: './sublabel-payments-modal.component.html',
     styleUrls: ['./sublabel-payments-modal.component.scss']
 })
@@ -39,7 +43,70 @@ export class SublabelPaymentsModalComponent implements OnChanges {
   @Output() close = new EventEmitter<void>();
 
   payments: SublabelPayment[] = [];
+  pagination: PaginationInfo | null = null;
   loading: boolean = false;
+  sortInfo: { column: string; direction: 'asc' | 'desc' } | null = null;
+  totalAmount: number = 0;
+  totalProcessingFees: number = 0;
+
+  columns: TableColumn[] = [
+    { key: 'date_paid', label: 'Date', type: 'date', sortable: true, searchable: false, mobileGroup: 'summary' },
+    { key: 'description', label: 'Description', type: 'text', sortable: true, searchable: false, mobileGroup: 'summary', mobileGroupMain: true },
+    {
+      key: 'paid_thru_type',
+      label: 'Method',
+      type: 'text',
+      sortable: false,
+      searchable: false,
+      mobileGroup: 'summary',
+      formatter: (payment: SublabelPayment) => this.getPaymentMethodDisplay(payment)
+    },
+    { key: 'amount', label: 'Amount', type: 'number', sortable: true, searchable: false, align: 'right' },
+    { key: 'payment_processing_fee', label: 'Fee', type: 'number', sortable: true, searchable: false, align: 'right' },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'succeeded', label: 'Succeeded' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'failed', label: 'Failed' }
+      ],
+      sortable: true,
+      searchable: false,
+      renderHtml: true,
+      mobileGroup: 'summary',
+      formatter: (payment: SublabelPayment) => this.formatStatus(payment.status, payment.failure_reason)
+    }
+  ];
+
+  get headerActions(): HeaderAction[] {
+    return [{
+      icon: () => this.loading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      label: '',
+      handler: () => this.loadPayments(this.pagination?.current_page ?? 1),
+      type: 'secondary',
+      title: 'Refresh payments',
+      disabled: () => this.loading,
+    }];
+  }
+
+  rowActions: TableAction[] = [
+    {
+      icon: 'fas fa-check-circle',
+      label: 'Mark as succeeded',
+      type: 'secondary',
+      hidden: (payment: SublabelPayment) => payment.status === 'succeeded',
+      handler: (payment: SublabelPayment) => this.updateStatus(payment, 'succeeded')
+    },
+    {
+      icon: 'fas fa-ban',
+      label: 'Void payment',
+      type: 'danger',
+      hidden: (payment: SublabelPayment) => payment.status === 'failed',
+      handler: (payment: SublabelPayment) => this.updateStatus(payment, 'failed')
+    }
+  ];
 
   constructor(
     private adminService: AdminService,
@@ -47,30 +114,55 @@ export class SublabelPaymentsModalComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Load payments when modal is opened and brandId is set
     if (changes['show'] && this.show && this.brandId) {
-      this.loadPayments();
+      this.loadPayments(1);
+    }
+    if (changes['show'] && !this.show) {
+      this.payments = [];
+      this.pagination = null;
+      this.sortInfo = null;
+      this.totalAmount = 0;
+      this.totalProcessingFees = 0;
     }
   }
 
-  loadPayments(): void {
-    if (!this.brandId) {
-      return;
-    }
+  async loadPayments(page: number = 1): Promise<void> {
+    if (!this.brandId) return;
 
     this.loading = true;
-    this.adminService.getSublabelPayments(this.brandId).subscribe({
-      next: (response) => {
-        // API returns { payments: [...], pagination: {...} }
-        this.payments = response.payments || [];
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading sublabel payments:', error);
-        this.notificationService.showError('Failed to load payments');
-        this.loading = false;
-      }
-    });
+    try {
+      const response = await firstValueFrom(
+        this.adminService.getSublabelPayments(
+          this.brandId, page, 10,
+          this.sortInfo?.column,
+          this.sortInfo?.direction
+        )
+      );
+      this.payments = response.payments || [];
+      this.pagination = response.pagination || null;
+      this.totalAmount = response.totalAmount || 0;
+      this.totalProcessingFees = response.totalProcessingFees || 0;
+    } catch {
+      this.notificationService.showError('Failed to load payments');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async onSortChange(sort: { column: string; direction: 'asc' | 'desc' } | null): Promise<void> {
+    this.sortInfo = sort;
+    await this.loadPayments(1);
+  }
+
+  async updateStatus(payment: SublabelPayment, status: 'succeeded' | 'failed'): Promise<void> {
+    if (!this.brandId) return;
+    try {
+      await firstValueFrom(this.adminService.updateSublabelPaymentStatus(this.brandId, payment.id, status));
+      this.notificationService.showSuccess(status === 'succeeded' ? 'Payment marked as succeeded' : 'Payment voided');
+      await this.loadPayments(this.pagination?.current_page ?? 1);
+    } catch {
+      this.notificationService.showError('Failed to update payment status');
+    }
   }
 
   onClose(): void {
@@ -84,53 +176,28 @@ export class SublabelPaymentsModalComponent implements OnChanges {
   }
 
   getPaymentMethodDisplay(payment: SublabelPayment): string {
-    // Use new payment method if available
     if (payment.paymentMethod) {
       return `${payment.paymentMethod.type} - ${payment.paymentMethod.account_name}`;
     }
-
-    // Fall back to legacy fields
     if (payment.paid_thru_type) {
       const accountName = payment.paid_thru_account_name || '';
       return payment.paid_thru_type + (accountName ? ` - ${accountName}` : '');
     }
-
     return 'N/A';
   }
 
-  getTotalPayments(): number {
-    return this.payments.reduce((total, payment) => {
-      const amount = this.parseAmount(payment.amount);
-      return total + amount;
-    }, 0);
-  }
-
-  getTotalProcessingFees(): number {
-    return this.payments.reduce((total, payment) => {
-      const fee = this.parseAmount(payment.payment_processing_fee || 0);
-      return total + fee;
-    }, 0);
-  }
-
-  parseAmount(value: any): number {
-    if (typeof value === 'number') {
-      return value;
+  formatStatus(status: string | undefined, failureReason?: string): string {
+    switch (status) {
+      case 'pending': return '<span class="status-dot status-warning">Pending</span>';
+      case 'failed': {
+        let html = '<span class="status-dot status-danger">Failed</span>';
+        if (failureReason) {
+          html += `<br><span class="text-muted small">${failureReason}</span>`;
+        }
+        return html;
+      }
+      case 'succeeded':
+      default:        return '<span class="status-dot status-success">Succeeded</span>';
     }
-    if (typeof value === 'string') {
-      // Remove any formatting and parse as float
-      const cleaned = value.replace(/,/g, '');
-      const parsed = parseFloat(cleaned);
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    return 0;
-  }
-
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
   }
 }

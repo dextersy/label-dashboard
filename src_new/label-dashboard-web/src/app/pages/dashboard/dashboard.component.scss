@@ -362,6 +362,11 @@
     }
   }
 
+  i {
+    font-size: 0.85rem;
+    color: #bbb;
+  }
+
   .stats-compact-cover {
     width: 56px;
     height: 56px;
@@ -386,23 +391,12 @@
     }
   }
 
-  .stats-compact-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-
-    i {
-      font-size: 0.8rem;
-      color: #999;
-    }
-
-    .stats-compact-label {
-      font-size: 0.7rem;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      font-weight: 500;
-    }
+  .stats-compact-label {
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 500;
   }
 }
 
@@ -418,6 +412,10 @@
   }
 
   .stats-compact-item {
+    i {
+      font-size: 1rem;
+    }
+
     .stats-compact-value {
       font-size: 1.5rem;
     }

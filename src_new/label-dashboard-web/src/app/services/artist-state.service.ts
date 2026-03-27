@@ -12,6 +12,9 @@ export class ArtistStateService {
   private refreshArtistsSubject = new Subject<number | null>();
   public refreshArtists$ = this.refreshArtistsSubject.asObservable();
 
+  private openModalSubject = new Subject<void>();
+  public openModal$ = this.openModalSubject.asObservable();
+
   constructor() {}
 
   setSelectedArtist(artist: Artist | null): void {
@@ -32,5 +35,9 @@ export class ArtistStateService {
 
   triggerArtistsRefresh(selectArtistId?: number): void {
     this.refreshArtistsSubject.next(selectArtistId || null);
+  }
+
+  triggerOpenModal(): void {
+    this.openModalSubject.next();
   }
 }

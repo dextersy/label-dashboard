@@ -8,7 +8,7 @@ import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
-import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn, HeaderAction } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
     selector: 'app-label-finance-tab',
@@ -64,6 +64,27 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   paymentMethods: LabelPaymentMethod[] = [];
   payments: LabelPayment[] = [];
   paymentsResponse: LabelPaymentsResponse | null = null;
+  paymentsLoading = false;
+
+  get paymentHeaderActions(): HeaderAction[] {
+    return [{
+      icon: () => this.paymentsLoading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      label: '',
+      handler: () => this.loadPayments(this.paymentsResponse?.pagination?.current_page ?? 1),
+      type: 'secondary',
+      title: 'Refresh payments',
+      disabled: () => this.paymentsLoading,
+    }];
+  }
+
+  readonly paymentColumns: TableColumn[] = [
+    { key: 'date_paid', label: 'Date', sortable: false, formatter: (item: any) => new Date(item.date_paid).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }), hideDataLabel: true },
+    { key: 'description', label: 'Description', sortable: false, cardHeader: true, formatter: (item: any) => item.description || 'Payment received' , hideDataLabel: true},
+    { key: 'amount', label: 'Amount', sortable: false, align: 'right', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.amount), hideDataLabel: true },
+    { key: 'payment_method', label: 'Payment Method', sortable: false, tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatPaymentMethod(item), hideDataLabel: true },
+    { key: 'reference_number', label: 'Reference', sortable: false, mobileClass: 'mobile-hide', formatter: (item: any) => item.reference_number || 'N/A', hideDataLabel: true },
+    { key: 'status', label: 'Status', sortable: false, renderHtml: true, hideDataLabel: true, formatter: (item: any) => this.formatStatus(item.status, item.failure_reason) },
+  ];
 
   showAddPaymentMethodModal = false;
   newPaymentMethod: any = {}; // Using 'any' to allow bank_selection property
@@ -219,7 +240,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return `₱${(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₱${(Number(value) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
   private loadPaymentMethods(): void {
@@ -239,19 +260,26 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   loadPayments(page: number = 1): void {
     if (!this.brandId) return;
 
+    this.paymentsLoading = true;
     this.subscriptions.add(
       this.labelFinanceService.getPayments(this.brandId, page, 10, 'date_paid', 'desc', this.startDate, this.endDate)
         .subscribe({
           next: (response) => {
             this.paymentsResponse = response;
             this.payments = response.payments;
+            this.paymentsLoading = false;
           },
           error: (error) => {
             console.error('Error loading payments:', error);
             this.notificationService.showError('Failed to load payments');
+            this.paymentsLoading = false;
           }
         })
     );
+  }
+
+  onPaymentsPageChange(page: number): void {
+    this.loadPayments(page);
   }
 
   openAddPaymentMethodModal(): void {
@@ -310,31 +338,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   //   // Implementation would go here when delete method is available
   // }
 
-  getPageNumbers(): number[] {
-    if (!this.paymentsResponse?.pagination) return [];
-    
-    const totalPages = this.paymentsResponse.pagination.total_pages;
-    const currentPage = this.paymentsResponse.pagination.current_page;
-    
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    const halfRange = Math.floor(maxPagesToShow / 2);
-    
-    let start = Math.max(1, currentPage - halfRange);
-    let end = Math.min(totalPages, start + maxPagesToShow - 1);
-    
-    if (end - start + 1 < maxPagesToShow) {
-      start = Math.max(1, end - maxPagesToShow + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
-  }
-
-  formatPaymentMethod(payment: LabelPayment): string {
+formatPaymentMethod(payment: LabelPayment): string {
     // Prioritize PaymentMethod data over legacy paid_thru_* fields
     if (payment.paymentMethod) {
       const { type, account_name, account_number_or_email } = payment.paymentMethod;
@@ -369,6 +373,21 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     }
     
     return payment.paid_thru_type;
+  }
+
+  formatStatus(status: string | undefined, failureReason?: string): string {
+    switch (status) {
+      case 'pending': return '<span class="status-dot status-warning">Pending</span>';
+      case 'failed': {
+        let html = '<span class="status-dot status-danger">Failed</span>';
+        if (failureReason) {
+          html += `<br><span class="text-muted small">${failureReason}</span>`;
+        }
+        return html;
+      }
+      case 'succeeded':
+      default:        return '<span class="status-dot status-success">Succeeded</span>';
+    }
   }
 
   getAmountClass(amount: number | undefined): string {

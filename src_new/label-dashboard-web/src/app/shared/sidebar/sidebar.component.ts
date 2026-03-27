@@ -5,8 +5,9 @@ import { BrandService, BrandSettings } from '../../services/brand.service';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { ArtistStateService } from '../../services/artist-state.service';
-import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
+import { WorkspaceService, WorkspaceType, WorkspaceInfo } from '../../services/workspace.service';
 import { ArtistSelectionComponent } from '../../components/shared/artist-selection/artist-selection.component';
+import { ModalToBodyDirective } from '../../directives/modal-to-body.directive';
 import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -29,7 +30,7 @@ interface MenuSection {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent, ModalToBodyDirective],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -59,6 +60,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   currentWorkspace: WorkspaceType = 'music';
   visibleSections: MenuSection[] = [];
   isInitialized = false;
+  availableWorkspaceInfos: WorkspaceInfo[] = [];
+
+  // Feature toggle state (from brand settings)
+  featureSublabels: boolean = true;
+
+  // Workspace switch modal
+  showWorkspaceSwitchModal = false;
   
   private brandSubscription: Subscription = new Subscription();
   private sidebarSubscription: Subscription = new Subscription();
@@ -128,7 +136,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           children: [
             { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true },
-            { route: '/campaigns/events/tickets', title: 'Tickets', adminOnly: true },
+            { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true },
             { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true },
             { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true },
             { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true }
@@ -156,6 +164,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Labels',
           adminOnly: true,
           children: [
+            { route: '/labels/setup', title: 'Label Setup', adminOnly: true },
             { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true },
             { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true }
           ]
@@ -172,7 +181,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Admin',
           adminOnly: true,
           children: [
-            { route: '/admin/settings', title: 'Settings', adminOnly: true },
             {
               route: '/admin/reports',
               title: 'Reports',
@@ -255,22 +263,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [
             {
               id: 'labels-top-level',
-              items: labelsItem.children?.map(child => {
-                // Assign appropriate icons based on the route
-                let icon = 'fas fa-tags'; // default
-                switch (child.route) {
-                  case '/labels/earnings':
-                    icon = 'fas fa-coins';
-                    break;
-                  case '/labels/sublabels':
-                    icon = 'fas fa-layer-group';
-                    break;
-                }
-                return {
-                  ...child,
-                  icon: icon
-                };
-              }) || []
+              items: (labelsItem.children || [])
+                .filter(child => {
+                  // Hide Sublabels item when feature is disabled
+                  if (child.route === '/labels/sublabels' && !this.featureSublabels) {
+                    return false;
+                  }
+                  return true;
+                })
+                .map(child => {
+                  // Assign appropriate icons based on the route
+                  let icon = 'fas fa-tags'; // default
+                  switch (child.route) {
+                    case '/labels/earnings':
+                      icon = 'fas fa-coins';
+                      break;
+                    case '/labels/sublabels':
+                      icon = 'fas fa-layer-group';
+                      break;
+                    case '/labels/setup':
+                      icon = 'fas fa-sliders';
+                      break;
+                  }
+                  return {
+                    ...child,
+                    icon: icon
+                  };
+                })
             }
           ];
         } else {
@@ -289,9 +308,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 // Assign appropriate icons based on the route
                 let icon = 'fas fa-cogs'; // default
                 switch (child.route) {
-                  case '/admin/settings':
-                    icon = 'fas fa-palette';
-                    break;
                   case '/admin/reports':
                     icon = 'fas fa-chart-bar';
                     break;
@@ -354,6 +370,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+        this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
       })
     );
 
@@ -472,6 +489,22 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.textColor = '#495057';
     this.iconColor = '#6c757d';
     this.activeColor = settings.brand_color; // Brand color used for active item highlighting
+
+    // Apply feature flags
+    this.featureSublabels = settings.feature_sublabels !== false;
+
+    // Refresh available workspaces (feature flags may affect which workspaces are visible)
+    this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
+
+    // If current workspace is no longer available, fall back to first available
+    // Note: 'admin' workspace is always available to admins but not in the toolbar list
+    const available = this.workspaceService.getAvailableWorkspaces(this.isAdmin);
+    if (this.currentWorkspace !== 'admin' && !available.includes(this.currentWorkspace) && available.length > 0) {
+      this.workspaceService.setWorkspace(available[0]);
+    }
+
+    // Re-render visible sections with updated feature flags
+    this.updateVisibleSections();
   }
 
   private updateTextColorsBasedOnBrightness(): void {
@@ -687,11 +720,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarService.closeOnMobileNavigation();
   }
 
-  getWorkspaceIcon(workspace: WorkspaceType): string {
-    return this.workspaceService.getWorkspaceIcon(workspace);
+  getWorkspaceInfo(workspace: WorkspaceType): WorkspaceInfo {
+    return this.workspaceService.getWorkspaceInfo(workspace);
   }
 
-  getWorkspaceLabel(workspace: WorkspaceType): string {
-    return this.workspaceService.getWorkspaceLabel(workspace);
+  onWorkspaceIndicatorClick(): void {
+    if (this.isCollapsed && !this.isMobileView && this.availableWorkspaceInfos.length > 1) {
+      this.openWorkspaceSwitchModal();
+    }
+  }
+
+  openWorkspaceSwitchModal(): void {
+    this.showWorkspaceSwitchModal = true;
+  }
+
+  closeWorkspaceSwitchModal(): void {
+    this.showWorkspaceSwitchModal = false;
+  }
+
+  switchWorkspace(workspace: WorkspaceType): void {
+    this.workspaceService.setWorkspace(workspace);
+    this.closeWorkspaceSwitchModal();
+    this.sidebarService.closeOnMobileNavigation();
+    switch (workspace) {
+      case 'music':     this.router.navigate(['/dashboard']); break;
+      case 'campaigns': this.router.navigate(['/campaigns/dashboard']); break;
+      case 'labels':    this.router.navigate(['/labels/earnings']); break;
+      case 'admin':     this.router.navigate(['/admin/reports/music-earnings']); break;
+    }
   }
 }

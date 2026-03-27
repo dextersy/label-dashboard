@@ -30,8 +30,8 @@
 
       <!-- Success Header -->
       <div class="card-header text-center"
-           [style.background-color]="event?.brand?.color || '#28a745'">
-        <h1 [style.color]="getContrastingColor(event?.brand?.color)"
+           [style.background-color]="event.brand?.color || '#28a745'">
+        <h1 [style.color]="getContrastingColor(event.brand?.color)"
             style="font-weight: 700;">
           <strong>Thank you! 🙌</strong>
         </h1>
@@ -103,13 +103,13 @@
       <!-- Brand Logo Footer -->
       <div class="card-footer text-center py-3"
            *ngIf="event?.brand?.logo_url"
-           [style.background-color]="event?.brand?.color || '#ffffff'">
+           [style.background-color]="event.brand?.color || '#ffffff'">
         <img [src]="event.brand?.logo_url"
              [alt]="(event.brand?.name || 'Brand') + ' logo'"
              class="mb-2"
              style="max-height: 30px; max-width: 120px; opacity: 0.9;">
         <p class="mb-0 small"
-           [style.color]="getContrastingColor(event?.brand?.color)"
+           [style.color]="getContrastingColor(event.brand?.color)"
            style="opacity: 0.7;">
           Powered by Melt Records Dashboard
         </p>

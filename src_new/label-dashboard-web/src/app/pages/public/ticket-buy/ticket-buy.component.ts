@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, SecurityContext } from '@angular/core';
+import { Component, OnInit, OnDestroy, SecurityContext, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeStyle } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
@@ -35,6 +35,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 export class TicketBuyComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
+  @ViewChild('posterImg') posterImg?: ElementRef<HTMLImageElement>;
+
   event: PublicEvent | null = null;
   ticketForm: FormGroup;
   isLoading = false;
@@ -215,6 +217,13 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     this.calculateTotal();
   }
 
+  selectTicketTypeCard(ticketType: any) {
+    if (ticketType.is_sold_out) return;
+    this.selectedTicketType = ticketType;
+    this.ticketForm.patchValue({ ticket_type_id: ticketType.id });
+    this.calculateTotal();
+  }
+
   calculateTotal() {
     const numberOfTickets = this.ticketForm.get('number_of_entries')?.value || 0;
     const ticketPrice = this.selectedTicketType?.price || this.event?.ticket_price || 0;
@@ -223,6 +232,13 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   get isEventLoaded(): boolean {
     return this.event !== null;
+  }
+
+  hasAvailableWalkInSlots(): boolean {
+    if (!this.event?.walkInTypes || this.event.walkInTypes.length === 0) return false;
+    return this.event.walkInTypes.some(wit =>
+      wit.remaining_slots === null || wit.remaining_slots > 0
+    );
   }
 
   canBuyTickets(): boolean {
@@ -444,6 +460,30 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     } else {
       this.emailTypoResult = null;
     }
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      const panel = this.posterImg.nativeElement.parentElement;
+      if (!panel) return;
+      const rect = panel.getBoundingClientRect();
+      // Only apply parallax while the poster is visible
+      if (rect.bottom < 0) return;
+      // Translate image down to counteract container scrolling up — makes it appear slower
+      const translate = window.scrollY * 0.5;
+      this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+    } else {
+      const translate = -(window.scrollY * 0.2);
+      this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+    }
+  }
+
+  getHeroBgImageStyle(): SafeStyle | null {
+    if (!this.event?.poster_url) return null;
+    return this.sanitizer.bypassSecurityTrustStyle(`url(${this.event.poster_url})`);
   }
 
   /**

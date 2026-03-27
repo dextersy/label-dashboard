@@ -78,6 +78,28 @@
                [class.fa-spinner]="loadingSongId === song.id"
                [class.fa-spin]="loadingSongId === song.id"></i>
           </button>
+          <button
+            *ngIf="song.audio_file"
+            class="btn btn-ghost btn-sm p-0 me-2 text-primary"
+            [disabled]="downloadingSongMaster[song.id!]"
+            (click)="onDownloadMaster(song)"
+            title="Download WAV master">
+            <i class="fa"
+               [class.fa-download]="!downloadingSongMaster[song.id!]"
+               [class.fa-spinner]="downloadingSongMaster[song.id!]"
+               [class.fa-spin]="downloadingSongMaster[song.id!]"></i>
+          </button>
+          <button
+            *ngIf="song.audio_file_mp3"
+            class="btn btn-ghost btn-sm p-0 me-2 text-success"
+            [disabled]="downloadingSongMp3[song.id!]"
+            (click)="onDownloadMp3(song)"
+            title="Download MP3">
+            <i class="fa"
+               [class.fa-music]="!downloadingSongMp3[song.id!]"
+               [class.fa-spinner]="downloadingSongMp3[song.id!]"
+               [class.fa-spin]="downloadingSongMp3[song.id!]"></i>
+          </button>
           <button class="btn btn-ghost btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit" [disabled]="isUploading(song.id)">
             <i class="fa fa-edit"></i>
           </button>

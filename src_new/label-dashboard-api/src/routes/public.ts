@@ -5,8 +5,7 @@ import {
   buyTicket,
   verifyTicket,
   ticketPaymentWebhook,
-  checkPin,
-  checkInTicket,
+  transferWebhook,
   getBrandByDomain,
   getEventForPublic,
   getPublicEventInfo,
@@ -58,10 +57,8 @@ router.post('/tickets/details', publicRateLimit, getTicketDetails);
 router.get('/tickets/pdf', publicRateLimit, downloadTicketPDF);
 router.post('/tickets/buy', ticketPurchaseRateLimit, buyTicket);
 router.post('/tickets/verify', publicRateLimit, verifyTicket);
-router.post('/tickets/check-pin', publicRateLimit, checkPin);
-router.post('/tickets/check-in', publicRateLimit, checkInTicket);
-
-// Webhook endpoint (PayMongo) - no rate limiting for webhooks as they come from trusted sources
+// Webhook endpoints (PayMongo) - no rate limiting for webhooks as they come from trusted sources
 router.post('/webhook/payment', ticketPaymentWebhook);
+router.post('/webhook/transfer', transferWebhook);
 
 export default router;

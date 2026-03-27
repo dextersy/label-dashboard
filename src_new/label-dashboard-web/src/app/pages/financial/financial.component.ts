@@ -64,6 +64,9 @@ export interface Payment {
     account_name: string;
     account_number_or_email: string;
   };
+  status?: string;
+  reference_number?: string;
+  failure_reason?: string;
 }
 
 export interface PaymentMethod {
@@ -128,7 +131,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
   @ViewChild('newPaymentFormComponent') newPaymentFormComponent?: NewPaymentFormComponent;
   
   private static getTodaysDate(): string {
-    return new Date().toISOString().split('T')[0];
+    return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   }
   
   selectedArtist: Artist | null = null;
@@ -433,7 +436,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadPaymentsPage(page: number, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
+  async loadPaymentsPage(page: number = 1, filters: any = {}, sort: { column: string; direction: 'asc' | 'desc' } | null = null): Promise<void> {
     if (!this.selectedArtist) return;
     this.paymentsLoading = true;
     try {

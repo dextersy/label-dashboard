@@ -6,8 +6,12 @@ import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
 import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser } from '../models';
+import Artist from '../models/Artist';
+import ArtistAccess from '../models/ArtistAccess';
+import Payment from '../models/Payment';
+import LabelPayment from '../models/LabelPayment';
 import { sendTicketEmail } from './ticketEmailService';
-import { sendBrandedEmail, sendEmail } from './emailService';
+import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification } from './emailService';
 import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
 
 interface PayMongoLinkData {
@@ -241,6 +245,198 @@ export class PaymentService {
     }
   }
   
+  async processTransferWebhook(payload: any, signature?: string): Promise<boolean> {
+    try {
+      this.webhookLog('Received a transfer webhook event: ' + JSON.stringify(payload));
+
+      if (signature && !this.verifyWebhookSignature(payload, signature)) {
+        this.webhookLog('ERROR: Invalid webhook signature');
+        return false;
+      }
+
+      if (!payload.data?.attributes) {
+        this.webhookLog('ERROR: Invalid webhook payload structure');
+        return false;
+      }
+
+      // PayMongo sends wallet_transaction events with attributes directly on payload.data.attributes
+      const attrs = payload.data.attributes;
+      const walletEventType = attrs.type; // e.g. 'send_money'
+
+      if (walletEventType !== 'send_money') {
+        this.webhookLog('ERROR: Not a send_money transfer event, type: ' + (walletEventType || 'unknown'));
+        return false;
+      }
+
+      const transferId = attrs.transfer_id || payload.data.id;
+      const referenceNumber = attrs.reference_number;
+      const transferStatus = attrs.status;
+      const providerError = attrs.provider_error;
+      const providerErrorCode = attrs.provider_error_code;
+
+      let newStatus: 'succeeded' | 'failed';
+      if (transferStatus === 'succeeded') {
+        newStatus = 'succeeded';
+      } else if (transferStatus === 'failed') {
+        newStatus = 'failed';
+      } else {
+        this.webhookLog('ERROR: Unknown transfer status: ' + transferStatus);
+        return false;
+      }
+
+      // Build failure reason string from provider error fields
+      let failureReason: string | null = null;
+      if (newStatus === 'failed' && (providerErrorCode || providerError)) {
+        failureReason = providerErrorCode && providerError
+          ? `${providerErrorCode}: ${providerError}`
+          : (providerError || providerErrorCode);
+      }
+
+      this.webhookLog(`Updating transfer ${transferId || referenceNumber} -> ${newStatus}${failureReason ? ` (reason: ${failureReason})` : ''}`);
+
+      const paymentInclude = [
+        { model: Artist, as: 'artist', include: [{ model: Brand, as: 'brand' }] },
+        { model: PaymentMethod, as: 'paymentMethod', required: false }
+      ];
+      const labelPaymentInclude = [
+        { model: Brand, as: 'brand', include: [{ model: Brand, as: 'parentBrand' }] },
+        { model: LabelPaymentMethod, as: 'paymentMethod', required: false }
+      ];
+
+      let foundPayment: any = null;
+      let foundLabelPayment: any = null;
+
+      // Try to match by Paymongo transfer ID first (most reliable)
+      if (transferId) {
+        foundPayment = await Payment.findOne({ where: { paymongo_transfer_id: transferId }, include: paymentInclude });
+        if (!foundPayment) {
+          foundLabelPayment = await LabelPayment.findOne({ where: { paymongo_transfer_id: transferId }, include: labelPaymentInclude });
+        }
+      }
+
+      // Fall back to matching by reference number
+      if (!foundPayment && !foundLabelPayment && referenceNumber) {
+        foundPayment = await Payment.findOne({ where: { reference_number: referenceNumber }, include: paymentInclude });
+        if (!foundPayment) {
+          foundLabelPayment = await LabelPayment.findOne({ where: { reference_number: referenceNumber }, include: labelPaymentInclude });
+        }
+      }
+
+      if (!foundPayment && !foundLabelPayment) {
+        this.webhookLog('WARNING: No payment record found for transfer ' + (transferId || referenceNumber));
+        return false;
+      }
+
+      if (foundPayment) {
+        await foundPayment.update({
+          status: newStatus,
+          failure_reason: newStatus === 'failed' ? failureReason : null,
+        });
+        this.webhookLog('Successfully updated artist payment status to ' + newStatus);
+        await this.notifyArtistPaymentStatus(foundPayment, newStatus);
+      } else if (foundLabelPayment) {
+        await foundLabelPayment.update({
+          status: newStatus,
+          failure_reason: newStatus === 'failed' ? failureReason : null,
+        });
+        this.webhookLog('Successfully updated label payment status to ' + newStatus);
+        await this.notifyLabelPaymentStatus(foundLabelPayment, newStatus);
+      }
+
+      return true;
+    } catch (error) {
+      this.webhookLog('ERROR: Exception in processTransferWebhook: ' + (error as Error).message);
+      console.error('Transfer webhook processing error:', error);
+      return false;
+    }
+  }
+
+  async notifyArtistPaymentStatus(payment: any, status: 'succeeded' | 'failed'): Promise<void> {
+    try {
+      const artist = payment.artist;
+      if (!artist) return;
+
+      const brand = artist.brand;
+      if (!brand) return;
+
+      if (status === 'succeeded') {
+        // Get team members who can view payments
+        const accessRecords = await ArtistAccess.findAll({
+          where: { artist_id: payment.artist_id, status: 'Accepted', can_view_payments: true },
+          include: [{ model: User, as: 'user' }]
+        });
+        const teamEmails = accessRecords
+          .filter((a: any) => a.user?.email_address)
+          .map((a: any) => a.user.email_address);
+        const adminEmails = await this.getAdminEmails(brand.id);
+        const recipients = [...new Set([...teamEmails, ...adminEmails])];
+
+        if (recipients.length > 0) {
+          await sendPaymentNotification(
+            recipients,
+            artist.name,
+            {
+              amount: parseFloat(payment.amount),
+              description: payment.description,
+              payment_processing_fee: parseFloat(payment.payment_processing_fee || 0),
+              paymentMethod: payment.paymentMethod || null,
+              paid_thru_type: payment.paid_thru_type,
+              paid_thru_account_name: payment.paid_thru_account_name,
+              paid_thru_account_number: payment.paid_thru_account_number
+            },
+            { name: brand.brand_name, brand_color: brand.brand_color, logo_url: brand.logo_url, id: brand.id }
+          );
+        }
+      } else if (status === 'failed') {
+        await sendPaymentFailedAdminNotification(
+          brand.id,
+          artist.name,
+          { amount: parseFloat(payment.amount), description: payment.description, reference_number: payment.reference_number }
+        );
+      }
+    } catch (error) {
+      console.error('Failed to send artist payment status notification:', error);
+    }
+  }
+
+  async notifyLabelPaymentStatus(labelPayment: any, status: 'succeeded' | 'failed'): Promise<void> {
+    try {
+      const sublabelBrand = labelPayment.brand;
+      if (!sublabelBrand) return;
+
+      if (status === 'succeeded') {
+        const parentBrand = sublabelBrand.parentBrand;
+        if (parentBrand) {
+          await sendSublabelPaymentNotification(
+            sublabelBrand.id,
+            sublabelBrand.brand_name,
+            {
+              amount: parseFloat(labelPayment.amount),
+              description: labelPayment.description,
+              payment_processing_fee: parseFloat(labelPayment.payment_processing_fee || 0),
+              paymentMethod: labelPayment.paymentMethod || null,
+              paid_thru_type: labelPayment.paid_thru_type,
+              paid_thru_account_name: labelPayment.paid_thru_account_name,
+              paid_thru_account_number: labelPayment.paid_thru_account_number
+            },
+            { name: parentBrand.brand_name, brand_color: parentBrand.brand_color, logo_url: parentBrand.logo_url, id: parentBrand.id }
+          );
+        }
+      } else if (status === 'failed') {
+        const parentBrand = sublabelBrand.parentBrand;
+        if (parentBrand) {
+          await sendPaymentFailedAdminNotification(
+            parentBrand.id,
+            sublabelBrand.brand_name,
+            { amount: parseFloat(labelPayment.amount), description: labelPayment.description, reference_number: labelPayment.reference_number }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to send label payment status notification:', error);
+    }
+  }
+
   private async findTicketByPaymentType(eventType: string, eventData: any): Promise<any> {
     const includeOptions = [
       { 
@@ -550,10 +746,8 @@ export class PaymentService {
         DASHBOARD_URL: dashboardUrl
       };
 
-      // Send branded email to each admin
-      for (const email of adminEmails) {
-        await sendBrandedEmail(email, 'donation_admin_notification', templateData, brand.id);
-      }
+      // Send branded email to all admins (handles loop + grouped logging internally)
+      await sendBrandedEmail(adminEmails, 'donation_admin_notification', templateData, brand.id);
 
       this.webhookLog('Successfully sent donation admin notification');
     } catch (error) {
@@ -781,10 +975,8 @@ export class PaymentService {
         DASHBOARD_URL: dashboardUrl
       };
 
-      // Send branded email to each admin
-      for (const email of adminEmails) {
-        await sendBrandedEmail(email, 'ticket_admin_notification', templateData, event.brand_id);
-      }
+      // Send branded email to all admins (handles loop + grouped logging internally)
+      await sendBrandedEmail(adminEmails, 'ticket_admin_notification', templateData, event.brand_id);
 
       return true;
     } catch (error) {
@@ -847,8 +1039,9 @@ export class PaymentService {
     paymentMethodId: number,
     amount: number,
     description: string = '',
-    isLabelPayment: boolean = false
-  ): Promise<string | null> {
+    isLabelPayment: boolean = false,
+    callbackUrl?: string
+  ): Promise<{ referenceNumber: string; transferId: string } | null> {
     // Declare paymentMethod at function scope for error logging
     let paymentMethod: any = null;
     let transferAttemptId: string | null = null;
@@ -899,23 +1092,29 @@ export class PaymentService {
         }
       }
 
+      const transactionPayload: any = {
+        data: {
+          attributes: {
+            amount: amountInCents, // Amount in cents (integer)
+            receiver: {
+              bank_account_name: paymentMethod.account_name,
+              bank_account_number: paymentMethod.account_number_or_email,
+              bank_code: paymentMethod.bank_code
+            },
+            provider: provider,
+            type: 'send_money',
+            description: description
+          }
+        }
+      };
+
+      if (callbackUrl) {
+        transactionPayload.data.attributes.callback_url = callbackUrl;
+      }
+
       const response = await axios.post(
         `${this.baseUrl}/wallets/${brand.paymongo_wallet_id}/transactions`,
-        {
-          data: {
-            attributes: {
-              amount: amountInCents, // Amount in cents (integer)
-              receiver: {
-                bank_account_name: paymentMethod.account_name,
-                bank_account_number: paymentMethod.account_number_or_email,
-                bank_code: paymentMethod.bank_code
-              },
-              provider: provider,
-              type: 'send_money',
-              description: description
-            }
-          }
-        },
+        transactionPayload,
         {
           headers: {
             'Accept': 'application/json',
@@ -928,10 +1127,11 @@ export class PaymentService {
       );
 
       const referenceNumber = response.data?.data?.attributes?.reference_number;
+      const transferId = response.data?.data?.id;
 
-      console.log(`[Transfer ${transferAttemptId}] ✓ SUCCESS - Ref: ${referenceNumber}`);
+      console.log(`[Transfer ${transferAttemptId}] ✓ SUCCESS - Ref: ${referenceNumber}, ID: ${transferId}`);
 
-      return referenceNumber;
+      return { referenceNumber, transferId };
     } catch (error: any) {
       const provider = amount > 50000 ? 'pesonet' : 'instapay';
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');

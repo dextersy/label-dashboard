@@ -33,18 +33,21 @@
       </div>
       <div class="modal-footer">
         <button type="button"
-                class="btn btn-secondary"
+                class="btn"
+                [ngClass]="data?.primaryAction === 'cancel' ? 'btn-primary' : 'btn-secondary'"
                 (click)="onCancel()">
           {{ data?.cancelText || 'No' }}
         </button>
         <button #confirmButton
                 type="button"
                 class="btn"
-                [ngClass]="{
-                  'btn-danger': data?.type === 'danger',
-                  'btn-secondary': data?.type === 'warning',
-                  'btn-primary': data?.type === 'info' || !data?.type
-                }"
+                [ngClass]="data?.primaryAction === 'cancel'
+                  ? 'btn-secondary'
+                  : {
+                      'btn-danger': data?.type === 'danger',
+                      'btn-secondary': data?.type === 'warning',
+                      'btn-primary': data?.type === 'info' || !data?.type
+                    }"
                 (click)="onConfirm()">
           {{ data?.confirmText || 'Yes' }}
         </button>

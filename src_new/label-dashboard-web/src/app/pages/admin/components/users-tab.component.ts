@@ -106,9 +106,9 @@ export class UsersTabComponent implements OnInit {
     { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
       const result = item.result;
       if (result === 'Success' || result === 'Successful') {
-        return `<span class="badge bg-success">${result}</span>`;
+        return `<span class="status-dot status-success">${result}</span>`;
       } else if (result === 'Failed') {
-        return `<span class="badge bg-danger">${result}</span>`;
+        return `<span class="status-dot status-danger">${result}</span>`;
       }
       return result;
     }},

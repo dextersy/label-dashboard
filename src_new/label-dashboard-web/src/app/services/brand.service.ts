@@ -12,6 +12,9 @@ export interface BrandSettings {
   domain?: string;
   release_submission_url?: string;
   catalog_prefix?: string;
+  feature_music_workspace?: boolean;
+  feature_campaigns_workspace?: boolean;
+  feature_sublabels?: boolean;
 }
 
 export interface BrandApiResponse {
@@ -25,6 +28,9 @@ export interface BrandApiResponse {
     favicon_url?: string;
     release_submission_url?: string;
     catalog_prefix?: string;
+    feature_music_workspace?: boolean;
+    feature_campaigns_workspace?: boolean;
+    feature_sublabels?: boolean;
   };
 }
 
@@ -66,7 +72,10 @@ export class BrandService {
             favicon_url: response.brand.favicon_url,
             domain: response.domain,
             release_submission_url: response.brand.release_submission_url,
-            catalog_prefix: response.brand.catalog_prefix
+            catalog_prefix: response.brand.catalog_prefix,
+            feature_music_workspace: response.brand.feature_music_workspace,
+            feature_campaigns_workspace: response.brand.feature_campaigns_workspace,
+            feature_sublabels: response.brand.feature_sublabels
           };
           localStorage.setItem('brand_settings', JSON.stringify(brandSettings));
           this.brandSettingsSubject.next(brandSettings);

@@ -1,8 +1,5 @@
+<app-breadcrumb></app-breadcrumb>
 <div class="container-fluid">
-  <!-- Page Header -->
-  <div class="page-header mb-3">
-    <app-breadcrumb></app-breadcrumb>
-  </div>
 
   <!-- Loading state -->
   <div *ngIf="loading" class="text-center py-5">
@@ -72,36 +69,165 @@
       <div class="col-lg-6 col-md-12 d-flex flex-column">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
-          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
-            <span class="stats-compact-value">{{ dashboardData.stats?.activeEvents || 0 }}</span>
-            <div class="stats-compact-meta">
+          <!-- Events group -->
+          <div class="stats-compact-group">
+            <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/details">
               <i class="fas fa-calendar-check"></i>
+              <span class="stats-compact-value">{{ dashboardData.stats.activeEvents || 0 }}</span>
               <span class="stats-compact-label">Active Events</span>
             </div>
-          </div>
-          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/details">
-            <span class="stats-compact-value">{{ dashboardData.stats?.activeFundraisers || 0 }}</span>
-            <div class="stats-compact-meta">
-              <i class="fas fa-hand-holding-heart"></i>
-              <span class="stats-compact-label">Fundraisers</span>
-            </div>
-          </div>
-          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/tickets">
-            <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthSales || 0) }}</span>
-            <div class="stats-compact-meta">
+            <span class="stats-compact-caret">›</span>
+            <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/events/tickets">
               <i class="fas fa-ticket-alt"></i>
+              <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats.thisMonthSales || 0) }}</span>
               <span class="stats-compact-label">Ticket Sales</span>
             </div>
           </div>
-          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/donations">
-            <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats?.thisMonthDonations || 0) }}</span>
-            <div class="stats-compact-meta">
+
+          <div class="stats-group-divider"></div>
+
+          <!-- Fundraisers group -->
+          <div class="stats-compact-group">
+            <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/details">
+              <i class="fas fa-hand-holding-heart"></i>
+              <span class="stats-compact-value">{{ dashboardData.stats.activeFundraisers || 0 }}</span>
+              <span class="stats-compact-label">Active Fundraisers</span>
+            </div>
+            <span class="stats-compact-caret">›</span>
+            <div class="stats-compact-item stats-compact-item-clickable" routerLink="/campaigns/fundraisers/donations">
               <i class="fas fa-donate"></i>
+              <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(dashboardData.stats.thisMonthDonations || 0) }}</span>
               <span class="stats-compact-label">Donations</span>
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Upcoming Events + Ongoing Fundraisers -->
+    <div class="row mb-4">
+
+      <!-- Upcoming Events (2/3) -->
+      <div class="col-lg-8 col-12 mb-3 mb-lg-0">
+        <h6 class="section-label">Upcoming Events</h6>
+        <!-- Empty state -->
+        <div class="upcoming-empty" *ngIf="!dashboardData.upcomingEvents?.length">
+          <i class="fas fa-calendar-alt upcoming-empty-icon"></i>
+          <span>No upcoming events. <a routerLink="/campaigns/events/new">Create one?</a></span>
+        </div>
+
+        <div class="upcoming-events-widget" *ngIf="dashboardData.upcomingEvents?.length">
+
+          <!-- Featured (nearest) event -->
+          <div class="upcoming-featured"
+               [style.background-image]="dashboardData.upcomingEvents[0].poster_url ? 'url(' + dashboardData.upcomingEvents[0].poster_url + ')' : null"
+               [class.has-poster]="dashboardData.upcomingEvents[0].poster_url">
+            <div class="upcoming-featured-overlay">
+              <div class="upcoming-featured-body">
+                <div class="upcoming-date-badge">
+                  <span class="upcoming-date-day">{{ dashboardData.upcomingEvents[0].date_and_time | date:'d' }}</span>
+                  <span class="upcoming-date-month">{{ dashboardData.upcomingEvents[0].date_and_time | date:'MMM' }}</span>
+                </div>
+                <div class="upcoming-featured-info">
+                  <div class="upcoming-title upcoming-title-lg">{{ dashboardData.upcomingEvents[0].title }}</div>
+                  <div class="upcoming-meta">
+                    <i class="fas fa-clock"></i> {{ formatEventTime(dashboardData.upcomingEvents[0].date_and_time) }}
+                    &nbsp;·&nbsp;
+                    <i class="fas fa-map-marker-alt"></i> {{ dashboardData.upcomingEvents[0].venue }}
+                  </div>
+                  <div class="upcoming-ticket-stats">
+                    <span class="upcoming-stat"><i class="fas fa-ticket-alt"></i> {{ dashboardData.upcomingEvents[0].tickets_sold }} sold</span>
+                    <span class="upcoming-stat-divider">·</span>
+                    <span class="upcoming-stat"><i class="fas fa-peso-sign"></i> {{ formatCurrency(dashboardData.upcomingEvents[0].net_earnings) }} net</span>
+                  </div>
+                </div>
+              </div>
+              <div class="upcoming-actions">
+                <button class="btn btn-sm upcoming-btn-manage" (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'details')">
+                  <i class="fas fa-cog me-1"></i> Manage
+                </button>
+                <button class="btn btn-sm upcoming-btn-tickets" (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
+                  <i class="fas fa-ticket-alt me-1"></i> View tickets
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smaller upcoming events -->
+          <div class="upcoming-secondary" *ngIf="dashboardData.upcomingEvents.length > 1">
+            <div class="upcoming-small-card" *ngFor="let event of dashboardData.upcomingEvents.slice(1)">
+              <div class="upcoming-small-date">
+                <span class="upcoming-date-day">{{ event.date_and_time | date:'d' }}</span>
+                <span class="upcoming-date-month">{{ event.date_and_time | date:'MMM' }}</span>
+              </div>
+              <div class="upcoming-small-info">
+                <div class="upcoming-title">{{ event.title }}</div>
+                <div class="upcoming-meta">
+                  <i class="fas fa-clock"></i> {{ formatEventTime(event.date_and_time) }}
+                  &nbsp;·&nbsp;
+                  <i class="fas fa-map-marker-alt"></i> {{ event.venue }}
+                </div>
+                <div class="upcoming-ticket-stats upcoming-ticket-stats-sm">
+                  <span class="upcoming-stat"><i class="fas fa-ticket-alt"></i> {{ event.tickets_sold }} sold</span>
+                  <span class="upcoming-stat-divider">·</span>
+                  <span class="upcoming-stat"><i class="fas fa-peso-sign"></i> {{ formatCurrency(event.net_earnings) }} net</span>
+                </div>
+                <div class="upcoming-actions upcoming-actions-sm">
+                  <button class="btn btn-sm upcoming-btn-manage" (click)="navigateToEvent(event, 'details')">
+                    <i class="fas fa-cog me-1"></i> Manage
+                  </button>
+                  <button class="btn btn-sm upcoming-btn-tickets" (click)="navigateToEvent(event, 'tickets')">
+                    <i class="fas fa-ticket-alt me-1"></i> View tickets
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Ongoing Fundraisers (1/3) -->
+      <div class="col-lg-4 col-12 d-flex flex-column">
+        <h6 class="section-label">Ongoing Fundraisers</h6>
+
+        <!-- Empty state -->
+        <div class="upcoming-empty flex-grow-1" *ngIf="!dashboardData.ongoingFundraisers?.items?.length">
+          <i class="fas fa-hand-holding-heart upcoming-empty-icon"></i>
+          <span>No active fundraisers. <a routerLink="/campaigns/fundraisers/new">Start one?</a></span>
+        </div>
+
+        <div class="fundraiser-widget" *ngIf="dashboardData.ongoingFundraisers?.items?.length">
+          <div class="fundraiser-cards-row">
+            <div class="fundraiser-card" *ngFor="let fundraiser of dashboardData.ongoingFundraisers.items">
+              <div class="fundraiser-card-thumb"
+                   [style.background-image]="fundraiser.poster_url ? 'url(' + fundraiser.poster_url + ')' : null"
+                   [class.has-poster]="fundraiser.poster_url">
+                <div class="fundraiser-live-badge">
+                  <span class="fundraiser-live-dot"></span> Live
+                </div>
+              </div>
+              <div class="fundraiser-card-body">
+                <div class="fundraiser-card-title">{{ fundraiser.title }}</div>
+                <div class="fundraiser-card-raised">
+                  <span class="fundraiser-raised-label">Total raised</span>
+                  <span class="fundraiser-raised-value">{{ formatCurrency(fundraiser.total_raised) }}</span>
+                </div>
+                <button class="btn btn-sm fundraiser-btn-manage" (click)="navigateToFundraiser(fundraiser)">
+                  <i class="fas fa-cog me-1"></i> Manage
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- More fundraisers indicator -->
+          <div class="fundraiser-more" *ngIf="dashboardData.ongoingFundraisers.total > 2" (click)="navigateToFundraiser(dashboardData.ongoingFundraisers.items[0])">
+            <i class="fas fa-hand-holding-heart me-1"></i>
+            + {{ dashboardData.ongoingFundraisers.total - 2 }} more active fundraiser{{ dashboardData.ongoingFundraisers.total - 2 === 1 ? '' : 's' }}
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Event Sales Charts -->

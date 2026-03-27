@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
-import { BrandSettingsTabComponent } from './components/brand-settings-tab.component';
 import { SummaryViewTabComponent } from './components/summary-view-tab.component';
 import { BalanceSummaryTabComponent } from './components/balance-summary-tab.component';
 import { BulkAddEarningsTabComponent } from './components/bulk-add-earnings-tab.component';
@@ -16,7 +15,6 @@ import { RecuperableExpenseTabComponent } from './components/recuperable-expense
     imports: [
         CommonModule,
         BreadcrumbComponent,
-        BrandSettingsTabComponent,
         SummaryViewTabComponent,
         BalanceSummaryTabComponent,
         BulkAddEarningsTabComponent,
@@ -29,7 +27,7 @@ import { RecuperableExpenseTabComponent } from './components/recuperable-expense
     styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit {
-  activeTab: string = 'settings';
+  activeTab: string = 'reports-music-earnings';
 
   constructor(private route: ActivatedRoute) {}
 

@@ -71,6 +71,12 @@ export interface EmailLog {
   result: 'Success' | 'Failed';
 }
 
+export interface FeatureToggles {
+  feature_music_workspace: boolean;
+  feature_campaigns_workspace: boolean;
+  feature_sublabels: boolean;
+}
+
 export interface ChildBrand {
   brand_id: number;
   brand_name: string;
@@ -93,6 +99,9 @@ export interface ChildBrand {
   balance: number;
   status?: string;
   domains?: Domain[];
+  feature_music_workspace?: boolean;
+  feature_campaigns_workspace?: boolean;
+  feature_sublabels?: boolean;
 }
 
 export interface CreateSublabelResponse {
@@ -933,6 +942,19 @@ export class AdminService {
     });
   }
 
+  // Feature Toggles Management
+  getFeatureToggles(brandId: number): Observable<FeatureToggles> {
+    return this.http.get<FeatureToggles>(`${environment.apiUrl}/brands/${brandId}/feature-toggles`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateFeatureToggles(brandId: number, toggles: FeatureToggles): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/feature-toggles`, toggles, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Label Payment Methods Management
   getLabelPaymentMethods(): Observable<any> {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
@@ -993,8 +1015,18 @@ export class AdminService {
     });
   }
 
-  getSublabelPayments(brandId: number): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments`, {
+  getSublabelPayments(brandId: number, page: number = 1, limit: number = 10, sortBy?: string, sortDirection?: string): Observable<any> {
+    let params = `page=${page}&limit=${limit}`;
+    if (sortBy && sortDirection) {
+      params += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    return this.http.get(`${environment.apiUrl}/brands/${brandId}/payments?${params}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateSublabelPaymentStatus(brandId: number, paymentId: number, status: 'succeeded' | 'failed'): Observable<any> {
+    return this.http.patch(`${environment.apiUrl}/brands/${brandId}/payments/${paymentId}/status`, { status }, {
       headers: this.getAuthHeaders()
     });
   }

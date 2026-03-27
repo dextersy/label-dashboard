@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  HostBinding,
   NgZone,
   OnDestroy,
   ViewChild,
@@ -23,6 +24,8 @@ export class FloatingActionBarComponent implements AfterViewInit, OnDestroy {
   drawerOpen = false;
   /** True when the primary slot has content — shows the fab-end section. */
   showFabEnd = false;
+  /** Hides the host element when both slots are empty. */
+  @HostBinding('style.display') hostDisplay = 'none';
 
   @ViewChild('secondarySlot') private secondarySlot!: ElementRef<HTMLElement>;
   @ViewChild('primarySlot') private primarySlot!: ElementRef<HTMLElement>;
@@ -51,6 +54,7 @@ export class FloatingActionBarComponent implements AfterViewInit, OnDestroy {
     const hasPrimary = this.primarySlot.nativeElement.children.length > 0;
     this.drawerMode = hasPrimary && hasSecondary;
     this.showFabEnd = hasPrimary;
+    this.hostDisplay = hasPrimary || hasSecondary ? '' : 'none';
     if (!this.drawerMode) {
       this.drawerOpen = false;
     }

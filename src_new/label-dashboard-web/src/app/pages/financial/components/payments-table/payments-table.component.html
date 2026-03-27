@@ -1,4 +1,4 @@
-<app-paginated-table 
+<app-paginated-table
   title="Payment History"
   [data]="payments"
   [pagination]="pagination"
@@ -7,9 +7,9 @@
   [showSortableHeaders]="true"
   [sortInfo]="sortInfo"
   [responsiveMode]="'financial'"
+  [headerActions]="headerActions"
+  [actions]="rowActions"
   (pageChange)="pageChange.emit($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">
-  
-  [headerActions]="headerActions">
 </app-paginated-table>

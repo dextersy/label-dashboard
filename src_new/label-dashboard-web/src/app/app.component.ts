@@ -20,7 +20,7 @@ import { SidebarService } from './services/sidebar.service';
 import { ConnectionMonitorService } from './services/connection-monitor.service';
 import { AppNotificationService } from './services/app-notification.service';
 import { OnboardingService } from './services/onboarding.service';
-import { WorkspaceService } from './services/workspace.service';
+import { WorkspaceService, WorkspaceType } from './services/workspace.service';
 import { PendingInviteNotificationProvider } from './services/notification-providers/pending-invite-notification.provider';
 import { filter } from 'rxjs/operators';
 
@@ -110,21 +110,19 @@ export class AppComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event) => {
-        this.currentRoute = (event as NavigationEnd).url;
+        const url = (event as NavigationEnd).url;
+        this.currentRoute = url;
+        const workspace = this.getWorkspaceFromUrl(url);
+        if (workspace !== this.workspaceService.currentWorkspace) {
+          this.workspaceService.setWorkspace(workspace);
+        }
       });
     
     // Global sublabel completion listener - works regardless of current page
     const completionSubscription = this.adminService.sublabelCompletion$.subscribe(
       (event: SublabelCompletionEvent | null) => {
         if (event && this.authService.isLoggedIn()) {
-          // Show completion notification with clickable action to go to settings
-          this.notificationService.showSuccess(
-            `Your new label "${event.sublabelName}" is ready! Click here to go to Settings.`,
-            () => {
-              // Navigate to settings
-              this.router.navigate(['/admin/settings']);
-            }
-          );
+          this.notificationService.showSuccess(`Your new label "${event.sublabelName}" is ready!`);
         }
       }
     );
@@ -183,17 +181,28 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  private getWorkspaceFromUrl(url: string): WorkspaceType {
+    const path = url.split('?')[0];
+    if (path.startsWith('/admin')) return 'admin';
+    if (path.startsWith('/campaigns')) return 'campaigns';
+    if (path.startsWith('/labels')) return 'labels';
+    return 'music';
+  }
+
   isStandalonePage(): boolean {
     const standaloneRoutes = ['/login', '/domain-not-found', '/forgot-password', '/reset-password', '/set-profile'];
     const standaloneRoutePrefixes = ['/invite', '/public', '/artist/epk/preview'];
 
+    // Strip query params before matching
+    const urlPath = this.router.url.split('?')[0];
+
     // Check exact matches
-    if (standaloneRoutes.includes(this.router.url) || this.router.url === '/') {
+    if (standaloneRoutes.includes(urlPath) || urlPath === '/') {
       return true;
     }
 
     // Check route prefixes (for routes like /invite/accept and /public)
-    if (standaloneRoutePrefixes.some(prefix => this.router.url.startsWith(prefix))) {
+    if (standaloneRoutePrefixes.some(prefix => urlPath.startsWith(prefix))) {
       return true;
     }
 

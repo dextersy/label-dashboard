@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { EarningsTableComponent } from '../earnings-table/earnings-table.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, HeaderAction, SearchFilters, SortInfo } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../../components/shared/date-range-filter/date-range-filter.component';
 import { Earning } from '../../financial.component';
@@ -12,7 +11,7 @@ import { ArtistStateService } from '../../../../services/artist-state.service';
 
 @Component({
     selector: 'app-financial-earnings-tab',
-    imports: [CommonModule, EarningsTableComponent, PaginatedTableComponent, DateRangeFilterComponent],
+    imports: [CommonModule, PaginatedTableComponent, DateRangeFilterComponent],
     templateUrl: './financial-earnings-tab.component.html',
     styleUrl: './financial-earnings-tab.component.scss'
 })
@@ -74,12 +73,13 @@ export class FinancialEarningsTabComponent {
 
   // Define table columns for search and sort functionality
   earningsColumns: TableColumn[] = [
-    { 
-      key: 'date_recorded', 
-      label: 'Date', 
-      type: 'date', 
-      searchable: false, 
+    {
+      key: 'date_recorded',
+      label: 'Date',
+      type: 'date',
+      searchable: false,
       sortable: true,
+      mobileGroup: 'summary',
       mobileClass: 'mobile-narrow',
       tabletClass: ''
     },
@@ -89,6 +89,7 @@ export class FinancialEarningsTabComponent {
       type: 'text',
       searchable: true,
       sortable: true,
+      mobileGroup: 'summary',
       mobileClass: 'mobile-text',
       tabletClass: ''
     },
@@ -107,15 +108,17 @@ export class FinancialEarningsTabComponent {
       type: 'text',
       searchable: true,
       sortable: true,
+      mobileGroup: 'summary',
+      mobileGroupMain: true,
       mobileClass: '',
-      tabletClass: 'tablet-hide'
+      tabletClass: ''
     },
-    { 
-      key: 'amount', 
-      label: 'Amount', 
-      type: 'number', 
-      searchable: true, 
-      sortable: true, 
+    {
+      key: 'amount',
+      label: 'Amount',
+      type: 'number',
+      searchable: true,
+      sortable: true,
       align: 'right',
       mobileClass: 'mobile-narrow mobile-number',
       tabletClass: ''
