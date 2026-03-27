@@ -616,20 +616,35 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-    // Get all events for this brand
-    const events = await Event.findAll({
+    // Get all events for this brand (used by graphs)
+    const allEvents = await Event.findAll({
       where: brandFilter,
       attributes: ['id']
     });
 
-    const eventIds = events.map(e => e.id);
+    const allEventIds = allEvents.map(e => e.id);
 
-    // Get confirmed tickets for this month
+    // Get active event IDs (published and not yet ended) for quick stats
+    const activeEventIds = allEvents.length > 0
+      ? (await Event.findAll({
+          where: {
+            ...brandFilter,
+            status: 'published',
+            [Op.or]: [
+              { close_time: { [Op.gt]: now } },
+              { close_time: null, date_and_time: { [Op.gt]: now } }
+            ]
+          },
+          attributes: ['id']
+        })).map(e => e.id)
+      : [];
+
+    // Get confirmed tickets for this month (active events only)
     let thisMonthSales = 0;
-    if (eventIds.length > 0) {
+    if (activeEventIds.length > 0) {
       const tickets = await Ticket.findAll({
         where: {
-          event_id: eventIds,
+          event_id: activeEventIds,
           status: ['Payment Confirmed', 'Ticket sent.'],
           order_timestamp: {
             [require('sequelize').Op.between]: [startOfMonth, endOfMonth]
