@@ -746,10 +746,8 @@ export class PaymentService {
         DASHBOARD_URL: dashboardUrl
       };
 
-      // Send branded email to each admin
-      for (const email of adminEmails) {
-        await sendBrandedEmail(email, 'donation_admin_notification', templateData, brand.id);
-      }
+      // Send branded email to all admins (handles loop + grouped logging internally)
+      await sendBrandedEmail(adminEmails, 'donation_admin_notification', templateData, brand.id);
 
       this.webhookLog('Successfully sent donation admin notification');
     } catch (error) {
@@ -977,10 +975,8 @@ export class PaymentService {
         DASHBOARD_URL: dashboardUrl
       };
 
-      // Send branded email to each admin
-      for (const email of adminEmails) {
-        await sendBrandedEmail(email, 'ticket_admin_notification', templateData, event.brand_id);
-      }
+      // Send branded email to all admins (handles loop + grouped logging internally)
+      await sendBrandedEmail(adminEmails, 'ticket_admin_notification', templateData, event.brand_id);
 
       return true;
     } catch (error) {

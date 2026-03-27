@@ -5,7 +5,7 @@ import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
-import { sendEmail, sendEmailWithInlineImages, loadEmailTemplate, processTemplate } from '../utils/emailService';
+import { sendEmail, sendEmailWithInlineImages } from '../utils/emailService';
 
 // Helper function to add responsive image styling to content
 const addResponsiveImageStyling = (content: string): string => {
@@ -2389,42 +2389,20 @@ const sendEventEmailShared = async (
 ): Promise<{ successCount: number; failedCount: number }> => {
   // Add responsive image styling to message content
   const styledMessage = addResponsiveImageStyling(message);
-  
+
   // Prepare branded email HTML using shared helper
   const htmlMessage = prepareBrandedEmailHtml(styledMessage, event, includeBanner, isTestEmail);
 
-  let successCount = 0;
-  let failedCount = 0;
+  const emailSubject = isTestEmail ? `[TEST] ${subject}` : subject;
+  const eventContext = {
+    eventTitle: event.title,
+    messageContent: message,
+    isTestEmail: isTestEmail
+  };
 
-  // Send email to each recipient
-  for (const email of recipients) {
-    try {
-      const emailSubject = isTestEmail ? `[TEST] ${subject}` : subject;
-      const eventContext = {
-        eventTitle: event.title,
-        messageContent: message, // Use original message for text version
-        isTestEmail: isTestEmail
-      };
-      const success = await sendEmailWithInlineImages(
-        [email], 
-        emailSubject, 
-        htmlMessage, 
-        brandId, 
-        undefined, // textBody
-        eventContext
-      );
-      if (success) {
-        successCount++;
-      } else {
-        failedCount++;
-      }
-    } catch (error) {
-      console.error(`Failed to send ${isTestEmail ? 'test ' : ''}email to ${email}:`, error);
-      failedCount++;
-    }
-  }
-
-  return { successCount, failedCount };
+  // sendEmailWithInlineImages handles the loop + grouped logging internally
+  const result = await sendEmailWithInlineImages(recipients, emailSubject, htmlMessage, brandId, undefined, eventContext);
+  return { successCount: result.successCount, failedCount: result.failedCount };
 };
 
 export const sendEventEmail = async (req: AuthRequest, res: Response) => {

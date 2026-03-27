@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
-import { sendTeamInviteEmail, sendArtistUpdateEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
+import { sendTeamInviteEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
 import multer from 'multer';
