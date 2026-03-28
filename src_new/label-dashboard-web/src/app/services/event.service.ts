@@ -904,6 +904,21 @@ export class EventService {
     }).pipe(catchError(this.handleError));
   }
 
+  /**
+   * Get event data for admin preview mode (returns PublicEvent shape from secured endpoint)
+   */
+  getEventForPreview(eventId: number): Observable<{event: any}> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+
+    return this.http.get<{event: any}>(`${environment.apiUrl}/events/${eventId}/preview`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   private handleError(error: any): Observable<never> {
     console.error('Event service error:', error);
     

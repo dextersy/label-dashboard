@@ -27,7 +27,8 @@ import {
   upload,
   publishEvent,
   unpublishEvent,
-  getPaymentConfig
+  getPaymentConfig,
+  getEventPreview
 } from '../controllers/eventController';
 import {
   getTicketTypes,
@@ -99,6 +100,7 @@ router.post('/send-email', requireAdmin, sendEventEmail);
 router.post('/send-test-email', requireAdmin, sendTestEventEmail);
 
 // Event CRUD operations with :id (these must come last)
+router.get('/:id/preview', requireAdmin, getEventPreview);
 router.get('/:id', getEvent);
 router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
 router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);

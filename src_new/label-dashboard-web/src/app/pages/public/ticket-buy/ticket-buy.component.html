@@ -1,7 +1,13 @@
 <div class="public-page" [style.background-color]="brandColor">
+  <!-- Preview Banner -->
+  <div *ngIf="isPreview" class="preview-banner">
+    <i class="fas fa-eye me-2"></i>
+    <strong>Preview Mode</strong> — This is how the buy page will look. Purchasing is disabled.
+  </div>
+
   <!-- Countdown Notification Bar -->
   <app-countdown-notification
-    *ngIf="event && event.show_countdown && !isLoading && !isError && canBuyTickets()"
+    *ngIf="event && event.show_countdown && !isLoading && !isError && canBuyTickets() && !isPreview"
     [eventDate]="event.date_and_time"
     [closeTime]="event.close_time"
     [eventTitle]="event.title"
@@ -309,9 +315,9 @@
               color="primary"
               type="submit"
               class="submit-button w-100"
-              [disabled]="ticketForm.invalid || isSubmitting">
+              [disabled]="ticketForm.invalid || isSubmitting || isPreview">
               <i class="fas me-1" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
-              {{ isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now') }}
+              {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>
             <div *ngIf="totalAmount > 0" class="fadeIn sixth" style="font-size:12px;">
               Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page.
