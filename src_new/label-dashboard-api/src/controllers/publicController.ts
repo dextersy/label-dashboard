@@ -383,6 +383,7 @@ export const getTicketDetails = async (req: Request, res: Response) => {
               venue_address: ticket.event.venue_address,
               venue_maps_url: ticket.event.venue_maps_url,
               poster_url: ticket.event.poster_url,
+              buy_shortlink: ticket.event.buy_shortlink,
               brand: ticket.event.brand ? {
                 id: ticket.event.brand.id,
                 name: ticket.event.brand.brand_name,

@@ -67,6 +67,7 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
                 poster_url: response.ticket.event.poster_url,
                 ticket_price: response.ticket.price_per_ticket,
                 ticket_naming: response.ticket.ticketType?.name || 'Regular',
+                buy_shortlink: response.ticket.event.buy_shortlink,
                 brand: response.ticket.event.brand ? {
                   id: response.ticket.event.brand.id,
                   name: response.ticket.event.brand.name,
@@ -169,6 +170,25 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
     const subject = `Problem with my ticket to ${eventTitle}`;
     
     window.location.href = `mailto:support@melt-records.com?subject=${encodeURIComponent(subject)}`;
+  }
+
+  getGoogleCalendarUrl(): string {
+    if (!this.event?.date_and_time) return '';
+    const start = new Date(this.event.date_and_time);
+    const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
+    const fmt = (d: Date) => {
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    };
+    const location = [this.event.venue, this.event.venue_address].filter(Boolean).join(', ');
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: this.event.title || '',
+      dates: `${fmt(start)}/${fmt(end)}`,
+      location,
+      details: `Event by ${this.event.brand?.name || 'the organizer'}`
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 
   shareOnFacebook() {

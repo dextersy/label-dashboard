@@ -57,14 +57,15 @@
             <div class="event-details mt-3 mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
               <div class="mb-2">
                 <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                  (<i class="fas fa-calendar-plus me-1"></i>Add to Calendar)
+</a>
               </div>
-              <div class="mb-2">
+              <div class="mb-0">
                 <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-              </div>
-              <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
-                <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
-                  🗺️ View on Google Maps
-                </a>
+                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                  (<i class="fas fa-map-marker-alt me-1"></i>View Map)
+</a>
               </div>
             </div>
 
@@ -90,13 +91,14 @@
               <div class="event-details mt-3 mb-3 p-3 text-start" style="background-color: #f8f9fa; border-radius: 8px;">
                 <div class="mb-2">
                   <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                  <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                    (<i class="fas fa-calendar-plus me-1"></i>Add to Calendar)
+                  </a>
                 </div>
-                <div class="mb-2">
+                <div class="mb-0">
                   <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-                </div>
-                <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
-                  <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
-                    🗺️ View on Google Maps
+                  <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                    (<i class="fas fa-map-marker-alt me-1"></i>View Map)
                   </a>
                 </div>
               </div>
