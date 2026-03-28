@@ -173,14 +173,8 @@
               <div class="text-warning d-block" *ngIf="emailTypoResult?.suggestedEmail">
                 <i class="fas fa-exclamation-triangle"></i>
                 Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?
-                <button type="button"
-                        class="btn btn-primary btn-sm ms-2 py-0 px-2"
-                        style="font-size: 0.75rem; box-shadow: none;"
-                        (click)="applySuggestedEmail()">Yes</button>
-                <button type="button"
-                        class="btn btn-primary btn-sm ms-1 py-0 px-2"
-                        style="font-size: 0.75rem; box-shadow: none;"
-                        (click)="dismissEmailSuggestion()">No</button>
+                <a class="ms-2 text-decoration-underline" style="cursor: pointer;" (click)="applySuggestedEmail()">Yes</a>
+                <a class="ms-1 text-decoration-underline" style="cursor: pointer;" (click)="dismissEmailSuggestion()">No</a>
               </div>
             </div>
 
