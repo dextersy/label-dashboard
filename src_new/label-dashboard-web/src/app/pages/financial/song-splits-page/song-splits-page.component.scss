@@ -1,0 +1,21 @@
+.table {
+  th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+.save-panel {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+
+  .btn-block {
+    font-weight: 500;
+  }
+}

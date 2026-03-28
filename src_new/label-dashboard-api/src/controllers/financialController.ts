@@ -2967,7 +2967,7 @@ export const getSongCollaboratorRoyalties = async (req: AuthRequest, res: Respon
       }))
     }));
 
-    res.json({ release_id: parseInt(release_id), songs });
+    res.json({ release_id: parseInt(release_id as string), release_title: (release as any).title, songs });
   } catch (error) {
     console.error('Get song collaborator royalties error:', error);
     res.status(500).json({ error: 'Internal server error' });

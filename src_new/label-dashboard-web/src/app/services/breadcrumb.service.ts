@@ -51,6 +51,7 @@ export class BreadcrumbService {
     '/financial/royalties': { label: 'Royalties', parent: '/financial' },
     '/financial/payments': { label: 'Payments and Advances', parent: '/financial' },
     '/financial/release': { label: 'Release Information', parent: '/financial' },
+    '/financial/release/:id': { label: 'Song Splits', parent: '/financial/release' },
     '/financial/royalties/new': { label: 'New Royalty', parent: '/financial/royalties' },
     '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
     '/financial/earnings/new': { label: 'New Earning', parent: '/financial/earnings' },

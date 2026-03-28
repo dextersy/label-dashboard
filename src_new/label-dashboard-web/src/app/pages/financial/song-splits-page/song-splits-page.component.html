@@ -1,0 +1,130 @@
+<app-breadcrumb></app-breadcrumb>
+
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-4">
+    <button type="button" class="btn btn-ghost btn-sm mr-3" (click)="goBack()">
+      <i class="fa fa-arrow-left"></i>
+    </button>
+    <h4 class="mb-0">Song Splits — {{ releaseTitle }}</h4>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="text-center py-5">
+    <span class="spinner-border" role="status"></span>
+    <p class="mt-2 text-muted">Loading song splits...</p>
+  </div>
+
+  <!-- No songs -->
+  <div *ngIf="!loading && songs.length === 0" class="text-center py-5">
+    <i class="fa fa-music fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No songs found for this release.</p>
+  </div>
+
+  <!-- Songs list -->
+  <div *ngIf="!loading && songs.length > 0">
+    <div *ngFor="let song of songs" class="card mb-3">
+      <div class="card-header">
+        <strong>{{ song.track_number }}. {{ song.title }}</strong>
+      </div>
+      <div class="card-body" *ngIf="song.collaborators.length > 0">
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead>
+              <tr>
+                <th>Collaborator</th>
+                <th class="text-right">Streaming %</th>
+                <th class="text-right">Sync %</th>
+                <th class="text-right">Downloads %</th>
+                <th class="text-right">Physical %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let collab of song.collaborators">
+                <td>{{ collab.artist_name }}</td>
+                <td class="text-right">
+                  <input
+                    *ngIf="editing"
+                    type="number"
+                    class="form-control form-control-sm text-right"
+                    min="0" max="100" step="1"
+                    [value]="formatPercentage(collab.streaming_royalty_percentage)"
+                    (input)="onPercentageChange(collab, 'streaming_royalty_percentage', $event)">
+                  <span *ngIf="!editing">
+                    {{ formatPercentage(collab.streaming_royalty_percentage) }}% of {{ collab.streaming_royalty_type }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <input
+                    *ngIf="editing"
+                    type="number"
+                    class="form-control form-control-sm text-right"
+                    min="0" max="100" step="1"
+                    [value]="formatPercentage(collab.sync_royalty_percentage)"
+                    (input)="onPercentageChange(collab, 'sync_royalty_percentage', $event)">
+                  <span *ngIf="!editing">
+                    {{ formatPercentage(collab.sync_royalty_percentage) }}% of {{ collab.sync_royalty_type }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <input
+                    *ngIf="editing"
+                    type="number"
+                    class="form-control form-control-sm text-right"
+                    min="0" max="100" step="1"
+                    [value]="formatPercentage(collab.download_royalty_percentage)"
+                    (input)="onPercentageChange(collab, 'download_royalty_percentage', $event)">
+                  <span *ngIf="!editing">
+                    {{ formatPercentage(collab.download_royalty_percentage) }}% of {{ collab.download_royalty_type }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <input
+                    *ngIf="editing"
+                    type="number"
+                    class="form-control form-control-sm text-right"
+                    min="0" max="100" step="1"
+                    [value]="formatPercentage(collab.physical_royalty_percentage)"
+                    (input)="onPercentageChange(collab, 'physical_royalty_percentage', $event)">
+                  <span *ngIf="!editing">
+                    {{ formatPercentage(collab.physical_royalty_percentage) }}% of {{ collab.physical_royalty_type }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-body text-muted" *ngIf="song.collaborators.length === 0">
+        No collaborators assigned to this song.
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin edit/save footer -->
+  <div *ngIf="isAdmin && !loading && songs.length > 0" class="card mt-3">
+    <div class="card-footer text-right save-panel">
+      <div *ngIf="!editing" class="edit-button">
+        <button type="button" class="btn btn-primary btn-block" (click)="toggleEdit()">
+          Edit Royalties
+        </button>
+      </div>
+      <div *ngIf="editing" class="save-changes-buttons">
+        <button
+          type="button"
+          class="btn btn-primary btn-block"
+          (click)="save()"
+          [disabled]="saving">
+          <span *ngIf="saving" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          {{ saving ? 'Saving...' : 'Save Changes' }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-block mt-2"
+          (click)="toggleEdit()"
+          [disabled]="saving">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

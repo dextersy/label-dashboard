@@ -37,6 +37,7 @@ import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
 import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
+import { SongSplitsPageComponent } from './pages/financial/song-splits-page/song-splits-page.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
@@ -103,7 +104,8 @@ export const routes: Routes = [
       { path: 'payments', component: FinancialComponent, data: { tab: 'payments' } },
       { path: 'payments/new', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-payment' } },
       { path: 'payments/new/:amount', component: FinancialComponent, canActivate: [adminGuard], data: { tab: 'new-payment' } },
-      { path: 'release', component: FinancialComponent, data: { tab: 'release' } }
+      { path: 'release', component: FinancialComponent, data: { tab: 'release' } },
+      { path: 'release/:id', component: SongSplitsPageComponent }
     ]
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
