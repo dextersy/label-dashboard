@@ -131,30 +131,114 @@
 
           <div class="card mb-3" [class.z-index-high]="showCollaboratorDropdown" [class.z-index-collaborators]="!showCollaboratorDropdown">
             <div class="card-body overflow-visible">
-              <div class="chip-input-wrapper">
+
+              <!-- Royalty splits header -->
+              <div *ngIf="songForm.collaborators.length > 0" class="row royalty-header mb-2">
+                <div [class]="isAdmin ? 'col-md-3' : 'col'"><small class="text-muted fw-bold">Artist</small></div>
+                <ng-container *ngIf="isAdmin">
+                  <div class="col-md-2"><small class="text-muted fw-bold">Streaming %</small></div>
+                  <div class="col-md-2"><small class="text-muted fw-bold">Sync %</small></div>
+                  <div class="col-md-2"><small class="text-muted fw-bold">Download %</small></div>
+                  <div class="col-md-2"><small class="text-muted fw-bold">Physical %</small></div>
+                  <div class="col-md-1"></div>
+                </ng-container>
+              </div>
+
+              <!-- Collaborator rows -->
+              <div *ngFor="let collab of songForm.collaborators; let i = index" class="row align-items-center royalty-row mb-2">
+                <div [class]="isAdmin ? 'col-md-3' : 'col'">
+                  <strong>{{ collab.artist?.name || getArtistName(collab.artist_id) }}</strong>
+                  <span *ngIf="collab.isReleaseArtist" class="badge badge-info ml-1" style="font-size: 0.7rem;">Release</span>
+                </div>
+
+                <!-- Admin: editable royalty inputs -->
+                <ng-container *ngIf="isAdmin">
+                  <div class="col-md-2">
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           [(ngModel)]="collab.streaming_royalty_percentage"
+                           [name]="'collab_streaming_' + i"
+                           min="0" max="100" step="0.01"
+                           placeholder="0"
+                           [disabled]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-2">
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           [(ngModel)]="collab.sync_royalty_percentage"
+                           [name]="'collab_sync_' + i"
+                           min="0" max="100" step="0.01"
+                           placeholder="0"
+                           [disabled]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-2">
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           [(ngModel)]="collab.download_royalty_percentage"
+                           [name]="'collab_download_' + i"
+                           min="0" max="100" step="0.01"
+                           placeholder="0"
+                           [disabled]="isRestrictedMode()">
+                  </div>
+                  <div class="col-md-2">
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           [(ngModel)]="collab.physical_royalty_percentage"
+                           [name]="'collab_physical_' + i"
+                           min="0" max="100" step="0.01"
+                           placeholder="0"
+                           [disabled]="isRestrictedMode()">
+                  </div>
+                </ng-container>
+
+                <div class="col-md-1">
+                  <button *ngIf="!collab.isReleaseArtist"
+                          type="button"
+                          class="btn btn-sm text-danger border-0"
+                          (click)="removeCollaborator(i)"
+                          [disabled]="isRestrictedMode()"
+                          title="Remove collaborator">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Label Royalty summary (admin only) -->
+              <div *ngIf="isAdmin && songForm.collaborators.length > 0" class="row align-items-center royalty-row royalty-label-row mt-2 pt-2">
+                <div class="col-md-3"><strong>Label Royalty</strong></div>
+                <div class="col-md-2">
+                  <span class="badge" [ngClass]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
+                    {{ getLabelRoyalty('streaming') }}%
+                  </span>
+                </div>
+                <div class="col-md-2">
+                  <span class="badge" [ngClass]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
+                    {{ getLabelRoyalty('sync') }}%
+                  </span>
+                </div>
+                <div class="col-md-2">
+                  <span class="badge" [ngClass]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
+                    {{ getLabelRoyalty('download') }}%
+                  </span>
+                </div>
+                <div class="col-md-2">
+                  <span class="badge" [ngClass]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
+                    {{ getLabelRoyalty('physical') }}%
+                  </span>
+                </div>
+                <div class="col-md-1"></div>
+              </div>
+
+              <p *ngIf="isAdmin && songForm.collaborators.length > 0" class="text-muted small mt-2 mb-2">
+                Note: percentages should not exceed 100%.
+              </p>
+
+              <!-- Add collaborator dropdown -->
+              <div class="chip-input-wrapper mt-3">
                 <div class="chip-input-field"
                      [class.focused]="collaboratorInputFocused"
                      [class.readonly]="isRestrictedMode()"
                      (click)="!isRestrictedMode() && onCollaboratorInputFocus()">
-
-                  <!-- Release Artists (non-removable) -->
-                  <span *ngFor="let artist of releaseArtists" class="chip-input-badge chip-input-badge-release">
-                    {{ artist.name }}
-                  </span>
-
-                  <!-- Additional Collaborators (removable) -->
-                  <span *ngFor="let collab of songForm.collaborators; let i = index" class="chip-input-badge">
-                    {{ getArtistName(collab.artist_id) }}
-                    <button type="button"
-                            class="chip-input-remove"
-                            (click)="removeCollaborator(i); $event.stopPropagation()"
-                            [disabled]="isRestrictedMode()"
-                            title="Remove">
-                      ×
-                    </button>
-                  </span>
-
-                  <!-- Placeholder input (no typing allowed) -->
                   <input type="text"
                          class="chip-input-text no-input"
                          placeholder="Click to select artists..."
@@ -169,10 +253,9 @@
                   <button *ngFor="let artist of artists"
                           type="button"
                           class="chip-dropdown-item"
-                          [disabled]="releaseArtistIds.includes(artist.id) || isArtistAlreadyAdded(artist.id)"
+                          [disabled]="isArtistAlreadyAdded(artist.id)"
                           (click)="selectCollaboratorFromDropdown(artist.id)">
                     {{ artist.name }}
-                    <span *ngIf="releaseArtistIds.includes(artist.id)" class="text-muted small"> (Release artist)</span>
                     <span *ngIf="isArtistAlreadyAdded(artist.id)" class="text-muted small"> (Already added)</span>
                   </button>
                 </div>

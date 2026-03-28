@@ -26,6 +26,7 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
   @Input() releaseCatalogNo: string = '';
   @Input() releaseStatus: string = '';
   @Input() releaseArtists: any[] = [];
+  @Input() albumCreditsArtists: any[] = [];
 
   @Output() trackListDataChange = new EventEmitter<TrackListData>();
   @Output() validationChange = new EventEmitter<ValidationResult>();

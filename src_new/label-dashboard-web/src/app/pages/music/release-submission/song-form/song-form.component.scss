@@ -99,6 +99,34 @@
   }
 }
 
+// Royalty splits rows
+.royalty-header {
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 4px;
+}
+
+.royalty-row {
+  padding: 4px 0;
+
+  .form-control-sm {
+    max-width: 100px;
+  }
+}
+
+.royalty-label-row {
+  border-top: 1px solid #dee2e6;
+
+  .badge-info {
+    background-color: #17a2b8;
+    color: white;
+  }
+
+  .badge-danger {
+    background-color: #dc3545;
+    color: white;
+  }
+}
+
 // Create new songwriter form
 .create-songwriter-form {
   border: 1px solid #dee2e6;

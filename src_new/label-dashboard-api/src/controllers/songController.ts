@@ -5,6 +5,24 @@ import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../ut
 import { analyzeAudio } from '../utils/audioAnalyzer';
 import { Readable } from 'stream';
 
+/**
+ * Validate that the total royalty percentages across all collaborators do not exceed 1 (100%).
+ * Returns an array of royalty types that exceed the limit, or empty if all valid.
+ */
+function validateRoyaltyTotals(collaborators: any[]): string[] {
+  const types = ['streaming', 'sync', 'download', 'physical'] as const;
+  const exceeded: string[] = [];
+  for (const type of types) {
+    const key = `${type}_royalty_percentage`;
+    const total = collaborators.reduce((sum, c) => sum + (Number(c[key]) || 0), 0);
+    // Allow small floating-point margin
+    if (total > 1.0001) {
+      exceeded.push(type);
+    }
+  }
+  return exceeded;
+}
+
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -169,6 +187,16 @@ export const createSong = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Cannot add songs to non-draft releases. Contact your label administrator.' });
     }
 
+    // Validate royalty totals if collaborators are provided
+    if (req.user.is_admin && collaborators && Array.isArray(collaborators)) {
+      const exceeded = validateRoyaltyTotals(collaborators);
+      if (exceeded.length > 0) {
+        return res.status(400).json({
+          error: `Royalty percentages exceed 100% for: ${exceeded.join(', ')}`
+        });
+      }
+    }
+
     // Get the highest track number for this release from the join table
     const maxTrackEntry = await ReleaseSong.findOne({
       where: { release_id },
@@ -207,36 +235,66 @@ export const createSong = async (req: AuthRequest, res: Response) => {
     const raRows = await ReleaseArtist.findAll({ where: { release_id: Number(release_id) } });
     const raMap = new Map(raRows.map(ra => [ra.artist_id, ra]));
 
-    // Auto-add release artists as collaborators, seeding royalty splits from release_artist
+    // Build a lookup from submitted collaborators (artist_id → royalty fields)
+    const submittedCollabMap = new Map<number, any>();
+    if (collaborators && Array.isArray(collaborators)) {
+      for (const c of collaborators) {
+        submittedCollabMap.set(Number(c.artist_id), c);
+      }
+    }
+
+    // Auto-add release artists as collaborators
+    // Admin: use submitted values if provided, else fall back to release_artist values
+    // Non-admin: always use release_artist values
     const releaseArtists = (release as any).artists || [];
     for (const artist of releaseArtists) {
       const ra = raMap.get(Number(artist.id));
+      const submitted = submittedCollabMap.get(Number(artist.id));
+
+      const royaltyFields = (req.user.is_admin && submitted) ? {
+        streaming_royalty_percentage: submitted.streaming_royalty_percentage ?? ra?.streaming_royalty_percentage,
+        streaming_royalty_type:       submitted.streaming_royalty_type ?? ra?.streaming_royalty_type,
+        sync_royalty_percentage:      submitted.sync_royalty_percentage ?? ra?.sync_royalty_percentage,
+        sync_royalty_type:            submitted.sync_royalty_type ?? ra?.sync_royalty_type,
+        download_royalty_percentage:  submitted.download_royalty_percentage ?? ra?.download_royalty_percentage,
+        download_royalty_type:        submitted.download_royalty_type ?? ra?.download_royalty_type,
+        physical_royalty_percentage:  submitted.physical_royalty_percentage ?? ra?.physical_royalty_percentage,
+        physical_royalty_type:        submitted.physical_royalty_type ?? ra?.physical_royalty_type,
+      } : (ra ? {
+        streaming_royalty_percentage: ra.streaming_royalty_percentage,
+        streaming_royalty_type:       ra.streaming_royalty_type,
+        sync_royalty_percentage:      ra.sync_royalty_percentage,
+        sync_royalty_type:            ra.sync_royalty_type,
+        download_royalty_percentage:  ra.download_royalty_percentage,
+        download_royalty_type:        ra.download_royalty_type,
+        physical_royalty_percentage:  ra.physical_royalty_percentage,
+        physical_royalty_type:        ra.physical_royalty_type,
+      } : {});
+
       await SongCollaborator.create({
         song_id: song.id!,
         artist_id: Number(artist.id),
-        ...(ra ? {
-          streaming_royalty_percentage: ra.streaming_royalty_percentage,
-          streaming_royalty_type:       ra.streaming_royalty_type,
-          sync_royalty_percentage:      ra.sync_royalty_percentage,
-          sync_royalty_type:            ra.sync_royalty_type,
-          download_royalty_percentage:  ra.download_royalty_percentage,
-          download_royalty_type:        ra.download_royalty_type,
-          physical_royalty_percentage:  ra.physical_royalty_percentage,
-          physical_royalty_type:        ra.physical_royalty_type,
-        } : {})
+        ...royaltyFields
       });
     }
 
-    // Add additional collaborators if provided (excluding duplicates).
-    // These are not release artists so they have no release_artist entry — splits default to 0.
+    // Add additional collaborators if provided (excluding release artists).
     if (collaborators && Array.isArray(collaborators)) {
       const releaseArtistIds = releaseArtists.map((a: any) => Number(a.id));
       for (const collab of collaborators) {
         const collabArtistId = Number(collab.artist_id);
         if (!releaseArtistIds.includes(collabArtistId)) {
+          const royaltyFields = req.user.is_admin ? {
+            streaming_royalty_percentage: collab.streaming_royalty_percentage,
+            sync_royalty_percentage:      collab.sync_royalty_percentage,
+            download_royalty_percentage:  collab.download_royalty_percentage,
+            physical_royalty_percentage:  collab.physical_royalty_percentage,
+          } : {};
+
           await SongCollaborator.create({
             song_id: song.id!,
-            artist_id: collabArtistId
+            artist_id: collabArtistId,
+            ...royaltyFields
           });
         }
       }
@@ -391,8 +449,27 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
 
     // Update collaborators if provided
     if (collaborators !== undefined) {
+      // Validate royalty totals if collaborators are provided
+      if (req.user.is_admin && Array.isArray(collaborators)) {
+        const exceeded = validateRoyaltyTotals(collaborators);
+        if (exceeded.length > 0) {
+          return res.status(400).json({
+            error: `Royalty percentages exceed 100% for: ${exceeded.join(', ')}`
+          });
+        }
+      }
+
       // Get release artists (these should always be present as collaborators)
       let releaseArtistIds: number[] = [];
+
+      // Build a lookup from submitted collaborators (artist_id → royalty fields)
+      const submittedCollabMap = new Map<number, any>();
+      if (Array.isArray(collaborators)) {
+        for (const c of collaborators) {
+          submittedCollabMap.set(Number(c.artist_id), c);
+        }
+      }
+
       if (release) {
         const releaseWithArtists = await Release.findByPk(release.id, {
           include: [{
@@ -410,22 +487,37 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
         const raRows = await ReleaseArtist.findAll({ where: { release_id: Number(release.id) } });
         const raMap = new Map(raRows.map(ra => [ra.artist_id, ra]));
 
-        // Re-add release artists, seeding royalty splits from release_artist
+        // Re-add release artists
+        // Admin: use submitted values if provided, else fall back to release_artist values
+        // Non-admin: always use release_artist values
         for (const artist of releaseArtists) {
           const ra = raMap.get(Number(artist.id));
+          const submitted = submittedCollabMap.get(Number(artist.id));
+
+          const royaltyFields = (req.user.is_admin && submitted) ? {
+            streaming_royalty_percentage: submitted.streaming_royalty_percentage ?? ra?.streaming_royalty_percentage,
+            streaming_royalty_type:       submitted.streaming_royalty_type ?? ra?.streaming_royalty_type,
+            sync_royalty_percentage:      submitted.sync_royalty_percentage ?? ra?.sync_royalty_percentage,
+            sync_royalty_type:            submitted.sync_royalty_type ?? ra?.sync_royalty_type,
+            download_royalty_percentage:  submitted.download_royalty_percentage ?? ra?.download_royalty_percentage,
+            download_royalty_type:        submitted.download_royalty_type ?? ra?.download_royalty_type,
+            physical_royalty_percentage:  submitted.physical_royalty_percentage ?? ra?.physical_royalty_percentage,
+            physical_royalty_type:        submitted.physical_royalty_type ?? ra?.physical_royalty_type,
+          } : (ra ? {
+            streaming_royalty_percentage: ra.streaming_royalty_percentage,
+            streaming_royalty_type:       ra.streaming_royalty_type,
+            sync_royalty_percentage:      ra.sync_royalty_percentage,
+            sync_royalty_type:            ra.sync_royalty_type,
+            download_royalty_percentage:  ra.download_royalty_percentage,
+            download_royalty_type:        ra.download_royalty_type,
+            physical_royalty_percentage:  ra.physical_royalty_percentage,
+            physical_royalty_type:        ra.physical_royalty_type,
+          } : {});
+
           await SongCollaborator.create({
             song_id: Number(id),
             artist_id: Number(artist.id),
-            ...(ra ? {
-              streaming_royalty_percentage: ra.streaming_royalty_percentage,
-              streaming_royalty_type:       ra.streaming_royalty_type,
-              sync_royalty_percentage:      ra.sync_royalty_percentage,
-              sync_royalty_type:            ra.sync_royalty_type,
-              download_royalty_percentage:  ra.download_royalty_percentage,
-              download_royalty_type:        ra.download_royalty_type,
-              physical_royalty_percentage:  ra.physical_royalty_percentage,
-              physical_royalty_type:        ra.physical_royalty_type,
-            } : {})
+            ...royaltyFields
           });
         }
       } else {
@@ -433,15 +525,22 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
         await SongCollaborator.destroy({ where: { song_id: id } });
       }
 
-      // Add additional collaborators (excluding duplicates).
-      // These are not release artists so they have no release_artist entry — splits default to 0.
+      // Add additional collaborators (excluding release artists).
       if (Array.isArray(collaborators)) {
         for (const collab of collaborators) {
           const collabArtistId = Number(collab.artist_id);
           if (!releaseArtistIds.includes(collabArtistId)) {
+            const royaltyFields = req.user.is_admin ? {
+              streaming_royalty_percentage: collab.streaming_royalty_percentage,
+              sync_royalty_percentage:      collab.sync_royalty_percentage,
+              download_royalty_percentage:  collab.download_royalty_percentage,
+              physical_royalty_percentage:  collab.physical_royalty_percentage,
+            } : {};
+
             await SongCollaborator.create({
               song_id: Number(id),
-              artist_id: collabArtistId
+              artist_id: collabArtistId,
+              ...royaltyFields
             });
           }
         }

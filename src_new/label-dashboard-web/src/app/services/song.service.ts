@@ -7,6 +7,15 @@ export interface SongCollaborator {
   id?: number;
   artist_id: number;
   artist?: any;
+  streaming_royalty_percentage?: number;
+  streaming_royalty_type?: string;
+  sync_royalty_percentage?: number;
+  sync_royalty_type?: string;
+  download_royalty_percentage?: number;
+  download_royalty_type?: string;
+  physical_royalty_percentage?: number;
+  physical_royalty_type?: string;
+  isReleaseArtist?: boolean; // UI-only flag
 }
 
 export interface Songwriter {

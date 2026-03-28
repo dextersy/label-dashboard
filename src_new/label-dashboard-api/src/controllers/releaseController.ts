@@ -230,24 +230,26 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
 
     if (parsedArtists && Array.isArray(parsedArtists)) {
       for (const artistData of parsedArtists) {
-        // For admins, use provided royalty percentages; for non-admins, ignore them and use 0
+        // For admins, use provided royalty percentages (or sensible defaults);
+        // For non-admins, default to 50% split equally among artists
+        const nonAdminDefault = 0.5 / parsedArtists.length;
         const royaltyData = req.user.is_admin ? {
-          streaming_royalty_percentage: artistData.streaming_royalty_percentage || 0.5,
-          streaming_royalty_type: artistData.streaming_royalty_type || 'Revenue',
-          sync_royalty_percentage: artistData.sync_royalty_percentage || 0.5,
-          sync_royalty_type: artistData.sync_royalty_type || 'Revenue',
-          download_royalty_percentage: artistData.download_royalty_percentage || 0.5,
-          download_royalty_type: artistData.download_royalty_type || 'Revenue',
-          physical_royalty_percentage: artistData.physical_royalty_percentage || 0.2,
-          physical_royalty_type: artistData.physical_royalty_type || 'Revenue'
+          streaming_royalty_percentage: artistData.streaming_royalty_percentage ?? 0.5,
+          streaming_royalty_type: artistData.streaming_royalty_type ?? 'Revenue',
+          sync_royalty_percentage: artistData.sync_royalty_percentage ?? 0.5,
+          sync_royalty_type: artistData.sync_royalty_type ?? 'Revenue',
+          download_royalty_percentage: artistData.download_royalty_percentage ?? 0.5,
+          download_royalty_type: artistData.download_royalty_type ?? 'Revenue',
+          physical_royalty_percentage: artistData.physical_royalty_percentage ?? 0.2,
+          physical_royalty_type: artistData.physical_royalty_type ?? 'Revenue'
         } : {
-          streaming_royalty_percentage: 0,
+          streaming_royalty_percentage: nonAdminDefault,
           streaming_royalty_type: 'Revenue',
-          sync_royalty_percentage: 0,
+          sync_royalty_percentage: nonAdminDefault,
           sync_royalty_type: 'Revenue',
-          download_royalty_percentage: 0,
+          download_royalty_percentage: nonAdminDefault,
           download_royalty_type: 'Revenue',
-          physical_royalty_percentage: 0,
+          physical_royalty_percentage: nonAdminDefault,
           physical_royalty_type: 'Revenue'
         };
 
@@ -417,14 +419,14 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
         await ReleaseArtist.create({
           release_id: releaseId,
           artist_id: artistData.artist_id,
-          streaming_royalty_percentage: artistData.streaming_royalty_percentage || 0.5,
-          streaming_royalty_type: artistData.streaming_royalty_type || 'Revenue',
-          sync_royalty_percentage: artistData.sync_royalty_percentage || 0.5,
-          sync_royalty_type: artistData.sync_royalty_type || 'Revenue',
-          download_royalty_percentage: artistData.download_royalty_percentage || 0.5,
-          download_royalty_type: artistData.download_royalty_type || 'Revenue',
-          physical_royalty_percentage: artistData.physical_royalty_percentage || 0.2,
-          physical_royalty_type: artistData.physical_royalty_type || 'Revenue'
+          streaming_royalty_percentage: artistData.streaming_royalty_percentage ?? 0.5,
+          streaming_royalty_type: artistData.streaming_royalty_type ?? 'Revenue',
+          sync_royalty_percentage: artistData.sync_royalty_percentage ?? 0.5,
+          sync_royalty_type: artistData.sync_royalty_type ?? 'Revenue',
+          download_royalty_percentage: artistData.download_royalty_percentage ?? 0.5,
+          download_royalty_type: artistData.download_royalty_type ?? 'Revenue',
+          physical_royalty_percentage: artistData.physical_royalty_percentage ?? 0.2,
+          physical_royalty_type: artistData.physical_royalty_type ?? 'Revenue'
         });
       }
     }

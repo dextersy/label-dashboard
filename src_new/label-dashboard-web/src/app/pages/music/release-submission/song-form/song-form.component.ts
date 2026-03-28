@@ -21,6 +21,7 @@ export class SongFormComponent implements OnChanges, OnInit {
   @Input() isAdmin: boolean = false;
   @Input() releaseStatus: string = 'Draft';
   @Input() releaseArtists: any[] = []; // Artists associated with the release (non-editable collaborators)
+  @Input() albumCreditsArtists: any[] = []; // Album credits artists with royalty split data
   @Output() close = new EventEmitter<void>();
   @Output() submit = new EventEmitter<any>();
 
@@ -94,6 +95,9 @@ export class SongFormComponent implements OnChanges, OnInit {
         this.resetForm();
         if (this.song) {
           this.loadSongData();
+        } else {
+          // New song: pre-populate release artists as collaborators with 0% defaults
+          this.prepopulateReleaseArtists();
         }
         // Reload songwriters when modal opens to ensure fresh data
         this.loadSongwriters();
@@ -255,14 +259,43 @@ export class SongFormComponent implements OnChanges, OnInit {
       // Note: releaseArtists have 'id' property, not 'artist_id'
       this.releaseArtistIds = this.releaseArtists.map(a => Number(a.id));
 
-      // Filter out release artists from editable collaborators
-      const editableCollaborators = this.song.collaborators
-        ? this.song.collaborators.filter(c => {
-            const collabArtistId = Number(c.artist_id);
-            const shouldKeep = !this.releaseArtistIds.includes(collabArtistId);
-            return shouldKeep;
-          })
-        : [];
+      // Build full collaborator list with isReleaseArtist flag
+      const allCollaborators: SongCollaborator[] = [];
+
+      // First add release artists (from existing collaborators if they exist, else create defaults)
+      for (const ra of this.releaseArtists) {
+        const existing = this.song.collaborators?.find(c => Number(c.artist_id) === Number(ra.id));
+        allCollaborators.push({
+          artist_id: Number(ra.id),
+          artist: ra,
+          isReleaseArtist: true,
+          // Convert from decimal (0-1) to display percentage (0-100)
+          streaming_royalty_percentage: this.toDisplay(existing?.streaming_royalty_percentage),
+          streaming_royalty_type: existing?.streaming_royalty_type,
+          sync_royalty_percentage: this.toDisplay(existing?.sync_royalty_percentage),
+          sync_royalty_type: existing?.sync_royalty_type,
+          download_royalty_percentage: this.toDisplay(existing?.download_royalty_percentage),
+          download_royalty_type: existing?.download_royalty_type,
+          physical_royalty_percentage: this.toDisplay(existing?.physical_royalty_percentage),
+          physical_royalty_type: existing?.physical_royalty_type,
+        });
+      }
+
+      // Then add additional collaborators (non-release artists)
+      if (this.song.collaborators) {
+        for (const c of this.song.collaborators) {
+          if (!this.releaseArtistIds.includes(Number(c.artist_id))) {
+            allCollaborators.push({
+              ...c,
+              isReleaseArtist: false,
+              streaming_royalty_percentage: this.toDisplay(c.streaming_royalty_percentage),
+              sync_royalty_percentage: this.toDisplay(c.sync_royalty_percentage),
+              download_royalty_percentage: this.toDisplay(c.download_royalty_percentage),
+              physical_royalty_percentage: this.toDisplay(c.physical_royalty_percentage),
+            });
+          }
+        }
+      }
 
       this.songForm = {
         title: this.song.title,
@@ -272,10 +305,33 @@ export class SongFormComponent implements OnChanges, OnInit {
         spotify_link: this.song.spotify_link || '',
         apple_music_link: this.song.apple_music_link || '',
         youtube_link: this.song.youtube_link || '',
-        collaborators: editableCollaborators,
+        collaborators: allCollaborators,
         authors: this.song.authors ? [...this.song.authors] : [],
         composers: this.song.composers ? [...this.song.composers] : []
       };
+    }
+  }
+
+  private prepopulateReleaseArtists(): void {
+    this.releaseArtistIds = this.releaseArtists.map(a => Number(a.id));
+    // Build a lookup from albumCreditsArtists (artist_id → royalty data, stored as decimals 0-1)
+    const creditsMap = new Map<number, any>();
+    for (const ca of this.albumCreditsArtists) {
+      creditsMap.set(Number(ca.artist_id), ca);
+    }
+
+    for (const ra of this.releaseArtists) {
+      const credits = creditsMap.get(Number(ra.id));
+      this.songForm.collaborators.push({
+        artist_id: Number(ra.id),
+        artist: ra,
+        isReleaseArtist: true,
+        // Convert from decimal (0-1) to display percentage (0-100)
+        streaming_royalty_percentage: this.toDisplay(credits?.streaming_royalty_percentage),
+        sync_royalty_percentage: this.toDisplay(credits?.sync_royalty_percentage),
+        download_royalty_percentage: this.toDisplay(credits?.download_royalty_percentage),
+        physical_royalty_percentage: this.toDisplay(credits?.physical_royalty_percentage),
+      });
     }
   }
 
@@ -298,9 +354,22 @@ export class SongFormComponent implements OnChanges, OnInit {
     // Process composers - create new songwriters if needed (reusing already created songwriters)
     const processedComposers = await this.processComposers(tempSongwriterMap);
 
+    // Strip the UI-only isReleaseArtist flag and convert display % (0-100) back to decimal (0-1)
+    const collaborators = this.songForm.collaborators.map(c => {
+      const { isReleaseArtist, ...rest } = c;
+      return {
+        ...rest,
+        streaming_royalty_percentage: this.toDecimal(rest.streaming_royalty_percentage),
+        sync_royalty_percentage: this.toDecimal(rest.sync_royalty_percentage),
+        download_royalty_percentage: this.toDecimal(rest.download_royalty_percentage),
+        physical_royalty_percentage: this.toDecimal(rest.physical_royalty_percentage),
+      };
+    });
+
     const songData = {
       release_id: this.releaseId,
       ...this.songForm,
+      collaborators,
       authors: processedAuthors,
       composers: processedComposers
     };
@@ -437,8 +506,15 @@ export class SongFormComponent implements OnChanges, OnInit {
   }
 
   selectCollaboratorFromDropdown(artistId: number): void {
-    if (!this.releaseArtistIds.includes(artistId) && !this.isArtistAlreadyAdded(artistId)) {
-      this.songForm.collaborators.push({ artist_id: artistId });
+    if (!this.isArtistAlreadyAdded(artistId)) {
+      this.songForm.collaborators.push({
+        artist_id: artistId,
+        isReleaseArtist: false,
+        streaming_royalty_percentage: 0,
+        sync_royalty_percentage: 0,
+        download_royalty_percentage: 0,
+        physical_royalty_percentage: 0,
+      });
     }
     this.showCollaboratorDropdown = false;
   }
@@ -565,6 +641,27 @@ export class SongFormComponent implements OnChanges, OnInit {
       this.createNewComposer();
     }
     event.preventDefault();
+  }
+
+  /** Convert decimal (0-1) from API/DB to display percentage (0-100) */
+  private toDisplay(val: number | undefined | null): number {
+    return val ? Math.round(Number(val) * 10000) / 100 : 0;
+  }
+
+  /** Convert display percentage (0-100) to decimal (0-1) for API/DB */
+  private toDecimal(val: number | undefined | null): number {
+    return val ? Number(val) / 100 : 0;
+  }
+
+  getRoyaltyTotal(type: string): number {
+    return this.songForm.collaborators.reduce((sum, c) => {
+      const val = (c as any)[`${type}_royalty_percentage`] || 0;
+      return sum + Number(val);
+    }, 0);
+  }
+
+  getLabelRoyalty(type: string): number {
+    return 100 - this.getRoyaltyTotal(type);
   }
 
   getArtistName(artistId: number): string {

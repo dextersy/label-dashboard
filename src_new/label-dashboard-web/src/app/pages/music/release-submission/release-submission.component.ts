@@ -189,18 +189,21 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
           this.artistStateService.setSelectedArtist(releaseArtist);
         }
 
+        // Pre-populate albumCreditsData from the loaded release's artists (with ReleaseArtist join data)
+        // so it's available immediately for the track list / song form without visiting the credits tab.
+        // The album-credits-section component will overwrite this when its tab is visited.
+        this.populateAlbumCreditsFromRelease(response.release);
+
         // Check if this is a non-draft release - show read-only view
         if (response.release.status !== 'Draft') {
           this.showReadOnlyView = true;
           this.releaseForView = response.release;
           return;
         }
-        
+
         // Initialize the form data from the loaded release
         this.initReleaseInfoFromRelease(response.release);
 
-        // Don't set albumCreditsData here - let the album-credits-section component process and emit it
-        
         // Mark as valid since we're editing existing data
         this.isReleaseInfoValid = true;
         this.isAlbumCreditsValid = true;
@@ -297,10 +300,11 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
       liner_notes: '',
       artists: this.artist ? [{
         artist_id: this.artist.id,
-        streaming_royalty_percentage: 50,
-        sync_royalty_percentage: 50,
-        download_royalty_percentage: 50,
-        physical_royalty_percentage: 50
+        // Store as decimal (0-1) to match format used by album-credits emitFormData
+        streaming_royalty_percentage: 0.5,
+        sync_royalty_percentage: 0.5,
+        download_royalty_percentage: 0.5,
+        physical_royalty_percentage: 0.5
       }] : []
     };
 
@@ -590,6 +594,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     // Initialize the form data from the loaded release
     if (this.editingRelease) {
       this.initReleaseInfoFromRelease(this.editingRelease);
+      this.populateAlbumCreditsFromRelease(this.editingRelease);
 
       // Mark as valid since we're editing existing data
       this.isReleaseInfoValid = true;
@@ -621,6 +626,37 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   // Check if we can show the cancel button (editing a non-Draft release)
   get canCancelToViewMode(): boolean {
     return this.isEditing && !this.isDraftStatus && this.editingRelease?.status !== 'Draft';
+  }
+
+  /**
+   * Populate albumCreditsData from a Release object's artists (with ReleaseArtist join data).
+   */
+  private populateAlbumCreditsFromRelease(release: any): void {
+    const artists = release.artists || [];
+    const isAdmin = this.authService.isAdmin();
+    // For non-admin users, default to 50% split equally if royalties are all zero/null
+    const nonAdminDefault = artists.length > 0 ? 0.5 / artists.length : 0.5;
+
+    const releaseArtistsData = artists.map((a: any) => {
+      const hasRoyalties = a.ReleaseArtist?.streaming_royalty_percentage ||
+        a.ReleaseArtist?.sync_royalty_percentage ||
+        a.ReleaseArtist?.download_royalty_percentage ||
+        a.ReleaseArtist?.physical_royalty_percentage;
+      const defaultVal = (!isAdmin && !hasRoyalties) ? nonAdminDefault : 0;
+      return {
+        artist_id: a.id,
+        artist_name: a.name,
+        // ReleaseArtist join table values are already in decimal (0-1)
+        streaming_royalty_percentage: a.ReleaseArtist?.streaming_royalty_percentage ?? defaultVal,
+        sync_royalty_percentage: a.ReleaseArtist?.sync_royalty_percentage ?? defaultVal,
+        download_royalty_percentage: a.ReleaseArtist?.download_royalty_percentage ?? defaultVal,
+        physical_royalty_percentage: a.ReleaseArtist?.physical_royalty_percentage ?? defaultVal,
+      };
+    });
+    this.albumCreditsData = {
+      liner_notes: release.liner_notes || '',
+      artists: releaseArtistsData
+    };
   }
 
   /**

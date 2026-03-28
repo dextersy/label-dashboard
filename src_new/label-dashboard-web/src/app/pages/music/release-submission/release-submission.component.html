@@ -90,6 +90,7 @@
           [releaseCatalogNo]="releaseInfoData?.catalog_no || ''"
           [releaseStatus]="releaseInfoData?.status || 'Draft'"
           [releaseArtists]="releaseInfoData?.artists || []"
+          [albumCreditsArtists]="albumCreditsData?.artists || []"
           (trackListDataChange)="onTrackListDataChange($event)"
           (validationChange)="onTrackListValidationChange($event)"
           (alertMessage)="onAlertMessage($event)">
