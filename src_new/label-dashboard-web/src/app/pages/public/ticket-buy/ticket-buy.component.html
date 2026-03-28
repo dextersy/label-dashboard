@@ -1,7 +1,13 @@
 <div class="public-page" [style.background-color]="brandColor">
+  <!-- Preview Banner -->
+  <div *ngIf="isPreview" class="preview-banner">
+    <i class="fas fa-eye me-2"></i>
+    <strong>Preview Mode</strong> — This is how the buy page will look. Purchasing is disabled.
+  </div>
+
   <!-- Countdown Notification Bar -->
   <app-countdown-notification
-    *ngIf="event && event.show_countdown && !isLoading && !isError && canBuyTickets()"
+    *ngIf="event && event.show_countdown && !isLoading && !isError && canBuyTickets() && !isPreview"
     [eventDate]="event.date_and_time"
     [closeTime]="event.close_time"
     [eventTitle]="event.title"
@@ -57,14 +63,15 @@
             <div class="event-details mt-3 mb-3 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
               <div class="mb-2">
                 <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                  (<i class="fas fa-calendar-plus me-1"></i>Add to Calendar)
+</a>
               </div>
-              <div class="mb-2">
+              <div class="mb-0">
                 <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-              </div>
-              <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
-                <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
-                  🗺️ View on Google Maps
-                </a>
+                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                  (<i class="fas fa-map-marker-alt me-1"></i>View Map)
+</a>
               </div>
             </div>
 
@@ -90,13 +97,14 @@
               <div class="event-details mt-3 mb-3 p-3 text-start" style="background-color: #f8f9fa; border-radius: 8px;">
                 <div class="mb-2">
                   <span class="fw-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                  <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                    (<i class="fas fa-calendar-plus me-1"></i>Add to Calendar)
+                  </a>
                 </div>
-                <div class="mb-2">
+                <div class="mb-0">
                   <span class="fw-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-                </div>
-                <div class="mb-0" *ngIf="hasVenueMapsLink(event)">
-                  <a [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none fw-semibold" style="color: #1595e7;">
-                    🗺️ View on Google Maps
+                  <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none ms-2" style="color: #1595e7;">
+                    (<i class="fas fa-map-marker-alt me-1"></i>View Map)
                   </a>
                 </div>
               </div>
@@ -171,14 +179,8 @@
               <div class="text-warning d-block" *ngIf="emailTypoResult?.suggestedEmail">
                 <i class="fas fa-exclamation-triangle"></i>
                 Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?
-                <button type="button"
-                        class="btn btn-primary btn-sm ms-2 py-0 px-2"
-                        style="font-size: 0.75rem; box-shadow: none;"
-                        (click)="applySuggestedEmail()">Yes</button>
-                <button type="button"
-                        class="btn btn-primary btn-sm ms-1 py-0 px-2"
-                        style="font-size: 0.75rem; box-shadow: none;"
-                        (click)="dismissEmailSuggestion()">No</button>
+                <a class="ms-2 text-decoration-underline" style="cursor: pointer;" (click)="applySuggestedEmail()">Yes</a>
+                <a class="ms-1 text-decoration-underline" style="cursor: pointer;" (click)="dismissEmailSuggestion()">No</a>
               </div>
             </div>
 
@@ -313,9 +315,9 @@
               color="primary"
               type="submit"
               class="submit-button w-100"
-              [disabled]="ticketForm.invalid || isSubmitting">
+              [disabled]="ticketForm.invalid || isSubmitting || isPreview">
               <i class="fas me-1" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
-              {{ isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now') }}
+              {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>
             <div *ngIf="totalAmount > 0" class="fadeIn sixth" style="font-size:12px;">
               Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page.

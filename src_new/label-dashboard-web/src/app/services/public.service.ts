@@ -287,6 +287,7 @@ export class PublicService {
         venue_address?: string;
         venue_maps_url?: string;
         poster_url?: string;
+        buy_shortlink?: string;
         brand?: {
           id: number;
           name: string;

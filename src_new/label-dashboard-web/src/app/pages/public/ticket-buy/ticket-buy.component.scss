@@ -5,6 +5,20 @@
   min-height: 100vh;
 }
 
+/* Preview Banner */
+.preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  background-color: #ffc107;
+  color: #000;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
 
 // Force override of global dashboard styles
 .public-page {

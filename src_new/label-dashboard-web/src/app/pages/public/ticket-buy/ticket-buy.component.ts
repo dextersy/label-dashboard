@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeStyle } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { PublicService, PublicEvent, TicketPurchaseRequest } from '../../../services/public.service';
+import { EventService } from '../../../services/event.service';
 import { BrandService, BrandSettings } from '../../../services/brand.service';
 import { MetaService } from '../../../services/meta.service';
 import { CountdownNotificationComponent } from '../../../shared/countdown-notification/countdown-notification.component';
@@ -49,12 +50,14 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   selectedTicketType: any = null;
   showLightbox = false;
   emailTypoResult: EmailTypoResult | null = null;
+  isPreview = false;
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private publicService: PublicService,
+    private eventService: EventService,
     private brandService: BrandService,
     private metaService: MetaService,
     private sanitizer: DomSanitizer
@@ -71,19 +74,21 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const eventId = params['id'];
-      if (eventId) {
-        this.loadEvent(eventId);
-      }
-    });
-
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      if (params['ref']) {
-        this.referralCode = params['ref'];
-        this.ticketForm.patchValue({ referral_code: params['ref'] });
-      }
-    });
+    combineLatest([this.route.params, this.route.queryParams])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([params, queryParams]) => {
+        if (queryParams['preview'] === 'true') {
+          this.isPreview = true;
+        }
+        if (queryParams['ref']) {
+          this.referralCode = queryParams['ref'];
+          this.ticketForm.patchValue({ referral_code: queryParams['ref'] });
+        }
+        const eventId = params['id'];
+        if (eventId) {
+          this.loadEvent(eventId);
+        }
+      });
 
     // Add email typo and name/email mismatch checking
     this.ticketForm.get('email_address')?.valueChanges
@@ -118,34 +123,40 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   loadEvent(eventId: string) {
     this.isLoading = true;
-    
+
+    // In preview mode, use authenticated endpoint; otherwise use public endpoint
+    const eventSource = this.isPreview
+      ? this.eventService.getEventForPreview(parseInt(eventId, 10))
+      : this.publicService.getEvent(parseInt(eventId, 10));
+
     // Load brand and event information (ticket types are already included in event)
     forkJoin({
       brand: this.brandService.loadBrandByDomain(),
-      event: this.publicService.getEvent(parseInt(eventId, 10))
+      event: eventSource
     }).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ brand, event }) => {
           this.currentBrand = brand;
           
           if (event.event) {
-            this.event = event.event;
+            const loadedEvent: PublicEvent = event.event;
+            this.event = loadedEvent;
 
             // Ticket types are already filtered (enabled only) in the event response
 
             // Additional frontend validation: check if event belongs to current brand
-            if (this.event.brand?.id && this.currentBrand?.id && 
-                this.event.brand.id !== this.currentBrand.id) {
+            if (loadedEvent.brand?.id && this.currentBrand?.id &&
+                loadedEvent.brand.id !== this.currentBrand.id) {
               console.warn('Event belongs to different brand than current domain');
               this.showError();
               return;
             }
-            
+
             // Set brand color from current brand or event brand
             if (this.currentBrand?.brand_color) {
               this.brandColor = this.currentBrand.brand_color;
-            } else if (this.event.brand?.color) {
-              this.brandColor = this.event.brand.color;
+            } else if (loadedEvent.brand?.color) {
+              this.brandColor = loadedEvent.brand.color;
             }
             
             // Update SEO metadata for social sharing
@@ -243,6 +254,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   canBuyTickets(): boolean {
     if (!this.event) return false;
+
+    // In preview mode, always show the form
+    if (this.isPreview) return true;
 
     // Event is explicitly closed
     if (this.event.is_closed) return false;
@@ -367,6 +381,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.isPreview) return;
     if (this.ticketForm.valid && this.event) {
       // Check if selected ticket type is sold out
       const selectedTicketTypeId = this.ticketForm.value.ticket_type_id;
@@ -484,6 +499,25 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   getHeroBgImageStyle(): SafeStyle | null {
     if (!this.event?.poster_url) return null;
     return this.sanitizer.bypassSecurityTrustStyle(`url(${this.event.poster_url})`);
+  }
+
+  getGoogleCalendarUrl(): string {
+    if (!this.event?.date_and_time) return '';
+    const start = new Date(this.event.date_and_time);
+    const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
+    const fmt = (d: Date) => {
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    };
+    const location = [this.event.venue, this.event.venue_address].filter(Boolean).join(', ');
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: this.event.title || '',
+      dates: `${fmt(start)}/${fmt(end)}`,
+      location,
+      details: `Event by ${this.event.brand?.name || 'the organizer'}`
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 
   /**

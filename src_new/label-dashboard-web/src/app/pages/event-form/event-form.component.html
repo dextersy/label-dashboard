@@ -552,6 +552,15 @@
 
 <!-- Floating Action Bar (outside scrollable container) -->
 <app-floating-action-bar>
+  <!-- Preview Buy Page button -->
+  <button
+    type="button"
+    class="btn btn-secondary"
+    (click)="previewBuyPage()"
+    *ngIf="!isNewEvent && eventId && isEventDraft()">
+    <i class="fa fa-eye"></i> Preview Buy Page
+  </button>
+
   <!-- Cancel button only shown when creating a new event -->
   <button
     type="button"

@@ -383,6 +383,7 @@ export const getTicketDetails = async (req: Request, res: Response) => {
               venue_address: ticket.event.venue_address,
               venue_maps_url: ticket.event.venue_maps_url,
               poster_url: ticket.event.poster_url,
+              buy_shortlink: ticket.event.buy_shortlink,
               brand: ticket.event.brand ? {
                 id: ticket.event.brand.id,
                 name: ticket.event.brand.brand_name,
@@ -1256,15 +1257,10 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     }
     const frontendUrl = `https://${brandDomain}/public/tickets/buy/${event.id}`;
 
-    // Check if this is a social media crawler
-    const userAgent = req.get('User-Agent') || '';
-    const isSocialCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree/i.test(userAgent);
-
-    // For social media crawlers, serve SEO page with meta tags
-    // For regular users and browsers, redirect immediately with HTTP 302
-    if (!isSocialCrawler) {
-      return res.redirect(302, frontendUrl);
-    }
+    // Always serve the SEO page with meta tags for all visitors.
+    // Crawlers (Linktree, Facebook, Twitter, etc.) read the OG tags.
+    // Real browsers get redirected via <meta http-equiv="refresh"> and JavaScript.
+    // This avoids needing to maintain a list of crawler user-agent strings.
 
     // Generate meta tags for social sharing
     const title = `Buy tickets to ${event.title}`;
@@ -1330,18 +1326,28 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
-  
+
+  <!-- Meta refresh for browsers that don't run JavaScript -->
+  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
+
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
-  
+
+  <!-- Auto-redirect for regular browsers -->
+  <script>
+    (function() {
+      window.location.replace('${frontendUrl}');
+    })();
+  </script>
+
   <!-- Styles for crawler display -->
   <style>
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      margin: 0; 
-      padding: 20px; 
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       display: flex;

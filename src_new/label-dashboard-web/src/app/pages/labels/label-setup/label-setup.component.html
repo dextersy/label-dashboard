@@ -13,7 +13,7 @@
               <div class="form-group mb-3">
                 <label for="logo">Logo</label><br>
                 <img [src]="brandSettings.logo_url || 'assets/img/placeholder.jpg'"
-                     width="250" style="background-color:#cccccc; margin-bottom: 10px;"><br>
+                     width="250" [style.background-color]="brandForm.get('brand_color')?.value || '#cccccc'" style="margin-bottom: 10px;"><br>
                 <input type="file" class="form-control" id="logo"
                        accept=".jpg,.png" (change)="onLogoFileSelected($event)" />
               </div>

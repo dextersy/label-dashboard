@@ -5,6 +5,7 @@ import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
+import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { sendEmail, sendEmailWithInlineImages } from '../utils/emailService';
 
 // Helper function to add responsive image styling to content
@@ -3031,4 +3032,163 @@ export const getPaymentConfig = async (req: AuthRequest, res: Response) => {
   const minCard = process.env.MIN_AMOUNT_CARD ? parseFloat(process.env.MIN_AMOUNT_CARD) : null;
   const minDob  = process.env.MIN_AMOUNT_DOB  ? parseFloat(process.env.MIN_AMOUNT_DOB)  : null;
   res.json({ min_card: minCard, min_dob: minDob });
+};
+
+// Helper: determine if countdown should be shown
+const shouldShowCountdown = (event: any): boolean => {
+  const now = new Date();
+  const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+  const timeDiff = closeTime.getTime() - now.getTime();
+  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+  if (timeDiff <= 0) return false;
+
+  switch (event.countdown_display) {
+    case 'always': return true;
+    case '1_week': return daysDiff <= 7;
+    case '3_days': return daysDiff <= 3;
+    case '1_day':  return daysDiff <= 1;
+    case 'never':
+    default:       return false;
+  }
+};
+
+// Admin-only preview of an event in the public ticket-buy shape (no status filter)
+export const getEventPreview = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const eventId = parseInt(id as string, 10);
+
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const event = await Event.findOne({
+      where: {
+        id: eventId,
+        brand_id: req.user.brand_id
+      },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        }
+      ]
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get enabled ticket types with availability info
+    const ticketTypes = await TicketType.findAll({
+      where: { event_id: eventId, disabled: false },
+      include: [{
+        model: Ticket,
+        as: 'tickets',
+        required: false,
+        attributes: ['id']
+      }],
+      order: [['id', 'ASC']]
+    });
+
+    const processedTicketTypes = [];
+    for (const ticketType of ticketTypes) {
+      const isAvailable = ticketType.isAvailable();
+      const isSoldOut = await ticketType.isSoldOut();
+      const remainingTickets = await ticketType.getRemainingTickets();
+      const soldCount = await ticketType.getSoldCount();
+
+      processedTicketTypes.push({
+        id: ticketType.id,
+        name: ticketType.name,
+        price: ticketType.price,
+        is_available: isAvailable,
+        is_sold_out: isSoldOut,
+        remaining_tickets: remainingTickets,
+        sold_count: soldCount,
+        special_instructions: ticketType.special_instructions || null
+      });
+    }
+
+    // Calculate remaining tickets if max_tickets is set
+    let remainingTickets = null;
+    if (event.max_tickets && event.max_tickets > 0) {
+      const totalSold = await Ticket.sum('number_of_entries', {
+        where: {
+          event_id: eventId,
+          status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] }
+        }
+      });
+      remainingTickets = event.max_tickets - (totalSold || 0);
+    }
+
+    const priceDisplay = getEventDisplayPriceSync(event);
+
+    // Build walk-in info if enabled
+    let walkInTypes: any[] | undefined;
+    if (event.walk_in_enabled) {
+      const witList = await WalkInType.findAll({
+        where: { event_id: eventId },
+        order: [['id', 'ASC']]
+      });
+      walkInTypes = [];
+      for (const wit of witList) {
+        const remainingSlots = await wit.getRemainingSlots();
+        walkInTypes.push({
+          name: wit.name,
+          price: wit.price,
+          remaining_slots: remainingSlots
+        });
+      }
+    }
+
+    res.json({
+      event: {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        date_and_time: event.date_and_time,
+        close_time: event.close_time,
+        venue: event.venue,
+        poster_url: event.poster_url,
+        ticket_price: priceDisplay.amount,
+        ticket_price_display: priceDisplay.displayText,
+        ticket_naming: event.ticket_naming || 'Regular',
+        max_tickets: event.max_tickets,
+        remaining_tickets: remainingTickets,
+        is_closed: false,
+        show_countdown: shouldShowCountdown(event),
+        show_tickets_remaining: (event as any).show_tickets_remaining !== undefined ? (event as any).show_tickets_remaining : true,
+        supports_card: event.supports_card,
+        supports_gcash: event.supports_gcash,
+        supports_qrph: event.supports_qrph,
+        supports_ubp: event.supports_ubp,
+        supports_dob: event.supports_dob,
+        supports_maya: event.supports_maya,
+        supports_grabpay: event.supports_grabpay,
+        buy_shortlink: event.buy_shortlink,
+        google_place_id: event.google_place_id,
+        venue_address: event.venue_address,
+        venue_latitude: event.venue_latitude,
+        venue_longitude: event.venue_longitude,
+        venue_phone: event.venue_phone,
+        venue_website: event.venue_website,
+        venue_maps_url: event.venue_maps_url,
+        walk_in_enabled: event.walk_in_enabled || false,
+        walkInTypes,
+        brand: event.brand ? {
+          id: event.brand.id,
+          name: event.brand.brand_name,
+          color: event.brand.brand_color,
+          logo_url: event.brand.logo_url
+        } : null,
+        ticketTypes: processedTicketTypes
+      }
+    });
+  } catch (error) {
+    console.error('Get event preview error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 };

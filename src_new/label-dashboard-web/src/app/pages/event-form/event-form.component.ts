@@ -1133,4 +1133,9 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     return 'P' + amount.toLocaleString('en-PH', { maximumFractionDigits: 0 });
   }
 
+  previewBuyPage(): void {
+    if (!this.eventId) return;
+    window.open(`/public/tickets/buy/${this.eventId}?preview=true`, '_blank');
+  }
+
 }
