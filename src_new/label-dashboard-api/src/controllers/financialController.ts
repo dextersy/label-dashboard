@@ -2258,6 +2258,71 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
   }
 };
 
+export const getAdminRecuperableExpenseFlowDetails = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { releaseId } = req.params;
+    const { start_date, end_date, page = '1', limit = '10' } = req.query;
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    if (!releaseId) {
+      return res.status(400).json({ error: 'releaseId is required' });
+    }
+
+    // Verify release belongs to brand
+    const release = await Release.findOne({
+      where: { id: releaseId, brand_id: req.user.brand_id }
+    });
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const pageNum = parseInt(page as string);
+    const pageSize = parseInt(limit as string);
+    const offset = (pageNum - 1) * pageSize;
+
+    const { Op } = require('sequelize');
+    const { count, rows } = await RecuperableExpense.findAndCountAll({
+      where: {
+        release_id: releaseId,
+        brand_id: req.user.brand_id,
+        date_recorded: { [Op.between]: [start_date, end_date] }
+      },
+      order: [['date_recorded', 'DESC'], ['id', 'DESC']],
+      offset,
+      limit: pageSize
+    });
+
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.json({
+      data: rows.map(e => ({
+        id: e.id,
+        expense_description: e.expense_description,
+        expense_amount: parseFloat((e.expense_amount || 0).toString()),
+        date_recorded: e.date_recorded
+      })),
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get admin recuperable expense flow details error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // HELPER: Check if artist is ready for payment and return payment details
 interface ArtistPaymentDetails {
   artist: any;

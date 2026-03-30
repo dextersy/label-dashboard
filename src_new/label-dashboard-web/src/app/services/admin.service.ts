@@ -786,6 +786,13 @@ export class AdminService {
     });
   }
 
+  getRecuperableExpenseFlowDetails(releaseId: number, startDate: string, endDate: string, page: number = 1, limit: number = 10): Observable<{data: any[], pagination: any}> {
+    const queryParams = `start_date=${startDate}&end_date=${endDate}&page=${page}&limit=${limit}`;
+    return this.http.get<{data: any[], pagination: any}>(`${environment.apiUrl}/financial/admin/recuperable-expense-flow/${releaseId}/details?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Balance Summary
   getArtistBalances(page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: ArtistBalance[], pagination: any, summary: any}> {
     let queryParams = `page=${page}&limit=${limit}`;

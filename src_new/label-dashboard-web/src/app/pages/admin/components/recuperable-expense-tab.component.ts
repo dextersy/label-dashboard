@@ -3,15 +3,16 @@ import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
-import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
+import { ExpenseFlowDetailModalComponent } from './expense-flow-detail-modal.component';
 
 export type RecuperableExpenseSection = 'balance' | 'flow';
 
 @Component({
   selector: 'app-recuperable-expense-tab',
   standalone: true,
-  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent, InPageNavComponent],
+  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent, InPageNavComponent, ExpenseFlowDetailModalComponent],
   templateUrl: './recuperable-expense-tab.component.html',
   styleUrls: ['./recuperable-expense-tab.component.scss']
 })
@@ -57,6 +58,19 @@ export class RecuperableExpenseTabComponent implements OnInit {
   flowFilters: SearchFilters = {};
   flowSort: SortInfo | null = null;
 
+  flowActions: TableAction[] = [
+    {
+      icon: 'fa-solid fa-eye',
+      label: 'View Details',
+      handler: (item: any) => this.openFlowDetailModal(item)
+    }
+  ];
+
+  // Flow detail modal state
+  showFlowDetailModal: boolean = false;
+  selectedFlowReleaseId: number = 0;
+  selectedFlowReleaseTitle: string = '';
+
   flowColumns: TableColumn[] = [
     { key: 'catalog_no', label: 'Catalog No.', type: 'text', searchable: true, sortable: true, mobileGroup: 'release' },
     { key: 'title', label: 'Release', type: 'text', searchable: true, sortable: true, mobileGroup: 'release', mobileGroupMain: true },
@@ -65,13 +79,23 @@ export class RecuperableExpenseTabComponent implements OnInit {
       key: 'new_expense', label: 'New Expenses (₱)', type: 'number',
       searchable: false, sortable: true, align: 'right',
       formatter: (item) => this.formatCurrency(item.new_expense),
+      mobileGroup: 'amounts',
       mobileClass: 'mobile-narrow mobile-number', tabletClass: ''
     },
     {
       key: 'recuperated_expense', label: 'Recuperated (₱)', type: 'number',
       searchable: false, sortable: true, align: 'right',
-      formatter: (item) => this.formatCurrency(item.recuperated_expense),
-      mobileClass: 'mobile-hide', tabletClass: ''
+      formatter: (item) => '-' + this.formatCurrency(item.recuperated_expense),
+      mobileGroup: 'amounts',
+      mobileClass: 'mobile-narrow mobile-number', tabletClass: ''
+    },
+    {
+      key: 'net_change', label: 'Net Flow (₱)', type: 'number',
+      searchable: false, sortable: true, align: 'right',
+      renderHtml: true,
+      formatter: (item) => `<strong>${this.formatCurrency(item.net_change)}</strong>`,
+      mobileGroup: 'amounts', mobileGroupMain: true,
+      mobileClass: 'mobile-narrow mobile-number', tabletClass: ''
     }
   ];
 
@@ -181,6 +205,17 @@ export class RecuperableExpenseTabComponent implements OnInit {
   onFlowSortChange(sort: SortInfo | null): void {
     this.flowSort = sort;
     this.loadFlow();
+  }
+
+  // ── Flow detail modal ────────────────────────────────────────────────────
+  openFlowDetailModal(item: any): void {
+    this.selectedFlowReleaseId = item.release_id;
+    this.selectedFlowReleaseTitle = item.title;
+    this.showFlowDetailModal = true;
+  }
+
+  closeFlowDetailModal(): void {
+    this.showFlowDetailModal = false;
   }
 
   // ── Shared ────────────────────────────────────────────────────────────────

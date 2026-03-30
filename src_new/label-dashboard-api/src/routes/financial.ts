@@ -27,6 +27,7 @@ import {
   getAdminRecuperableExpenseSummary,
   getAdminPaymentsRoyaltiesArtists,
   getAdminRecuperableExpenseFlow,
+  getAdminRecuperableExpenseFlowDetails,
   updatePaymentStatus
 } from '../controllers/financialController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -90,5 +91,6 @@ router.get('/admin/earnings-list', requireAdmin, getAdminEarningsList);
 router.get('/admin/recuperable-expense-summary', requireAdmin, getAdminRecuperableExpenseSummary);
 router.get('/admin/payments-royalties-artists', requireAdmin, getAdminPaymentsRoyaltiesArtists);
 router.get('/admin/recuperable-expense-flow', requireAdmin, getAdminRecuperableExpenseFlow);
+router.get('/admin/recuperable-expense-flow/:releaseId/details', requireAdmin, getAdminRecuperableExpenseFlowDetails);
 
 export default router;

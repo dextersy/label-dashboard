@@ -73,6 +73,8 @@
         [pagination]="flowPagination"
         [loading]="flowTableLoading"
         [columns]="flowColumns"
+        [actions]="flowActions"
+        [showActionsColumn]="true"
         [showSortableHeaders]="true"
         [sortInfo]="flowSort"
         [responsiveMode]="'financial'"
@@ -89,3 +91,12 @@
   </div>
 
 </app-in-page-nav>
+
+<app-expense-flow-detail-modal
+  [releaseId]="selectedFlowReleaseId"
+  [releaseTitle]="selectedFlowReleaseTitle"
+  [startDate]="flowStartDate"
+  [endDate]="flowEndDate"
+  [isVisible]="showFlowDetailModal"
+  (close)="closeFlowDetailModal()">
+</app-expense-flow-detail-modal>
