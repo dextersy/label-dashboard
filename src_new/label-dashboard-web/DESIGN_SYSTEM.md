@@ -101,7 +101,7 @@ All defined in `src/styles/components.scss` as Bootstrap overrides.
 ### Sizes
 | Modifier | Notes |
 |----------|-------|
-| `.btn-sm` | `font-size: 13px`, smaller icon margin |
+| `.btn-sm` | `font-size: 13px`, smaller icon margin. On `.btn-icon`, reduces padding to `4px` for dense contexts (tables, lists) |
 | `.btn-lg` | `padding: 16px 32px`, `font-size: 15px` |
 
 ### Rules
@@ -111,6 +111,38 @@ All defined in `src/styles/components.scss` as Bootstrap overrides.
 - Disabled: `opacity: 0.5`, no transform, `cursor: not-allowed`
 - `.btn-icon` **always** overrides to `background: transparent !important; box-shadow: none !important`
 - If a fixed-square icon button is ever needed, add a `.btn-icon--square` modifier on top of `.btn-icon` rather than a new standalone class
+
+### Kebab Menu
+
+Reusable three-dot overflow menu. Defined in `src/styles/components.scss`.
+
+| Class | Purpose |
+|-------|---------|
+| `.kebab-container` | Wrapper — `position: relative; display: inline-block` |
+| `.kebab-btn` | Toggle button — transparent, gray icon, hover highlight |
+| `.kebab-dropdown` | Dropdown panel — `position: fixed`, `z-index: 1050`, rounded, shadowed |
+
+The dropdown uses **fixed positioning** with JS-calculated `top`/`right` coordinates so it is never clipped by `overflow: hidden` on ancestor containers. Render it **outside** the scrollable parent (e.g. after the table).
+
+Dropdown items use `.btn .btn-ghost` for consistent styling:
+```html
+<div class="kebab-dropdown" *ngIf="isOpen" [style.top.px]="pos.top" [style.right.px]="pos.right">
+  <button class="btn btn-ghost" (click)="edit()"><i class="fa fa-edit me-2"></i> Edit</button>
+  <button class="btn btn-ghost text-danger" (click)="delete()"><i class="fa fa-trash me-2"></i> Delete</button>
+</div>
+```
+
+Positioning pattern (TypeScript):
+```typescript
+const btn = (event.target as HTMLElement).closest('.kebab-btn') as HTMLElement;
+const rect = btn.getBoundingClientRect();
+this.dropdownPosition = {
+  top: rect.bottom + 2,
+  right: document.documentElement.clientWidth - rect.right
+};
+```
+
+Close on document click (`@HostListener('document:click')`) and on scroll (`document.addEventListener('scroll', handler, true)`).
 
 ### Blob accent (`.btn-primary` only)
 Primary buttons carry two decorative circular blobs via `::before` / `::after` — the same visual language used by primary quick-link cards and the Current Balance section.

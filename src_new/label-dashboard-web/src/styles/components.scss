@@ -505,6 +505,12 @@ textarea.form-control {
   }
 }
 
+/* Icon button - small size for dense contexts (tables, lists) */
+.btn-icon.btn-sm {
+  padding: 4px !important;
+  font-size: 13px;
+}
+
 /* Icon button with danger color */
 .btn-icon.btn-danger {
   color: #ef4444 !important;
@@ -514,6 +520,57 @@ textarea.form-control {
   &:hover:not(:disabled) {
     color: #dc2626 !important;
     background: rgba(239, 68, 68, 0.1) !important;
+  }
+}
+
+/* Kebab menu — reusable three-dot menu pattern */
+.kebab-container {
+  position: relative;
+  display: inline-block;
+}
+
+.kebab-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover, &.active {
+    background: rgba(0, 0, 0, 0.05);
+    color: #374151;
+  }
+}
+
+.kebab-dropdown {
+  position: fixed;
+  min-width: 160px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  z-index: 1050;
+  padding: 6px;
+
+  .btn {
+    display: flex !important;
+    justify-content: flex-start;
+    width: 100%;
+    text-align: left;
+    border-radius: 6px !important;
+    margin-bottom: 2px;
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+    box-shadow: none !important;
+    transform: none !important;
+
+    &:last-child { margin-bottom: 0; }
   }
 }
 

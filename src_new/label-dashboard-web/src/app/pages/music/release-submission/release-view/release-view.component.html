@@ -184,15 +184,15 @@
           <span class="track-title">Title</span>
           <span class="track-collaborators">Collaborators</span>
           <span class="track-duration">Duration</span>
-          <span class="track-download">Download</span>
+          <span class="track-actions"></span>
         </div>
-        
+
         <div class="track-row" *ngFor="let song of release.songs; let i = index">
           <span class="track-num">{{ song.track_number || (i + 1) }}</span>
           <span class="track-play">
-            <button 
+            <button
               *ngIf="song.audio_file"
-              class="btn btn-ghost btn-sm p-0" 
+              class="btn btn-icon btn-sm"
               [class.text-warning]="isPlaying(song.id)"
               [class.text-info]="isPaused(song.id)"
               [class.text-success]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"
@@ -215,35 +215,46 @@
           </span>
           <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
           <span class="track-duration">{{ formatDuration(song.duration) }}</span>
-          <span class="track-download">
-            <button
-              *ngIf="song.audio_file"
-              class="btn btn-ghost btn-sm p-0 me-2 text-primary"
-              [disabled]="downloadingSongMaster[song.id]"
-              (click)="onDownloadSongMaster(song)"
-              title="Download WAV">
-              <i class="fa"
-                 [class.fa-download]="!downloadingSongMaster[song.id]"
-                 [class.fa-spinner]="downloadingSongMaster[song.id]"
-                 [class.fa-spin]="downloadingSongMaster[song.id]"></i>
-            </button>
-            <button
-              *ngIf="song.audio_file_mp3"
-              class="btn btn-ghost btn-sm p-0 text-success"
-              [disabled]="downloadingSongMp3[song.id]"
-              (click)="onDownloadSongMp3(song)"
-              title="Download MP3">
-              <i class="fa"
-                 [class.fa-music]="!downloadingSongMp3[song.id]"
-                 [class.fa-spinner]="downloadingSongMp3[song.id]"
-                 [class.fa-spin]="downloadingSongMp3[song.id]"></i>
-            </button>
+          <span class="track-actions" *ngIf="song.audio_file || song.audio_file_mp3">
+            <div class="kebab-container" (click)="$event.stopPropagation()">
+              <button class="kebab-btn" type="button"
+                      (click)="toggleTrackKebab(song, $event)"
+                      [class.active]="openTrackKebabItem === song">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
           </span>
         </div>
       </div>
       <ng-template #noTracks>
         <p class="no-data">No tracks added to this release.</p>
       </ng-template>
+
+      <!-- Track kebab dropdown — rendered outside the grid to avoid clipping -->
+      <div class="kebab-dropdown"
+           *ngIf="openTrackKebabItem && trackKebabPosition"
+           [style.top.px]="trackKebabPosition.top"
+           [style.right.px]="trackKebabPosition.right"
+           (click)="$event.stopPropagation()">
+        <button *ngIf="openTrackKebabItem.audio_file" class="btn btn-ghost"
+                (click)="onDownloadSongMaster(openTrackKebabItem); closeTrackKebab()"
+                [disabled]="downloadingSongMaster[openTrackKebabItem.id]">
+          <i class="fa me-2"
+             [class.fa-download]="!downloadingSongMaster[openTrackKebabItem.id]"
+             [class.fa-spinner]="downloadingSongMaster[openTrackKebabItem.id]"
+             [class.fa-spin]="downloadingSongMaster[openTrackKebabItem.id]"></i>
+          {{ downloadingSongMaster[openTrackKebabItem.id] ? 'Downloading...' : 'Download WAV' }}
+        </button>
+        <button *ngIf="openTrackKebabItem.audio_file_mp3" class="btn btn-ghost"
+                (click)="onDownloadSongMp3(openTrackKebabItem); closeTrackKebab()"
+                [disabled]="downloadingSongMp3[openTrackKebabItem.id]">
+          <i class="fa me-2"
+             [class.fa-music]="!downloadingSongMp3[openTrackKebabItem.id]"
+             [class.fa-spinner]="downloadingSongMp3[openTrackKebabItem.id]"
+             [class.fa-spin]="downloadingSongMp3[openTrackKebabItem.id]"></i>
+          {{ downloadingSongMp3[openTrackKebabItem.id] ? 'Downloading...' : 'Download MP3' }}
+        </button>
+      </div>
     </section>
   </div>
 </div>

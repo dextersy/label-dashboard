@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnDestroy, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
@@ -29,17 +29,26 @@ export class SongListComponent implements OnInit, OnDestroy {
   loadingSongId: number | null = null;
   pausedSongId: number | null = null;
 
+  openKebabItem: Song | null = null;
+  dropdownPosition: { top: number; right: number } | null = null;
+  private readonly scrollCloseHandler = () => this.closeKebab();
+
   private subscription: Subscription | null = null;
 
   constructor(private audioPlayerService: AudioPlayerService) {}
 
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeKebab();
+  }
+
   ngOnInit(): void {
-    // Subscribe to audio player state changes
     this.subscription = this.audioPlayerService.state$.subscribe(state => {
       this.playingSongId = state.playingSongId;
       this.loadingSongId = state.loadingSongId;
       this.pausedSongId = state.pausedSongId;
     });
+    document.addEventListener('scroll', this.scrollCloseHandler, true);
   }
 
   // For non-admin users on non-draft releases, song list modifications are restricted
@@ -103,6 +112,26 @@ export class SongListComponent implements OnInit, OnDestroy {
     return songId !== undefined ? (this.uploadProgress[songId] || 0) : 0;
   }
 
+  toggleKebab(song: Song, event: Event): void {
+    event.stopPropagation();
+    if (this.openKebabItem === song) {
+      this.closeKebab();
+    } else {
+      const btn = (event.target as HTMLElement).closest('.kebab-btn') as HTMLElement;
+      const rect = btn.getBoundingClientRect();
+      this.openKebabItem = song;
+      this.dropdownPosition = {
+        top: rect.bottom + 2,
+        right: document.documentElement.clientWidth - rect.right
+      };
+    }
+  }
+
+  closeKebab(): void {
+    this.openKebabItem = null;
+    this.dropdownPosition = null;
+  }
+
   onPlayAudio(song: Song): void {
     if (!song.id || !song.audio_file) return;
     this.audioPlayerService.togglePlay({ 
@@ -113,11 +142,9 @@ export class SongListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Unsubscribe from audio player state
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    // Note: Don't stop audio here - the AudioPlayerService is a singleton
-    // and the global popup player manages playback lifecycle
+    document.removeEventListener('scroll', this.scrollCloseHandler, true);
   }
 }

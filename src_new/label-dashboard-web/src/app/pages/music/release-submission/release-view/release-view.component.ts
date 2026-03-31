@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, SecurityContext } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, SecurityContext, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
@@ -49,6 +49,11 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   // Mobile kebab menu state
   kebabOpen = false;
 
+  // Track kebab menu state
+  openTrackKebabItem: any = null;
+  trackKebabPosition: { top: number; right: number } | null = null;
+  private readonly scrollCloseHandler = () => this.closeTrackKebab();
+
   private subscription: Subscription | null = null;
 
   constructor(
@@ -58,21 +63,25 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
     private songService: SongService
   ) {}
 
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeTrackKebab();
+  }
+
   ngOnInit(): void {
-    // Subscribe to audio player state changes
     this.subscription = this.audioPlayerService.state$.subscribe(state => {
       this.playingSongId = state.playingSongId;
       this.loadingSongId = state.loadingSongId;
       this.pausedSongId = state.pausedSongId;
     });
+    document.addEventListener('scroll', this.scrollCloseHandler, true);
   }
 
   ngOnDestroy(): void {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    // Note: Don't stop audio here - the AudioPlayerService is a singleton
-    // and the global popup player manages playback lifecycle
+    document.removeEventListener('scroll', this.scrollCloseHandler, true);
   }
 
   onEditClick(): void {
@@ -147,6 +156,26 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
       return this.release.artists[0].name;
     }
     return '';
+  }
+
+  toggleTrackKebab(song: any, event: Event): void {
+    event.stopPropagation();
+    if (this.openTrackKebabItem === song) {
+      this.closeTrackKebab();
+    } else {
+      const btn = (event.target as HTMLElement).closest('.kebab-btn') as HTMLElement;
+      const rect = btn.getBoundingClientRect();
+      this.openTrackKebabItem = song;
+      this.trackKebabPosition = {
+        top: rect.bottom + 2,
+        right: document.documentElement.clientWidth - rect.right
+      };
+    }
+  }
+
+  closeTrackKebab(): void {
+    this.openTrackKebabItem = null;
+    this.trackKebabPosition = null;
   }
 
   // Audio player methods

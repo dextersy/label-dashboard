@@ -9,12 +9,13 @@
       <tr>
         <th *ngIf="!isRestrictedMode()" style="width: 30px;"></th>
         <th>#</th>
+        <th style="width: 30px;"></th>
         <th>Title</th>
         <th>Duration</th>
         <th>Collaborators</th>
         <th>ISRC</th>
         <th>Links</th>
-        <th>Actions</th>
+        <th class="actions-column"></th>
       </tr>
     </thead>
     <tbody cdkDropList (cdkDropListDropped)="onDrop($event)" [cdkDropListDisabled]="isRestrictedMode()">
@@ -25,6 +26,24 @@
           </div>
         </td>
         <td>{{ i + 1 }}</td>
+        <td>
+          <button
+            *ngIf="song.audio_file"
+            class="btn btn-icon btn-sm"
+            [class.text-warning]="playingSongId === song.id"
+            [class.text-info]="pausedSongId === song.id"
+            [class.text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
+            [disabled]="loadingSongId === song.id"
+            (click)="onPlayAudio(song)"
+            [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
+            <i class="fa"
+               [class.fa-play]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
+               [class.fa-pause]="playingSongId === song.id"
+               [class.fa-play-circle]="pausedSongId === song.id"
+               [class.fa-spinner]="loadingSongId === song.id"
+               [class.fa-spin]="loadingSongId === song.id"></i>
+          </button>
+        </td>
         <td>
           <strong>{{ song.title }}</strong>
           <div *ngIf="!song.audio_file && !isUploading(song.id)" class="text-danger small">
@@ -48,71 +67,62 @@
         <td>{{ getCollaboratorNames(song) }}</td>
         <td><small>{{ song.isrc || '-' }}</small></td>
         <td>
-          <div class="btn-group btn-group-sm">
-            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-primary" title="Spotify">
+          <div class="d-flex align-items-center gap-0">
+            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-icon btn-sm text-success" title="Spotify">
               <i class="fab fa-spotify"></i>
             </a>
-            <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn btn-dark" title="Apple Music">
+            <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn btn-icon btn-sm" title="Apple Music">
               <i class="fab fa-apple"></i>
             </a>
-            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn btn-danger" title="YouTube">
+            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn btn-icon btn-sm text-danger" title="YouTube">
               <i class="fab fa-youtube"></i>
             </a>
           </div>
           <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted">-</span>
         </td>
-        <td>
-          <button
-            *ngIf="song.audio_file"
-            class="btn btn-ghost btn-sm p-0 me-2"
-            [class.text-warning]="playingSongId === song.id"
-            [class.text-info]="pausedSongId === song.id"
-            [class.text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
-            [disabled]="loadingSongId === song.id"
-            (click)="onPlayAudio(song)"
-            [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
-            <i class="fa"
-               [class.fa-play]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
-               [class.fa-pause]="playingSongId === song.id"
-               [class.fa-play-circle]="pausedSongId === song.id"
-               [class.fa-spinner]="loadingSongId === song.id"
-               [class.fa-spin]="loadingSongId === song.id"></i>
-          </button>
-          <button
-            *ngIf="song.audio_file"
-            class="btn btn-ghost btn-sm p-0 me-2 text-primary"
-            [disabled]="downloadingSongMaster[song.id!]"
-            (click)="onDownloadMaster(song)"
-            title="Download WAV master">
-            <i class="fa"
-               [class.fa-download]="!downloadingSongMaster[song.id!]"
-               [class.fa-spinner]="downloadingSongMaster[song.id!]"
-               [class.fa-spin]="downloadingSongMaster[song.id!]"></i>
-          </button>
-          <button
-            *ngIf="song.audio_file_mp3"
-            class="btn btn-ghost btn-sm p-0 me-2 text-success"
-            [disabled]="downloadingSongMp3[song.id!]"
-            (click)="onDownloadMp3(song)"
-            title="Download MP3">
-            <i class="fa"
-               [class.fa-music]="!downloadingSongMp3[song.id!]"
-               [class.fa-spinner]="downloadingSongMp3[song.id!]"
-               [class.fa-spin]="downloadingSongMp3[song.id!]"></i>
-          </button>
-          <button class="btn btn-ghost btn-sm p-0 me-2" (click)="onEdit(song)" title="Edit" [disabled]="isUploading(song.id)">
-            <i class="fa fa-edit"></i>
-          </button>
-          <button class="btn btn-ghost btn-sm p-0 me-2" (click)="onUploadAudio(song)" title="Upload Audio" [disabled]="isUploading(song.id) || isRestrictedMode()">
-            <i class="fa" [class.fa-upload]="!isUploading(song.id)" [class.fa-spinner]="isUploading(song.id)" [class.fa-spin]="isUploading(song.id)"></i>
-          </button>
-          <button *ngIf="!isRestrictedMode()" class="btn btn-ghost btn-sm p-0 text-danger" (click)="onDelete(song)" title="Delete">
-            <i class="fa fa-trash"></i>
-          </button>
+        <td class="actions-column">
+          <div class="kebab-container" (click)="$event.stopPropagation()">
+            <button class="kebab-btn" type="button"
+                    (click)="toggleKebab(song, $event)"
+                    [class.active]="openKebabItem === song">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+          </div>
         </td>
       </tr>
     </tbody>
   </table>
+</div>
+
+<!-- Kebab dropdown — rendered outside the table to avoid overflow clipping -->
+<div class="kebab-dropdown"
+     *ngIf="openKebabItem && dropdownPosition"
+     [style.top.px]="dropdownPosition.top"
+     [style.right.px]="dropdownPosition.right"
+     (click)="$event.stopPropagation()">
+  <button class="btn btn-ghost" (click)="onEdit(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id)">
+    <i class="fa fa-edit me-2"></i> Edit Song
+  </button>
+  <button class="btn btn-ghost" (click)="onUploadAudio(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id) || isRestrictedMode()">
+    <i class="fa me-2" [class.fa-upload]="!isUploading(openKebabItem.id)" [class.fa-spinner]="isUploading(openKebabItem.id)" [class.fa-spin]="isUploading(openKebabItem.id)"></i>
+    {{ isUploading(openKebabItem.id) ? 'Uploading...' : openKebabItem.audio_file ? 'Replace Audio' : 'Upload Audio' }}
+  </button>
+  <button *ngIf="openKebabItem.audio_file" class="btn btn-ghost"
+          (click)="onDownloadMaster(openKebabItem); closeKebab()"
+          [disabled]="downloadingSongMaster[openKebabItem.id!]">
+    <i class="fa me-2" [class.fa-download]="!downloadingSongMaster[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMaster[openKebabItem.id!]" [class.fa-spin]="downloadingSongMaster[openKebabItem.id!]"></i>
+    {{ downloadingSongMaster[openKebabItem.id!] ? 'Downloading...' : 'Download WAV' }}
+  </button>
+  <button *ngIf="openKebabItem.audio_file_mp3" class="btn btn-ghost"
+          (click)="onDownloadMp3(openKebabItem); closeKebab()"
+          [disabled]="downloadingSongMp3[openKebabItem.id!]">
+    <i class="fa me-2" [class.fa-music]="!downloadingSongMp3[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMp3[openKebabItem.id!]" [class.fa-spin]="downloadingSongMp3[openKebabItem.id!]"></i>
+    {{ downloadingSongMp3[openKebabItem.id!] ? 'Downloading...' : 'Download MP3' }}
+  </button>
+  <button *ngIf="!isRestrictedMode()" class="btn btn-ghost text-danger"
+          (click)="onDelete(openKebabItem); closeKebab()">
+    <i class="fa fa-trash me-2"></i> Delete Song
+  </button>
 </div>
 
 <div *ngIf="songs.length === 0" class="alert alert-info">
