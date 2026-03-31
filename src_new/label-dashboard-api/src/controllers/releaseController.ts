@@ -17,13 +17,13 @@ export const getReleases = async (req: AuthRequest, res: Response) => {
       where: { brand_id: req.user.brand_id },
       include: [
         { model: Brand, as: 'brand' },
-        { 
-          model: Artist, 
+        {
+          model: Artist,
           as: 'artists',
           through: { attributes: ['streaming_royalty_percentage', 'sync_royalty_percentage'] }
         },
-        { model: Earning, as: 'earnings' },
-        { model: RecuperableExpense, as: 'expenses' }
+        { model: Earning, as: 'earnings', separate: true },
+        { model: RecuperableExpense, as: 'expenses', separate: true }
       ],
       order: [['release_date', 'DESC']]
     });
@@ -39,37 +39,37 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const releaseId = parseInt(id as string, 10);
-    
+
     if (isNaN(releaseId)) {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
 
     const release = await Release.findOne({
-      where: { 
+      where: {
         id: releaseId,
-        brand_id: req.user.brand_id 
+        brand_id: req.user.brand_id
       },
       attributes: [
-        'id', 'title', 'catalog_no', 'UPC', 'spotify_link', 'apple_music_link', 
-        'youtube_link', 'release_date', 'status', 'cover_art', 'description', 
+        'id', 'title', 'catalog_no', 'UPC', 'spotify_link', 'apple_music_link',
+        'youtube_link', 'release_date', 'status', 'cover_art', 'description',
         'liner_notes', 'brand_id'
       ],
       include: [
         { model: Brand, as: 'brand' },
-        { 
-          model: Artist, 
+        {
+          model: Artist,
           as: 'artists',
-          through: { 
+          through: {
             attributes: [
-              'streaming_royalty_percentage', 
+              'streaming_royalty_percentage',
               'streaming_royalty_type',
-              'sync_royalty_percentage', 
+              'sync_royalty_percentage',
               'sync_royalty_type',
-              'download_royalty_percentage', 
+              'download_royalty_percentage',
               'download_royalty_type',
-              'physical_royalty_percentage', 
+              'physical_royalty_percentage',
               'physical_royalty_type'
-            ] 
+            ]
           }
         },
         {
@@ -80,22 +80,25 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
             {
               model: SongCollaborator,
               as: 'collaborators',
+              separate: true,
               include: [{ model: Artist, as: 'artist' }]
             },
             {
               model: SongAuthor,
               as: 'authors',
+              separate: true,
               include: [{ model: Songwriter, as: 'songwriter' }]
             },
             {
               model: SongComposer,
               as: 'composers',
+              separate: true,
               include: [{ model: Songwriter, as: 'songwriter' }]
             }
           ]
         },
-        { model: Earning, as: 'earnings' },
-        { model: RecuperableExpense, as: 'expenses' }
+        { model: Earning, as: 'earnings', separate: true },
+        { model: RecuperableExpense, as: 'expenses', separate: true }
       ]
     });
 
@@ -105,6 +108,7 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
 
     // Flatten track_number from join table and sort songs
     const releaseJson = release.toJSON() as any;
+
     if (releaseJson.songs) {
       releaseJson.songs = releaseJson.songs
         .map((song: any) => ({
