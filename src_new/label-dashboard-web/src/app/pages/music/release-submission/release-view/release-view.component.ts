@@ -54,6 +54,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   trackKebabPosition: { top: number; right: number } | null = null;
   private readonly scrollCloseHandler = () => this.closeTrackKebab();
 
+  // Lyrics modal state
+  lyricsModalSong: any = null;
+
   private subscription: Subscription | null = null;
 
   constructor(
@@ -82,6 +85,7 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
       this.subscription.unsubscribe();
     }
     document.removeEventListener('scroll', this.scrollCloseHandler, true);
+    document.body.classList.remove('modal-open');
   }
 
   onEditClick(): void {
@@ -176,6 +180,16 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   closeTrackKebab(): void {
     this.openTrackKebabItem = null;
     this.trackKebabPosition = null;
+  }
+
+  openLyricsModal(song: any): void {
+    this.lyricsModalSong = song;
+    document.body.classList.add('modal-open');
+  }
+
+  closeLyricsModal(): void {
+    this.lyricsModalSong = null;
+    document.body.classList.remove('modal-open');
   }
 
   // Audio player methods

@@ -537,6 +537,19 @@
       }
     }
   }
+
+  // Lyrics Modal
+  .lyrics-text {
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-color, #333);
+    margin: 0;
+    background: none;
+    border: none;
+    padding: 0;
+  }
 }
 
 @keyframes spin {

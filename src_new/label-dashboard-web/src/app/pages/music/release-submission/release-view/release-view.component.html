@@ -215,7 +215,7 @@
           </span>
           <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
           <span class="track-duration">{{ formatDuration(song.duration) }}</span>
-          <span class="track-actions" *ngIf="song.audio_file || song.audio_file_mp3">
+          <span class="track-actions" *ngIf="song.audio_file || song.audio_file_mp3 || song.lyrics">
             <div class="kebab-container" (click)="$event.stopPropagation()">
               <button class="kebab-btn" type="button"
                       (click)="toggleTrackKebab(song, $event)"
@@ -236,6 +236,10 @@
            [style.top.px]="trackKebabPosition.top"
            [style.right.px]="trackKebabPosition.right"
            (click)="$event.stopPropagation()">
+        <button *ngIf="openTrackKebabItem.lyrics" class="btn btn-ghost"
+                (click)="openLyricsModal(openTrackKebabItem); closeTrackKebab()">
+          <i class="fa fa-align-left me-2"></i>View Lyrics
+        </button>
         <button *ngIf="openTrackKebabItem.audio_file" class="btn btn-ghost"
                 (click)="onDownloadSongMaster(openTrackKebabItem); closeTrackKebab()"
                 [disabled]="downloadingSongMaster[openTrackKebabItem.id]">
@@ -257,4 +261,21 @@
       </div>
     </section>
   </div>
+
+  <!-- Lyrics Modal -->
+  <div class="modal fade" [class.show]="lyricsModalSong" [style.display]="lyricsModalSong ? 'block' : 'none'"
+       (click)="closeLyricsModal()">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content" *ngIf="lyricsModalSong">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ lyricsModalSong.title }}</h5>
+          <button type="button" class="btn-close" (click)="closeLyricsModal()"></button>
+        </div>
+        <div class="modal-body">
+          <pre class="lyrics-text">{{ lyricsModalSong.lyrics }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [class.show]="lyricsModalSong" *ngIf="lyricsModalSong"></div>
 </div>
