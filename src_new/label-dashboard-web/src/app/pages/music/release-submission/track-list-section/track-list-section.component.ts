@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SongService, Song } from '../../../../services/song.service';
 import { ReleaseService } from '../../../../services/release.service';
@@ -39,6 +39,7 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
   isAdmin = false;
   uploadProgress: { [songId: number]: number } = {};
   downloadingMasters = false;
+  mobileMenuOpen = false;
 
   // Add Existing Song state
   showExistingSongPicker = false;
@@ -46,7 +47,15 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
   searchResults: Song[] = [];
   searchLoading = false;
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.mobileMenuOpen && !this.elementRef.nativeElement.querySelector('.mobile-kebab')?.contains(event.target as Node)) {
+      this.mobileMenuOpen = false;
+    }
+  }
+
   constructor(
+    private elementRef: ElementRef,
     private songService: SongService,
     private releaseService: ReleaseService,
     private authService: AuthService,

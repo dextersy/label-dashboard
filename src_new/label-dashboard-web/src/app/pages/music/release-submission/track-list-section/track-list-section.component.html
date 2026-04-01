@@ -10,7 +10,8 @@
       <i class="fa fa-info-circle mr-1"></i>
       Manage the tracklist for this release. You can add tracks now or skip and add them later.
     </p>
-    <div class="button-group d-flex">
+    <!-- Desktop buttons -->
+    <div class="button-group d-none d-md-flex">
       <button
         type="button"
         class="btn btn-sm btn-primary me-2"
@@ -38,6 +39,24 @@
         [disabled]="isRestrictedMode()">
         <i class="fa fa-plus me-1"></i> Add Song
       </button>
+    </div>
+
+    <!-- Mobile kebab menu -->
+    <div class="mobile-kebab d-md-none">
+      <button class="btn btn-sm btn-icon" type="button" (click)="mobileMenuOpen = !mobileMenuOpen">
+        <i class="fas fa-ellipsis-v"></i>
+      </button>
+      <div class="kebab-dropdown" *ngIf="mobileMenuOpen" (click)="mobileMenuOpen = false">
+        <button class="btn btn-ghost" (click)="onDownloadMasters()" [disabled]="downloadingMasters">
+          <i class="fa fa-download me-2"></i>{{ downloadingMasters ? 'Downloading...' : 'Download Masters' }}
+        </button>
+        <button class="btn btn-ghost" (click)="onAddExistingSong()" [disabled]="isRestrictedMode()">
+          <i class="fa fa-link me-2"></i>Add Existing
+        </button>
+        <button class="btn btn-ghost" (click)="onAddSong()" [disabled]="isRestrictedMode()">
+          <i class="fa fa-plus me-2"></i>Add Song
+        </button>
+      </div>
     </div>
   </div>
 
