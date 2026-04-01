@@ -613,8 +613,18 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   // Cancel edit mode and return to read-only view (for non-Draft releases)
   onCancelEditMode(): void {
     if (this.editingRelease && this.editingRelease.status !== 'Draft') {
-      this.releaseForView = this.editingRelease;
       this.showReadOnlyView = true;
+      // Reload release from API to get fresh data (e.g. updated lyrics)
+      this.releaseService.getRelease(this.editingRelease.id).subscribe({
+        next: (response) => {
+          this.editingRelease = response.release;
+          this.releaseForView = response.release;
+        },
+        error: () => {
+          // Fallback to stale data if reload fails
+          this.releaseForView = this.editingRelease;
+        }
+      });
     }
   }
 
