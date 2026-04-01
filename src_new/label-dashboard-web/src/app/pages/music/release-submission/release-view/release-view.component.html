@@ -274,6 +274,12 @@
         <div class="modal-body">
           <pre class="lyrics-text">{{ lyricsModalSong.lyrics }}</pre>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="copyLyrics()">
+            <i class="fa me-1" [class.fa-copy]="!lyricsCopied" [class.fa-check]="lyricsCopied"></i>
+            {{ lyricsCopied ? 'Copied!' : 'Copy' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>

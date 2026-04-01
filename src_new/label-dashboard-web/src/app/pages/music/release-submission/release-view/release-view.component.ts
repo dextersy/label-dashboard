@@ -56,6 +56,7 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
 
   // Lyrics modal state
   lyricsModalSong: any = null;
+  lyricsCopied = false;
 
   private subscription: Subscription | null = null;
 
@@ -189,7 +190,16 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
 
   closeLyricsModal(): void {
     this.lyricsModalSong = null;
+    this.lyricsCopied = false;
     document.body.classList.remove('modal-open');
+  }
+
+  copyLyrics(): void {
+    if (!this.lyricsModalSong?.lyrics) return;
+    navigator.clipboard.writeText(this.lyricsModalSong.lyrics).then(() => {
+      this.lyricsCopied = true;
+      setTimeout(() => this.lyricsCopied = false, 2000);
+    });
   }
 
   // Audio player methods
