@@ -21,6 +21,18 @@ const s3Client = new S3Client(s3ClientConfig);
 export { s3Client };
 
 /**
+ * Build the public URL for an S3 object, respecting S3_ENDPOINT for custom/local endpoints.
+ */
+export function getS3PublicUrl(bucket: string, key: string): string {
+  if (process.env.S3_ENDPOINT) {
+    // Path-style URL for custom endpoints (e.g. MinIO, local S3)
+    const base = process.env.S3_ENDPOINT.replace(/\/$/, '');
+    return `${base}/${bucket}/${key}`;
+  }
+  return `https://${bucket}.s3.${process.env.S3_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+}
+
+/**
  * Upload a file to S3 using multipart upload (handles large files)
  */
 export async function uploadToS3(params: {
@@ -43,7 +55,7 @@ export async function uploadToS3(params: {
 
   const result = await upload.done();
   return {
-    Location: result.Location || `https://${params.Bucket}.s3.amazonaws.com/${params.Key}`,
+    Location: result.Location || getS3PublicUrl(params.Bucket, params.Key),
     Key: params.Key,
     Bucket: params.Bucket
   };

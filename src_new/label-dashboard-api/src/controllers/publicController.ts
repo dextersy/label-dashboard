@@ -9,7 +9,7 @@ import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
-import { headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import { headS3Object, getS3ObjectStream, getS3PublicUrl } from '../utils/s3Service';
 import { getRequestDomain } from '../utils/requestUtils';
 import archiver from 'archiver';
 import path from 'path';
@@ -2223,7 +2223,7 @@ export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
       ? artist.bio.replace(/<[^>]*>/g, '').substring(0, 160) + '...'
       : `Check out ${artist.name}'s music, bio, and latest releases.`;
     const image = artist.profile_photo 
-      ? (artist.profile_photo.startsWith('http') ? artist.profile_photo : `https://dashboard-uploads-test.s3.ap-southeast-1.amazonaws.com/${artist.profile_photo}`)
+      ? (artist.profile_photo.startsWith('http') ? artist.profile_photo : getS3PublicUrl(process.env.S3_BUCKET || 'melt-records-assets', artist.profile_photo))
       : '';
     const siteName = artist.brand?.brand_name || 'Melt Records';
     

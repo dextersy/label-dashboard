@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { uploadToS3, deleteFromS3, headS3Object } from './s3Service';
+import { uploadToS3, deleteFromS3, headS3Object, getS3PublicUrl } from './s3Service';
 
 const S3_BUCKET = process.env.S3_BUCKET || 'melt-records-assets';
 
@@ -69,7 +69,7 @@ export class QRCodeService {
       });
 
       // Return the public S3 URL
-      return `https://${S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`;
+      return getS3PublicUrl(S3_BUCKET, key);
     } catch (error) {
       console.error('Failed to generate and store QR code:', error);
       throw new Error('Failed to generate QR code');
@@ -87,7 +87,7 @@ export class QRCodeService {
       if (exists) {
         // Return existing S3 URL
         const key = this.generateS3Key(eventId, ticketCode);
-        return `https://${S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`;
+        return getS3PublicUrl(S3_BUCKET, key);
       } else {
         // Generate and store new QR code
         return await this.generateAndStoreQRCode(eventId, ticketCode);
