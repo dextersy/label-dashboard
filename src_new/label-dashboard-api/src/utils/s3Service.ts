@@ -3,13 +3,20 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { Readable } from 'stream';
 
 // Configure S3 Client
-const s3Client = new S3Client({
+const s3ClientConfig: ConstructorParameters<typeof S3Client>[0] = {
   region: process.env.S3_REGION || 'us-east-1',
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY || '',
     secretAccessKey: process.env.S3_SECRET_KEY || ''
   }
-});
+};
+
+if (process.env.S3_ENDPOINT) {
+  s3ClientConfig.endpoint = process.env.S3_ENDPOINT;
+  s3ClientConfig.forcePathStyle = true;
+}
+
+const s3Client = new S3Client(s3ClientConfig);
 
 export { s3Client };
 
