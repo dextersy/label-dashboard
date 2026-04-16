@@ -10,7 +10,7 @@ import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
-import { createSubdomainARecord } from '../utils/lightsailDNSService';
+import { createSubdomainARecord } from '../utils/dnsService';
 import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 import { clearOriginsCache } from '../middleware/csrf';
 
