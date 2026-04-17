@@ -146,6 +146,7 @@
                   <i [class]="getStatusIcon(domain.status)"
                      [title]="getStatusTooltip(domain.status)"></i>
                   {{ domain.domain_name }}
+                  <span *ngIf="domain.is_primary" class="badge bg-primary ms-1" style="font-size: 11px;">Primary</span>
                 </span>
                 <span class="d-flex align-items-center gap-2">
                   <button *ngIf="shouldShowVerifyButton(domain.status)"
@@ -163,6 +164,13 @@
                   <span *ngIf="domain.status === 'Pending'" class="text-info small">
                     <i class="fas fa-clock fa-spin"></i> Processing...
                   </span>
+                  <button *ngIf="!domain.is_primary"
+                     (click)="setPrimaryDomain(domain.domain_name)"
+                     class="btn btn-ghost btn-sm text-muted"
+                     title="Set as primary domain"
+                     style="padding: 0; border: none; background: none;">
+                    <i class="fas fa-star"></i>
+                  </button>
                   <a (click)="deleteDomain(domain.domain_name)"
                      class="btn btn-ghost btn-sm text-danger"
                      title="Delete domain">

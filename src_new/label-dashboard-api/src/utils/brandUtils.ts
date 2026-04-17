@@ -7,11 +7,23 @@ import { Domain, Brand } from '../models';
  * @throws Error if no domains are found for the brand
  */
 export const getBrandFrontendUrl = async (brandId: number): Promise<string> => {
-  // First try to get a verified domain for the brand
+  // First try the primary domain
+  const primaryDomain = await Domain.findOne({
+    where: {
+      brand_id: brandId,
+      is_primary: true,
+    }
+  });
+
+  if (primaryDomain) {
+    return `https://${primaryDomain.domain_name}`;
+  }
+
+  // Fall back to any verified domain
   const verifiedDomain = await Domain.findOne({
     where: { 
       brand_id: brandId,
-      status: 'Verified'
+      status: 'Connected'
     }
   });
   

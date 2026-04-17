@@ -8,14 +8,16 @@ interface DomainAttributes {
   brand_id: number;
   domain_name: string;
   status: DomainStatus;
+  is_primary: boolean;
 }
 
-interface DomainCreationAttributes extends Optional<DomainAttributes, 'status'> {}
+interface DomainCreationAttributes extends Optional<DomainAttributes, 'status' | 'is_primary'> {}
 
 class Domain extends Model<DomainAttributes, DomainCreationAttributes> implements DomainAttributes {
   public brand_id!: number;
   public domain_name!: string;
   public status!: DomainStatus;
+  public is_primary!: boolean;
 
   // Association properties
   public brand?: any;
@@ -40,6 +42,11 @@ Domain.init(
       type: DataTypes.ENUM('Unverified', 'Pending', 'No SSL', 'Connected'),
       allowNull: true,
       defaultValue: 'Unverified',
+    },
+    is_primary: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {

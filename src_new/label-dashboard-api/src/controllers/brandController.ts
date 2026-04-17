@@ -566,13 +566,42 @@ export const getDomains = async (req: Request, res: Response) => {
 
     const domains = await Domain.findAll({
       where: { brand_id: brandId },
-      attributes: ['domain_name', 'status', 'brand_id']
+      attributes: ['domain_name', 'status', 'brand_id', 'is_primary']
     });
 
     res.json(domains);
 
   } catch (error) {
     console.error('Error fetching domains:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const setPrimaryDomain = async (req: Request, res: Response) => {
+  try {
+    const { brandId, domainName } = req.params;
+    const decodedDomainName = decodeURIComponent(domainName as string);
+
+    const domain = await Domain.findOne({
+      where: { brand_id: brandId, domain_name: decodedDomainName }
+    });
+
+    if (!domain) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    // Clear any existing primary for this brand, then set the new one
+    await Domain.update(
+      { is_primary: false },
+      { where: { brand_id: brandId } }
+    );
+
+    await domain.update({ is_primary: true });
+
+    res.json({ message: 'Primary domain updated successfully' });
+
+  } catch (error) {
+    console.error('Error setting primary domain:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -42,6 +42,7 @@ export interface Domain {
   domain_name: string;
   status: 'Unverified' | 'Pending' | 'No SSL' | 'Connected';
   brand_id: number;
+  is_primary: boolean;
 }
 
 export interface User {
@@ -623,6 +624,20 @@ export class AdminService {
     }
     
     return this.http.put(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}/verify`, 
+      {}, 
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  setPrimaryDomain(domainName: string): Observable<any> {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+
+    if (!brandId) {
+      throw new Error('No brand ID found for current user');
+    }
+
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}/primary`,
       {}, 
       { headers: this.getAuthHeaders() }
     );

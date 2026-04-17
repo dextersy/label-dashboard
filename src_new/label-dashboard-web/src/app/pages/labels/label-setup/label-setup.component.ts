@@ -301,6 +301,18 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
     });
   }
 
+  setPrimaryDomain(domainName: string): void {
+    this.adminService.setPrimaryDomain(domainName).subscribe({
+      next: () => {
+        this.domains.forEach(d => d.is_primary = d.domain_name === domainName);
+        this.notificationService.showSuccess(`"${domainName}" set as primary domain`);
+      },
+      error: () => {
+        this.notificationService.showError('Error setting primary domain');
+      }
+    });
+  }
+
   verifyDomain(domainName: string): void {
     if (this.domainVerificationState.inProgress && this.domainVerificationState.pendingDomain === domainName) {
       return;
