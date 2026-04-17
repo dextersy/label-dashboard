@@ -55,6 +55,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Handle auth_token from unified login redirect (spindly.app SSO handoff).
+    // Must run before Angular routing so the token isn't lost when '' redirects to /login.
+    const urlParams = new URLSearchParams(window.location.search);
+    const ssoToken = urlParams.get('auth_token');
+    if (ssoToken) {
+      localStorage.setItem('auth_token', ssoToken);
+      // Remove token from URL immediately to keep it out of browser history
+      history.replaceState({}, '', window.location.pathname);
+    }
+
     // Initialize brand information before anything else
     this.brandService.loadBrandByDomain().subscribe({
       next: (brandSettings) => {
