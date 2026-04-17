@@ -168,10 +168,12 @@ main() {
     # Add --days 999 flag for testing to force certificate generation
     # Also remove pm2 restart commands to avoid stopping service during test
     local test_command_part
-    test_command_part=$(echo "$command_part" | sed 's/ renew / renew --days 999 /')
+    test_command_part=$(echo "$command_part" | sed 's/ renew / renew --days 999 --no-random-sleep /')
     test_command_part=$(echo "$test_command_part" | sed 's/[[:space:]]*&&[[:space:]]*pm2[[:space:]].*$//')
+    # Use hard restart (not graceful) so the new cert is loaded immediately rather than waiting for workers to cycle
+    test_command_part=$(echo "$test_command_part" | sed 's/-k graceful/-k restart/')
 
-    print_info "Testing command (with --days 999, excluding pm2 restart): $test_command_part"
+    print_info "Testing command (with --days 999 --no-random-sleep and hard restart, excluding pm2 restart): $test_command_part"
     echo
 
     # Execute the lego command as a test

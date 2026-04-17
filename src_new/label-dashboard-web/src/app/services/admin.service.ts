@@ -618,13 +618,20 @@ export class AdminService {
   verifyDomain(domainName: string): Observable<any> {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = currentUser.brand_id;
-    
+
     if (!brandId) {
       throw new Error('No brand ID found for current user');
     }
-    
-    return this.http.put(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}/verify`, 
-      {}, 
+
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}/verify`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  verifyDomainForBrand(brandId: number, domainName: string): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/domains/${encodeURIComponent(domainName)}/verify`,
+      {},
       { headers: this.getAuthHeaders() }
     );
   }

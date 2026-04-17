@@ -174,6 +174,12 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       handler: (item) => this.openSublabelDashboard(item)
     },
     {
+      icon: 'fas fa-shield-alt',
+      label: 'Verify Domains',
+      hidden: (item) => !this.canVerifyDomains(item),
+      handler: (item) => this.verifyDomains(item)
+    },
+    {
       icon: 'fas fa-dollar-sign',
       label: 'Fee Settings',
       handler: (item) => this.openFeeSettingsModal(item)
@@ -516,6 +522,49 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   // Check if a sublabel has any domains configured
   hasDomains(childBrand: ChildBrand): boolean {
     return !!(childBrand.domains && childBrand.domains.length > 0);
+  }
+
+  // Show "Verify Domains" only for Unverified/Warning sublabels that have verifiable domains
+  canVerifyDomains(childBrand: ChildBrand): boolean {
+    if (childBrand.status !== 'Unverified' && childBrand.status !== 'Warning') {
+      return false;
+    }
+    return !!(childBrand.domains?.some(d => d.status !== 'Connected' && d.status !== 'Pending'));
+  }
+
+  verifyDomains(childBrand: ChildBrand): void {
+    const domainsToVerify = childBrand.domains?.filter(
+      d => d.status !== 'Connected' && d.status !== 'Pending'
+    ) || [];
+
+    if (domainsToVerify.length === 0) return;
+
+    let callsRemaining = domainsToVerify.length;
+    let hasError = false;
+
+    const onComplete = () => {
+      callsRemaining--;
+      if (callsRemaining === 0) {
+        if (!hasError) {
+          this.notificationService.showInfo(
+            `Domain verification started for ${childBrand.brand_name}. Status will update in a few minutes.`
+          );
+        }
+        this.loadChildBrands();
+      }
+    };
+
+    domainsToVerify.forEach(domain => {
+      this.adminService.verifyDomainForBrand(childBrand.brand_id, domain.domain_name).subscribe({
+        next: () => onComplete(),
+        error: (error) => {
+          hasError = true;
+          const msg = error.error?.error || 'Failed to start domain verification';
+          this.notificationService.showError(msg);
+          onComplete();
+        }
+      });
+    });
   }
 
   // Fee Settings Modal handlers
