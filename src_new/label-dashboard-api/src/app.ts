@@ -45,6 +45,11 @@ const configureCors = () => {
         allowedOrigins = await getAllowedOrigins();
       }
 
+      // In non-production, allow any localhost/127.0.0.1 origin regardless of port
+      if (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
       // Normalize to lowercase for case-insensitive comparison (DNS is case-insensitive)
       if (allowedOrigins.has(origin.toLowerCase())) {
         callback(null, true);

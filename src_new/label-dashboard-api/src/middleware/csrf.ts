@@ -55,15 +55,7 @@ export const getAllowedOrigins = async (): Promise<Set<string>> => {
       }
     });
 
-    // Always add localhost for development (if not in production)
-    if (process.env.NODE_ENV !== 'production') {
-      origins.add('http://localhost:4200');
-      origins.add('http://localhost:3000');
-      origins.add('http://localhost:1234'); // spindly.app dev server
-      origins.add('http://127.0.0.1:4200');
-      origins.add('http://127.0.0.1:3000');
-      origins.add('http://127.0.0.1:1234');
-    }
+    // localhost origins are handled by a wildcard check in the CORS origin callback (non-production only)
 
     // Update cache
     allowedOriginsCache = origins;
@@ -268,6 +260,12 @@ export const csrfProtection = async (req: Request, res: Response, next: NextFunc
   // Check Origin header first (most reliable)
   const origin = req.headers.origin;
   if (origin) {
+    // In non-production, allow any localhost/127.0.0.1 origin regardless of port
+    if (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      next();
+      return;
+    }
+
     // Normalize to lowercase for case-insensitive comparison (DNS is case-insensitive)
     if (allowedOrigins.has(origin.toLowerCase())) {
       next();
