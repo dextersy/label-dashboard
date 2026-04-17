@@ -1,0 +1,344 @@
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-dark/95 backdrop-blur-sm border-b border-white/[0.06]">
+  <div class="max-w-5xl mx-auto px-6 flex items-center justify-between h-14">
+    <a href="/" class="shrink-0">
+      <img src="assets/logo.png" alt="Spindly" class="h-9">
+    </a>
+    <div class="flex items-center gap-6">
+      <a href="#what-we-handle" class="hidden md:block text-sm text-white/40 hover:text-white/70 transition-colors">how it works</a>
+      <a routerLink="/login" class="text-sm text-white/60 hover:text-white transition-colors font-medium">sign in →</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ===== HERO ===== -->
+<section class="relative min-h-screen bg-dark flex items-center overflow-hidden pt-14">
+
+  <!-- Dot pattern texture -->
+  <div class="absolute inset-0 opacity-[0.035] pointer-events-none"
+    style="background-image: radial-gradient(circle, #019D92 1px, transparent 1px); background-size: 28px 28px;">
+  </div>
+
+  <!-- Warm glow: bottom left -->
+  <div class="absolute -bottom-32 -left-32 w-[600px] h-[600px] opacity-10 blur-3xl pointer-events-none rounded-full"
+    style="background: radial-gradient(circle, #FF5C7A, transparent 70%);">
+  </div>
+  <!-- Teal glow: top right -->
+  <div class="absolute -top-32 right-0 w-[600px] h-[600px] opacity-10 blur-3xl pointer-events-none rounded-full"
+    style="background: radial-gradient(circle, #019D92, transparent 70%);">
+  </div>
+
+  <div class="relative max-w-5xl mx-auto px-6 py-28 w-full grid md:grid-cols-5 gap-12 items-center">
+
+    <!-- Left: 3 cols -->
+    <div class="md:col-span-3">
+
+      <!-- Sticker badge -->
+      <div class="inline-flex items-center gap-1.5 bg-accent-yellow text-dark font-display font-bold text-xs px-3 py-1.5 rounded-sm -rotate-1 mb-10 select-none">
+        ★ free while we're in beta
+      </div>
+
+      <!-- Headline -->
+      <h1 class="font-display font-black text-white mb-8"
+          style="font-size: clamp(1.8rem, 3vw, 2.75rem); line-height: 1.15; letter-spacing: -0.015em;">
+        managing<br>
+        labels is<br>
+        hard.<br>
+        <span class="text-gradient">we've got you.</span>
+      </h1>
+
+      <!-- Subheading -->
+      <p class="text-white/55 text-lg leading-relaxed mb-10 max-w-md">
+        Artist dashboards, finances, releases, payments — all the admin nobody signed up for.
+        Spindly takes care of it so you can focus on what actually matters.
+      </p>
+
+      <!-- CTAs -->
+      <div class="flex flex-wrap gap-3">
+        <a routerLink="/login" class="inline-flex items-center gap-2 bg-primary text-white font-bold px-7 py-3.5 rounded-lg hover:bg-primary-dark transition-all hover:scale-[1.02]">
+          get started free
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+        <a href="#what-we-handle" class="inline-flex items-center gap-2 text-white/50 font-medium px-7 py-3.5 rounded-lg border border-white/10 hover:border-white/20 hover:text-white/80 transition-all">
+          see how it works
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Right: vinyl (2 cols) -->
+    <div class="relative hidden md:flex items-center justify-center md:col-span-2">
+      <div class="animate-spin-slow w-[300px] h-[300px] rounded-full border border-white/5 flex items-center justify-center"
+        style="background: radial-gradient(circle at 30% 30%, #1a3533, #0C1F1D); box-shadow: inset 0 0 60px rgba(1,157,146,0.08);">
+        <div class="w-[270px] h-[270px] rounded-full border border-white/[0.03]">
+        <div class="w-[238px] h-[238px] m-auto mt-[16px] rounded-full border border-white/[0.04]">
+        <div class="w-[206px] h-[206px] m-auto mt-[16px] rounded-full border border-white/[0.05]">
+        <div class="w-[174px] h-[174px] m-auto mt-[16px] rounded-full border border-white/[0.07]">
+        <div class="w-[142px] h-[142px] m-auto mt-[16px] rounded-full border border-white/[0.08]">
+          <div class="w-[110px] h-[110px] m-auto mt-[16px] rounded-full flex items-center justify-center"
+            style="background: linear-gradient(135deg, #019D92, #017A72);">
+            <div class="w-4 h-4 rounded-full bg-dark"></div>
+          </div>
+        </div>
+        </div>
+        </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Tonearm -->
+      <div class="absolute top-1/2 left-1/2 w-[170px] h-[2px] origin-left rounded-full opacity-30 pointer-events-none"
+        style="background: linear-gradient(90deg, transparent, #019D92); transform: translate(-10%, -50%) rotate(-35deg);">
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ===== WHAT WE HANDLE ===== -->
+<section id="what-we-handle" class="py-24 bg-white">
+  <div class="max-w-5xl mx-auto px-6">
+
+    <div class="mb-16">
+      <div class="inline-block bg-dark text-white font-display font-bold text-xs px-3 py-1.5 rounded-sm rotate-1 mb-6 select-none">
+        what spindly handles
+      </div>
+      <h2 class="font-display font-black text-dark leading-tight"
+          style="font-size: clamp(1.5rem, 2.5vw, 2.25rem); line-height: 1.2; letter-spacing: -0.015em;">
+        you didn't start a label<br>to do accounting.
+      </h2>
+    </div>
+
+    <!-- 3-column editorial layout, no card boxes -->
+    <div class="grid md:grid-cols-3 gap-x-12 gap-y-12">
+      @for (feature of features; track feature.title) {
+        <div>
+          <div class="text-4xl mb-5 leading-none">{{ feature.emoji }}</div>
+          <h3 class="font-display font-bold text-dark text-xl mb-3">{{ feature.title }}</h3>
+          <p class="text-dark/60 leading-relaxed">{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ===== FOR YOUR ARTISTS ===== -->
+<section class="py-24 bg-primary-light relative overflow-hidden">
+
+  <!-- Decorative quote mark (tinted) -->
+  <div class="absolute -top-12 -right-8 opacity-[0.05] pointer-events-none select-none font-display font-black text-primary leading-none"
+    style='font-size: 36rem;'>"</div>
+
+  <div class="relative max-w-5xl mx-auto px-6">
+    <div class="grid md:grid-cols-2 gap-16 items-center">
+
+      <!-- Copy -->
+      <div>
+        <div class="inline-block bg-accent-pink text-white font-display font-bold text-xs px-3 py-1.5 rounded-sm rotate-1 mb-8 select-none">
+          for your artists
+        </div>
+
+        <h2 class="font-display font-black text-dark leading-tight mb-6"
+            style="font-size: clamp(1.5rem, 2.5vw, 2.25rem); line-height: 1.2; letter-spacing: -0.015em;">
+          they'll finally<br>
+          know what<br>
+          they're owed.
+        </h2>
+
+        <p class="text-dark/60 text-lg leading-relaxed mb-6">
+          Every artist on your roster gets their own dashboard — earnings, releases, payment history.
+          No more "I'll send you the spreadsheet later." No more black boxes.
+        </p>
+
+        <p class="text-dark/40 leading-relaxed">
+          When artists can see the numbers in real time, the trust that took years to build
+          stops being something you have to defend every quarter.
+        </p>
+      </div>
+
+      <!-- Mock artist earnings card (light) -->
+      <div class="relative">
+        <div class="bg-white border border-primary/10 rounded-2xl p-6 rotate-1 shadow-lg">
+
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <p class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">total earned</p>
+              <p class="font-display font-black text-dark" style="font-size: 2.5rem; line-height: 1;">$4,280</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Earnings bars -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <p class="text-gray-400 text-xs w-20 shrink-0 truncate">Nightfall EP</p>
+              <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full" style="width: 65%"></div>
+              </div>
+              <p class="text-gray-600 text-xs w-14 text-right font-medium">$2,782</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <p class="text-gray-400 text-xs w-20 shrink-0 truncate">Static EP</p>
+              <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-accent-purple rounded-full" style="width: 35%"></div>
+              </div>
+              <p class="text-gray-600 text-xs w-14 text-right font-medium">$1,498</p>
+            </div>
+          </div>
+
+          <!-- Pending payment -->
+          <div class="mt-5 pt-4 border-t border-gray-100 flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-accent-yellow shrink-0"></div>
+            <p class="text-gray-400 text-xs">Payment due <span class="text-dark font-semibold">April 30</span></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== FOR LABELS ===== -->
+<section class="py-24 bg-white">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="grid md:grid-cols-2 gap-16 items-center">
+
+      <!-- Mock roster card -->
+      <div class="relative order-2 md:order-1">
+        <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm -rotate-1">
+          <p class="text-gray-400 text-xs uppercase tracking-wider font-medium mb-5">your roster</p>
+
+          <div class="space-y-0 divide-y divide-gray-50">
+            <!-- Artist 1 -->
+            <div class="flex items-center gap-3 py-3">
+              <div class="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center text-xs font-bold text-primary shrink-0">HC</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-gray-800 text-sm font-semibold">Hollow Coast</p>
+                <p class="text-gray-400 text-xs">3 releases</p>
+              </div>
+              <p class="text-gray-700 text-sm font-semibold shrink-0">$2,840</p>
+            </div>
+            <!-- Artist 2 -->
+            <div class="flex items-center gap-3 py-3">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style="background: rgba(255,92,122,0.15); color: #FF5C7A;">VN</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-gray-800 text-sm font-semibold">Velvet Noise</p>
+                <p class="text-gray-400 text-xs">1 release</p>
+              </div>
+              <p class="text-gray-700 text-sm font-semibold shrink-0">$1,120</p>
+            </div>
+            <!-- Artist 3 -->
+            <div class="flex items-center gap-3 py-3">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style="background: rgba(139,92,246,0.15); color: #8B5CF6;">TM</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-gray-800 text-sm font-semibold">The Mainframes</p>
+                <p class="text-gray-400 text-xs">5 releases</p>
+              </div>
+              <p class="text-gray-700 text-sm font-semibold shrink-0">$4,390</p>
+            </div>
+          </div>
+
+          <div class="pt-4 mt-2 border-t border-gray-50 flex items-center justify-between">
+            <p class="text-gray-300 text-xs">3 artists</p>
+            <p class="text-primary text-xs font-semibold">view all →</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy -->
+      <div class="order-1 md:order-2">
+        <div class="inline-block bg-primary-light text-primary font-display font-bold text-xs px-3 py-1.5 rounded-sm -rotate-1 mb-8 select-none">
+          for labels
+        </div>
+
+        <h2 class="font-display font-black text-dark leading-tight mb-6"
+            style="font-size: clamp(1.5rem, 2.5vw, 2.25rem); line-height: 1.2; letter-spacing: -0.015em;">
+          everything you need<br>
+          to get started<br>
+          <span class="text-gradient">in one place.</span>
+        </h2>
+
+        <p class="text-dark/55 text-lg leading-relaxed mb-8">
+          Your whole operation — every artist, release, payment, and document — under one roof.
+          No more chasing tabs across three spreadsheets.
+        </p>
+
+        <div class="space-y-3">
+          @for (item of labelBenefits; track item) {
+            <div class="flex items-start gap-3">
+              <span class="text-primary font-bold text-base leading-none mt-0.5 shrink-0">✦</span>
+              <p class="text-dark/65 leading-relaxed">{{ item }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== CTA ===== -->
+<section class="py-32 bg-dark relative overflow-hidden">
+
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] opacity-15 blur-3xl rounded-full"
+      style="background: radial-gradient(ellipse, #019D92, transparent 70%);">
+    </div>
+  </div>
+
+  <div class="relative max-w-2xl mx-auto px-6 text-center">
+
+    <div class="inline-flex items-center gap-1.5 bg-accent-yellow text-dark font-display font-bold text-xs px-4 py-2 rounded-sm -rotate-1 mb-12 select-none">
+      ★ no credit card needed
+    </div>
+
+    <h2 class="font-display font-black text-white leading-tight mb-8"
+        style="font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.15; letter-spacing: -0.015em;">
+      ready when<br>you are.
+    </h2>
+
+    <p class="text-white/45 text-xl mb-10">
+      Start free. Bring your artists. Get back to the music.
+    </p>
+
+    <a routerLink="/login" class="inline-flex items-center gap-2 bg-primary text-white font-bold text-lg px-8 py-4 rounded-lg hover:bg-primary-dark transition-all hover:scale-[1.02]">
+      get started free
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+      </svg>
+    </a>
+
+  </div>
+</section>
+
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-dark border-t border-white/[0.06] py-10">
+  <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <img src="assets/logo.png" alt="Spindly" class="h-6 mb-2">
+      <p class="text-white/25 text-xs">label management for independent music.</p>
+    </div>
+    <div class="flex items-center gap-6 text-white/30 text-sm">
+      <a href="#what-we-handle" class="hover:text-white/60 transition-colors">features</a>
+      <a href="mailto:hello@spindly.app" class="hover:text-white/60 transition-colors">contact</a>
+      <a routerLink="/login" class="hover:text-white/60 transition-colors">sign in</a>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-6 mt-8 pt-6 border-t border-white/[0.05] flex items-center justify-between">
+    <p class="text-white/20 text-xs">&copy; 2026 Spindly.</p>
+    <p class="text-white/20 text-xs">made with love for indie music ♥</p>
+  </div>
+</footer>
