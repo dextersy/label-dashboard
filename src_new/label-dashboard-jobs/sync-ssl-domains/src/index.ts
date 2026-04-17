@@ -79,7 +79,7 @@ class SSLDomainSyncService {
     this.sendSuccessNotif = process.env.SEND_SUCCESS_NOTIF === 'true';
     this.sendErrorNotif = process.env.SEND_ERROR_NOTIF === 'true';
     this.adminEmail = process.env.ADMIN_EMAIL || '';
-    this.fromEmail = process.env.FROM_EMAIL || 'noreply@melt-records.com';
+    this.fromEmail = process.env.FROM_EMAIL || 'noreply@spindly.app';
 
     // Initialize SMTP transporter if notifications are enabled
     if (this.sendSuccessNotif || this.sendErrorNotif) {
@@ -601,8 +601,8 @@ class SSLDomainSyncService {
       // NOTE: We only remove orphaned domains, we don't add missing domains
       // Missing domains should be added manually by users via the admin interface
 
-      // IMPORTANT: Never remove dashboard.melt-records.com (primary domain for certificate naming)
-      const primaryDomain = 'dashboard.melt-records.com';
+      // IMPORTANT: Never remove my.spindly.app (primary domain for certificate naming)
+      const primaryDomain = 'my.spindly.app';
       const domainsToRemove = sslDomainsBefore
         .filter(d => !dbDomains.includes(d))
         .filter(d => d !== primaryDomain);  // Never remove primary domain

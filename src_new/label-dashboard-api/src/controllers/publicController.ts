@@ -1004,7 +1004,7 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
 
     // Footer
     doc.fontSize(9).font('Helvetica-Oblique').fillColor('#666666').text(
-      'Powered by Melt Records Tickets.',
+      'Powered by Spindly.',
       { align: 'center' }
     );
 
@@ -2228,7 +2228,7 @@ export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
     const siteName = artist.brand?.brand_name || 'Melt Records';
     
     // Use the brand's primary domain for the frontend URL
-    const brandDomain = artist.brand?.domains?.[0]?.domain_name || 'testbrand.melt-records.com';
+    const brandDomain = artist.brand?.domains?.[0]?.domain_name || 'testbrand.spindly.app';
     const frontendUrl = `https://${brandDomain}/public/epk/${artist.id}`;
 
     // Generate structured data for Artist/MusicGroup
@@ -2315,7 +2315,7 @@ ${JSON.stringify(structuredData, null, 4)}
     </div>
     
     <div style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
-      <p style="font-size: 12px; color: #6c757d;">Powered by Melt Records Dashboard</p>
+      <p style="font-size: 12px; color: #6c757d;">Powered by Spindly</p>
     </div>
   </div>
   

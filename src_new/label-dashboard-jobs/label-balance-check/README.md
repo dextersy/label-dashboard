@@ -47,7 +47,7 @@ The email includes:
 
 Email format:
 - **Subject**: `[label-balance-check] Sublabel Balance Summary - X Sublabels Ready for Payment (₱X,XXX.XX)`
-- **From**: Melt Records Dashboard - System Notifications
+- **From**: Spindly - System Notifications
 
 ## Prerequisites
 

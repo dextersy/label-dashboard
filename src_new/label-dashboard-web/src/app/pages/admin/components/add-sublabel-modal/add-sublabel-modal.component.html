@@ -59,12 +59,12 @@
                 maxlength="63"
                 placeholder="sublabel"
                 pattern="^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?$">
-              <span class="input-group-text">.melt-records.com</span>
+              <span class="input-group-text">.spindly.app</span>
             </div>
             
             <div class="form-text text-muted">
               <i class="fas fa-info-circle me-1"></i>
-              This will create a subdomain under melt-records.com. You can add custom domains later in brand settings.
+              This will create a subdomain under spindly.app. You can add custom domains later in brand settings.
             </div>
             
             <div class="invalid-feedback" *ngIf="subdomainName.invalid && (subdomainName.dirty || subdomainName.touched)">
@@ -82,7 +82,7 @@
               </h6>
               <ul class="mb-0 small">
                 <li>New brand record as a sublabel of your current brand</li>
-                <li>Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.melt-records.com" with automatic DNS configuration</li>
+                <li>Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.spindly.app" with automatic DNS configuration</li>
                 <li>Admin user account for the new sublabel (copy of your account)</li>
                 <li>Default settings: Gray brand color, 10% payment processing fee</li>
               </ul>

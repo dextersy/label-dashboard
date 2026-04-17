@@ -1302,17 +1302,17 @@ const createSublabelAsync = async (
     let sslConfigured = false;
     let sslMessage = 'SSL certificate not configured (DNS not created automatically)';
     
-    // Create DNS A record for melt-records.com subdomains
+    // Create DNS A record for spindly.app subdomains
     if (isSubdomainOfMeltRecords && subdomain_name) {
       try {
-        console.log(`[Async] Creating DNS A record for ${subdomain_name}.melt-records.com`);
+        console.log(`[Async] Creating DNS A record for ${subdomain_name}.spindly.app`);
         const dnsCreated = await createSubdomainARecord(subdomain_name.toLowerCase());
         if (dnsCreated) {
           domainStatus = 'Pending'; // Set to Pending while SSL is being configured
-          console.log(`[Async] DNS A record created successfully for ${subdomain_name}.melt-records.com`);
+          console.log(`[Async] DNS A record created successfully for ${subdomain_name}.spindly.app`);
           
           // Automatically add domain to SSL certificate when DNS is successfully created
-          // For melt-records.com subdomains, we know they will point to the correct IP after DNS creation
+          // For spindly.app subdomains, we know they will point to the correct IP after DNS creation
           if (isMeltRecordsSubdomain(finalDomainName) && shouldAutoAddToSSL(finalDomainName)) {
             try {
               console.log(`[Async][SSL] Attempting to add ${finalDomainName} to SSL certificate`);
@@ -1334,14 +1334,14 @@ const createSublabelAsync = async (
               sslMessage = 'DNS configured successfully, but SSL certificate update failed due to connection error. Manual SSL configuration required.';
             }
           } else {
-            console.log(`[Async][SSL] Skipping SSL certificate update for ${finalDomainName} during creation (not a melt-records.com subdomain or invalid format). Use verify domain to add SSL after IP verification.`);
+            console.log(`[Async][SSL] Skipping SSL certificate update for ${finalDomainName} during creation (not a spindly.app subdomain or invalid format). Use verify domain to add SSL after IP verification.`);
             sslMessage = 'DNS configured successfully. Use "Verify Domain" after confirming IP points to server to add SSL certificate.';
           }
         } else {
-          console.warn(`[Async] DNS A record creation failed for ${subdomain_name}.melt-records.com`);
+          console.warn(`[Async] DNS A record creation failed for ${subdomain_name}.spindly.app`);
         }
       } catch (dnsError) {
-        console.error(`[Async] DNS creation error for ${subdomain_name}.melt-records.com:`, dnsError);
+        console.error(`[Async] DNS creation error for ${subdomain_name}.spindly.app:`, dnsError);
       }
     }
 

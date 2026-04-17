@@ -63,7 +63,7 @@ show_usage() {
     echo "  -h, --help          Show this help message"
     echo
     echo "Examples:"
-    echo "  $0 newdomain.melt-records.com"
+    echo "  $0 newdomain.spindly.app"
     echo
     echo "Note: This script will automatically test the SSL certificate generation"
     echo "      before adding the domain to the cron job to ensure it works properly."
@@ -150,7 +150,7 @@ main() {
     print_info "Adding domain '$new_domain' to the SSL renewal command..."
 
     # Define primary domain (must always be first for consistent cert naming)
-    local primary_domain="dashboard.melt-records.com"
+    local primary_domain="my.spindly.app"
 
     # Create new command line with additional domain
     local new_lego_line

@@ -174,7 +174,7 @@ These must be configured on the backend API server (not in Lambda):
 | `SEND_SUCCESS_NOTIF` | Send email on success (no changes) | ❌ | `false` |
 | `SEND_ERROR_NOTIF` | Send email on errors or domain removals | ❌ | `true` |
 | `ADMIN_EMAIL` | Admin email address for notifications | ✅* | - |
-| `FROM_EMAIL` | Sender email address | ❌ | `noreply@melt-records.com` |
+| `FROM_EMAIL` | Sender email address | ❌ | `noreply@spindly.app` |
 | `SMTP_HOST` | SMTP server hostname | ✅* | - |
 | `SMTP_PORT` | SMTP server port | ❌ | `587` |
 | `SMTP_SECURE` | Use SSL/TLS (true/false) | ❌ | `false` |

@@ -71,7 +71,7 @@ export const createSubdomainARecord = async (subdomain: string): Promise<boolean
     const domainName = getDomainName();
 
     const domainEntry: DomainEntry = {
-      name: `${subdomain}.${domainName}`, // Full subdomain (e.g., 'newlabel.melt-records.com')
+      name: `${subdomain}.${domainName}`, // Full subdomain (e.g., 'newlabel.spindly.app')
       type: 'A',
       target: frontendIP
     };

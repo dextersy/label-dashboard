@@ -497,7 +497,7 @@ class LabelBalanceCheckService {
     const textBody = this.generateEmailText(summary);
 
     const mailOptions = {
-      from: `Melt Records Dashboard - System Notifications <${this.fromEmail}>`,
+      from: `Spindly - System Notifications <${this.fromEmail}>`,
       to: this.superadminEmail,
       subject: `[label-balance-check] ${subject}`,
       html: htmlBody,

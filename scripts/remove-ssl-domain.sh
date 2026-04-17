@@ -72,8 +72,8 @@ show_usage() {
     echo "  --no-renew          Skip SSL renewal/testing (just update the renewal script)"
     echo
     echo "Examples:"
-    echo "  $0 olddomain.melt-records.com"
-    echo "  $0 --no-renew olddomain.melt-records.com"
+    echo "  $0 olddomain.spindly.app"
+    echo "  $0 --no-renew olddomain.spindly.app"
     echo "  $0 --force lastdomain.com"
     echo
     echo "Note: By default, this script tests the SSL certificate generation"

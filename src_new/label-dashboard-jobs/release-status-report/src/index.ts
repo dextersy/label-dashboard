@@ -736,7 +736,7 @@ class ReleaseStatusReportService {
     const textBody = this.generateEmailText(releases, releasesWithErrors, releasesWithWarnings, totalSongs);
 
     const mailOptions = {
-      from: `Melt Records Dashboard - System Notifications <${this.fromEmail}>`,
+      from: `Spindly - System Notifications <${this.fromEmail}>`,
       to: this.superadminEmail,
       subject: `[release-status-report] ${subject}`,
       html: htmlBody,

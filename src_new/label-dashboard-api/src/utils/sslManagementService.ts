@@ -215,12 +215,12 @@ export const shouldAutoAddToSSL = (domainName: string): boolean => {
 };
 
 /**
- * Check if domain is a melt-records.com subdomain (for backwards compatibility)
+ * Check if domain is a spindly.app subdomain (primary domain for auto-provisioning)
  * @param domainName - The domain name to check
- * @returns boolean - True if domain is a melt-records.com subdomain
+ * @returns boolean - True if domain is a spindly.app subdomain
  */
 export const isMeltRecordsSubdomain = (domainName: string): boolean => {
-  const baseDomain = process.env.LIGHTSAIL_DOMAIN || 'melt-records.com';
+  const baseDomain = process.env.LIGHTSAIL_DOMAIN || 'spindly.app';
   return domainName.endsWith(`.${baseDomain}`) && domainName !== baseDomain;
 };
 
