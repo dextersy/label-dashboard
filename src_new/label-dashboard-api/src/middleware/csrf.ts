@@ -59,8 +59,10 @@ export const getAllowedOrigins = async (): Promise<Set<string>> => {
     if (process.env.NODE_ENV !== 'production') {
       origins.add('http://localhost:4200');
       origins.add('http://localhost:3000');
+      origins.add('http://localhost:1234'); // spindly.app dev server
       origins.add('http://127.0.0.1:4200');
       origins.add('http://127.0.0.1:3000');
+      origins.add('http://127.0.0.1:1234');
     }
 
     // Update cache
@@ -87,8 +89,10 @@ export const getAllowedOrigins = async (): Promise<Set<string>> => {
     if (process.env.NODE_ENV !== 'production') {
       origins.add('http://localhost:4200');
       origins.add('http://localhost:3000');
+      origins.add('http://localhost:1234'); // spindly.app dev server
       origins.add('http://127.0.0.1:4200');
       origins.add('http://127.0.0.1:3000');
+      origins.add('http://127.0.0.1:1234');
     }
 
     // PERFORMANCE: Cache fallback origins with shorter TTL to prevent hammering the database

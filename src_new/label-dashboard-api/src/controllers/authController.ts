@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
-import { getBrandIdFromDomain } from '../utils/brandUtils';
+import { getBrandIdFromDomain, getBrandFrontendUrl } from '../utils/brandUtils';
 import { verifyPassword, migrateUserPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
 import fs from 'fs';
@@ -450,6 +450,253 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const loginUnified = async (req: Request, res: Response) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const remoteIp = req.ip || 'unknown';
+    const proxyIp = req.get('X-Forwarded-For') || 'unknown';
+
+    // Find ALL users matching username or email across all brands
+    const users = await User.findAll({
+      where: {
+        [Op.or]: [
+          { username },
+          { email_address: username }
+        ]
+      },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    const lockedUsers: any[] = [];
+    const matchedUsers: { user: any; needsMigration: boolean }[] = [];
+
+    for (const user of users) {
+      const isLocked = await checkLoginLock(user.id);
+      if (isLocked) {
+        lockedUsers.push(user);
+        await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id);
+        continue;
+      }
+
+      const { isValid, needsMigration } = await verifyPassword(password, user);
+      if (isValid) {
+        matchedUsers.push({ user, needsMigration });
+      } else if (user.brand_id) {
+        await LoginAttempt.create({
+          user_id: user.id,
+          status: 'Failed',
+          date_and_time: new Date(),
+          brand_id: user.brand_id,
+          proxy_ip: proxyIp,
+          remote_ip: remoteIp
+        });
+      }
+    }
+
+    // All found users are locked (none unlocked to attempt password)
+    if (matchedUsers.length === 0 && lockedUsers.length === users.length) {
+      const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
+      return res.status(423).json({
+        error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.`
+      });
+    }
+
+    if (matchedUsers.length === 0) {
+      console.warn('Login failed (unified)', { username, reason: 'invalid_password', ip: remoteIp, timestamp: new Date() });
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
+    if (matchedUsers.length === 1) {
+      const { user, needsMigration } = matchedUsers[0];
+      return await completeLoginForUser(user, remoteIp, proxyIp, res, needsMigration, password);
+    }
+
+    // Multiple password matches — return brand selection token
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    const matches = matchedUsers.map(({ user }) => ({ userId: user.id, brandId: user.brand_id }));
+    const selectionToken = jwt.sign(
+      { type: 'brand_selection', matches },
+      process.env.JWT_SECRET,
+      { expiresIn: '5m' }
+    );
+
+    const brands = matchedUsers.map(({ user }) => ({
+      id: user.brand_id,
+      name: user.brand?.brand_name || 'Unknown',
+      logo_url: user.brand?.logo_url || null,
+      brand_color: user.brand?.brand_color || null
+    }));
+
+    return res.status(200).json({
+      status: 'brand_selection',
+      brands,
+      selection_token: selectionToken
+    });
+
+  } catch (error) {
+    console.error('Login unified error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const selectBrand = async (req: Request, res: Response) => {
+  try {
+    const { selection_token, brand_id } = req.body;
+
+    if (!selection_token || brand_id === undefined) {
+      return res.status(400).json({ error: 'Selection token and brand ID are required' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(selection_token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired selection token' });
+    }
+
+    if (decoded.type !== 'brand_selection' || !Array.isArray(decoded.matches)) {
+      return res.status(400).json({ error: 'Invalid selection token type' });
+    }
+
+    const match = decoded.matches.find((m: any) => m.brandId === brand_id);
+    if (!match) {
+      return res.status(400).json({ error: 'Invalid brand selection' });
+    }
+
+    const user = await User.findByPk(match.userId, {
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const remoteIp = req.ip || 'unknown';
+    const proxyIp = req.get('X-Forwarded-For') || 'unknown';
+
+    return await completeLoginForUser(user, remoteIp, proxyIp, res);
+
+  } catch (error) {
+    console.error('Select brand error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Shared helper to complete login and send response
+async function completeLoginForUser(
+  user: any,
+  remoteIp: string,
+  proxyIp: string,
+  res: Response,
+  needsMigration: boolean = false,
+  plainPassword: string = ''
+): Promise<any> {
+  // Record successful login attempt
+  await LoginAttempt.create({
+    user_id: user.id,
+    status: 'Successful',
+    date_and_time: new Date(),
+    brand_id: user.brand_id,
+    proxy_ip: proxyIp,
+    remote_ip: remoteIp
+  });
+
+  // Migrate from MD5 to bcrypt if needed
+  if (needsMigration && plainPassword) {
+    await migrateUserPassword(user, plainPassword);
+  }
+
+  // Check if profile is incomplete
+  if (!user.username) {
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+    const tempToken = jwt.sign(
+      { userId: user.id, email: user.email_address, brandId: user.brand_id, profileIncomplete: true },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    return res.status(200).json({
+      status: 'profile_incomplete',
+      message: 'Please complete your profile by setting a username',
+      token: tempToken,
+      user: {
+        id: user.id,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        brand_id: user.brand_id
+      }
+    });
+  }
+
+  await user.update({ last_logged_in: new Date() });
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+
+  const token = jwt.sign(
+    { userId: user.id, username: user.username, brandId: user.brand_id },
+    process.env.JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+
+  sendLoginNotification(
+    user.email_address,
+    user.first_name || '',
+    remoteIp,
+    proxyIp,
+    user.brand_id
+  ).catch(error => {
+    console.error('Failed to send login notification:', error);
+  });
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const isSuperadmin = adminEmail && user.email_address === adminEmail;
+
+  // Resolve brand frontend URL for cross-origin redirects (e.g. spindly.app login)
+  let frontendUrl: string | null = null;
+  try {
+    frontendUrl = await getBrandFrontendUrl(user.brand_id);
+  } catch {
+    // No domain configured — omit from response
+  }
+
+  return res.json({
+    message: 'Login successful',
+    token,
+    frontend_url: frontendUrl,
+    user: {
+      id: user.id,
+      username: user.username,
+      email_address: user.email_address,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      is_admin: user.is_admin,
+      is_superadmin: isSuperadmin,
+      brand_id: user.brand_id,
+      onboarding_completed: user.onboarding_completed || false
+    }
+  });
+}
 
 // Helper functions matching original PHP implementation
 async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number, refererUrl: string): Promise<boolean> {

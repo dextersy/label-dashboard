@@ -1,11 +1,13 @@
 import { Router } from 'express';
-import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile } from '../controllers/authController';
+import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
 
 router.post('/login', authRateLimit, login);
+router.post('/login-unified', authRateLimit, loginUnified);
+router.post('/select-brand', authRateLimit, selectBrand);
 router.post('/logout', logout);
 router.get('/me', authenticateToken, checkAuth);
 router.post('/forgot-password', authRateLimit, forgotPassword);

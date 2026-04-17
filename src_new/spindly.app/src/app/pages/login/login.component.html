@@ -1,0 +1,154 @@
+<div class="min-h-screen bg-dark flex flex-col">
+
+  <!-- Dot texture -->
+  <div class="fixed inset-0 opacity-[0.02] pointer-events-none"
+    style="background-image: radial-gradient(circle, #019D92 1px, transparent 1px); background-size: 28px 28px;">
+  </div>
+
+  <!-- Navbar -->
+  <nav class="relative z-10 max-w-5xl mx-auto px-6 flex items-center w-full h-14">
+    <a routerLink="/" class="shrink-0">
+      <img src="assets/logo.png" alt="Spindly" class="h-9">
+    </a>
+  </nav>
+
+  <!-- Card -->
+  <div class="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-sm">
+      <div class="bg-dark-surface border border-white/[0.08] rounded-2xl p-8">
+
+        <!-- Login form -->
+        @if (loginState === 'login') {
+          <h1 class="font-display font-black text-white text-2xl mb-1">Sign in</h1>
+          <p class="text-white/40 text-sm mb-4">Welcome back to Spindly.</p>
+          <p class="text-white/25 text-xs leading-relaxed mb-7">You'll be redirected to your label dashboard automatically, or asked to choose a label if you have accounts on multiple.</p>
+
+          @if (errorMessage) {
+            <div class="mb-5 px-4 py-3 bg-accent-pink/10 border border-accent-pink/20 rounded-lg text-accent-pink text-sm">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+            <div class="mb-4">
+              <label class="block text-white/50 text-xs font-medium mb-1.5 uppercase tracking-wide">Username or email</label>
+              <input
+                type="text"
+                name="login"
+                [(ngModel)]="loginField"
+                required
+                autocomplete="username"
+                class="w-full bg-dark border border-white/[0.1] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary/60 transition-colors">
+            </div>
+
+            <div class="mb-6">
+              <label class="block text-white/50 text-xs font-medium mb-1.5 uppercase tracking-wide">Password</label>
+              <div class="relative">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  name="password"
+                  [(ngModel)]="password"
+                  required
+                  autocomplete="current-password"
+                  class="w-full bg-dark border border-white/[0.1] rounded-lg px-4 py-2.5 pr-10 text-white text-sm focus:outline-none focus:border-primary/60 transition-colors">
+                <button
+                  type="button"
+                  (click)="togglePassword()"
+                  tabindex="-1"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+                  @if (!showPassword) {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                  } @else {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="loading || loginForm.invalid"
+              class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 rounded-lg transition-all hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2">
+              @if (!loading) {
+                Sign in
+              } @else {
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Signing in...
+              }
+            </button>
+          </form>
+        }
+
+        <!-- Brand picker -->
+        @if (loginState === 'brand_selection') {
+          <h1 class="font-display font-black text-white text-2xl mb-1">Select your label</h1>
+          <p class="text-white/40 text-sm mb-7">You have accounts on multiple labels.</p>
+
+          @if (errorMessage) {
+            <div class="mb-5 px-4 py-3 bg-accent-pink/10 border border-accent-pink/20 rounded-lg text-accent-pink text-sm">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <div class="space-y-2">
+            @for (brand of brandChoices; track brand.id) {
+              <button
+                type="button"
+                [disabled]="loading"
+                (click)="selectBrand(brand.id)"
+                class="w-full flex items-center gap-3 px-4 py-3.5 bg-dark border border-white/[0.1] rounded-xl hover:border-primary/40 hover:bg-primary/5 transition-all text-left disabled:opacity-50 group">
+                @if (brand.logo_url) {
+                  <img [src]="brand.logo_url" [alt]="brand.name"
+                    class="w-9 h-9 rounded-lg object-contain bg-white/5 shrink-0">
+                } @else {
+                  <div class="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                  </div>
+                }
+                <span class="text-white font-medium text-sm flex-1">{{ brand.name }}</span>
+                @if (loading) {
+                  <svg class="w-4 h-4 text-white/30 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                } @else {
+                  <svg class="w-4 h-4 text-white/20 group-hover:text-white/50 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                }
+              </button>
+            }
+          </div>
+
+          <button
+            type="button"
+            (click)="backToLogin()"
+            class="mt-5 flex items-center gap-1.5 text-white/35 hover:text-white/60 text-sm transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+          </button>
+        }
+
+      </div>
+
+      @if (loginState === 'login') {
+        <p class="text-center mt-5 text-white/25 text-xs">
+          Forgot your password? Contact your label admin.
+        </p>
+      }
+    </div>
+  </div>
+
+</div>
