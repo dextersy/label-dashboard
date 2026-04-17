@@ -9,10 +9,12 @@ SFTP_USER="ubuntu"
 # Server Paths
 BACKEND_DEPLOY_PATH="/var/www/label-dashboard-api"
 FRONTEND_DEPLOY_PATH="/var/www/label-dashboard-web"
+SPINDLY_DEPLOY_PATH="/var/www/spindly-landing"
 
 # Build Configuration
 API_BUILD_COMMAND="npm run build"
 WEB_BUILD_COMMAND="npm run build -- --configuration production"
+SPINDLY_BUILD_COMMAND="npm run build"
 
 # PM2 Configuration
 PM2_APP_NAME="app"

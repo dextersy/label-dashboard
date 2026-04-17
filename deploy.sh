@@ -127,7 +127,7 @@ print_status "Loading configuration from $CONFIG_FILE"
 source "$CONFIG_FILE"
 
 # Validate required configuration
-if [ -z "$SFTP_KEY_PATH" ] || [ -z "$PRODUCTION_HOST" ] || [ -z "$SFTP_USER" ] || [ -z "$BACKEND_DEPLOY_PATH" ] || [ -z "$FRONTEND_DEPLOY_PATH" ]; then
+if [ -z "$SFTP_KEY_PATH" ] || [ -z "$PRODUCTION_HOST" ] || [ -z "$SFTP_USER" ] || [ -z "$BACKEND_DEPLOY_PATH" ] || [ -z "$FRONTEND_DEPLOY_PATH" ] || [ -z "$SPINDLY_DEPLOY_PATH" ]; then
     print_error "Missing required configuration. Please check deploy.config"
     exit 1
 fi
@@ -141,12 +141,14 @@ fi
 # Set default values
 API_BUILD_COMMAND=${API_BUILD_COMMAND:-"npm run build"}
 WEB_BUILD_COMMAND=${WEB_BUILD_COMMAND:-"npm run build"}
+SPINDLY_BUILD_COMMAND=${SPINDLY_BUILD_COMMAND:-"npm run build"}
 PM2_APP_NAME=${PM2_APP_NAME:-"app"}
 
 print_status "Starting deployment process..."
 print_status "Target server: $SFTP_USER@$PRODUCTION_HOST"
 print_status "Backend path: $BACKEND_DEPLOY_PATH"
 print_status "Frontend path: $FRONTEND_DEPLOY_PATH"
+print_status "Spindly landing path: $SPINDLY_DEPLOY_PATH"
 
 if [ "$SKIP_BUILD" = true ]; then
     print_warning "🚀 Fast deployment mode: Build step will be skipped"
@@ -167,6 +169,7 @@ check_directory() {
 # Check project directories
 check_directory "$SCRIPT_DIR/src_new/label-dashboard-api" "API"
 check_directory "$SCRIPT_DIR/src_new/label-dashboard-web" "Web"
+check_directory "$SCRIPT_DIR/src_new/spindly.app" "Spindly"
 
 # Build API
 start_phase
@@ -282,6 +285,57 @@ else
     end_phase "Build: Web"
 fi
 
+# Build Spindly.app (landing page)
+start_phase
+if [ "$SKIP_BUILD" = true ]; then
+    print_warning "Skipping Spindly build (--skip-build flag specified)"
+    cd "$SCRIPT_DIR/src_new/spindly.app"
+    if [ ! -d "dist/spindly-web/browser" ]; then
+        print_error "Spindly dist/spindly-web/browser directory not found and build was skipped. Please build first or run without --skip-build"
+        exit 1
+    fi
+    end_phase "Build: Spindly (skipped)"
+else
+    print_status "Building Spindly.app (landing page)..."
+    cd "$SCRIPT_DIR/src_new/spindly.app"
+
+    if [ ! -f "package.json" ]; then
+        print_error "package.json not found in Spindly directory"
+        exit 1
+    fi
+
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing Spindly dependencies..."
+        npm install
+    fi
+
+    # Set up production environment file
+    if [ -f "src/environments/environment.prod.example.ts" ]; then
+        print_status "Creating Spindly production environment file..."
+        cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
+    else
+        print_warning "environment.prod.example.ts not found, skipping environment setup"
+    fi
+
+    # Build Spindly
+    print_status "Running Spindly build command: $SPINDLY_BUILD_COMMAND"
+    eval "$SPINDLY_BUILD_COMMAND"
+
+    # Clean up temporary environment file
+    if [ -f "src/environments/environment.prod.ts" ]; then
+        rm -f src/environments/environment.prod.ts
+    fi
+
+    if [ ! -d "dist/spindly-web/browser" ]; then
+        print_error "Spindly build failed - dist/spindly-web/browser directory not found"
+        exit 1
+    fi
+
+    print_success "Spindly build completed"
+    end_phase "Build: Spindly"
+fi
+
 # Function to clean directory on server
 clean_directory() {
     local target_dir=$1
@@ -360,6 +414,7 @@ ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST
     "find $BACKEND_DEPLOY_PATH -maxdepth 1 -mindepth 1 ! -name 'node_modules' ! -name '.*' -exec rm -rf {} + 2>/dev/null; mkdir -p $BACKEND_DEPLOY_PATH"
 print_success "API server directory cleaned"
 clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
+clean_directory "$SPINDLY_DEPLOY_PATH" "Spindly server"
 
 # Deploy maintenance page and .htaccess after cleaning
 print_status "Deploying maintenance mode..."
@@ -499,9 +554,16 @@ scp -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
 print_success "✅ Phase 6: Frontend application deployed and live!"
 end_phase "Phase 6: Deploy frontend"
 
-# Phase 7: Final deployment tasks
+# Phase 7: Deploy Spindly.app (landing page)
 start_phase
-print_status "Phase 7: Completing final deployment tasks..."
+print_status "Phase 7: Deploying Spindly.app landing page..."
+upload_files "$SCRIPT_DIR/src_new/spindly.app/dist/spindly-web/browser" "$SPINDLY_DEPLOY_PATH" "Spindly landing page"
+print_success "✅ Phase 7: Spindly.app deployed and live!"
+end_phase "Phase 7: Deploy Spindly"
+
+# Phase 8: Final deployment tasks
+start_phase
+print_status "Phase 8: Completing final deployment tasks..."
 
 # Upload tmp folder if it exists
 if [ -d "tmp" ]; then
@@ -576,8 +638,8 @@ else
 fi
 rm -f "$sftp_batch"
 
-print_success "✅ Phase 7: Final deployment tasks completed"
-end_phase "Phase 7: Final tasks"
+print_success "✅ Phase 8: Final deployment tasks completed"
+end_phase "Phase 8: Final tasks"
 
 # Final deployment summary
 DEPLOY_TOTAL=$(( $(date +%s) - DEPLOY_START ))
