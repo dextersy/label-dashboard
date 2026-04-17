@@ -480,26 +480,32 @@ export const loginUnified = async (req: Request, res: Response) => {
     const lockedUsers: any[] = [];
     const matchedUsers: { user: any; needsMigration: boolean }[] = [];
 
-    for (const user of users) {
+    const results = await Promise.all(users.map(async (user) => {
       const isLocked = await checkLoginLock(user.id);
       if (isLocked) {
-        lockedUsers.push(user);
-        await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id);
-        continue;
+        sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id).catch(() => {});
+        return { user, locked: true, isValid: false, needsMigration: false };
       }
 
       const { isValid, needsMigration } = await verifyPassword(password, user);
-      if (isValid) {
-        matchedUsers.push({ user, needsMigration });
-      } else if (user.brand_id) {
-        await LoginAttempt.create({
+      if (!isValid && user.brand_id) {
+        LoginAttempt.create({
           user_id: user.id,
           status: 'Failed',
           date_and_time: new Date(),
           brand_id: user.brand_id,
           proxy_ip: proxyIp,
           remote_ip: remoteIp
-        });
+        }).catch(() => {});
+      }
+      return { user, locked: false, isValid, needsMigration };
+    }));
+
+    for (const result of results) {
+      if (result.locked) {
+        lockedUsers.push(result.user);
+      } else if (result.isValid) {
+        matchedUsers.push({ user: result.user, needsMigration: result.needsMigration });
       }
     }
 
