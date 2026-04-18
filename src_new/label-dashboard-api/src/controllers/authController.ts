@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User, Brand, LoginAttempt } from '../models';
+import { User, Brand, Domain, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { getBrandIdFromDomain, getBrandFrontendUrl } from '../utils/brandUtils';
 import { verifyPassword, migrateUserPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
@@ -703,6 +703,167 @@ async function completeLoginForUser(
     }
   });
 }
+
+export const organizerSignup = async (req: Request, res: Response) => {
+  try {
+    const { full_name, email, password, brand_name } = req.body;
+
+    if (!full_name || !email || !password || !brand_name) {
+      return res.status(400).json({ error: 'full_name, email, password, and brand_name are required' });
+    }
+
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    console.log('[organizerSignup] TICKETING_PARENT_BRAND_ID:', process.env.TICKETING_PARENT_BRAND_ID, '→ parsed:', parentBrandId);
+    if (!parentBrandId) {
+      throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
+    }
+
+    // Check for duplicate email within ticketing brands only (parent + all sub-brands)
+    // Users on unrelated brands can share the same email — login is scoped to ticketing brands anyway
+    const ticketingSubBrandIds = (await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] })).map(b => b.id);
+    const ticketingBrandIds = [parentBrandId, ...ticketingSubBrandIds];
+    console.log('[organizerSignup] ticketingBrandIds:', ticketingBrandIds);
+    const existingUser = await User.findOne({
+      where: { email_address: email.toLowerCase().trim(), brand_id: ticketingBrandIds }
+    });
+    console.log('[organizerSignup] existingUser:', existingUser ? `id=${existingUser.id} brand_id=${existingUser.brand_id}` : 'none');
+    if (existingUser) {
+      return res.status(409).json({ error: 'An account with this email already exists' });
+    }
+
+    // Split full_name into first and last
+    const nameParts = full_name.trim().split(' ');
+    const first_name = nameParts[0];
+    const last_name = nameParts.slice(1).join(' ') || '';
+
+    // Create a new sub-brand under the configured parent
+    const newBrand = await Brand.create({
+      brand_name: brand_name.trim(),
+      parent_brand: parentBrandId,
+      brand_color: '#6366f1',
+      feature_music_workspace: false,
+      feature_campaigns_workspace: false,
+    });
+
+    // Copy the parent brand's primary domain to the new organizer brand so that
+    // getBrandFrontendUrl works for event verification/buy links
+    const parentDomain = await Domain.findOne({
+      where: { brand_id: parentBrandId, is_primary: true },
+    }) || await Domain.findOne({
+      where: { brand_id: parentBrandId },
+      order: [['is_primary', 'DESC']],
+    });
+    if (parentDomain) {
+      await Domain.create({
+        brand_id: newBrand.id,
+        domain_name: parentDomain.domain_name,
+        status: parentDomain.status,
+        is_primary: true,
+      });
+    }
+
+    // Hash password with bcrypt
+    const password_hash = await hashPassword(password);
+
+    // Create admin user for the new brand
+    const newUser = await User.create({
+      email_address: email.toLowerCase().trim(),
+      password_hash,
+      first_name,
+      last_name,
+      brand_id: newBrand.id,
+      is_admin: true,
+      is_system_user: false,
+      onboarding_completed: false,
+    });
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    const token = jwt.sign(
+      { userId: newUser.id, brandId: newUser.brand_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    return res.status(201).json({
+      token,
+      user: {
+        id: newUser.id,
+        email: newUser.email_address,
+        brand_id: newUser.brand_id,
+      }
+    });
+  } catch (error) {
+    console.error('Organizer signup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const organizerLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId) {
+      throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
+    }
+
+    const remoteIp = req.ip || 'unknown';
+    const proxyIp = req.get('X-Forwarded-For') || 'unknown';
+
+    // Find user by email globally
+    const user = await User.findOne({
+      where: { email_address: email.toLowerCase().trim() },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Check login lock
+    const isLocked = await checkLoginLock(user.id);
+    if (isLocked) {
+      const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
+      return res.status(423).json({
+        error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.`
+      });
+    }
+
+    // Verify password
+    const { isValid, needsMigration } = await verifyPassword(password, user);
+    if (!isValid) {
+      await LoginAttempt.create({
+        user_id: user.id,
+        status: 'Failed',
+        date_and_time: new Date(),
+        brand_id: user.brand_id,
+        proxy_ip: proxyIp,
+        remote_ip: remoteIp
+      });
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Ensure the user belongs to the configured parent brand or one of its sub-brands
+    const isParentBrand = user.brand_id === parentBrandId;
+    const isSubBrand = user.brand?.parent_brand === parentBrandId;
+
+    if (!isParentBrand && !isSubBrand) {
+      return res.status(403).json({ error: 'Not an organizer account' });
+    }
+
+    return await completeLoginForUser(user, remoteIp, proxyIp, res, needsMigration, password);
+  } catch (error) {
+    console.error('Organizer login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 // Helper functions matching original PHP implementation
 async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number, refererUrl: string): Promise<boolean> {

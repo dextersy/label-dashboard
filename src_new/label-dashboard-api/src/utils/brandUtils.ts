@@ -40,6 +40,12 @@ export const getBrandFrontendUrl = async (brandId: number): Promise<string> => {
     return `https://${anyDomain.domain_name}`;
   }
   
+  // Fall back to parent brand's domain (for organizer sub-brands that inherit the platform domain)
+  const brand = await Brand.findByPk(brandId, { attributes: ['parent_brand'] });
+  if (brand?.parent_brand) {
+    return getBrandFrontendUrl(brand.parent_brand);
+  }
+
   // Throw error instead of falling back to environment variable
   throw new Error(`No domains found for brand ID ${brandId}`);
 };

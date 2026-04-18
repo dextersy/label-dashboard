@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand } from '../controllers/authController';
+import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
@@ -14,5 +14,11 @@ router.post('/forgot-password', authRateLimit, forgotPassword);
 router.post('/reset-password', authRateLimit, resetPassword);
 router.post('/complete-profile', authRateLimit, completeProfile);
 router.get('/validate-reset-hash/:hash', validateResetHash);
+
+// Ticketing portal auth
+const ticketingRouter = Router();
+ticketingRouter.post('/signup', authRateLimit, organizerSignup);
+ticketingRouter.post('/login', authRateLimit, organizerLogin);
+router.use('/ticketing', ticketingRouter);
 
 export default router;
