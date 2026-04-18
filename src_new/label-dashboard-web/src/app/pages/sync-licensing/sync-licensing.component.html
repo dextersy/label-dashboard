@@ -1,10 +1,10 @@
 <app-breadcrumb></app-breadcrumb>
-<div class="container-fluid py-4 tw-py-4">
+<div class="container-fluid tw-py-4">
 
-  <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+  <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
     <div class="col">
-      <h2 class="mb-0 tw-mb-0">Sync Licensing</h2>
-      <p class="text-muted mt-2 mb-0 tw-text-muted tw-mt-2 tw-mb-0">Create and manage sync licensing pitches for your catalog.</p>
+      <h2 class="tw-mb-0">Sync Licensing</h2>
+      <p class="tw-mt-2 tw-mb-0 tw-text-muted">Create and manage sync licensing pitches for your catalog.</p>
     </div>
   </div>
 
@@ -36,27 +36,27 @@
       </div>
       <div class="modal-body">
         <!-- Pitch Details -->
-        <div class="mb-4 tw-mb-4">
-          <h6 class="text-muted mb-3 tw-text-muted tw-mb-3">Pitch Details</h6>
-          <div class="mb-3 tw-mb-3">
-            <label for="pitchTitle" class="form-label tw-label">Title <span class="text-danger tw-text-danger">*</span></label>
-            <input type="text" class="form-control tw-input" id="pitchTitle" [(ngModel)]="pitchForm.title" placeholder="Enter pitch title">
+        <div class="tw-mb-4">
+          <h6 class="tw-mb-3 tw-text-muted">Pitch Details</h6>
+          <div class="tw-mb-3">
+            <label for="pitchTitle" class="tw-label">Title <span class="tw-text-danger">*</span></label>
+            <input type="text" class="tw-input" id="pitchTitle" [(ngModel)]="pitchForm.title" placeholder="Enter pitch title">
           </div>
-          <div class="mb-3 tw-mb-3">
-            <label for="pitchDescription" class="form-label tw-label">Description</label>
-            <textarea class="form-control tw-input" id="pitchDescription" [(ngModel)]="pitchForm.description" rows="3" placeholder="Enter pitch description (optional)"></textarea>
+          <div class="tw-mb-3">
+            <label for="pitchDescription" class="tw-label">Description</label>
+            <textarea class="tw-input" id="pitchDescription" [(ngModel)]="pitchForm.description" rows="3" placeholder="Enter pitch description (optional)"></textarea>
           </div>
         </div>
 
         <!-- Song Selection -->
-        <div class="mb-4 tw-mb-4">
-          <h6 class="text-muted mb-3 tw-text-muted tw-mb-3">Songs</h6>
+        <div class="tw-mb-4">
+          <h6 class="tw-mb-3 tw-text-muted">Songs</h6>
 
           <!-- Song Search -->
-          <div class="mb-3 tw-mb-3">
+          <div class="tw-mb-3">
             <div class="input-group">
-              <input type="text" class="form-control tw-input" [(ngModel)]="songSearchQuery" (input)="searchSongs()" placeholder="Search songs to add...">
-              <button class="btn btn-secondary" type="button" [disabled]="searchingSongs">
+              <input type="text" class="tw-input" [(ngModel)]="songSearchQuery" (input)="searchSongs()" placeholder="Search songs to add...">
+              <button class="btn-secondary" type="button" [disabled]="searchingSongs">
                 <i class="fas fa-search" *ngIf="!searchingSongs"></i>
                 <i class="fas fa-spinner fa-spin" *ngIf="searchingSongs"></i>
               </button>
@@ -64,15 +64,15 @@
           </div>
 
           <!-- Search Results -->
-          <div *ngIf="songSearchResults.length > 0" class="mb-3 tw-mb-3">
+          <div *ngIf="songSearchResults.length > 0" class="tw-mb-3">
             <div class="list-group" style="max-height: 200px; overflow-y: auto;">
-              <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center"
+              <button type="button" class="list-group-item list-group-item-action tw-flex tw-justify-between tw-items-center"
                       *ngFor="let song of songSearchResults; trackBy: trackBySongId" (click)="addSong(song)">
                 <div>
                   <strong>{{ song.title }}</strong>
-                  <small class="text-muted d-block tw-text-muted tw-block">{{ getArtistNames(song) }} &bull; {{ song.release?.title }}</small>
-                  <small class="text-warning d-block tw-text-warning tw-block" *ngIf="getSongWarnings(song).length">
-                    <i class="fas fa-exclamation-triangle me-1 tw-mr-1"></i>{{ getSongWarnings(song).join(' · ') }}
+                  <small class="tw-block tw-text-muted">{{ getArtistNames(song) }} &bull; {{ song.release?.title }}</small>
+                  <small class="tw-text-warning tw-block" *ngIf="getSongWarnings(song).length">
+                    <i class="fas fa-exclamation-triangle tw-mr-1"></i>{{ getSongWarnings(song).join(' · ') }}
                   </small>
                 </div>
                 <i class="fas fa-plus text-primary"></i>
@@ -82,39 +82,39 @@
 
           <!-- Selected Songs -->
           <div *ngIf="selectedSongs.length > 0">
-            <label class="form-label text-muted tw-text-muted tw-label">Selected Songs ({{ selectedSongs.length }})</label>
+            <label class="tw-label tw-text-muted">Selected Songs ({{ selectedSongs.length }})</label>
             <div class="list-group">
-              <div class="list-group-item d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center" *ngFor="let song of selectedSongs; trackBy: trackBySongId">
-                <div class="d-flex align-items-center tw-flex tw-items-center">
-                  <img *ngIf="song.release?.cover_art" [src]="song.release?.cover_art" class="rounded me-3 tw-mr-3" style="width: 40px; height: 40px; object-fit: cover;">
-                  <div *ngIf="!song.release?.cover_art" class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center tw-mr-3 tw-flex tw-items-center tw-justify-center" style="width: 40px; height: 40px;">
-                    <i class="fas fa-music text-white tw-text-white"></i>
+              <div class="list-group-item tw-flex tw-justify-between tw-items-center" *ngFor="let song of selectedSongs; trackBy: trackBySongId">
+                <div class="tw-flex tw-items-center">
+                  <img *ngIf="song.release?.cover_art" [src]="song.release?.cover_art" class="rounded tw-mr-3" style="width: 40px; height: 40px; object-fit: cover;">
+                  <div *ngIf="!song.release?.cover_art" class="bg-secondary rounded tw-mr-3 tw-flex tw-items-center tw-justify-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-music tw-text-white"></i>
                   </div>
                   <div>
                     <strong>{{ song.title }}</strong>
-                    <small class="text-muted d-block tw-text-muted tw-block">{{ getArtistNames(song) }}</small>
-                    <small class="text-warning d-block tw-text-warning tw-block" *ngIf="getSongWarnings(song).length">
-                      <i class="fas fa-exclamation-triangle me-1 tw-mr-1"></i>{{ getSongWarnings(song).join(' · ') }}
+                    <small class="tw-block tw-text-muted">{{ getArtistNames(song) }}</small>
+                    <small class="tw-text-warning tw-block" *ngIf="getSongWarnings(song).length">
+                      <i class="fas fa-exclamation-triangle tw-mr-1"></i>{{ getSongWarnings(song).join(' · ') }}
                     </small>
                   </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-ghost text-danger p-1 tw-text-danger tw-p-1" (click)="removeSong(song)">
+                <button type="button" class="btn-sm btn-ghost tw-text-danger tw-p-1" (click)="removeSong(song)">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
             </div>
           </div>
 
-          <div *ngIf="selectedSongs.length === 0" class="text-center text-muted py-4 border rounded tw-text-center tw-text-muted tw-py-4">
-            <i class="fas fa-music fa-2x mb-2 tw-mb-2"></i>
-            <p class="mb-0 tw-mb-0">No songs selected. Search and add songs above.</p>
+          <div *ngIf="selectedSongs.length === 0" class="tw-py-4 border rounded tw-text-center tw-text-muted">
+            <i class="fas fa-music fa-2x tw-mb-2"></i>
+            <p class="tw-mb-0">No songs selected. Search and add songs above.</p>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="savePitch()" [disabled]="savingPitch || !pitchForm.title.trim()">
-          <i class="fas fa-spinner fa-spin me-2 tw-mr-2" *ngIf="savingPitch"></i>
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="savePitch()" [disabled]="savingPitch || !pitchForm.title.trim()">
+          <i class="fas fa-spinner fa-spin tw-mr-2" *ngIf="savingPitch"></i>
           {{ editingPitch ? 'Update Pitch' : 'Create Pitch' }}
         </button>
       </div>

@@ -1,45 +1,45 @@
 <div class="manage-epk-tab">
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center">
-      <h5 class="mb-0 tw-mb-0">
-        <i class="fas fa-link me-2 tw-mr-2"></i>
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
+      <h5 class="tw-mb-0">
+        <i class="fas fa-link tw-mr-2"></i>
         Manage EPK
       </h5>
     </div>
 
-    <div class="card-body">
+    <div class="tw-px-card-pad tw-pb-card-pad">
       <div class="row tw-grid tw-grid-cols-1">
         <div class="col-12 tw-col-span-12">
-          <p class="text-muted mb-3 tw-text-muted tw-mb-3">
+          <p class="tw-mb-3 tw-text-muted">
             Share your Electronic Press Kit (EPK) with industry professionals, media, and fans using the link below.
           </p>
 
           <!-- EPK Link (hidden when EPK is disabled) -->
-          <div class="form-group mb-4 link-accent tw-mb-4" *ngIf="selectedTemplate !== 0">
-            <label for="epkUrl" class="form-label tw-label">EPK Link</label>
+          <div class="tw-mb-5 tw-mb-4 link-accent" *ngIf="selectedTemplate !== 0">
+            <label for="epkUrl" class="tw-label">EPK Link</label>
             <div class="input-group link-action-group">
               <input
                 type="text"
                 id="epkUrl"
-                class="form-control tw-input"
+                class="tw-input"
                 [value]="epkUrl"
                 readonly
                 placeholder="Generating EPK URL...">
               <button
-                class="btn btn-secondary"
+                class="btn-secondary"
                 type="button"
                 (click)="copyToClipboard()"
                 [disabled]="!epkUrl">
-                <i class="fas fa-copy me-1 tw-mr-1"></i>
+                <i class="fas fa-copy tw-mr-1"></i>
                 Copy
               </button>
               <button
-                class="btn btn-secondary"
+                class="btn-secondary"
                 type="button"
                 (click)="downloadEPKQRCode()"
                 [disabled]="!epkUrl"
                 title="Download QR Code">
-                <i class="fas fa-qrcode me-1 tw-mr-1"></i>
+                <i class="fas fa-qrcode tw-mr-1"></i>
                 QR Code
               </button>
             </div>
@@ -49,18 +49,18 @@
           </div>
 
           <!-- EPK Template Selector -->
-          <div class="form-group mb-3 tw-mb-3">
-            <label class="form-label tw-label">EPK Template</label>
-            <p class="text-muted small mb-2 tw-text-muted tw-text-sm tw-mb-2">Choose the design template for your EPK page.</p>
+          <div class="tw-mb-5 tw-mb-3">
+            <label class="tw-label">EPK Template</label>
+            <p class="small tw-mb-2 tw-text-muted tw-text-sm">Choose the design template for your EPK page.</p>
 
             <div class="row g-3 tw-grid tw-grid-cols-1">
               <div class="col-md-4 tw-md:tw-col-span-4" *ngFor="let template of templateOptions">
                 <div
-                  class="card template-option"
+                  class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 template-option"
                   [class.selected]="selectedTemplate === template.value"
                   [class.template-disabled]="template.value === 0"
                   (click)="selectedTemplate = template.value">
-                  <div class="card-body">
+                  <div class="tw-px-card-pad tw-pb-card-pad">
                     <div class="form-check">
                       <input
                         class="form-check-input"
@@ -69,20 +69,20 @@
                         name="epk_template"
                         [value]="template.value"
                         [(ngModel)]="selectedTemplate">
-                      <label class="form-check-label w-100 tw-w-full" [for]="'template-' + template.value">
-                        <div class="d-flex flex-column align-items-center text-center gap-2 tw-flex tw-flex-col tw-items-center tw-text-center tw-gap-2">
+                      <label class="form-check-label tw-w-full" [for]="'template-' + template.value">
+                        <div class="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-text-center">
                           <span class="template-icon" [innerHTML]="template.icon"></span>
                           <strong>{{ template.name }}</strong>
-                          <p class="text-muted small mb-0 tw-text-muted tw-text-sm tw-mb-0">{{ template.description }}</p>
+                          <p class="small tw-mb-0 tw-text-muted tw-text-sm">{{ template.description }}</p>
                         </div>
                       </label>
                     </div>
-                    <div class="mt-2 tw-mt-2" *ngIf="template.value !== 0">
+                    <div class="tw-mt-2" *ngIf="template.value !== 0">
                       <button
                         type="button"
-                        class="btn btn-sm btn-secondary w-100 tw-w-full"
+                        class="btn-sm btn-secondary tw-w-full"
                         (click)="openPreview(template.value); $event.stopPropagation()">
-                        <i class="fas fa-eye me-1 tw-mr-1"></i>
+                        <i class="fas fa-eye tw-mr-1"></i>
                         Preview Template
                       </button>
                     </div>
@@ -93,18 +93,18 @@
           </div>
 
           <!-- Save Button -->
-          <div class="d-flex justify-content-end mt-3 tw-flex tw-justify-end tw-mt-3">
+          <div class="tw-flex tw-justify-end tw-mt-3">
             <button
               type="button"
-              class="btn btn-primary"
+              class="btn-primary"
               (click)="updateEPKSettings()"
               [disabled]="saving || selectedTemplate === artist.epk_template">
               <span *ngIf="!saving">
-                <i class="fas fa-save me-1 tw-mr-1"></i>
+                <i class="fas fa-save tw-mr-1"></i>
                 Save EPK Settings
               </span>
               <span *ngIf="saving">
-                <span class="spinner-border spinner-border-sm me-1 tw-mr-1" role="status"></span>
+                <span class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
                 Saving...
               </span>
             </button>
@@ -119,40 +119,40 @@
 <div class="modal fade" appModalToBody [class.show]="previewOpen" [style.display]="previewOpen ? 'block' : 'none'" tabindex="-1" (click)="closePreview()">
   <div class="modal-dialog modal-fullscreen" (click)="$event.stopPropagation()">
     <div class="modal-content">
-      <div class="modal-header bg-dark text-white tw-text-white">
-        <div class="d-flex align-items-center justify-content-between w-100 tw-flex tw-items-center tw-justify-between tw-w-full">
+      <div class="modal-header bg-dark tw-text-white">
+        <div class="tw-flex tw-items-center tw-justify-between tw-w-full">
           <div>
-            <h5 class="modal-title mb-0 tw-mb-0">
-              <i class="fas fa-eye me-2 tw-mr-2"></i>
+            <h5 class="modal-title tw-mb-0">
+              <i class="fas fa-eye tw-mr-2"></i>
               Template Preview: {{ getPreviewTemplateName() }}
             </h5>
           </div>
-          <div class="d-flex gap-2 align-items-center tw-flex tw-gap-2 tw-items-center">
+          <div class="tw-flex tw-gap-2 tw-items-center">
             <button
               type="button"
-              class="btn btn-primary"
+              class="btn-primary"
               (click)="useThisTemplate()"
               *ngIf="previewTemplate !== artist.epk_template">
-              <i class="fas fa-check me-1 tw-mr-1"></i>
+              <i class="fas fa-check tw-mr-1"></i>
               Like this? Use this template
             </button>
             <div
               class="current-template-badge"
               *ngIf="previewTemplate === artist.epk_template">
-              <i class="fas fa-check-circle me-2 tw-mr-2"></i>
+              <i class="fas fa-check-circle tw-mr-2"></i>
               This is currently set as your template
             </div>
             <button
               type="button"
-              class="btn btn-secondary"
+              class="btn-secondary"
               (click)="closePreview()">
-              <i class="fas fa-times me-1 tw-mr-1"></i>
+              <i class="fas fa-times tw-mr-1"></i>
               Close Preview
             </button>
           </div>
         </div>
       </div>
-      <div class="modal-body p-0 tw-p-0">
+      <div class="modal-body tw-p-0">
         <iframe
           *ngIf="previewOpen && previewTemplate"
           [src]="getPreviewUrl(previewTemplate)"

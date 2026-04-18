@@ -1,8 +1,8 @@
-<div class="card">
-  <div class="card-header">
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3>Release Information</h3>
   </div>
-  <div class="card-body">
+  <div class="tw-px-card-pad tw-pb-card-pad">
     <p class="card-text">This tab shows financial details regarding your releases, including splits, recuperable expenses, earnings, and revenues.</p>
     
     <div class="table-responsive" *ngIf="releases.length > 0">
@@ -28,7 +28,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control tw-input" 
+                  class="tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -43,7 +43,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control tw-input" 
+                  class="tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -58,7 +58,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control tw-input" 
+                  class="tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -73,7 +73,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control tw-input" 
+                  class="tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -85,11 +85,11 @@
               </div>
             </td>
             <td class="text-right" data-label="Remaining Recuperable Expense">
-              <div class="d-flex align-items-center justify-content-end tw-flex tw-items-center tw-justify-end">
+              <div class="tw-flex tw-items-center tw-justify-end">
                 <span [ngClass]="getAmountClass(release.recuperable_expense_balance)">{{ formatCurrency(release.recuperable_expense_balance) }}</span>
                 <button 
                   type="button"
-                  class="btn btn-ghost btn-sm btn-icon ml-2"
+                  class="btn-ghost btn-sm btn-icon ml-2"
                   (click)="openExpensesDialog(release.id, release.title)"
                   title="View expenses">
                   <i class="fa fa-eye"></i>
@@ -97,7 +97,7 @@
                 <button 
                   *ngIf="isAdmin" 
                   type="button"
-                  class="btn btn-ghost btn-sm btn-icon ml-1"
+                  class="btn-ghost btn-sm btn-icon ml-1"
                   (click)="openAddExpenseDialog(release.id, release.title)"
                   title="Add recuperable expense">
                   <i class="fa fa-plus"></i>
@@ -111,30 +111,30 @@
       </table>
     </div>
 
-    <div *ngIf="releases.length === 0" class="text-center py-5 tw-text-center">
-      <i class="fa fa-music fa-3x text-muted mb-3 tw-text-muted tw-mb-3"></i>
-      <p class="text-muted tw-text-muted">No releases yet.</p>
+    <div *ngIf="releases.length === 0" class="tw-py-5 tw-text-center">
+      <i class="fa fa-music fa-3x tw-mb-3 tw-text-muted"></i>
+      <p class="tw-text-muted">No releases yet.</p>
     </div>
   </div>
 
-  <div *ngIf="isAdmin" class="card-footer text-right save-panel">
+  <div *ngIf="isAdmin" class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle text-right save-panel">
     <div *ngIf="!editingRoyalties" class="edit-button">
-      <button type="button" class="btn btn-primary btn-block" (click)="toggleEditRoyalties()">
+      <button type="button" class="btn-primary tw-w-full" (click)="toggleEditRoyalties()">
         Edit Royalties
       </button> 
     </div>
     <div *ngIf="editingRoyalties" class="save-changes-buttons">
       <button 
         type="button" 
-        class="btn btn-primary btn-block" 
+        class="btn-primary tw-w-full" 
         (click)="updateRoyalties()"
         [disabled]="updatingRoyalties">
-        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm me-1 tw-mr-1" role="status"></span>
+        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
         {{ updatingRoyalties ? 'Saving...' : 'Save Changes' }}
       </button>
       <button 
         type="button" 
-        class="btn btn-secondary btn-block mt-2 tw-mt-2" 
+        class="btn-secondary tw-w-full tw-mt-2" 
         (click)="toggleEditRoyalties()"
         [disabled]="updatingRoyalties">
         Cancel

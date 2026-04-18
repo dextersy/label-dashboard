@@ -15,45 +15,45 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="mb-3 tw-mb-3">
+        <div class="tw-mb-3">
           <strong>Release:</strong> {{ releaseTitle }}
         </div>
         
         <form (ngSubmit)="onSubmit()" #expenseFormRef="ngForm">
-          <div class="form-group">
-            <label for="expenseDate">Recorded Date <span class="text-danger tw-text-danger">*</span></label>
+          <div class="tw-mb-5">
+            <label for="expenseDate">Recorded Date <span class="tw-text-danger">*</span></label>
             <input 
               type="date" 
-              class="form-control tw-input" 
+              class="tw-input" 
               id="expenseDate" 
               [(ngModel)]="expenseForm.date_recorded"
               name="date_recorded"
               required>
           </div>
           
-          <div class="form-group">
-            <label for="expenseDescription">Description <span class="text-danger tw-text-danger">*</span></label>
+          <div class="tw-mb-5">
+            <label for="expenseDescription">Description <span class="tw-text-danger">*</span></label>
             <input 
               type="text" 
-              class="form-control tw-input" 
+              class="tw-input" 
               id="expenseDescription" 
               [(ngModel)]="expenseForm.expense_description"
               name="expense_description" 
               placeholder="Enter expense description"
               required
               maxlength="255">
-            <small class="form-text text-muted tw-text-muted">Describe what this expense is for</small>
+            <small class="form-text tw-text-muted">Describe what this expense is for</small>
           </div>
           
-          <div class="form-group">
-            <label for="expenseAmount">Amount <span class="text-danger tw-text-danger">*</span></label>
+          <div class="tw-mb-5">
+            <label for="expenseAmount">Amount <span class="tw-text-danger">*</span></label>
             <div class="input-group">
               <div class="input-group-prepend">
                 <span class="input-group-text">₱</span>
               </div>
               <input 
                 type="number" 
-                class="form-control tw-input" 
+                class="tw-input" 
                 id="expenseAmount" 
                 [(ngModel)]="expenseForm.expense_amount"
                 name="expense_amount" 
@@ -68,14 +68,14 @@
       <div class="modal-footer">
         <button 
           type="button" 
-          class="btn btn-secondary" 
+          class="btn-secondary" 
           (click)="onClose()"
           [disabled]="isSubmitting">
           Cancel
         </button>
         <button 
           type="button" 
-          class="btn btn-primary" 
+          class="btn-primary" 
           (click)="onSubmit()"
           [disabled]="!isFormValid || isSubmitting">
           <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm mr-1" role="status"></span>

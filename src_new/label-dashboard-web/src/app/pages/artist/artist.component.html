@@ -55,8 +55,8 @@
     <!-- Loading Artists -->
     <div class="row tw-grid tw-grid-cols-1" *ngIf="loading">
       <div class="col-12 tw-col-span-12">
-        <div class="card">
-          <div class="card-body text-center p-5 tw-text-center">
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <div class="loading-dots">
               <div></div>
               <div></div>
@@ -70,13 +70,13 @@
     <!-- No Artists Available -->
     <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && !selectedArtist && availableArtists.length === 0">
       <div class="col-12 tw-col-span-12">
-        <div class="card">
-          <div class="card-body text-center p-5 tw-text-center">
-            <i class="fas fa-user-plus fa-4x text-muted mb-3 tw-text-muted tw-mb-3"></i>
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
+            <i class="fas fa-user-plus fa-4x tw-mb-3 tw-text-muted"></i>
             <h4>No Artists Available</h4>
-            <p class="text-muted tw-text-muted">No artists found for your label. Create a new artist to get started.</p>
-            <button class="btn btn-primary" *ngIf="isAdmin" (click)="openCreateArtistModal()">
-              <i class="fa fa-plus me-1 tw-mr-1"></i>Create New Artist
+            <p class="tw-text-muted">No artists found for your label. Create a new artist to get started.</p>
+            <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateArtistModal()">
+              <i class="fa fa-plus tw-mr-1"></i>Create New Artist
             </button>
           </div>
         </div>
@@ -86,11 +86,11 @@
     <!-- No Artist Selected (but artists are available) -->
     <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && !selectedArtist && availableArtists.length > 0">
       <div class="col-12 tw-col-span-12">
-        <div class="card">
-          <div class="card-body text-center p-5 tw-text-center">
-            <i class="far fa-user-circle fa-4x text-muted mb-3 tw-text-muted tw-mb-3"></i>
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
+            <i class="far fa-user-circle fa-4x tw-mb-3 tw-text-muted"></i>
             <h4>No Artist Selected</h4>
-            <p class="text-muted tw-text-muted">Please select an artist from the dropdown above to manage their profile.</p>
+            <p class="tw-text-muted">Please select an artist from the dropdown above to manage their profile.</p>
           </div>
         </div>
       </div>

@@ -2,21 +2,21 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <!-- Body -->
-      <div class="modal-body text-center pt-5 tw-text-center">
-        <div class="celebration-icon mb-1 tw-mb-1">
+      <div class="modal-body tw-pt-5 tw-text-center">
+        <div class="celebration-icon tw-mb-1">
           <span role="img" aria-label="Celebration">🎊</span>
         </div>
 
-        <h2 class="mb-2 fw-bold tw-mb-2 tw-font-bold">{{ data?.releaseTitle }} Submitted!</h2>
+        <h2 class="tw-mb-2 tw-font-bold">{{ data?.releaseTitle }} Submitted!</h2>
 
-        <p class="mb-4 tw-mb-4">
+        <p class="tw-mb-4">
           {{ data?.message }}
         </p>
 
         <!-- Close Button -->
-        <div class="text-end pb-3 pe-3 tw-text-right tw-pb-3">
-          <button type="button" class="btn btn-ghost text-muted tw-text-muted" (click)="close()">
-            <i class="fas fa-times me-1 tw-mr-1"></i>Close
+        <div class="tw-text-right tw-pb-3 tw-pr-3">
+          <button type="button" class="btn-ghost tw-text-muted" (click)="close()">
+            <i class="fas fa-times tw-mr-1"></i>Close
           </button>
         </div>
       </div>

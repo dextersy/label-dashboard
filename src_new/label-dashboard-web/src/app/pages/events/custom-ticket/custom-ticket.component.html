@@ -5,44 +5,44 @@
   <div class="container-fluid" *ngIf="!loading">
 
     <!-- Event Status Information -->
-    <div class="alert alert-danger mb-4 tw-mb-4" *ngIf="isEventPast()">
-      <i class="far fa-clock me-2 tw-mr-2"></i>
+    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="isEventPast()">
+      <i class="far fa-clock tw-mr-2"></i>
       <strong>Event Past:</strong> {{ getEventStatusMessage() }} Custom ticket creation is disabled for past events.
     </div>
 
-    <div class="alert alert-warning mb-4 tw-mb-4" *ngIf="isEventClosed() && !isEventPast()">
-      <i class="fas fa-lock me-2 tw-mr-2"></i>
+    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800" *ngIf="isEventClosed() && !isEventPast()">
+      <i class="fas fa-lock tw-mr-2"></i>
       <strong>Sales Closed:</strong> {{ getEventStatusMessage() }} You can still create custom tickets for special invites.
     </div>
 
     <!-- Access Denied for Past Events -->
-    <div class="alert alert-danger" *ngIf="selectedEvent && !canCreateCustomTickets()">
-      <i class="fa fa-lock me-2 tw-mr-2"></i>
+    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="selectedEvent && !canCreateCustomTickets()">
+      <i class="fa fa-lock tw-mr-2"></i>
       <strong>Access Denied:</strong> Custom ticket creation is disabled for past events.
     </div>
 
     <!-- View Toggle -->
-    <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1" *ngIf="canCreateCustomTickets()">
+    <div class="row tw-mb-4 tw-grid tw-grid-cols-1" *ngIf="canCreateCustomTickets()">
       <div class="col-12 tw-col-span-12">
-        <div class="d-flex justify-content-center align-items-center flex-column tw-flex tw-justify-center tw-items-center tw-flex-col">
+        <div class="tw-flex tw-justify-center tw-items-center tw-flex-col">
           <div class="btn-group view-toggle" role="group" aria-label="Ticket creation mode toggle">
             <button type="button" 
-                    class="btn"
+                    class=""
                     [class.active]="currentView === 'single'"
                     (click)="switchToSingleView()"
                     [attr.aria-pressed]="currentView === 'single'">
-              <i class="fa fa-user me-2 tw-mr-2"></i>Single Ticket
+              <i class="fa fa-user tw-mr-2"></i>Single Ticket
             </button>
             <button type="button" 
-                    class="btn"
+                    class=""
                     [class.active]="currentView === 'bulk'"
                     (click)="switchToBulkView()"
                     [attr.aria-pressed]="currentView === 'bulk'">
-              <i class="fa fa-users me-2 tw-mr-2"></i>Bulk Create
+              <i class="fa fa-users tw-mr-2"></i>Bulk Create
             </button>
           </div>
-          <small class="text-muted mt-2 tw-text-muted tw-mt-2">
-            <i class="fa fa-info-circle me-1 tw-mr-1"></i>
+          <small class="tw-mt-2 tw-text-muted">
+            <i class="fa fa-info-circle tw-mr-1"></i>
             <span *ngIf="currentView === 'single'">Create individual custom tickets with detailed options</span>
             <span *ngIf="currentView === 'bulk'">Create multiple tickets at once with bulk editing features</span>
           </small>
@@ -54,25 +54,25 @@
     <ng-container *ngIf="canCreateCustomTickets() && currentView === 'single'">
     <div class="row tw-grid tw-grid-cols-1">
       <div class="col-lg-8 col-xl-6 tw-lg:tw-col-span-8 tw-xl:tw-col-span-6">
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0 tw-mb-0">
-              <i class="fa fa-ticket-alt me-2 tw-mr-2"></i>Ticket Details
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+            <h5 class="tw-mb-0">
+              <i class="fa fa-ticket-alt tw-mr-2"></i>Ticket Details
             </h5>
           </div>
-          <div class="card-body">
-            <div class="alert alert-info">
+          <div class="tw-px-card-pad tw-pb-card-pad">
+            <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
               <small>Use this for special invites. Create a custom ticket and optionally send a payment link. You can override the ticket price for this payment.</small>
             </div>
 
             <form (ngSubmit)="onSubmitCustomTicket()" #customTicketFormRef="ngForm">
               <!-- Event Name -->
-              <div class="mb-4 tw-mb-4" *ngIf="selectedEvent">
-                <h6 class="text-muted mb-2 tw-text-muted tw-mb-2">
-                  <i class="fa fa-calendar me-2 tw-mr-2"></i>Event
+              <div class="tw-mb-4" *ngIf="selectedEvent">
+                <h6 class="tw-mb-2 tw-text-muted">
+                  <i class="fa fa-calendar tw-mr-2"></i>Event
                 </h6>
-                <h5 class="mb-0 tw-mb-0">{{ selectedEvent.title }}</h5>
-                <small class="text-muted tw-text-muted" *ngIf="selectedEvent.date_and_time">
+                <h5 class="tw-mb-0">{{ selectedEvent.title }}</h5>
+                <small class="tw-text-muted" *ngIf="selectedEvent.date_and_time">
                   {{ selectedEvent.date_and_time | date:'medium' }}
                   <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
                 </small>
@@ -80,11 +80,11 @@
 
               <div class="row tw-grid tw-grid-cols-1">
                 <div class="col-md-6 tw-md:tw-col-span-6">
-                  <div class="mb-3 tw-mb-3">
-                    <label class="form-label required tw-label">Name</label>
+                  <div class="tw-mb-3">
+                    <label class="tw-label required">Name</label>
                     <input 
                       type="text" 
-                      class="form-control tw-input" 
+                      class="tw-input" 
                       [(ngModel)]="customTicketForm.name"
                       name="name"
                       placeholder="Full Name"
@@ -93,11 +93,11 @@
                 </div>
 
                 <div class="col-md-6 tw-md:tw-col-span-6">
-                  <div class="mb-3 tw-mb-3">
-                    <label class="form-label required tw-label">Email Address</label>
+                  <div class="tw-mb-3">
+                    <label class="tw-label required">Email Address</label>
                     <input 
                       type="email" 
-                      class="form-control tw-input" 
+                      class="tw-input" 
                       [(ngModel)]="customTicketForm.email_address"
                       name="email_address"
                       placeholder="email@example.com"
@@ -108,11 +108,11 @@
 
               <div class="row tw-grid tw-grid-cols-1">
                 <div class="col-md-6 tw-md:tw-col-span-6">
-                  <div class="mb-3 tw-mb-3">
-                    <label class="form-label required tw-label">Contact Number</label>
+                  <div class="tw-mb-3">
+                    <label class="tw-label required">Contact Number</label>
                     <input 
                       type="tel" 
-                      class="form-control tw-input" 
+                      class="tw-input" 
                       [(ngModel)]="customTicketForm.contact_number"
                       name="contact_number"
                       placeholder="+639xxxxxxxxx"
@@ -121,11 +121,11 @@
                 </div>
 
                 <div class="col-md-6 tw-md:tw-col-span-6">
-                  <div class="mb-3 tw-mb-3">
-                    <label class="form-label required tw-label">Number of Entries</label>
+                  <div class="tw-mb-3">
+                    <label class="tw-label required">Number of Entries</label>
                     <input
                       type="number"
-                      class="form-control tw-input"
+                      class="tw-input"
                       [(ngModel)]="customTicketForm.number_of_entries"
                       name="number_of_entries"
                       placeholder="1"
@@ -136,8 +136,8 @@
               </div>
 
               <!-- Ticket Type Selection -->
-              <div class="mb-3 tw-mb-3" *ngIf="ticketTypes.length > 0">
-                <label class="form-label required tw-label">Ticket Type</label>
+              <div class="tw-mb-3" *ngIf="ticketTypes.length > 0">
+                <label class="tw-label required">Ticket Type</label>
                 <select
                   class="form-select tw-input"
                   [(ngModel)]="customTicketForm.ticket_type_id"
@@ -155,13 +155,13 @@
                 </select>
               </div>
 
-              <div class="mb-3 tw-mb-3">
-                <label class="form-label tw-label">Price per Ticket</label>
+              <div class="tw-mb-3">
+                <label class="tw-label">Price per Ticket</label>
                 <div class="input-group">
                   <span class="input-group-text">₱</span>
                   <input 
                     type="number" 
-                    class="form-control tw-input" 
+                    class="tw-input" 
                     [(ngModel)]="customTicketForm.price_per_ticket"
                     name="price_per_ticket"
                     placeholder="0.00"
@@ -170,7 +170,7 @@
                     [disabled]="!priceOverrideEnabled">
                   <button
                     type="button"
-                    class="btn btn-secondary"
+                    class="btn-secondary"
                     (click)="enablePriceOverride()"
                     *ngIf="!priceOverrideEnabled"
                     title="Override price">
@@ -178,7 +178,7 @@
                   </button>
                   <button
                     type="button"
-                    class="btn btn-secondary"
+                    class="btn-secondary"
                     (click)="disablePriceOverride()"
                     *ngIf="priceOverrideEnabled"
                     title="Use ticket type price">
@@ -194,17 +194,17 @@
                 </div>
               </div>
 
-              <div class="mb-3 tw-mb-3">
-                <label class="form-label tw-label">Referral Code (Optional)</label>
+              <div class="tw-mb-3">
+                <label class="tw-label">Referral Code (Optional)</label>
                 <input 
                   type="text" 
-                  class="form-control tw-input" 
+                  class="tw-input" 
                   [(ngModel)]="customTicketForm.referral_code"
                   name="referral_code"
                   placeholder="Enter referral code">
               </div>
 
-              <div class="mb-3 tw-mb-3">
+              <div class="tw-mb-3">
                 <div class="form-check form-switch">
                   <input 
                     class="form-check-input" 
@@ -218,13 +218,13 @@
                   </label>
                 </div>
 
-                <div class="mt-2 tw-mt-2" *ngIf="customTicketForm.ticket_paid">
-                  <label class="form-label tw-label">Payment Processing Fee</label>
+                <div class="tw-mt-2" *ngIf="customTicketForm.ticket_paid">
+                  <label class="tw-label">Payment Processing Fee</label>
                   <div class="input-group">
                     <span class="input-group-text">₱</span>
                     <input 
                       type="number" 
-                      class="form-control tw-input" 
+                      class="tw-input" 
                       [(ngModel)]="customTicketForm.payment_processing_fee"
                       name="payment_processing_fee"
                       placeholder="0.00"
@@ -233,7 +233,7 @@
                   </div>
                 </div>
 
-                <div class="form-check form-switch mt-2 tw-mt-2" *ngIf="!customTicketForm.ticket_paid">
+                <div class="form-check form-switch tw-mt-2" *ngIf="!customTicketForm.ticket_paid">
                   <input 
                     class="form-check-input" 
                     type="checkbox" 
@@ -253,13 +253,13 @@
 
       <!-- Summary Card -->
       <div class="col-lg-4 col-xl-6 tw-lg:tw-col-span-4 tw-xl:tw-col-span-6">
-        <div class="card">
-          <div class="card-header">
-            <h6 class="mb-0 tw-mb-0">
-              <i class="fa fa-info-circle me-2 tw-mr-2"></i>Ticket Summary
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+            <h6 class="tw-mb-0">
+              <i class="fa fa-info-circle tw-mr-2"></i>Ticket Summary
             </h6>
           </div>
-          <div class="card-body">
+          <div class="tw-px-card-pad tw-pb-card-pad">
             <table class="table table-borderless table-sm">
               <tr *ngIf="selectedEvent">
                 <td><strong>Event:</strong></td>
@@ -291,12 +291,12 @@
               </tr>
             </table>
 
-            <div class="alert alert-info mt-3 tw-mt-3" *ngIf="customTicketForm.ticket_paid">
-              <small><i class="fa fa-check-circle me-1 tw-mr-1"></i>This ticket will be marked as paid immediately after creation.</small>
+            <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mt-3" *ngIf="customTicketForm.ticket_paid">
+              <small><i class="fa fa-check-circle tw-mr-1"></i>This ticket will be marked as paid immediately after creation.</small>
             </div>
 
-            <div class="alert alert-warning mt-3 tw-mt-3" *ngIf="!customTicketForm.ticket_paid && customTicketForm.send_email">
-              <small><i class="fa fa-envelope me-1 tw-mr-1"></i>A payment email will be sent to the customer.</small>
+            <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mt-3" *ngIf="!customTicketForm.ticket_paid && customTicketForm.send_email">
+              <small><i class="fa fa-envelope tw-mr-1"></i>A payment email will be sent to the customer.</small>
             </div>
           </div>
         </div>
@@ -306,26 +306,26 @@
     <app-floating-action-bar>
       <button
         type="button"
-        class="btn btn-secondary"
+        class="btn-secondary"
         (click)="onCancel()"
         [disabled]="submitting">
         Cancel
       </button>
       <button
         type="button"
-        class="btn btn-secondary"
+        class="btn-secondary"
         (click)="resetCustomTicketForm()"
         [disabled]="submitting">
-        <i class="fa fa-undo me-1 tw-mr-1"></i>
+        <i class="fa fa-undo tw-mr-1"></i>
         Reset Form
       </button>
       <button
         type="button"
-        class="btn btn-primary fab-primary-btn"
+        class="btn-primary fab-primary-btn"
         (click)="onSubmitCustomTicket()"
         [disabled]="!customTicketFormRef.form.valid || submitting">
-        <i class="fa fa-plus me-1 tw-mr-1" *ngIf="!submitting"></i>
-        <i class="fa fa-spinner fa-spin me-1 tw-mr-1" *ngIf="submitting"></i>
+        <i class="fa fa-plus tw-mr-1" *ngIf="!submitting"></i>
+        <i class="fa fa-spinner fa-spin tw-mr-1" *ngIf="submitting"></i>
         <span *ngIf="submitting">Creating...</span>
         <span *ngIf="!submitting">Create Ticket</span>
       </button>
@@ -335,22 +335,22 @@
     <!-- Bulk Ticket Creation View -->
     <div *ngIf="canCreateCustomTickets() && currentView === 'bulk'">
       <!-- Event Information for Bulk View -->
-      <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1" *ngIf="selectedEvent">
+      <div class="row tw-mb-3 tw-grid tw-grid-cols-1" *ngIf="selectedEvent">
         <div class="col-12 tw-col-span-12">
-          <div class="card border-primary">
-            <div class="card-body py-2 tw-py-2">
-              <div class="d-flex align-items-center justify-content-between tw-flex tw-items-center tw-justify-between">
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 border-primary">
+            <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
+              <div class="tw-flex tw-items-center tw-justify-between">
                 <div>
-                  <h6 class="mb-1 text-primary tw-mb-1">
-                    <i class="fa fa-calendar me-2 tw-mr-2"></i>{{ selectedEvent.title }}
+                  <h6 class="tw-mb-1 text-primary">
+                    <i class="fa fa-calendar tw-mr-2"></i>{{ selectedEvent.title }}
                   </h6>
-                  <small class="text-muted tw-text-muted">
+                  <small class="tw-text-muted">
                     {{ selectedEvent.date_and_time | date:'medium' }}
                     <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
                   </small>
                 </div>
-                <div class="text-end tw-text-right">
-                  <small class="text-muted d-block tw-text-muted tw-block">Default Price</small>
+                <div class="tw-text-right">
+                  <small class="tw-block tw-text-muted">Default Price</small>
                   <strong>₱{{ selectedEvent.ticket_price | number:'1.2-2' }}</strong>
                 </div>
               </div>
@@ -384,7 +384,7 @@
               <td></td>
               <td>
                 <input type="number"
-                       class="form-control form-control-md tw-input"
+                       class="tw-input"
                        #applyAllEntriesInput
                        placeholder="1"
                        min="1"
@@ -409,7 +409,7 @@
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>
                   <input type="number" 
-                         class="form-control tw-input" 
+                         class="tw-input" 
                          #applyAllPriceInput 
                          placeholder="{{ selectedEvent?.ticket_price || 0 }}"
                          step="0.01"
@@ -440,7 +440,7 @@
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>
                   <input type="number" 
-                         class="form-control tw-input" 
+                         class="tw-input" 
                          #applyAllProcessingFeeInput 
                          placeholder="0.00"
                          step="0.01"
@@ -451,7 +451,7 @@
               </td>
               <td>
                 <input type="text" 
-                       class="form-control form-control-md tw-input" 
+                       class="tw-input" 
                        #applyAllReferralInput 
                        placeholder="Referral code"
                        (change)="applyAllReferralCode(applyAllReferralInput.value); applyAllReferralInput.value = ''">
@@ -463,28 +463,28 @@
             <tr *ngFor="let ticket of bulkTickets; let i = index">
               <td>
                 <input type="text" 
-                       class="form-control form-control-md tw-input" 
+                       class="tw-input" 
                        [(ngModel)]="ticket.name"
                        placeholder="Full Name"
                        required>
               </td>
               <td>
                 <input type="email" 
-                       class="form-control form-control-md tw-input" 
+                       class="tw-input" 
                        [(ngModel)]="ticket.email_address"
                        placeholder="email@example.com"
                        required>
               </td>
               <td>
                 <input type="tel" 
-                       class="form-control form-control-md tw-input" 
+                       class="tw-input" 
                        [(ngModel)]="ticket.contact_number"
                        placeholder="+639xxxxxxxxx"
                        required>
               </td>
               <td>
                 <input type="number"
-                       class="form-control form-control-md tw-input"
+                       class="tw-input"
                        [(ngModel)]="ticket.number_of_entries"
                        placeholder="1"
                        min="1"
@@ -509,7 +509,7 @@
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>
                   <input type="number" 
-                         class="form-control tw-input" 
+                         class="tw-input" 
                          [(ngModel)]="ticket.price_per_ticket"
                          placeholder="0.00"
                          step="0.01"
@@ -536,7 +536,7 @@
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>
                   <input type="number" 
-                         class="form-control tw-input" 
+                         class="tw-input" 
                          [(ngModel)]="ticket.payment_processing_fee"
                          placeholder="0.00"
                          step="0.01"
@@ -546,13 +546,13 @@
               </td>
               <td>
                 <input type="text" 
-                       class="form-control form-control-md tw-input" 
+                       class="tw-input" 
                        [(ngModel)]="ticket.referral_code"
                        placeholder="Optional">
               </td>
               <td>
                 <button type="button" 
-                        class="btn btn-danger btn-sm" 
+                        class="btn-danger btn-sm" 
                         (click)="removeBulkRow(i)"
                         title="Remove row">
                   <i class="fa fa-times"></i>
@@ -566,55 +566,55 @@
       <!-- Bulk Action Bar -->
       <app-floating-action-bar>
         <!-- Left side: summary + add-row buttons (desktop only) -->
-        <div floatingStart class="d-none d-lg-flex align-items-center gap-4 tw-hidden tw-lg:tw-flex tw-items-center tw-gap-4">
+        <div floatingStart class="tw-hidden tw-lg:tw-flex tw-items-center tw-gap-4">
           <div>
             <strong>Total Amount:</strong>
-            <span class="text-success ms-1 tw-text-success tw-ml-1">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
+            <span class="tw-text-success tw-ml-1">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
           </div>
-          <div class="text-muted tw-text-muted">
+          <div class="tw-text-muted">
             Tickets: {{ bulkTickets.length }}
           </div>
           <div class="btn-group" role="group">
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
+            <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(1)">
               Add Row
             </button>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
+            <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(5)">
               Add 5
             </button>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
+            <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(10)">
               Add 10
             </button>
           </div>
         </div>
 
         <!-- Mobile layout (self-contained) -->
-        <div class="d-block d-lg-none w-100 tw-block tw-lg:tw-hidden tw-w-full">
-          <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+        <div class="tw-block tw-lg:tw-hidden tw-w-full">
+          <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
             <div class="col-12 tw-col-span-12">
-              <div class="btn-group w-100 tw-w-full" role="group">
-                <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(1)">
+              <div class="btn-group tw-w-full" role="group">
+                <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(1)">
                   Add Row
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(5)">
+                <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(5)">
                   Add 5
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="addBulkRows(10)">
+                <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(10)">
                   Add 10
                 </button>
               </div>
             </div>
           </div>
-          <div class="d-flex align-items-center justify-content-center mb-2 tw-flex tw-items-center tw-justify-center tw-mb-2">
-            <small class="text-muted tw-text-muted">
+          <div class="tw-flex tw-items-center tw-justify-center tw-mb-2">
+            <small class="tw-text-muted">
               Total: ₱{{ getBulkTotal() | number:'1.2-2' }} • {{ bulkTickets.length }} tickets
             </small>
           </div>
           <button type="button"
-                  class="btn btn-primary btn-lg w-100 tw-w-full"
+                  class="btn-primary btn-lg tw-w-full"
                   (click)="onSubmitBulkTickets()"
                   [disabled]="submitting || bulkTickets.length === 0">
-            <i class="fa fa-plus me-2 tw-mr-2" *ngIf="!submitting"></i>
-            <i class="fa fa-spinner fa-spin me-2 tw-mr-2" *ngIf="submitting"></i>
+            <i class="fa fa-plus tw-mr-2" *ngIf="!submitting"></i>
+            <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="submitting"></i>
             <span *ngIf="submitting">Creating...</span>
             <span *ngIf="!submitting && bulkTickets.length > 0">Create {{ bulkTickets.length }} Tickets</span>
             <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
@@ -622,19 +622,19 @@
         </div>
 
         <!-- Desktop right-side buttons -->
-        <div class="d-none d-lg-flex gap-2 tw-hidden tw-lg:tw-flex tw-gap-2">
+        <div class="tw-hidden tw-lg:tw-flex tw-gap-2">
           <button type="button"
-                  class="btn btn-secondary"
+                  class="btn-secondary"
                   (click)="onCancel()"
                   [disabled]="submitting">
             Cancel
           </button>
           <button type="button"
-                  class="btn btn-primary btn-lg"
+                  class="btn-primary btn-lg"
                   (click)="onSubmitBulkTickets()"
                   [disabled]="submitting || bulkTickets.length === 0">
-            <i class="fa fa-plus me-2 tw-mr-2" *ngIf="!submitting"></i>
-            <i class="fa fa-spinner fa-spin me-2 tw-mr-2" *ngIf="submitting"></i>
+            <i class="fa fa-plus tw-mr-2" *ngIf="!submitting"></i>
+            <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="submitting"></i>
             <span *ngIf="submitting">Creating...</span>
             <span *ngIf="!submitting && bulkTickets.length > 0">Create All Tickets</span>
             <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
@@ -644,15 +644,15 @@
     </div>
 
     <!-- Non-Admin Access Denied -->
-    <div class="alert alert-danger" *ngIf="!isAdmin && !loading">
-      <i class="fa fa-lock me-2 tw-mr-2"></i>
+    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="!isAdmin && !loading">
+      <i class="fa fa-lock tw-mr-2"></i>
       <strong>Access Denied:</strong> You don't have permission to create custom tickets. Only administrators can create custom tickets.
     </div>
   </div>
 
   <!-- Loading State -->
-  <div class="text-center py-5 tw-text-center" *ngIf="loading">
-    <i class="fa fa-spinner fa-spin fa-2x text-muted tw-text-muted"></i>
-    <p class="text-muted mt-2 tw-text-muted tw-mt-2">Loading...</p>
+  <div class="tw-py-5 tw-text-center" *ngIf="loading">
+    <i class="fa fa-spinner fa-spin fa-2x tw-text-muted"></i>
+    <p class="tw-mt-2 tw-text-muted">Loading...</p>
   </div>
 </div>

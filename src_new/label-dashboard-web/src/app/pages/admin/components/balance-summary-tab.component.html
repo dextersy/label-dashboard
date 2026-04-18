@@ -19,52 +19,52 @@
               <tr>
                 <th class="mobile-text" style="cursor: pointer;" (click)="onBalanceSortToggle('name')">
                   Artist 
-                  <i class="fas fa-sort ms-1 tw-ml-1" 
+                  <i class="fas fa-sort tw-ml-1" 
                      [class.fa-sort-up]="balanceSort?.column === 'name' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="mobile-hide tablet-hide text-end tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
+                <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
                   Total royalties (₱)
-                  <i class="fas fa-sort ms-1 tw-ml-1"
+                  <i class="fas fa-sort tw-ml-1"
                      [class.fa-sort-up]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="mobile-hide tablet-hide text-end tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
+                <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
                   Total payments (₱)
-                  <i class="fas fa-sort ms-1 tw-ml-1"
+                  <i class="fas fa-sort tw-ml-1"
                      [class.fa-sort-up]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="mobile-narrow mobile-number text-end tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_balance')">
+                <th class="mobile-narrow mobile-number tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_balance')">
                   Balance (₱)
-                  <i class="fas fa-sort ms-1 tw-ml-1"
+                  <i class="fas fa-sort tw-ml-1"
                      [class.fa-sort-up]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="mobile-hide text-end tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('payout_point')">
+                <th class="mobile-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('payout_point')">
                   Payout point (₱)
-                  <i class="fas fa-sort ms-1 tw-ml-1"
+                  <i class="fas fa-sort tw-ml-1"
                      [class.fa-sort-up]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'desc'"></i>
                 </th>
-                <th class="mobile-narrow text-center tw-text-center">Due</th>
-                <th class="mobile-hide text-center tw-text-center">Paused</th>
+                <th class="mobile-narrow tw-text-center">Due</th>
+                <th class="mobile-hide tw-text-center">Paused</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let artist of data" [class.table-success]="artist.ready_for_payment">
                 <td class="mobile-text" data-label="Artist">{{ artist.name }}</td>
-                <td class="mobile-hide tablet-hide text-end tw-text-right" data-label="Total royalties"><span [ngClass]="{'text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span></td>
-                <td class="mobile-hide tablet-hide text-end tw-text-right" data-label="Total payments"><span [ngClass]="{'text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span></td>
-                <td class="mobile-narrow mobile-number text-end fw-bold tw-text-right tw-font-bold" data-label="Balance"><span [ngClass]="{'text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
-                <td class="mobile-hide text-end tw-text-right" data-label="Payout point"><span [ngClass]="{'text-danger': artist.payout_point < 0}">{{ formatCurrency(artist.payout_point) }}</span></td>
-                <td class="mobile-narrow text-center tw-text-center" data-label="Due for payment">
-                  <i class="fas fa-check text-success tw-text-success" *ngIf="artist.due_for_payment"></i>
-                  <span *ngIf="!artist.due_for_payment" class="text-muted tw-text-muted">-</span>
+                <td class="mobile-hide tablet-hide tw-text-right" data-label="Total royalties"><span [ngClass]="{'tw-text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span></td>
+                <td class="mobile-hide tablet-hide tw-text-right" data-label="Total payments"><span [ngClass]="{'tw-text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span></td>
+                <td class="mobile-narrow mobile-number tw-text-right tw-font-bold" data-label="Balance"><span [ngClass]="{'tw-text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
+                <td class="mobile-hide tw-text-right" data-label="Payout point"><span [ngClass]="{'tw-text-danger': artist.payout_point < 0}">{{ formatCurrency(artist.payout_point) }}</span></td>
+                <td class="mobile-narrow tw-text-center" data-label="Due for payment">
+                  <i class="fas fa-check tw-text-success" *ngIf="artist.due_for_payment"></i>
+                  <span *ngIf="!artist.due_for_payment" class="tw-text-muted">-</span>
                 </td>
-                <td class="mobile-hide text-center tw-text-center" data-label="Payouts paused">
-                  <i class="fas fa-pause-circle text-warning tw-text-warning" *ngIf="artist.hold_payouts"></i>
-                  <span *ngIf="!artist.hold_payouts" class="text-muted tw-text-muted">-</span>
+                <td class="mobile-hide tw-text-center" data-label="Payouts paused">
+                  <i class="fas fa-pause-circle tw-text-warning" *ngIf="artist.hold_payouts"></i>
+                  <span *ngIf="!artist.hold_payouts" class="tw-text-muted">-</span>
                 </td>
               </tr>
             </tbody>
@@ -76,46 +76,46 @@
 </div>
 
 <!-- Summary Cards -->
-<div class="row mt-4 tw-mt-4 tw-grid tw-grid-cols-1">
+<div class="row tw-mt-4 tw-grid tw-grid-cols-1">
   <div class="col-md-4 tw-md:tw-col-span-4">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0 tw-mb-0">Total Balance</h5>
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+        <h5 class="card-title tw-mb-0">Total Balance</h5>
       </div>
-      <div class="card-body text-center tw-text-center">
+      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
         <h3><strong [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_balance || 0) }}</strong></h3>
       </div>
     </div>
   </div>
 
   <div class="col-md-4 tw-md:tw-col-span-4">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0 tw-mb-0">Total Due For Payment</h5>
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+        <h5 class="card-title tw-mb-0">Total Due For Payment</h5>
       </div>
-      <div class="card-body text-center tw-text-center">
+      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
         <h3><strong [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}</strong></h3>
       </div>
     </div>
   </div>
 
   <div class="col-md-4 tw-md:tw-col-span-4">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0 tw-mb-0">Ready to Pay 
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+        <h5 class="card-title tw-mb-0">Ready to Pay 
           <i class="fas fa-info-circle" title="Due for payment and has bank account"></i>
         </h5>
       </div>
-      <div class="card-body text-center tw-text-center">
+      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
         <h3><strong [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}</strong></h3>
-        <button class="btn btn-primary w-100 tw-w-full"
+        <button class="btn-primary tw-w-full"
                 [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
                 (click)="payAllBalances()">
           <i class="fas fa-credit-card"></i> Pay Now
         </button>
-        <small class="d-block mt-2 tw-block tw-mt-2"><strong>On hold:</strong> <span [style.color]="(balanceSummary?.paused_payouts || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</span></small>
+        <small class="tw-block tw-mt-2"><strong>On hold:</strong> <span [style.color]="(balanceSummary?.paused_payouts || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</span></small>
       </div>
-      <div class="card-footer text-center tw-text-center">
+      <div class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle tw-text-center">
         <div class="badge bg-info">
           Available balance: <span [style.color]="walletBalance < 0 ? '#FF4A55' : ''">{{ formatCurrency(walletBalance) }}</span>
         </div>

@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-money-bill-wave me-2 tw-mr-2"></i>
+          <i class="fas fa-money-bill-wave tw-mr-2"></i>
           Pay Out to {{ sublabel?.brand_name }}
         </h5>
         <button type="button" class="btn-close" (click)="onClose()" [disabled]="submitting"></button>
@@ -11,24 +11,24 @@
 
       <div class="modal-body">
         <!-- Sublabel Information -->
-        <div class="alert alert-info" *ngIf="sublabel">
+        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800" *ngIf="sublabel">
           <h6><strong>{{ sublabel.brand_name }}</strong></h6>
           <div class="row tw-grid tw-grid-cols-1">
             <div class="col-md-6 tw-md:tw-col-span-6">
-              <small class="text-muted tw-text-muted">Payable Balance:</small>
-              <strong class="text-success tw-text-success">₱{{ sublabel.balance | number:'1.2-2' }}</strong>
+              <small class="tw-text-muted">Payable Balance:</small>
+              <strong class="tw-text-success">₱{{ sublabel.balance | number:'1.2-2' }}</strong>
             </div>
             <div class="col-md-6 tw-md:tw-col-span-6">
-              <small class="text-muted tw-text-muted">Wallet Balance:</small>
+              <small class="tw-text-muted">Wallet Balance:</small>
               <span *ngIf="!loadingWalletBalance">
-                <strong [class.text-success]="hasEnoughWalletBalance()" [class.text-danger]="!hasEnoughWalletBalance()">
+                <strong [class.tw-text-success]="hasEnoughWalletBalance()" [class.tw-text-danger]="!hasEnoughWalletBalance()">
                   ₱{{ walletBalance | number:'1.2-2' }}
                 </strong>
-                <i class="fas fa-check-circle text-success ms-1 tw-text-success tw-ml-1" *ngIf="hasEnoughWalletBalance()"></i>
-                <i class="fas fa-times-circle text-danger ms-1 tw-text-danger tw-ml-1" *ngIf="!hasEnoughWalletBalance()"></i>
+                <i class="fas fa-check-circle tw-text-success tw-ml-1" *ngIf="hasEnoughWalletBalance()"></i>
+                <i class="fas fa-times-circle tw-text-danger tw-ml-1" *ngIf="!hasEnoughWalletBalance()"></i>
               </span>
-              <span *ngIf="loadingWalletBalance" class="text-muted tw-text-muted">
-                <i class="fas fa-spinner fa-spin me-1 tw-mr-1"></i>Loading...
+              <span *ngIf="loadingWalletBalance" class="tw-text-muted">
+                <i class="fas fa-spinner fa-spin tw-mr-1"></i>Loading...
               </span>
             </div>
           </div>
@@ -36,15 +36,15 @@
 
         <form (ngSubmit)="onSubmit()" #payoutForm="ngForm">
           <!-- Amount -->
-          <div class="mb-3 tw-mb-3">
-            <label for="amount" class="form-label tw-label">Payout Amount *</label>
+          <div class="tw-mb-3">
+            <label for="amount" class="tw-label">Payout Amount *</label>
             <div class="input-group">
               <span class="input-group-text">₱</span>
               <input
                 type="number"
                 id="amount"
                 name="amount"
-                class="form-control tw-input"
+                class="tw-input"
                 [(ngModel)]="payoutData.amount"
                 [max]="sublabel?.balance || 0"
                 min="0.01"
@@ -58,38 +58,38 @@
           </div>
 
           <!-- Description -->
-          <div class="mb-3 tw-mb-3">
-            <label for="description" class="form-label tw-label">Description</label>
+          <div class="tw-mb-3">
+            <label for="description" class="tw-label">Description</label>
             <input
               type="text"
               id="description"
               name="description"
-              class="form-control tw-input"
+              class="tw-input"
               [(ngModel)]="payoutData.description"
               [disabled]="submitting"
               placeholder="Payment description">
           </div>
 
           <!-- Date Paid -->
-          <div class="mb-3 tw-mb-3">
-            <label for="date_paid" class="form-label tw-label">Date Paid *</label>
+          <div class="tw-mb-3">
+            <label for="date_paid" class="tw-label">Date Paid *</label>
             <input
               type="datetime-local"
               id="date_paid"
               name="date_paid"
-              class="form-control tw-input"
+              class="tw-input"
               [(ngModel)]="payoutData.date_paid"
               required
               [disabled]="submitting">
           </div>
 
           <!-- Payment Method Selection -->
-          <div class="mb-3 tw-mb-3">
-            <label for="payment_method_id" class="form-label tw-label">Payment Method</label>
+          <div class="tw-mb-3">
+            <label for="payment_method_id" class="tw-label">Payment Method</label>
             <select
               id="payment_method_id"
               name="payment_method_id"
-              class="form-control tw-input"
+              class="tw-input"
               [(ngModel)]="selectedPaymentMethodId"
               (change)="onPaymentMethodChange()"
               [disabled]="submitting || loadingPaymentMethods">
@@ -102,12 +102,12 @@
               </option>
             </select>
             <div class="form-text" *ngIf="loadingPaymentMethods">
-              <i class="fas fa-spinner fa-spin me-1 tw-mr-1"></i> Loading payment methods...
+              <i class="fas fa-spinner fa-spin tw-mr-1"></i> Loading payment methods...
             </div>
           </div>
 
           <!-- Offline Payment Checkbox - Hidden when manual payment is selected -->
-          <div class="mb-3 tw-mb-3" *ngIf="shouldShowOfflineCheckbox()">
+          <div class="tw-mb-3" *ngIf="shouldShowOfflineCheckbox()">
             <div class="form-check form-switch">
               <input 
                 class="form-check-input" 
@@ -120,7 +120,7 @@
                 [title]="shouldDisableOfflineToggle() ? getInsufficientBalanceTooltip() : ''">
               <label class="form-check-label" for="offlinePayment">
                 This is an offline payment
-                <i class="fas fa-info-circle text-warning ms-1 tw-text-warning tw-ml-1" 
+                <i class="fas fa-info-circle tw-text-warning tw-ml-1" 
                    *ngIf="shouldDisableOfflineToggle()" 
                    [title]="getInsufficientBalanceTooltip()"></i>
               </label>
@@ -128,47 +128,47 @@
           </div>
 
           <!-- Manual Payment Selection Message -->
-          <div class="alert alert-primary text-dark tw-text-gray-900" *ngIf="isManualSelected()">
+          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal alert-primary text-dark tw-text-gray-900" *ngIf="isManualSelected()">
             <i class="fas fa-info-circle"></i> Manual payments are automatically processed as offline payments.
           </div>
 
           <!-- Manual Payment Details (shown when manual payment is selected) -->
-          <div *ngIf="isManualSelected()" class="card">
-            <div class="card-header">
-              <h6 class="card-title mb-0 tw-mb-0">Manual Payment Details</h6>
+          <div *ngIf="isManualSelected()" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+              <h6 class="card-title tw-mb-0">Manual Payment Details</h6>
             </div>
-            <div class="card-body">
+            <div class="tw-px-card-pad tw-pb-card-pad">
               <div class="row tw-grid tw-grid-cols-1">
-                <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
-                  <label for="paid_thru_type" class="form-label tw-label">Payment Type *</label>
+                <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                  <label for="paid_thru_type" class="tw-label">Payment Type *</label>
                   <input
                     type="text"
                     id="paid_thru_type"
                     name="paid_thru_type"
-                    class="form-control tw-input"
+                    class="tw-input"
                     [(ngModel)]="payoutData.paid_thru_type"
                     [disabled]="submitting"
                     placeholder="e.g. Bank Transfer, PayPal">
                 </div>
-                <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
-                  <label for="paid_thru_account_name" class="form-label tw-label">Account Name *</label>
+                <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                  <label for="paid_thru_account_name" class="tw-label">Account Name *</label>
                   <input
                     type="text"
                     id="paid_thru_account_name"
                     name="paid_thru_account_name"
-                    class="form-control tw-input"
+                    class="tw-input"
                     [(ngModel)]="payoutData.paid_thru_account_name"
                     [disabled]="submitting"
                     placeholder="Account holder name">
                 </div>
               </div>
-              <div class="mb-3 tw-mb-3">
-                <label for="paid_thru_account_number" class="form-label tw-label">Account Number/Email *</label>
+              <div class="tw-mb-3">
+                <label for="paid_thru_account_number" class="tw-label">Account Number/Email *</label>
                 <input
                   type="text"
                   id="paid_thru_account_number"
                   name="paid_thru_account_number"
-                  class="form-control tw-input"
+                  class="tw-input"
                   [(ngModel)]="payoutData.paid_thru_account_number"
                   [disabled]="submitting"
                   placeholder="Account number or email address">
@@ -178,26 +178,26 @@
 
           <!-- Additional Details (shown only when offline payment is ON) -->
           <div class="row tw-grid tw-grid-cols-1" *ngIf="shouldShowReferenceAndFee()">
-            <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
-              <label for="reference_number" class="form-label tw-label">Reference Number</label>
+            <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <label for="reference_number" class="tw-label">Reference Number</label>
               <input
                 type="text"
                 id="reference_number"
                 name="reference_number"
-                class="form-control tw-input"
+                class="tw-input"
                 [(ngModel)]="payoutData.reference_number"
                 [disabled]="submitting"
                 placeholder="Transaction reference">
             </div>
-            <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
-              <label for="payment_processing_fee" class="form-label tw-label">Processing Fee</label>
+            <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <label for="payment_processing_fee" class="tw-label">Processing Fee</label>
               <div class="input-group">
                 <span class="input-group-text">₱</span>
                 <input
                   type="number"
                   id="payment_processing_fee"
                   name="payment_processing_fee"
-                  class="form-control tw-input"
+                  class="tw-input"
                   [(ngModel)]="payoutData.payment_processing_fee"
                   min="0"
                   step="0.01"
@@ -210,16 +210,16 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="submitting">
+        <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="submitting">
           Cancel
         </button>
-        <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="submitting">
+        <button type="button" class="btn-primary" (click)="onSubmit()" [disabled]="submitting">
           <span *ngIf="!submitting">
-            <i class="fas fa-money-bill-wave me-1 tw-mr-1"></i>
+            <i class="fas fa-money-bill-wave tw-mr-1"></i>
             Pay Out ₱{{ payoutData.amount | number:'1.2-2' }}
           </span>
           <span *ngIf="submitting">
-            <i class="fas fa-spinner fa-spin me-1 tw-mr-1"></i>
+            <i class="fas fa-spinner fa-spin tw-mr-1"></i>
             Processing Payment...
           </span>
         </button>

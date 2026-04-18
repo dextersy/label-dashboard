@@ -5,11 +5,11 @@
 
 <!-- Camera Container (QR Scanner) — full-screen fixed overlay -->
 <div id="cameraContainer" [style.display]="isScanning ? 'block' : 'none'">
-  <div class="h-100 d-flex justify-content-center tw-h-full tw-flex tw-justify-center">
-    <div class="w-100 tw-w-full" style="height:auto;">
+  <div class="tw-h-full tw-flex tw-justify-center">
+    <div class="tw-w-full" style="height:auto;">
       <div id="qr-reader" height="600"></div>
       <div>
-        <button type="button" id="btnCancelScan" class="btn btn-primary btn-block" (click)="stopScanner()">
+        <button type="button" id="btnCancelScan" class="btn-primary tw-w-full" (click)="stopScanner()">
           <i class="fa fa-times"></i> Cancel Scanning
         </button>
       </div>
@@ -29,24 +29,24 @@
     <div class="content-panel">
 
       <!-- Event header -->
-      <div class="event-info-section text-center tw-text-center">
-        <h5 class="mb-0 text-muted tw-mb-0 tw-text-muted">Verify tickets for</h5>
+      <div class="event-info-section tw-text-center">
+        <h5 class="tw-mb-0 tw-text-muted">Verify tickets for</h5>
         <h1><strong>{{ currentEvent?.title || 'Event' }}</strong></h1>
       </div>
 
       <!-- PIN Validation Form -->
       <div class="scanner-section" *ngIf="!isPinValidated">
-        <p class="text-muted mb-4 tw-text-muted tw-mb-4">Enter the event PIN to access the ticket scanner.</p>
+        <p class="tw-mb-4 tw-text-muted">Enter the event PIN to access the ticket scanner.</p>
 
-        <div class="alert alert-danger" role="alert" *ngIf="showAlert && alertType === 'error'">
+        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert" *ngIf="showAlert && alertType === 'error'">
           {{ alertMessage }}
         </div>
 
         <form [formGroup]="pinForm" (ngSubmit)="validatePin()">
-          <div class="mb-3 tw-mb-3">
+          <div class="tw-mb-3">
             <div class="form-floating">
               <input type="password"
-                     class="form-control tw-input"
+                     class="tw-input"
                      formControlName="pin"
                      id="pin"
                      placeholder="PIN code"
@@ -56,7 +56,7 @@
             </div>
           </div>
           <button type="submit"
-                  class="btn btn-primary btn-lg w-100 tw-w-full"
+                  class="btn-primary btn-lg tw-w-full"
                   [disabled]="!pinForm.valid || isLoading">
             <i class="fa fa-sign-in"></i> Sign In
           </button>
@@ -64,21 +64,21 @@
       </div>
 
       <!-- Mode Tabs (only show if walk-in is enabled) -->
-      <div class="d-flex justify-content-center mb-4 tw-flex tw-justify-center tw-mb-4" *ngIf="isPinValidated && walkInEnabled">
+      <div class="tw-flex tw-justify-center tw-mb-4" *ngIf="isPinValidated && walkInEnabled">
         <div class="btn-group view-toggle" role="group" aria-label="Mode toggle">
           <button type="button"
-                  class="btn"
+                  class=""
                   [class.active]="activeMode === 'scan'"
                   (click)="switchMode('scan')"
                   [attr.aria-pressed]="activeMode === 'scan'">
-            <i class="fa fa-qrcode me-2 tw-mr-2"></i>Scan Tickets
+            <i class="fa fa-qrcode tw-mr-2"></i>Scan Tickets
           </button>
           <button type="button"
-                  class="btn"
+                  class=""
                   [class.active]="activeMode === 'walk-in'"
                   (click)="switchMode('walk-in')"
                   [attr.aria-pressed]="activeMode === 'walk-in'">
-            <i class="fa fa-walking me-2 tw-mr-2"></i>Walk-Ins
+            <i class="fa fa-walking tw-mr-2"></i>Walk-Ins
           </button>
         </div>
       </div>
@@ -87,18 +87,18 @@
       <div class="scanner-section" *ngIf="isPinValidated && activeMode === 'walk-in' && walkInEnabled">
 
         <!-- Loading -->
-        <div *ngIf="walkInLoading" class="text-center py-4 tw-text-center tw-py-4">
+        <div *ngIf="walkInLoading" class="tw-py-4 tw-text-center">
           <div class="loading"></div>
         </div>
 
         <!-- Registration Success -->
-        <div *ngIf="walkInRegistered" class="result-alert result-alert--success text-center tw-text-center">
+        <div *ngIf="walkInRegistered" class="result-alert result-alert--success tw-text-center">
           <i class="fa fa-3x fa-check-circle"></i>
-          <h4 class="mt-2 tw-mt-2"><strong>{{ walkInRegisteredMessage }}</strong></h4>
-          <p class="mb-0 tw-mb-0">Walk-in has been registered.</p>
+          <h4 class="tw-mt-2"><strong>{{ walkInRegisteredMessage }}</strong></h4>
+          <p class="tw-mb-0">Walk-in has been registered.</p>
         </div>
-        <div *ngIf="walkInRegistered" class="mt-3 tw-mt-3">
-          <button type="button" class="btn btn-primary btn-lg w-100 tw-w-full" (click)="resetWalkIn()">
+        <div *ngIf="walkInRegistered" class="tw-mt-3">
+          <button type="button" class="btn-primary btn-lg tw-w-full" (click)="resetWalkIn()">
             <i class="fa fa-plus"></i> Register Another Walk-In
           </button>
         </div>
@@ -107,16 +107,16 @@
         <div *ngIf="!walkInLoading && !walkInRegistered">
 
           <!-- Transient Alerts -->
-          <div class="alert alert-danger" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
+          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
 
-          <p class="text-muted mb-3 tw-text-muted tw-mb-3" *ngIf="walkInMaxCount <= 0 || getWalkInRemainingCount()! > 0">Tap a type to select it. Tap again to add more.</p>
+          <p class="tw-mb-3 tw-text-muted" *ngIf="walkInMaxCount <= 0 || getWalkInRemainingCount()! > 0">Tap a type to select it. Tap again to add more.</p>
 
           <!-- Walk-In Max Count Info -->
-          <p class="text-muted mb-3 small tw-text-muted tw-mb-3 tw-text-sm" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount()! > 0">
-            <i class="fa fa-info-circle me-1 tw-mr-1"></i>{{ walkInTotalSoldCount }} / {{ walkInMaxCount }} walk-ins registered &middot; <strong>{{ getWalkInRemainingCount() }} left</strong>
+          <p class="tw-mb-3 small tw-text-muted tw-text-sm" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount()! > 0">
+            <i class="fa fa-info-circle tw-mr-1"></i>{{ walkInTotalSoldCount }} / {{ walkInMaxCount }} walk-ins registered &middot; <strong>{{ getWalkInRemainingCount() }} left</strong>
           </p>
-          <p class="text-danger mb-3 tw-text-danger tw-mb-3" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount() === 0 && !hasWalkInSelections()">
-            <i class="fa fa-ban me-1 tw-mr-1"></i> Walk-in limit has been reached.
+          <p class="tw-text-danger tw-mb-3" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount() === 0 && !hasWalkInSelections()">
+            <i class="fa fa-ban tw-mr-1"></i> Walk-in limit has been reached.
           </p>
 
           <div class="walk-in-types">
@@ -130,15 +130,15 @@
                 <div class="walk-in-type-price">{{ formatWalkInPrice(type.price) }}</div>
                 <div class="walk-in-type-slots" *ngIf="type.remaining_slots !== null && type.remaining_slots !== undefined">
                   <span *ngIf="type.remaining_slots > 0">{{ type.remaining_slots }} slots left</span>
-                  <span *ngIf="type.remaining_slots === 0" class="text-danger fw-bold tw-text-danger tw-font-bold">Sold Out</span>
+                  <span *ngIf="type.remaining_slots === 0" class="tw-text-danger tw-font-bold">Sold Out</span>
                 </div>
               </div>
               <div class="walk-in-type-qty" *ngIf="getWalkInQty(type.id) > 0" (click)="$event.stopPropagation()">
-                <button class="btn btn-sm btn-outline-secondary qty-btn" (click)="decrementWalkIn(type.id, $event)">
+                <button class="btn-sm btn-outline-secondary qty-btn" (click)="decrementWalkIn(type.id, $event)">
                   <i class="fa fa-minus"></i>
                 </button>
                 <span class="qty-value">{{ getWalkInQty(type.id) }}</span>
-                <button class="btn btn-sm btn-outline-secondary qty-btn" (click)="incrementWalkIn(type.id, $event)">
+                <button class="btn-sm btn-outline-secondary qty-btn" (click)="incrementWalkIn(type.id, $event)">
                   <i class="fa fa-plus"></i>
                 </button>
               </div>
@@ -146,49 +146,49 @@
           </div>
 
           <!-- Payment Method -->
-          <div class="mt-3 tw-mt-3" *ngIf="hasWalkInSelections()">
-            <label class="form-label fw-semibold tw-font-semibold tw-label">Payment Method</label>
-            <div class="d-flex gap-2 flex-wrap tw-flex tw-gap-2 tw-flex-wrap">
+          <div class="tw-mt-3" *ngIf="hasWalkInSelections()">
+            <label class="tw-label tw-font-semibold">Payment Method</label>
+            <div class="tw-flex tw-gap-2 tw-flex-wrap">
               <button *ngIf="walkInPaymentMethods.cash"
-                      class="btn payment-method-btn"
+                      class="payment-method-btn"
                       [class.btn-primary]="walkInPaymentMethod === 'cash'"
                       [class.btn-outline-secondary]="walkInPaymentMethod !== 'cash'"
                       (click)="walkInPaymentMethod = 'cash'">
-                <i class="fa fa-money-bill-wave me-1 tw-mr-1"></i> Cash
+                <i class="fa fa-money-bill-wave tw-mr-1"></i> Cash
               </button>
               <button *ngIf="walkInPaymentMethods.gcash"
-                      class="btn payment-method-btn"
+                      class="payment-method-btn"
                       [class.btn-primary]="walkInPaymentMethod === 'gcash'"
                       [class.btn-outline-secondary]="walkInPaymentMethod !== 'gcash'"
                       (click)="walkInPaymentMethod = 'gcash'">
-                <i class="fa fa-mobile-alt me-1 tw-mr-1"></i> GCash
+                <i class="fa fa-mobile-alt tw-mr-1"></i> GCash
               </button>
               <button *ngIf="walkInPaymentMethods.card"
-                      class="btn payment-method-btn"
+                      class="payment-method-btn"
                       [class.btn-primary]="walkInPaymentMethod === 'card'"
                       [class.btn-outline-secondary]="walkInPaymentMethod !== 'card'"
                       (click)="walkInPaymentMethod = 'card'">
-                <i class="fa fa-credit-card me-1 tw-mr-1"></i> Card
+                <i class="fa fa-credit-card tw-mr-1"></i> Card
               </button>
             </div>
 
             <!-- Optional payment reference -->
-            <div class="mt-2 tw-mt-2" *ngIf="walkInPaymentMethod === 'gcash' || walkInPaymentMethod === 'card'">
-              <input type="text" class="form-control tw-input" placeholder="Reference # (optional)"
+            <div class="tw-mt-2" *ngIf="walkInPaymentMethod === 'gcash' || walkInPaymentMethod === 'card'">
+              <input type="text" class="tw-input" placeholder="Reference # (optional)"
                      [(ngModel)]="walkInPaymentReference">
             </div>
           </div>
 
           <!-- Total & Register -->
           <div class="walk-in-total-bar" *ngIf="hasWalkInSelections()">
-            <div class="d-flex justify-content-between align-items-center mb-2 tw-flex tw-justify-between tw-items-center tw-mb-2">
-              <span class="fw-bold fs-5 tw-font-bold">Total</span>
-              <span class="fw-bold fs-4 tw-font-bold">{{ formatWalkInPrice(getWalkInTotal()) }}</span>
+            <div class="tw-flex tw-justify-between tw-items-center tw-mb-2">
+              <span class="tw-font-bold fs-5">Total</span>
+              <span class="tw-font-bold fs-4">{{ formatWalkInPrice(getWalkInTotal()) }}</span>
             </div>
-            <button class="btn btn-success btn-lg w-100 tw-w-full"
+            <button class="btn-success btn-lg tw-w-full"
                     [disabled]="!walkInPaymentMethod || walkInLoading"
                     (click)="registerWalkIn()">
-              <i class="fa fa-check-circle me-1 tw-mr-1"></i> Register Walk-In
+              <i class="fa fa-check-circle tw-mr-1"></i> Register Walk-In
             </button>
           </div>
         </div>
@@ -198,27 +198,27 @@
       <div class="scanner-section" *ngIf="isPinValidated && (activeMode === 'scan' || !walkInEnabled)">
 
         <!-- Transient Alerts -->
-        <div class="alert alert-danger" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
-        <div class="alert alert-success" role="alert" *ngIf="showAlert && alertType === 'success'">{{ alertMessage }}</div>
-        <div class="alert alert-info" role="alert" *ngIf="showAlert && alertType === 'info'">{{ alertMessage }}</div>
+        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
+        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-green-200 tw-bg-green-50 tw-text-green-800" role="alert" *ngIf="showAlert && alertType === 'success'">{{ alertMessage }}</div>
+        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800" role="alert" *ngIf="showAlert && alertType === 'info'">{{ alertMessage }}</div>
 
         <!-- Persistent Result -->
-        <div class="result-alert text-center tw-text-center"
+        <div class="result-alert tw-text-center"
              [ngClass]="{'result-alert--success': persistentAlertType === 'success', 'result-alert--error': persistentAlertType === 'error'}"
              *ngIf="showPersistentAlert">
           <i class="fa fa-3x"
              [ngClass]="{'fa-check-circle': persistentAlertType === 'success', 'fa-times-circle': persistentAlertType === 'error'}"></i>
-          <h4 class="mt-2 tw-mt-2"><strong>{{ persistentAlertMessage }}</strong></h4>
-          <p class="mb-0 tw-mb-0" *ngIf="persistentAlertType === 'success'">Ticket has been processed successfully.</p>
+          <h4 class="tw-mt-2"><strong>{{ persistentAlertMessage }}</strong></h4>
+          <p class="tw-mb-0" *ngIf="persistentAlertType === 'success'">Ticket has been processed successfully.</p>
         </div>
 
         <!-- Ticket Input Form -->
         <form [formGroup]="ticketForm" (ngSubmit)="lookupTicket()" *ngIf="showInputForm">
-          <div class="mb-3 tw-mb-3">
-            <label class="form-label fw-semibold mb-2 tw-font-semibold tw-mb-2 tw-label">Enter ticket code</label>
+          <div class="tw-mb-3">
+            <label class="tw-label tw-font-semibold tw-mb-2">Enter ticket code</label>
             <div class="input-group">
               <input type="text"
-                     class="form-control ticket-code-input text-center tw-text-center tw-input"
+                     class="ticket-code-input tw-text-center tw-input"
                      formControlName="ticketCode"
                      id="ticketCode"
                      placeholder="e.g. AB12C"
@@ -227,7 +227,7 @@
                      [disabled]="isLoading" />
               <button type="button"
                       id="btnScanQR"
-                      class="btn btn-outline-secondary"
+                      class="btn-outline-secondary"
                       (click)="toggleScanner()"
                       [disabled]="isLoading"
                       title="Scan QR code">
@@ -237,7 +237,7 @@
           </div>
 
           <button type="submit"
-                  class="btn btn-primary btn-lg w-100 tw-w-full"
+                  class="btn-primary btn-lg tw-w-full"
                   [disabled]="!ticketForm.valid || isLoading"
                   *ngIf="!currentTicket">
             <i class="fa fa-search"></i> Look Up Ticket
@@ -248,14 +248,14 @@
         <div *ngIf="showCheckInForm" class="checkin-section">
 
           <!-- Large entries display for gate staff -->
-          <div class="entries-display text-center tw-text-center">
+          <div class="entries-display tw-text-center">
             <div class="entries-label">ENTRIES AVAILABLE</div>
             <div class="entries-number">{{ currentTicket?.remaining_entries }}</div>
             <div class="entries-subtitle">{{ currentTicket?.name }}</div>
             <div class="entries-ticket-type" *ngIf="currentTicket?.ticketType">
               <strong>{{ currentTicket.ticketType.name }}</strong>
-              <div *ngIf="currentTicket?.ticketType?.special_instructions_for_scanner" class="mt-2 small tw-mt-2 tw-text-sm">
-                <i class="fa fa-exclamation-triangle me-1 tw-mr-1"></i>
+              <div *ngIf="currentTicket?.ticketType?.special_instructions_for_scanner" class="tw-mt-2 small tw-text-sm">
+                <i class="fa fa-exclamation-triangle tw-mr-1"></i>
                 <strong>Note:</strong> {{ currentTicket.ticketType.special_instructions_for_scanner }}
               </div>
             </div>
@@ -264,18 +264,18 @@
           <!-- Claim All -->
           <button id="btnClaimAll"
                   type="button"
-                  class="btn btn-success btn-lg w-100 mb-3 tw-w-full tw-mb-3"
+                  class="btn-success btn-lg tw-w-full tw-mb-3"
                   (click)="claimAllEntries()"
                   [disabled]="isLoading || (currentTicket?.remaining_entries || 0) <= 0">
             <i class="fa fa-users"></i> Claim All
           </button>
 
-          <p class="text-center text-muted mb-2 tw-text-center tw-text-muted tw-mb-2"><strong>Or enter number of people checking in</strong></p>
+          <p class="tw-mb-2 tw-text-center tw-text-muted"><strong>Or enter number of people checking in</strong></p>
 
           <form [formGroup]="checkInForm" (ngSubmit)="checkInTicket()">
-            <div class="mb-3 tw-mb-3">
+            <div class="tw-mb-3">
               <input type="number"
-                     class="form-control form-control-lg text-center tw-text-center tw-input"
+                     class="tw-input-lg tw-text-center tw-input"
                      min="1"
                      [max]="currentTicket?.remaining_entries || 1"
                      formControlName="entriesToClaim"
@@ -289,7 +289,7 @@
             </div>
             <button id="btnCheckIn"
                     type="submit"
-                    class="btn btn-primary btn-lg w-100 tw-w-full"
+                    class="btn-primary btn-lg tw-w-full"
                     [disabled]="!checkInForm.valid || isLoading">
               <i class="fa fa-check-circle"></i> Check In
             </button>
@@ -297,9 +297,9 @@
         </div>
 
         <!-- Reset -->
-        <div *ngIf="showCheckInForm || showPersistentAlert" class="mt-3 tw-mt-3">
+        <div *ngIf="showCheckInForm || showPersistentAlert" class="tw-mt-3">
           <button type="button"
-                  class="btn btn-outline-secondary btn-lg w-100 tw-w-full"
+                  class="btn-outline-secondary btn-lg tw-w-full"
                   (click)="resetTicketLookup()"
                   [disabled]="isLoading">
             <i class="fa fa-refresh"></i> Look Up Another Ticket
@@ -308,8 +308,8 @@
       </div>
 
       <!-- Footer -->
-      <div class="text-center tw-text-center" style="padding-top: 2.5rem; padding-bottom: 1rem;">
-        <p *ngIf="isPinValidated" class="mb-1 tw-mb-1" style="font-size: 12px; color: #999;">
+      <div class="tw-text-center" style="padding-top: 2.5rem; padding-bottom: 1rem;">
+        <p *ngIf="isPinValidated" class="tw-mb-1" style="font-size: 12px; color: #999;">
           <i class="fa fa-circle" style="color: #28a745; font-size: 8px; vertical-align: middle; margin-right: 4px;"></i>Logged in. (<a href="javascript:void(0)" (click)="logoutScanner()" style="color: #999;">Log out?</a>)
         </p>
         <p>

@@ -11,7 +11,7 @@
   (comparisonToggle)="onComparisonToggle($event)">
 </app-date-range-filter>
 
-<div *ngIf="loading" class="text-center tw-text-center">
+<div *ngIf="loading" class="tw-text-center">
   <div class="loading-dots">
     <div></div>
     <div></div>
@@ -24,10 +24,10 @@
   <!-- ── Earnings Summary ─────────────────────────────────────────── -->
   <h3 class="section-heading">Earnings Summary</h3>
 
-  <div class="row mb-4 align-items-center tw-mb-4 tw-items-center tw-grid tw-grid-cols-1" *ngIf="earningsSummary">
+  <div class="row tw-mb-4 tw-items-center tw-grid tw-grid-cols-1" *ngIf="earningsSummary">
     <!-- Dominant total card -->
-    <div class="col-lg-4 col-md-12 mb-3 mb-lg-0 tw-mb-3 tw-lg:tw-col-span-4 tw-md:tw-col-span-12">
-      <div class="current-balance-section text-center p-4 tw-text-center tw-p-4">
+    <div class="col-lg-4 col-md-12 tw-mb-3 mb-lg-0 tw-lg:tw-col-span-4 tw-md:tw-col-span-12">
+      <div class="current-balance-section tw-p-4 tw-text-center">
         <h2 class="balance-title">Total Earnings</h2>
         <h1 class="balance-amount">
           {{ formatCurrency(earningsSummary.physical_earnings + earningsSummary.download_earnings + earningsSummary.streaming_earnings + earningsSummary.sync_earnings) }}
@@ -63,7 +63,7 @@
     </div>
   </div>
 
-  <div *ngIf="!earningsSummary" class="text-muted mb-4 tw-text-muted tw-mb-4">No releases yet.</div>
+  <div *ngIf="!earningsSummary" class="tw-mb-4 tw-text-muted">No releases yet.</div>
 
   <!-- ── Earnings List ─────────────────────────────────────────────── -->
   <app-paginated-table

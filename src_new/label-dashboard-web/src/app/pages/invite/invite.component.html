@@ -18,11 +18,11 @@
 
     <!-- Error state -->
     <div class="error-section" *ngIf="!loading && message && messageType === 'error'">
-      <div class="alert alert-danger" role="alert">
-        <i class="fa fa-exclamation-circle me-2 tw-mr-2"></i>
+      <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-border-red-200 tw-rounded-lg tw-bg-red-50 tw-text-red-800 tw-text-sm tw-leading-normal" role="alert">
+        <i class="fa fa-exclamation-circle tw-mr-2"></i>
         {{ message }}
       </div>
-      <a routerLink="/login" class="btn btn-primary btn-block btn-md">Go to Login</a>
+      <a routerLink="/login" class="btn-primary tw-w-full">Go to Login</a>
     </div>
   </div>
 </div>

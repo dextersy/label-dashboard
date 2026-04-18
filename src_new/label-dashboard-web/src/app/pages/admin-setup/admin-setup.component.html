@@ -1,20 +1,20 @@
-<div class="container mt-5 tw-mt-5">
-  <div class="row justify-content-center tw-justify-center tw-grid tw-grid-cols-1">
+<div class="container tw-mt-5">
+  <div class="row tw-justify-center tw-grid tw-grid-cols-1">
     <div class="col-md-6 tw-md:tw-col-span-6">
-      <div class="card">
-        <div class="card-header text-center tw-text-center" [style.background-color]="brandColor" style="color: white;">
-          <img [src]="brandLogo" alt="Logo" class="mb-2 tw-mb-2" style="max-height: 60px; width: auto;">
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-text-center" [style.background-color]="brandColor" style="color: white;">
+          <img [src]="brandLogo" alt="Logo" class="tw-mb-2" style="max-height: 60px; width: auto;">
           <h4>{{ brandName }} - Admin Setup</h4>
-          <p class="mb-0 tw-mb-0">Complete your admin profile setup</p>
+          <p class="tw-mb-0">Complete your admin profile setup</p>
         </div>
-        <div class="card-body">
-          <div *ngIf="loading" class="text-center p-4 tw-text-center tw-p-4">
+        <div class="tw-px-card-pad tw-pb-card-pad">
+          <div *ngIf="loading" class="tw-p-4 tw-text-center">
             <div class="loading-dots">
               <div></div>
               <div></div>
               <div></div>
             </div>
-            <p class="mt-3 tw-mt-3">Loading...</p>
+            <p class="tw-mt-3">Loading...</p>
           </div>
           
           <div *ngIf="!loading && profile">
@@ -25,16 +25,16 @@
             
             <form (ngSubmit)="onSubmit()" #setupForm="ngForm">
               <!-- Email (read-only) -->
-              <div class="mb-3 tw-mb-3">
-                <label for="email" class="form-label tw-label">Email Address</label>
-                <input type="email" class="form-control tw-input" id="email" 
+              <div class="tw-mb-3">
+                <label for="email" class="tw-label">Email Address</label>
+                <input type="email" class="tw-input" id="email" 
                        [value]="profile.email_address" readonly>
               </div>
               
               <!-- Username -->
-              <div class="mb-3 tw-mb-3" *ngIf="canChangeUsername">
-                <label for="username" class="form-label tw-label">Username <span class="text-danger tw-text-danger">*</span></label>
-                <input type="text" class="form-control tw-input" id="username"
+              <div class="tw-mb-3" *ngIf="canChangeUsername">
+                <label for="username" class="tw-label">Username <span class="tw-text-danger">*</span></label>
+                <input type="text" class="tw-input" id="username"
                        [(ngModel)]="profile.username" 
                        name="username"
                        (input)="onUsernameChange(profile.username)"
@@ -59,9 +59,9 @@
               </div>
               
               <!-- First Name -->
-              <div class="mb-3 tw-mb-3">
-                <label for="firstName" class="form-label tw-label">First Name <span class="text-danger tw-text-danger">*</span></label>
-                <input type="text" class="form-control tw-input" id="firstName"
+              <div class="tw-mb-3">
+                <label for="firstName" class="tw-label">First Name <span class="tw-text-danger">*</span></label>
+                <input type="text" class="tw-input" id="firstName"
                        [(ngModel)]="profile.first_name" 
                        name="firstName"
                        [class.is-invalid]="errors.first_name"
@@ -73,9 +73,9 @@
               </div>
               
               <!-- Last Name -->
-              <div class="mb-3 tw-mb-3">
-                <label for="lastName" class="form-label tw-label">Last Name <span class="text-danger tw-text-danger">*</span></label>
-                <input type="text" class="form-control tw-input" id="lastName"
+              <div class="tw-mb-3">
+                <label for="lastName" class="tw-label">Last Name <span class="tw-text-danger">*</span></label>
+                <input type="text" class="tw-input" id="lastName"
                        [(ngModel)]="profile.last_name" 
                        name="lastName"
                        [class.is-invalid]="errors.last_name"
@@ -87,12 +87,12 @@
               </div>
               
               <!-- Password -->
-              <div class="mb-3 tw-mb-3">
-                <label for="password" class="form-label tw-label">Password <span class="text-danger tw-text-danger">*</span></label>
+              <div class="tw-mb-3">
+                <label for="password" class="tw-label">Password <span class="tw-text-danger">*</span></label>
                 <div class="password-field-wrapper">
                   <input
                     [type]="showPassword ? 'text' : 'password'"
-                    class="form-control tw-input"
+                    class="tw-input"
                     id="password"
                     [(ngModel)]="password"
                     name="password"
@@ -108,21 +108,21 @@
                     <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                   </button>
                 </div>
-                <div class="invalid-feedback d-block tw-block" *ngIf="errors.password">
+                <div class="invalid-feedback tw-block" *ngIf="errors.password">
                   {{ errors.password }}
                 </div>
-                <small class="text-muted tw-text-muted" *ngIf="!errors.password">
+                <small class="tw-text-muted" *ngIf="!errors.password">
                   Must include: 8+ characters, uppercase, lowercase, number, and special character
                 </small>
               </div>
 
               <!-- Confirm Password -->
-              <div class="mb-3 tw-mb-3">
-                <label for="confirmPassword" class="form-label tw-label">Confirm Password <span class="text-danger tw-text-danger">*</span></label>
+              <div class="tw-mb-3">
+                <label for="confirmPassword" class="tw-label">Confirm Password <span class="tw-text-danger">*</span></label>
                 <div class="password-field-wrapper">
                   <input
                     [type]="showConfirmPassword ? 'text' : 'password'"
-                    class="form-control tw-input"
+                    class="tw-input"
                     id="confirmPassword"
                     [(ngModel)]="confirmPassword"
                     name="confirmPassword"
@@ -138,29 +138,29 @@
                     <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                   </button>
                 </div>
-                <div class="invalid-feedback d-block tw-block" *ngIf="errors.confirmPassword">
+                <div class="invalid-feedback tw-block" *ngIf="errors.confirmPassword">
                   {{ errors.confirmPassword }}
                 </div>
-                <div class="invalid-feedback d-block tw-block" *ngIf="errors.passwordMismatch">
+                <div class="invalid-feedback tw-block" *ngIf="errors.passwordMismatch">
                   {{ errors.passwordMismatch }}
                 </div>
               </div>
               
               <!-- Submit Button -->
-              <div class="d-grid mb-3 tw-mb-3">
+              <div class="tw-grid tw-mb-3">
                 <button type="submit" 
-                        class="btn btn-primary"
+                        class="btn-primary"
                         [disabled]="saving || !setupForm.form.valid || (canChangeUsername && (usernameExists || usernameInvalid))"
                         [style.background-color]="brandColor"
                         [style.border-color]="brandColor">
-                  <span *ngIf="saving" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status" aria-hidden="true"></span>
+                  <span *ngIf="saving" class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>
                   {{ saving ? 'Setting up...' : 'Complete Setup' }}
                 </button>
               </div>
             </form>
             
-            <div class="text-center tw-text-center">
-              <small class="text-muted tw-text-muted">
+            <div class="tw-text-center">
+              <small class="tw-text-muted">
                 Already have an account? <a href="#" (click)="goToLogin()" class="text-decoration-none">Sign in here</a>
               </small>
             </div>

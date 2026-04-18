@@ -2,17 +2,17 @@
   
   <div *ngIf="selectedEvent">
     <!-- Recipients Info -->
-    <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+    <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
       <div class="col-12 tw-col-span-12">
-        <div class="alert alert-info d-flex align-items-center tw-flex tw-items-center">
-          <i class="fas fa-info-circle me-2 tw-mr-2"></i>
+        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-flex tw-items-center">
+          <i class="fas fa-info-circle tw-mr-2"></i>
           <div>
             <strong>To:</strong> 
             <span *ngIf="loadingCount">Loading recipients...</span>
-            <span *ngIf="!loadingCount" class="text-primary fw-bold tw-font-bold">
+            <span *ngIf="!loadingCount" class="text-primary tw-font-bold">
               {{ recipientsCount }} confirmed ticket holder{{ recipientsCount !== 1 ? 's' : '' }}
             </span>
-            <small class="d-block text-muted mt-1 tw-block tw-text-muted tw-mt-1">
+            <small class="tw-block tw-mt-1 tw-text-muted">
               Only confirmed ticket holders (with "Payment Confirmed" or "Ticket sent" status) will receive this email.
             </small>
           </div>
@@ -23,26 +23,26 @@
     <!-- Email Form -->
     <form #emailForm="ngForm" (ngSubmit)="sendEmail()">
       <!-- Subject Line -->
-      <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+      <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
         <div class="col-12 tw-col-span-12">
-          <label for="emailSubject" class="form-label fw-bold tw-font-bold tw-label">
-            Subject Line <span class="text-danger tw-text-danger">*</span>
+          <label for="emailSubject" class="tw-label tw-font-bold">
+            Subject Line <span class="tw-text-danger">*</span>
           </label>
           <input
             type="text"
             id="emailSubject"
             name="emailSubject"
-            class="form-control tw-input"
+            class="tw-input"
             [(ngModel)]="subject"
             placeholder="Enter email subject..."
             required
             maxlength="500"
             [disabled]="sending">
-          <small class="form-text text-muted tw-text-muted">
-            <span [class]="subject.length > 400 ? 'text-warning' : 'text-muted'">
+          <small class="form-text tw-text-muted">
+            <span [class]="subject.length > 400 ? 'tw-text-warning' : 'tw-text-muted'">
               {{ subject.length }}/500 characters
             </span>
-            <span *ngIf="subject.length > 500" class="text-danger ms-2 tw-text-danger tw-ml-2">
+            <span *ngIf="subject.length > 500" class="tw-text-danger tw-ml-2">
               <i class="fas fa-exclamation-triangle"></i> Too long!
             </span>
           </small>
@@ -50,7 +50,7 @@
       </div>
 
       <!-- Banner Option -->
-      <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+      <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
         <div class="col-12 tw-col-span-12">
           <div class="form-check">
             <input
@@ -63,7 +63,7 @@
             <label for="includeBanner" class="form-check-label">
               Include email banner with event branding
             </label>
-            <small class="form-text text-muted d-block tw-text-muted tw-block">
+            <small class="form-text tw-block tw-text-muted">
               Adds a branded header with your label's logo and event title
             </small>
           </div>
@@ -71,10 +71,10 @@
       </div>
 
       <!-- Message Editor -->
-      <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+      <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
         <div class="col-12 tw-col-span-12">
-          <label for="emailMessage" class="form-label fw-bold tw-font-bold tw-label">
-            Message <span class="text-danger tw-text-danger">*</span>
+          <label for="emailMessage" class="tw-label tw-font-bold">
+            Message <span class="tw-text-danger">*</span>
           </label>
           <quill-editor
             [(ngModel)]="message"
@@ -85,17 +85,17 @@
             [style]="{ 'min-height': '300px' }"
             [disabled]="sending">
           </quill-editor>
-          <div class="form-text text-muted tw-text-muted">
-            <div class="mb-2 tw-mb-2">
+          <div class="form-text tw-text-muted">
+            <div class="tw-mb-2">
               Use the toolbar above for rich text formatting, links, and images. Images will be automatically uploaded and included in the email.
               <br><strong>Image limits:</strong> Maximum 10 images, 5MB per image. Supported formats: JPEG, PNG, GIF, WebP.
             </div>
-            <div class="d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center">
+            <div class="tw-flex tw-justify-between tw-items-center">
               <span>
                 <strong>Content size:</strong> 
                 <span [class]="getContentSizeClass()">{{ getContentSizeText() }}</span>
               </span>
-              <span *ngIf="isContentTooLarge()" class="text-danger tw-text-danger">
+              <span *ngIf="isContentTooLarge()" class="tw-text-danger">
                 <i class="fas fa-exclamation-triangle"></i> Content too large!
               </span>
             </div>
@@ -107,34 +107,34 @@
     </div>
 
   <!-- No Event Selected -->
-  <div class="text-center py-5 tw-text-center" *ngIf="!selectedEvent">
-    <i class="fas fa-envelope fa-4x text-muted mb-3 tw-text-muted tw-mb-3"></i>
-    <h5 class="text-muted tw-text-muted">No Event Selected</h5>
-    <p class="text-muted tw-text-muted">Please select an event to send emails to ticket holders.</p>
+  <div class="tw-py-5 tw-text-center" *ngIf="!selectedEvent">
+    <i class="fas fa-envelope fa-4x tw-mb-3 tw-text-muted"></i>
+    <h5 class="tw-text-muted">No Event Selected</h5>
+    <p class="tw-text-muted">Please select an event to send emails to ticket holders.</p>
   </div>
 </div>
 
 <!-- Floating Action Bar -->
 <app-floating-action-bar *ngIf="selectedEvent">
-  <span floatingStart class="text-muted tw-text-muted">
-    <small><i class="fas fa-clock me-1 tw-mr-1"></i>Emails will be sent one by one to preserve deliverability</small>
+  <span floatingStart class="tw-text-muted">
+    <small><i class="fas fa-clock tw-mr-1"></i>Emails will be sent one by one to preserve deliverability</small>
   </span>
   <button
     type="button"
-    class="btn btn-secondary"
+    class="btn-secondary"
     [disabled]="!isFormValid() || sending"
     (click)="showTestEmailModal()"
     title="Send a test email to specific addresses first">
-    <i class="fas fa-flask me-2 tw-mr-2"></i>
+    <i class="fas fa-flask tw-mr-2"></i>
     Send Test Email
   </button>
   <button
     type="button"
-    class="btn btn-primary fab-primary-btn"
+    class="btn-primary fab-primary-btn"
     [disabled]="!isFormValid() || recipientsCount === 0 || sending || loadingCount"
     (click)="sendEmail()">
-    <span *ngIf="sending" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status"></span>
-    <i *ngIf="!sending" class="fas fa-paper-plane me-2 tw-mr-2"></i>
+    <span *ngIf="sending" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
+    <i *ngIf="!sending" class="fas fa-paper-plane tw-mr-2"></i>
     <span *ngIf="sending">Sending Email...</span>
     <span *ngIf="!sending">Send Email to {{ recipientsCount }} Recipients</span>
   </button>

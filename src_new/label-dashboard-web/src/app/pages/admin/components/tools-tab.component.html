@@ -20,7 +20,7 @@
 </div>
 
 <!-- Email Detail Modal -->
-<div class="modal" [class.d-block]="showEmailModal" [style.display]="showEmailModal ? 'block' : 'none'" *ngIf="showEmailModal">
+<div class="modal" [style.display]="showEmailModal ? 'block' : 'none'" *ngIf="showEmailModal">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -30,19 +30,19 @@
         </button>
       </div>
       <div class="modal-body" *ngIf="selectedEmail">
-        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Timestamp:</strong></div>
           <div class="col-sm-9">{{ formatDate(selectedEmail.timestamp) }}</div>
         </div>
-        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Recipients:</strong></div>
           <div class="col-sm-9">{{ selectedEmail.recipients }}</div>
         </div>
-        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Subject:</strong></div>
           <div class="col-sm-9">{{ selectedEmail.subject }}</div>
         </div>
-        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
+        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Result:</strong></div>
           <div class="col-sm-9">
             <span class="badge" 
@@ -55,15 +55,15 @@
         <div class="row tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Content:</strong></div>
           <div class="col-sm-9">
-            <div class="border p-3 tw-p-3" style="max-height: 400px; overflow-y: auto;">
+            <div class="border tw-p-3" style="max-height: 400px; overflow-y: auto;">
               <div [innerHTML]="selectedEmail.body"></div>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeEmailModal()">Close</button>
-        <button type="button" class="btn btn-primary" (click)="previewEmail(selectedEmail.id)" *ngIf="selectedEmail">
+        <button type="button" class="btn-secondary" (click)="closeEmailModal()">Close</button>
+        <button type="button" class="btn-primary" (click)="previewEmail(selectedEmail.id)" *ngIf="selectedEmail">
           <i class="fas fa-external-link-alt"></i> Preview in New Window
         </button>
       </div>

@@ -1,7 +1,7 @@
 <div class="public-page" [style.background-color]="brandColor">
   <!-- Preview Banner -->
   <div *ngIf="isPreview" class="preview-banner">
-    <i class="fas fa-eye me-2 tw-mr-2"></i>
+    <i class="fas fa-eye tw-mr-2"></i>
     <strong>Preview Mode</strong> — This is how the buy page will look. Purchasing is disabled.
   </div>
 
@@ -20,14 +20,14 @@
   </div>
 
   <!-- Error State (404) -->
-  <div *ngIf="isError" class="wrapper h-100 d-flex justify-content-center align-items-center tw-h-full tw-flex tw-justify-center tw-items-center">
-    <div class="card text-center tw-text-center" style="max-width: 500px;">
-      <div class="card-body py-5">
-        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3 tw-text-danger tw-mb-3"></i>
-        <h1 class="text-danger tw-text-danger">404 - Event Not Found</h1>
-        <p class="text-muted tw-text-muted">The event you're looking for could not be found.</p>
-        <button class="btn btn-primary" (click)="goBack()">
-          <i class="fas fa-arrow-left me-1 tw-mr-1"></i>Go Back
+  <div *ngIf="isError" class="wrapper tw-h-full tw-flex tw-justify-center tw-items-center">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-text-center" style="max-width: 500px;">
+      <div class="tw-px-card-pad tw-pb-card-pad tw-py-5">
+        <i class="fas fa-exclamation-triangle fa-3x tw-text-danger tw-mb-3"></i>
+        <h1 class="tw-text-danger">404 - Event Not Found</h1>
+        <p class="tw-text-muted">The event you're looking for could not be found.</p>
+        <button class="btn-primary" (click)="goBack()">
+          <i class="fas fa-arrow-left tw-mr-1"></i>Go Back
         </button>
       </div>
     </div>
@@ -57,54 +57,54 @@
         <!-- Event info -->
         <div class="event-info-section">
           <div *ngIf="canBuyTickets()">
-            <h5 class="mb-0 tw-mb-0">Get tickets to</h5>
+            <h5 class="tw-mb-0">Get tickets to</h5>
             <h1 style="margin-top: 0 !important;"><strong>{{ event.title }}</strong></h1>
 
-            <div class="event-details mt-3 mb-3 p-3 tw-mt-3 tw-mb-3 tw-p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-              <div class="mb-2 tw-mb-2">
-                <span class="fw-semibold tw-font-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold tw-font-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
-                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none ms-2 tw-ml-2" style="color: #1595e7;">
-                  (<i class="fas fa-calendar-plus me-1 tw-mr-1"></i>Add to Calendar)
+            <div class="event-details tw-mt-3 tw-mb-3 tw-p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+              <div class="tw-mb-2">
+                <span class="tw-font-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="tw-font-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
+                  (<i class="fas fa-calendar-plus tw-mr-1"></i>Add to Calendar)
 </a>
               </div>
-              <div class="mb-0 tw-mb-0">
-                <span class="fw-semibold tw-font-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none ms-2 tw-ml-2" style="color: #1595e7;">
-                  (<i class="fas fa-map-marker-alt me-1 tw-mr-1"></i>View Map)
+              <div class="tw-mb-0">
+                <span class="tw-font-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
+                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
+                  (<i class="fas fa-map-marker-alt tw-mr-1"></i>View Map)
 </a>
               </div>
             </div>
 
             <small [innerHTML]="sanitizeHtml(event.description)" style="font-size: 1rem;" class="description-text"></small>
           </div>
-          <div *ngIf="!canBuyTickets()" class="text-center tw-text-center">
+          <div *ngIf="!canBuyTickets()" class="tw-text-center">
             <h1>Online ticket sales for <strong>{{ event.title }}</strong> has ended.</h1>
 
             <!-- Walk-in available -->
             <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()">
-              <div class="alert alert-info text-center mt-4 mb-3 tw-text-center tw-mt-4 tw-mb-3" style="font-size: 1.2rem;">
-                <i class="fas fa-walking me-2 tw-mr-2"></i>
+              <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mt-4 tw-mb-3 tw-text-center" style="font-size: 1.2rem;">
+                <i class="fas fa-walking tw-mr-2"></i>
                 <strong>Walk-in tickets are available at the venue!</strong>
-                <hr class="my-2 tw-my-2">
+                <hr class="tw-my-2">
                 <div *ngFor="let wit of event.walkInTypes">
-                  <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0" class="mb-1 tw-mb-1">
+                  <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0" class="tw-mb-1">
                     <strong>{{ wit.name }}</strong> — {{ formatPriceDisplay(wit.price) }}
-                    <span *ngIf="wit.remaining_slots !== null" class="text-muted tw-text-muted">({{ wit.remaining_slots }} slots available)</span>
+                    <span *ngIf="wit.remaining_slots !== null" class="tw-text-muted">({{ wit.remaining_slots }} slots available)</span>
                   </div>
                 </div>
               </div>
 
-              <div class="event-details mt-3 mb-3 p-3 text-start tw-mt-3 tw-mb-3 tw-p-3 tw-text-left" style="background-color: #f8f9fa; border-radius: 8px;">
-                <div class="mb-2 tw-mb-2">
-                  <span class="fw-semibold tw-font-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="fw-semibold tw-font-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
-                  <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none ms-2 tw-ml-2" style="color: #1595e7;">
-                    (<i class="fas fa-calendar-plus me-1 tw-mr-1"></i>Add to Calendar)
+              <div class="event-details tw-mt-3 tw-mb-3 tw-p-3 tw-text-left" style="background-color: #f8f9fa; border-radius: 8px;">
+                <div class="tw-mb-2">
+                  <span class="tw-font-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="tw-font-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
+                  <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
+                    (<i class="fas fa-calendar-plus tw-mr-1"></i>Add to Calendar)
                   </a>
                 </div>
-                <div class="mb-0 tw-mb-0">
-                  <span class="fw-semibold tw-font-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-                  <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none ms-2 tw-ml-2" style="color: #1595e7;">
-                    (<i class="fas fa-map-marker-alt me-1 tw-mr-1"></i>View Map)
+                <div class="tw-mb-0">
+                  <span class="tw-font-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
+                  <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
+                    (<i class="fas fa-map-marker-alt tw-mr-1"></i>View Map)
                   </a>
                 </div>
               </div>
@@ -112,7 +112,7 @@
 
             <!-- No walk-in -->
             <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()">
-              <small class="text-muted mt-2 d-block tw-text-muted tw-mt-2 tw-block">Tickets or walk-in may still be available at the show. Please check <strong>{{ event.brand?.name || 'the event organizer' }}</strong> social media for more information.</small>
+              <small class="tw-mt-2 tw-block tw-text-muted">Tickets or walk-in may still be available at the show. Please check <strong>{{ event.brand?.name || 'the event organizer' }}</strong> social media for more information.</small>
             </div>
           </div>
         </div>
@@ -126,10 +126,10 @@
             <!-- Name Field -->
             <div class="name-container fadeIn first">
               <div class="input-group">
-                <div class="form-floating flex-fill">
+                <div class="form-floating tw-flex-1">
                   <input
                     type="text"
-                    class="form-control tw-input"
+                    class="tw-input"
                     id="name"
                     formControlName="name"
                     placeholder="Full name"
@@ -138,12 +138,12 @@
                   <label for="name">Full name</label>
                 </div>
               </div>
-              <div class="invalid-feedback d-block tw-block" *ngIf="isFieldInvalid('name')">
+              <div class="invalid-feedback tw-block" *ngIf="isFieldInvalid('name')">
                 Full name is required.
               </div>
-              <div class="valid-feedback d-block tw-block"
+              <div class="valid-feedback tw-block"
                    *ngIf="!isFieldInvalid('name') && ticketForm.get('name')?.value">
-                <i class="fas fa-check-circle text-success tw-text-success"></i>
+                <i class="fas fa-check-circle tw-text-success"></i>
                 Please make sure your full name is as it appears on your identification.
               </div>
             </div>
@@ -151,10 +151,10 @@
             <!-- Email Field -->
             <div class="email-container fadeIn second">
               <div class="input-group">
-                <div class="form-floating flex-fill">
+                <div class="form-floating tw-flex-1">
                   <input
                     type="email"
-                    class="form-control tw-input"
+                    class="tw-input"
                     id="email_address"
                     formControlName="email_address"
                     placeholder="Email address"
@@ -163,24 +163,24 @@
                   <label for="email_address">Email address</label>
                 </div>
               </div>
-              <div class="invalid-feedback d-block tw-block"
+              <div class="invalid-feedback tw-block"
                    *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">
                 Email address is required.
               </div>
-              <div class="invalid-feedback d-block tw-block"
+              <div class="invalid-feedback tw-block"
                    *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">
                 Email address is not valid.
               </div>
-              <div class="valid-feedback d-block tw-block"
+              <div class="valid-feedback tw-block"
                    *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
-                <i class="fas fa-check-circle text-success tw-text-success"></i>
+                <i class="fas fa-check-circle tw-text-success"></i>
                 Please make sure your email address is correct.
               </div>
-              <div class="text-warning d-block tw-text-warning tw-block" *ngIf="emailTypoResult?.suggestedEmail">
+              <div class="tw-text-warning tw-block" *ngIf="emailTypoResult?.suggestedEmail">
                 <i class="fas fa-exclamation-triangle"></i>
                 Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?
-                <a class="ms-2 text-decoration-underline tw-ml-2" style="cursor: pointer;" (click)="applySuggestedEmail()">Yes</a>
-                <a class="ms-1 text-decoration-underline tw-ml-1" style="cursor: pointer;" (click)="dismissEmailSuggestion()">No</a>
+                <a class="tw-ml-2 text-decoration-underline" style="cursor: pointer;" (click)="applySuggestedEmail()">Yes</a>
+                <a class="tw-ml-1 text-decoration-underline" style="cursor: pointer;" (click)="dismissEmailSuggestion()">No</a>
               </div>
             </div>
 
@@ -188,10 +188,10 @@
             <div class="contact-number-container fadeIn third">
               <div class="input-group">
                 <span class="input-group-text">🇵🇭 +63</span>
-                <div class="form-floating flex-fill">
+                <div class="form-floating tw-flex-1">
                   <input
                     type="text"
-                    class="form-control tw-input"
+                    class="tw-input"
                     id="contact_number"
                     formControlName="contact_number"
                     placeholder="Contact number"
@@ -199,7 +199,7 @@
                   <label for="contact_number">Contact number</label>
                 </div>
               </div>
-              <div class="invalid-feedback d-block tw-block" *ngIf="isFieldInvalid('contact_number')">
+              <div class="invalid-feedback tw-block" *ngIf="isFieldInvalid('contact_number')">
                 Contact number is required.
               </div>
             </div>
@@ -226,12 +226,12 @@
             </div>
 
             <!-- Ticket type special instructions -->
-            <div class="d-block text-success mb-3 tw-block tw-text-success tw-mb-3" *ngIf="selectedTicketType?.special_instructions">
-              <i class="fas fa-info-circle me-1 tw-mr-1"></i>{{ selectedTicketType?.special_instructions }}
+            <div class="tw-block tw-text-success tw-mb-3" *ngIf="selectedTicketType?.special_instructions">
+              <i class="fas fa-info-circle tw-mr-1"></i>{{ selectedTicketType?.special_instructions }}
             </div>
 
             <!-- Number of Tickets -->
-            <div *ngIf="getAvailableTicketTypes().length <= 1" class="single-ticket-type-display fadeIn fourth mb-3 tw-mb-3">
+            <div *ngIf="getAvailableTicketTypes().length <= 1" class="single-ticket-type-display fadeIn fourth tw-mb-3">
               {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} &mdash;
               <strong>{{ formatPriceDisplay(selectedTicketType?.price ?? event.ticket_price) }}</strong>
             </div>
@@ -245,7 +245,7 @@
                   min="1"
                   [max]="getRemainingTicketsDisplay() || 99"
                   step="1"
-                  class="form-control tw-input"
+                  class="tw-input"
                   id="number_of_entries"
                   formControlName="number_of_entries"
                   placeholder="Number of tickets"
@@ -253,7 +253,7 @@
                   [class.is-invalid]="isFieldInvalid('number_of_entries')">
                 <label for="number_of_entries">Number of tickets</label>
               </div>
-              <div class="invalid-feedback d-block tw-block" *ngIf="isFieldInvalid('number_of_entries')">
+              <div class="invalid-feedback tw-block" *ngIf="isFieldInvalid('number_of_entries')">
                 Number of tickets is required.
               </div>
             </div>
@@ -261,10 +261,10 @@
             <!-- Referral Code -->
             <div class="referral-code-container fadeIn fifth" *ngIf="!referralCode">
               <div class="input-group">
-                <div class="form-floating flex-fill">
+                <div class="form-floating tw-flex-1">
                   <input
                     type="text"
-                    class="form-control tw-input"
+                    class="tw-input"
                     id="referral_code"
                     formControlName="referral_code"
                     placeholder="Referral code (optional)">
@@ -273,14 +273,14 @@
               </div>
             </div>
             <div *ngIf="referralCode" class="referral-code-display fadeIn fifth">
-              <strong>Referral code: </strong><span class="badge bg-info text-white tw-text-white">{{ referralCode }}</span>
+              <strong>Referral code: </strong><span class="badge bg-info tw-text-white">{{ referralCode }}</span>
             </div>
 
-            <hr class="my-4 tw-my-4">
+            <hr class="tw-my-4">
 
             <!-- Reminders -->
             <h6><i class="fas fa-info-circle"></i> <strong>Important reminders before submitting</strong></h6>
-            <div class="alert alert-info field-description text-dark tw-text-gray-900">
+            <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 field-description text-dark tw-text-gray-900">
               <ul>
                 <li>Please use a name that is shown in any valid ID, as you may be requested to present identification at the gate.</li>
                 <li>Please make sure your email address is correct to make sure that you receive your ticket without any problem.</li>
@@ -292,8 +292,8 @@
             <!-- Payment Calculation -->
             <div id="div_paymentCalculation">
               <h5 *ngIf="totalAmount > 0">Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h5>
-              <h5 *ngIf="totalAmount === 0" class="text-success tw-text-success">
-                <i class="fas fa-check-circle me-2 tw-mr-2"></i><b>Admission is FREE</b>
+              <h5 *ngIf="totalAmount === 0" class="tw-text-success">
+                <i class="fas fa-check-circle tw-mr-2"></i><b>Admission is FREE</b>
               </h5>
             </div>
 
@@ -314,9 +314,9 @@
               mat-raised-button
               color="primary"
               type="submit"
-              class="submit-button w-100 tw-w-full"
+              class="submit-button tw-w-full"
               [disabled]="ticketForm.invalid || isSubmitting || isPreview">
-              <i class="fas me-1 tw-mr-1" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
+              <i class="fas tw-mr-1" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
               {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>
             <div *ngIf="totalAmount > 0" class="fadeIn sixth" style="font-size:12px;">
@@ -328,7 +328,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="text-center tw-text-center" style="padding-top: 1.5rem;">
+        <div class="tw-text-center" style="padding-top: 1.5rem;">
           <p>
             <span style="font-size:12px; font-weight:bold;">Powered by Spindly.</span><br>
             <span style="font-size:12px; font-style:italic;">

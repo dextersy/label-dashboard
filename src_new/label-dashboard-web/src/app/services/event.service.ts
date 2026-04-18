@@ -31,6 +31,13 @@ export interface CreateEventForm {
   venue_phone?: string;
   venue_website?: string;
   venue_maps_url?: string;
+  supports_gcash?: boolean;
+  supports_qrph?: boolean;
+  supports_card?: boolean;
+  supports_ubp?: boolean;
+  supports_dob?: boolean;
+  supports_maya?: boolean;
+  supports_grabpay?: boolean;
 }
 
 export interface Event {

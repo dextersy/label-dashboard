@@ -2,8 +2,8 @@
   <app-breadcrumb></app-breadcrumb>
 
   <!-- Page Header with Fundraiser Selector -->
-  <div class="page-header mb-3 tw-mb-3">
-    <div class="d-flex align-items-start flex-wrap gap-3 tw-flex tw-items-start tw-flex-wrap tw-gap-3">
+  <div class="page-header tw-mb-3">
+    <div class="tw-flex tw-items-start tw-flex-wrap tw-gap-3">
       <div class="fundraiser-selector-main" *ngIf="!isNewFundraiser && availableFundraisers.length > 0">
         <app-fundraiser-selection
           [fundraisers]="availableFundraisers"
@@ -30,8 +30,8 @@
     <div *ngIf="!loading" class="fundraiser-form-content">
       <!-- Form Section -->
       <div class="form-section">
-        <div class="d-flex align-items-center gap-2 mb-2 tw-flex tw-items-center tw-gap-2 tw-mb-2">
-          <h3 class="mb-0 tw-mb-0">Fundraiser Details</h3>
+        <div class="tw-flex tw-items-center tw-gap-2 tw-mb-2">
+          <h3 class="tw-mb-0">Fundraiser Details</h3>
           <span class="badge bg-secondary" *ngIf="isFundraiserDraft()">Draft</span>
           <span class="badge bg-success" *ngIf="isFundraiserPublished()">Published</span>
           <span class="badge bg-dark" *ngIf="isFundraiserClosed()">Closed</span>
@@ -39,26 +39,26 @@
         <p>Basic fundraiser information displayed on the donation page</p>
 
         <!-- Public Link (shown for published/closed fundraisers) -->
-        <div class="mb-4 link-accent tw-mb-4" *ngIf="!isNewFundraiser && fundraiser?.id && (isFundraiserPublished() || isFundraiserClosed())">
-          <label class="form-label fw-semibold mb-2 tw-font-semibold tw-mb-2 tw-label">
-            <i class="fa fa-link me-1 tw-mr-1"></i> Public Donation Link
+        <div class="tw-mb-4 link-accent" *ngIf="!isNewFundraiser && fundraiser?.id && (isFundraiserPublished() || isFundraiserClosed())">
+          <label class="tw-label tw-font-semibold tw-mb-2">
+            <i class="fa fa-link tw-mr-1"></i> Public Donation Link
           </label>
           <div class="input-group link-action-group">
             <input
               type="text"
-              class="form-control tw-input"
+              class="tw-input"
               [value]="getPublicFundraiserUrl()"
               readonly>
             <button
               type="button"
-              class="btn btn-secondary d-flex align-items-center tw-flex tw-items-center"
+              class="btn-secondary tw-flex tw-items-center"
               (click)="copyPublicLink()"
               title="Copy link to clipboard">
               <i class="fa fa-copy"></i>
             </button>
             <button
               type="button"
-              class="btn btn-secondary d-flex align-items-center tw-flex tw-items-center"
+              class="btn-secondary tw-flex tw-items-center"
               (click)="downloadFundraiserQR()"
               title="Download QR Code">
               <i class="fa fa-qrcode"></i>
@@ -66,34 +66,34 @@
             <a
               [href]="getPublicFundraiserUrl()"
               target="_blank"
-              class="btn btn-secondary d-flex align-items-center tw-flex tw-items-center"
+              class="btn-secondary tw-flex tw-items-center"
               title="Open in new tab">
               <i class="fa fa-external-link"></i>
             </a>
           </div>
-          <small class="form-text text-muted tw-text-muted">
+          <small class="form-text tw-text-muted">
             <i class="fa fa-info-circle"></i> Share this link with potential donors
           </small>
         </div>
 
         <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-12 mb-3 tw-mb-3 tw-col-span-12">
-            <label for="fundraiserTitle" class="form-label required tw-label">Fundraiser Title</label>
+          <div class="col-12 tw-mb-3 tw-col-span-12">
+            <label for="fundraiserTitle" class="tw-label required">Fundraiser Title</label>
             <input
               type="text"
               id="fundraiserTitle"
-              class="form-control tw-input"
+              class="tw-input"
               [(ngModel)]="fundraiserData.title"
               placeholder="Enter fundraiser title"
               [disabled]="isFundraiserClosed()"
               required>
-            <small class="form-text text-muted tw-text-muted">
+            <small class="form-text tw-text-muted">
               <i class="fa fa-info-circle"></i> The title will be displayed prominently on the donation page
             </small>
           </div>
 
-          <div class="col-12 mb-3 tw-mb-3 tw-col-span-12">
-            <label for="fundraiserDescription" class="form-label tw-label">Description</label>
+          <div class="col-12 tw-mb-3 tw-col-span-12">
+            <label for="fundraiserDescription" class="tw-label">Description</label>
             <quill-editor
               id="fundraiserDescription"
               [(ngModel)]="fundraiserData.description"
@@ -102,13 +102,13 @@
               (onContentChanged)="onDescriptionContentChanged($event)"
               placeholder="Describe your fundraiser and what the donations will be used for...">
             </quill-editor>
-            <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
+            <small class="form-text" [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit" [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
               {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
             </small>
           </div>
 
-          <div class="col-12 mb-3 tw-mb-3 tw-col-span-12">
-            <label class="form-label tw-label">Fundraiser Poster</label>
+          <div class="col-12 tw-mb-3 tw-col-span-12">
+            <label class="tw-label">Fundraiser Poster</label>
             <div *ngIf="!posterPreview && !fundraiserData.poster_url"
                  class="poster-upload-zone"
                  role="button"
@@ -116,16 +116,16 @@
                  (click)="posterInput.click()"
                  (keydown)="onPosterUploadKeydown($event)"
                  aria-label="Upload fundraiser poster image">
-              <i class="fa fa-image fa-3x text-muted mb-2 tw-text-muted tw-mb-2"></i>
-              <p class="text-muted mb-0 tw-text-muted tw-mb-0">Click to upload poster image</p>
-              <small class="text-muted tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
+              <i class="fa fa-image fa-3x tw-mb-2 tw-text-muted"></i>
+              <p class="tw-mb-0 tw-text-muted">Click to upload poster image</p>
+              <small class="tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
             </div>
 
             <div *ngIf="posterPreview || fundraiserData.poster_url" class="poster-preview">
               <img [src]="posterPreview || fundraiserData.poster_url" alt="Fundraiser poster">
               <button
                 type="button"
-                class="btn btn-sm btn-danger poster-remove-btn"
+                class="btn-sm btn-danger poster-remove-btn"
                 (click)="removePoster()"
                 *ngIf="!isFundraiserClosed()">
                 <i class="fa fa-times"></i>
@@ -151,7 +151,7 @@
   <!-- Cancel button only shown when creating a new fundraiser -->
   <button
     type="button"
-    class="btn btn-secondary"
+    class="btn-secondary"
     (click)="onCancel()"
     [disabled]="saving"
     *ngIf="isNewFundraiser">
@@ -162,7 +162,7 @@
        projected child (which would prevent select=".fab-primary-btn" from matching). -->
   <button
     type="button"
-    class="btn btn-secondary"
+    class="btn-secondary"
     (click)="onSave()"
     [disabled]="saving"
     *ngIf="isFundraiserDraft()">
@@ -173,7 +173,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-secondary"
+    class="btn-secondary"
     (click)="onUnpublish()"
     [disabled]="saving || hasDonations()"
     *ngIf="isFundraiserPublished() && !hasDonations()">
@@ -184,7 +184,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-secondary"
+    class="btn-secondary"
     (click)="onClose()"
     [disabled]="saving"
     *ngIf="isFundraiserPublished()">
@@ -197,7 +197,7 @@
   <!-- Primary buttons — direct children for ng-content select=".fab-primary-btn" to work -->
   <button
     type="button"
-    class="btn btn-primary fab-primary-btn"
+    class="btn-primary fab-primary-btn"
     (click)="onPublish()"
     [disabled]="saving"
     *ngIf="isFundraiserDraft()">
@@ -208,7 +208,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-primary fab-primary-btn"
+    class="btn-primary fab-primary-btn"
     (click)="onSave()"
     [disabled]="saving || !isFormDirty()"
     *ngIf="isFundraiserPublished()">
@@ -219,7 +219,7 @@
   </button>
   <button
     type="button"
-    class="btn btn-primary fab-primary-btn"
+    class="btn-primary fab-primary-btn"
     (click)="onReopen()"
     [disabled]="saving"
     *ngIf="isFundraiserClosed()">

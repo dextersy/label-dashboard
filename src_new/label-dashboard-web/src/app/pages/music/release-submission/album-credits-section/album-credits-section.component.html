@@ -2,21 +2,21 @@
   <form [formGroup]="creditsForm">
     <!-- Artists & Royalty Splits -->
     <div class="artists-section" formArrayName="royaltyArtists">
-      <div class="d-flex justify-content-between align-items-center mb-3 tw-flex tw-justify-between tw-items-center tw-mb-3">
-        <h5 class="mb-0 tw-mb-0">Artists & Royalty Splits</h5>
+      <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
+        <h5 class="tw-mb-0">Artists & Royalty Splits</h5>
         <button type="button"
-                class="btn btn-sm btn-secondary"
+                class="btn-sm btn-secondary"
                 (click)="addRoyaltyArtistFromUI()"
                 [disabled]="loadingArtists || !canModifyArtists">
           <i class="fa fa-plus"></i> Add Artist
         </button>
       </div>
 
-      <div *ngIf="!canModifyArtists" class="alert alert-info py-2 mb-3 tw-py-2 tw-mb-3">
+      <div *ngIf="!canModifyArtists" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-py-2 tw-mb-3">
         <small><i class="fa fa-info-circle"></i> Artist modifications are restricted for non-draft releases. Only administrators can modify artists on releases with status: {{ editingRelease?.status }}</small>
       </div>
 
-      <div *ngIf="loadingArtists" class="text-center py-3 tw-text-center tw-py-3">
+      <div *ngIf="loadingArtists" class="tw-py-3 tw-text-center">
         <div class="loading-dots">
           <div></div>
           <div></div>
@@ -26,14 +26,14 @@
 
       <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">
         <div *ngFor="let artistControl of royaltyArtists.controls; let i = index"
-             class="card mb-3 tw-mb-3"
+             class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3"
              [formGroupName]="i">
-          <div class="card-body">
-            <div class="row align-items-center tw-items-center tw-grid tw-grid-cols-1">
+          <div class="tw-px-card-pad tw-pb-card-pad">
+            <div class="row tw-items-center tw-grid tw-grid-cols-1">
               <div [class]="isAdmin ? 'col-md-3' : 'col-md-10'">
-                <div class="form-group mb-0 tw-mb-0">
+                <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Artist</label>
-                  <select class="form-control form-control-sm tw-input"
+                  <select class="tw-input-sm tw-input"
                           formControlName="artist_id"
                           [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched"
                           [disabled]="!canModifyArtists">
@@ -52,40 +52,40 @@
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
-                <div class="form-group mb-0 tw-mb-0">
+                <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Streaming %</label>
                   <input type="number"
-                         class="form-control form-control-sm tw-input"
+                         class="tw-input-sm tw-input"
                          formControlName="streaming_royalty_percentage"
                          min="0" max="100" step="1"
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
-                <div class="form-group mb-0 tw-mb-0">
+                <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Sync %</label>
                   <input type="number"
-                         class="form-control form-control-sm tw-input"
+                         class="tw-input-sm tw-input"
                          formControlName="sync_royalty_percentage"
                          min="0" max="100" step="1"
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
-                <div class="form-group mb-0 tw-mb-0">
+                <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Download %</label>
                   <input type="number"
-                         class="form-control form-control-sm tw-input"
+                         class="tw-input-sm tw-input"
                          formControlName="download_royalty_percentage"
                          min="0" max="100" step="1"
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
               <div class="col-md-2" *ngIf="isAdmin">
-                <div class="form-group mb-0 tw-mb-0">
+                <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Physical %</label>
                   <input type="number"
-                         class="form-control form-control-sm tw-input"
+                         class="tw-input-sm tw-input"
                          formControlName="physical_royalty_percentage"
                          min="0" max="100" step="1"
                          [disabled]="!canModifyArtists">
@@ -93,7 +93,7 @@
               </div>
               <div class="col-md-1">
                 <button type="button"
-                        class="btn btn-sm btn-danger"
+                        class="btn-sm btn-danger"
                         (click)="removeRoyaltyArtist(i)"
                         [disabled]="royaltyArtists.length <= 1 || !canModifyArtists"
                         title="Remove Artist">
@@ -105,9 +105,9 @@
         </div>
 
         <!-- Royalty Totals -->
-        <div class="card bg-light tw-bg-gray-50" *ngIf="isAdmin">
-          <div class="card-body py-2 tw-py-2">
-            <div class="row text-center tw-text-center tw-grid tw-grid-cols-1">
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50" *ngIf="isAdmin">
+          <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
+            <div class="row tw-text-center tw-grid tw-grid-cols-1">
               <div class="col-md-3">
                 <strong>Label Royalty:</strong>
               </div>
@@ -137,8 +137,8 @@
         </div>
 
         <!-- Royalty Split Notes -->
-        <div class="mt-3 tw-mt-3">
-          <small class="text-muted tw-text-muted">
+        <div class="tw-mt-3">
+          <small class="tw-text-muted">
             <i class="fa fa-info-circle"></i>
             <strong>Note:</strong> Artist percentages for each royalty type should not exceed 100%.
             The label row shows the remaining percentage (100% - total artist percentages).
@@ -146,17 +146,17 @@
         </div>
       </div>
 
-      <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="text-center text-muted py-3 tw-text-center tw-text-muted tw-py-3">
+      <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="tw-py-3 tw-text-center tw-text-muted">
         <i class="fa fa-info-circle"></i>
         No artists added yet. Click "Add Artist" to get started.
       </div>
     </div>
 
     <!-- Liner Notes -->
-    <div class="liner-notes-section mt-4 tw-mt-4">
-      <div class="form-group">
+    <div class="liner-notes-section tw-mt-4">
+      <div class="tw-mb-5">
         <label for="linerNotes">Liner Notes</label>
-        <small class="form-text text-muted mb-2 tw-text-muted tw-mb-2">
+        <small class="form-text tw-mb-2 tw-text-muted">
           Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
           It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
           <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
@@ -168,21 +168,21 @@
           (onContentChanged)="onLinerNotesContentChanged($event)"
           placeholder="Liner notes, acknowledgments, credits...">
         </quill-editor>
-        <small class="form-text" [class.text-danger]="linerNotesCharCount > linerNotesCharLimit" [class.text-muted]="linerNotesCharCount <= linerNotesCharLimit">
+        <small class="form-text" [class.tw-text-danger]="linerNotesCharCount > linerNotesCharLimit" [class.tw-text-muted]="linerNotesCharCount <= linerNotesCharLimit">
           {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters
         </small>
       </div>
     </div>
 
     <!-- Save Changes Button -->
-    <div class="save-credits-section mt-5 tw-mt-5" *ngIf="editingRelease">
+    <div class="save-credits-section tw-mt-5" *ngIf="editingRelease">
       <button
         type="button"
-        class="btn btn-primary save-changes-btn"
+        class="btn-primary save-changes-btn"
         [disabled]="savingCredits || !creditsForm.valid"
         (click)="saveCredits()">
-        <i class="fa fa-save me-2 tw-mr-2" *ngIf="!savingCredits"></i>
-        <i class="fa fa-spinner fa-spin me-2 tw-mr-2" *ngIf="savingCredits"></i>
+        <i class="fa fa-save tw-mr-2" *ngIf="!savingCredits"></i>
+        <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="savingCredits"></i>
         {{ savingCredits ? 'Saving...' : 'Save Changes' }}
       </button>
     </div>

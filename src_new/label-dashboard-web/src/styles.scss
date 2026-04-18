@@ -236,6 +236,24 @@
   .tw-label {
     @apply tw-block tw-mb-2 tw-font-medium tw-text-xs tw-text-[#374151];
   }
+
+  /* Compact input variant (replaces form-control-sm) */
+  .tw-input-sm {
+    @apply tw-w-full tw-px-2 tw-py-1 tw-text-sm tw-text-[#1f2937]
+           tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
+
+    &:focus { @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring; }
+    &::placeholder { @apply tw-text-muted; }
+  }
+
+  /* Large input variant (replaces form-control-lg) */
+  .tw-input-lg {
+    @apply tw-w-full tw-px-5 tw-py-4 tw-text-lg tw-text-[#1f2937]
+           tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
+
+    &:focus { @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring; }
+    &::placeholder { @apply tw-text-muted; }
+  }
 }
 
 /* =========================================== */

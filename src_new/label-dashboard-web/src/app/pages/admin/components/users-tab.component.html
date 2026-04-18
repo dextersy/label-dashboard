@@ -47,29 +47,29 @@
       </div>
       <div class="modal-body">
         <form (ngSubmit)="sendInvite()">
-          <div class="mb-3 tw-mb-3">
-            <label for="email" class="form-label tw-label">Email Address *</label>
+          <div class="tw-mb-3">
+            <label for="email" class="tw-label">Email Address *</label>
             <input type="email"
-                   class="form-control tw-input"
+                   class="tw-input"
                    id="email"
                    [(ngModel)]="inviteForm.email_address"
                    name="email"
                    required
                    placeholder="Enter email address">
           </div>
-          <div class="mb-3 tw-mb-3">
-            <label for="firstName" class="form-label tw-label">First Name</label>
+          <div class="tw-mb-3">
+            <label for="firstName" class="tw-label">First Name</label>
             <input type="text"
-                   class="form-control tw-input"
+                   class="tw-input"
                    id="firstName"
                    [(ngModel)]="inviteForm.first_name"
                    name="firstName"
                    placeholder="Enter first name">
           </div>
-          <div class="mb-3 tw-mb-3">
-            <label for="lastName" class="form-label tw-label">Last Name</label>
+          <div class="tw-mb-3">
+            <label for="lastName" class="tw-label">Last Name</label>
             <input type="text"
-                   class="form-control tw-input"
+                   class="tw-input"
                    id="lastName"
                    [(ngModel)]="inviteForm.last_name"
                    name="lastName"
@@ -78,12 +78,12 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeInviteModal()">Cancel</button>
+        <button type="button" class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
         <button type="button"
-                class="btn btn-primary"
+                class="btn-primary"
                 (click)="sendInvite()"
                 [disabled]="inviteLoading || !inviteForm.email_address.trim()">
-          <span *ngIf="inviteLoading" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status" aria-hidden="true"></span>
+          <span *ngIf="inviteLoading" class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>
           Send Invitation
         </button>
       </div>

@@ -1,14 +1,14 @@
-<div class="row align-items-center tw-items-center tw-grid tw-grid-cols-1" *ngIf="summary">
+<div class="row tw-items-center tw-grid tw-grid-cols-1" *ngIf="summary">
   <div class="col-md-4 tw-md:tw-col-span-4">
-    <div class="current-balance-section text-center p-4 tw-text-center tw-p-4">
+    <div class="current-balance-section tw-p-4 tw-text-center">
       <h2 class="balance-title">Current Balance</h2>
       <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
       <p class="balance-subtitle" *ngIf="!isAdmin">This is your total earned royalties less payments and advances made to you. Once this reaches your set payout point, this will be transferred to you on the 15th of the month.</p>
-      <button class="btn btn-primary pay-now-btn" 
+      <button class="btn-primary pay-now-btn" 
               *ngIf="isAdmin"
               (click)="onPayNow()"
               [disabled]="summary.currentBalance <= 0">
-        <i class="fas fa-credit-card me-2 tw-mr-2"></i>Pay Now
+        <i class="fas fa-credit-card tw-mr-2"></i>Pay Now
       </button>
     </div>
   </div>
@@ -33,23 +33,23 @@
   </div>
 </div>
 
-<div class="row mt-4 tw-mt-4 tw-grid tw-grid-cols-1">
+<div class="row tw-mt-4 tw-grid tw-grid-cols-1">
   <div class="col-md-6 tw-md:tw-col-span-6">
-    <div class="card">
-      <div class="card-header">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
         <h4>Latest Earnings</h4>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
       </div>
     </div>
   </div>
   <div class="col-md-6 tw-md:tw-col-span-6">
-    <div class="card">
-      <div class="card-header">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
         <h4>Latest Royalties</h4>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>
       </div>
     </div>

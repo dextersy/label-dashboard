@@ -10,13 +10,13 @@
   <!-- Form Content -->
   <div id="formContent">
     <!-- Error and Success Alerts -->
-    <div *ngIf="errorType === 'lock'" class="alert alert-danger" role="alert">
+    <div *ngIf="errorType === 'lock'" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-border-red-200 tw-rounded-lg tw-bg-red-50 tw-text-red-800 tw-text-sm tw-leading-normal" role="alert">
       Your account is temporarily locked due to too many failed logins. Please try again in {{lockTimeMinutes}} minutes.
     </div>
-    <div *ngIf="showResetSuccess" class="alert alert-success" role="alert">
+    <div *ngIf="showResetSuccess" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-border-green-200 tw-rounded-lg tw-bg-green-50 tw-text-green-800 tw-text-sm tw-leading-normal" role="alert">
       Your password has been successfully reset. Please log in again.
     </div>
-    <div *ngIf="errorMessage && !errorType" class="alert alert-danger" role="alert">
+    <div *ngIf="errorMessage && !errorType" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-border-red-200 tw-rounded-lg tw-bg-red-50 tw-text-red-800 tw-text-sm tw-leading-normal" role="alert">
       {{errorMessage}}
     </div>
 
@@ -31,11 +31,11 @@
             <i class="fa fa-user"></i>
           </span>
         </div>
-        <input 
-          type="text" 
-          id="login" 
-          class="fadeIn second form-control tw-input" 
-          name="login" 
+        <input
+          type="text"
+          id="login"
+          class="fadeIn second tw-input"
+          name="login"
           placeholder="Username / email" 
           [(ngModel)]="loginField"
           required>
@@ -52,7 +52,7 @@
           <input
             [type]="showPassword ? 'text' : 'password'"
             id="password"
-            class="fadeIn third form-control tw-input"
+            class="fadeIn third tw-input"
             name="password"
             placeholder="Password"
             [(ngModel)]="password"
@@ -74,7 +74,7 @@
       <!-- Submit Button -->
       <button 
         type="submit" 
-        class="fadeIn fourth btn btn-primary btn-block"
+        class="fadeIn fourth btn-primary tw-w-full"
         [disabled]="loading || loginForm.invalid">
         <span *ngIf="!loading">Log In <i class="fas fa-sign-in-alt"></i></span>
         <span *ngIf="loading" class="loading-inline">
@@ -91,10 +91,10 @@
 
   <!-- Footer Text -->
   &nbsp;
-  <div class="text-center tw-text-center">
+  <div class="tw-text-center">
     <p>
-      <small class="text-muted tw-text-muted">Powered by <strong>Spindly</strong>.</small><br>
-      <small class="text-muted tw-text-muted"><em>Having trouble? <a href="mailto:support@melt-records.com">Contact us here</a> or use the chat widget.</em></small>
+      <small class="tw-text-muted">Powered by <strong>Spindly</strong>.</small><br>
+      <small class="tw-text-muted"><em>Having trouble? <a href="mailto:support@melt-records.com">Contact us here</a> or use the chat widget.</em></small>
     </p>
   </div>
 </div>

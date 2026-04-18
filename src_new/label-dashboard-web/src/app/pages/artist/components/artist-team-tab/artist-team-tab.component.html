@@ -13,18 +13,18 @@
   </app-paginated-table>
 
   <!-- Invite New Member Section -->
-  <div class="card invite-section mt-4 tw-mt-4">
-    <div class="card-header">
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 invite-section tw-mt-4">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h5>Invite Team Member</h5>
     </div>
-    <div class="card-body">
+    <div class="tw-px-card-pad tw-pb-card-pad">
       <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
-        <div class="row align-items-end tw-items-end tw-grid tw-grid-cols-1">
+        <div class="row tw-items-end tw-grid tw-grid-cols-1">
           <div class="col-md-8 tw-md:tw-col-span-8">
-            <div class="form-group mb-0 tw-mb-0">
-              <label for="inviteEmail" class="form-label tw-label">Email Address</label>
+            <div class="tw-mb-5 tw-mb-0">
+              <label for="inviteEmail" class="tw-label">Email Address</label>
               <input type="email"
-                     class="form-control tw-input"
+                     class="tw-input"
                      id="inviteEmail"
                      name="inviteEmail"
                      [(ngModel)]="inviteEmail"
@@ -35,9 +35,9 @@
             </div>
           </div>
           <div class="col-md-4 tw-md:tw-col-span-4">
-            <div class="form-group mb-0 tw-mb-0">
+            <div class="tw-mb-5 tw-mb-0">
               <button type="submit"
-                      class="btn btn-primary w-100 tw-w-full"
+                      class="btn-primary tw-w-full"
                       [disabled]="!inviteForm.form.valid || sendingInvite">
                 <div class="loading-spinner" *ngIf="sendingInvite"></div>
                 <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>

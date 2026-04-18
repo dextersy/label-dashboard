@@ -3,8 +3,8 @@
   <div class="container-fluid">
 
     <!-- Page Header with Event Selector -->
-    <div class="page-header mb-3 tw-mb-3">
-      <div class="d-flex align-items-start flex-wrap gap-3 tw-flex tw-items-start tw-flex-wrap tw-gap-3">
+    <div class="page-header tw-mb-3">
+      <div class="tw-flex tw-items-start tw-flex-wrap tw-gap-3">
         <div class="event-selector-main" *ngIf="availableEvents.length > 0">
           <app-event-selection
             [events]="availableEvents"
@@ -18,8 +18,8 @@
     </div>
 
     <!-- Past Event Warning -->
-    <div class="alert alert-warning mb-3 tw-mb-3" *ngIf="selectedEvent && isEventPast(selectedEvent)">
-      <i class="fas fa-exclamation-triangle me-2 tw-mr-2"></i>
+    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3" *ngIf="selectedEvent && isEventPast(selectedEvent)">
+      <i class="fas fa-exclamation-triangle tw-mr-2"></i>
       <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
     </div>
 
@@ -69,8 +69,8 @@
     <!-- Loading Events -->
     <div class="row tw-grid tw-grid-cols-1" *ngIf="loading && availableEvents.length === 0">
       <div class="col-12 tw-col-span-12">
-        <div class="card">
-          <div class="card-body text-center p-5 tw-text-center">
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <div class="loading-dots">
               <div></div>
               <div></div>
@@ -84,13 +84,13 @@
     <!-- No Events Available -->
     <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && availableEvents.length === 0">
       <div class="col-12 tw-col-span-12">
-        <div class="card">
-          <div class="card-body text-center p-5 tw-text-center">
-            <i class="fas fa-ticket-alt fa-4x text-muted mb-3 tw-text-muted tw-mb-3"></i>
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
+            <i class="fas fa-ticket-alt fa-4x tw-mb-3 tw-text-muted"></i>
             <h4>No Events Available</h4>
-            <p class="text-muted tw-text-muted">No events found for your label. Create a new event to get started.</p>
-            <button class="btn btn-primary" *ngIf="isAdmin" (click)="openCreateEventModal()">
-              <i class="fa fa-plus me-1 tw-mr-1"></i>Create New Event
+            <p class="tw-text-muted">No events found for your label. Create a new event to get started.</p>
+            <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateEventModal()">
+              <i class="fa fa-plus tw-mr-1"></i>Create New Event
             </button>
           </div>
         </div>

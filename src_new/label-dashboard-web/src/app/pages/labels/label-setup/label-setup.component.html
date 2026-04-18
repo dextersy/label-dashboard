@@ -7,63 +7,63 @@
     <form [formGroup]="brandForm" *ngIf="brandSettings">
       <div class="row tw-grid tw-grid-cols-1">
         <div class="col-md-6 tw-md:tw-col-span-6">
-          <div class="card">
-            <div class="card-header"><h5>General Settings</h5></div>
-            <div class="card-body">
-              <div class="form-group mb-3 tw-mb-3">
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h5>General Settings</h5></div>
+            <div class="tw-px-card-pad tw-pb-card-pad">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="logo">Logo</label><br>
                 <img [src]="brandSettings.logo_url || 'assets/img/placeholder.jpg'"
                      width="250" [style.background-color]="brandForm.get('brand_color')?.value || '#cccccc'" style="margin-bottom: 10px;"><br>
-                <input type="file" class="form-control tw-input" id="logo"
+                <input type="file" class="tw-input" id="logo"
                        accept=".jpg,.png" (change)="onLogoFileSelected($event)" />
               </div>
 
-              <div class="form-group mb-3 tw-mb-3">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="name">Name</label>
-                <input type="text" class="form-control tw-input" id="name"
+                <input type="text" class="tw-input" id="name"
                        formControlName="name" placeholder="Brand Name">
               </div>
 
-              <div class="form-group mb-3 tw-mb-3">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="brand_website">Website
                   <i class="fas fa-info-circle" title="This will be linked to your logo. Include http or https in the URL"></i>
                 </label>
-                <input type="text" class="form-control tw-input" id="brand_website"
+                <input type="text" class="tw-input" id="brand_website"
                        formControlName="brand_website" placeholder="Brand Website">
               </div>
 
-              <div class="form-group mb-3 tw-mb-3">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="brand_color">Brand color</label>
-                <div class="d-flex align-items-center gap-3 tw-flex tw-items-center tw-gap-3">
-                  <div class="color-preview d-flex align-items-center justify-content-center rounded border tw-flex tw-items-center tw-justify-center"
+                <div class="tw-flex tw-items-center tw-gap-3">
+                  <div class="color-preview tw-flex tw-items-center tw-justify-center rounded border"
                        [style.background-color]="brandForm.get('brand_color')?.value"
                        style="width: 60px; height: 45px; min-width: 60px; border: 2px solid #dee2e6;">
-                    <i class="fas fa-palette text-white tw-text-white"
+                    <i class="fas fa-palette tw-text-white"
                        style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5); font-size: 18px;"></i>
                   </div>
-                  <input type="color" class="form-control color-picker tw-input" id="brand_color"
+                  <input type="color" class="color-picker tw-input" id="brand_color"
                          formControlName="brand_color"
                          style="width: 80px; height: 45px; padding: 4px; border-radius: 6px;">
-                  <div class="flex-grow-1 tw-flex-grow">
-                    <input type="text" class="form-control tw-input"
+                  <div class="tw-grow tw-flex-grow">
+                    <input type="text" class="tw-input"
                            [value]="brandForm.get('brand_color')?.value?.toUpperCase()"
                            (input)="onHexColorChange($event)"
                            placeholder="#800080"
                            pattern="^#[0-9A-Fa-f]{6}$"
                            style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
-                    <small class="text-muted tw-text-muted">Enter hex color code (e.g., #800080)</small>
+                    <small class="tw-text-muted">Enter hex color code (e.g., #800080)</small>
                   </div>
                 </div>
               </div>
 
-              <div class="form-group mb-3 tw-mb-3">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="favicon">Favicon</label><br>
                 <div class="input-group">
                   <div class="input-group-text">
                     <img [src]="brandSettings.favicon_url || 'assets/img/placeholder.jpg'"
                          width="20" style="background-color:#cccccc;">
                   </div>
-                  <input type="file" class="form-control tw-input" id="favicon"
+                  <input type="file" class="tw-input" id="favicon"
                          accept=".png" (change)="onFaviconFileSelected($event)" />
                 </div>
               </div>
@@ -72,40 +72,40 @@
         </div>
 
         <div class="col-md-6 tw-md:tw-col-span-6">
-          <div class="card">
-            <div class="card-header"><h5>Catalog</h5></div>
-            <div class="card-body">
-              <div class="form-group mb-3 tw-mb-3">
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h5>Catalog</h5></div>
+            <div class="tw-px-card-pad tw-pb-card-pad">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="catalog_prefix">Catalog Prefix
                   <i class="fas fa-info-circle" title="For autogenerated catalog number (e.g. CAT001)"></i>
                 </label>
-                <input type="text" class="form-control tw-input" id="catalog_prefix"
+                <input type="text" class="tw-input" id="catalog_prefix"
                        formControlName="catalog_prefix" placeholder="Catalog Prefix">
               </div>
 
-              <div class="form-group mb-3 tw-mb-3">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="release_submission_url">Release Submission URL
                   <i class="fas fa-info-circle" title="Link to the form where your artists should submit their releases."></i>
                 </label>
-                <input type="text" class="form-control tw-input" id="release_submission_url"
+                <input type="text" class="tw-input" id="release_submission_url"
                        formControlName="release_submission_url" placeholder="Release Submission URL">
               </div>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header"><h5>Payments</h5></div>
-            <div class="card-body">
-              <div class="form-group mb-3 tw-mb-3">
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h5>Payments</h5></div>
+            <div class="tw-px-card-pad tw-pb-card-pad">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="paymongo_wallet_id">Paymongo Wallet ID (optional)</label>
                 <div class="input-group">
                   <input [type]="showPaymongoWalletId ? 'text' : 'password'"
-                         class="form-control tw-input"
+                         class="tw-input"
                          id="paymongo_wallet_id"
                          formControlName="paymongo_wallet_id"
                          placeholder="Paymongo Wallet ID">
                   <button type="button"
-                          class="btn btn-secondary password-toggle-btn"
+                          class="btn-secondary password-toggle-btn"
                           (click)="togglePaymongoWalletIdVisibility()"
                           title="Toggle password visibility">
                     <i class="fas" [class.fa-eye]="!showPaymongoWalletId" [class.fa-eye-slash]="showPaymongoWalletId"></i>
@@ -113,11 +113,11 @@
                 </div>
               </div>
 
-              <div class="form-group mb-3 tw-mb-3">
+              <div class="tw-mb-5 tw-mb-3">
                 <label for="processing_fee">Processing fee for payouts</label>
                 <div class="input-group">
                   <div class="input-group-text">₱</div>
-                  <input type="number" class="form-control tw-input" id="processing_fee"
+                  <input type="number" class="tw-input" id="processing_fee"
                          formControlName="payment_processing_fee_for_payouts"
                          placeholder="Payment processing fee" min="0" step="0.01">
                 </div>
@@ -133,46 +133,46 @@
   <div *ngIf="activeSection === 'domains'">
     <div class="row tw-grid tw-grid-cols-1">
       <div class="col-12 tw-col-span-12">
-        <div class="card">
-          <div class="card-header"><h3>Domains</h3></div>
-          <div class="card-body">
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+          <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h3>Domains</h3></div>
+          <div class="tw-px-card-pad tw-pb-card-pad">
             <p>These domains will resolve to your dashboard.</p>
 
             <div *ngIf="domains.length > 0">
               <div *ngFor="let domain of domains"
-                   class="d-flex align-items-center justify-content-between py-2 tw-flex tw-items-center tw-justify-between tw-py-2"
+                   class="tw-flex tw-items-center tw-justify-between tw-py-2"
                    style="border-bottom: 1px solid #dee2e6;">
                 <span>
                   <i [class]="getStatusIcon(domain.status)"
                      [title]="getStatusTooltip(domain.status)"></i>
                   {{ domain.domain_name }}
-                  <span *ngIf="domain.is_primary" class="badge bg-primary ms-1 tw-ml-1" style="font-size: 11px;">Primary</span>
+                  <span *ngIf="domain.is_primary" class="badge bg-primary tw-ml-1" style="font-size: 11px;">Primary</span>
                 </span>
-                <span class="d-flex align-items-center gap-2 tw-flex tw-items-center tw-gap-2">
+                <span class="tw-flex tw-items-center tw-gap-2">
                   <button *ngIf="shouldShowVerifyButton(domain.status)"
                      (click)="verifyDomain(domain.domain_name)"
-                     class="btn btn-ghost btn-sm"
+                     class="btn-ghost btn-sm"
                      [disabled]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
-                     [class.text-muted]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
+                     [class.tw-text-muted]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
                      [title]="getVerifyButtonTooltip(domain.domain_name, domain.status)"
                      style="padding: 0; border: none; background: none; text-decoration: underline;">
                     [ {{ getVerifyButtonText(domain.status) }} ]
                   </button>
-                  <span *ngIf="domain.status === 'Connected'" class="text-success small tw-text-success tw-text-sm">
+                  <span *ngIf="domain.status === 'Connected'" class="tw-text-success small tw-text-sm">
                     <i class="fas fa-check"></i> Connected
                   </span>
-                  <span *ngIf="domain.status === 'Pending'" class="text-info small tw-text-sm">
+                  <span *ngIf="domain.status === 'Pending'" class="tw-text-[#0891b2] small tw-text-sm">
                     <i class="fas fa-clock fa-spin"></i> Processing...
                   </span>
                   <button *ngIf="!domain.is_primary"
                      (click)="setPrimaryDomain(domain.domain_name)"
-                     class="btn btn-ghost btn-sm text-muted tw-text-muted"
+                     class="btn-ghost btn-sm tw-text-muted"
                      title="Set as primary domain"
                      style="padding: 0; border: none; background: none;">
                     <i class="fas fa-star"></i>
                   </button>
                   <a (click)="deleteDomain(domain.domain_name)"
-                     class="btn btn-ghost btn-sm text-danger tw-text-danger"
+                     class="btn-ghost btn-sm tw-text-danger"
                      title="Delete domain">
                     <i class="fas fa-trash"></i>
                   </a>
@@ -185,15 +185,15 @@
             </div>
 
             <h4>Add domain</h4>
-            <div class="row align-items-end tw-items-end tw-grid tw-grid-cols-1">
+            <div class="row tw-items-end tw-grid tw-grid-cols-1">
               <div class="col-md-8 tw-md:tw-col-span-8">
-                <div class="form-group mb-0 tw-mb-0">
-                  <input type="text" class="form-control tw-input" [(ngModel)]="newDomainName" placeholder="Domain name">
+                <div class="tw-mb-5 tw-mb-0">
+                  <input type="text" class="tw-input" [(ngModel)]="newDomainName" placeholder="Domain name">
                 </div>
               </div>
               <div class="col-md-4 tw-md:tw-col-span-4">
-                <div class="form-group mb-0 tw-mb-0">
-                  <button type="button" class="btn btn-primary w-100 tw-w-full" (click)="addDomain()"><i class="fas fa-plus"></i> Add Domain</button>
+                <div class="tw-mb-5 tw-mb-0">
+                  <button type="button" class="btn-primary tw-w-full" (click)="addDomain()"><i class="fas fa-plus"></i> Add Domain</button>
                 </div>
               </div>
             </div>
@@ -208,7 +208,7 @@
 <app-floating-action-bar>
   <button *ngIf="activeSection === 'brand-settings'"
           type="button"
-          class="btn btn-primary fab-primary-btn"
+          class="btn-primary fab-primary-btn"
           (click)="saveBrandSettings()"
           [disabled]="loading">
     <i class="fas fa-save"></i> Save Settings

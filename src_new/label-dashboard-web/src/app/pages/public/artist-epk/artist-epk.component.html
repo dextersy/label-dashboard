@@ -1,6 +1,6 @@
 <div class="artist-epk-page" (keydown)="onKeyDown($event)" tabindex="0">
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center tw-flex tw-justify-center tw-items-center" style="min-height: 400px;">
+  <div *ngIf="isLoading" class="tw-flex tw-justify-center tw-items-center" style="min-height: 400px;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading artist information...</span>
     </div>
@@ -23,8 +23,8 @@
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="container">
-          <div class="row justify-content-center tw-justify-center tw-grid tw-grid-cols-1">
-            <div class="col-lg-10 text-center tw-text-center">
+          <div class="row tw-justify-center tw-grid tw-grid-cols-1">
+            <div class="col-lg-10 tw-text-center">
               <div class="profile-photo-wrapper">
                 <img 
                   [src]="getProfilePhotoUrl(epkData.artist.profile_photo)" 
@@ -60,7 +60,7 @@
     <!-- Artist Bio -->
     <div *ngIf="epkData.artist.bio" class="content-section bio-section">
       <div class="container">
-        <div class="row justify-content-center tw-justify-center tw-grid tw-grid-cols-1">
+        <div class="row tw-justify-center tw-grid tw-grid-cols-1">
           <div class="col-lg-8 tw-lg:tw-col-span-8">
             <div class="section-header">
               <h2 class="section-title">About</h2>
@@ -74,7 +74,7 @@
     <!-- Releases Section -->
     <div *ngIf="epkData.releases.length > 0" class="content-section releases-section">
       <div class="container">
-        <div class="section-header text-center tw-text-center">
+        <div class="section-header tw-text-center">
           <h2 class="section-title">Music</h2>
           <p class="section-subtitle">Latest releases and discography</p>
         </div>
@@ -125,7 +125,7 @@
     <!-- Media Gallery Section -->
     <div *ngIf="epkData.gallery.length > 0" class="content-section gallery-section">
       <div class="container">
-        <div class="section-header text-center tw-text-center">
+        <div class="section-header tw-text-center">
           <h2 class="section-title">Gallery</h2>
           <p class="section-subtitle">Behind the scenes and live moments</p>
         </div>
@@ -149,7 +149,7 @@
     <!-- Footer -->
     <div class="epk-footer">
       <div class="container">
-        <div class="footer-content text-center tw-text-center">
+        <div class="footer-content tw-text-center">
           <div class="footer-branding">
             <p class="powered-by">Powered by <strong>Spindly</strong></p>
           </div>
@@ -171,7 +171,7 @@
     <div class="minimal-header">
       <div class="container">
         <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-12 text-center tw-text-center tw-col-span-12">
+          <div class="col-12 tw-text-center tw-col-span-12">
             <div class="minimal-profile">
               <img
                 [src]="getProfilePhotoUrl(epkData.artist.profile_photo)"
@@ -207,7 +207,7 @@
     <!-- Bio Section -->
     <div *ngIf="epkData.artist.bio" class="minimal-section minimal-bio-section">
       <div class="container">
-        <div class="row justify-content-center tw-justify-center tw-grid tw-grid-cols-1">
+        <div class="row tw-justify-center tw-grid tw-grid-cols-1">
           <div class="col-lg-8 col-md-10 tw-lg:tw-col-span-8">
             <h2 class="minimal-section-title">About</h2>
             <div class="minimal-bio-content" [innerHTML]="epkData.artist.bio"></div>
@@ -219,10 +219,10 @@
     <!-- Music Section -->
     <div *ngIf="epkData.releases.length > 0" class="minimal-section minimal-music-section">
       <div class="container">
-        <h2 class="minimal-section-title text-center tw-text-center">Music</h2>
+        <h2 class="minimal-section-title tw-text-center">Music</h2>
         <div class="minimal-releases-list">
           <div *ngFor="let release of epkData.releases" class="minimal-release-card">
-            <div class="row align-items-center tw-items-center tw-grid tw-grid-cols-1">
+            <div class="row tw-items-center tw-grid tw-grid-cols-1">
               <div class="col-md-3 col-sm-4">
                 <div class="minimal-release-cover-wrapper">
                   <img
@@ -270,7 +270,7 @@
     <!-- Gallery Section -->
     <div *ngIf="epkData.gallery.length > 0" class="minimal-section minimal-gallery-section">
       <div class="container">
-        <h2 class="minimal-section-title text-center tw-text-center">Gallery</h2>
+        <h2 class="minimal-section-title tw-text-center">Gallery</h2>
         <div class="minimal-gallery-grid">
           <div *ngFor="let item of epkData.gallery; let i = index" class="minimal-gallery-item" (click)="openLightbox(i)">
             <img

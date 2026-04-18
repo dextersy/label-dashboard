@@ -1,561 +1,312 @@
-/* ================================= */
-/* MODERN MINIMALIST COMPONENTS     */
-/* ================================= */
+/* ================================================================= */
+/* COMPONENT CSS — @apply-based transitional layer                   */
+/* Semantic class names preserved for backward compatibility while   */
+/* migrating templates to inline tw- utilities (Option B).           */
+/* Remove each section as the corresponding templates are rewritten. */
+/* ================================================================= */
 
-/* Global Button Improvements */
-
-/* Mobile button improvements for paginated tables handled in paginated-table.component.scss */
-
-/* Modern Card Layouts - Override Bootstrap defaults */
+/* ----------------------------------------------------------------- */
+/* CARD                                                               */
+/* ----------------------------------------------------------------- */
 .card {
-  margin-bottom: 32px;
-  border: none;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  
+  @apply tw-bg-surface tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8;
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+    @apply tw-shadow-card-hover;
     transform: translateY(-0.5px);
   }
-  
+
   .card-header {
-    background: transparent;
-    border: none;
-    padding: 28px 28px 16px 28px;
-    border-bottom: none;
-    
+    @apply tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-bg-transparent tw-border-none;
+
     h5 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 500;
-      color: #1a202c;
+      @apply tw-m-0 tw-text-xl tw-font-medium tw-text-heading tw-leading-snug;
       letter-spacing: -0.025em;
-      line-height: 1.3;
     }
   }
-  
+
   .card-body {
-    padding: 0 28px 28px 28px;
-    text-align: left;
-    background: #ffffff;
+    @apply tw-px-card-pad tw-pb-card-pad tw-text-left tw-bg-surface;
   }
 }
 
-/* Modern Form Groups - Override Bootstrap defaults */
-.form-group {
-  margin: 0 0 20px 0;
-  padding: 0;
-  text-align: left;
-  
-  label {
-    display: block;
-    margin: 0 0 8px 0;
-    padding: 0;
-    font-weight: 500;
-    font-size: 12px;
-    color: #374151;
-    text-align: left;
-    letter-spacing: -0.01em;
-    line-height: 1.5;
-    
-    .text-danger {
-      color: #ef4444;
-      font-weight: 600;
+@media (max-width: 768px) {
+  .card {
+    @apply tw-mb-6 tw-rounded-card-mobile;
+
+    .card-header {
+      @apply tw-px-card-pad-mobile tw-pt-card-pad-mobile tw-pb-3;
+      h5 { @apply tw-text-lg; }
+    }
+
+    .card-body {
+      @apply tw-px-card-pad-mobile tw-pb-card-pad-mobile;
     }
   }
 }
 
-/* Modern Form Controls - Override Bootstrap defaults */
+/* ----------------------------------------------------------------- */
+/* FORM GROUP                                                         */
+/* ----------------------------------------------------------------- */
+.form-group {
+  @apply tw-mb-5 tw-text-left;
+
+  label {
+    @apply tw-block tw-mb-2 tw-font-medium tw-text-xs tw-text-[#374151] tw-leading-normal;
+
+    .text-danger { @apply tw-text-danger tw-font-semibold; }
+  }
+}
+
+/* ----------------------------------------------------------------- */
+/* FORM CONTROLS                                                      */
+/* ----------------------------------------------------------------- */
 .form-control {
-  width: 100%;
-  padding: 12px 16px;
+  @apply tw-w-full tw-px-4 tw-py-3 tw-text-[#1f2937] tw-bg-input-bg
+         tw-border-0 tw-rounded-input tw-m-0 tw-text-left;
   font-size: 15px;
-  font-weight: 400;
   line-height: 1.5;
-  color: #1f2937;
-  background-color: #f9fafb;
-  background-image: none;
-  border: none;
-  border-radius: 8px;
   box-shadow: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: left;
-  margin: 0;
-  
+
   &:focus {
-    background-color: #ffffff;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring;
   }
-  
-  &:hover:not(:focus) {
-    background-color: #f3f4f6;
-  }
-  
-  &::placeholder {
-    color: #9ca3af;
-    font-weight: 400;
-  }
-  
-  &[type="text"],
-  &[type="password"],
-  &[type="url"] {
-    margin: 0;
-    padding: 12px 16px;
-  }
+
+  &:hover:not(:focus) { @apply tw-bg-input-bg-hover; }
+  &::placeholder      { @apply tw-text-muted; }
 }
 
-/* Modern Textarea */
 textarea.form-control {
   resize: vertical;
   min-height: 120px;
   line-height: 1.6;
-  margin: 0;
-  padding: 12px 16px;
 }
 
-/* Modern File Input */
 .form-control-file {
-  display: block;
-  width: 100%;
+  @apply tw-block tw-w-full;
   padding: 6px 0;
   font-size: 14px;
-  line-height: 1.42857143;
-  color: #555;
-  background-color: #fff;
-  background-image: none;
-  border: none;
-  border-radius: 4px;
 }
 
-/* Modern Form Text */
 .form-text {
-  display: block;
-  margin-top: 5px;
-  color: #737373;
-  font-size: 12px;
+  @apply tw-block tw-mt-1 tw-text-xs tw-text-muted;
 }
 
-/* Modern Photo Display */
-.current-photo {
-  text-align: center;
-  
-  .current-photo-img, .photo-img {
-    max-width: 160px;
-    max-height: 160px;
-    width: 160px;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 16px;
-    border: 3px solid #f1f5f9;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    &:hover {
-      transform: scale(1.02);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-      border-color: #e2e8f0;
-    }
+.form-actions {
+  @apply tw-pt-8 tw-pb-2 tw-text-right tw-border-t tw-border-border-subtle tw-mt-8;
+
+  @media (max-width: 768px) {
+    @apply tw-text-center tw-pt-6 tw-mt-6;
+
+    .btn-primary { @apply tw-w-full tw-max-w-[300px]; }
   }
 }
 
-/* Modern Image Thumbnail */
-.img-thumbnail {
-  display: inline-block;
-  max-width: 100%;
-  height: auto;
-  padding: 0;
-  line-height: 1.5;
-  background-color: transparent;
-  border: none;
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Modern Progress Bar - Override Bootstrap defaults */
+/* ----------------------------------------------------------------- */
+/* PROGRESS BAR                                                       */
+/* ----------------------------------------------------------------- */
 .progress {
-  height: 8px;
-  margin-bottom: 16px;
-  margin-top: 12px;
-  overflow: hidden;
-  background-color: #f1f5f9;
-  border-radius: 8px;
-  box-shadow: none;
-  
+  @apply tw-h-2 tw-mb-4 tw-mt-3 tw-overflow-hidden tw-bg-gray-100 tw-rounded-lg;
+
   .progress-bar {
-    height: 100%;
-    font-size: 0;
-    line-height: 8px;
-    color: transparent;
-    text-align: center;
-    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
-    border-radius: 8px;
-    box-shadow: none;
+    @apply tw-h-full tw-rounded-lg;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-/* Modern Form Actions */
-.form-actions {
-  padding: 32px 0 8px 0;
-  text-align: right;
-  border-top: 1px solid #e5e7eb;
-  margin-top: 32px;
+/* ----------------------------------------------------------------- */
+/* PHOTO DISPLAY                                                      */
+/* ----------------------------------------------------------------- */
+.current-photo {
+  @apply tw-text-center;
+
+  .current-photo-img,
+  .photo-img {
+    @apply tw-object-cover tw-border-[3px] tw-border-gray-100;
+    width: 160px;
+    height: 160px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      @apply tw-border-gray-200;
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .photo-img,
+    .current-photo-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+    }
+  }
 }
 
-/* Modern Primary Button - Override Bootstrap defaults */
+.img-thumbnail {
+  @apply tw-inline-block tw-max-w-full tw-h-auto tw-bg-transparent tw-border-0;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ----------------------------------------------------------------- */
+/* BUTTONS                                                            */
+/* ----------------------------------------------------------------- */
+$btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
 .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  touch-action: manipulation;
-  cursor: pointer;
-  background-image: none;
-  border: 1px solid transparent;
-  padding: 12px 24px;
+  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium tw-text-center
+         tw-whitespace-nowrap tw-cursor-pointer tw-border tw-border-transparent
+         tw-py-3 tw-px-6 tw-rounded-btn tw-no-underline tw-select-none tw-mb-0
+         tw-relative tw-overflow-hidden tw-align-middle;
   font-size: 15px;
   line-height: 1.5;
-  border-radius: 8px;
-  user-select: none;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  touch-action: manipulation;
   color: var(--brand-color-text, #ffffff);
   background: var(--brand-color, #3b82f6);
-  border-color: transparent;
-  position: relative;
-  overflow: hidden;
+  transition: $btn-transition;
 
-  // Decorative blobs — subtle depth accent (same language as primary quick-link cards)
-  &::before {
-    content: '';
-    position: absolute;
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    top: -25px;
-    right: -15px;
-    pointer-events: none;
-  }
-
+  &::before,
   &::after {
     content: '';
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.07);
-    bottom: -12px;
-    left: 12px;
-    pointer-events: none;
+    @apply tw-absolute tw-rounded-full tw-pointer-events-none;
   }
+  &::before { width: 70px; height: 70px; background: rgba(255, 255, 255, 0.1); top: -25px; right: -15px; }
+  &::after  { width: 40px; height: 40px; background: rgba(255, 255, 255, 0.07); bottom: -12px; left: 12px; }
 
   &:hover:not(:disabled) {
     background: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #ffffff);
-    transform: translateY(-1px);
     color: var(--brand-color-text, #ffffff);
+    transform: translateY(-1px);
   }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; background: #9ca3af; border: none; transform: none; }
 
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: #9ca3af;
-    border: none;
-    box-shadow: none;
-    transform: none;
-  }
-
-  i {
-    margin-right: 8px;
-    font-size: 14px;
-  }
+  i { margin-right: 8px; font-size: 14px; }
 }
 
-/* Secondary Button - white, borderless shadow style */
 .btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  touch-action: manipulation;
-  cursor: pointer;
-  background-image: none;
-  border: none !important; /* Remove all borders */
-  padding: 12px 24px;
+  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium tw-text-center
+         tw-whitespace-nowrap tw-cursor-pointer tw-border-0 tw-py-3 tw-px-6
+         tw-rounded-btn tw-no-underline tw-select-none tw-mb-0 tw-bg-surface
+         tw-text-[#374151] tw-align-middle tw-shadow-card;
   font-size: 15px;
   line-height: 1.5;
-  border-radius: 8px;
-  user-select: none;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: #ffffff;
-  color: #374151;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  
+  touch-action: manipulation;
+  transition: $btn-transition;
+
   &:hover:not(:disabled) {
-    background-color: #f9fafb;
+    @apply tw-bg-gray-50;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
     color: #374151;
   }
-  
-  &:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: #f9fafb;
-    box-shadow: none;
-    transform: none;
-    color: #9ca3af;
-  }
-  
-  i {
-    margin-right: 8px;
-    font-size: 14px;
-  }
+  &:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed tw-bg-gray-50 tw-text-muted; box-shadow: none; transform: none; }
+
+  i { margin-right: 8px; font-size: 14px; }
 }
 
-/* Danger Button - outline red */
 .btn-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  touch-action: manipulation;
-  cursor: pointer;
-  background-image: none;
+  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium tw-text-center
+         tw-whitespace-nowrap tw-cursor-pointer tw-py-3 tw-px-6 tw-rounded-btn
+         tw-no-underline tw-select-none tw-mb-0 tw-bg-transparent tw-text-danger tw-align-middle;
   border: 1px solid #ef4444;
-  padding: 12px 24px;
   font-size: 15px;
   line-height: 1.5;
-  border-radius: 8px;
-  user-select: none;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #ef4444;
-  background: transparent;
-  box-shadow: none;
+  touch-action: manipulation;
+  transition: $btn-transition;
 
   &:hover:not(:disabled) {
     background: rgba(239, 68, 68, 0.06);
     border-color: #dc2626;
     color: #dc2626;
-    box-shadow: none;
     transform: translateY(-1px);
   }
+  &:active:not(:disabled) { background: rgba(239, 68, 68, 0.12); transform: translateY(0); }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed tw-bg-transparent tw-border-0; transform: none; }
 
-  &:active:not(:disabled) {
-    background: rgba(239, 68, 68, 0.12);
-    transform: translateY(0);
-    box-shadow: none;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    transform: none;
-  }
-
-  i {
-    margin-right: 8px;
-    font-size: 14px;
-  }
+  i { margin-right: 8px; font-size: 14px; }
 }
 
-/* Ghost Button - text only, no background */
 .btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  touch-action: manipulation;
-  cursor: pointer;
-  background: transparent;
-  border: none;
+  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium
+         tw-bg-transparent tw-border-0 tw-text-[#374151] tw-cursor-pointer
+         tw-rounded-md tw-no-underline tw-select-none;
   padding: 6px 10px;
   font-size: 14px;
-  line-height: 1.5;
-  border-radius: 6px;
-  user-select: none;
-  text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
-  color: #374151;
-  box-shadow: none;
 
-  &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05);
-    color: #111827;
-    text-decoration: none;
-    box-shadow: none;
-    transform: none;
-  }
-
-  &:active:not(:disabled) {
-    background: rgba(0, 0, 0, 0.08);
-    transform: none;
-    box-shadow: none;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  &:hover:not(:disabled)  { background: rgba(0, 0, 0, 0.05); color: #111827; }
+  &:active:not(:disabled) { background: rgba(0, 0, 0, 0.08); }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; }
 
   &.text-danger {
-    color: #ef4444;
-
-    &:hover:not(:disabled) {
-      background: rgba(239, 68, 68, 0.08);
-      color: #dc2626;
-    }
+    @apply tw-text-danger;
+    &:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
   }
 
-  i {
-    margin-right: 6px;
-    font-size: 13px;
-  }
+  i { margin-right: 6px; font-size: 13px; }
 }
 
-/* Small button variants */
 .btn-sm {
   padding: 8px 16px !important;
   font-size: 13px !important;
   margin-bottom: 0 !important;
-
-  i {
-    margin-right: 6px !important;
-    font-size: 12px !important;
-  }
+  i { margin-right: 6px !important; font-size: 12px !important; }
 }
 
-/* Large button variant */
 .btn-lg {
   padding: 16px 32px !important;
   font-size: 15px !important;
   font-weight: 500 !important;
   border-radius: 8px !important;
-  letter-spacing: 0 !important;
 }
 
-/* Icon Button - transparent, no border or shadow */
 .btn-icon {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 8px !important;
-  color: inherit;
+  @apply tw-border-0 tw-bg-transparent tw-shadow-none tw-p-2;
 
-  &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05) !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  &:active:not(:disabled) {
-    background: rgba(0, 0, 0, 0.1) !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  &:focus {
-    background: rgba(0, 0, 0, 0.05) !important;
-    box-shadow: none !important;
-  }
-
-  &:disabled {
-    background: transparent !important;
-    color: #9ca3af !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  i {
-    margin: 0 !important;
-  }
+  &:hover:not(:disabled)  { background: rgba(0, 0, 0, 0.05); }
+  &:active:not(:disabled) { background: rgba(0, 0, 0, 0.1); }
+  &:focus  { background: rgba(0, 0, 0, 0.05); }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; }
+  i { margin: 0; }
 }
 
-/* Icon button - small size for dense contexts (tables, lists) */
-.btn-icon.btn-sm {
-  padding: 4px !important;
-  font-size: 13px;
-}
+.btn-icon.btn-sm { padding: 4px !important; }
 
-/* Icon button with danger color */
 .btn-icon.btn-danger {
-  color: #ef4444 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-
-  &:hover:not(:disabled) {
-    color: #dc2626 !important;
-    background: rgba(239, 68, 68, 0.1) !important;
-  }
+  @apply tw-text-danger tw-bg-transparent;
+  &:hover:not(:disabled) { color: #dc2626; background: rgba(239, 68, 68, 0.1); }
 }
 
-/* Kebab menu — reusable three-dot menu pattern */
-.kebab-container {
-  position: relative;
-  display: inline-block;
-}
+/* ----------------------------------------------------------------- */
+/* KEBAB MENU                                                         */
+/* ----------------------------------------------------------------- */
+.kebab-container { @apply tw-relative tw-inline-block; }
 
 .kebab-btn {
-  background: none;
-  border: none;
-  color: #9ca3af;
+  @apply tw-bg-transparent tw-border-0 tw-text-muted tw-rounded tw-cursor-pointer tw-leading-none;
   padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
   font-size: 15px;
-  line-height: 1;
   transition: background 0.15s ease, color 0.15s ease;
 
-  &:hover, &.active {
-    background: rgba(0, 0, 0, 0.05);
-    color: #374151;
-  }
+  &:hover,
+  &.active { background: rgba(0, 0, 0, 0.05); color: #374151; }
 }
 
 .kebab-dropdown {
   position: fixed;
+  @apply tw-bg-surface tw-border tw-border-border-subtle tw-rounded-input tw-shadow-dropdown tw-z-dropdown;
   min-width: 160px;
   max-height: 60vh;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
-  z-index: 1050;
   padding: 6px;
 
   .btn {
@@ -574,205 +325,96 @@ textarea.form-control {
   }
 }
 
-/* Modern Grid System - Override Bootstrap defaults */
-.row {
-  margin-left: -12px;
-  margin-right: -12px;
-  display: flex;
-  align-items: flex-start;
-  
-  [class*="col-"] {
-    padding-left: 12px;
-    padding-right: 12px;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-/* ================================= */
-/* RESPONSIVE DESIGN                 */
-/* ================================= */
-
-@media (max-width: 768px) {
-  .card {
-    margin-bottom: 24px;
-    border-radius: 8px;
-    
-    .card-header {
-      padding: 24px 20px 12px 20px;
-      
-      h5 {
-        font-size: 18px;
-      }
-    }
-    
-    .card-body {
-      padding: 0 20px 20px 20px;
-    }
-  }
-  
-  .current-photo .photo-img,
-  .current-photo .current-photo-img {
-    max-width: 120px;
-    max-height: 120px;
-    width: 120px;
-    height: 120px;
-    border-radius: 12px;
-  }
-  
-  .form-actions {
-    text-align: center;
-    padding: 24px 0 8px 0;
-    margin-top: 24px;
-    
-    .btn-primary {
-      width: 100%;
-      max-width: 300px;
-    }
-  }
-  
-  .row {
-    margin-left: -8px;
-    margin-right: -8px;
-
-    [class*="col-"] {
-      padding-left: 8px;
-      padding-right: 8px;
-    }
-  }
-}
-
-/* ================================= */
-/* STATUS DOT                        */
-/* Colored circle + colored text.    */
-/* Usage: <span class="status-dot status-success">Live</span> */
-/* ================================= */
+/* ----------------------------------------------------------------- */
+/* STATUS DOT                                                         */
+/* ----------------------------------------------------------------- */
 .status-dot {
-  display: inline-flex;
-  align-items: center;
+  @apply tw-inline-flex tw-items-center tw-whitespace-nowrap;
   gap: 7px;
-  font-size: inherit;
-  font-weight: inherit;
-  white-space: nowrap;
 
   &::before {
     content: '';
-    display: inline-block;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
+    @apply tw-inline-block tw-w-[9px] tw-h-[9px] tw-rounded-full tw-shrink-0;
   }
 
-  &.status-success   { color: #16a34a; &::before { background-color: #16a34a; } }
-  &.status-warning   { color: #d97706; &::before { background-color: #d97706; } }
-  &.status-danger    { color: #dc2626; &::before { background-color: #dc2626; } }
-  &.status-secondary { color: #6b7280; &::before { background-color: #6b7280; } }
-  &.status-info      { color: #0891b2; &::before { background-color: #0891b2; } }
+  &.status-success   { @apply tw-text-success;  &::before { @apply tw-bg-success; } }
+  &.status-warning   { @apply tw-text-warning;  &::before { @apply tw-bg-warning; } }
+  &.status-danger    { @apply tw-text-danger;   &::before { @apply tw-bg-danger; } }
+  &.status-secondary { color: #6b7280;          &::before { background-color: #6b7280; } }
+  &.status-info      { @apply tw-text-info;     &::before { @apply tw-bg-info; } }
 }
 
+/* ----------------------------------------------------------------- */
+/* BOOTSTRAP GRID COMPAT (transitional — remove as templates migrate) */
+/* ----------------------------------------------------------------- */
+.row {
+  @apply tw-flex tw-flex-wrap tw-items-start;
+  margin-left: -12px;
+  margin-right: -12px;
 
+  [class*="col-"] {
+    padding-left: 12px;
+    padding-right: 12px;
+    @apply tw-flex tw-flex-col;
+  }
 
-/* ================================= */
-/* MODAL STRUCTURE                   */
-/* Positioning override lives in     */
-/* @layer components of styles.scss  */
-/* ================================= */
+  .form-group { @apply tw-flex-1 tw-flex tw-flex-col; }
+}
 
+@media (max-width: 768px) {
+  .row {
+    margin-left: -8px;
+    margin-right: -8px;
+    [class*="col-"] { padding-left: 8px; padding-right: 8px; }
+  }
+}
+
+/* ----------------------------------------------------------------- */
+/* MODAL                                                              */
+/* ----------------------------------------------------------------- */
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1040;
-  background-color: rgba(0, 0, 0, 0.5);
-
+  @apply tw-fixed tw-inset-0 tw-z-[1040] tw-bg-black/50;
   &.show { opacity: 1; }
   &.fade { opacity: 0; transition: opacity 0.15s linear; }
 }
 
 .modal-dialog {
-  position: relative;
-  width: auto;
-  margin: 60px auto;
-  max-width: 500px;
-  pointer-events: none;
+  @apply tw-relative tw-w-auto tw-mx-auto tw-max-w-lg tw-pointer-events-none;
+  margin-top: 60px;
+  margin-bottom: 60px;
 }
 
 .modal-dialog-centered {
-  display: flex;
-  align-items: center;
+  @apply tw-flex tw-items-center;
   min-height: calc(100% - 60px);
 }
 
 .modal-dialog-scrollable {
-  .modal-content {
-    max-height: calc(100vh - 120px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .modal-body {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  .modal-content { max-height: calc(100vh - 120px); @apply tw-overflow-hidden tw-flex tw-flex-col; }
+  .modal-body    { @apply tw-overflow-y-auto; -webkit-overflow-scrolling: touch; }
 }
 
 .modal-content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  pointer-events: auto;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  outline: 0;
+  @apply tw-relative tw-flex tw-flex-col tw-w-full tw-pointer-events-auto
+         tw-bg-surface tw-rounded-card tw-shadow-modal tw-outline-0 tw-border-0;
 }
 
 .modal-header {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
+  @apply tw-flex tw-shrink-0 tw-items-center tw-justify-between
+         tw-px-6 tw-pt-5 tw-pb-4 tw-border-b tw-border-border-subtle;
 }
 
 .modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a202c;
-  margin: 0;
-  line-height: 1.5;
+  @apply tw-text-lg tw-font-semibold tw-text-heading tw-m-0 tw-leading-normal;
 }
 
 .modal-body {
-  position: relative;
-  flex: 1 1 auto;
-  padding: 20px 24px;
-  overflow-y: auto;
+  @apply tw-relative tw-flex-auto tw-px-6 tw-py-5 tw-overflow-y-auto;
 }
 
 .modal-footer {
-  display: flex;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px 20px;
-  border-top: 1px solid #e5e7eb;
-  border-bottom-right-radius: 12px;
-  border-bottom-left-radius: 12px;
+  @apply tw-flex tw-flex-wrap tw-shrink-0 tw-items-center tw-justify-end
+         tw-gap-3 tw-px-6 tw-py-4 tw-border-t tw-border-border-subtle;
 }
 
 .modal-sm { max-width: 300px; }
@@ -780,183 +422,94 @@ textarea.form-control {
 .modal-xl { max-width: 1140px; }
 
 @media (max-width: 576px) {
-  .modal-dialog { margin: 0; max-width: 100%; }
-  .modal-content { border-radius: 0; }
+  .modal-dialog  { @apply tw-m-0 tw-max-w-full; }
+  .modal-content { @apply tw-rounded-none; }
 }
 
-/* ================================= */
-/* ALERTS                            */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* ALERTS                                                             */
+/* ----------------------------------------------------------------- */
 .alert {
-  position: relative;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  @apply tw-relative tw-px-4 tw-py-3 tw-mb-4 tw-border tw-border-transparent tw-rounded-input;
   font-size: 14px;
   line-height: 1.5;
 }
 
-.alert-danger, .alert-error {
-  color: #991b1b;
-  background-color: #fef2f2;
-  border-color: #fecaca;
-}
+.alert-danger,
+.alert-error  { color: #991b1b; background-color: #fef2f2; border-color: #fecaca; }
+.alert-success { color: #166534; background-color: #f0fdf4; border-color: #bbf7d0; }
+.alert-warning { color: #92400e; background-color: #fffbeb; border-color: #fde68a; }
+.alert-info    { color: #1e40af; background-color: #eff6ff; border-color: #bfdbfe; }
 
-.alert-success {
-  color: #166534;
-  background-color: #f0fdf4;
-  border-color: #bbf7d0;
-}
-
-.alert-warning {
-  color: #92400e;
-  background-color: #fffbeb;
-  border-color: #fde68a;
-}
-
-.alert-info {
-  color: #1e40af;
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
-}
-
-/* ================================= */
-/* NAVIGATION & TABS                 */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* NAVIGATION & TABS                                                  */
+/* ----------------------------------------------------------------- */
 .nav {
-  display: flex;
-  flex-wrap: wrap;
-  padding-left: 0;
-  margin-bottom: 0;
-  list-style: none;
+  @apply tw-flex tw-flex-wrap tw-pl-0 tw-mb-0 tw-list-none;
 }
 
 .nav-link {
-  display: block;
+  @apply tw-block tw-text-[13px] tw-no-underline tw-rounded;
   padding: 8px 16px;
-  font-size: 13px;
   color: var(--brand-color, #3b82f6);
-  text-decoration: none;
   transition: color 0.15s ease, background-color 0.15s ease;
-  border-radius: 4px;
 
-  &:hover {
-    color: color-mix(in srgb, var(--brand-color, #3b82f6) 80%, #000);
-  }
-
-  &.disabled {
-    color: #6c757d;
-    pointer-events: none;
-    cursor: default;
-  }
+  &:hover   { color: color-mix(in srgb, var(--brand-color, #3b82f6) 80%, #000); }
+  &.disabled { @apply tw-text-gray-500 tw-pointer-events-none tw-cursor-default; }
 }
 
 .nav-tabs {
-  border-bottom: 1px solid #dee2e6;
-  margin-bottom: 0;
+  @apply tw-border-b tw-border-[#dee2e6] tw-mb-0;
 
   .nav-link {
     margin-bottom: -1px;
     border: 1px solid transparent;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    @apply tw-rounded-t tw-text-gray-500;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    color: #6c757d;
 
-    &:hover {
-      border-color: #e9ecef #e9ecef #dee2e6;
-      color: #495057;
-      background-color: transparent;
-    }
-
-    &.active {
-      color: var(--brand-color, #3b82f6);
-      background-color: #fff;
-      border-color: #dee2e6 #dee2e6 #fff;
-    }
+    &:hover  { border-color: #e9ecef #e9ecef #dee2e6; @apply tw-text-gray-600; }
+    &.active { color: var(--brand-color, #3b82f6); @apply tw-bg-white; border-color: #dee2e6 #dee2e6 #fff; }
   }
 }
 
-.tab-content > .tab-pane { display: none; }
-.tab-content > .active { display: block; }
+.tab-content > .tab-pane { @apply tw-hidden; }
+.tab-content > .active   { @apply tw-block; }
 
-/* ================================= */
-/* INPUT GROUP                       */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* INPUT GROUP                                                        */
+/* ----------------------------------------------------------------- */
 .input-group {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  width: 100%;
+  @apply tw-relative tw-flex tw-flex-wrap tw-items-stretch tw-w-full;
 
   > .form-control,
-  > .form-select {
-    position: relative;
-    flex: 1 1 auto;
-    width: 1%;
-    min-width: 0;
-  }
+  > .form-select { @apply tw-relative tw-min-w-0; flex: 1 1 auto; width: 1%; }
 }
 
 .input-group-prepend,
-.input-group-append {
-  display: flex;
-}
+.input-group-append { @apply tw-flex; }
 
 .input-group-text {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: #495057;
-  text-align: center;
-  white-space: nowrap;
-  background-color: #f8f9fa;
-  border: 1px solid transparent;
-  border-radius: 8px 0 0 8px;
+  @apply tw-flex tw-items-center tw-px-3 tw-py-2 tw-text-sm tw-text-gray-600
+         tw-whitespace-nowrap tw-bg-gray-50 tw-border-0 tw-rounded-l-input;
 }
 
 .input-group-prepend + .form-control,
-.input-group-prepend + .form-select {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
+.input-group-prepend + .form-select { @apply tw-rounded-l-none; }
 
-/* ================================= */
-/* FORM CHECK                        */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* FORM CHECK                                                         */
+/* ----------------------------------------------------------------- */
 .form-check {
-  display: block;
+  @apply tw-block tw-pl-6 tw-mb-0.5;
   min-height: 1.5rem;
-  padding-left: 1.5em;
-  margin-bottom: 0.125rem;
 }
 
 .form-check-input {
-  width: 1em;
-  height: 1em;
-  margin-top: 0.25em;
-  vertical-align: top;
-  background-color: #fff;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  appearance: none;
-  border-radius: 0.25em;
-  cursor: pointer;
+  @apply tw-w-4 tw-h-4 tw-mt-1 tw-align-top tw-bg-white tw-bg-no-repeat tw-bg-center
+         tw-bg-contain tw-border tw-border-black/25 tw-appearance-none tw-rounded tw-cursor-pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 
-  // Checkmark SVG encoded (no single quotes in data URLs to avoid SCSS parse issues)
   &:checked {
     background-color: var(--brand-color, #3b82f6);
     border-color: var(--brand-color, #3b82f6);
@@ -964,57 +517,34 @@ textarea.form-control {
   }
 
   &[type="radio"] {
-    border-radius: 50%;
-    &:checked {
-      background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27%3e%3ccircle r=%272%27 fill=%27%23fff%27/%3e%3c/svg%3e");
-    }
+    @apply tw-rounded-full;
+    &:checked { background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27%3e%3ccircle r=%272%27 fill=%27%23fff%27/%3e%3c/svg%3e"); }
   }
 
-  &:indeterminate {
-    background-color: var(--brand-color, #3b82f6);
-    border-color: var(--brand-color, #3b82f6);
-    background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27%3e%3cpath fill=%27none%27 stroke=%27%23fff%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%273%27 d=%27M6 10h8%27/%3e%3c/svg%3e");
-  }
-
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; }
 }
 
-.form-check-label { cursor: pointer; padding-left: 0.25em; }
+.form-check-label { @apply tw-cursor-pointer tw-pl-1; }
 
 .form-switch {
-  padding-left: 2.5em;
+  @apply tw-pl-10;
 
   .form-check-input {
     width: 2em;
     margin-left: -2.5em;
-    border-radius: 2em;
+    @apply tw-rounded-[2em];
 
-    &:checked {
-      background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27%3e%3ccircle r=%273%27 fill=%27%23fff%27/%3e%3c/svg%3e");
-      background-position: right center;
-    }
-
-    &:not(:checked) {
-      background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27%3e%3ccircle r=%273%27 fill=%27rgba(0,0,0,0.25)%27/%3e%3c/svg%3e");
-    }
+    &:checked      { background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27%3e%3ccircle r=%273%27 fill=%27%23fff%27/%3e%3c/svg%3e"); background-position: right center; }
+    &:not(:checked) { background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27%3e%3ccircle r=%273%27 fill=%27rgba(0,0,0,0.25)%27/%3e%3c/svg%3e"); }
   }
 }
 
-/* ================================= */
-/* BADGE                             */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* BADGE                                                              */
+/* ----------------------------------------------------------------- */
 .badge {
-  display: inline-block;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  color: #fff;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 12px;
+  @apply tw-inline-block tw-px-2 tw-py-1 tw-text-[11px] tw-font-semibold tw-leading-none
+         tw-text-white tw-text-center tw-whitespace-nowrap tw-align-baseline tw-rounded-badge;
   letter-spacing: 0.3px;
 }
 
@@ -1043,75 +573,44 @@ textarea.form-control {
 .text-bg-warning   { background-color: #ffc107 !important; color: #212529 !important; }
 .text-bg-info      { background-color: #0dcaf0 !important; color: #212529 !important; }
 
-/* ================================= */
-/* PAGINATION (global)               */
-/* ================================= */
-
-.pagination {
-  display: flex;
-  padding-left: 0;
-  list-style: none;
-  border-radius: 4px;
-}
+/* ----------------------------------------------------------------- */
+/* PAGINATION                                                         */
+/* ----------------------------------------------------------------- */
+.pagination { @apply tw-flex tw-pl-0 tw-list-none tw-rounded; }
 
 .page-link {
-  position: relative;
-  display: block;
-  padding: 6px 12px;
-  font-size: 13px;
+  @apply tw-relative tw-block tw-px-3 tw-py-1.5 tw-text-[13px] tw-bg-white
+         tw-border tw-border-[#dee2e6] tw-no-underline tw-cursor-pointer;
   color: var(--brand-color, #3b82f6);
-  background-color: #fff;
-  border: 1px solid #dee2e6;
-  text-decoration: none;
-  cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 
-  &:hover {
-    z-index: 2;
-    color: color-mix(in srgb, var(--brand-color, #3b82f6) 80%, #000);
-    background-color: #e9ecef;
-    border-color: #dee2e6;
-  }
-
-  &:focus {
-    z-index: 3;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
-  }
+  &:hover { z-index: 2; color: color-mix(in srgb, var(--brand-color, #3b82f6) 80%, #000); @apply tw-bg-gray-200; }
+  &:focus  { z-index: 3; @apply tw-outline-0; box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent); }
 }
 
 .page-item {
-  &:first-child .page-link { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
-  &:last-child .page-link { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+  &:first-child .page-link { @apply tw-rounded-l; }
+  &:last-child  .page-link { @apply tw-rounded-r; }
 
   &.active .page-link {
     z-index: 3;
-    color: #fff;
+    @apply tw-text-white;
     background-color: var(--brand-color, #3b82f6);
     border-color: var(--brand-color, #3b82f6);
   }
 
-  &.disabled .page-link {
-    color: #6c757d;
-    pointer-events: none;
-    background-color: #fff;
-    border-color: #dee2e6;
-    cursor: not-allowed;
-  }
+  &.disabled .page-link { @apply tw-text-gray-500 tw-pointer-events-none tw-bg-white tw-cursor-not-allowed; }
 }
 
-/* ================================= */
-/* SPINNER                           */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* SPINNER                                                            */
+/* ----------------------------------------------------------------- */
 .spinner-border {
-  display: inline-block;
+  @apply tw-inline-block tw-align-middle tw-rounded-full;
   width: 2rem;
   height: 2rem;
-  vertical-align: -0.125em;
   border: 0.25em solid currentcolor;
   border-right-color: transparent;
-  border-radius: 50%;
   animation: spinner-border 0.75s linear infinite;
 }
 
@@ -1119,10 +618,9 @@ textarea.form-control {
 
 .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.2em; }
 
-/* ================================= */
-/* TEXT COLOR UTILITIES              */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* TEXT COLOR UTILITIES                                               */
+/* ----------------------------------------------------------------- */
 .text-primary   { color: var(--brand-color, #3b82f6) !important; }
 .text-secondary { color: #6c757d !important; }
 .text-success   { color: #198754 !important; }
@@ -1133,77 +631,44 @@ textarea.form-control {
 .text-dark      { color: #212529 !important; }
 .text-white     { color: #fff !important; }
 
-/* ================================= */
-/* CLOSE BUTTON                      */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* CLOSE BUTTON                                                       */
+/* ----------------------------------------------------------------- */
 .btn-close {
+  @apply tw-bg-transparent tw-border-0 tw-rounded tw-opacity-50 tw-cursor-pointer tw-text-gray-500;
   box-sizing: content-box;
   width: 1em;
   height: 1em;
   padding: 0.25em;
-  color: #6b7280;
-  background: transparent;
-  border: 0;
-  border-radius: 0.25rem;
-  opacity: 0.5;
-  cursor: pointer;
   font-size: 20px;
   line-height: 1;
 
-  &:before { content: "x"; }
-  &:hover { opacity: 0.75; }
-  &:focus { opacity: 1; outline: 0; }
+  &::before { content: "×"; }
+  &:hover   { @apply tw-opacity-75; }
+  &:focus   { @apply tw-opacity-100 tw-outline-0; }
 }
 
-/* ================================= */
-/* DROPDOWN                          */
-/* ================================= */
-
+/* ----------------------------------------------------------------- */
+/* DROPDOWN                                                           */
+/* ----------------------------------------------------------------- */
 .dropdown-menu {
-  position: absolute;
+  @apply tw-absolute tw-left-0 tw-z-dropdown tw-min-w-[10rem] tw-py-[6px] tw-text-[13px]
+         tw-text-left tw-list-none tw-bg-white tw-rounded-input tw-shadow-dropdown;
   top: 100%;
-  left: 0;
-  z-index: 1050;
-  min-width: 10rem;
-  padding: 6px 0;
-  font-size: 13px;
-  color: #212529;
-  text-align: left;
-  list-style: none;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .dropdown-item {
-  display: block;
+  @apply tw-block tw-py-[6px] tw-px-4 tw-font-normal tw-text-gray-800 tw-text-left
+         tw-whitespace-nowrap tw-bg-transparent tw-border-0 tw-cursor-pointer
+         tw-no-underline tw-rounded-md tw-my-0.5 tw-transition-colors;
+  margin-left: 6px;
+  margin-right: 6px;
   width: calc(100% - 12px);
-  padding: 6px 16px;
-  clear: both;
-  font-weight: 400;
-  color: #212529;
-  text-align: inherit;
-  white-space: nowrap;
-  background-color: transparent;
-  border: 0;
-  cursor: pointer;
-  text-decoration: none;
-  border-radius: 6px;
-  margin: 1px 6px;
-  transition: background-color 0.15s ease;
 
-  &:hover, &:focus {
-    background-color: #f8f9fa;
-    color: #1a202c;
-  }
+  &:hover,
+  &:focus { @apply tw-bg-gray-50 tw-text-gray-900; }
 }
 
 .dropdown-divider {
-  height: 0;
-  margin: 6px 0;
-  overflow: hidden;
-  border-top: 1px solid #e5e7eb;
+  @apply tw-h-0 tw-my-[6px] tw-overflow-hidden tw-border-t tw-border-border-subtle;
 }
