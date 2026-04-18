@@ -10,17 +10,17 @@ import { RouterLink } from '@angular/router';
 export class LandingComponent {
   features = [
     {
-      emoji: '💸',
+      image: 'money.png',
       title: 'Money, sorted.',
       description: "Artists see exactly what they earned — royalties, advances, deductions — broken down clearly. No more quarterly statements that don't add up.",
     },
     {
-      emoji: '🎵',
+      image: 'music.png',
       title: 'Releases, tracked.',
       description: "From first demo to streaming everywhere. Cover art, audio files, metadata — one timeline per release, not scattered across Dropbox and email threads.",
     },
     {
-      emoji: '🗂️',
+      image: 'documents.png',
       title: 'All the rest.',
       description: "Contracts, payment history, events, documents. If it's part of running a label, it lives here. Stop paying for six separate tools.",
     },
