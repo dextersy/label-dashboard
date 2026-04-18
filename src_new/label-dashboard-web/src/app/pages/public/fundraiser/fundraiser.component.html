@@ -5,18 +5,18 @@
   </div>
 
   <!-- Error State -->
-  <div *ngIf="isError && !isLoading" class="wrapper h-100 d-flex justify-content-center align-items-center">
-    <div class="card text-center" style="max-width: 500px;">
+  <div *ngIf="isError && !isLoading" class="wrapper h-100 d-flex justify-content-center align-items-center tw-h-full tw-flex tw-justify-center tw-items-center">
+    <div class="card text-center tw-text-center" style="max-width: 500px;">
       <div class="card-body py-5">
-        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-        <h1 class="text-danger" style="font-size: 1.5rem;">Error</h1>
-        <p class="text-muted">{{ errorMessage }}</p>
+        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3 tw-text-danger tw-mb-3"></i>
+        <h1 class="text-danger tw-text-danger" style="font-size: 1.5rem;">Error</h1>
+        <p class="text-muted tw-text-muted">{{ errorMessage }}</p>
       </div>
     </div>
   </div>
 
   <!-- Closed Fundraiser State -->
-  <div *ngIf="fundraiser && isClosed && !isLoading && !isError" class="wrapper fadeInDown h-100">
+  <div *ngIf="fundraiser && isClosed && !isLoading && !isError" class="wrapper fadeInDown h-100 tw-h-full">
     <div class="page-container">
       <!-- Header Section - Smaller Poster -->
       <div class="header-section closed-header" *ngIf="fundraiser.poster_url">
@@ -26,21 +26,21 @@
       </div>
 
       <!-- Body Section -->
-      <div class="body-section text-center">
+      <div class="body-section text-center tw-text-center">
         <div class="closed-message py-5">
           <i class="fas fa-heart fa-4x" style="color: var(--brand-color);"></i>
-          <h1 class="mb-3" style="font-size: 3rem;">Thank You!</h1>
-          <p class="text-muted mb-4">
+          <h1 class="mb-3 tw-mb-3" style="font-size: 3rem;">Thank You!</h1>
+          <p class="text-muted mb-4 tw-text-muted tw-mb-4">
             <strong>{{ fundraiser.title }}</strong> fundraiser has ended and is no longer accepting donations.
           </p>
-          <p class="text-muted">
+          <p class="text-muted tw-text-muted">
             We appreciate everyone who contributed to this cause.
           </p>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="text-center footer-section">
+      <div class="text-center footer-section tw-text-center">
         <p>
           <span style="font-size:12px; font-weight:bold;">Powered by Spindly.</span>
         </p>
@@ -49,7 +49,7 @@
   </div>
 
   <!-- Fundraiser Content (Active) -->
-  <div *ngIf="fundraiser && !isClosed && !isLoading && !isError" class="wrapper fadeInDown h-100">
+  <div *ngIf="fundraiser && !isClosed && !isLoading && !isError" class="wrapper fadeInDown h-100 tw-h-full">
     <div class="page-container">
       <!-- Header Section - Poster Banner -->
       <div class="header-section" *ngIf="fundraiser.poster_url">
@@ -67,10 +67,10 @@
       <!-- Body Section - Title, Description & Donation Form -->
       <div class="body-section">
         <!-- Title -->
-        <h1 class="fundraiser-title text-center mb-3"><strong>{{ fundraiser.title }}</strong></h1>
+        <h1 class="fundraiser-title text-center mb-3 tw-text-center tw-mb-3"><strong>{{ fundraiser.title }}</strong></h1>
 
         <!-- Description -->
-        <div *ngIf="fundraiser.description" class="description-box mb-4 p-3">
+        <div *ngIf="fundraiser.description" class="description-box mb-4 p-3 tw-mb-4 tw-p-3">
           <div class="description-content" [innerHTML]="fundraiser.description"></div>
         </div>
 
@@ -83,7 +83,7 @@
               <div class="form-floating flex-fill">
                 <input
                   type="number"
-                  class="form-control amount-field"
+                  class="form-control amount-field tw-input"
                   id="amount"
                   formControlName="amount"
                   placeholder="Amount"
@@ -93,7 +93,7 @@
                 <label for="amount">Amount</label>
               </div>
             </div>
-            <div class="invalid-feedback d-block"
+            <div class="invalid-feedback d-block tw-block"
                  *ngIf="amountControl?.invalid && amountControl?.touched">
               <span *ngIf="amountControl?.errors?.['required']">Amount is required.</span>
               <span *ngIf="amountControl?.errors?.['min']">Minimum amount is ₱20.00.</span>
@@ -108,7 +108,7 @@
               <div class="form-floating flex-fill">
                 <input
                   type="text"
-                  class="form-control"
+                  class="form-control tw-input"
                   id="name"
                   formControlName="name"
                   placeholder="Full name"
@@ -117,7 +117,7 @@
                 <label for="name">Full name</label>
               </div>
             </div>
-            <div class="invalid-feedback d-block"
+            <div class="invalid-feedback d-block tw-block"
                  *ngIf="nameControl?.invalid && nameControl?.touched">
               Full name is required.
             </div>
@@ -129,7 +129,7 @@
               <div class="form-floating flex-fill">
                 <input
                   type="email"
-                  class="form-control"
+                  class="form-control tw-input"
                   id="email"
                   formControlName="email"
                   placeholder="Email address"
@@ -138,17 +138,17 @@
                 <label for="email">Email address</label>
               </div>
             </div>
-            <div class="invalid-feedback d-block"
+            <div class="invalid-feedback d-block tw-block"
                  *ngIf="emailControl?.invalid && emailControl?.touched && emailControl?.errors?.['required']">
               Email address is required.
             </div>
-            <div class="invalid-feedback d-block"
+            <div class="invalid-feedback d-block tw-block"
                  *ngIf="emailControl?.invalid && emailControl?.touched && emailControl?.errors?.['email']">
               Email address is not valid.
             </div>
-            <div class="valid-feedback d-block"
+            <div class="valid-feedback d-block tw-block"
                  *ngIf="!emailControl?.invalid && emailControl?.value">
-              <i class="fas fa-check-circle text-success"></i>
+              <i class="fas fa-check-circle text-success tw-text-success"></i>
               Please make sure your email address is correct.
             </div>
           </div>
@@ -160,7 +160,7 @@
               <div class="form-floating flex-fill">
                 <input
                   type="text"
-                  class="form-control"
+                  class="form-control tw-input"
                   id="contact_number"
                   formControlName="contact_number"
                   placeholder="Contact number (optional)">
@@ -182,31 +182,31 @@
                 Make this donation anonymous
               </label>
             </div>
-            <small class="text-muted">
+            <small class="text-muted tw-text-muted">
               Your name will not be displayed to the organizers if you check this option.
             </small>
           </div>
 
           <!-- Submit Error -->
-          <div class="submit-error mb-3" *ngIf="submitError">
-            <i class="fas fa-exclamation-circle me-2"></i>{{ submitError }}
+          <div class="submit-error mb-3 tw-mb-3" *ngIf="submitError">
+            <i class="fas fa-exclamation-circle me-2 tw-mr-2"></i>{{ submitError }}
           </div>
 
           <!-- Submit Button -->
           <div class="fadeIn sixth">
             <button
               type="submit"
-              class="btn btn-primary btn-lg w-100 submit-button"
+              class="btn btn-primary btn-lg w-100 submit-button tw-w-full"
               [disabled]="isSubmitting"
             >
-              <i class="fas fa-heart me-2" *ngIf="!isSubmitting"></i>
+              <i class="fas fa-heart me-2 tw-mr-2" *ngIf="!isSubmitting"></i>
               <span *ngIf="!isSubmitting">Donate Now</span>
               <span *ngIf="isSubmitting">
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status" aria-hidden="true"></span>
                 Processing...
               </span>
             </button>
-            <div class="text-center mt-2" style="font-size: 12px;">
+            <div class="text-center mt-2 tw-text-center tw-mt-2" style="font-size: 12px;">
               Clicking <b>Donate Now</b> will bring you to our Paymongo checkout page.
             </div>
           </div>
@@ -214,7 +214,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="text-center footer-section">
+      <div class="text-center footer-section tw-text-center">
         <p>
           <span style="font-size:12px; font-weight:bold;">Powered by Spindly.</span><br>
           <span style="font-size:12px; font-style:italic;">

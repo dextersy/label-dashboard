@@ -1,7 +1,7 @@
-<div class="wrapper h-100 d-flex justify-content-center">
-  <div class="card mb-3">
+<div class="wrapper h-100 d-flex justify-content-center tw-h-full tw-flex tw-justify-center">
+  <div class="card mb-3 tw-mb-3">
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="card-body text-center py-5">
+    <div *ngIf="isLoading" class="card-body text-center py-5 tw-text-center">
       <div class="loading-dots">
         <div></div>
         <div></div>
@@ -10,12 +10,12 @@
     </div>
 
     <!-- Error State (404) -->
-    <div *ngIf="isError" class="card-body text-center py-5">
-      <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-      <h1 class="text-danger">404 - Event Not Found</h1>
-      <p class="text-muted">The event you're looking for could not be found.</p>
+    <div *ngIf="isError" class="card-body text-center py-5 tw-text-center">
+      <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3 tw-text-danger tw-mb-3"></i>
+      <h1 class="text-danger tw-text-danger">404 - Event Not Found</h1>
+      <p class="text-muted tw-text-muted">The event you're looking for could not be found.</p>
       <button class="btn btn-primary" (click)="goToEventPage()">
-        <i class="fas fa-arrow-left me-1"></i>Go Back
+        <i class="fas fa-arrow-left me-1 tw-mr-1"></i>Go Back
       </button>
     </div>
 
@@ -29,7 +29,7 @@
            [alt]="event.title + ' poster'">
 
       <!-- Success Header -->
-      <div class="card-header text-center"
+      <div class="card-header text-center tw-text-center"
            [style.background-color]="event.brand?.color || '#28a745'">
         <h1 [style.color]="getContrastingColor(event.brand?.color)"
             style="font-weight: 700;">
@@ -38,31 +38,31 @@
       </div>
 
       <!-- Success Message -->
-      <div class="card-body text-center">
+      <div class="card-body text-center tw-text-center">
 
         <p><i class="fas fa-check-circle" style="font-size:150px;color:green;"></i></p>
         <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
 
         <!-- Download PDF Button -->
-        <div class="mb-4 p-4 bg-light border border-primary rounded" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div class="mb-4 p-4 bg-light border border-primary rounded tw-mb-4 tw-p-4 tw-bg-gray-50" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
           <button
-            class="btn btn-primary py-3 px-5"
+            class="btn btn-primary py-3 px-5 tw-py-3"
             style="font-size: 1.5rem; font-weight: bold; min-width: 300px;"
             (click)="downloadPDF()"
             [disabled]="isDownloading"
             [attr.aria-busy]="isDownloading">
-            <i class="fas me-2" style="font-size: 1.75rem;" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
+            <i class="fas me-2 tw-mr-2" style="font-size: 1.75rem;" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
             {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
-          <p class="text-muted mt-3 mb-0" style="font-size: 1rem;">Save or print your ticket for easy access at the event</p>
-          <div *ngIf="downloadError" class="alert alert-danger mt-3 mb-0" role="alert">
-            <i class="fas fa-exclamation-triangle me-1"></i>
+          <p class="text-muted mt-3 mb-0 tw-text-muted tw-mt-3 tw-mb-0" style="font-size: 1rem;">Save or print your ticket for easy access at the event</p>
+          <div *ngIf="downloadError" class="alert alert-danger mt-3 mb-0 tw-mt-3 tw-mb-0" role="alert">
+            <i class="fas fa-exclamation-triangle me-1 tw-mr-1"></i>
             Failed to download PDF. Please try again or contact support if the issue persists.
           </div>
         </div>
 
         <!-- Instructions -->
-      <div class="alert alert-info field-description text-dark text-left">
+      <div class="alert alert-info field-description text-dark text-left tw-text-gray-900">
         <i class="fas fa-info-circle"></i> <b>How to use your ticket</b><br>
         <ul>
           <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
@@ -78,11 +78,11 @@
       </div>
 
       <!-- Share Buttons Footer -->
-      <div class="card-footer bg-light text-center text-dark" *ngIf="event.buy_shortlink || getGoogleCalendarUrl()">
+      <div class="card-footer bg-light text-center text-dark tw-bg-gray-50 tw-text-center tw-text-gray-900" *ngIf="event.buy_shortlink || getGoogleCalendarUrl()">
         <p>
           <strong>Tell your friends about this show!</strong>
         </p>
-        <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <div class="d-flex justify-content-center gap-2 flex-wrap tw-flex tw-justify-center tw-gap-2 tw-flex-wrap">
           <a *ngIf="event.buy_shortlink"
              (click)="shareOnFacebook()"
              class="btn btn-primary"
@@ -105,14 +105,14 @@
       </div>
 
       <!-- Brand Logo Footer -->
-      <div class="card-footer text-center py-3"
+      <div class="card-footer text-center py-3 tw-text-center tw-py-3"
            *ngIf="event?.brand?.logo_url"
            [style.background-color]="event.brand?.color || '#ffffff'">
         <img [src]="event.brand?.logo_url"
              [alt]="(event.brand?.name || 'Brand') + ' logo'"
-             class="mb-2"
+             class="mb-2 tw-mb-2"
              style="max-height: 30px; max-width: 120px; opacity: 0.9;">
-        <p class="mb-0 small"
+        <p class="mb-0 small tw-mb-0 tw-text-sm"
            [style.color]="getContrastingColor(event.brand?.color)"
            style="opacity: 0.7;">
           Powered by Spindly

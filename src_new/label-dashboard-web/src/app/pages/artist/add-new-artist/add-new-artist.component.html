@@ -13,18 +13,18 @@
   <form id="newArtistForm" (ngSubmit)="createArtist()" #newArtistForm="ngForm">
     
     <!-- Top Row: Basic Information and Profile Photo side by side -->
-    <div class="row">
+    <div class="row tw-grid tw-grid-cols-1">
       <!-- Basic Information Section -->
-      <div class="col-lg-8">
+      <div class="col-lg-8 tw-lg:tw-col-span-8">
         <div class="card">
           <div class="card-header">
             <h5>Basic Information</h5>
           </div>
           <div class="card-body">
             <div class="form-group">
-              <label for="artistName">Artist Name <span class="text-danger">*</span></label>
+              <label for="artistName">Artist Name <span class="text-danger tw-text-danger">*</span></label>
               <input type="text" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="artistName"
                      name="artistName"
                      [(ngModel)]="newArtist.name"
@@ -34,7 +34,7 @@
             
             <div class="form-group">
               <label for="bandMembers">Band Members</label>
-              <textarea class="form-control" 
+              <textarea class="form-control tw-input" 
                         id="bandMembers"
                         name="bandMembers"
                         rows="3"
@@ -44,7 +44,7 @@
             
             <div class="form-group">
               <label for="bio">Biography</label>
-              <textarea class="form-control" 
+              <textarea class="form-control tw-input" 
                         id="bio"
                         name="bio"
                         rows="4"
@@ -56,7 +56,7 @@
       </div>
 
       <!-- Profile Photo Section -->
-      <div class="col-lg-4">
+      <div class="col-lg-4 tw-lg:tw-col-span-4">
         <div class="card">
           <div class="card-header">
             <h5>Profile Photo</h5>
@@ -81,7 +81,7 @@
               </small>
             </div>
             
-            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2">
+            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2 tw-mt-2">
               <div class="progress-bar" 
                    role="progressbar" 
                    [style.width.%]="uploadProgress">
@@ -99,23 +99,23 @@
         <h5>Social Media & Links</h5>
       </div>
       <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
+        <div class="row tw-grid tw-grid-cols-1">
+          <div class="col-md-6 tw-md:tw-col-span-6">
             <div class="form-group">
               <label for="website">Website</label>
               <input type="url" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="website"
                      name="website"
                      [(ngModel)]="newArtist.website_page_url"
                      placeholder="https://www.example.com">
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 tw-md:tw-col-span-6">
             <div class="form-group">
               <label for="facebook">Facebook</label>
               <input type="text" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="facebook"
                      name="facebook"
                      [(ngModel)]="newArtist.facebook_handle"
@@ -124,23 +124,23 @@
           </div>
         </div>
         
-        <div class="row">
-          <div class="col-md-6">
+        <div class="row tw-grid tw-grid-cols-1">
+          <div class="col-md-6 tw-md:tw-col-span-6">
             <div class="form-group">
               <label for="instagram">Instagram</label>
               <input type="text" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="instagram"
                      name="instagram"
                      [(ngModel)]="newArtist.instagram_handle"
                      placeholder="Instagram username">
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 tw-md:tw-col-span-6">
             <div class="form-group">
               <label for="twitter">Twitter</label>
               <input type="text" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="twitter"
                      name="twitter"
                      [(ngModel)]="newArtist.twitter_handle"
@@ -149,23 +149,23 @@
           </div>
         </div>
         
-        <div class="row">
-          <div class="col-md-6">
+        <div class="row tw-grid tw-grid-cols-1">
+          <div class="col-md-6 tw-md:tw-col-span-6">
             <div class="form-group">
               <label for="tiktok">TikTok</label>
               <input type="text" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="tiktok"
                      name="tiktok"
                      [(ngModel)]="newArtist.tiktok_handle"
                      placeholder="TikTok username">
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-6 tw-md:tw-col-span-6">
             <div class="form-group">
               <label for="youtube">YouTube Channel</label>
               <input type="text" 
-                     class="form-control" 
+                     class="form-control tw-input" 
                      id="youtube"
                      name="youtube"
                      [(ngModel)]="newArtist.youtube_channel"

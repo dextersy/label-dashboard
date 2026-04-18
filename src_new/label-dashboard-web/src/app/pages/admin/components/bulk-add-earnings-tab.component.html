@@ -1,25 +1,25 @@
 <!-- View Toggle -->
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="d-flex justify-content-center align-items-center flex-column">
+<div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+  <div class="col-12 tw-col-span-12">
+    <div class="d-flex justify-content-center align-items-center flex-column tw-flex tw-justify-center tw-items-center tw-flex-col">
       <div class="btn-group view-toggle" role="group" aria-label="View toggle">
         <button type="button" 
                 class="btn"
                 [class.active]="currentView === 'manual'"
                 (click)="switchToManualView()"
                 [attr.aria-pressed]="currentView === 'manual'">
-          <i class="fa fa-edit me-2"></i>Manual Entry
+          <i class="fa fa-edit me-2 tw-mr-2"></i>Manual Entry
         </button>
         <button type="button" 
                 class="btn"
                 [class.active]="currentView === 'csv'"
                 (click)="switchToCsvView()"
                 [attr.aria-pressed]="currentView === 'csv'">
-          <i class="fa fa-file-csv me-2"></i>CSV Import
+          <i class="fa fa-file-csv me-2 tw-mr-2"></i>CSV Import
         </button>
       </div>
-      <small class="text-muted mt-2">
-        <i class="fa fa-info-circle me-1"></i>
+      <small class="text-muted mt-2 tw-text-muted tw-mt-2">
+        <i class="fa fa-info-circle me-1 tw-mr-1"></i>
         <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
         <span *ngIf="currentView === 'csv'">Bulk import earnings from CSV file</span>
       </small>
@@ -48,11 +48,11 @@
       <tr style="background-color:#f1f1f1;">
         <td><em>Apply to all</em></td>
         <td>
-          <input type="date" class="form-control" #applyAllDateInput 
+          <input type="date" class="form-control tw-input" #applyAllDateInput 
                  (change)="applyAllDate(applyAllDateInput.value)">
         </td>
         <td>
-          <select class="form-control" #applyAllTypeInput 
+          <select class="form-control tw-input" #applyAllTypeInput 
                   (change)="applyAllType(applyAllTypeInput.value)">
             <option value="Sync">Sync</option>
             <option value="Streaming">Streaming</option>
@@ -61,7 +61,7 @@
           </select>
         </td>
         <td>
-          <input type="text" class="form-control" #applyAllDescInput placeholder="Description" 
+          <input type="text" class="form-control tw-input" #applyAllDescInput placeholder="Description" 
                  (change)="applyAllDescription(applyAllDescInput.value); applyAllDescInput.value = ''">
         </td>
         <td></td>
@@ -79,7 +79,7 @@
         <td>
           <div class="position-relative">
             <input type="text" 
-                   class="form-control" 
+                   class="form-control tw-input" 
                    [(ngModel)]="searchTerms[i]"
                    (input)="onReleaseSearch(i, searchTerms[i])"
                    (focus)="onInputFocus(i)"
@@ -89,34 +89,34 @@
             
             <!-- Dropdown for autocomplete results -->
             <div *ngIf="showDropdown[i]" 
-                 class="position-absolute w-100 bg-white border border-top-0 shadow-sm" 
+                 class="position-absolute w-100 bg-white border border-top-0 shadow-sm tw-w-full tw-bg-white" 
                  style="z-index: 1000; max-height: 200px; overflow-y: auto;">
               <div *ngIf="filteredReleases.length > 0; else noResults">
                 <div *ngFor="let release of filteredReleases" 
-                     class="p-2 release-option"
+                     class="p-2 release-option tw-p-2"
                      style="cursor: pointer; border-bottom: 1px solid #eee;"
                      (click)="selectRelease(i, release)">
                   <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
                 </div>
               </div>
               <ng-template #noResults>
-                <div class="p-2 text-muted">
+                <div class="p-2 text-muted tw-p-2 tw-text-muted">
                   No releases found
                 </div>
               </ng-template>
             </div>
             
             <!-- Show selected release if one is selected -->
-            <div *ngIf="earning.release_id > 0 && !searchTerms[i]" class="text-muted small">
+            <div *ngIf="earning.release_id > 0 && !searchTerms[i]" class="text-muted small tw-text-muted tw-text-sm">
               Selected: {{ getSelectedRelease(earning.release_id)?.catalog_no }}: {{ getSelectedRelease(earning.release_id)?.title }}
             </div>
           </div>
         </td>
         <td>
-          <input type="date" class="form-control" [(ngModel)]="earning.date_recorded">
+          <input type="date" class="form-control tw-input" [(ngModel)]="earning.date_recorded">
         </td>
         <td>
-          <select class="form-control" [(ngModel)]="earning.type">
+          <select class="form-control tw-input" [(ngModel)]="earning.type">
             <option value="Sync">Sync</option>
             <option value="Streaming">Streaming</option>
             <option value="Downloads">Downloads</option>
@@ -124,13 +124,13 @@
           </select>
         </td>
         <td>
-          <input type="text" class="form-control" [(ngModel)]="earning.description" 
+          <input type="text" class="form-control tw-input" [(ngModel)]="earning.description" 
                  placeholder="Description">
         </td>
         <td>
           <div class="amount-input-container">
             <span class="peso-sign">₱</span>
-            <input type="number" class="form-control amount-input" step="0.01" min="0" 
+            <input type="number" class="form-control amount-input tw-input" step="0.01" min="0" 
                    [(ngModel)]="earning.amount" placeholder="Amount" 
                    (ngModelChange)="onBulkAmountChange()">
           </div>
@@ -160,21 +160,21 @@
 <app-floating-action-bar *ngIf="currentView === 'manual'">
 
   <!-- Desktop left: totals and rows count -->
-  <div floatingStart class="d-none d-lg-flex align-items-center gap-4">
+  <div floatingStart class="d-none d-lg-flex align-items-center gap-4 tw-hidden tw-lg:tw-flex tw-items-center tw-gap-4">
     <div>
       <strong>Current total earnings:</strong>
       <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span>
     </div>
-    <div class="text-muted">Total rows: {{ bulkEarnings.length }}</div>
+    <div class="text-muted tw-text-muted">Total rows: {{ bulkEarnings.length }}</div>
   </div>
 
   <!-- Mobile bar: always-visible total summary -->
-  <span floatingBarInfo class="text-muted">
+  <span floatingBarInfo class="text-muted tw-text-muted">
     Total: <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span> • {{ bulkEarnings.length }} rows
   </span>
 
   <!-- Desktop: btn-group with dropdown (hidden on mobile to avoid overflow clip in drawer) -->
-  <div class="add-rows-container d-none d-lg-flex">
+  <div class="add-rows-container d-none d-lg-flex tw-hidden tw-lg:tw-flex">
     <div class="btn-group add-rows-dropdown" role="group">
       <button type="button" class="btn btn-secondary btn-sm" (click)="addRows(1)">
         Add Row
@@ -194,14 +194,14 @@
     </div>
   </div>
   <!-- Mobile: flat buttons in drawer (no popup dropdowns inside overflow:hidden) -->
-  <button type="button" class="btn btn-secondary d-lg-none" (click)="addRows(1)">
-    <i class="fa fa-plus me-2"></i>Add 1 Row
+  <button type="button" class="btn btn-secondary d-lg-none tw-lg:tw-hidden" (click)="addRows(1)">
+    <i class="fa fa-plus me-2 tw-mr-2"></i>Add 1 Row
   </button>
-  <button type="button" class="btn btn-secondary d-lg-none" (click)="addRows(5)">
-    <i class="fa fa-plus me-2"></i>Add 5 Rows
+  <button type="button" class="btn btn-secondary d-lg-none tw-lg:tw-hidden" (click)="addRows(5)">
+    <i class="fa fa-plus me-2 tw-mr-2"></i>Add 5 Rows
   </button>
-  <button type="button" class="btn btn-secondary d-lg-none" (click)="addRows(10)">
-    <i class="fa fa-plus me-2"></i>Add 10 Rows
+  <button type="button" class="btn btn-secondary d-lg-none tw-lg:tw-hidden" (click)="addRows(10)">
+    <i class="fa fa-plus me-2 tw-mr-2"></i>Add 10 Rows
   </button>
 
   <!-- Primary: Save -->
@@ -209,7 +209,7 @@
           class="btn btn-primary fab-primary-btn"
           (click)="saveBulkEarnings()"
           [disabled]="loading || bulkEarnings.length === 0">
-    <i class="fa fa-save me-2"></i>
+    <i class="fa fa-save me-2 tw-mr-2"></i>
     <span *ngIf="bulkEarnings.length > 0">Save {{ bulkEarnings.length }} Earnings</span>
     <span *ngIf="bulkEarnings.length === 0">No Earnings to Save</span>
   </button>
@@ -223,21 +223,21 @@
        (dragover)="onDragOver($event)" 
        (dragleave)="onDragLeave($event)" 
        (drop)="onDrop($event)">
-    <div class="mb-3">
-      <i class="fa fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+    <div class="mb-3 tw-mb-3">
+      <i class="fa fa-cloud-upload-alt fa-3x text-muted mb-3 tw-text-muted tw-mb-3"></i>
       <h5>Upload CSV File</h5>
-      <p class="text-muted">
+      <p class="text-muted tw-text-muted">
         Drag and drop a CSV file here, or click to select a file.<br>
         Expected columns: Catalog Number (or similar), Release Title (or similar), Earning Amount (or similar)<br>
         <small class="text-info">Column names are matched using fuzzy matching - variations in naming are supported</small>
       </p>
       <input type="file" 
-             class="form-control d-none" 
+             class="form-control d-none tw-hidden tw-input" 
              id="csvFileInput" 
              accept=".csv" 
              (change)="onFileSelected($event)">
       <button type="button" class="btn btn-primary" (click)="openFileDialog()">
-        <i class="fa fa-folder-open me-2"></i>Select CSV File
+        <i class="fa fa-folder-open me-2 tw-mr-2"></i>Select CSV File
       </button>
     </div>
   </div>
@@ -245,43 +245,43 @@
   <!-- CSV Preview Section -->
   <div *ngIf="csvFile && csvProcessingResult">
     <!-- Summary Information -->
-    <div class="row mb-4">
+    <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
       <div class="col-md-3">
         <div class="card">
-          <div class="card-body text-center">
+          <div class="card-body text-center tw-text-center">
             <h5 class="card-title text-primary">{{ csvTotalCount - csvTotalUnmatched }}</h5>
-            <p class="card-text text-muted">Total Matched Rows</p>
+            <p class="card-text text-muted tw-text-muted">Total Matched Rows</p>
           </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card">
-          <div class="card-body text-center">
-            <h5 class="card-title text-success" [ngClass]="getAmountClass(csvTotalAmount)">{{ formatCurrency(csvTotalAmount) }}</h5>
-            <p class="card-text text-muted">Total Matched Amount</p>
+          <div class="card-body text-center tw-text-center">
+            <h5 class="card-title text-success tw-text-success" [ngClass]="getAmountClass(csvTotalAmount)">{{ formatCurrency(csvTotalAmount) }}</h5>
+            <p class="card-text text-muted tw-text-muted">Total Matched Amount</p>
           </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card">
-          <div class="card-body text-center">
-            <h5 class="card-title text-danger">{{ csvTotalUnmatched }}</h5>
-            <p class="card-text text-muted">Unmatched Rows</p>
+          <div class="card-body text-center tw-text-center">
+            <h5 class="card-title text-danger tw-text-danger">{{ csvTotalUnmatched }}</h5>
+            <p class="card-text text-muted tw-text-muted">Unmatched Rows</p>
             <button 
               type="button" 
-              class="btn btn-danger btn-sm mt-2" 
+              class="btn btn-danger btn-sm mt-2 tw-mt-2" 
               (click)="downloadUnmatchedCsv()"
               *ngIf="csvTotalUnmatched > 0">
-              <i class="fa fa-download me-1"></i>Download CSV
+              <i class="fa fa-download me-1 tw-mr-1"></i>Download CSV
             </button>
           </div>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card">
-          <div class="card-body text-center">
+          <div class="card-body text-center tw-text-center">
             <h6 class="card-title">{{ csvFile.name }}</h6>
-            <p class="card-text text-muted">
+            <p class="card-text text-muted tw-text-muted">
               <small>{{ (csvFile.size / 1024).toFixed(1) }} KB</small>
             </p>
           </div>
@@ -291,17 +291,17 @@
 
     <!-- CSV Data Table -->
     <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">CSV Preview</h6>
+      <div class="card-header d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center">
+        <h6 class="mb-0 tw-mb-0">CSV Preview</h6>
         <button type="button" class="btn btn-danger btn-sm" (click)="removeCsvFile()">
-          <i class="fa fa-times me-2"></i>Remove File
+          <i class="fa fa-times me-2 tw-mr-2"></i>Remove File
         </button>
       </div>
       <div class="card-body">
-        <div *ngIf="csvData.length === 0; else showTable" class="text-center py-4">
-          <i class="fa fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-          <h5 class="text-muted">No matches found in the CSV file.</h5>
-          <p class="text-muted">
+        <div *ngIf="csvData.length === 0; else showTable" class="text-center py-4 tw-text-center tw-py-4">
+          <i class="fa fa-exclamation-triangle fa-3x text-warning mb-3 tw-text-warning tw-mb-3"></i>
+          <h5 class="text-muted tw-text-muted">No matches found in the CSV file.</h5>
+          <p class="text-muted tw-text-muted">
             Please check that your CSV contains valid catalog numbers or release titles that match existing releases in your system.
           </p>
         </div>
@@ -326,19 +326,19 @@
 <app-floating-action-bar *ngIf="csvFile && csvProcessingResult">
 
   <!-- Desktop left: form fields -->
-  <div floatingStart class="d-none d-lg-flex align-items-end gap-3">
-    <div class="form-group mb-0">
-      <label for="csvDescriptionDesktop" class="form-label">Description</label>
+  <div floatingStart class="d-none d-lg-flex align-items-end gap-3 tw-hidden tw-lg:tw-flex tw-items-end tw-gap-3">
+    <div class="form-group mb-0 tw-mb-0">
+      <label for="csvDescriptionDesktop" class="form-label tw-label">Description</label>
       <input type="text"
-             class="form-control"
+             class="form-control tw-input"
              id="csvDescriptionDesktop"
              [(ngModel)]="csvDescription"
              placeholder="Enter description for imported earnings"
              style="min-width: 200px;">
     </div>
-    <div class="form-group mb-0">
-      <label for="csvEarningTypeDesktop" class="form-label">Type</label>
-      <select class="form-select"
+    <div class="form-group mb-0 tw-mb-0">
+      <label for="csvEarningTypeDesktop" class="form-label tw-label">Type</label>
+      <select class="form-select tw-input"
               id="csvEarningTypeDesktop"
               [(ngModel)]="csvEarningType"
               style="min-width: 120px;">
@@ -348,48 +348,48 @@
         <option value="Physical">Physical</option>
       </select>
     </div>
-    <div class="form-group mb-0">
+    <div class="form-group mb-0 tw-mb-0">
       <div class="form-check form-switch" style="margin-top: 32px;">
         <input class="form-check-input" type="checkbox" id="csvCalculateRoyaltiesDesktop" [(ngModel)]="csvCalculateRoyalties">
         <label class="form-check-label" for="csvCalculateRoyaltiesDesktop">Calculate Royalties</label>
       </div>
     </div>
-    <div *ngIf="csvTotalUnmatched > 0" class="alert alert-warning mb-0 ms-3" style="font-size: 12px; padding: 6px 12px; margin-top: 32px;">
-      <i class="fa fa-exclamation-triangle me-1"></i>{{ csvTotalUnmatched }} unmatched
+    <div *ngIf="csvTotalUnmatched > 0" class="alert alert-warning mb-0 ms-3 tw-mb-0 tw-ml-3" style="font-size: 12px; padding: 6px 12px; margin-top: 32px;">
+      <i class="fa fa-exclamation-triangle me-1 tw-mr-1"></i>{{ csvTotalUnmatched }} unmatched
     </div>
   </div>
 
   <!-- Mobile bar: always-visible import summary -->
-  <span floatingBarInfo class="text-muted">
+  <span floatingBarInfo class="text-muted tw-text-muted">
     {{ csvTotalCount - csvTotalUnmatched }} rows • {{ csvEarningType }}
   </span>
 
   <!-- Mobile drawer: form fields (hidden on desktop) -->
-  <div class="d-lg-none">
-    <label class="form-label small mb-1">Description</label>
-    <input type="text" class="form-control form-control-sm" [(ngModel)]="csvDescription" placeholder="Description">
+  <div class="d-lg-none tw-lg:tw-hidden">
+    <label class="form-label small mb-1 tw-text-sm tw-mb-1 tw-label">Description</label>
+    <input type="text" class="form-control form-control-sm tw-input" [(ngModel)]="csvDescription" placeholder="Description">
   </div>
-  <div class="d-lg-none d-flex gap-2 align-items-end">
+  <div class="d-lg-none d-flex gap-2 align-items-end tw-lg:tw-hidden tw-flex tw-gap-2 tw-items-end">
     <div class="flex-fill">
-      <label class="form-label small mb-1">Type</label>
-      <select class="form-select form-select-sm" [(ngModel)]="csvEarningType">
+      <label class="form-label small mb-1 tw-text-sm tw-mb-1 tw-label">Type</label>
+      <select class="form-select form-select-sm tw-input" [(ngModel)]="csvEarningType">
         <option value="Sync">Sync</option>
         <option value="Streaming">Streaming</option>
         <option value="Downloads">Downloads</option>
         <option value="Physical">Physical</option>
       </select>
     </div>
-    <div class="form-check form-switch mb-1">
+    <div class="form-check form-switch mb-1 tw-mb-1">
       <input class="form-check-input" type="checkbox" id="csvCalcRoyaltiesMobile" [(ngModel)]="csvCalculateRoyalties">
-      <label class="form-check-label small" for="csvCalcRoyaltiesMobile">Royalties</label>
+      <label class="form-check-label small tw-text-sm" for="csvCalcRoyaltiesMobile">Royalties</label>
     </div>
   </div>
-  <div *ngIf="csvTotalUnmatched > 0" class="alert alert-warning mb-0 d-lg-none" style="font-size: 12px; padding: 8px 12px;">
-    <i class="fa fa-exclamation-triangle me-1"></i>{{ csvTotalUnmatched }} rows will be skipped
+  <div *ngIf="csvTotalUnmatched > 0" class="alert alert-warning mb-0 d-lg-none tw-mb-0 tw-lg:tw-hidden" style="font-size: 12px; padding: 8px 12px;">
+    <i class="fa fa-exclamation-triangle me-1 tw-mr-1"></i>{{ csvTotalUnmatched }} rows will be skipped
   </div>
   <!-- Cancel: visible on both desktop (in secondary bar) and mobile (in drawer) -->
   <button type="button" class="btn btn-secondary" (click)="removeCsvFile()">
-    <i class="fa fa-times me-2"></i>Cancel
+    <i class="fa fa-times me-2 tw-mr-2"></i>Cancel
   </button>
 
   <!-- Primary: Import -->
@@ -397,7 +397,7 @@
           class="btn btn-primary fab-primary-btn"
           (click)="saveCsvEarnings()"
           [disabled]="loading || csvData.length === 0">
-    <i class="fa fa-save me-2"></i>
+    <i class="fa fa-save me-2 tw-mr-2"></i>
     <span *ngIf="csvData.length > 0">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
     <span *ngIf="csvData.length === 0">No Earnings to Import</span>
   </button>
@@ -405,10 +405,10 @@
 </app-floating-action-bar>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="text-center py-4">
+  <div *ngIf="loading" class="text-center py-4 tw-text-center tw-py-4">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Processing...</span>
     </div>
-    <p class="mt-2 text-muted">Previewing CSV file...</p>
+    <p class="mt-2 text-muted tw-mt-2 tw-text-muted">Previewing CSV file...</p>
   </div>
 </div>

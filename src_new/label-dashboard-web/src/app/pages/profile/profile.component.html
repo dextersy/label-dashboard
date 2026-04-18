@@ -1,19 +1,19 @@
 <div class="container-fluid">
   <!-- Page Header -->
-  <div class="page-header d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">
-      <i class="fas fa-user-cog me-2 text-primary"></i>
+  <div class="page-header d-flex justify-content-between align-items-center mb-3 tw-flex tw-justify-between tw-items-center tw-mb-3">
+    <h5 class="mb-0 tw-mb-0">
+      <i class="fas fa-user-cog me-2 text-primary tw-mr-2"></i>
       Profile Settings
     </h5>
   </div>
 
-  <div class="row">
-    <div class="col-md-8 col-lg-6 mx-auto">
+  <div class="row tw-grid tw-grid-cols-1">
+    <div class="col-md-8 col-lg-6 mx-auto tw-mx-auto tw-md:tw-col-span-8 tw-lg:tw-col-span-6">
           
           <!-- Original Page Header (keeping for form styling) -->
           <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h4 class="card-title mb-0">
+            <div class="card-header d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center">
+              <h4 class="card-title mb-0 tw-mb-0">
                 <i class="fa fa-user"></i> Edit Profile
               </h4>
               <button class="btn btn-sm btn-secondary" (click)="goBack()">
@@ -24,7 +24,7 @@
 
           <!-- Loading State -->
           <div *ngIf="loading" class="card">
-            <div class="card-body text-center p-4">
+            <div class="card-body text-center p-4 tw-text-center tw-p-4">
               <div class="loading-dots">
                 <div></div>
                 <div></div>
@@ -36,71 +36,71 @@
           <!-- Profile Information Card -->
           <div *ngIf="!loading && profile" class="card">
             <div class="card-header">
-              <h5 class="card-title mb-0">Profile Information</h5>
+              <h5 class="card-title mb-0 tw-mb-0">Profile Information</h5>
             </div>
             <div class="card-body">
               
               <!-- Profile Details (Read-only) -->
-              <div class="row mb-4">
-                <div class="col-md-6">
+              <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+                <div class="col-md-6 tw-md:tw-col-span-6">
                   <div class="info-item">
-                    <label class="form-label small text-muted">Account Status</label>
-                    <div class="d-flex align-items-center">
-                      <span class="badge bg-success me-2">Active</span>
+                    <label class="form-label small text-muted tw-text-sm tw-text-muted tw-label">Account Status</label>
+                    <div class="d-flex align-items-center tw-flex tw-items-center">
+                      <span class="badge bg-success me-2 tw-mr-2">Active</span>
                       <span *ngIf="profile.is_admin" class="badge bg-primary">
                         <i class="fa fa-shield"></i> Administrator
                       </span>
                     </div>
                   </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 tw-md:tw-col-span-6">
                   <div class="info-item">
-                    <label class="form-label small text-muted">Last Login</label>
-                    <div class="text-dark">{{ formatLastLogin(profile.last_login) }}</div>
+                    <label class="form-label small text-muted tw-text-sm tw-text-muted tw-label">Last Login</label>
+                    <div class="text-dark tw-text-gray-900">{{ formatLastLogin(profile.last_login) }}</div>
                   </div>
                 </div>
               </div>
 
               <!-- Profile Form -->
               <form (ngSubmit)="onSubmitProfile()" #profileFormRef="ngForm">
-                <div class="row">
+                <div class="row tw-grid tw-grid-cols-1">
                   <!-- Username (read-only as per original PHP) -->
-                  <div class="col-md-6 mb-3">
-                    <label for="username" class="form-label">Username</label>
+                  <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
+                    <label for="username" class="form-label tw-label">Username</label>
                     <input 
                       type="text" 
                       id="username"
-                      class="form-control"
+                      class="form-control tw-input"
                       [(ngModel)]="profileForm.username"
                       name="username"
                       readonly
                       placeholder="Username">
-                    <small class="text-muted">Username cannot be changed</small>
+                    <small class="text-muted tw-text-muted">Username cannot be changed</small>
                   </div>
                   
                   <!-- Email (read-only as per original PHP) -->
-                  <div class="col-md-6 mb-3">
-                    <label for="email" class="form-label">Email Address</label>
+                  <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
+                    <label for="email" class="form-label tw-label">Email Address</label>
                     <input 
                       type="email" 
                       id="email"
-                      class="form-control"
+                      class="form-control tw-input"
                       [(ngModel)]="profileForm.email"
                       name="email"
                       readonly
                       placeholder="Email address">
-                    <small class="text-muted">Email cannot be changed</small>
+                    <small class="text-muted tw-text-muted">Email cannot be changed</small>
                   </div>
                 </div>
 
-                <div class="row">
+                <div class="row tw-grid tw-grid-cols-1">
                   <!-- First Name -->
-                  <div class="col-md-6 mb-3">
-                    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                  <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
+                    <label for="first_name" class="form-label tw-label">First Name <span class="text-danger tw-text-danger">*</span></label>
                     <input 
                       type="text" 
                       id="first_name"
-                      class="form-control"
+                      class="form-control tw-input"
                       [class.is-invalid]="errors.first_name"
                       [(ngModel)]="profileForm.first_name"
                       name="first_name"
@@ -112,12 +112,12 @@
                   </div>
                   
                   <!-- Last Name -->
-                  <div class="col-md-6 mb-3">
-                    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                  <div class="col-md-6 mb-3 tw-mb-3 tw-md:tw-col-span-6">
+                    <label for="last_name" class="form-label tw-label">Last Name <span class="text-danger tw-text-danger">*</span></label>
                     <input 
                       type="text" 
                       id="last_name"
-                      class="form-control"
+                      class="form-control tw-input"
                       [class.is-invalid]="errors.last_name"
                       [(ngModel)]="profileForm.last_name"
                       name="last_name"
@@ -130,13 +130,13 @@
                 </div>
 
                 <!-- Submit Button -->
-                <div class="d-flex justify-content-end">
+                <div class="d-flex justify-content-end tw-flex tw-justify-end">
                   <button 
                     type="submit" 
                     class="btn btn-primary"
                     [disabled]="saving">
-                    <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    <i *ngIf="!saving" class="fa fa-save me-2"></i>
+                    <span *ngIf="saving" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status"></span>
+                    <i *ngIf="!saving" class="fa fa-save me-2 tw-mr-2"></i>
                     {{ saving ? 'Saving...' : 'Save Changes' }}
                   </button>
                 </div>
@@ -147,21 +147,21 @@
           <!-- Password Section -->
           <div *ngIf="!loading && profile" class="card">
             <div class="card-header">
-              <h5 class="card-title mb-0">Password</h5>
+              <h5 class="card-title mb-0 tw-mb-0">Password</h5>
             </div>
             <div class="card-body">
               
               <!-- Password Display (when not changing) -->
-              <div *ngIf="!showPasswordChange" class="d-flex justify-content-between align-items-center">
+              <div *ngIf="!showPasswordChange" class="d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center">
                 <div>
-                  <span class="text-muted">••••••••••</span>
-                  <small class="text-muted d-block">Your password is secure</small>
+                  <span class="text-muted tw-text-muted">••••••••••</span>
+                  <small class="text-muted d-block tw-text-muted tw-block">Your password is secure</small>
                 </div>
                 <button 
                   type="button" 
                   class="btn btn-secondary btn-sm"
                   (click)="togglePasswordChange()">
-                  <i class="fa fa-key me-2"></i>Change Password
+                  <i class="fa fa-key me-2 tw-mr-2"></i>Change Password
                 </button>
               </div>
 
@@ -170,13 +170,13 @@
                 <form (ngSubmit)="onSubmitPassword()" #passwordFormRef="ngForm">
                   
                   <!-- Current Password -->
-                  <div class="mb-3">
-                    <label for="current_password" class="form-label">Current Password <span class="text-danger">*</span></label>
+                  <div class="mb-3 tw-mb-3">
+                    <label for="current_password" class="form-label tw-label">Current Password <span class="text-danger tw-text-danger">*</span></label>
                     <div class="password-field-wrapper">
                       <input
                         [type]="showCurrentPassword ? 'text' : 'password'"
                         id="current_password"
-                        class="form-control"
+                        class="form-control tw-input"
                         [class.is-invalid]="errors.current_password"
                         [(ngModel)]="passwordForm.current_password"
                         name="current_password"
@@ -191,19 +191,19 @@
                         <i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                       </button>
                     </div>
-                    <div *ngIf="errors.current_password" class="invalid-feedback d-block">
+                    <div *ngIf="errors.current_password" class="invalid-feedback d-block tw-block">
                       {{ errors.current_password }}
                     </div>
                   </div>
 
                   <!-- New Password -->
-                  <div class="mb-3">
-                    <label for="new_password" class="form-label">New Password <span class="text-danger">*</span></label>
+                  <div class="mb-3 tw-mb-3">
+                    <label for="new_password" class="form-label tw-label">New Password <span class="text-danger tw-text-danger">*</span></label>
                     <div class="password-field-wrapper">
                       <input
                         [type]="showNewPassword ? 'text' : 'password'"
                         id="new_password"
-                        class="form-control"
+                        class="form-control tw-input"
                         [class.is-invalid]="errors.new_password"
                         [(ngModel)]="passwordForm.new_password"
                         name="new_password"
@@ -218,20 +218,20 @@
                         <i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                       </button>
                     </div>
-                    <div *ngIf="errors.new_password" class="invalid-feedback d-block">
+                    <div *ngIf="errors.new_password" class="invalid-feedback d-block tw-block">
                       {{ errors.new_password }}
                     </div>
-                    <small class="text-muted">Must include: 8+ characters, uppercase, lowercase, number, and special character</small>
+                    <small class="text-muted tw-text-muted">Must include: 8+ characters, uppercase, lowercase, number, and special character</small>
                   </div>
 
                   <!-- Confirm Password -->
-                  <div class="mb-3">
-                    <label for="confirm_password" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
+                  <div class="mb-3 tw-mb-3">
+                    <label for="confirm_password" class="form-label tw-label">Confirm New Password <span class="text-danger tw-text-danger">*</span></label>
                     <div class="password-field-wrapper">
                       <input
                         [type]="showConfirmPassword ? 'text' : 'password'"
                         id="confirm_password"
-                        class="form-control"
+                        class="form-control tw-input"
                         [class.is-invalid]="errors.confirm_password"
                         [(ngModel)]="passwordForm.confirm_password"
                         name="confirm_password"
@@ -246,13 +246,13 @@
                         <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                       </button>
                     </div>
-                    <div *ngIf="errors.confirm_password" class="invalid-feedback d-block">
+                    <div *ngIf="errors.confirm_password" class="invalid-feedback d-block tw-block">
                       {{ errors.confirm_password }}
                     </div>
                   </div>
 
                   <!-- Action Buttons -->
-                  <div class="d-flex justify-content-end gap-2">
+                  <div class="d-flex justify-content-end gap-2 tw-flex tw-justify-end tw-gap-2">
                     <button 
                       type="button" 
                       class="btn btn-secondary"
@@ -264,8 +264,8 @@
                       type="submit" 
                       class="btn btn-secondary"
                       [disabled]="changingPassword">
-                      <span *ngIf="changingPassword" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                      <i *ngIf="!changingPassword" class="fa fa-key me-2"></i>
+                      <span *ngIf="changingPassword" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status"></span>
+                      <i *ngIf="!changingPassword" class="fa fa-key me-2 tw-mr-2"></i>
                       {{ changingPassword ? 'Changing...' : 'Change Password' }}
                     </button>
                   </div>

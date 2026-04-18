@@ -3,12 +3,12 @@
     <h5>Latest releases</h5>
   </div>
   <div class="card-body">
-    <div *ngIf="releases.length === 0" class="text-center text-muted py-3">
+    <div *ngIf="releases.length === 0" class="text-center text-muted py-3 tw-text-center tw-text-muted tw-py-3">
       No releases found
     </div>
     <div class="release-tiles" *ngIf="releases.length > 0">
       <div class="release-tile" *ngFor="let release of releases.slice(0, 4)">
-        <span class="release-tile-date text-muted">
+        <span class="release-tile-date text-muted tw-text-muted">
           {{ release.release_date | date:'MMM d, y' }}
         </span>
         <img

@@ -3,7 +3,7 @@
     <h5>Top earning releases (all-time)</h5>
   </div>
   <div class="card-body chart-body">
-    <div *ngIf="releases.length === 0" class="text-center text-muted py-3">
+    <div *ngIf="releases.length === 0" class="text-center text-muted py-3 tw-text-center tw-text-muted tw-py-3">
       No earnings data found
     </div>
     <canvas #earningsChart *ngIf="releases.length > 0"></canvas>

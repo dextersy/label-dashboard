@@ -213,7 +213,7 @@
       }
 
       &.active {
-        color: #007bff;
+        color: var(--brand-color, #3b82f6);
         font-weight: 600;
 
         i {
@@ -420,7 +420,7 @@
 
 /* Admin chip styling */
 .admin-chip {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, var(--brand-color, #3b82f6), color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000));
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -429,7 +429,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--brand-color, #3b82f6) 30%, transparent);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   
@@ -438,9 +438,9 @@
   }
   
   &:hover {
-    background: linear-gradient(135deg, #0056b3, #004085);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000), color-mix(in srgb, var(--brand-color, #3b82f6) 70%, #000000));
     transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 123, 255, 0.4);
+    box-shadow: 0 3px 6px color-mix(in srgb, var(--brand-color, #3b82f6) 40%, transparent);
   }
   
   transition: all 0.2s ease-in-out;

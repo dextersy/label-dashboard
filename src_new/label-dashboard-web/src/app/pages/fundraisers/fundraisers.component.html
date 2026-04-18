@@ -3,8 +3,8 @@
   <div class="container-fluid">
 
     <!-- Page Header with Fundraiser Selector -->
-    <div class="page-header mb-3">
-      <div class="d-flex align-items-start flex-wrap gap-3">
+    <div class="page-header mb-3 tw-mb-3">
+      <div class="d-flex align-items-start flex-wrap gap-3 tw-flex tw-items-start tw-flex-wrap tw-gap-3">
         <div class="fundraiser-selector-main" *ngIf="availableFundraisers.length > 0">
           <app-fundraiser-selection
             [fundraisers]="availableFundraisers"
@@ -18,8 +18,8 @@
     </div>
 
     <!-- Main Content -->
-    <div class="row" *ngIf="selectedFundraiser">
-      <div class="col-12">
+    <div class="row tw-grid tw-grid-cols-1" *ngIf="selectedFundraiser">
+      <div class="col-12 tw-col-span-12">
 
         <!-- Fundraiser Donations Tab -->
         <div *ngIf="activeTab === 'donations'">
@@ -34,10 +34,10 @@
     </div>
 
     <!-- Loading Fundraisers -->
-    <div class="row" *ngIf="loading && availableFundraisers.length === 0">
-      <div class="col-12">
+    <div class="row tw-grid tw-grid-cols-1" *ngIf="loading && availableFundraisers.length === 0">
+      <div class="col-12 tw-col-span-12">
         <div class="card">
-          <div class="card-body text-center p-5">
+          <div class="card-body text-center p-5 tw-text-center">
             <div class="loading-dots">
               <div></div>
               <div></div>
@@ -49,15 +49,15 @@
     </div>
 
     <!-- No Fundraisers Available -->
-    <div class="row" *ngIf="!loading && availableFundraisers.length === 0">
-      <div class="col-12">
+    <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && availableFundraisers.length === 0">
+      <div class="col-12 tw-col-span-12">
         <div class="card">
-          <div class="card-body text-center p-5">
-            <i class="fas fa-hand-holding-heart fa-4x text-muted mb-3"></i>
+          <div class="card-body text-center p-5 tw-text-center">
+            <i class="fas fa-hand-holding-heart fa-4x text-muted mb-3 tw-text-muted tw-mb-3"></i>
             <h4>No Fundraisers Available</h4>
-            <p class="text-muted">No fundraisers found for your label. Create a new fundraiser to get started.</p>
+            <p class="text-muted tw-text-muted">No fundraisers found for your label. Create a new fundraiser to get started.</p>
             <button class="btn btn-primary" *ngIf="isAdmin" (click)="openCreateFundraiserModal()">
-              <i class="fa fa-plus me-1"></i>Create New Fundraiser
+              <i class="fa fa-plus me-1 tw-mr-1"></i>Create New Fundraiser
             </button>
           </div>
         </div>

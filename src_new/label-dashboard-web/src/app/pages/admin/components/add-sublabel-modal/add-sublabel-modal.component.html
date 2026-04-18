@@ -5,7 +5,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-plus me-2"></i>
+          <i class="fas fa-plus me-2 tw-mr-2"></i>
           Add New Sublabel
         </h5>
         <button type="button" class="btn-close" aria-label="Close" (click)="onClose()">
@@ -17,18 +17,18 @@
         <form #addSublabelForm="ngForm" (ngSubmit)="false" novalidate>
         <div class="modal-body">
           <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
+            <i class="fas fa-info-circle me-2 tw-mr-2"></i>
             This will create a new sublabel under your current brand, along with a domain and admin user account.
           </div>
 
           <!-- Brand Name Field -->
-          <div class="mb-3">
-            <label for="brandName" class="form-label">
-              Sublabel Name <span class="text-danger">*</span>
+          <div class="mb-3 tw-mb-3">
+            <label for="brandName" class="form-label tw-label">
+              Sublabel Name <span class="text-danger tw-text-danger">*</span>
             </label>
             <input
               type="text"
-              class="form-control"
+              class="form-control tw-input"
               id="brandName"
               name="brandName"
               [(ngModel)]="formData.brandName"
@@ -43,14 +43,14 @@
           </div>
 
           <!-- Subdomain Name Field -->
-          <div class="mb-3">
-            <label for="subdomainName" class="form-label">
-              Subdomain <span class="text-danger">*</span>
+          <div class="mb-3 tw-mb-3">
+            <label for="subdomainName" class="form-label tw-label">
+              Subdomain <span class="text-danger tw-text-danger">*</span>
             </label>
             <div class="input-group">
               <input
                 type="text"
-                class="form-control"
+                class="form-control tw-input"
                 id="subdomainName"
                 name="subdomainName"
                 [(ngModel)]="formData.subdomainName"
@@ -62,8 +62,8 @@
               <span class="input-group-text">.spindly.app</span>
             </div>
             
-            <div class="form-text text-muted">
-              <i class="fas fa-info-circle me-1"></i>
+            <div class="form-text text-muted tw-text-muted">
+              <i class="fas fa-info-circle me-1 tw-mr-1"></i>
               This will create a subdomain under spindly.app. You can add custom domains later in brand settings.
             </div>
             
@@ -74,13 +74,13 @@
           </div>
 
           <!-- What will be created -->
-          <div class="card bg-light">
+          <div class="card bg-light tw-bg-gray-50">
             <div class="card-body">
               <h6 class="card-title">
-                <i class="fas fa-list me-2"></i>
+                <i class="fas fa-list me-2 tw-mr-2"></i>
                 What will be created:
               </h6>
-              <ul class="mb-0 small">
+              <ul class="mb-0 small tw-mb-0 tw-text-sm">
                 <li>New brand record as a sublabel of your current brand</li>
                 <li>Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.spindly.app" with automatic DNS configuration</li>
                 <li>Admin user account for the new sublabel (copy of your account)</li>
@@ -99,8 +99,8 @@
             class="btn btn-primary"
             (click)="onSubmit(addSublabelForm)"
             [disabled]="!addSublabelForm.form.valid || submitting">
-            <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            <i *ngIf="!submitting" class="fas fa-plus me-2"></i>
+            <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status" aria-hidden="true"></span>
+            <i *ngIf="!submitting" class="fas fa-plus me-2 tw-mr-2"></i>
             {{ submitting ? 'Creating...' : 'Create Sublabel' }}
           </button>
         </div>

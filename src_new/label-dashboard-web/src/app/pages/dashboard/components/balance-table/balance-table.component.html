@@ -3,7 +3,7 @@
     <h5>Balance Summary</h5>
   </div>
   <div class="card-body">
-    <div class="row row-cols-2 row-cols-md-1 g-2 g-md-0 artist-balance-grid">
+    <div class="row row-cols-2 row-cols-md-1 g-2 g-md-0 artist-balance-grid tw-grid tw-grid-cols-1">
       <div class="col" *ngFor="let artist of artists">
         <div class="artist-balance-item">
           <div class="artist-info">
@@ -17,8 +17,8 @@
           </div>
         </div>
       </div>
-      <div class="col-12" *ngIf="artists.length === 0">
-        <p class="text-center text-muted py-2">No artists found</p>
+      <div class="col-12 tw-col-span-12" *ngIf="artists.length === 0">
+        <p class="text-center text-muted py-2 tw-text-center tw-text-muted tw-py-2">No artists found</p>
       </div>
     </div>
   </div>

@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-paper-plane me-2"></i>
+          <i class="fas fa-paper-plane me-2 tw-mr-2"></i>
           Send Test Email
         </h5>
         <button type="button" class="btn-close" (click)="hide()" [disabled]="loading"></button>
@@ -12,13 +12,13 @@
       <div class="modal-body">
         <form>
           <!-- Email Addresses -->
-          <div class="mb-3">
-            <label for="testEmails" class="form-label fw-bold">
-              Test Email Addresses <span class="text-danger">*</span>
+          <div class="mb-3 tw-mb-3">
+            <label for="testEmails" class="form-label fw-bold tw-font-bold tw-label">
+              Test Email Addresses <span class="text-danger tw-text-danger">*</span>
             </label>
             <textarea
               id="testEmails"
-              class="form-control"
+              class="form-control tw-input"
               rows="4"
               [(ngModel)]="emailsText"
               name="testEmails"
@@ -27,8 +27,8 @@
               required></textarea>
             
             <div class="form-text">
-              <div class="d-flex justify-content-between">
-                <span class="text-muted">
+              <div class="d-flex justify-content-between tw-flex tw-justify-between">
+                <span class="text-muted tw-text-muted">
                   Separate multiple emails with commas, spaces, or new lines
                 </span>
                 <span class="badge bg-secondary" *ngIf="getEmailCount() > 0">
@@ -36,9 +36,9 @@
                 </span>
               </div>
               
-              <div *ngIf="getInvalidEmails().length > 0" class="text-danger mt-1">
+              <div *ngIf="getInvalidEmails().length > 0" class="text-danger mt-1 tw-text-danger tw-mt-1">
                 <small>
-                  <i class="fas fa-exclamation-triangle me-1"></i>
+                  <i class="fas fa-exclamation-triangle me-1 tw-mr-1"></i>
                   Invalid emails: {{ getInvalidEmails().join(', ') }}
                 </small>
               </div>
@@ -46,29 +46,29 @@
           </div>
 
           <!-- Subject Preview -->
-          <div class="mb-3">
-            <label class="form-label fw-bold">Subject</label>
-            <div class="form-control bg-light" style="min-height: 40px;">
+          <div class="mb-3 tw-mb-3">
+            <label class="form-label fw-bold tw-font-bold tw-label">Subject</label>
+            <div class="form-control bg-light tw-bg-gray-50 tw-input" style="min-height: 40px;">
               {{ currentSubject || 'No subject specified' }}
             </div>
-            <small class="form-text text-muted">
+            <small class="form-text text-muted tw-text-muted">
               This will use the same subject from your email form
             </small>
           </div>
 
           <!-- Message Preview -->
-          <div class="mb-3">
-            <label class="form-label fw-bold">Message Preview</label>
-            <div class="form-control bg-light message-preview" [innerHTML]="currentMessage || '<span class=&quot;text-muted&quot;>No message specified</span>'">
+          <div class="mb-3 tw-mb-3">
+            <label class="form-label fw-bold tw-font-bold tw-label">Message Preview</label>
+            <div class="form-control bg-light message-preview tw-bg-gray-50 tw-input" [innerHTML]="currentMessage || '<span class=&quot;text-muted&quot;>No message specified</span>'">
             </div>
-            <small class="form-text text-muted">
+            <small class="form-text text-muted tw-text-muted">
               This will use the same message content from your email form
             </small>
           </div>
 
           <!-- Warning Note -->
           <div class="alert alert-warning">
-            <i class="fas fa-info-circle me-2"></i>
+            <i class="fas fa-info-circle me-2 tw-mr-2"></i>
             <strong>Note:</strong> Test emails will be sent with the same content as your main email, 
             but only to the addresses specified above. The actual recipients won't receive these test emails.
           </div>
@@ -88,8 +88,8 @@
           class="btn btn-primary" 
           (click)="onSendTest()"
           [disabled]="!isFormValid() || loading">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-          <i *ngIf="!loading" class="fas fa-paper-plane me-2"></i>
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2 tw-mr-2" role="status"></span>
+          <i *ngIf="!loading" class="fas fa-paper-plane me-2 tw-mr-2"></i>
           <span *ngIf="loading">Sending Test...</span>
           <span *ngIf="!loading">Send Test to {{ getEmailCount() }} Recipients</span>
         </button>

@@ -1,7 +1,7 @@
 <div class="label-finance-tab">
   <!-- Date Range Filter -->
-  <div class="row mb-4">
-    <div class="col-md-12">
+  <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+    <div class="col-md-12 tw-md:tw-col-span-12">
       <app-date-range-filter
         [compact]="true"
         [loading]="loading"
@@ -13,16 +13,16 @@
   </div>
 
   <!-- Dashboard Metrics -->
-  <div class="row mb-4 align-items-center">
-    <div class="col-lg-4 col-md-12 mb-3 mb-lg-0">
-      <div class="current-balance-section text-center p-4">
+  <div class="row mb-4 align-items-center tw-mb-4 tw-items-center tw-grid tw-grid-cols-1">
+    <div class="col-lg-4 col-md-12 mb-3 mb-lg-0 tw-mb-3 tw-lg:tw-col-span-4 tw-md:tw-col-span-12">
+      <div class="current-balance-section text-center p-4 tw-text-center tw-p-4">
         <h2 class="balance-title">Receivable Balance</h2>
         <h1 class="balance-amount" [ngClass]="getAmountClass(dashboard?.receivable_balance ?? 0)">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
         <p class="balance-subtitle">Net earnings - payments received</p>
       </div>
     </div>
 
-    <div class="col-lg-8 col-md-12">
+    <div class="col-lg-8 col-md-12 tw-lg:tw-col-span-8 tw-md:tw-col-span-12">
       <div class="financial-summary-card">
         <div class="financial-summary-item" (click)="showBreakdown('music')">
           <span class="financial-item-label">Net Music Earnings</span>
@@ -49,33 +49,33 @@
   </div>
 
   <!-- Payment Methods and Payment History Section -->
-  <div class="row">
+  <div class="row tw-grid tw-grid-cols-1">
     <!-- Payment Methods -->
-    <div class="col-lg-4 mb-4 mb-lg-0">
-      <div class="card h-100">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">Payment Methods</h5>
+    <div class="col-lg-4 mb-4 mb-lg-0 tw-mb-4 tw-lg:tw-col-span-4">
+      <div class="card h-100 tw-h-full">
+        <div class="card-header d-flex justify-content-between align-items-center tw-flex tw-justify-between tw-items-center">
+          <h5 class="mb-0 tw-mb-0">Payment Methods</h5>
           <button class="btn btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
-            <i class="fas fa-plus me-1"></i>Add
+            <i class="fas fa-plus me-1 tw-mr-1"></i>Add
           </button>
         </div>
         <div class="card-body">
-          <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="text-center text-muted">
-            <i class="fas fa-credit-card fa-3x mb-3"></i>
+          <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="text-center text-muted tw-text-center tw-text-muted">
+            <i class="fas fa-credit-card fa-3x mb-3 tw-mb-3"></i>
             <p>No payment methods configured yet.</p>
             <button class="btn btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
-              <i class="fas fa-plus me-1"></i>Add Payment Method
+              <i class="fas fa-plus me-1 tw-mr-1"></i>Add Payment Method
             </button>
           </div>
           <div *ngIf="paymentMethods && paymentMethods.length > 0">
             <div class="list-group list-group-flush">
-              <div class="list-group-item px-0" *ngFor="let method of paymentMethods">
-                <div class="d-flex justify-content-between align-items-start">
+              <div class="list-group-item px-0 tw-px-0" *ngFor="let method of paymentMethods">
+                <div class="d-flex justify-content-between align-items-start tw-flex tw-justify-between tw-items-start">
                   <div>
                     <strong>{{ method.type }}</strong>
-                    <span *ngIf="method.is_default_for_brand" class="badge bg-success ms-2">Default</span>
-                    <div class="small text-muted">{{ method.account_name }}</div>
-                    <div class="small text-muted">{{ method.account_number_or_email }}</div>
+                    <span *ngIf="method.is_default_for_brand" class="badge bg-success ms-2 tw-ml-2">Default</span>
+                    <div class="small text-muted tw-text-sm tw-text-muted">{{ method.account_name }}</div>
+                    <div class="small text-muted tw-text-sm tw-text-muted">{{ method.account_number_or_email }}</div>
                   </div>
                 </div>
               </div>
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Payment History -->
-    <div class="col-lg-8">
+    <div class="col-lg-8 tw-lg:tw-col-span-8">
       <app-paginated-table
         title="Payment History"
         [data]="payments"
@@ -144,9 +144,9 @@
         </div>
         <div class="modal-body">
           <form #addPaymentMethodForm="ngForm" (ngSubmit)="addPaymentMethod()">
-            <div class="mb-3">
-              <label class="form-label">Bank Selection *</label>
-              <select class="form-control" name="bank_selection" [(ngModel)]="newPaymentMethod.bank_selection" required>
+            <div class="mb-3 tw-mb-3">
+              <label class="form-label tw-label">Bank Selection *</label>
+              <select class="form-control tw-input" name="bank_selection" [(ngModel)]="newPaymentMethod.bank_selection" required>
                 <option value="">Select Bank</option>
                 <option *ngFor="let bank of supportedBanks" [value]="bank.bank_code + ',' + bank.bank_name">
                   {{ bank.bank_name }}
@@ -154,16 +154,16 @@
               </select>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Account Name *</label>
-              <input type="text" class="form-control" name="account_name"
+            <div class="mb-3 tw-mb-3">
+              <label class="form-label tw-label">Account Name *</label>
+              <input type="text" class="form-control tw-input" name="account_name"
                      [(ngModel)]="newPaymentMethod.account_name" required
                      placeholder="Enter account holder name">
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Account Number/Email *</label>
-              <input type="text" class="form-control" name="account_number_or_email"
+            <div class="mb-3 tw-mb-3">
+              <label class="form-label tw-label">Account Number/Email *</label>
+              <input type="text" class="form-control tw-input" name="account_number_or_email"
                      [(ngModel)]="newPaymentMethod.account_number_or_email" required
                      placeholder="Enter account number or email">
             </div>

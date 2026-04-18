@@ -321,11 +321,22 @@ export class EventService {
       if (formEventData.venue_website) formData.append('venue_website', formEventData.venue_website);
       if (formEventData.venue_maps_url) formData.append('venue_maps_url', formEventData.venue_maps_url);
       
+      // Add payment method flags (convert booleans to '1'/'0' for TINYINT fields)
+      const boolToInt = (val: any, def = true) => (val !== undefined ? !!val : def) ? '1' : '0';
+      formData.append('supports_gcash', boolToInt(formEventData.supports_gcash));
+      formData.append('supports_qrph', boolToInt(formEventData.supports_qrph));
+      formData.append('supports_card', boolToInt(formEventData.supports_card));
+      formData.append('supports_ubp', boolToInt(formEventData.supports_ubp));
+      formData.append('supports_dob', boolToInt(formEventData.supports_dob));
+      formData.append('supports_maya', boolToInt(formEventData.supports_maya));
+      formData.append('supports_grabpay', boolToInt(formEventData.supports_grabpay));
+      formData.append('show_tickets_remaining', boolToInt((formEventData as any).show_tickets_remaining));
+
       // Add ticket types if available
       if (formEventData.ticketTypes && Array.isArray(formEventData.ticketTypes)) {
         formData.append('ticketTypes', JSON.stringify(formEventData.ticketTypes));
       }
-      
+
       // Add the poster file
       formData.append('poster', formEventData.poster_file);
       

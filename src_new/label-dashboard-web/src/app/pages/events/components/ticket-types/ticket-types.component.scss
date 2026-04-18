@@ -2,8 +2,8 @@
   background: #eaf2ff;
   padding: 6px 10px;
   border-radius: 8px;
-  border: 2px solid #007bff;
-  box-shadow: 0 2px 8px 0 rgba(0,123,255,0.08);
+  border: 2px solid var(--brand-color, #3b82f6);
+  box-shadow: 0 2px 8px 0 color-mix(in srgb, var(--brand-color, #3b82f6) 8%, transparent);
   margin-bottom: 0.5rem;
   transition: background 0.2s, border 0.2s;
 }
@@ -44,8 +44,8 @@
 
 // Editing card styling - blue border
 .card.border-primary {
-  border: 2px solid #007bff !important;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  border: 2px solid var(--brand-color, #3b82f6) !important;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
 }
 
 // New ticket form styling - green border

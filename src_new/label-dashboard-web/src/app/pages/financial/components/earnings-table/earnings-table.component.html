@@ -16,7 +16,7 @@
         <td class="mobile-narrow mobile-number" style="text-align:right" data-label="Amount" [ngClass]="getAmountClass(earning.amount)">{{ formatCurrency(earning.amount) }}</td>
       </tr>
       <tr *ngIf="earnings.length === 0">
-        <td [attr.colspan]="showHeader ? 4 : 1" class="text-center">No recorded earnings yet.</td>
+        <td [attr.colspan]="showHeader ? 4 : 1" class="text-center tw-text-center">No recorded earnings yet.</td>
       </tr>
     </tbody>
   </table>

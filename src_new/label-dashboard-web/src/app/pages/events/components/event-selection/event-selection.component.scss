@@ -240,8 +240,8 @@
   height: 34px;
   
   &:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    border-color: var(--brand-color, #3b82f6);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
   }
 }
 
@@ -264,7 +264,7 @@
     }
     
     &.active {
-      background-color: #007bff;
+      background-color: var(--brand-color, #3b82f6);
       
       a {
         color: #fff;
@@ -409,14 +409,14 @@
 
 .create-new-event {
   font-weight: 600;
-  color: #007bff !important;
+  color: var(--brand-color, #3b82f6) !important;
   
   &:hover {
     background-color: #f8f9fa !important;
   }
   
   i {
-    color: #007bff;
+    color: var(--brand-color, #3b82f6);
   }
 }
 
@@ -443,7 +443,7 @@
 
 .search-summary {
   i {
-    color: #007bff;
+    color: var(--brand-color, #3b82f6);
   }
 }
 
@@ -477,7 +477,7 @@
 }
 
 .badge-primary {
-  background-color: #007bff !important;
+  background-color: var(--brand-color, #3b82f6) !important;
   color: white !important;
 }
 

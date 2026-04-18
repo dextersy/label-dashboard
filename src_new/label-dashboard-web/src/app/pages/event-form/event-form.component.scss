@@ -107,7 +107,7 @@
     transition: all 0.2s;
 
     &:hover {
-      border-color: #007bff;
+      border-color: var(--brand-color, #3b82f6);
       background: #f8f9fa;
     }
   }
@@ -162,7 +162,7 @@
       cursor: pointer;
 
       &:hover {
-        border-color: #007bff;
+        border-color: var(--brand-color, #3b82f6);
         background: #f8f9fa;
       }
 
@@ -175,7 +175,7 @@
         cursor: pointer;
 
         &:checked ~ label {
-          color: #007bff;
+          color: var(--brand-color, #3b82f6);
           font-weight: 600;
         }
       }
@@ -201,7 +201,7 @@
       }
 
       input:checked ~ label i {
-        color: #007bff;
+        color: var(--brand-color, #3b82f6);
       }
     }
   }
@@ -221,7 +221,7 @@
     div {
       width: 12px;
       height: 12px;
-      background: #007bff;
+      background: var(--brand-color, #3b82f6);
       border-radius: 50%;
       animation: bounce 1.4s infinite ease-in-out both;
 

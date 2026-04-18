@@ -28,7 +28,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control" 
+                  class="form-control tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -43,7 +43,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control" 
+                  class="form-control tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -58,7 +58,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control" 
+                  class="form-control tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -73,7 +73,7 @@
               <div class="input-group">
                 <input 
                   type="number" 
-                  class="form-control" 
+                  class="form-control tw-input" 
                   style="text-align: right;"
                   min="0" 
                   step="1" 
@@ -85,7 +85,7 @@
               </div>
             </td>
             <td class="text-right" data-label="Remaining Recuperable Expense">
-              <div class="d-flex align-items-center justify-content-end">
+              <div class="d-flex align-items-center justify-content-end tw-flex tw-items-center tw-justify-end">
                 <span [ngClass]="getAmountClass(release.recuperable_expense_balance)">{{ formatCurrency(release.recuperable_expense_balance) }}</span>
                 <button 
                   type="button"
@@ -111,9 +111,9 @@
       </table>
     </div>
 
-    <div *ngIf="releases.length === 0" class="text-center py-5">
-      <i class="fa fa-music fa-3x text-muted mb-3"></i>
-      <p class="text-muted">No releases yet.</p>
+    <div *ngIf="releases.length === 0" class="text-center py-5 tw-text-center">
+      <i class="fa fa-music fa-3x text-muted mb-3 tw-text-muted tw-mb-3"></i>
+      <p class="text-muted tw-text-muted">No releases yet.</p>
     </div>
   </div>
 
@@ -129,12 +129,12 @@
         class="btn btn-primary btn-block" 
         (click)="updateRoyalties()"
         [disabled]="updatingRoyalties">
-        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm me-1 tw-mr-1" role="status"></span>
         {{ updatingRoyalties ? 'Saving...' : 'Save Changes' }}
       </button>
       <button 
         type="button" 
-        class="btn btn-secondary btn-block mt-2" 
+        class="btn btn-secondary btn-block mt-2 tw-mt-2" 
         (click)="toggleEditRoyalties()"
         [disabled]="updatingRoyalties">
         Cancel

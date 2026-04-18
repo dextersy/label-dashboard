@@ -11,10 +11,10 @@
   <div id="formContent" *ngIf="profile">
     <!-- Header Text - different for profile completion vs invite -->
     <h3 *ngIf="!isProfileCompletionMode"><strong>Complete Your Profile 🏁</strong></h3>
-    <small class="text-muted" *ngIf="!isProfileCompletionMode">Please update your profile information so we can set up your account correctly.</small>
+    <small class="text-muted tw-text-muted" *ngIf="!isProfileCompletionMode">Please update your profile information so we can set up your account correctly.</small>
 
     <h3 *ngIf="isProfileCompletionMode"><strong>Set Your Username 🏁</strong></h3>
-    <small class="text-muted" *ngIf="isProfileCompletionMode">Your password is already set. Just choose a username to complete your profile.</small>
+    <small class="text-muted tw-text-muted" *ngIf="isProfileCompletionMode">Your password is already set. Just choose a username to complete your profile.</small>
 
     <!-- Error Alert -->
     <div class="alert alert-danger" role="alert" *ngIf="message && messageType === 'error'">

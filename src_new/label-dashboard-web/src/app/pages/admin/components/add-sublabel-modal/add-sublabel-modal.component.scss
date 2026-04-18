@@ -78,7 +78,7 @@
 .form-control:focus {
   border-color: #80bdff;
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
 }
 
 .form-control.is-invalid {
@@ -142,20 +142,20 @@
 
 .btn-primary {
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: var(--brand-color, #3b82f6);
+  border-color: var(--brand-color, #3b82f6);
 }
 
 .btn-primary:hover {
   color: #fff;
-  background-color: #0056b3;
-  border-color: #004085;
+  background-color: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
+  border-color: color-mix(in srgb, var(--brand-color, #3b82f6) 70%, #000000);
 }
 
 .btn-primary:disabled {
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: var(--brand-color, #3b82f6);
+  border-color: var(--brand-color, #3b82f6);
   opacity: 0.65;
 }
 

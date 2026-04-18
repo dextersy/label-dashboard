@@ -143,11 +143,11 @@
 <div class="modal fade show" appModalToBody *ngIf="showWorkspaceSwitchModal" tabindex="-1" style="display: block;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
-      <div class="modal-header border-0 px-4 pt-4 pb-2">
+      <div class="modal-header border-0 px-4 pt-4 pb-2 tw-border-0 tw-px-4 tw-pt-4 tw-pb-2">
         <h5 class="modal-title workspace-switch-modal-title">Switch Workspace</h5>
         <button type="button" class="btn-close" (click)="closeWorkspaceSwitchModal()"></button>
       </div>
-      <div class="modal-body px-4 pb-4 pt-2">
+      <div class="modal-body px-4 pb-4 pt-2 tw-px-4 tw-pb-4 tw-pt-2">
         <div class="workspace-options">
           <button *ngFor="let info of availableWorkspaceInfos"
                   class="workspace-option-btn"

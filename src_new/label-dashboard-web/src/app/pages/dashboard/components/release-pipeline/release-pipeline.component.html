@@ -1,13 +1,13 @@
 <div class="card pipeline-card">
-  <div class="card-header d-flex align-items-center justify-content-between">
-    <h5 class="mb-0">Release Pipeline</h5>
+  <div class="card-header d-flex align-items-center justify-content-between tw-flex tw-items-center tw-justify-between">
+    <h5 class="mb-0 tw-mb-0">Release Pipeline</h5>
     <span class="pipeline-total-badge" *ngIf="total > 0">{{ total }} total</span>
   </div>
 
   <div class="card-body">
     <!-- Empty state -->
-    <div *ngIf="total === 0" class="text-center text-muted py-4">
-      <i class="fas fa-layer-group fa-2x mb-2 d-block"></i>
+    <div *ngIf="total === 0" class="text-center text-muted py-4 tw-text-center tw-text-muted tw-py-4">
+      <i class="fas fa-layer-group fa-2x mb-2 d-block tw-mb-2 tw-block"></i>
       No releases yet
     </div>
 
@@ -44,7 +44,7 @@
       </div>
 
       <!-- Distribution bar -->
-      <div class="distribution-bar mt-3">
+      <div class="distribution-bar mt-3 tw-mt-3">
         <div
           *ngFor="let stage of distributionStages"
           class="distribution-segment"

@@ -35,8 +35,7 @@
               "src/.htaccess"
             ],
             "styles": [
-              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
-              "src/assets/css/light-bootstrap-dashboard.css",
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "src/styles.scss"
             ],
             "scripts": [],
@@ -152,8 +151,7 @@
               "src/.htaccess"
             ],
             "styles": [
-              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
-              "src/assets/css/light-bootstrap-dashboard.css",
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "src/styles.scss"
             ],
             "scripts": [],

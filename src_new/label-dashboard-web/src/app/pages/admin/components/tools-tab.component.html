@@ -1,8 +1,8 @@
 <h3>Administrative Tools</h3>
 
 <!-- Email Logs Section -->
-<div class="row">
-  <div class="col-12">
+<div class="row tw-grid tw-grid-cols-1">
+  <div class="col-12 tw-col-span-12">
     <app-paginated-table
       title="Email Logs"
       [data]="emailLogs"
@@ -30,19 +30,19 @@
         </button>
       </div>
       <div class="modal-body" *ngIf="selectedEmail">
-        <div class="row mb-3">
+        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Timestamp:</strong></div>
           <div class="col-sm-9">{{ formatDate(selectedEmail.timestamp) }}</div>
         </div>
-        <div class="row mb-3">
+        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Recipients:</strong></div>
           <div class="col-sm-9">{{ selectedEmail.recipients }}</div>
         </div>
-        <div class="row mb-3">
+        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Subject:</strong></div>
           <div class="col-sm-9">{{ selectedEmail.subject }}</div>
         </div>
-        <div class="row mb-3">
+        <div class="row mb-3 tw-mb-3 tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Result:</strong></div>
           <div class="col-sm-9">
             <span class="badge" 
@@ -52,10 +52,10 @@
             </span>
           </div>
         </div>
-        <div class="row">
+        <div class="row tw-grid tw-grid-cols-1">
           <div class="col-sm-3"><strong>Content:</strong></div>
           <div class="col-sm-9">
-            <div class="border p-3" style="max-height: 400px; overflow-y: auto;">
+            <div class="border p-3 tw-p-3" style="max-height: 400px; overflow-y: auto;">
               <div [innerHTML]="selectedEmail.body"></div>
             </div>
           </div>

@@ -5,7 +5,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fa fa-exchange-alt me-2"></i>
+          <i class="fa fa-exchange-alt me-2 tw-mr-2"></i>
           Transfer Ticket
         </h5>
         <button type="button" class="btn-close" aria-label="Close" (click)="hide()">
@@ -17,16 +17,16 @@
         <div class="modal-body">
           <!-- Current Ticket Information -->
           <div class="alert alert-info">
-            <h6 class="mb-2">
-              <i class="fa fa-ticket-alt me-2"></i>
+            <h6 class="mb-2 tw-mb-2">
+              <i class="fa fa-ticket-alt me-2 tw-mr-2"></i>
               Current Ticket Information
             </h6>
-            <div class="row">
-              <div class="col-sm-6">
+            <div class="row tw-grid tw-grid-cols-1">
+              <div class="col-sm-6 tw-sm:tw-col-span-6">
                 <strong>Ticket Code:</strong><br>
                 {{ ticket.ticket_code }}
               </div>
-              <div class="col-sm-6">
+              <div class="col-sm-6 tw-sm:tw-col-span-6">
                 <strong>Number of Tickets:</strong><br>
                 {{ ticket.number_of_entries }}
               </div>
@@ -34,50 +34,50 @@
           </div>
 
           <!-- Transfer To Section -->
-          <h6 class="mb-3">
-            <i class="fa fa-user me-2"></i>
+          <h6 class="mb-3 tw-mb-3">
+            <i class="fa fa-user me-2 tw-mr-2"></i>
             Transfer To
           </h6>
 
-          <div class="mb-3">
-            <label class="form-label required">New Name</label>
+          <div class="mb-3 tw-mb-3">
+            <label class="form-label required tw-label">New Name</label>
             <input 
               type="text" 
-              class="form-control" 
+              class="form-control tw-input" 
               [(ngModel)]="transferData.name" 
               name="name"
               placeholder="Full name of new ticket holder"
               required>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label required">New Contact Number</label>
+          <div class="mb-3 tw-mb-3">
+            <label class="form-label required tw-label">New Contact Number</label>
             <input 
               type="tel" 
-              class="form-control" 
+              class="form-control tw-input" 
               [(ngModel)]="transferData.contact_number" 
               name="contact_number"
               placeholder="+639XXXXXXXXX"
               required>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label required">New Email Address</label>
+          <div class="mb-3 tw-mb-3">
+            <label class="form-label required tw-label">New Email Address</label>
             <input 
               type="email" 
-              class="form-control" 
+              class="form-control tw-input" 
               [(ngModel)]="transferData.email_address" 
               name="email_address"
               placeholder="new@example.com"
               required>
-            <small class="form-text text-muted">
+            <small class="form-text text-muted tw-text-muted">
               The new ticket will be sent to this email address
             </small>
           </div>
 
           <!-- Warning Message -->
           <div class="alert alert-warning">
-            <i class="fa fa-exclamation-triangle me-2"></i>
+            <i class="fa fa-exclamation-triangle me-2 tw-mr-2"></i>
             <strong>Important:</strong> 
             The original ticket will be canceled and a new ticket with a new ticket code will be generated and sent to the new email address.
           </div>
@@ -91,8 +91,8 @@
             type="submit" 
             class="btn btn-primary" 
             [disabled]="loading || !transferForm.valid">
-            <i class="fa fa-spinner fa-spin me-2" *ngIf="loading"></i>
-            <i class="fa fa-exchange-alt me-2" *ngIf="!loading"></i>
+            <i class="fa fa-spinner fa-spin me-2 tw-mr-2" *ngIf="loading"></i>
+            <i class="fa fa-exchange-alt me-2 tw-mr-2" *ngIf="!loading"></i>
             {{ loading ? 'Transferring...' : 'Transfer Ticket' }}
           </button>
         </div>

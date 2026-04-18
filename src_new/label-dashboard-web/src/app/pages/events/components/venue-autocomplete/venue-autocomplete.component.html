@@ -4,7 +4,7 @@
     <input
       #searchInput
       type="text"
-      class="form-control"
+      class="form-control tw-input"
       [placeholder]="placeholder"
       [value]="displayValue"
       (input)="onInputChange($event)"
@@ -17,37 +17,37 @@
   </div>
   
   <!-- Loading indicator -->
-  <div class="text-muted small mt-1" *ngIf="isLoading">
-    <i class="fa fa-spinner fa-spin me-1"></i>Searching places...
+  <div class="text-muted small mt-1 tw-text-muted tw-text-sm tw-mt-1" *ngIf="isLoading">
+    <i class="fa fa-spinner fa-spin me-1 tw-mr-1"></i>Searching places...
   </div>
   
   <!-- Manual entry option -->
-  <div class="form-text small mt-1" *ngIf="showDropdown && predictions.length === 0 && searchQuery.length > 2 && !isLoading">
+  <div class="form-text small mt-1 tw-text-sm tw-mt-1" *ngIf="showDropdown && predictions.length === 0 && searchQuery.length > 2 && !isLoading">
     No places found. You can enter the venue name manually.
   </div>
   
   <!-- Selected venue info with clear button -->
-  <div class="selected-venue-info mt-2" *ngIf="selectedVenue && selectedVenue.google_place_id">
-    <div class="card card-body bg-light small">
-      <div class="d-flex align-items-start">
-        <i class="fa fa-map-marker-alt text-primary me-2 mt-1"></i>
-        <div class="flex-grow-1">
-          <div class="fw-semibold">{{ selectedVenue.venue }}</div>
-          <div class="text-muted" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</div>
-          <div class="mt-1" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
-            <span class="badge bg-secondary me-1" *ngIf="selectedVenue.venue_phone">
-              <i class="fa fa-phone me-1"></i>{{ selectedVenue.venue_phone }}
+  <div class="selected-venue-info mt-2 tw-mt-2" *ngIf="selectedVenue && selectedVenue.google_place_id">
+    <div class="card card-body bg-light small tw-bg-gray-50 tw-text-sm">
+      <div class="d-flex align-items-start tw-flex tw-items-start">
+        <i class="fa fa-map-marker-alt text-primary me-2 mt-1 tw-mr-2 tw-mt-1"></i>
+        <div class="flex-grow-1 tw-flex-grow">
+          <div class="fw-semibold tw-font-semibold">{{ selectedVenue.venue }}</div>
+          <div class="text-muted tw-text-muted" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</div>
+          <div class="mt-1 tw-mt-1" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
+            <span class="badge bg-secondary me-1 tw-mr-1" *ngIf="selectedVenue.venue_phone">
+              <i class="fa fa-phone me-1 tw-mr-1"></i>{{ selectedVenue.venue_phone }}
             </span>
             <a [href]="selectedVenue.venue_website" target="_blank" 
                class="badge bg-primary text-decoration-none" 
                *ngIf="selectedVenue.venue_website">
-              <i class="fa fa-globe me-1"></i>Website
+              <i class="fa fa-globe me-1 tw-mr-1"></i>Website
             </a>
           </div>
         </div>
         <button
           type="button"
-          class="btn btn-sm btn-ghost text-muted ms-2 p-1"
+          class="btn btn-sm btn-ghost text-muted ms-2 p-1 tw-text-muted tw-ml-2 tw-p-1"
           (click)="clearSelection()"
           [disabled]="disabled"
           title="Clear selection"

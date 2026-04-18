@@ -1,16 +1,16 @@
-<div class="row">
-  <div class="col-md-8">
+<div class="row tw-grid tw-grid-cols-1">
+  <div class="col-md-8 tw-md:tw-col-span-8">
     <div class="card">
       <div class="card-header">
         <h5>Add New Earning</h5>
       </div>
       <div class="card-body">
         <form (ngSubmit)="onSubmitEarning()">
-          <div class="row">
-            <div class="col-md-6">
+          <div class="row tw-grid tw-grid-cols-1">
+            <div class="col-md-6 tw-md:tw-col-span-6">
               <div class="form-group">
                 <label>Release</label>
-                <select class="form-control" [(ngModel)]="newEarningForm.release_id" name="release_id" required>
+                <select class="form-control tw-input" [(ngModel)]="newEarningForm.release_id" name="release_id" required>
                   <option value="">Select a release</option>
                   <option *ngFor="let release of releases" [value]="release.id">
                     {{ formatReleaseOption(release) }}
@@ -18,10 +18,10 @@
                 </select>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 tw-md:tw-col-span-6">
               <div class="form-group">
                 <label>Earning Type</label>
-                <select class="form-control" [(ngModel)]="newEarningForm.type" name="type" required>
+                <select class="form-control tw-input" [(ngModel)]="newEarningForm.type" name="type" required>
                   <option value="Streaming">Streaming</option>
                   <option value="Sync">Sync</option>
                   <option value="Downloads">Downloads</option>
@@ -31,24 +31,24 @@
             </div>
           </div>
 
-          <div class="row">
-            <div class="col-md-6">
+          <div class="row tw-grid tw-grid-cols-1">
+            <div class="col-md-6 tw-md:tw-col-span-6">
               <div class="form-group">
                 <label>Date Recorded</label>
-                <input type="date" class="form-control" [(ngModel)]="newEarningForm.date_recorded" name="date_recorded" required>
+                <input type="date" class="form-control tw-input" [(ngModel)]="newEarningForm.date_recorded" name="date_recorded" required>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 tw-md:tw-col-span-6">
               <div class="form-group">
                 <label>Amount (PHP)</label>
-                <input type="number" class="form-control" [(ngModel)]="newEarningForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+                <input type="number" class="form-control tw-input" [(ngModel)]="newEarningForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
               </div>
             </div>
           </div>
 
           <div class="form-group">
             <label>Description</label>
-            <textarea class="form-control" [(ngModel)]="newEarningForm.description" name="description" rows="3" placeholder="Enter earning description" required></textarea>
+            <textarea class="form-control tw-input" [(ngModel)]="newEarningForm.description" name="description" rows="3" placeholder="Enter earning description" required></textarea>
           </div>
 
           <div class="form-group">
@@ -58,7 +58,7 @@
                 Calculate royalties automatically based on artist percentages
               </label>
             </div>
-            <small class="form-text text-muted">
+            <small class="form-text text-muted tw-text-muted">
               When checked, this will automatically create royalty entries for all artists associated with the selected release based on their configured royalty percentages.
             </small>
           </div>

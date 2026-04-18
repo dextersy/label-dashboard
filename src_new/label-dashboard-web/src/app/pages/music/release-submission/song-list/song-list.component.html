@@ -1,5 +1,5 @@
 <div class="table-responsive" *ngIf="songs.length > 0">
-  <div *ngIf="!isRestrictedMode()" class="alert alert-info mb-3">
+  <div *ngIf="!isRestrictedMode()" class="alert alert-info mb-3 tw-mb-3">
     <i class="fa fa-arrows-alt mr-2"></i>
     Drag and drop rows to reorder tracks
   </div>
@@ -22,7 +22,7 @@
       <tr *ngFor="let song of songs; let i = index" cdkDrag [cdkDragDisabled]="isRestrictedMode()" class="song-row">
         <td *ngIf="!isRestrictedMode()" class="drag-handle-cell">
           <div class="drag-handle" cdkDragHandle>
-            <i class="fa fa-grip-vertical text-muted"></i>
+            <i class="fa fa-grip-vertical text-muted tw-text-muted"></i>
           </div>
         </td>
         <td>{{ i + 1 }}</td>
@@ -46,11 +46,11 @@
         </td>
         <td>
           <strong>{{ song.title }}</strong>
-          <div *ngIf="!song.audio_file && !isUploading(song.id)" class="text-danger small">
-            <i class="fa fa-exclamation-circle me-1"></i>
+          <div *ngIf="!song.audio_file && !isUploading(song.id)" class="text-danger small tw-text-danger tw-text-sm">
+            <i class="fa fa-exclamation-circle me-1 tw-mr-1"></i>
             <strong>No audio master</strong>
           </div>
-          <div *ngIf="isUploading(song.id)" class="mt-2">
+          <div *ngIf="isUploading(song.id)" class="mt-2 tw-mt-2">
             <div class="progress" style="height: 6px;">
               <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
                    role="progressbar"
@@ -60,25 +60,25 @@
                    aria-valuemax="100">
               </div>
             </div>
-            <small class="text-muted">Uploading... {{ getUploadProgress(song.id) }}%</small>
+            <small class="text-muted tw-text-muted">Uploading... {{ getUploadProgress(song.id) }}%</small>
           </div>
         </td>
         <td>{{ formatDuration(song.duration) }}</td>
         <td>{{ getCollaboratorNames(song) }}</td>
         <td><small>{{ song.isrc || '-' }}</small></td>
         <td>
-          <div class="d-flex align-items-center gap-0">
-            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-icon btn-sm text-success" title="Spotify">
+          <div class="d-flex align-items-center gap-0 tw-flex tw-items-center tw-gap-0">
+            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn btn-icon btn-sm text-success tw-text-success" title="Spotify">
               <i class="fab fa-spotify"></i>
             </a>
             <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn btn-icon btn-sm" title="Apple Music">
               <i class="fab fa-apple"></i>
             </a>
-            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn btn-icon btn-sm text-danger" title="YouTube">
+            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn btn-icon btn-sm text-danger tw-text-danger" title="YouTube">
               <i class="fab fa-youtube"></i>
             </a>
           </div>
-          <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted">-</span>
+          <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="text-muted tw-text-muted">-</span>
         </td>
         <td class="actions-column">
           <div class="kebab-container" (click)="$event.stopPropagation()">
@@ -101,27 +101,27 @@
      [style.right.px]="dropdownPosition.right"
      (click)="$event.stopPropagation()">
   <button class="btn btn-ghost" (click)="onEdit(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id)">
-    <i class="fa fa-edit me-2"></i> Edit Song
+    <i class="fa fa-edit me-2 tw-mr-2"></i> Edit Song
   </button>
   <button class="btn btn-ghost" (click)="onUploadAudio(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id) || isRestrictedMode()">
-    <i class="fa me-2" [class.fa-upload]="!isUploading(openKebabItem.id)" [class.fa-spinner]="isUploading(openKebabItem.id)" [class.fa-spin]="isUploading(openKebabItem.id)"></i>
+    <i class="fa me-2 tw-mr-2" [class.fa-upload]="!isUploading(openKebabItem.id)" [class.fa-spinner]="isUploading(openKebabItem.id)" [class.fa-spin]="isUploading(openKebabItem.id)"></i>
     {{ isUploading(openKebabItem.id) ? 'Uploading...' : openKebabItem.audio_file ? 'Replace Audio' : 'Upload Audio' }}
   </button>
   <button *ngIf="openKebabItem.audio_file" class="btn btn-ghost"
           (click)="onDownloadMaster(openKebabItem); closeKebab()"
           [disabled]="downloadingSongMaster[openKebabItem.id!]">
-    <i class="fa me-2" [class.fa-download]="!downloadingSongMaster[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMaster[openKebabItem.id!]" [class.fa-spin]="downloadingSongMaster[openKebabItem.id!]"></i>
+    <i class="fa me-2 tw-mr-2" [class.fa-download]="!downloadingSongMaster[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMaster[openKebabItem.id!]" [class.fa-spin]="downloadingSongMaster[openKebabItem.id!]"></i>
     {{ downloadingSongMaster[openKebabItem.id!] ? 'Downloading...' : 'Download WAV' }}
   </button>
   <button *ngIf="openKebabItem.audio_file_mp3" class="btn btn-ghost"
           (click)="onDownloadMp3(openKebabItem); closeKebab()"
           [disabled]="downloadingSongMp3[openKebabItem.id!]">
-    <i class="fa me-2" [class.fa-music]="!downloadingSongMp3[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMp3[openKebabItem.id!]" [class.fa-spin]="downloadingSongMp3[openKebabItem.id!]"></i>
+    <i class="fa me-2 tw-mr-2" [class.fa-music]="!downloadingSongMp3[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMp3[openKebabItem.id!]" [class.fa-spin]="downloadingSongMp3[openKebabItem.id!]"></i>
     {{ downloadingSongMp3[openKebabItem.id!] ? 'Downloading...' : 'Download MP3' }}
   </button>
-  <button *ngIf="!isRestrictedMode()" class="btn btn-ghost text-danger"
+  <button *ngIf="!isRestrictedMode()" class="btn btn-ghost text-danger tw-text-danger"
           (click)="onDelete(openKebabItem); closeKebab()">
-    <i class="fa fa-trash me-2"></i> Delete Song
+    <i class="fa fa-trash me-2 tw-mr-2"></i> Delete Song
   </button>
 </div>
 

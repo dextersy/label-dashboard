@@ -17,7 +17,7 @@
           (click)="handleAction(notification, action)"
           class="btn btn-primary btn-sm"
           [disabled]="isActionProcessing(notification, action)">
-          <span *ngIf="isActionProcessing(notification, action)" class="spinner-border spinner-border-sm me-1"></span>
+          <span *ngIf="isActionProcessing(notification, action)" class="spinner-border spinner-border-sm me-1 tw-mr-1"></span>
           {{ action.label }}
         </button>
       </div>

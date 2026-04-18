@@ -19,11 +19,11 @@
           <div class="event-title">{{ selectedEvent.title }}</div>
           <div class="event-meta">
             <span class="event-date">
-              <i class="fa fa-clock me-1"></i>
+              <i class="fa fa-clock me-1 tw-mr-1"></i>
               {{ selectedEvent.date_and_time | date:'MMM d, y • h:mm a' }}
             </span>
-            <span class="event-venue ms-2">
-              <i class="fas fa-map-marker-alt me-1"></i>
+            <span class="event-venue ms-2 tw-ml-2">
+              <i class="fas fa-map-marker-alt me-1 tw-mr-1"></i>
               {{ selectedEvent.venue }}
             </span>
           </div>
@@ -35,7 +35,7 @@
         </div>
       </div>
       <div *ngIf="!selectedEvent && !loading" class="no-event">
-        <i class="fa fa-calendar-plus me-2"></i>
+        <i class="fa fa-calendar-plus me-2 tw-mr-2"></i>
         Select an Event
       </div>
       <div *ngIf="loading" class="loading-inline">
@@ -59,7 +59,7 @@
           <i class="fa fa-search search-icon"></i>
           <input 
             type="text" 
-            class="form-control search-input" 
+            class="form-control search-input tw-input" 
             placeholder="Search events..."
             [(ngModel)]="searchTerm"
             (click)="$event.stopPropagation()"
@@ -78,7 +78,7 @@
       <!-- Create new event option at the top -->
       <li *ngIf="isAdmin" class="create-event-item">
         <a (click)="createEvent()" class="create-new-event">
-          <i class="fa fa-plus me-2"></i>
+          <i class="fa fa-plus me-2 tw-mr-2"></i>
           Create New Event
         </a>
       </li>
@@ -105,11 +105,11 @@
             <div class="dropdown-event-title">{{ event.title }}</div>
             <div class="dropdown-event-meta">
               <div class="dropdown-event-date">
-                <i class="fa fa-clock me-1"></i>
+                <i class="fa fa-clock me-1 tw-mr-1"></i>
                 {{ event.date_and_time | date:'MMM d, y • h:mm a' }}
               </div>
               <div class="dropdown-event-venue">
-                <i class="fas fa-map-marker-alt me-1"></i>
+                <i class="fas fa-map-marker-alt me-1 tw-mr-1"></i>
                 {{ event.venue }}
               </div>
             </div>
@@ -124,7 +124,7 @@
       
       <li class="no-results" *ngIf="filteredEvents.length === 0 && searchTerm">
         <div class="no-results-content">
-          <i class="fa fa-search text-muted"></i>
+          <i class="fa fa-search text-muted tw-text-muted"></i>
           <span>No events found matching "{{ searchTerm }}"</span>
         </div>
       </li>
@@ -134,9 +134,9 @@
   </div>
   
   <!-- Event search results summary -->
-  <div class="search-summary mt-2" *ngIf="searchTerm && filteredEvents.length > 0">
-    <small class="text-muted">
-      <i class="fa fa-filter me-1"></i>
+  <div class="search-summary mt-2 tw-mt-2" *ngIf="searchTerm && filteredEvents.length > 0">
+    <small class="text-muted tw-text-muted">
+      <i class="fa fa-filter me-1 tw-mr-1"></i>
       Showing {{ filteredEvents.length }} of {{ events.length }} events
     </small>
   </div>

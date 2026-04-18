@@ -1,5 +1,5 @@
-<div class="row">
-  <div class="col-md-8">
+<div class="row tw-grid tw-grid-cols-1">
+  <div class="col-md-8 tw-md:tw-col-span-8">
     <app-payments-table 
       [payments]="payments"
       [pagination]="paymentsPagination"
@@ -12,7 +12,7 @@
     </app-payments-table>
   </div>
   
-  <div class="col-md-4">
+  <div class="col-md-4 tw-md:tw-col-span-4">
     <div class="card">
       <div class="card-header">
         <h5>Payment Methods</h5>
@@ -26,7 +26,7 @@
           </div>
           <div class="payment-method-actions">
             <div *ngIf="method.is_default_for_artist" class="badge badge-primary">Default</div>
-            <div class="btn-group btn-group-sm mt-1" role="group">
+            <div class="btn-group btn-group-sm mt-1 tw-mt-1" role="group">
               <button 
                 type="button" 
                 class="btn btn-secondary btn-sm btn-icon"
@@ -47,7 +47,7 @@
           </div>
         </div>
         
-        <div *ngIf="paymentMethods.length === 0" class="text-center text-muted">
+        <div *ngIf="paymentMethods.length === 0" class="text-center text-muted tw-text-center tw-text-muted">
           No payment methods added yet.
         </div>
         
@@ -55,7 +55,7 @@
         
         <div class="collapsible-section">
           <div class="collapsible-header" (click)="toggleAddPaymentMethodCollapse()">
-            <h6 class="mb-0">Add Payment Method</h6>
+            <h6 class="mb-0 tw-mb-0">Add Payment Method</h6>
             <i class="fa" [class.fa-chevron-down]="isAddPaymentMethodCollapsed" [class.fa-chevron-up]="!isAddPaymentMethodCollapsed"></i>
           </div>
           
@@ -63,7 +63,7 @@
             <form (ngSubmit)="onSubmitPaymentMethod()">
               <div class="form-group">
                 <label>Bank Selection</label>
-                <select class="form-control" [(ngModel)]="addPaymentMethodForm.bank_selection" name="bank_selection" required>
+                <select class="form-control tw-input" [(ngModel)]="addPaymentMethodForm.bank_selection" name="bank_selection" required>
                   <option value="">Select Bank</option>
                   <option *ngFor="let bank of supportedBanks" [value]="bank.bank_code + ',' + bank.bank_name">
                     {{ bank.bank_name }}
@@ -73,16 +73,16 @@
               
               <div class="form-group">
                 <label>Account Name</label>
-                <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_name" name="account_name" required>
+                <input type="text" class="form-control tw-input" [(ngModel)]="addPaymentMethodForm.account_name" name="account_name" required>
               </div>
               
               <div class="form-group">
                 <label>Account Number/Email</label>
-                <input type="text" class="form-control" [(ngModel)]="addPaymentMethodForm.account_number_or_email" name="account_number_or_email" required>
+                <input type="text" class="form-control tw-input" [(ngModel)]="addPaymentMethodForm.account_number_or_email" name="account_number_or_email" required>
               </div>
               
               <button type="submit" class="btn btn-primary btn-sm" [disabled]="addingPaymentMethod">
-                <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm me-1 tw-mr-1" role="status"></span>
                 {{ addingPaymentMethod ? 'Adding...' : 'Add Payment Method' }}
               </button>
             </form>
@@ -91,7 +91,7 @@
       </div>
     </div>
     
-    <div class="card mt-3" *ngIf="payoutSettings">
+    <div class="card mt-3 tw-mt-3" *ngIf="payoutSettings">
       <div class="card-header">
         <h5>Payout Settings</h5>
       </div>
@@ -99,7 +99,7 @@
         <form (ngSubmit)="onUpdatePayoutSettings()">
           <div class="form-group">
             <label>Payout Point (PHP)</label>
-            <input type="number" class="form-control" [(ngModel)]="payoutSettings.payout_point" name="payout_point" min="0" step="0.01">
+            <input type="number" class="form-control tw-input" [(ngModel)]="payoutSettings.payout_point" name="payout_point" min="0" step="0.01">
           </div>
           
           <div class="form-check form-switch">
@@ -109,7 +109,7 @@
             </label>
           </div>
           
-          <button type="submit" class="btn btn-primary btn-sm mt-2">Update Settings</button>
+          <button type="submit" class="btn btn-primary btn-sm mt-2 tw-mt-2">Update Settings</button>
         </form>
       </div>
     </div>

@@ -16,20 +16,20 @@
       </div>
       <div class="modal-body">
         <!-- Info Message for Non-Draft Releases -->
-        <div *ngIf="isEditMode && isRestrictedMode()" class="alert alert-info mb-3">
-          <i class="fa fa-info-circle me-2"></i>
+        <div *ngIf="isEditMode && isRestrictedMode()" class="alert alert-info mb-3 tw-mb-3">
+          <i class="fa fa-info-circle me-2 tw-mr-2"></i>
           <strong>This release is {{ releaseStatus }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
         </div>
 
         <form (ngSubmit)="onSubmit()" #songFormRef="ngForm">
           <!-- Basic Information -->
-          <h5 class="mb-3">Basic Information</h5>
+          <h5 class="mb-3 tw-mb-3">Basic Information</h5>
 
           <div class="form-group">
-            <label for="songTitle">Song Title <span class="text-danger">*</span></label>
+            <label for="songTitle">Song Title <span class="text-danger tw-text-danger">*</span></label>
             <input
               type="text"
-              class="form-control"
+              class="form-control tw-input"
               id="songTitle"
               [(ngModel)]="songForm.title"
               name="title"
@@ -39,28 +39,28 @@
               [readonly]="isRestrictedMode()">
           </div>
 
-          <div class="row" *ngIf="isAdmin">
-            <div class="col-md-6">
+          <div class="row tw-grid tw-grid-cols-1" *ngIf="isAdmin">
+            <div class="col-md-6 tw-md:tw-col-span-6">
               <div class="form-group">
                 <label for="duration">Duration (seconds)</label>
                 <input
                   type="number"
-                  class="form-control"
+                  class="form-control tw-input"
                   id="duration"
                   [(ngModel)]="songForm.duration"
                   name="duration"
                   placeholder="180"
                   min="0"
                   [readonly]="isRestrictedMode()">
-                <small class="form-text text-muted">Duration in seconds (e.g., 180 = 3:00)</small>
+                <small class="form-text text-muted tw-text-muted">Duration in seconds (e.g., 180 = 3:00)</small>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 tw-md:tw-col-span-6">
               <div class="form-group">
                 <label for="isrc">ISRC Code</label>
                 <input
                   type="text"
-                  class="form-control"
+                  class="form-control tw-input"
                   id="isrc"
                   [(ngModel)]="songForm.isrc"
                   name="isrc"
@@ -74,7 +74,7 @@
           <div class="form-group">
             <label for="lyrics">Lyrics</label>
             <textarea
-              class="form-control"
+              class="form-control tw-input"
               id="lyrics"
               [(ngModel)]="songForm.lyrics"
               name="lyrics"
@@ -84,13 +84,13 @@
 
           <!-- Streaming Links -->
           <div *ngIf="isAdmin">
-            <h5 class="mb-3 mt-4">Streaming Links</h5>
+            <h5 class="mb-3 mt-4 tw-mb-3 tw-mt-4">Streaming Links</h5>
 
             <div class="form-group">
               <label for="spotifyLink">Spotify Link</label>
               <input
                 type="url"
-                class="form-control"
+                class="form-control tw-input"
                 id="spotifyLink"
                 [(ngModel)]="songForm.spotify_link"
                 name="spotify_link"
@@ -102,7 +102,7 @@
               <label for="appleMusicLink">Apple Music Link</label>
               <input
                 type="url"
-                class="form-control"
+                class="form-control tw-input"
                 id="appleMusicLink"
                 [(ngModel)]="songForm.apple_music_link"
                 name="apple_music_link"
@@ -114,7 +114,7 @@
               <label for="youtubeLink">YouTube Link</label>
               <input
                 type="url"
-                class="form-control"
+                class="form-control tw-input"
                 id="youtubeLink"
                 [(ngModel)]="songForm.youtube_link"
                 name="youtube_link"
@@ -124,12 +124,12 @@
           </div>
 
           <!-- Collaborators -->
-          <h5 class="mb-3 mt-4">Collaborators (Artists)</h5>
-          <p class="text-muted small mb-3">
+          <h5 class="mb-3 mt-4 tw-mb-3 tw-mt-4">Collaborators (Artists)</h5>
+          <p class="text-muted small mb-3 tw-text-muted tw-text-sm tw-mb-3">
             Indicate performing artists that are involved in this track. If the artist you collaborated with does not appear, inform your label administrator.
           </p>
 
-          <div class="card mb-3" [class.z-index-high]="showCollaboratorDropdown" [class.z-index-collaborators]="!showCollaboratorDropdown">
+          <div class="card mb-3 tw-mb-3" [class.z-index-high]="showCollaboratorDropdown" [class.z-index-collaborators]="!showCollaboratorDropdown">
             <div class="card-body overflow-visible">
               <div class="chip-input-wrapper">
                 <div class="chip-input-field"
@@ -172,8 +172,8 @@
                           [disabled]="releaseArtistIds.includes(artist.id) || isArtistAlreadyAdded(artist.id)"
                           (click)="selectCollaboratorFromDropdown(artist.id)">
                     {{ artist.name }}
-                    <span *ngIf="releaseArtistIds.includes(artist.id)" class="text-muted small"> (Release artist)</span>
-                    <span *ngIf="isArtistAlreadyAdded(artist.id)" class="text-muted small"> (Already added)</span>
+                    <span *ngIf="releaseArtistIds.includes(artist.id)" class="text-muted small tw-text-muted tw-text-sm"> (Release artist)</span>
+                    <span *ngIf="isArtistAlreadyAdded(artist.id)" class="text-muted small tw-text-muted tw-text-sm"> (Already added)</span>
                   </button>
                 </div>
               </div>
@@ -181,12 +181,12 @@
           </div>
 
           <!-- Authors -->
-          <h5 class="mb-3 mt-4">Authors (Lyricists)</h5>
-          <p class="text-muted small mb-3">
+          <h5 class="mb-3 mt-4 tw-mb-3 tw-mt-4">Authors (Lyricists)</h5>
+          <p class="text-muted small mb-3 tw-text-muted tw-text-sm tw-mb-3">
             <strong>Use full legal names.</strong> Indicate people who contributed to the lyrics of this song. Select from the list of songwriters in our database or add a new songwriter.
           </p>
 
-          <div class="card mb-3" [class.z-index-high]="showAuthorDropdown || isCreatingNewAuthor" [class.z-index-authors]="!showAuthorDropdown && !isCreatingNewAuthor">
+          <div class="card mb-3 tw-mb-3" [class.z-index-high]="showAuthorDropdown || isCreatingNewAuthor" [class.z-index-authors]="!showAuthorDropdown && !isCreatingNewAuthor">
             <div class="card-body overflow-visible">
               <!-- Chip input with search -->
               <div class="chip-input-wrapper">
@@ -240,55 +240,55 @@
                           class="chip-dropdown-item"
                           (click)="selectAuthorSongwriter(songwriter)">
                     <strong>{{ songwriter.name }}</strong>
-                    <span *ngIf="songwriter.pro_affiliation" class="text-muted"> ({{ songwriter.pro_affiliation }})</span>
-                    <span *ngIf="songwriter.ipi_number" class="text-muted small"> - IPI: {{ songwriter.ipi_number }}</span>
+                    <span *ngIf="songwriter.pro_affiliation" class="text-muted tw-text-muted"> ({{ songwriter.pro_affiliation }})</span>
+                    <span *ngIf="songwriter.ipi_number" class="text-muted small tw-text-muted tw-text-sm"> - IPI: {{ songwriter.ipi_number }}</span>
                   </button>
                 </div>
               </div>
 
               <!-- Create new songwriter form (shown when in create mode) -->
               <div *ngIf="isCreatingNewAuthor" class="create-songwriter-form">
-                <h6 class="mb-3">Create New Songwriter</h6>
-                <div class="row">
-                  <div class="col-md-12 mb-2">
-                    <label for="newAuthorName" class="form-label mb-1"><small>Name <span class="text-danger">*</span></small></label>
+                <h6 class="mb-3 tw-mb-3">Create New Songwriter</h6>
+                <div class="row tw-grid tw-grid-cols-1">
+                  <div class="col-md-12 mb-2 tw-mb-2 tw-md:tw-col-span-12">
+                    <label for="newAuthorName" class="form-label mb-1 tw-mb-1 tw-label"><small>Name <span class="text-danger tw-text-danger">*</span></small></label>
                     <input
                       type="text"
                       id="newAuthorName"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newAuthor.name"
                       name="new_author_name_create"
                       placeholder="Songwriter name"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 mb-2">
-                    <label for="newAuthorPro" class="form-label mb-1"><small>PRO Affiliation (optional)</small></label>
+                  <div class="col-md-6 mb-2 tw-mb-2 tw-md:tw-col-span-6">
+                    <label for="newAuthorPro" class="form-label mb-1 tw-mb-1 tw-label"><small>PRO Affiliation (optional)</small></label>
                     <input
                       type="text"
                       id="newAuthorPro"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newAuthor.pro_affiliation"
                       name="new_author_pro_create"
                       placeholder="e.g., ASCAP, BMI"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 mb-2">
-                    <label for="newAuthorIpi" class="form-label mb-1"><small>IPI Number (optional)</small></label>
+                  <div class="col-md-6 mb-2 tw-mb-2 tw-md:tw-col-span-6">
+                    <label for="newAuthorIpi" class="form-label mb-1 tw-mb-1 tw-label"><small>IPI Number (optional)</small></label>
                     <input
                       type="text"
                       id="newAuthorIpi"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newAuthor.ipi_number"
                       name="new_author_ipi_create"
                       placeholder="IPI Number"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 mb-2" *ngIf="isAdmin">
-                    <label for="newAuthorShare" class="form-label mb-1"><small>Share % (optional)</small></label>
+                  <div class="col-md-6 mb-2 tw-mb-2 tw-md:tw-col-span-6" *ngIf="isAdmin">
+                    <label for="newAuthorShare" class="form-label mb-1 tw-mb-1 tw-label"><small>Share % (optional)</small></label>
                     <input
                       type="number"
                       id="newAuthorShare"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newAuthor.share_percentage"
                       name="new_author_share_create"
                       placeholder="Share %"
@@ -298,7 +298,7 @@
                       [readonly]="isRestrictedMode()">
                   </div>
                 </div>
-                <div class="mt-3">
+                <div class="mt-3 tw-mt-3">
                   <button type="button" class="btn btn-primary btn-sm mr-2" (click)="addAuthor()" [disabled]="isRestrictedMode() || !newAuthor.name.trim()">
                     <i class="fa fa-check"></i> Add
                   </button>
@@ -311,12 +311,12 @@
           </div>
 
           <!-- Composers -->
-          <h5 class="mb-3 mt-4">Composers</h5>
-          <p class="text-muted small mb-3">
+          <h5 class="mb-3 mt-4 tw-mb-3 tw-mt-4">Composers</h5>
+          <p class="text-muted small mb-3 tw-text-muted tw-text-sm tw-mb-3">
             <strong>Use full legal names.</strong> Indicate who contributed to the music for each track. Generally, "composer" refers to who made the main melody of the song (the tune that is sung), but you can take liberty to decide who should be credited for the music. Select from the list of songwriters in our database or add a new songwriter.
           </p>
 
-          <div class="card mb-3" [class.z-index-high]="showComposerDropdown || isCreatingNewComposer" [class.z-index-composers]="!showComposerDropdown && !isCreatingNewComposer">
+          <div class="card mb-3 tw-mb-3" [class.z-index-high]="showComposerDropdown || isCreatingNewComposer" [class.z-index-composers]="!showComposerDropdown && !isCreatingNewComposer">
             <div class="card-body overflow-visible">
               <!-- Chip input with search -->
               <div class="chip-input-wrapper">
@@ -370,55 +370,55 @@
                           class="chip-dropdown-item"
                           (click)="selectComposerSongwriter(songwriter)">
                     <strong>{{ songwriter.name }}</strong>
-                    <span *ngIf="songwriter.pro_affiliation" class="text-muted"> ({{ songwriter.pro_affiliation }})</span>
-                    <span *ngIf="songwriter.ipi_number" class="text-muted small"> - IPI: {{ songwriter.ipi_number }}</span>
+                    <span *ngIf="songwriter.pro_affiliation" class="text-muted tw-text-muted"> ({{ songwriter.pro_affiliation }})</span>
+                    <span *ngIf="songwriter.ipi_number" class="text-muted small tw-text-muted tw-text-sm"> - IPI: {{ songwriter.ipi_number }}</span>
                   </button>
                 </div>
               </div>
 
               <!-- Create new songwriter form (shown when in create mode) -->
               <div *ngIf="isCreatingNewComposer" class="create-songwriter-form">
-                <h6 class="mb-3">Create New Songwriter</h6>
-                <div class="row">
-                  <div class="col-md-12 mb-2">
-                    <label for="newComposerName" class="form-label mb-1"><small>Name <span class="text-danger">*</span></small></label>
+                <h6 class="mb-3 tw-mb-3">Create New Songwriter</h6>
+                <div class="row tw-grid tw-grid-cols-1">
+                  <div class="col-md-12 mb-2 tw-mb-2 tw-md:tw-col-span-12">
+                    <label for="newComposerName" class="form-label mb-1 tw-mb-1 tw-label"><small>Name <span class="text-danger tw-text-danger">*</span></small></label>
                     <input
                       type="text"
                       id="newComposerName"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newComposer.name"
                       name="new_composer_name_create"
                       placeholder="Songwriter name"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 mb-2">
-                    <label for="newComposerPro" class="form-label mb-1"><small>PRO Affiliation (optional)</small></label>
+                  <div class="col-md-6 mb-2 tw-mb-2 tw-md:tw-col-span-6">
+                    <label for="newComposerPro" class="form-label mb-1 tw-mb-1 tw-label"><small>PRO Affiliation (optional)</small></label>
                     <input
                       type="text"
                       id="newComposerPro"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newComposer.pro_affiliation"
                       name="new_composer_pro_create"
                       placeholder="e.g., ASCAP, BMI"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 mb-2">
-                    <label for="newComposerIpi" class="form-label mb-1"><small>IPI Number (optional)</small></label>
+                  <div class="col-md-6 mb-2 tw-mb-2 tw-md:tw-col-span-6">
+                    <label for="newComposerIpi" class="form-label mb-1 tw-mb-1 tw-label"><small>IPI Number (optional)</small></label>
                     <input
                       type="text"
                       id="newComposerIpi"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newComposer.ipi_number"
                       name="new_composer_ipi_create"
                       placeholder="IPI Number"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 mb-2" *ngIf="isAdmin">
-                    <label for="newComposerShare" class="form-label mb-1"><small>Share % (optional)</small></label>
+                  <div class="col-md-6 mb-2 tw-mb-2 tw-md:tw-col-span-6" *ngIf="isAdmin">
+                    <label for="newComposerShare" class="form-label mb-1 tw-mb-1 tw-label"><small>Share % (optional)</small></label>
                     <input
                       type="number"
                       id="newComposerShare"
-                      class="form-control form-control-sm"
+                      class="form-control form-control-sm tw-input"
                       [(ngModel)]="newComposer.share_percentage"
                       name="new_composer_share_create"
                       placeholder="Share %"
@@ -428,7 +428,7 @@
                       [readonly]="isRestrictedMode()">
                   </div>
                 </div>
-                <div class="mt-3">
+                <div class="mt-3 tw-mt-3">
                   <button type="button" class="btn btn-primary btn-sm mr-2" (click)="addComposer()" [disabled]="isRestrictedMode() || !newComposer.name.trim()">
                     <i class="fa fa-check"></i> Add
                   </button>

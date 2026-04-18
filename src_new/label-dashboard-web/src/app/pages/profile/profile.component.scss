@@ -35,7 +35,7 @@
   }
   
   &.bg-primary {
-    background-color: #007bff !important;
+    background-color: var(--brand-color, #3b82f6) !important;
   }
 }
 

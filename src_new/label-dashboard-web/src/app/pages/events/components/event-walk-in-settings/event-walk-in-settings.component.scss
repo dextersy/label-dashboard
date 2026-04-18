@@ -24,7 +24,7 @@
       cursor: pointer;
 
       &:hover {
-        border-color: #007bff;
+        border-color: var(--brand-color, #3b82f6);
         background: #f8f9fa;
       }
 
@@ -37,7 +37,7 @@
         cursor: pointer;
 
         &:checked ~ label {
-          color: #007bff;
+          color: var(--brand-color, #3b82f6);
           font-weight: 600;
         }
       }
@@ -63,7 +63,7 @@
       }
 
       input:checked ~ label i {
-        color: #007bff;
+        color: var(--brand-color, #3b82f6);
       }
     }
   }
@@ -82,8 +82,8 @@
   }
 
   .card.border-primary {
-    border: 2px solid #007bff !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border: 2px solid var(--brand-color, #3b82f6) !important;
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
   }
 
   .card.border-success {

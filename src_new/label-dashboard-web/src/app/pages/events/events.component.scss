@@ -49,8 +49,8 @@
         }
         
         &.active {
-          border-bottom-color: #007bff;
-          color: #007bff;
+          border-bottom-color: var(--brand-color, #3b82f6);
+          color: var(--brand-color, #3b82f6);
           background-color: transparent;
         }
         

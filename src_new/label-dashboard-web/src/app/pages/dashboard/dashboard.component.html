@@ -2,7 +2,7 @@
 <div class="container-fluid">
 
   <!-- Loading state -->
-  <div *ngIf="loading" class="text-center py-5">
+  <div *ngIf="loading" class="text-center py-5 tw-text-center">
     <div class="loading-dots">
       <div></div>
       <div></div>
@@ -21,7 +21,7 @@
   <!-- Dashboard content -->
   <div *ngIf="!loading && !error && dashboardData">
     <!-- Welcome Header - Minimalist -->
-    <div class="welcome-section mb-4">
+    <div class="welcome-section mb-4 tw-mb-4">
       <h1 class="welcome-greeting">
         Good {{ getTimeOfDay() }}, <span class="welcome-name">{{ userFirstName }}! ✨</span>
       </h1>
@@ -29,12 +29,12 @@
     </div>
 
     <!-- Quick Menu + Stats Row -->
-    <div class="row mb-4">
+    <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
+      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0 tw-mb-3 tw-lg:tw-col-span-8 tw-md:tw-col-span-12">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
-        <div class="row">
-          <div class="col-12 col-sm-6 mb-3 mb-sm-0">
+        <div class="row tw-grid tw-grid-cols-1">
+          <div class="col-12 col-sm-6 mb-3 mb-sm-0 tw-mb-3 tw-col-span-12 tw-sm:tw-col-span-6">
             <a routerLink="/music/releases/new" class="quick-menu-card quick-menu-card-primary">
               <div class="quick-menu-icon-wrap">
                 <i class="fas fa-upload"></i>
@@ -48,7 +48,7 @@
               </div>
             </a>
           </div>
-          <div class="col-6 col-sm-3">
+          <div class="col-6 col-sm-3 tw-col-span-6">
             <a routerLink="/artist/profile" class="quick-menu-card">
               <div class="quick-menu-icon-wrap">
                 <i class="fas fa-user-edit"></i>
@@ -62,7 +62,7 @@
               </div>
             </a>
           </div>
-          <div class="col-6 col-sm-3">
+          <div class="col-6 col-sm-3 tw-col-span-6">
             <a routerLink="/financial/summary" class="quick-menu-card">
               <div class="quick-menu-icon-wrap">
                 <i class="fas fa-chart-pie"></i>
@@ -80,7 +80,7 @@
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-4 col-md-12 d-flex flex-column">
+      <div class="col-lg-4 col-md-12 d-flex flex-column tw-flex tw-flex-col tw-lg:tw-col-span-4 tw-md:tw-col-span-12">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
@@ -111,21 +111,21 @@
 
     <!-- Dashboard widgets -->
     <!-- Row 1: Latest releases + Release Pipeline -->
-    <div class="row mb-4">
-      <div class="col-lg-6 mb-4 mb-lg-0">
+    <div class="row mb-4 tw-mb-4 tw-grid tw-grid-cols-1">
+      <div class="col-lg-6 mb-4 mb-lg-0 tw-mb-4 tw-lg:tw-col-span-6">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
-      <div class="col-lg-6">
+      <div class="col-lg-6 tw-lg:tw-col-span-6">
         <app-release-pipeline [stages]="dashboardData.releasePipeline || []"></app-release-pipeline>
       </div>
     </div>
 
     <!-- Row 2: Top earning releases + Balance summary -->
-    <div class="row">
-      <div class="col-lg-8 mb-4 mb-lg-0">
+    <div class="row tw-grid tw-grid-cols-1">
+      <div class="col-lg-8 mb-4 mb-lg-0 tw-mb-4 tw-lg:tw-col-span-8">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-4 tw-lg:tw-col-span-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>
     </div>

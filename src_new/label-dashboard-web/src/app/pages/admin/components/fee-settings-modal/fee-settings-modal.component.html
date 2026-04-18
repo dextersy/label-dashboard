@@ -9,23 +9,23 @@
         <form [formGroup]="feeForm" (ngSubmit)="onSubmit()">
           
           <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
+            <i class="fas fa-info-circle me-2 tw-mr-2"></i>
             Configure the fees that will be charged to this sublabel. The monthly fee applies to both music and event earnings, while transaction and percentage fees can be set separately. All values can be set to 0 if no fees apply.
           </div>
 
           <!-- General Monthly Fee -->
-          <div class="card mb-4">
+          <div class="card mb-4 tw-mb-4">
             <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fas fa-calendar me-2 text-success"></i>
+              <h6 class="mb-0 tw-mb-0">
+                <i class="fas fa-calendar me-2 text-success tw-mr-2 tw-text-success"></i>
                 General Monthly Fee
               </h6>
             </div>
             <div class="card-body">
-              <div class="mb-3">
-                <label for="monthlyFee" class="form-label">
+              <div class="mb-3 tw-mb-3">
+                <label for="monthlyFee" class="form-label tw-label">
                   Monthly Fee (₱)
-                  <i class="fas fa-info-circle text-muted ms-1" 
+                  <i class="fas fa-info-circle text-muted ms-1 tw-text-muted tw-ml-1" 
                      title="Not yet supported" 
                      data-bs-toggle="tooltip" 
                      data-bs-placement="top"></i>
@@ -33,14 +33,14 @@
                 <input
                   type="number"
                   id="monthlyFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="monthly_fee"
                   min="0"
                   step="0.01"
                   placeholder="0.00"
                   title="Not yet supported"
                   [class.is-invalid]="feeForm.get('monthly_fee')?.invalid && feeForm.get('monthly_fee')?.touched">
-                <div class="form-text text-muted">Fixed monthly fee charged to brand (coming soon)</div>
+                <div class="form-text text-muted tw-text-muted">Fixed monthly fee charged to brand (coming soon)</div>
                 <div class="invalid-feedback" *ngIf="feeForm.get('monthly_fee')?.invalid && feeForm.get('monthly_fee')?.touched">
                   Monthly fee must be a non-negative number
                 </div>
@@ -49,22 +49,22 @@
           </div>
           
           <!-- Music Fee Settings -->
-          <div class="card mb-4">
+          <div class="card mb-4 tw-mb-4">
             <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fas fa-music me-2 text-primary"></i>
+              <h6 class="mb-0 tw-mb-0">
+                <i class="fas fa-music me-2 text-primary tw-mr-2"></i>
                 Music Earnings Fee Settings
               </h6>
             </div>
             <div class="card-body" formGroupName="music">
               
               <!-- Music Transaction Fixed Fee -->
-              <div class="mb-3">
-                <label for="musicTransactionFee" class="form-label">Fixed Fee per Transaction (₱)</label>
+              <div class="mb-3 tw-mb-3">
+                <label for="musicTransactionFee" class="form-label tw-label">Fixed Fee per Transaction (₱)</label>
                 <input
                   type="number"
                   id="musicTransactionFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="transaction_fixed_fee"
                   min="0"
                   step="0.01"
@@ -77,12 +77,12 @@
               </div>
 
               <!-- Music Revenue Percentage Fee -->
-              <div class="mb-3">
-                <label for="musicRevenueFee" class="form-label">Revenue Percentage Fee (%)</label>
+              <div class="mb-3 tw-mb-3">
+                <label for="musicRevenueFee" class="form-label tw-label">Revenue Percentage Fee (%)</label>
                 <input
                   type="number"
                   id="musicRevenueFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="revenue_percentage_fee"
                   min="0"
                   max="100"
@@ -96,9 +96,9 @@
               </div>
 
               <!-- Music Fee Revenue Type -->
-              <div class="mb-3">
-                <label class="form-label">Revenue Type for Music Percentage Fee</label>
-                <div class="d-flex gap-3">
+              <div class="mb-3 tw-mb-3">
+                <label class="form-label tw-label">Revenue Type for Music Percentage Fee</label>
+                <div class="d-flex gap-3 tw-flex tw-gap-3">
                   <div class="form-check">
                     <input
                       class="form-check-input"
@@ -131,22 +131,22 @@
           </div>
 
           <!-- Event Fee Settings -->
-          <div class="card mb-4">
+          <div class="card mb-4 tw-mb-4">
             <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fas fa-calendar-alt me-2 text-warning"></i>
+              <h6 class="mb-0 tw-mb-0">
+                <i class="fas fa-calendar-alt me-2 text-warning tw-mr-2 tw-text-warning"></i>
                 Event Earnings Fee Settings
               </h6>
             </div>
             <div class="card-body" formGroupName="event">
 
               <!-- Event Transaction Fixed Fee -->
-              <div class="mb-3">
-                <label for="eventTransactionFee" class="form-label">Fixed Fee per Transaction (₱)</label>
+              <div class="mb-3 tw-mb-3">
+                <label for="eventTransactionFee" class="form-label tw-label">Fixed Fee per Transaction (₱)</label>
                 <input
                   type="number"
                   id="eventTransactionFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="transaction_fixed_fee"
                   min="0"
                   step="0.01"
@@ -159,12 +159,12 @@
               </div>
 
               <!-- Event Revenue Percentage Fee -->
-              <div class="mb-3">
-                <label for="eventRevenueFee" class="form-label">Revenue Percentage Fee (%)</label>
+              <div class="mb-3 tw-mb-3">
+                <label for="eventRevenueFee" class="form-label tw-label">Revenue Percentage Fee (%)</label>
                 <input
                   type="number"
                   id="eventRevenueFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="revenue_percentage_fee"
                   min="0"
                   max="100"
@@ -178,9 +178,9 @@
               </div>
 
               <!-- Event Fee Revenue Type -->
-              <div class="mb-3">
-                <label class="form-label">Revenue Type for Event Percentage Fee</label>
-                <div class="d-flex gap-3">
+              <div class="mb-3 tw-mb-3">
+                <label class="form-label tw-label">Revenue Type for Event Percentage Fee</label>
+                <div class="d-flex gap-3 tw-flex tw-gap-3">
                   <div class="form-check">
                     <input
                       class="form-check-input"
@@ -213,22 +213,22 @@
           </div>
 
           <!-- Fundraiser Fee Settings -->
-          <div class="card mb-4">
+          <div class="card mb-4 tw-mb-4">
             <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fas fa-hand-holding-heart me-2 text-danger"></i>
+              <h6 class="mb-0 tw-mb-0">
+                <i class="fas fa-hand-holding-heart me-2 text-danger tw-mr-2 tw-text-danger"></i>
                 Fundraiser Earnings Fee Settings
               </h6>
             </div>
             <div class="card-body" formGroupName="fundraiser">
 
               <!-- Fundraiser Transaction Fixed Fee -->
-              <div class="mb-3">
-                <label for="fundraiserTransactionFee" class="form-label">Fixed Fee per Donation (₱)</label>
+              <div class="mb-3 tw-mb-3">
+                <label for="fundraiserTransactionFee" class="form-label tw-label">Fixed Fee per Donation (₱)</label>
                 <input
                   type="number"
                   id="fundraiserTransactionFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="transaction_fixed_fee"
                   min="0"
                   step="0.01"
@@ -241,12 +241,12 @@
               </div>
 
               <!-- Fundraiser Revenue Percentage Fee -->
-              <div class="mb-3">
-                <label for="fundraiserRevenueFee" class="form-label">Revenue Percentage Fee (%)</label>
+              <div class="mb-3 tw-mb-3">
+                <label for="fundraiserRevenueFee" class="form-label tw-label">Revenue Percentage Fee (%)</label>
                 <input
                   type="number"
                   id="fundraiserRevenueFee"
-                  class="form-control"
+                  class="form-control tw-input"
                   formControlName="revenue_percentage_fee"
                   min="0"
                   max="100"
@@ -260,9 +260,9 @@
               </div>
 
               <!-- Fundraiser Fee Revenue Type -->
-              <div class="mb-3">
-                <label class="form-label">Revenue Type for Fundraiser Percentage Fee</label>
-                <div class="d-flex gap-3">
+              <div class="mb-3 tw-mb-3">
+                <label class="form-label tw-label">Revenue Type for Fundraiser Percentage Fee</label>
+                <div class="d-flex gap-3 tw-flex tw-gap-3">
                   <div class="form-check">
                     <input
                       class="form-check-input"
@@ -295,52 +295,52 @@
           </div>
 
           <!-- Fee Summary -->
-          <div class="card bg-light mt-4" *ngIf="showPreview()">
+          <div class="card bg-light mt-4 tw-bg-gray-50 tw-mt-4" *ngIf="showPreview()">
             <div class="card-body">
               <h6 class="card-title">Fee Summary</h6>
               
               <!-- General Monthly Fee Summary -->
-              <div *ngIf="showMonthlyPreview()" class="mb-3">
-                <strong class="text-success">
-                  <i class="fas fa-calendar me-2"></i>General Monthly Fee:
+              <div *ngIf="showMonthlyPreview()" class="mb-3 tw-mb-3">
+                <strong class="text-success tw-text-success">
+                  <i class="fas fa-calendar me-2 tw-mr-2"></i>General Monthly Fee:
                 </strong>
-                <ul class="list-unstyled mb-0 ms-3">
+                <ul class="list-unstyled mb-0 ms-3 tw-mb-0 tw-ml-3">
                   <li>
-                    <i class="fas fa-calendar me-2 text-success"></i>
+                    <i class="fas fa-calendar me-2 text-success tw-mr-2 tw-text-success"></i>
                     Monthly: ₱{{ feeForm.get('monthly_fee')?.value | number:'1.2-2' }} (applies to both music and events)
                   </li>
                 </ul>
               </div>
               
               <!-- Music Fees Summary -->
-              <div *ngIf="showMusicPreview()" class="mb-3">
+              <div *ngIf="showMusicPreview()" class="mb-3 tw-mb-3">
                 <strong class="text-primary">
-                  <i class="fas fa-music me-2"></i>Music Earnings Fees:
+                  <i class="fas fa-music me-2 tw-mr-2"></i>Music Earnings Fees:
                 </strong>
-                <ul class="list-unstyled mb-0 ms-3">
+                <ul class="list-unstyled mb-0 ms-3 tw-mb-0 tw-ml-3">
                   <li *ngIf="feeForm.get('music.transaction_fixed_fee')?.value > 0">
-                    <i class="fas fa-exchange-alt me-2 text-info"></i>
+                    <i class="fas fa-exchange-alt me-2 text-info tw-mr-2"></i>
                     Per Transaction: ₱{{ feeForm.get('music.transaction_fixed_fee')?.value | number:'1.2-2' }}
                   </li>
                   <li *ngIf="feeForm.get('music.revenue_percentage_fee')?.value > 0">
-                    <i class="fas fa-percentage me-2 text-warning"></i>
+                    <i class="fas fa-percentage me-2 text-warning tw-mr-2 tw-text-warning"></i>
                     {{ feeForm.get('music.revenue_percentage_fee')?.value }}% of {{ feeForm.get('music.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
               </div>
 
               <!-- Event Fees Summary -->
-              <div *ngIf="showEventPreview()" class="mb-3">
-                <strong class="text-warning">
-                  <i class="fas fa-calendar-alt me-2"></i>Event Earnings Fees:
+              <div *ngIf="showEventPreview()" class="mb-3 tw-mb-3">
+                <strong class="text-warning tw-text-warning">
+                  <i class="fas fa-calendar-alt me-2 tw-mr-2"></i>Event Earnings Fees:
                 </strong>
-                <ul class="list-unstyled mb-0 ms-3">
+                <ul class="list-unstyled mb-0 ms-3 tw-mb-0 tw-ml-3">
                   <li *ngIf="feeForm.get('event.transaction_fixed_fee')?.value > 0">
-                    <i class="fas fa-exchange-alt me-2 text-info"></i>
+                    <i class="fas fa-exchange-alt me-2 text-info tw-mr-2"></i>
                     Per Transaction: ₱{{ feeForm.get('event.transaction_fixed_fee')?.value | number:'1.2-2' }}
                   </li>
                   <li *ngIf="feeForm.get('event.revenue_percentage_fee')?.value > 0">
-                    <i class="fas fa-percentage me-2 text-warning"></i>
+                    <i class="fas fa-percentage me-2 text-warning tw-mr-2 tw-text-warning"></i>
                     {{ feeForm.get('event.revenue_percentage_fee')?.value }}% of {{ feeForm.get('event.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
@@ -348,16 +348,16 @@
 
               <!-- Fundraiser Fees Summary -->
               <div *ngIf="showFundraiserPreview()">
-                <strong class="text-danger">
-                  <i class="fas fa-hand-holding-heart me-2"></i>Fundraiser Earnings Fees:
+                <strong class="text-danger tw-text-danger">
+                  <i class="fas fa-hand-holding-heart me-2 tw-mr-2"></i>Fundraiser Earnings Fees:
                 </strong>
-                <ul class="list-unstyled mb-0 ms-3">
+                <ul class="list-unstyled mb-0 ms-3 tw-mb-0 tw-ml-3">
                   <li *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.value > 0">
-                    <i class="fas fa-exchange-alt me-2 text-info"></i>
+                    <i class="fas fa-exchange-alt me-2 text-info tw-mr-2"></i>
                     Per Donation: ₱{{ feeForm.get('fundraiser.transaction_fixed_fee')?.value | number:'1.2-2' }}
                   </li>
                   <li *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.value > 0">
-                    <i class="fas fa-percentage me-2 text-warning"></i>
+                    <i class="fas fa-percentage me-2 text-warning tw-mr-2 tw-text-warning"></i>
                     {{ feeForm.get('fundraiser.revenue_percentage_fee')?.value }}% of {{ feeForm.get('fundraiser.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
@@ -365,7 +365,7 @@
 
               <!-- No Fees Message -->
               <div *ngIf="!showPreview()">
-                <i class="fas fa-check me-2 text-success"></i>
+                <i class="fas fa-check me-2 text-success tw-mr-2 tw-text-success"></i>
                 No fees configured
               </div>
             </div>
@@ -379,10 +379,10 @@
         </button>
         <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading || feeForm.invalid">
           <span *ngIf="loading">
-            <i class="fas fa-spinner fa-spin me-2"></i>Saving...
+            <i class="fas fa-spinner fa-spin me-2 tw-mr-2"></i>Saving...
           </span>
           <span *ngIf="!loading">
-            <i class="fas fa-save me-2"></i>Save Fee Settings
+            <i class="fas fa-save me-2 tw-mr-2"></i>Save Fee Settings
           </span>
         </button>
       </div>

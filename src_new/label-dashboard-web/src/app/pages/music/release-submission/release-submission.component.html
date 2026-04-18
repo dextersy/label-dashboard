@@ -13,7 +13,7 @@
   </ng-container>
 
   <!-- Edit Form for Draft releases or admin edit mode -->
-  <app-in-page-nav class="mt-3" *ngIf="!showReadOnlyView" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
+  <app-in-page-nav class="mt-3 tw-mt-3" *ngIf="!showReadOnlyView" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
 
     <div class="release-form-container">
       <!-- Release Info Section -->
@@ -34,13 +34,13 @@
         </app-release-info-section>
 
         <!-- Show Next button only after release is saved -->
-        <div class="section-actions section-actions--next-only mt-4" *ngIf="releaseId">
+        <div class="section-actions section-actions--next-only mt-4 tw-mt-4" *ngIf="releaseId">
           <button
             type="button"
             class="btn btn-secondary"
             (click)="setActiveSection('credits')">
             Next: Album Credits
-            <i class="fa fa-arrow-right ms-2"></i>
+            <i class="fa fa-arrow-right ms-2 tw-ml-2"></i>
           </button>
         </div>
       </div>
@@ -60,12 +60,12 @@
           (creditsSaved)="onAlbumCreditsSaved($event)">
         </app-album-credits-section>
 
-        <div class="section-actions mt-4">
+        <div class="section-actions mt-4 tw-mt-4">
           <button
             type="button"
             class="btn btn-secondary"
             (click)="setActiveSection('info')">
-            <i class="fa fa-arrow-left me-2"></i>
+            <i class="fa fa-arrow-left me-2 tw-mr-2"></i>
             Back: Release Info
           </button>
           <button
@@ -73,7 +73,7 @@
             class="btn btn-secondary"
             (click)="setActiveSection('tracks')">
             Next: Track List
-            <i class="fa fa-arrow-right ms-2"></i>
+            <i class="fa fa-arrow-right ms-2 tw-ml-2"></i>
           </button>
         </div>
       </div>
@@ -95,12 +95,12 @@
           (alertMessage)="onAlertMessage($event)">
         </app-track-list-section>
 
-        <div class="section-actions mt-4">
+        <div class="section-actions mt-4 tw-mt-4">
           <button
             type="button"
             class="btn btn-secondary"
             (click)="setActiveSection('credits')">
-            <i class="fa fa-arrow-left me-2"></i>
+            <i class="fa fa-arrow-left me-2 tw-mr-2"></i>
             Back: Album Credits
           </button>
           <button
@@ -110,7 +110,7 @@
             *ngIf="isDraftStatus"
             (click)="setActiveSection('submit')">
             Next: Submit
-            <i class="fa fa-arrow-right ms-2"></i>
+            <i class="fa fa-arrow-right ms-2 tw-ml-2"></i>
           </button>
         </div>
       </div>
@@ -132,12 +132,12 @@
           (navigateToSection)="setActiveSection($event)">
         </app-submission-section>
 
-        <div class="section-actions mt-4">
+        <div class="section-actions mt-4 tw-mt-4">
           <button
             type="button"
             class="btn btn-secondary"
             (click)="setActiveSection('tracks')">
-            <i class="fa fa-arrow-left me-2"></i>
+            <i class="fa fa-arrow-left me-2 tw-mr-2"></i>
             Back: Track List
           </button>
           <button

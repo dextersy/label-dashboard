@@ -230,7 +230,7 @@
   }
 
   .table-light {
-    background-color: rgba(0, 123, 255, 0.05) !important;
+    background-color: color-mix(in srgb, var(--brand-color, #3b82f6) 5%, transparent) !important;
     
     td {
       font-style: italic;

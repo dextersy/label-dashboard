@@ -56,7 +56,7 @@ body, html {
 #formFooter {
   a {
     cursor: pointer;
-    color: #007bff;
+    color: var(--brand-color, #3b82f6);
     text-decoration: none;
     
     &:hover {

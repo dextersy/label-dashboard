@@ -5,7 +5,7 @@
   }
 
   .alert-primary {
-    border-color: #b8daff;
+    border-color: rgba(var(--brand-color-rgb, 59,130,246), 0.3);
     background-color: #d1ecf1;
     color: #0c5460;
     
@@ -46,7 +46,7 @@
   }
 
   .alert-info {
-    border-color: #b8daff;
+    border-color: rgba(var(--brand-color-rgb, 59,130,246), 0.3);
     background-color: #d1ecf1;
     color: #0c5460;
   }
