@@ -9,16 +9,41 @@ import { AuthService } from '../../../services/auth.service';
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div class="w-full max-w-md">
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-primary-600">Your Scene</h1>
-          <p class="mt-2 text-gray-500">Sign in to your organizer account</p>
-        </div>
+    <div class="min-h-screen bg-black flex">
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+      <!-- Left panel — branding -->
+      <div class="hidden lg:flex flex-col justify-between w-2/5 border-r-2 border-white/15 p-10 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-[0.04]"
+          style="background-image: repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%); background-size: 12px 12px;"></div>
+        <div class="relative z-10">
+          <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-5 opacity-30">
+        </div>
+        <div class="relative z-10">
+          <p class="text-xs font-mono text-yellow-400 uppercase tracking-[0.25em] mb-5">— organizer portal —</p>
+          <h2 class="text-5xl font-black text-white uppercase leading-[1] mb-5">
+            Your shows.<br>Your rules.
+          </h2>
+          <p class="text-sm font-mono text-white/25 max-w-xs leading-relaxed">
+            list your gig, sell tickets, track the door. built for the people putting on shows.
+          </p>
+        </div>
+        <div class="relative z-10">
+          <p class="text-xs font-mono text-white/15 uppercase tracking-wider">no service fees. no gatekeeping.</p>
+        </div>
+      </div>
+
+      <!-- Right panel — form -->
+      <div class="flex-1 flex items-center justify-center px-6 py-12 bg-white">
+        <div class="w-full max-w-sm">
+
+          <div class="lg:hidden mb-8">
+            <img src="/assets/logo-light-bg.png" alt="Your Scene" class="h-6">
+          </div>
+
+          <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-7">Sign in to your account</p>
+
           @if (error()) {
-            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <div class="mb-5 p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">
               {{ error() }}
             </div>
           }
@@ -26,32 +51,32 @@ import { AuthService } from '../../../services/auth.service';
           <form [formGroup]="form" (ngSubmit)="submit()">
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
                 <input type="email" formControlName="email"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                   placeholder="you@example.com">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
                 <input type="password" formControlName="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                   placeholder="••••••••">
               </div>
             </div>
 
             <div class="mt-2 text-right">
-              <a routerLink="/forgot-password" class="text-xs text-primary-600 hover:underline">Forgot password?</a>
+              <a routerLink="/app/forgot-password" class="text-xs font-mono text-gray-400 hover:text-yellow-500 uppercase tracking-wider transition-colors">Forgot password?</a>
             </div>
 
             <button type="submit" [disabled]="loading()"
-              class="mt-6 w-full py-2.5 px-4 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors">
+              class="mt-6 w-full py-2.5 px-4 bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black uppercase tracking-wider transition-colors disabled:opacity-50">
               {{ loading() ? 'Signing in...' : 'Sign in' }}
             </button>
           </form>
 
-          <p class="mt-6 text-center text-sm text-gray-500">
+          <p class="mt-6 text-xs font-mono text-gray-500 text-center">
             Don't have an account?
-            <a routerLink="/signup" class="text-primary-600 font-medium hover:underline">Create one</a>
+            <a routerLink="/app/signup" class="text-yellow-500 hover:text-yellow-600 uppercase tracking-wider transition-colors ml-1">Create one</a>
           </p>
         </div>
       </div>
@@ -77,7 +102,7 @@ export class LoginComponent {
 
     const { email, password } = this.form.value;
     this.auth.login(email, password).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.router.navigate(['/app/dashboard']),
       error: (err) => {
         this.error.set(err.error?.error || 'Login failed. Please try again.');
         this.loading.set(false);

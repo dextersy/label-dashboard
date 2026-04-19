@@ -20,93 +20,135 @@ import { EventReferrer } from '../../../models/event-referrer.model';
   imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
   template: `
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Header -->
-      <div class="flex items-center gap-3 mb-6">
-        <a routerLink="/events" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
-        </a>
-        <div class="flex-1">
-          <h1 class="text-2xl font-bold text-gray-900">{{ event()?.title }}</h1>
-          <p class="text-sm text-gray-500 mt-0.5">{{ event()?.venue }} · {{ event()?.date_and_time | date:'mediumDate' }}</p>
+
+      <!-- Hero Header -->
+      <div class="border border-gray-200 mb-6 relative overflow-hidden bg-white">
+        <div class="absolute inset-0 opacity-[0.04]"
+          style="background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0, rgba(0,0,0,0.15) 1px, transparent 0, transparent 50%); background-size: 10px 10px;"></div>
+        <div class="relative z-10 flex gap-6 p-6 md:p-8">
+          <div class="flex-1 min-w-0">
+            <!-- Back + status row -->
+            <div class="flex items-center gap-3 mb-4">
+              <a routerLink="/app/events" class="text-xs font-mono text-gray-400 hover:text-yellow-500 uppercase tracking-wider transition-colors">
+                ← All Events
+              </a>
+              <span class="w-px h-3 bg-gray-300"></span>
+              <span class="text-xs font-mono uppercase px-2 py-0.5 border"
+                [class]="event()?.status === 'published'
+                  ? 'border-green-300 text-green-700 bg-green-50'
+                  : event()?.status === 'past'
+                  ? 'border-blue-300 text-blue-700 bg-blue-50'
+                  : 'border-gray-300 text-gray-500 bg-gray-50'">
+                {{ event()?.status }}
+              </span>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-2xl md:text-3xl font-black text-gray-900 mb-3 leading-tight uppercase">{{ event()?.title }}</h1>
+
+            <!-- Meta -->
+            <div class="flex flex-wrap items-center gap-4 mb-6 font-mono">
+              <span class="text-xs text-yellow-500 uppercase tracking-wide">
+                {{ event()?.date_and_time | date:'EEE MMM d · h:mm a' }}
+              </span>
+              @if (event()?.venue) {
+                <span class="text-xs text-gray-400">{{ event()?.venue }}</span>
+              }
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <a [routerLink]="['/app/events', routeEventId(), 'edit']"
+                 class="px-3 py-1.5 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
+                Edit Event
+              </a>
+              <button (click)="togglePublish()"
+                 class="px-3 py-1.5 border text-xs font-mono uppercase tracking-wider transition-colors"
+                 [class]="event()?.status === 'published'
+                   ? 'border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 hover:border-yellow-400/60'
+                   : 'border-green-400/30 text-green-400/70 hover:text-green-400 hover:border-green-400/60'">
+                {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
+              </button>
+              @if (event()?.buy_shortlink) {
+                <a [href]="event()?.buy_shortlink" target="_blank"
+                   class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                  Ticket Page →
+                </a>
+              }
+            </div>
+          </div>
+
+          <!-- Poster thumbnail -->
+          @if (event()?.poster_url) {
+            <div class="hidden md:block flex-shrink-0 self-start">
+              <img [src]="event()?.poster_url" alt="Event poster"
+                   class="h-36 w-24 object-cover border border-gray-200">
+            </div>
+          }
         </div>
-        <a [routerLink]="['/events', routeEventId(), 'edit']"
-           class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-          Edit
-        </a>
-        <button (click)="togglePublish()"
-           class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-           [class]="event()?.status === 'published'
-             ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-             : 'bg-green-100 text-green-700 hover:bg-green-200'">
-          {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
-        </button>
       </div>
 
       <!-- Tab Nav -->
-      <div class="border-b border-gray-200 mb-6">
-        <nav class="-mb-px flex gap-6 overflow-x-auto">
-          @for (tab of tabs; track tab.id) {
-            <button (click)="activeTab.set(tab.id)"
-              class="pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
-              [class]="activeTab() === tab.id
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'">
-              {{ tab.label }}
-            </button>
-          }
-        </nav>
+      <div class="flex gap-0 border-b border-gray-200 overflow-x-auto mb-6">
+        @for (tab of tabs; track tab.id) {
+          <button (click)="activeTab.set(tab.id)"
+            class="px-4 py-2.5 text-xs font-mono uppercase tracking-widest whitespace-nowrap border-b-2 transition-colors"
+            [class]="activeTab() === tab.id
+              ? 'border-yellow-400 text-yellow-500'
+              : 'border-transparent text-gray-400 hover:text-gray-900'">
+            {{ tab.label }}
+          </button>
+        }
       </div>
 
       <!-- ====== OVERVIEW TAB ====== -->
       @if (activeTab() === 'overview') {
         <div>
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p class="text-xs font-medium text-gray-500 uppercase">Tickets Sold</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ event()?.tickets_sold || 0 }}</p>
+            <div class="bg-white border border-gray-200 p-5">
+              <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Tickets Sold</p>
+              <p class="text-2xl font-black text-gray-900">{{ event()?.tickets_sold || 0 }}</p>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p class="text-xs font-medium text-gray-500 uppercase">Revenue</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ (event()?.total_revenue || 0) | currency:'PHP':'symbol':'1.0-0' }}</p>
+            <div class="bg-white border border-gray-200 p-5">
+              <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Revenue</p>
+              <p class="text-2xl font-black text-yellow-500">{{ (event()?.total_revenue || 0) | currency:'PHP':'symbol':'1.0-0' }}</p>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p class="text-xs font-medium text-gray-500 uppercase">Status</p>
-              <span class="inline-flex items-center mt-1 px-2.5 py-1 rounded-full text-sm font-medium"
+            <div class="bg-white border border-gray-200 p-5">
+              <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Status</p>
+              <span class="text-xs font-mono uppercase px-2 py-0.5 border"
                 [class]="statusClass(event()?.status || '')">
-                {{ event()?.status | titlecase }}
+                {{ event()?.status }}
               </span>
             </div>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p class="text-xs font-medium text-gray-500 uppercase">Walk-In</p>
-              <p class="text-sm font-medium text-gray-900 mt-1">{{ event()?.walk_in_enabled ? 'Enabled' : 'Disabled' }}</p>
+            <div class="bg-white border border-gray-200 p-5">
+              <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Walk-In</p>
+              <p class="text-xl font-black text-gray-900">{{ event()?.walk_in_enabled ? 'On' : 'Off' }}</p>
             </div>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-sm font-semibold text-gray-900 mb-4">Event Details</h3>
-            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div class="border border-gray-200 bg-white p-6">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Event Details</h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <dt class="text-gray-500">Date</dt>
-                <dd class="font-medium text-gray-900 mt-0.5">{{ event()?.date_and_time | date:'long' }}</dd>
+                <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Date</dt>
+                <dd class="text-sm font-mono text-gray-600">{{ event()?.date_and_time | date:'long' }}</dd>
               </div>
               <div>
-                <dt class="text-gray-500">Venue</dt>
-                <dd class="font-medium text-gray-900 mt-0.5">{{ event()?.venue || '—' }}</dd>
+                <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Venue</dt>
+                <dd class="text-sm font-mono text-gray-600">{{ event()?.venue || '—' }}</dd>
               </div>
               @if (event()?.buy_shortlink) {
                 <div>
-                  <dt class="text-gray-500">Buy Link</dt>
-                  <dd class="font-medium text-primary-600 mt-0.5 truncate">
+                  <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Buy Link</dt>
+                  <dd class="text-sm font-mono text-yellow-500 truncate">
                     <a [href]="event()?.buy_shortlink" target="_blank">{{ event()?.buy_shortlink }}</a>
                   </dd>
                 </div>
               }
               @if (event()?.description) {
                 <div class="sm:col-span-2">
-                  <dt class="text-gray-500">Description</dt>
-                  <dd class="font-medium text-gray-900 mt-0.5">{{ event()?.description }}</dd>
+                  <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Description</dt>
+                  <dd class="text-sm text-gray-600">{{ event()?.description }}</dd>
                 </div>
               }
             </dl>
@@ -117,62 +159,58 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== TICKETS TAB ====== -->
       @if (activeTab() === 'tickets') {
         <div>
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <input type="text" [(ngModel)]="ticketSearch" (input)="loadTickets()"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Search by name...">
-            </div>
+          <div class="flex items-center justify-between mb-4 gap-3">
+            <input type="text" [(ngModel)]="ticketSearch" (input)="loadTickets()"
+              class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+              placeholder="Search by name...">
             <a [href]="ticketsService.exportCsvUrl({ event_id: routeEventId() })"
-               class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
+               class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
               Export CSV
             </a>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="border border-gray-200 overflow-hidden bg-white">
             @if (ticketsLoading()) {
               <div class="flex items-center justify-center py-12">
-                <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
               </div>
             } @else if (tickets().length === 0) {
-              <div class="text-center py-12 text-gray-500 text-sm">No tickets found.</div>
+              <div class="text-center py-12 text-gray-400 text-xs font-mono">No tickets found.</div>
             } @else {
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200">
+                  <thead class="border-b border-gray-200 bg-zinc-50">
                     <tr>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Type</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Entries</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Attendee</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Type</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Entries</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Amount</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
+                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100">
                     @for (ticket of tickets(); track ticket.id) {
-                      <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-3 font-medium text-gray-900">{{ ticket.name }}</td>
-                        <td class="px-6 py-3 text-gray-500">{{ ticket.email_address }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ ticket.ticket_type_name }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ ticket.number_of_entries }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ ticket.amount | currency:'PHP':'symbol':'1.2-2' }}</td>
-                        <td class="px-6 py-3">
-                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                      <tr class="hover:bg-zinc-50 transition-colors">
+                        <td class="px-6 py-3.5">
+                          <p class="font-bold text-gray-900 text-sm">{{ ticket.name }}</p>
+                          <p class="text-xs font-mono text-gray-400 mt-0.5">{{ ticket.email_address }}</p>
+                        </td>
+                        <td class="px-6 py-3.5 text-sm text-gray-500 font-mono">{{ ticket.ticket_type_name }}</td>
+                        <td class="px-6 py-3.5 text-sm text-gray-500 font-mono">{{ ticket.number_of_entries }}</td>
+                        <td class="px-6 py-3.5 text-sm font-black text-gray-900">{{ ticket.amount | currency:'PHP':'symbol':'1.2-2' }}</td>
+                        <td class="px-6 py-3.5">
+                          <span class="text-xs font-mono uppercase px-2 py-0.5 border"
                             [class]="ticketStatusClass(ticket.status)">
                             {{ ticketStatusLabel(ticket.status) }}
                           </span>
                         </td>
-                        <td class="px-6 py-3">
-                          <div class="flex items-center justify-end gap-2">
-                            <button (click)="resendTicket(ticket)" class="text-xs text-primary-600 hover:text-primary-700 font-medium">Resend</button>
+                        <td class="px-6 py-3.5">
+                          <div class="flex items-center justify-end gap-3">
+                            <button (click)="resendTicket(ticket)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Resend</button>
                             @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
-                              <button (click)="confirmAction('cancel', ticket)" class="text-xs text-yellow-600 hover:text-yellow-700 font-medium">Cancel</button>
-                              <button (click)="confirmAction('refund', ticket)" class="text-xs text-red-600 hover:text-red-700 font-medium">Refund</button>
+                              <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
+                              <button (click)="confirmAction('refund', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Refund</button>
                             }
                           </div>
                         </td>
@@ -190,50 +228,50 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       @if (activeTab() === 'ticket-types') {
         <div>
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold text-gray-900">Ticket Types</h2>
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticket Types</h2>
             <button (click)="openTicketTypeModal()"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
-              + Add Ticket Type
+              class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+              + Add Type
             </button>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="border border-gray-200 overflow-hidden bg-white">
             @if (ticketTypes().length === 0) {
-              <div class="text-center py-12 text-gray-500 text-sm">No ticket types yet. Add one to start selling tickets.</div>
+              <div class="text-center py-12 text-gray-400 text-xs font-mono">No ticket types yet.</div>
             } @else {
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200">
+                  <thead class="border-b border-gray-200 bg-zinc-50">
                     <tr>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Price</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Max</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Sold</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Pending</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Remaining</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Price</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Max</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Pending</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Left</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
+                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100">
                     @for (tt of ticketTypes(); track tt.id) {
-                      <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-3 font-medium text-gray-900">{{ tt.name }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ tt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ tt.max_tickets === 0 ? '∞' : tt.max_tickets }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ tt.sold_tickets || 0 }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ tt.pending_tickets || 0 }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ tt.remaining_tickets == null ? '∞' : tt.remaining_tickets }}</td>
+                      <tr class="hover:bg-zinc-50">
+                        <td class="px-6 py-3 font-bold text-gray-900 uppercase text-sm">{{ tt.name }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.max_tickets === 0 ? '∞' : tt.max_tickets }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.sold_tickets || 0 }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.pending_tickets || 0 }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.remaining_tickets == null ? '∞' : tt.remaining_tickets }}</td>
                         <td class="px-6 py-3">
-                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                            [class]="tt.disabled ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
-                            {{ tt.disabled ? 'Disabled' : 'Active' }}
+                          <span class="text-xs font-mono uppercase px-2 py-0.5 border"
+                            [class]="tt.disabled ? 'border-red-300 text-red-600 bg-red-50' : 'border-green-300 text-green-700 bg-green-50'">
+                            {{ tt.disabled ? 'Off' : 'On' }}
                           </span>
                         </td>
                         <td class="px-6 py-3">
-                          <div class="flex items-center justify-end gap-2">
-                            <button (click)="openTicketTypeModal(tt)" class="text-xs text-primary-600 hover:text-primary-700 font-medium">Edit</button>
-                            <button (click)="deleteTicketType(tt)" class="text-xs text-red-600 hover:text-red-700 font-medium">Delete</button>
+                          <div class="flex items-center justify-end gap-3">
+                            <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                            <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -249,69 +287,66 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== PENDING ORDERS TAB ====== -->
       @if (activeTab() === 'pending') {
         <div>
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <input type="text" [(ngModel)]="pendingSearch" (input)="loadPendingTickets()"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Search by name...">
-            </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <input type="text" [(ngModel)]="pendingSearch" (input)="loadPendingTickets()"
+              class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+              placeholder="Search by name...">
             <div class="flex items-center gap-2">
               <a [href]="eventsService.getPendingCsvUrl(routeEventId())"
-                 class="px-3 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                Download CSV
+                 class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
+                CSV
               </a>
               <button (click)="verifyPayments()"
-                class="px-3 py-2 border border-blue-300 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-50 transition-colors">
+                class="px-3 py-2 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
                 Verify Payments
               </button>
               <button (click)="cancelAllUnpaid()"
-                class="px-3 py-2 border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors">
+                class="px-3 py-2 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
                 Cancel All Unpaid
               </button>
             </div>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="border border-gray-200 overflow-hidden bg-white">
             @if (pendingLoading()) {
               <div class="flex items-center justify-center py-12">
-                <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
               </div>
             } @else if (pendingTickets().length === 0) {
-              <div class="text-center py-12 text-gray-500 text-sm">No pending orders.</div>
+              <div class="text-center py-12 text-gray-400 text-xs font-mono">No pending orders.</div>
             } @else {
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200">
+                  <thead class="border-b border-gray-200 bg-zinc-50">
                     <tr>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Contact</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Entries</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ticket Type</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ordered</th>
-                      <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Buyer</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Ticket</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Entries</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Ordered</th>
+                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100">
                     @for (ticket of pendingTickets(); track ticket.id) {
-                      <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-3 font-medium text-gray-900">{{ ticket.name }}</td>
-                        <td class="px-6 py-3 text-gray-500">{{ ticket.email_address }}</td>
-                        <td class="px-6 py-3 text-gray-500">{{ ticket.contact_number || '—' }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ ticket.number_of_entries }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ ticket.ticket_type_name }}</td>
-                        <td class="px-6 py-3">
-                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                      <tr class="hover:bg-zinc-50 transition-colors">
+                        <td class="px-6 py-3.5">
+                          <p class="font-bold text-gray-900 text-sm">{{ ticket.name }}</p>
+                          <p class="text-xs font-mono text-gray-400 mt-0.5">{{ ticket.email_address }}{{ ticket.contact_number ? ' · ' + ticket.contact_number : '' }}</p>
+                        </td>
+                        <td class="px-6 py-3.5 text-sm font-mono text-gray-500">{{ ticket.ticket_type_name }}</td>
+                        <td class="px-6 py-3.5 text-sm font-mono text-gray-500">{{ ticket.number_of_entries }}</td>
+                        <td class="px-6 py-3.5">
+                          <span class="text-xs font-mono uppercase px-2 py-0.5 border"
                             [class]="ticketStatusClass(ticket.status)">
                             {{ ticketStatusLabel(ticket.status) }}
                           </span>
                         </td>
-                        <td class="px-6 py-3 text-gray-500">{{ ticket.order_timestamp | date:'short' }}</td>
-                        <td class="px-6 py-3">
-                          <div class="flex items-center justify-end gap-2">
-                            <button (click)="markPaid(ticket)" class="text-xs text-green-600 hover:text-green-700 font-medium">Mark Paid</button>
-                            <button (click)="confirmAction('cancel', ticket)" class="text-xs text-red-600 hover:text-red-700 font-medium">Cancel</button>
+                        <td class="px-6 py-3.5 text-xs font-mono text-gray-400">{{ ticket.order_timestamp | date:'short' }}</td>
+                        <td class="px-6 py-3.5">
+                          <div class="flex items-center justify-end gap-3">
+                            <button (click)="markPaid(ticket)" class="text-xs font-mono text-green-400 hover:text-green-300 uppercase tracking-wider">Mark Paid</button>
+                            <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Cancel</button>
                           </div>
                         </td>
                       </tr>
@@ -327,16 +362,15 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== WALK-IN TAB ====== -->
       @if (activeTab() === 'walk-in') {
         <div>
-          <!-- Walk-in sub-nav -->
-          <div class="flex gap-4 mb-5">
+          <div class="flex gap-0 border-b border-gray-200 mb-5">
             <button (click)="walkInView.set('types')"
-              class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-              [class]="walkInView() === 'types' ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:text-gray-700'">
-              Walk-In Types
+              class="px-4 py-2 text-xs font-mono uppercase tracking-widest border-b-2 transition-colors"
+              [class]="walkInView() === 'types' ? 'border-yellow-400 text-yellow-500' : 'border-transparent text-gray-400 hover:text-gray-900'">
+              Types
             </button>
             <button (click)="walkInView.set('transactions'); loadWalkInTransactions()"
-              class="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-              [class]="walkInView() === 'transactions' ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:text-gray-700'">
+              class="px-4 py-2 text-xs font-mono uppercase tracking-widest border-b-2 transition-colors"
+              [class]="walkInView() === 'transactions' ? 'border-yellow-400 text-yellow-500' : 'border-transparent text-gray-400 hover:text-gray-900'">
               Transactions
             </button>
           </div>
@@ -344,39 +378,39 @@ import { EventReferrer } from '../../../models/event-referrer.model';
           @if (walkInView() === 'types') {
             <div>
               <div class="flex items-center justify-between mb-4">
-                <h2 class="text-base font-semibold text-gray-900">Walk-In Types</h2>
+                <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Walk-In Types</h2>
                 <button (click)="openWalkInTypeModal()"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                  class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
                   + Add Type
                 </button>
               </div>
-              <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div class="border border-gray-200 overflow-hidden bg-white">
                 @if (walkInTypes().length === 0) {
-                  <div class="text-center py-12 text-gray-500 text-sm">No walk-in types yet.</div>
+                  <div class="text-center py-12 text-gray-400 text-xs font-mono">No walk-in types yet.</div>
                 } @else {
                   <table class="w-full text-sm">
-                    <thead class="border-b border-gray-200">
+                    <thead class="border-b border-gray-200 bg-zinc-50">
                       <tr>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Price</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Max Slots</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Sold</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Remaining</th>
-                        <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Price</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Max</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Left</th>
+                        <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                       @for (wt of walkInTypes(); track wt.id) {
-                        <tr class="hover:bg-gray-50">
-                          <td class="px-6 py-3 font-medium text-gray-900">{{ wt.name }}</td>
-                          <td class="px-6 py-3 text-gray-700">{{ wt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
-                          <td class="px-6 py-3 text-gray-700">{{ wt.max_slots === 0 ? '∞' : wt.max_slots }}</td>
-                          <td class="px-6 py-3 text-gray-700">{{ wt.sold_count || 0 }}</td>
-                          <td class="px-6 py-3 text-gray-700">{{ wt.remaining_slots == null ? '∞' : wt.remaining_slots }}</td>
+                        <tr class="hover:bg-zinc-50">
+                          <td class="px-6 py-3 font-bold text-gray-900 uppercase text-sm">{{ wt.name }}</td>
+                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
+                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.max_slots === 0 ? '∞' : wt.max_slots }}</td>
+                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.sold_count || 0 }}</td>
+                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.remaining_slots == null ? '∞' : wt.remaining_slots }}</td>
                           <td class="px-6 py-3">
-                            <div class="flex items-center justify-end gap-2">
-                              <button (click)="openWalkInTypeModal(wt)" class="text-xs text-primary-600 hover:text-primary-700 font-medium">Edit</button>
-                              <button (click)="deleteWalkInType(wt)" class="text-xs text-red-600 hover:text-red-700 font-medium">Delete</button>
+                            <div class="flex items-center justify-end gap-3">
+                              <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                              <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
                             </div>
                           </td>
                         </tr>
@@ -389,37 +423,37 @@ import { EventReferrer } from '../../../models/event-referrer.model';
           }
 
           @if (walkInView() === 'transactions') {
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="border border-gray-200 overflow-hidden bg-white">
               @if (walkInTransactionsLoading()) {
                 <div class="flex items-center justify-center py-12">
-                  <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
                 </div>
               } @else if (walkInTransactions().length === 0) {
-                <div class="text-center py-12 text-gray-500 text-sm">No walk-in transactions yet.</div>
+                <div class="text-center py-12 text-gray-400 text-xs font-mono">No walk-in transactions yet.</div>
               } @else {
                 <div class="overflow-x-auto">
                   <table class="w-full text-sm">
-                    <thead class="border-b border-gray-200">
+                    <thead class="border-b border-gray-200 bg-zinc-50">
                       <tr>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Items</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Payment</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">By</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Date</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Items</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Payment</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Amount</th>
+                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">By</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                       @for (tx of walkInTransactions(); track tx.id) {
-                        <tr class="hover:bg-gray-50">
-                          <td class="px-6 py-3 text-gray-500">{{ tx.created_at | date:'short' }}</td>
-                          <td class="px-6 py-3 text-gray-700">
+                        <tr class="hover:bg-zinc-50">
+                          <td class="px-6 py-3 text-xs font-mono text-gray-400">{{ tx.created_at | date:'short' }}</td>
+                          <td class="px-6 py-3 text-sm font-mono text-gray-500">
                             @for (item of tx.items; track item.id) {
                               <div>{{ item.quantity }}× {{ item.walk_in_type_name }}</div>
                             }
                           </td>
-                          <td class="px-6 py-3 text-gray-700 capitalize">{{ tx.payment_method }}</td>
-                          <td class="px-6 py-3 text-gray-700">{{ tx.total_amount | currency:'PHP':'symbol':'1.2-2' }}</td>
-                          <td class="px-6 py-3 text-gray-500">{{ tx.registered_by_name || tx.registered_by }}</td>
+                          <td class="px-6 py-3 text-sm font-mono text-gray-500 capitalize">{{ tx.payment_method }}</td>
+                          <td class="px-6 py-3 text-sm font-black text-gray-900">{{ tx.total_amount | currency:'PHP':'symbol':'1.2-2' }}</td>
+                          <td class="px-6 py-3 text-xs font-mono text-gray-400">{{ tx.registered_by_name || tx.registered_by }}</td>
                         </tr>
                       }
                     </tbody>
@@ -435,51 +469,49 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       @if (activeTab() === 'referrals') {
         <div>
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold text-gray-900">Referrers</h2>
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Referrers</h2>
             <button (click)="openReferrerModal()"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
+              class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
               + Add Referrer
             </button>
           </div>
 
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="border border-gray-200 overflow-hidden bg-white">
             @if (referrers().length === 0) {
-              <div class="text-center py-12 text-gray-500 text-sm">No referrers yet.</div>
+              <div class="text-center py-12 text-gray-400 text-xs font-mono">No referrers yet.</div>
             } @else {
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200">
+                  <thead class="border-b border-gray-200 bg-zinc-50">
                     <tr>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Code</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Tickets Sold</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Gross</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Net</th>
-                      <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Shortlink</th>
-                      <th class="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Code</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Gross</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Net</th>
+                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Shortlink</th>
+                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100">
                     @for (ref of referrers(); track ref.id) {
-                      <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-3 font-medium text-gray-900">{{ ref.name }}</td>
-                        <td class="px-6 py-3 font-mono text-gray-700">{{ ref.referral_code }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ ref.tickets_sold || 0 }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ (ref.gross || 0) | currency:'PHP':'symbol':'1.2-2' }}</td>
-                        <td class="px-6 py-3 text-gray-700">{{ (ref.net || 0) | currency:'PHP':'symbol':'1.2-2' }}</td>
-                        <td class="px-6 py-3 text-gray-500 truncate max-w-[160px]">
+                      <tr class="hover:bg-zinc-50">
+                        <td class="px-6 py-3 font-bold text-gray-900 uppercase text-sm">{{ ref.name }}</td>
+                        <td class="px-6 py-3 font-mono text-yellow-500 text-sm">{{ ref.referral_code }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ ref.tickets_sold || 0 }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ (ref.gross || 0) | currency:'PHP':'symbol':'1.2-2' }}</td>
+                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ (ref.net || 0) | currency:'PHP':'symbol':'1.2-2' }}</td>
+                        <td class="px-6 py-3 font-mono text-gray-400 truncate max-w-[160px] text-xs">
                           @if (ref.referral_shortlink) {
-                            <a [href]="ref.referral_shortlink" target="_blank" class="text-primary-600 hover:underline">{{ ref.referral_shortlink }}</a>
-                          } @else {
-                            —
-                          }
+                            <a [href]="ref.referral_shortlink" target="_blank" class="text-yellow-500 hover:text-yellow-600">{{ ref.referral_shortlink }}</a>
+                          } @else { — }
                         </td>
                         <td class="px-6 py-3">
-                          <div class="flex items-center justify-end gap-2">
+                          <div class="flex items-center justify-end gap-3">
                             @if (ref.referral_shortlink) {
-                              <button (click)="copyLink(ref.referral_shortlink)" class="text-xs text-gray-500 hover:text-gray-700 font-medium">Copy Link</button>
+                              <button (click)="copyLink(ref.referral_shortlink)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Copy</button>
                             }
-                            <button (click)="deleteReferrer(ref)" class="text-xs text-red-600 hover:text-red-700 font-medium">Delete</button>
+                            <button (click)="deleteReferrer(ref)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -495,49 +527,49 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== EMAIL TAB ====== -->
       @if (activeTab() === 'email') {
         <div class="max-w-3xl">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5">
+          <div class="border border-gray-200 bg-white p-6 space-y-5">
             <div class="flex items-center justify-between">
-              <h2 class="text-base font-semibold text-gray-900">Email Ticket Holders</h2>
+              <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Email Ticket Holders</h2>
               @if (ticketHoldersCount() !== null) {
-                <span class="text-sm text-gray-500">{{ ticketHoldersCount() }} recipient{{ ticketHoldersCount() !== 1 ? 's' : '' }}</span>
+                <span class="text-xs font-mono text-gray-400">{{ ticketHoldersCount() }} recipient{{ ticketHoldersCount() !== 1 ? 's' : '' }}</span>
               }
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Subject *</label>
               <input type="text" [(ngModel)]="emailSubject"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                 placeholder="Email subject...">
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Body *</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Body *</label>
               <textarea [(ngModel)]="emailBody" rows="10"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono resize-y"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors font-mono resize-y"
                 placeholder="Email body (HTML supported)..."></textarea>
-              <p class="mt-1 text-xs text-gray-400">You can use HTML for formatting.</p>
+              <p class="mt-1 text-xs font-mono text-gray-400">HTML supported.</p>
             </div>
 
             @if (emailSuccess()) {
-              <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{{ emailSuccess() }}</div>
+              <div class="p-3 border border-green-300 bg-green-50 text-green-700 text-xs font-mono">{{ emailSuccess() }}</div>
             }
             @if (emailError()) {
-              <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ emailError() }}</div>
+              <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ emailError() }}</div>
             }
 
-            <div class="flex items-end gap-3 pt-2 border-t border-gray-100">
+            <div class="flex items-end gap-3 pt-4 border-t border-gray-200">
               <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Test Email Address</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Test Email</label>
                 <input type="email" [(ngModel)]="testEmailAddress"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                   placeholder="you@example.com">
               </div>
               <button (click)="sendTestEmail()" [disabled]="emailSending()"
-                class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                class="px-4 py-2.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider disabled:opacity-50 transition-colors">
                 {{ emailSending() ? 'Sending...' : 'Send Test' }}
               </button>
               <button (click)="sendEmail()" [disabled]="emailSending()"
-                class="px-6 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors">
+                class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
                 {{ emailSending() ? 'Sending...' : 'Send to All' }}
               </button>
             </div>
@@ -548,68 +580,67 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== TICKET TYPE MODAL ====== -->
       @if (ticketTypeModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div class="fixed inset-0 bg-black/30" (click)="ticketTypeModal.set(null)"></div>
-          <div class="relative bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-            <h3 class="text-base font-semibold text-gray-900 mb-4">
+          <div class="fixed inset-0 bg-black/50" (click)="ticketTypeModal.set(null)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-lg">
+            <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-4">
               {{ ticketTypeModal()!.id ? 'Edit Ticket Type' : 'Add Ticket Type' }}
             </h3>
             <form [formGroup]="ticketTypeForm" (ngSubmit)="saveTicketType()" class="space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Name *</label>
                   <input type="text" formControlName="name"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Price (PHP) *</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Price (PHP) *</label>
                   <input type="number" formControlName="price" min="0" step="0.01"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Max Tickets <span class="text-gray-400 font-normal">(0=unlimited)</span></label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Tickets <span class="normal-case text-gray-400">(0=unlimited)</span></label>
                   <input type="number" formControlName="max_tickets" min="0"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Sale Start</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Sale Start</label>
                   <input type="datetime-local" formControlName="start_date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Sale End</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Sale End</label>
                   <input type="datetime-local" formControlName="end_date"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Special Instructions</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Special Instructions</label>
                   <textarea formControlName="special_instructions" rows="2"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"
                     placeholder="Shown to buyer at checkout..."></textarea>
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Instructions for Scanner</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Instructions for Scanner</label>
                   <textarea formControlName="special_instructions_for_scanner" rows="2"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"
                     placeholder="Shown to scanner staff..."></textarea>
                 </div>
                 <div class="col-span-2">
                   <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" formControlName="disabled"
-                      class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                    <span class="text-sm text-gray-700">Disable this ticket type</span>
+                    <input type="checkbox" formControlName="disabled" class="w-4 h-4 accent-yellow-400">
+                    <span class="text-xs font-mono text-gray-500">Disable this ticket type</span>
                   </label>
                 </div>
               </div>
               @if (ticketTypeError()) {
-                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ ticketTypeError() }}</div>
+                <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ ticketTypeError() }}</div>
               }
-              <div class="flex justify-end gap-3 pt-2">
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-200">
                 <button type="button" (click)="ticketTypeModal.set(null)"
-                  class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                  class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
                   Cancel
                 </button>
                 <button type="submit" [disabled]="ticketTypeForm.invalid || ticketTypeSaving()"
-                  class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50">
+                  class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
                   {{ ticketTypeSaving() ? 'Saving...' : 'Save' }}
                 </button>
               </div>
@@ -621,37 +652,37 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== WALK-IN TYPE MODAL ====== -->
       @if (walkInTypeModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div class="fixed inset-0 bg-black/30" (click)="walkInTypeModal.set(null)"></div>
-          <div class="relative bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-            <h3 class="text-base font-semibold text-gray-900 mb-4">
+          <div class="fixed inset-0 bg-black/50" (click)="walkInTypeModal.set(null)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-4">
               {{ walkInTypeModal()!.id ? 'Edit Walk-In Type' : 'Add Walk-In Type' }}
             </h3>
             <form [formGroup]="walkInTypeForm" (ngSubmit)="saveWalkInType()" class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Name *</label>
                 <input type="text" formControlName="name"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Price (PHP) *</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Price (PHP) *</label>
                 <input type="number" formControlName="price" min="0" step="0.01"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Max Slots <span class="text-gray-400 font-normal">(0=unlimited)</span></label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Slots <span class="normal-case text-gray-400">(0=unlimited)</span></label>
                 <input type="number" formControlName="max_slots" min="0"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
               @if (walkInTypeError()) {
-                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ walkInTypeError() }}</div>
+                <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ walkInTypeError() }}</div>
               }
-              <div class="flex justify-end gap-3 pt-2">
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-200">
                 <button type="button" (click)="walkInTypeModal.set(null)"
-                  class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                  class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
                   Cancel
                 </button>
                 <button type="submit" [disabled]="walkInTypeForm.invalid || walkInTypeSaving()"
-                  class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50">
+                  class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
                   {{ walkInTypeSaving() ? 'Saving...' : 'Save' }}
                 </button>
               </div>
@@ -663,31 +694,31 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== REFERRER MODAL ====== -->
       @if (referrerModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div class="fixed inset-0 bg-black/30" (click)="referrerModal.set(false)"></div>
-          <div class="relative bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-            <h3 class="text-base font-semibold text-gray-900 mb-4">Add Referrer</h3>
+          <div class="fixed inset-0 bg-black/50" (click)="referrerModal.set(false)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-4">Add Referrer</h3>
             <form [formGroup]="referrerForm" (ngSubmit)="saveReferrer()" class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Name *</label>
                 <input type="text" formControlName="name"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Referral Code *</label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Referral Code *</label>
                 <input type="text" formControlName="referral_code"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors"
                   placeholder="e.g. FRIEND2025">
               </div>
               @if (referrerError()) {
-                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ referrerError() }}</div>
+                <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ referrerError() }}</div>
               }
-              <div class="flex justify-end gap-3 pt-2">
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-200">
                 <button type="button" (click)="referrerModal.set(false)"
-                  class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                  class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
                   Cancel
                 </button>
                 <button type="submit" [disabled]="referrerForm.invalid || referrerSaving()"
-                  class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50">
+                  class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
                   {{ referrerSaving() ? 'Saving...' : 'Add Referrer' }}
                 </button>
               </div>
@@ -699,22 +730,22 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== CONFIRM MODAL ====== -->
       @if (confirmModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div class="fixed inset-0 bg-black/30" (click)="confirmModal.set(null)"></div>
-          <div class="relative bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-            <h3 class="text-base font-semibold text-gray-900 mb-2">
+          <div class="fixed inset-0 bg-black/50" (click)="confirmModal.set(null)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-2">
               {{ confirmModal()!.action === 'cancel' ? 'Cancel Ticket' : 'Refund Ticket' }}
             </h3>
-            <p class="text-sm text-gray-600 mb-4">
+            <p class="text-sm font-mono text-gray-500 mb-5">
               Are you sure you want to {{ confirmModal()!.action }} this ticket for
-              <strong>{{ confirmModal()!.ticket.name }}</strong>?
+              <strong class="text-gray-900">{{ confirmModal()!.ticket.name }}</strong>?
             </p>
-            <div class="flex justify-end gap-3">
+            <div class="flex justify-end gap-3 pt-3 border-t border-gray-200">
               <button (click)="confirmModal.set(null)"
-                class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">
+                class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
                 Cancel
               </button>
               <button (click)="executeAction()"
-                class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider transition-colors">
                 Confirm
               </button>
             </div>
@@ -1117,20 +1148,20 @@ export class EventDetailComponent implements OnInit {
 
   statusClass(status: string): string {
     switch (status) {
-      case 'published': return 'bg-green-100 text-green-700';
-      case 'past': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'published': return 'border-green-300 text-green-700 bg-green-50';
+      case 'past': return 'border-blue-300 text-blue-700 bg-blue-50';
+      default: return 'border-gray-300 text-gray-500 bg-gray-50';
     }
   }
 
   ticketStatusClass(status: string): string {
     switch (status) {
-      case 'Ticket sent.': return 'bg-green-100 text-green-700';
-      case 'Payment Confirmed': return 'bg-blue-100 text-blue-700';
-      case 'New': return 'bg-yellow-100 text-yellow-700';
-      case 'Canceled': return 'bg-gray-100 text-gray-600';
-      case 'Refunded': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'Ticket sent.': return 'border-green-300 text-green-700 bg-green-50';
+      case 'Payment Confirmed': return 'border-blue-300 text-blue-700 bg-blue-50';
+      case 'New': return 'border-yellow-300 text-yellow-700 bg-yellow-50';
+      case 'Canceled': return 'border-gray-300 text-gray-500 bg-gray-50';
+      case 'Refunded': return 'border-red-300 text-red-600 bg-red-50';
+      default: return 'border-gray-300 text-gray-500 bg-gray-50';
     }
   }
 

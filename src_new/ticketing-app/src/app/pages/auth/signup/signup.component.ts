@@ -9,71 +9,68 @@ import { AuthService } from '../../../services/auth.service';
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
-      <div class="w-full max-w-md">
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-primary-600">Your Scene</h1>
-          <p class="mt-2 text-gray-500">Create your organizer account</p>
+    <div class="min-h-screen bg-black flex items-center justify-center px-4 py-8">
+      <div class="w-full max-w-sm">
+        <div class="mb-8">
+          <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-5 opacity-30">
+          <p class="text-xs font-mono text-white/30 uppercase tracking-widest mt-4">Create your organizer account</p>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          @if (error()) {
-            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {{ error() }}
-            </div>
-          }
+        @if (error()) {
+          <div class="mb-5 p-3 border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-mono">
+            {{ error() }}
+          </div>
+        }
 
-          <form [formGroup]="form" (ngSubmit)="submit()">
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input type="text" formControlName="full_name"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Jane Smith">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" formControlName="email"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="you@example.com">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Organization / Event Brand Name</label>
-                <input type="text" formControlName="brand_name"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="My Events Co.">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" formControlName="password"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="••••••••">
-                <!-- Password strength indicator -->
-                @if (form.get('password')?.value) {
-                  <div class="mt-2">
-                    <div class="flex gap-1">
-                      @for (i of [1,2,3,4]; track i) {
-                        <div class="h-1 flex-1 rounded-full transition-colors"
-                          [class]="i <= passwordStrength() ? strengthColor() : 'bg-gray-200'"></div>
-                      }
-                    </div>
-                    <p class="text-xs mt-1" [class]="strengthTextColor()">{{ strengthLabel() }}</p>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Full Name</label>
+              <input type="text" formControlName="full_name"
+                class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="Jane Smith">
+            </div>
+            <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Email</label>
+              <input type="email" formControlName="email"
+                class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="you@example.com">
+            </div>
+            <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Organization / Event Brand</label>
+              <input type="text" formControlName="brand_name"
+                class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="My Events Co.">
+            </div>
+            <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Password</label>
+              <input type="password" formControlName="password"
+                class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="••••••••">
+              @if (form.get('password')?.value) {
+                <div class="mt-2">
+                  <div class="flex gap-1">
+                    @for (i of [1,2,3,4]; track i) {
+                      <div class="h-0.5 flex-1 transition-colors"
+                        [class]="i <= passwordStrength() ? strengthColor() : 'bg-white/10'"></div>
+                    }
                   </div>
-                }
-              </div>
+                  <p class="text-xs font-mono mt-1" [class]="strengthTextColor()">{{ strengthLabel() }}</p>
+                </div>
+              }
             </div>
+          </div>
 
-            <button type="submit" [disabled]="loading()"
-              class="mt-6 w-full py-2.5 px-4 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors">
-              {{ loading() ? 'Creating account...' : 'Create account' }}
-            </button>
-          </form>
+          <button type="submit" [disabled]="loading()"
+            class="mt-6 w-full py-2.5 px-4 bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black uppercase tracking-wider transition-colors disabled:opacity-50">
+            {{ loading() ? 'Creating account...' : 'Create account' }}
+          </button>
+        </form>
 
-          <p class="mt-6 text-center text-sm text-gray-500">
-            Already have an account?
-            <a routerLink="/login" class="text-primary-600 font-medium hover:underline">Sign in</a>
-          </p>
-        </div>
+        <p class="mt-6 text-xs font-mono text-white/30 text-center">
+          Already have an account?
+          <a routerLink="/app/login" class="text-yellow-400 hover:text-yellow-300 uppercase tracking-wider transition-colors ml-1">Sign in</a>
+        </p>
       </div>
     </div>
   `
@@ -104,18 +101,18 @@ export class SignupComponent {
 
   strengthColor = computed(() => {
     const s = this.passwordStrength();
-    if (s <= 1) return 'bg-red-400';
+    if (s <= 1) return 'bg-red-500';
     if (s === 2) return 'bg-yellow-400';
-    if (s === 3) return 'bg-blue-400';
-    return 'bg-green-500';
+    if (s === 3) return 'bg-yellow-300';
+    return 'bg-green-400';
   });
 
   strengthTextColor = computed(() => {
     const s = this.passwordStrength();
-    if (s <= 1) return 'text-red-500';
-    if (s === 2) return 'text-yellow-600';
-    if (s === 3) return 'text-blue-600';
-    return 'text-green-600';
+    if (s <= 1) return 'text-red-400';
+    if (s === 2) return 'text-yellow-400';
+    if (s === 3) return 'text-yellow-300';
+    return 'text-green-400';
   });
 
   strengthLabel = computed(() => {
@@ -132,7 +129,7 @@ export class SignupComponent {
     this.error.set('');
 
     this.auth.signup(this.form.value).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.router.navigate(['/app/dashboard']),
       error: (err) => {
         this.error.set(err.error?.error || 'Signup failed. Please try again.');
         this.loading.set(false);
