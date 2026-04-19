@@ -5,8 +5,8 @@
   <!-- Brand Settings Tab -->
   <div *ngIf="activeSection === 'brand-settings'">
     <form [formGroup]="brandForm" *ngIf="brandSettings">
-      <div class="row tw-grid tw-grid-cols-1">
-        <div class="col-md-6 md:tw-col-span-6">
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-5">
+        <div>
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h5>General Settings</h5></div>
             <div class="tw-px-card-pad tw-pb-card-pad">
@@ -71,7 +71,7 @@
           </div>
         </div>
 
-        <div class="col-md-6 md:tw-col-span-6">
+        <div>
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h5>Catalog</h5></div>
             <div class="tw-px-card-pad tw-pb-card-pad">
@@ -131,8 +131,8 @@
 
   <!-- Domains Tab -->
   <div *ngIf="activeSection === 'domains'">
-    <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-12 tw-col-span-12">
+    <div>
+      <div>
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4"><h3>Domains</h3></div>
           <div class="tw-px-card-pad tw-pb-card-pad">
@@ -185,16 +185,12 @@
             </div>
 
             <h4>Add domain</h4>
-            <div class="row tw-items-end tw-grid tw-grid-cols-1">
-              <div class="col-md-8 md:tw-col-span-8">
-                <div class="tw-mb-5 tw-mb-0">
-                  <input type="text" class="tw-input" [(ngModel)]="newDomainName" placeholder="Domain name">
-                </div>
+            <div class="tw-grid tw-grid-cols-4 tw-gap-3 tw-items-end">
+              <div class="tw-col-span-3">
+                <input type="text" class="tw-input" [(ngModel)]="newDomainName" placeholder="Domain name">
               </div>
-              <div class="col-md-4 md:tw-col-span-4">
-                <div class="tw-mb-5 tw-mb-0">
-                  <button type="button" class="btn-primary tw-w-full" (click)="addDomain()"><i class="fas fa-plus"></i> Add Domain</button>
-                </div>
+              <div>
+                <button type="button" class="btn-primary tw-w-full" (click)="addDomain()"><i class="fas fa-plus"></i> Add Domain</button>
               </div>
             </div>
           </div>

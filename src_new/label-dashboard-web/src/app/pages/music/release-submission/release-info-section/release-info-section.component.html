@@ -1,8 +1,8 @@
 <div class="release-info-section">
   <form [formGroup]="releaseForm">
     <!-- Basic Release Information -->
-    <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-md-6 md:tw-col-span-6">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div>
         <div class="tw-mb-5">
           <label for="title">Title <span class="tw-text-danger">*</span></label>
           <input type="text"
@@ -17,7 +17,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6 md:tw-col-span-6" *ngIf="isAdmin">
+      <div *ngIf="isAdmin">
         <div class="tw-mb-5">
           <label for="catalogNo">Catalog Number <span class="tw-text-danger">*</span></label>
           <input type="text"
@@ -36,8 +36,8 @@
       </div>
     </div>
 
-    <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-md-6 md:tw-col-span-6" *ngIf="isAdmin">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div *ngIf="isAdmin">
         <div class="tw-mb-5">
           <label for="upc">Barcode (UPC/EAN/Code128)</label>
           <input type="text"
@@ -47,7 +47,7 @@
                 placeholder="UPC, EAN, or Code 128 barcode">
         </div>
       </div>
-      <div class="col-md-6 md:tw-col-span-6">
+      <div>
         <div class="tw-mb-5">
           <label for="releaseDate">Release Date <span class="tw-text-danger">*</span></label>
           <input type="date"
@@ -63,8 +63,8 @@
       </div>
     </div>
 
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="isAdmin && showStatus">
-      <div class="col-md-6 md:tw-col-span-6">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4" *ngIf="isAdmin && showStatus">
+      <div>
         <div class="tw-mb-5">
           <label for="status">Status</label>
           <select class="tw-input" id="status" formControlName="status">
@@ -81,8 +81,8 @@
     <!-- Cover Art -->
     <div class="tw-mb-5">
       <label for="coverArt">Cover Art <span class="tw-text-danger">*</span></label>
-      <div class="row tw-grid tw-grid-cols-1">
-        <div class="col-md-6 md:tw-col-span-6">
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+        <div>
           <input type="file"
                 class="form-control-file"
                 id="coverArt"
@@ -99,7 +99,7 @@
             Cover art is required
           </div>
         </div>
-        <div class="col-md-6 md:tw-col-span-6" *ngIf="coverArtPreview">
+        <div *ngIf="coverArtPreview">
           <div class="cover-art-preview">
             <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
             <button type="button"

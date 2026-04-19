@@ -18,49 +18,38 @@
     </div>
 
     <!-- Main Content -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="selectedFundraiser">
-      <div class="col-12 tw-col-span-12">
-
-        <!-- Fundraiser Donations Tab -->
-        <div *ngIf="activeTab === 'donations'">
-          <app-fundraiser-donations-tab
-            [selectedFundraiser]="selectedFundraiser"
-            [isAdmin]="isAdmin"
-            (alertMessage)="onAlertMessage($event)">
-          </app-fundraiser-donations-tab>
-        </div>
-
+    <div *ngIf="selectedFundraiser">
+      <div *ngIf="activeTab === 'donations'">
+        <app-fundraiser-donations-tab
+          [selectedFundraiser]="selectedFundraiser"
+          [isAdmin]="isAdmin"
+          (alertMessage)="onAlertMessage($event)">
+        </app-fundraiser-donations-tab>
       </div>
     </div>
 
     <!-- Loading Fundraisers -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="loading && availableFundraisers.length === 0">
-      <div class="col-12 tw-col-span-12">
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
-            <div class="loading-dots">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-          </div>
+    <div *ngIf="loading && availableFundraisers.length === 0"
+         class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-4">
+      <div class="tw-p-8 tw-text-center">
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
         </div>
       </div>
     </div>
 
     <!-- No Fundraisers Available -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && availableFundraisers.length === 0">
-      <div class="col-12 tw-col-span-12">
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
-            <i class="fas fa-hand-holding-heart fa-4x tw-mb-3 tw-text-muted"></i>
-            <h4>No Fundraisers Available</h4>
-            <p class="tw-text-muted">No fundraisers found for your label. Create a new fundraiser to get started.</p>
-            <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateFundraiserModal()">
-              <i class="fa fa-plus tw-mr-1"></i>Create New Fundraiser
-            </button>
-          </div>
-        </div>
+    <div *ngIf="!loading && availableFundraisers.length === 0"
+         class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-4">
+      <div class="tw-p-8 tw-text-center">
+        <i class="fas fa-hand-holding-heart fa-4x tw-mb-3 tw-text-muted"></i>
+        <h4>No Fundraisers Available</h4>
+        <p class="tw-text-muted">No fundraisers found for your label. Create a new fundraiser to get started.</p>
+        <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateFundraiserModal()">
+          <i class="fa fa-plus tw-mr-1"></i>Create New Fundraiser
+        </button>
       </div>
     </div>
 
