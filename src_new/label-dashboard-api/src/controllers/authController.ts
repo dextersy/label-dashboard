@@ -389,16 +389,29 @@ export const completeProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Profile is already complete' });
     }
 
-    // Check if username is already taken
+    // Check if username is already taken.
+    // For ticketing users (brand is the ticketing parent or a sub-brand of it), usernames
+    // must be unique across the entire ticketing hierarchy. For main-dashboard users,
+    // uniqueness is scoped to their own brand.
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    const userBrand: any = user.get('brand') as any;
+    const isTicketingUser = parentBrandId > 0 && (
+      user.brand_id === parentBrandId ||
+      userBrand?.parent_brand === parentBrandId
+    );
+
+    let usernameBrandScope: number | number[] = user.brand_id;
+    if (isTicketingUser) {
+      const ticketingSubBrands = await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] });
+      usernameBrandScope = [parentBrandId, ...ticketingSubBrands.map((b: any) => b.id)];
+    }
+
     const existingUser = await User.findOne({
-      where: {
-        username,
-        brand_id: user.brand_id
-      }
+      where: { username, brand_id: usernameBrandScope }
     });
 
     if (existingUser) {
-      return res.status(409).json({ error: 'Username already exists' });
+      return res.status(409).json({ error: 'Username already taken' });
     }
 
     // Validate username format (alphanumeric, underscore, hyphen, 3-30 chars)
