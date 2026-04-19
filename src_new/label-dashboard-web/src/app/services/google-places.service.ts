@@ -218,9 +218,9 @@ export class GooglePlacesService {
         componentRestrictions: { country: [] } // Allow worldwide search
       };
 
-      this.autocompleteService.getPlacePredictions(request, (predictions: google.maps.places.QueryAutocompletePrediction[] | null, status: google.maps.places.PlacesServiceStatus) => {
+      this.autocompleteService.getPlacePredictions(request, (predictions: google.maps.places.QueryAutocompletePrediction[] | null, status: string) => {
         this.ngZone.run(() => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+          if (status === 'OK' && predictions) {
             const formattedPredictions: GooglePlacesPrediction[] = predictions.map((prediction: google.maps.places.QueryAutocompletePrediction) => ({
               place_id: prediction.place_id || '',
               description: prediction.description || '',
@@ -349,9 +349,9 @@ export class GooglePlacesService {
       ]
     };
 
-    legacyPlacesService.getDetails(request, (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
+    legacyPlacesService.getDetails(request, (place: google.maps.places.PlaceResult | null, status: string) => {
       this.ngZone.run(() => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+        if (status === 'OK' && place) {
           const placeDetails: GooglePlaceDetails = {
             place_id: place.place_id || '',
             name: place.name || '',
