@@ -10,68 +10,71 @@ import { Event } from '../../models/event.model';
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Welcome back, {{ firstName() }}</h1>
-        <p class="text-gray-500 mt-1">Here's what's happening with your events.</p>
+        <p class="text-xs font-mono text-yellow-500 uppercase tracking-[0.25em] mb-1">— dashboard —</p>
+        <h1 class="text-2xl font-black text-gray-900 uppercase tracking-tight">Hey {{ firstName() }}</h1>
       </div>
 
       <!-- Stat Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p class="text-sm font-medium text-gray-500">Total Events</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ events().length }}</p>
+        <div class="bg-white border border-gray-200 p-5">
+          <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-3">Total Events</p>
+          <p class="text-3xl font-black text-gray-900">{{ events().length }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p class="text-sm font-medium text-gray-500">Tickets Sold</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ totalTicketsSold() }}</p>
+        <div class="bg-white border border-gray-200 p-5">
+          <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-3">Tickets Sold</p>
+          <p class="text-3xl font-black text-gray-900">{{ totalTicketsSold() }}</p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <p class="text-sm font-medium text-gray-500">Total Revenue</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ totalRevenue() | currency:'PHP':'symbol':'1.2-2' }}</p>
+        <div class="bg-white border border-gray-200 p-5">
+          <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-3">Total Revenue</p>
+          <p class="text-3xl font-black text-yellow-500">{{ totalRevenue() | currency:'PHP':'symbol':'1.0-0' }}</p>
         </div>
       </div>
 
       <!-- Upcoming Events -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="border border-gray-200 bg-white">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 class="text-base font-semibold text-gray-900">Upcoming Events</h2>
-          <a routerLink="/events/new" class="text-sm text-primary-600 font-medium hover:underline">+ New Event</a>
+          <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Upcoming Events</h2>
+          <a routerLink="/app/events/new" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider transition-colors">
+            + New Event
+          </a>
         </div>
 
         @if (loading()) {
           <div class="flex items-center justify-center py-12">
-            <div class="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
           </div>
         } @else if (upcomingEvents().length === 0) {
-          <div class="text-center py-12">
-            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-            </div>
-            <p class="text-gray-500 text-sm">No upcoming events</p>
-            <a routerLink="/events/new"
-               class="mt-3 inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
+          <div class="text-center py-12 border border-dashed border-gray-200 m-6">
+            <p class="text-gray-400 text-xs font-mono mb-4">no upcoming events.</p>
+            <a routerLink="/app/events/new"
+               class="inline-flex items-center px-5 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
               Create your first event
             </a>
           </div>
         } @else {
           <div class="divide-y divide-gray-100">
             @for (event of upcomingEvents(); track event.id) {
-              <a [routerLink]="['/events', event.id]" class="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div>
-                  <p class="text-sm font-medium text-gray-900">{{ event.title }}</p>
-                  <p class="text-xs text-gray-500 mt-0.5">{{ event.venue }} · {{ event.date_and_time | date:'mediumDate' }}</p>
+              <a [routerLink]="['/app/events', event.id]" class="flex items-center gap-4 px-6 py-4 hover:bg-zinc-50 transition-colors group">
+                <!-- Date badge -->
+                <div class="flex-shrink-0 w-10 text-center border border-gray-200 py-1.5">
+                  <p class="text-xs font-mono text-yellow-500 uppercase leading-none">{{ event.date_and_time | date:'MMM' }}</p>
+                  <p class="text-lg font-black text-gray-900 leading-tight">{{ event.date_and_time | date:'d' }}</p>
                 </div>
-                <div class="text-right">
-                  <p class="text-sm font-medium text-gray-900">{{ event.tickets_sold || 0 }} sold</p>
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                    [class]="event.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'">
-                    {{ event.status | titlecase }}
-                  </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-gray-900 group-hover:text-yellow-500 transition-colors uppercase">{{ event.title }}</p>
+                  <p class="text-xs font-mono text-gray-400 mt-0.5 truncate">{{ event.venue ? event.venue + ' · ' : '' }}{{ event.date_and_time | date:'h:mm a' }}</p>
                 </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-sm font-black text-gray-900">{{ event.tickets_sold || 0 }}</p>
+                  <p class="text-xs font-mono text-gray-400">sold</p>
+                </div>
+                <span class="text-xs font-mono uppercase px-2 py-0.5 border flex-shrink-0"
+                  [class]="event.status === 'published' ? 'border-green-300 text-green-700 bg-green-50' : 'border-gray-300 text-gray-500 bg-gray-50'">
+                  {{ event.status }}
+                </span>
               </a>
             }
           </div>

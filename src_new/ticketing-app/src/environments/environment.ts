@@ -1,5 +1,6 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:3000/api',
-  googleMapsApiKey: '' // Set your Google Maps API key here
+  googleMapsApiKey: '', // Set your Google Maps API key here
+  publicListingDomain: 'spindly.app' // Domain used for the public show listing on the landing page
 };

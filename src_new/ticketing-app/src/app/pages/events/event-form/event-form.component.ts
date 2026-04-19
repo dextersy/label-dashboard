@@ -44,63 +44,66 @@ function newTicketTypeItem(): TicketTypeFormItem {
   styles: [`
     .venue-dropdown {
       position: absolute; top: 100%; left: 0; right: 0; z-index: 9999;
-      background: white; border: 1px solid #d1d5db; border-radius: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px;
+      background: white; border: 1px solid rgba(0,0,0,0.12); border-radius: 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12); max-height: 260px;
       overflow-y: auto; margin-top: 2px;
     }
   `],
   template: `
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex items-center gap-3 mb-6">
-        <a routerLink="/events" class="text-gray-400 hover:text-gray-600">
+      <div class="flex items-center gap-3 mb-8">
+        <a routerLink="/app/events" class="text-gray-400 hover:text-gray-900 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </a>
-        <h1 class="text-2xl font-bold text-gray-900">{{ isEdit() ? 'Edit Event' : 'New Event' }}</h1>
+        <div>
+          <h1 class="text-xl font-black text-gray-900 uppercase tracking-tight">{{ isEdit() ? 'Edit Event' : 'New Event' }}</h1>
+          <p class="text-xs font-mono text-gray-400 mt-0.5">{{ isEdit() ? 'update event details' : 'fill in the details to list your show' }}</p>
+        </div>
       </div>
 
       @if (error()) {
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ error() }}</div>
+        <div class="mb-5 p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ error() }}</div>
       }
 
       <form [formGroup]="form" (ngSubmit)="submit()">
 
         <!-- ===== BASIC INFO ===== -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5 mb-6">
-          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Basic Info</h2>
+        <div class="bg-white border border-gray-200 p-6 space-y-5 mb-4">
+          <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Basic Info</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Event Title *</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Event Title *</label>
               <input type="text" formControlName="title"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                 placeholder="Concert Night 2025">
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Start Date & Time *</label>
               <input type="datetime-local" formControlName="date_and_time"
                 (change)="onEventDateChange()"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
             </div>
 
             <!-- Close Time -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Close Ticket Sales</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Close Ticket Sales</label>
               <label class="flex items-center gap-2 mb-2 cursor-pointer select-none">
                 <input type="checkbox" [(ngModel)]="closeAtShowTime" [ngModelOptions]="{standalone:true}"
                   (change)="onCloseAtShowTimeChange()"
-                  class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                <span class="text-sm text-gray-700">End at show time</span>
+                  class="w-4 h-4 accent-yellow-400">
+                <span class="text-xs font-mono text-gray-500">End at show time</span>
               </label>
               @if (!closeAtShowTime) {
                 <input type="datetime-local" formControlName="close_time"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 <div class="flex flex-wrap gap-1.5 mt-2">
                   @for (s of closeTimeSuggestions; track s.label) {
                     <button type="button" (click)="applyCloseTimeSuggestion(s.offsetMinutes)"
-                      class="px-2 py-0.5 text-xs rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition-colors">
+                      class="px-2 py-0.5 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 hover:border-gray-500 transition-colors">
                       {{ s.label }}
                     </button>
                   }
@@ -110,38 +113,38 @@ function newTicketTypeItem(): TicketTypeFormItem {
 
             <!-- Venue with Google Places -->
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Venue</label>
               <div class="relative">
                 <input type="text" [(ngModel)]="venueQuery" [ngModelOptions]="{standalone:true}"
                   (input)="onVenueInput()" (focus)="onVenueFocus()" (blur)="onVenueBlur()"
                   placeholder="Search venue name or address..."
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-8">
+                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors pr-8">
                 @if (venueSearching()) {
-                  <div class="absolute right-3 top-2.5">
-                    <div class="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div class="absolute right-3 top-3">
+                    <div class="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 }
                 @if (venueDropdownOpen() && venuePredictions().length > 0) {
                   <div class="venue-dropdown">
                     @for (p of venuePredictions(); track p.place_id) {
                       <button type="button" (mousedown)="selectVenuePrediction(p)"
-                        class="w-full text-left px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                        class="w-full text-left px-4 py-2.5 hover:bg-zinc-50 border-b border-gray-100 last:border-0">
                         <div class="text-sm font-medium text-gray-900">{{ p.structured_formatting.main_text }}</div>
-                        <div class="text-xs text-gray-500">{{ p.structured_formatting.secondary_text }}</div>
+                        <div class="text-xs font-mono text-gray-400">{{ p.structured_formatting.secondary_text }}</div>
                       </button>
                     }
                   </div>
                 }
               </div>
               @if (selectedVenue()) {
-                <div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-                  <div class="text-xs text-blue-800 min-w-0">
+                <div class="mt-2 p-2 border border-yellow-400/30 bg-yellow-50 flex items-center justify-between">
+                  <div class="text-xs font-mono text-yellow-600 min-w-0">
                     <span class="font-medium">{{ selectedVenue()!.venue }}</span>
                     @if (selectedVenue()!.venue_address) {
-                      <span class="text-blue-600 ml-1">— {{ selectedVenue()!.venue_address }}</span>
+                      <span class="text-yellow-500/70 ml-1">— {{ selectedVenue()!.venue_address }}</span>
                     }
                   </div>
-                  <button type="button" (click)="clearVenueSelection()" class="text-blue-400 hover:text-blue-600 ml-2 flex-shrink-0">
+                  <button type="button" (click)="clearVenueSelection()" class="text-gray-400 hover:text-gray-700 ml-2 flex-shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -151,62 +154,60 @@ function newTicketTypeItem(): TicketTypeFormItem {
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Description</label>
               <textarea formControlName="description" rows="4"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
                 placeholder="Describe your event..."></textarea>
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Event Poster</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Event Poster</label>
               <input type="file" accept="image/*" (change)="onPosterChange($event)"
-                class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100">
+                class="w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:border file:border-gray-300 file:text-xs file:font-mono file:text-gray-500 file:bg-white file:uppercase file:tracking-wider hover:file:text-gray-900 hover:file:border-gray-500 transition-colors">
               @if (posterPreview()) {
-                <img [src]="posterPreview()" alt="Poster preview" class="mt-3 h-32 rounded-lg object-cover border border-gray-200">
+                <img [src]="posterPreview()" alt="Poster preview" class="mt-3 h-32 object-cover border border-gray-200">
               }
             </div>
           </div>
         </div>
 
         <!-- ===== TICKET TYPES ===== -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ticket Types</h2>
+        <div class="bg-white border border-gray-200 p-6 mb-4">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticket Types</h2>
             <button type="button" (click)="addTicketType()"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white text-xs font-medium rounded-lg hover:bg-primary-700 transition-colors">
-              + Add Ticket Type
+              class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+              + Add Type
             </button>
           </div>
 
           @if (ticketTypes.length === 0) {
-            <p class="text-sm text-gray-400 text-center py-4">No ticket types yet. Add one above.</p>
+            <p class="text-xs font-mono text-gray-400 text-center py-4">no ticket types yet.</p>
           }
 
-          <div class="space-y-3">
+          <div class="space-y-2">
             @for (tt of ticketTypes; track tt; let i = $index) {
-              <div class="border border-gray-200 rounded-lg overflow-hidden">
+              <div class="border border-gray-200 overflow-hidden">
 
                 <!-- VIEW MODE -->
                 @if (!tt.isEditing) {
                   <div class="flex items-center justify-between px-4 py-3 bg-gray-50">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <div class="min-w-0">
-                        <span class="text-sm font-medium text-gray-900">{{ tt.name }}</span>
-                        <span class="ml-2 text-sm text-gray-500">{{ tt.isFree ? 'Free' : (tt.price | currency:'PHP':'symbol':'1.0-0') }}</span>
-                        @if (!tt.isUnlimited && tt.max_tickets > 0) {
-                          <span class="ml-2 text-xs text-gray-400">· {{ tt.max_tickets }} slots</span>
-                        }
-                        @if (tt.disabled) {
-                          <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">Disabled</span>
-                        }
-                      </div>
+                    <div class="min-w-0">
+                      <span class="text-sm font-bold text-gray-900 uppercase">{{ tt.name }}</span>
+                      <span class="ml-2 text-sm font-mono text-gray-400">{{ tt.isFree ? 'Free' : (tt.price | currency:'PHP':'symbol':'1.0-0') }}</span>
+                      @if (!tt.isUnlimited && tt.max_tickets > 0) {
+                        <span class="ml-2 text-xs font-mono text-gray-400">· {{ tt.max_tickets }} slots</span>
+                      }
+                      @if (tt.disabled) {
+                        <span class="ml-2 text-xs font-mono border border-red-300 text-red-600 bg-red-50 px-1.5 py-0.5 uppercase">Disabled</span>
+                      }
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
+                    <div class="flex items-center gap-3 flex-shrink-0">
                       <button type="button" (click)="startEditTicketType(i)"
-                        class="text-xs text-primary-600 hover:text-primary-700 font-medium">Edit</button>
+                        class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
                       @if (ticketTypes.length > 1) {
                         <button type="button" (click)="removeTicketType(i)"
-                          class="text-xs text-red-500 hover:text-red-600 font-medium">Remove</button>
+                          class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Remove</button>
                       }
                     </div>
                   </div>
@@ -214,96 +215,96 @@ function newTicketTypeItem(): TicketTypeFormItem {
 
                 <!-- EDIT MODE -->
                 @if (tt.isEditing) {
-                  <div class="p-4 space-y-3">
+                  <div class="p-4 space-y-3 bg-white">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div class="sm:col-span-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Name *</label>
+                        <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Name *</label>
                         <input type="text" [(ngModel)]="tt.name" [ngModelOptions]="{standalone:true}"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                           placeholder="e.g. General Admission, VIP">
                       </div>
 
                       <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Price</label>
-                        <div class="flex items-center gap-2">
-                          <label class="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer flex-shrink-0">
+                        <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Price</label>
+                        <div class="flex items-center gap-3">
+                          <label class="flex items-center gap-1.5 text-xs font-mono text-gray-400 cursor-pointer flex-shrink-0">
                             <input type="checkbox" [(ngModel)]="tt.isFree" [ngModelOptions]="{standalone:true}"
-                              class="w-3.5 h-3.5 text-primary-600 border-gray-300 rounded">
+                              class="w-3.5 h-3.5 accent-yellow-400">
                             Free
                           </label>
                           @if (!tt.isFree) {
                             <input type="number" [(ngModel)]="tt.price" [ngModelOptions]="{standalone:true}" min="0" step="0.01"
-                              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors"
                               placeholder="0.00">
                           }
                         </div>
                       </div>
 
                       <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Capacity</label>
-                        <div class="flex items-center gap-2">
-                          <label class="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer flex-shrink-0">
+                        <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Capacity</label>
+                        <div class="flex items-center gap-3">
+                          <label class="flex items-center gap-1.5 text-xs font-mono text-gray-400 cursor-pointer flex-shrink-0">
                             <input type="checkbox" [(ngModel)]="tt.isUnlimited" [ngModelOptions]="{standalone:true}"
-                              class="w-3.5 h-3.5 text-primary-600 border-gray-300 rounded">
+                              class="w-3.5 h-3.5 accent-yellow-400">
                             Unlimited
                           </label>
                           @if (!tt.isUnlimited) {
                             <input type="number" [(ngModel)]="tt.max_tickets" [ngModelOptions]="{standalone:true}" min="1"
-                              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              class="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors"
                               placeholder="Max slots">
                           }
                         </div>
                       </div>
 
                       <div class="sm:col-span-2">
-                        <label class="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+                        <label class="flex items-center gap-1.5 text-xs font-mono text-gray-400 cursor-pointer">
                           <input type="checkbox" [(ngModel)]="tt.showDateRange" [ngModelOptions]="{standalone:true}"
-                            class="w-3.5 h-3.5 text-primary-600 border-gray-300 rounded">
+                            class="w-3.5 h-3.5 accent-yellow-400">
                           Schedule sale window
                         </label>
                         @if (tt.showDateRange) {
                           <div class="grid grid-cols-2 gap-3 mt-2">
                             <div>
-                              <label class="block text-xs text-gray-500 mb-1">Sale Start</label>
+                              <label class="block text-xs font-mono text-gray-400 mb-1">Sale Start</label>
                               <input type="datetime-local" [(ngModel)]="tt.start_date" [ngModelOptions]="{standalone:true}"
-                                class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-900 text-xs focus:outline-none focus:border-yellow-400 transition-colors">
                             </div>
                             <div>
-                              <label class="block text-xs text-gray-500 mb-1">Sale End</label>
+                              <label class="block text-xs font-mono text-gray-400 mb-1">Sale End</label>
                               <input type="datetime-local" [(ngModel)]="tt.end_date" [ngModelOptions]="{standalone:true}"
-                                class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500">
+                                class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-900 text-xs focus:outline-none focus:border-yellow-400 transition-colors">
                             </div>
                           </div>
                         }
                       </div>
 
                       <div class="sm:col-span-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Special Instructions <span class="font-normal text-gray-400">(shown to buyer)</span></label>
+                        <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Buyer Instructions <span class="normal-case text-gray-400">(shown at checkout)</span></label>
                         <textarea [(ngModel)]="tt.special_instructions" [ngModelOptions]="{standalone:true}" rows="2"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                          class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
                           placeholder="Optional note shown at checkout..."></textarea>
                       </div>
 
                       <div class="sm:col-span-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Scanner Instructions <span class="font-normal text-gray-400">(shown to staff)</span></label>
+                        <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Scanner Instructions <span class="normal-case text-gray-400">(shown to staff)</span></label>
                         <textarea [(ngModel)]="tt.special_instructions_for_scanner" [ngModelOptions]="{standalone:true}" rows="2"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                          class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
                           placeholder="Optional note shown to scanner staff..."></textarea>
                       </div>
 
                       <div class="sm:col-span-2 flex items-center justify-between">
-                        <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                        <label class="flex items-center gap-2 text-xs font-mono text-gray-400 cursor-pointer">
                           <input type="checkbox" [(ngModel)]="tt.disabled" [ngModelOptions]="{standalone:true}"
-                            class="w-3.5 h-3.5 text-primary-600 border-gray-300 rounded">
+                            class="w-3.5 h-3.5 accent-yellow-400">
                           Disable this ticket type
                         </label>
                         <div class="flex items-center gap-2">
                           @if (tt._backup !== undefined) {
                             <button type="button" (click)="cancelEditTicketType(i)"
-                              class="px-3 py-1.5 text-xs border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50">Cancel</button>
+                              class="px-3 py-1.5 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
                           }
                           <button type="button" (click)="saveTicketType(i)" [disabled]="!tt.name.trim()"
-                            class="px-3 py-1.5 text-xs bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-40">
+                            class="px-3 py-1.5 text-xs font-black bg-yellow-400 hover:bg-yellow-300 text-black uppercase tracking-wider disabled:opacity-40">
                             {{ tt._backup !== undefined ? 'Save' : 'Done' }}
                           </button>
                         </div>
@@ -317,32 +318,32 @@ function newTicketTypeItem(): TicketTypeFormItem {
           </div>
 
           @if (ticketTypeError()) {
-            <p class="mt-3 text-xs text-red-600">{{ ticketTypeError() }}</p>
+            <p class="mt-3 text-xs font-mono text-red-600">{{ ticketTypeError() }}</p>
           }
         </div>
 
         <!-- ===== PAYMENT METHODS ===== -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4 mb-6">
-          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Payment Methods</h2>
+        <div class="bg-white border border-gray-200 p-6 space-y-4 mb-4">
+          <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Payment Methods</h2>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             @for (pm of paymentMethods; track pm.key) {
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" [formControlName]="pm.key"
-                  class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                <span class="text-sm text-gray-700">{{ pm.label }}</span>
+                  class="w-4 h-4 accent-yellow-400">
+                <span class="text-sm font-mono text-gray-500">{{ pm.label }}</span>
               </label>
             }
           </div>
         </div>
 
         <!-- ===== PURCHASE SETTINGS ===== -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5 mb-6">
-          <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Purchase Settings</h2>
+        <div class="bg-white border border-gray-200 p-6 space-y-5 mb-4">
+          <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Purchase Settings</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Countdown Display</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Countdown Display</label>
               <select formControlName="countdown_display"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 <option value="always">Always</option>
                 <option value="1_week">1 Week Before</option>
                 <option value="3_days">3 Days Before</option>
@@ -351,54 +352,54 @@ function newTicketTypeItem(): TicketTypeFormItem {
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Ticket Naming</label>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Ticket Naming</label>
               <input type="text" formControlName="ticket_naming"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                 placeholder="e.g. Ticket, Pass, Seat">
             </div>
             <div class="md:col-span-2">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" formControlName="show_tickets_remaining"
-                  class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                <span class="text-sm text-gray-700">Show tickets remaining to buyers</span>
+                  class="w-4 h-4 accent-yellow-400">
+                <span class="text-sm font-mono text-gray-500">Show tickets remaining to buyers</span>
               </label>
             </div>
           </div>
         </div>
 
         <!-- ===== WALK-IN SETTINGS ===== -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5 mb-6">
+        <div class="bg-white border border-gray-200 p-6 space-y-5 mb-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Walk-In Sales</h2>
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Walk-In Sales</h2>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" formControlName="walk_in_enabled"
-                class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-              <span class="text-sm text-gray-700">Enable walk-in sales</span>
+                class="w-4 h-4 accent-yellow-400">
+              <span class="text-xs font-mono text-gray-500">Enable walk-in sales</span>
             </label>
           </div>
           @if (form.get('walk_in_enabled')?.value) {
-            <div class="space-y-4 pt-2 border-t border-gray-100">
+            <div class="space-y-4 pt-4 border-t border-gray-200">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Accepted Payment Methods</label>
-                <div class="flex flex-wrap gap-4">
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-2">Accepted Payment Methods</label>
+                <div class="flex flex-wrap gap-5">
                   <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" formControlName="walk_in_supports_cash" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                    <span class="text-sm text-gray-700">Cash</span>
+                    <input type="checkbox" formControlName="walk_in_supports_cash" class="w-4 h-4 accent-yellow-400">
+                    <span class="text-sm font-mono text-gray-500">Cash</span>
                   </label>
                   <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" formControlName="walk_in_supports_gcash" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                    <span class="text-sm text-gray-700">GCash</span>
+                    <input type="checkbox" formControlName="walk_in_supports_gcash" class="w-4 h-4 accent-yellow-400">
+                    <span class="text-sm font-mono text-gray-500">GCash</span>
                   </label>
                   <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" formControlName="walk_in_supports_card" class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                    <span class="text-sm text-gray-700">Card</span>
+                    <input type="checkbox" formControlName="walk_in_supports_card" class="w-4 h-4 accent-yellow-400">
+                    <span class="text-sm font-mono text-gray-500">Card</span>
                   </label>
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Max Walk-In Count <span class="text-gray-400 font-normal">(0 = unlimited)</span></label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Walk-In Count <span class="normal-case text-gray-400">(0 = unlimited)</span></label>
                 <input type="number" formControlName="walk_in_max_count" min="0"
-                  class="w-48 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  class="w-48 px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
             </div>
           }
@@ -406,28 +407,28 @@ function newTicketTypeItem(): TicketTypeFormItem {
 
         <!-- ===== SCANNER SETTINGS (edit only) ===== -->
         @if (isEdit() && verificationPin()) {
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Scanner Settings</h2>
+          <div class="bg-white border border-gray-200 p-6 mb-4">
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Scanner Settings</h2>
             <div class="flex items-center gap-4">
               <div>
-                <label class="block text-xs text-gray-500 mb-1">Verification PIN</label>
-                <span class="text-2xl font-mono font-bold text-gray-900 tracking-widest">{{ verificationPin() }}</span>
+                <label class="block text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Verification PIN</label>
+                <span class="text-3xl font-mono font-black text-yellow-500 tracking-widest">{{ verificationPin() }}</span>
               </div>
               <button type="button" (click)="refreshPin()"
-                class="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                class="px-3 py-2 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
                 Refresh PIN
               </button>
             </div>
           </div>
         }
 
-        <div class="flex items-center justify-end gap-3 mt-6">
-          <a routerLink="/events"
-             class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+        <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+          <a routerLink="/app/events"
+             class="px-4 py-2.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
             Cancel
           </a>
           <button type="submit" [disabled]="loading()"
-            class="px-6 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors">
+            class="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
             {{ loading() ? 'Saving...' : (isEdit() ? 'Save Changes' : 'Create Event') }}
           </button>
         </div>
@@ -772,7 +773,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       : this.eventsService.createEvent(data);
 
     action.subscribe({
-      next: (res) => this.router.navigate(['/events', res.event.id]),
+      next: (res) => this.router.navigate(['/app/events', res.event.id]),
       error: (err) => {
         this.error.set(err.error?.error || 'Failed to save event.');
         this.loading.set(false);

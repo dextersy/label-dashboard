@@ -10,11 +10,17 @@ SFTP_USER="ubuntu"
 BACKEND_DEPLOY_PATH="/var/www/label-dashboard-api"
 FRONTEND_DEPLOY_PATH="/var/www/label-dashboard-web"
 SPINDLY_DEPLOY_PATH="/var/www/spindly-landing"
+TICKETING_APP_DEPLOY_PATH="/var/www/ticketing-app"
 
 # Build Configuration
 API_BUILD_COMMAND="npm run build"
 WEB_BUILD_COMMAND="npm run build -- --configuration production"
 SPINDLY_BUILD_COMMAND="npm run build"
+TICKETING_BUILD_COMMAND="npm run build"
+
+# Ticketing App Configuration
+# Domain where public show listings are served (used by the organizer portal to generate links)
+TICKETING_APP_PUBLIC_LISTING_DOMAIN="your-listing-domain.com"
 
 # PM2 Configuration
 PM2_APP_NAME="app"

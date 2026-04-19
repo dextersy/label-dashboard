@@ -101,7 +101,7 @@
     <div class="grid md:grid-cols-3 gap-x-12 gap-y-12">
       @for (feature of features; track feature.title) {
         <div>
-          <div class="text-4xl mb-5 leading-none">{{ feature.emoji }}</div>
+          <div class="mb-5"><img src="assets/{{ feature.image }}" class="w-1/4" /></div>
           <h3 class="font-display font-bold text-dark text-xl mb-3">{{ feature.title }}</h3>
           <p class="text-dark/60 leading-relaxed">{{ feature.description }}</p>
         </div>

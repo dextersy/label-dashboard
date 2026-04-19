@@ -127,7 +127,7 @@ print_status "Loading configuration from $CONFIG_FILE"
 source "$CONFIG_FILE"
 
 # Validate required configuration
-if [ -z "$SFTP_KEY_PATH" ] || [ -z "$PRODUCTION_HOST" ] || [ -z "$SFTP_USER" ] || [ -z "$BACKEND_DEPLOY_PATH" ] || [ -z "$FRONTEND_DEPLOY_PATH" ] || [ -z "$SPINDLY_DEPLOY_PATH" ]; then
+if [ -z "$SFTP_KEY_PATH" ] || [ -z "$PRODUCTION_HOST" ] || [ -z "$SFTP_USER" ] || [ -z "$BACKEND_DEPLOY_PATH" ] || [ -z "$FRONTEND_DEPLOY_PATH" ] || [ -z "$SPINDLY_DEPLOY_PATH" ] || [ -z "$TICKETING_APP_DEPLOY_PATH" ]; then
     print_error "Missing required configuration. Please check deploy.config"
     exit 1
 fi
@@ -142,6 +142,7 @@ fi
 API_BUILD_COMMAND=${API_BUILD_COMMAND:-"npm run build"}
 WEB_BUILD_COMMAND=${WEB_BUILD_COMMAND:-"npm run build"}
 SPINDLY_BUILD_COMMAND=${SPINDLY_BUILD_COMMAND:-"npm run build"}
+TICKETING_BUILD_COMMAND=${TICKETING_BUILD_COMMAND:-"npm run build"}
 PM2_APP_NAME=${PM2_APP_NAME:-"app"}
 
 print_status "Starting deployment process..."
@@ -149,6 +150,7 @@ print_status "Target server: $SFTP_USER@$PRODUCTION_HOST"
 print_status "Backend path: $BACKEND_DEPLOY_PATH"
 print_status "Frontend path: $FRONTEND_DEPLOY_PATH"
 print_status "Spindly landing path: $SPINDLY_DEPLOY_PATH"
+print_status "Ticketing App path: $TICKETING_APP_DEPLOY_PATH"
 
 if [ "$SKIP_BUILD" = true ]; then
     print_warning "🚀 Fast deployment mode: Build step will be skipped"
@@ -170,6 +172,7 @@ check_directory() {
 check_directory "$SCRIPT_DIR/src_new/label-dashboard-api" "API"
 check_directory "$SCRIPT_DIR/src_new/label-dashboard-web" "Web"
 check_directory "$SCRIPT_DIR/src_new/spindly.app" "Spindly"
+check_directory "$SCRIPT_DIR/src_new/ticketing-app" "Ticketing App"
 
 # Build API
 start_phase
@@ -336,6 +339,79 @@ else
     end_phase "Build: Spindly"
 fi
 
+# Build Ticketing App
+start_phase
+if [ "$SKIP_BUILD" = true ]; then
+    print_warning "Skipping Ticketing App build (--skip-build flag specified)"
+    cd "$SCRIPT_DIR/src_new/ticketing-app"
+    if [ ! -d "dist/ticketing-app/browser" ]; then
+        print_error "Ticketing App dist/ticketing-app/browser directory not found and build was skipped. Please build first or run without --skip-build"
+        exit 1
+    fi
+    end_phase "Build: Ticketing App (skipped)"
+else
+    print_status "Building Ticketing App..."
+    cd "$SCRIPT_DIR/src_new/ticketing-app"
+
+    if [ ! -f "package.json" ]; then
+        print_error "package.json not found in Ticketing App directory"
+        exit 1
+    fi
+
+    # Install dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing Ticketing App dependencies..."
+        npm install
+    fi
+
+    # Handle environment configuration for Ticketing App
+    print_status "Configuring Ticketing App production environment..."
+
+    if [ -f "src/environments/environment.prod.example.ts" ]; then
+        print_status "Creating Ticketing App production environment file from template..."
+        cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
+
+        TICKETING_MAPS_KEY=""
+        if [ -n "$GOOGLE_MAPS_API_KEY" ]; then
+            TICKETING_MAPS_KEY="$GOOGLE_MAPS_API_KEY"
+        elif [ -n "$GOOGLE_MAPS_API_KEY_CONFIG" ]; then
+            TICKETING_MAPS_KEY="$GOOGLE_MAPS_API_KEY_CONFIG"
+        fi
+
+        if [ -n "$TICKETING_MAPS_KEY" ]; then
+            sed -i "s/YOUR_PRODUCTION_GOOGLE_MAPS_API_KEY_HERE/$TICKETING_MAPS_KEY/g" src/environments/environment.prod.ts
+        else
+            print_warning "No Google Maps API key found — googleMapsApiKey placeholder left as-is"
+        fi
+
+        if [ -n "$TICKETING_APP_PUBLIC_LISTING_DOMAIN" ]; then
+            sed -i "s/YOUR_PUBLIC_LISTING_DOMAIN_HERE/$TICKETING_APP_PUBLIC_LISTING_DOMAIN/g" src/environments/environment.prod.ts
+        else
+            print_warning "TICKETING_APP_PUBLIC_LISTING_DOMAIN not set in deploy.config — placeholder left as-is"
+        fi
+    else
+        print_warning "environment.prod.example.ts not found in Ticketing App, skipping environment setup"
+    fi
+
+    # Build Ticketing App
+    print_status "Running Ticketing App build command: $TICKETING_BUILD_COMMAND"
+    eval "$TICKETING_BUILD_COMMAND"
+
+    # Clean up temporary environment file
+    if [ -f "src/environments/environment.prod.ts" ]; then
+        print_status "Cleaning up Ticketing App temporary environment file..."
+        rm -f src/environments/environment.prod.ts
+    fi
+
+    if [ ! -d "dist/ticketing-app/browser" ]; then
+        print_error "Ticketing App build failed - dist/ticketing-app/browser directory not found"
+        exit 1
+    fi
+
+    print_success "Ticketing App build completed"
+    end_phase "Build: Ticketing App"
+fi
+
 # Function to clean directory on server
 clean_directory() {
     local target_dir=$1
@@ -415,6 +491,7 @@ ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no "$SFTP_USER@$PRODUCTION_HOST
 print_success "API server directory cleaned"
 clean_directory "$FRONTEND_DEPLOY_PATH" "Web server"
 clean_directory "$SPINDLY_DEPLOY_PATH" "Spindly server"
+clean_directory "$TICKETING_APP_DEPLOY_PATH" "Ticketing App server"
 
 # Deploy maintenance page and .htaccess after cleaning
 print_status "Deploying maintenance mode..."
@@ -561,9 +638,16 @@ upload_files "$SCRIPT_DIR/src_new/spindly.app/dist/spindly-web/browser" "$SPINDL
 print_success "✅ Phase 7: Spindly.app deployed and live!"
 end_phase "Phase 7: Deploy Spindly"
 
-# Phase 8: Final deployment tasks
+# Phase 8: Deploy Ticketing App
 start_phase
-print_status "Phase 8: Completing final deployment tasks..."
+print_status "Phase 8: Deploying Ticketing App..."
+upload_files "$SCRIPT_DIR/src_new/ticketing-app/dist/ticketing-app/browser" "$TICKETING_APP_DEPLOY_PATH" "Ticketing App"
+print_success "✅ Phase 8: Ticketing App deployed and live!"
+end_phase "Phase 8: Deploy Ticketing App"
+
+# Phase 9: Final deployment tasks
+start_phase
+print_status "Phase 9: Completing final deployment tasks..."
 
 # Upload tmp folder if it exists
 if [ -d "tmp" ]; then
@@ -638,8 +722,8 @@ else
 fi
 rm -f "$sftp_batch"
 
-print_success "✅ Phase 8: Final deployment tasks completed"
-end_phase "Phase 8: Final tasks"
+print_success "✅ Phase 9: Final deployment tasks completed"
+end_phase "Phase 9: Final tasks"
 
 # Final deployment summary
 DEPLOY_TOTAL=$(( $(date +%s) - DEPLOY_START ))
