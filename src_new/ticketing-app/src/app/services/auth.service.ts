@@ -17,6 +17,8 @@ export interface User {
 export class AuthService {
   private readonly TOKEN_KEY = 'your_scene_token';
   private readonly USER_KEY = 'your_scene_user';
+  private readonly TEMP_TOKEN_KEY = 'your_scene_temp_token';
+  private readonly NEEDS_TERMS_KEY = 'your_scene_needs_terms';
   private currentUserSubject = new BehaviorSubject<User | null>(this.loadUser());
 
   currentUser$ = this.currentUserSubject.asObservable();
@@ -29,9 +31,21 @@ export class AuthService {
     );
   }
 
-  signup(data: { full_name: string; email: string; password: string; brand_name: string }): Observable<any> {
+  signup(data: { full_name: string; email: string; password: string; brand_name: string; terms_accepted: boolean }): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/ticketing/signup`, data).pipe(
       tap((res: any) => this.handleAuthResponse(res))
+    );
+  }
+
+  completeProfile(data: { username: string; terms_accepted?: boolean }): Observable<any> {
+    const tempToken = this.getTempToken();
+    return this.http.post(`${environment.apiUrl}/auth/complete-profile`, data, {
+      headers: { Authorization: `Bearer ${tempToken}` }
+    }).pipe(
+      tap((res: any) => {
+        this.clearTempToken();
+        this.handleAuthResponse(res);
+      })
     );
   }
 
@@ -49,6 +63,8 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.TEMP_TOKEN_KEY);
+    localStorage.removeItem(this.NEEDS_TERMS_KEY);
     this.currentUserSubject.next(null);
   }
 
@@ -60,11 +76,55 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
+  getTempToken(): string | null {
+    return localStorage.getItem(this.TEMP_TOKEN_KEY);
+  }
+
+  needsTerms(): boolean {
+    return localStorage.getItem(this.NEEDS_TERMS_KEY) === 'true';
+  }
+
+  /**
+   * Redeems the one-time exchange code issued by the Google OAuth callback.
+   * The code is posted to the backend which returns a JWT in the response body,
+   * keeping all tokens out of URLs, logs, and browser history.
+   */
+  exchangeGoogleCode(code: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/ticketing/google/exchange`, { code }).pipe(
+      tap((res: any) => this.handleAuthResponse(res))
+    );
+  }
+
+  /** @deprecated Only kept for compatibility — use exchangeGoogleCode for Google OAuth. */
+  storeToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
+  }
+
+  /** @deprecated Only kept for compatibility — use exchangeGoogleCode for Google OAuth. */
+  storeTempToken(tempToken: string, needsTerms: boolean): void {
+    localStorage.setItem(this.TEMP_TOKEN_KEY, tempToken);
+    localStorage.setItem(this.NEEDS_TERMS_KEY, needsTerms ? 'true' : 'false');
+  }
+
+  clearTempToken(): void {
+    localStorage.removeItem(this.TEMP_TOKEN_KEY);
+    localStorage.removeItem(this.NEEDS_TERMS_KEY);
+  }
+
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
   private handleAuthResponse(res: any): void {
+    if (res.status === 'profile_incomplete') {
+      // Store temp token separately — don't set as main auth token
+      if (res.token) {
+        localStorage.setItem(this.TEMP_TOKEN_KEY, res.token);
+      }
+      localStorage.setItem(this.NEEDS_TERMS_KEY, res.needs_terms ? 'true' : 'false');
+      return;
+    }
+
     if (res.token) {
       localStorage.setItem(this.TOKEN_KEY, res.token);
     }
