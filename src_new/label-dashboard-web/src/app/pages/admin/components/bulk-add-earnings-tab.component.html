@@ -160,7 +160,7 @@
 <app-floating-action-bar *ngIf="currentView === 'manual'">
 
   <!-- Desktop left: totals and rows count -->
-  <div floatingStart class="tw-hidden tw-lg:tw-flex tw-items-center tw-gap-4">
+  <div floatingStart class="tw-hidden lg:tw-flex tw-items-center tw-gap-4">
     <div>
       <strong>Current total earnings:</strong>
       <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span>
@@ -174,7 +174,7 @@
   </span>
 
   <!-- Desktop: btn-group with dropdown (hidden on mobile to avoid overflow clip in drawer) -->
-  <div class="add-rows-container tw-hidden tw-lg:tw-flex">
+  <div class="add-rows-container tw-hidden lg:tw-flex">
     <div class="btn-group add-rows-dropdown" role="group">
       <button type="button" class="btn-secondary btn-sm" (click)="addRows(1)">
         Add Row
@@ -194,13 +194,13 @@
     </div>
   </div>
   <!-- Mobile: flat buttons in drawer (no popup dropdowns inside overflow:hidden) -->
-  <button type="button" class="btn-secondary tw-lg:tw-hidden" (click)="addRows(1)">
+  <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(1)">
     <i class="fa fa-plus tw-mr-2"></i>Add 1 Row
   </button>
-  <button type="button" class="btn-secondary tw-lg:tw-hidden" (click)="addRows(5)">
+  <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(5)">
     <i class="fa fa-plus tw-mr-2"></i>Add 5 Rows
   </button>
-  <button type="button" class="btn-secondary tw-lg:tw-hidden" (click)="addRows(10)">
+  <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(10)">
     <i class="fa fa-plus tw-mr-2"></i>Add 10 Rows
   </button>
 
@@ -326,7 +326,7 @@
 <app-floating-action-bar *ngIf="csvFile && csvProcessingResult">
 
   <!-- Desktop left: form fields -->
-  <div floatingStart class="tw-hidden tw-lg:tw-flex tw-items-end tw-gap-3">
+  <div floatingStart class="tw-hidden lg:tw-flex tw-items-end tw-gap-3">
     <div class="tw-mb-5 tw-mb-0">
       <label for="csvDescriptionDesktop" class="tw-label">Description</label>
       <input type="text"
@@ -365,11 +365,11 @@
   </span>
 
   <!-- Mobile drawer: form fields (hidden on desktop) -->
-  <div class="tw-lg:tw-hidden">
+  <div class="lg:tw-hidden">
     <label class="tw-label small tw-mb-1 tw-text-sm">Description</label>
     <input type="text" class="tw-input-sm tw-input" [(ngModel)]="csvDescription" placeholder="Description">
   </div>
-  <div class="tw-lg:tw-hidden tw-flex tw-gap-2 tw-items-end">
+  <div class="lg:tw-hidden tw-flex tw-gap-2 tw-items-end">
     <div class="tw-flex-1">
       <label class="tw-label small tw-mb-1 tw-text-sm">Type</label>
       <select class="form-select form-select-sm tw-input" [(ngModel)]="csvEarningType">
@@ -384,7 +384,7 @@
       <label class="form-check-label small tw-text-sm" for="csvCalcRoyaltiesMobile">Royalties</label>
     </div>
   </div>
-  <div *ngIf="csvTotalUnmatched > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-0 tw-lg:tw-hidden" style="font-size: 12px; padding: 8px 12px;">
+  <div *ngIf="csvTotalUnmatched > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-0 lg:tw-hidden" style="font-size: 12px; padding: 8px 12px;">
     <i class="fa fa-exclamation-triangle tw-mr-1"></i>{{ csvTotalUnmatched }} rows will be skipped
   </div>
   <!-- Cancel: visible on both desktop (in secondary bar) and mobile (in drawer) -->

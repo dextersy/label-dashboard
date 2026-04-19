@@ -10,7 +10,7 @@
 
 <!-- Ticket Types Grid -->
 <div class="row g-3 tw-grid tw-grid-cols-1">
-    <div *ngFor="let ticketType of ticketTypes; let i = index" class="col-md-6 col-lg-4 tw-md:tw-col-span-6 tw-lg:tw-col-span-4">
+    <div *ngFor="let ticketType of ticketTypes; let i = index" class="col-md-6 col-lg-4 md:tw-col-span-6 lg:tw-col-span-4">
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full tw-pt-2 tw-relative" [ngClass]="editingIndex === i ? 'border-primary' : 'ticket-type-card'">
         <!-- Card Header for Static Cards -->
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-bg-transparent tw-border-0 tw-pb-2" *ngIf="editingIndex !== i">
@@ -171,7 +171,7 @@
 </div>
 
 <!-- New Ticket Type Form as a card in the same grid -->
-<div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4 tw-md:tw-col-span-6 tw-lg:tw-col-span-4">
+<div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4 md:tw-col-span-6 lg:tw-col-span-4">
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full border-success">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h6 class="card-title tw-text-success tw-mb-3">

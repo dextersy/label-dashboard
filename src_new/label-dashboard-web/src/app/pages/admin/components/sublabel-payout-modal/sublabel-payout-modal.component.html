@@ -14,11 +14,11 @@
         <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800" *ngIf="sublabel">
           <h6><strong>{{ sublabel.brand_name }}</strong></h6>
           <div class="row tw-grid tw-grid-cols-1">
-            <div class="col-md-6 tw-md:tw-col-span-6">
+            <div class="col-md-6 md:tw-col-span-6">
               <small class="tw-text-muted">Payable Balance:</small>
               <strong class="tw-text-success">₱{{ sublabel.balance | number:'1.2-2' }}</strong>
             </div>
-            <div class="col-md-6 tw-md:tw-col-span-6">
+            <div class="col-md-6 md:tw-col-span-6">
               <small class="tw-text-muted">Wallet Balance:</small>
               <span *ngIf="!loadingWalletBalance">
                 <strong [class.tw-text-success]="hasEnoughWalletBalance()" [class.tw-text-danger]="!hasEnoughWalletBalance()">
@@ -139,7 +139,7 @@
             </div>
             <div class="tw-px-card-pad tw-pb-card-pad">
               <div class="row tw-grid tw-grid-cols-1">
-                <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                   <label for="paid_thru_type" class="tw-label">Payment Type *</label>
                   <input
                     type="text"
@@ -150,7 +150,7 @@
                     [disabled]="submitting"
                     placeholder="e.g. Bank Transfer, PayPal">
                 </div>
-                <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                   <label for="paid_thru_account_name" class="tw-label">Account Name *</label>
                   <input
                     type="text"
@@ -178,7 +178,7 @@
 
           <!-- Additional Details (shown only when offline payment is ON) -->
           <div class="row tw-grid tw-grid-cols-1" *ngIf="shouldShowReferenceAndFee()">
-            <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+            <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
               <label for="reference_number" class="tw-label">Reference Number</label>
               <input
                 type="text"
@@ -189,7 +189,7 @@
                 [disabled]="submitting"
                 placeholder="Transaction reference">
             </div>
-            <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+            <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
               <label for="payment_processing_fee" class="tw-label">Processing Fee</label>
               <div class="input-group">
                 <span class="input-group-text">₱</span>

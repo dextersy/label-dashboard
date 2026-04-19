@@ -61,7 +61,7 @@
             <p>Basic event details and description</p>
 
             <div class="row tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="eventTitle" class="tw-label required">Event Title</label>
                 <input 
                   type="text" 
@@ -74,7 +74,7 @@
                   required>
               </div>
 
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="eventDateTime" class="tw-label required">Event Date & Time <span class="tw-text-muted">(GMT+8 PH)</span></label>
                 <input 
                   type="datetime-local" 
@@ -85,7 +85,7 @@
                   required>
               </div>
 
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label class="tw-label required">Venue</label>
                 <app-venue-autocomplete
                   placeholder="Search for venue or enter manually..."
@@ -98,7 +98,7 @@
                 </app-venue-autocomplete>
               </div>
 
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="rsvpLink" class="tw-label">RSVP or Social Media Link</label>
                 <input 
                   type="url" 
@@ -238,7 +238,7 @@
 
             <!-- Maximum Tickets and Show Remaining -->
             <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="maxTickets" class="tw-label">Maximum Tickets (Total)</label>
                 <div class="tw-flex tw-items-center tw-gap-2 tw-mb-2">
                   <div class="form-check form-switch tw-mb-0">
@@ -267,7 +267,7 @@
                 </small>
               </div>
 
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label class="tw-label">Show Tickets Remaining</label>
                 <div class="form-check form-switch">
                   <input 
@@ -289,7 +289,7 @@
 
             <!-- Ticket Sales Settings -->
             <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="closeTime" class="tw-label">Ticket Sales Close Time</label>
                 <div class="tw-flex tw-items-center tw-gap-2 tw-mb-2">
                   <div class="form-check form-switch tw-mb-0">
@@ -323,7 +323,7 @@
                 </div>
               </div>
 
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="countdownDisplay" class="tw-label">Show Countdown on Ticket Page</label>
                 <select id="countdownDisplay" class="form-select tw-input" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
                   <option value="always">Always show</option>
@@ -508,7 +508,7 @@
             </div>
 
             <div class="row tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                 <label for="verificationPin" class="tw-label">Verification PIN</label>
                 <div class="input-group">
                   <input 

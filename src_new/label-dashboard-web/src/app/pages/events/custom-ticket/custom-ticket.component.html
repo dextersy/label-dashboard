@@ -53,7 +53,7 @@
     <!-- Single Ticket Form -->
     <ng-container *ngIf="canCreateCustomTickets() && currentView === 'single'">
     <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-lg-8 col-xl-6 tw-lg:tw-col-span-8 tw-xl:tw-col-span-6">
+      <div class="col-lg-8 col-xl-6 lg:tw-col-span-8 xl:tw-col-span-6">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
             <h5 class="tw-mb-0">
@@ -79,7 +79,7 @@
               </div>
 
               <div class="row tw-grid tw-grid-cols-1">
-                <div class="col-md-6 tw-md:tw-col-span-6">
+                <div class="col-md-6 md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Name</label>
                     <input 
@@ -92,7 +92,7 @@
                   </div>
                 </div>
 
-                <div class="col-md-6 tw-md:tw-col-span-6">
+                <div class="col-md-6 md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Email Address</label>
                     <input 
@@ -107,7 +107,7 @@
               </div>
 
               <div class="row tw-grid tw-grid-cols-1">
-                <div class="col-md-6 tw-md:tw-col-span-6">
+                <div class="col-md-6 md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Contact Number</label>
                     <input 
@@ -120,7 +120,7 @@
                   </div>
                 </div>
 
-                <div class="col-md-6 tw-md:tw-col-span-6">
+                <div class="col-md-6 md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Number of Entries</label>
                     <input
@@ -252,7 +252,7 @@
       </div>
 
       <!-- Summary Card -->
-      <div class="col-lg-4 col-xl-6 tw-lg:tw-col-span-4 tw-xl:tw-col-span-6">
+      <div class="col-lg-4 col-xl-6 lg:tw-col-span-4 xl:tw-col-span-6">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
             <h6 class="tw-mb-0">
@@ -566,7 +566,7 @@
       <!-- Bulk Action Bar -->
       <app-floating-action-bar>
         <!-- Left side: summary + add-row buttons (desktop only) -->
-        <div floatingStart class="tw-hidden tw-lg:tw-flex tw-items-center tw-gap-4">
+        <div floatingStart class="tw-hidden lg:tw-flex tw-items-center tw-gap-4">
           <div>
             <strong>Total Amount:</strong>
             <span class="tw-text-success tw-ml-1">₱{{ getBulkTotal() | number:'1.2-2' }}</span>
@@ -588,7 +588,7 @@
         </div>
 
         <!-- Mobile layout (self-contained) -->
-        <div class="tw-block tw-lg:tw-hidden tw-w-full">
+        <div class="tw-block lg:tw-hidden tw-w-full">
           <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
             <div class="col-12 tw-col-span-12">
               <div class="btn-group tw-w-full" role="group">
@@ -622,7 +622,7 @@
         </div>
 
         <!-- Desktop right-side buttons -->
-        <div class="tw-hidden tw-lg:tw-flex tw-gap-2">
+        <div class="tw-hidden lg:tw-flex tw-gap-2">
           <button type="button"
                   class="btn-secondary"
                   (click)="onCancel()"

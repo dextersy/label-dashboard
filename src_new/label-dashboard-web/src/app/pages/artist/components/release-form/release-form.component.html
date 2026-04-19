@@ -1,7 +1,7 @@
 <form [formGroup]="releaseForm" (ngSubmit)="onSubmit()" (keydown.escape)="$event.stopPropagation()">
   <!-- Basic Release Information -->
   <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <div class="tw-mb-5">
         <label for="title">Title <span class="tw-text-danger">*</span></label>
         <input type="text"
@@ -16,7 +16,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-6 tw-md:tw-col-span-6" *ngIf="isAdmin">
+    <div class="col-md-6 md:tw-col-span-6" *ngIf="isAdmin">
       <div class="tw-mb-5">
         <label for="catalogNo">Catalog Number <span class="tw-text-danger">*</span></label>
         <input type="text"
@@ -36,7 +36,7 @@
   </div>
 
   <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-6 tw-md:tw-col-span-6" *ngIf="isAdmin">
+    <div class="col-md-6 md:tw-col-span-6" *ngIf="isAdmin">
       <div class="tw-mb-5">
         <label for="upc">UPC Code</label>
         <input type="text"
@@ -46,7 +46,7 @@
                placeholder="Universal Product Code">
       </div>
     </div>
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <div class="tw-mb-5">
         <label for="releaseDate">Release Date <span class="tw-text-danger">*</span></label>
         <input type="date"
@@ -63,7 +63,7 @@
   </div>
 
   <div class="row tw-grid tw-grid-cols-1" *ngIf="isAdmin && showStatus">
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <div class="tw-mb-5">
         <label for="status">Status</label>
         <select class="tw-input" id="status" formControlName="status">
@@ -81,7 +81,7 @@
   <div class="tw-mb-5">
     <label for="coverArt">Cover Art</label>
     <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-md-6 tw-md:tw-col-span-6">
+      <div class="col-md-6 md:tw-col-span-6">
         <input type="file"
                class="form-control-file"
                id="coverArt"
@@ -94,7 +94,7 @@
           JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
         </small>
       </div>
-      <div class="col-md-6 tw-md:tw-col-span-6" *ngIf="coverArtPreview">
+      <div class="col-md-6 md:tw-col-span-6" *ngIf="coverArtPreview">
         <div class="cover-art-preview">
           <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
         </div>
@@ -280,7 +280,7 @@
 
   <!-- Action Buttons -->
   <div *ngIf="showActionButtons" class="row tw-mt-4 tw-grid tw-grid-cols-1">
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <button type="submit" 
               class="btn-primary tw-w-full"
               [disabled]="loading || !isFormValid">
@@ -289,7 +289,7 @@
         {{ loading ? 'Saving...' : submitButtonText }}
       </button>
     </div>
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <button type="button" 
               class="btn-secondary tw-w-full"
               [disabled]="loading"

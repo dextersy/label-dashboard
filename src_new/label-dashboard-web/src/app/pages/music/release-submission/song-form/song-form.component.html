@@ -40,7 +40,7 @@
           </div>
 
           <div class="row tw-grid tw-grid-cols-1" *ngIf="isAdmin">
-            <div class="col-md-6 tw-md:tw-col-span-6">
+            <div class="col-md-6 md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label for="duration">Duration (seconds)</label>
                 <input
@@ -55,7 +55,7 @@
                 <small class="form-text tw-text-muted">Duration in seconds (e.g., 180 = 3:00)</small>
               </div>
             </div>
-            <div class="col-md-6 tw-md:tw-col-span-6">
+            <div class="col-md-6 md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label for="isrc">ISRC Code</label>
                 <input
@@ -250,7 +250,7 @@
               <div *ngIf="isCreatingNewAuthor" class="create-songwriter-form">
                 <h6 class="tw-mb-3">Create New Songwriter</h6>
                 <div class="row tw-grid tw-grid-cols-1">
-                  <div class="col-md-12 tw-mb-2 tw-md:tw-col-span-12">
+                  <div class="col-md-12 tw-mb-2 md:tw-col-span-12">
                     <label for="newAuthorName" class="tw-label tw-mb-1"><small>Name <span class="tw-text-danger">*</span></small></label>
                     <input
                       type="text"
@@ -261,7 +261,7 @@
                       placeholder="Songwriter name"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
                     <label for="newAuthorPro" class="tw-label tw-mb-1"><small>PRO Affiliation (optional)</small></label>
                     <input
                       type="text"
@@ -272,7 +272,7 @@
                       placeholder="e.g., ASCAP, BMI"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
                     <label for="newAuthorIpi" class="tw-label tw-mb-1"><small>IPI Number (optional)</small></label>
                     <input
                       type="text"
@@ -283,7 +283,7 @@
                       placeholder="IPI Number"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 tw-md:tw-col-span-6" *ngIf="isAdmin">
+                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6" *ngIf="isAdmin">
                     <label for="newAuthorShare" class="tw-label tw-mb-1"><small>Share % (optional)</small></label>
                     <input
                       type="number"
@@ -380,7 +380,7 @@
               <div *ngIf="isCreatingNewComposer" class="create-songwriter-form">
                 <h6 class="tw-mb-3">Create New Songwriter</h6>
                 <div class="row tw-grid tw-grid-cols-1">
-                  <div class="col-md-12 tw-mb-2 tw-md:tw-col-span-12">
+                  <div class="col-md-12 tw-mb-2 md:tw-col-span-12">
                     <label for="newComposerName" class="tw-label tw-mb-1"><small>Name <span class="tw-text-danger">*</span></small></label>
                     <input
                       type="text"
@@ -391,7 +391,7 @@
                       placeholder="Songwriter name"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
                     <label for="newComposerPro" class="tw-label tw-mb-1"><small>PRO Affiliation (optional)</small></label>
                     <input
                       type="text"
@@ -402,7 +402,7 @@
                       placeholder="e.g., ASCAP, BMI"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
                     <label for="newComposerIpi" class="tw-label tw-mb-1"><small>IPI Number (optional)</small></label>
                     <input
                       type="text"
@@ -413,7 +413,7 @@
                       placeholder="IPI Number"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 tw-md:tw-col-span-6" *ngIf="isAdmin">
+                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6" *ngIf="isAdmin">
                     <label for="newComposerShare" class="tw-label tw-mb-1"><small>Share % (optional)</small></label>
                     <input
                       type="number"

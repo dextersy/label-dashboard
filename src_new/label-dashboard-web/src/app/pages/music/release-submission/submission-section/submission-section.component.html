@@ -11,12 +11,12 @@
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
       <div class="row tw-grid tw-grid-cols-1">
-        <div class="col-md-6 tw-md:tw-col-span-6">
+        <div class="col-md-6 md:tw-col-span-6">
           <p><strong>Title:</strong> {{ releaseInfoData.title || 'Not specified' }}</p>
           <p><strong>Catalog Number:</strong> {{ releaseInfoData.catalog_no || 'Not specified' }}</p>
           <p><strong>UPC:</strong> {{ releaseInfoData.UPC || 'Not specified' }}</p>
         </div>
-        <div class="col-md-6 tw-md:tw-col-span-6">
+        <div class="col-md-6 md:tw-col-span-6">
           <p><strong>Release Date:</strong> {{ formatDate(releaseInfoData.release_date) || 'Not specified' }}</p>
           <p><strong>Cover Art:</strong>
             <span *ngIf="releaseInfoData.cover_art_preview || releaseInfoData.cover_art"> ✓ Uploaded</span>
@@ -71,7 +71,7 @@
         <!-- Non-admin view: simple list -->
         <div *ngIf="!isAdmin">
           <div class="row tw-grid tw-grid-cols-1">
-            <div class="col-md-12 tw-md:tw-col-span-12">
+            <div class="col-md-12 md:tw-col-span-12">
               <p class="tw-mb-2"><strong>Artists:</strong></p>
               <ul class="list-unstyled">
                 <li *ngFor="let artist of albumCreditsData.artists" class="tw-mb-1">
@@ -133,7 +133,7 @@
 
   <!-- Bottom Section: Validation and Submit -->
   <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <!-- Validation Summary -->
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
@@ -172,7 +172,7 @@
       </div>
     </div>
 
-    <div class="col-md-6 tw-md:tw-col-span-6">
+    <div class="col-md-6 md:tw-col-span-6">
       <!-- Submission Warning -->
       <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
         <i class="fa fa-exclamation-triangle tw-mr-2"></i>

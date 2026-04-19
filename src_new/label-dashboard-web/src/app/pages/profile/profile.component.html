@@ -8,7 +8,7 @@
   </div>
 
   <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-8 col-lg-6 tw-mx-auto tw-md:tw-col-span-8 tw-lg:tw-col-span-6">
+    <div class="col-md-8 col-lg-6 tw-mx-auto md:tw-col-span-8 lg:tw-col-span-6">
           
           <!-- Original Page Header (keeping for form styling) -->
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
@@ -42,7 +42,7 @@
               
               <!-- Profile Details (Read-only) -->
               <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-                <div class="col-md-6 tw-md:tw-col-span-6">
+                <div class="col-md-6 md:tw-col-span-6">
                   <div class="info-item">
                     <label class="tw-label small tw-text-sm tw-text-muted">Account Status</label>
                     <div class="tw-flex tw-items-center">
@@ -53,7 +53,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-6 tw-md:tw-col-span-6">
+                <div class="col-md-6 md:tw-col-span-6">
                   <div class="info-item">
                     <label class="tw-label small tw-text-sm tw-text-muted">Last Login</label>
                     <div class="text-dark tw-text-gray-900">{{ formatLastLogin(profile.last_login) }}</div>
@@ -65,7 +65,7 @@
               <form (ngSubmit)="onSubmitProfile()" #profileFormRef="ngForm">
                 <div class="row tw-grid tw-grid-cols-1">
                   <!-- Username (read-only as per original PHP) -->
-                  <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                     <label for="username" class="tw-label">Username</label>
                     <input 
                       type="text" 
@@ -79,7 +79,7 @@
                   </div>
                   
                   <!-- Email (read-only as per original PHP) -->
-                  <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                     <label for="email" class="tw-label">Email Address</label>
                     <input 
                       type="email" 
@@ -95,7 +95,7 @@
 
                 <div class="row tw-grid tw-grid-cols-1">
                   <!-- First Name -->
-                  <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                     <label for="first_name" class="tw-label">First Name <span class="tw-text-danger">*</span></label>
                     <input 
                       type="text" 
@@ -112,7 +112,7 @@
                   </div>
                   
                   <!-- Last Name -->
-                  <div class="col-md-6 tw-mb-3 tw-md:tw-col-span-6">
+                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
                     <label for="last_name" class="tw-label">Last Name <span class="tw-text-danger">*</span></label>
                     <input 
                       type="text" 

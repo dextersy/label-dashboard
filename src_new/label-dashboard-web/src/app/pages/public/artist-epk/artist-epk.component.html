@@ -61,7 +61,7 @@
     <div *ngIf="epkData.artist.bio" class="content-section bio-section">
       <div class="container">
         <div class="row tw-justify-center tw-grid tw-grid-cols-1">
-          <div class="col-lg-8 tw-lg:tw-col-span-8">
+          <div class="col-lg-8 lg:tw-col-span-8">
             <div class="section-header">
               <h2 class="section-title">About</h2>
             </div>
@@ -208,7 +208,7 @@
     <div *ngIf="epkData.artist.bio" class="minimal-section minimal-bio-section">
       <div class="container">
         <div class="row tw-justify-center tw-grid tw-grid-cols-1">
-          <div class="col-lg-8 col-md-10 tw-lg:tw-col-span-8">
+          <div class="col-lg-8 col-md-10 lg:tw-col-span-8">
             <h2 class="minimal-section-title">About</h2>
             <div class="minimal-bio-content" [innerHTML]="epkData.artist.bio"></div>
           </div>
@@ -245,7 +245,7 @@
                   </button>
                 </div>
               </div>
-              <div class="col-md-6 col-sm-8 tw-md:tw-col-span-6">
+              <div class="col-md-6 col-sm-8 md:tw-col-span-6">
                 <h3 class="minimal-release-title">{{ release.title }}</h3>
                 <p class="minimal-release-date">{{ formatReleaseDate(release.release_date) }}</p>
               </div>

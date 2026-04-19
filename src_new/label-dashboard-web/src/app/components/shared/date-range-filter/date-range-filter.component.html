@@ -3,7 +3,7 @@
   <div class="tw-px-card-pad tw-pb-card-pad" [class.tw-py-2]="compact">
     <!-- Collapsed Header - Always visible -->
     <div class="row tw-items-center date-range-header tw-grid tw-grid-cols-1">
-      <div class="col-lg-8 col-md-8 tw-lg:tw-col-span-8 tw-md:tw-col-span-8" [class.col-8]="compact">
+      <div class="col-lg-8 col-md-8 lg:tw-col-span-8 md:tw-col-span-8" [class.col-8]="compact">
         <div class="tw-flex tw-items-center">
           <button class="btn-ghost btn-sm text-decoration-none tw-p-0 tw-mr-2"
                   (click)="toggleExpanded()"
@@ -12,7 +12,7 @@
             <strong>{{ getPresetDisplayName() }}</strong>
             <i class="fa tw-ml-1" [class.fa-chevron-down]="!isExpanded" [class.fa-chevron-up]="isExpanded"></i>
           </button>
-          <span class="small tw-mr-2 tw-text-muted tw-text-sm" [ngClass]="{'tw-hidden': compact, 'tw-sm:tw-inline': compact}">
+          <span class="small tw-mr-2 tw-text-muted tw-text-sm" [ngClass]="{'tw-hidden': compact, 'sm:tw-inline': compact}">
             {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
             <span class="tw-text-success tw-ml-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
             <span class="tw-text-success tw-ml-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
@@ -22,13 +22,13 @@
                   [disabled]="loading"
                   [title]="loading ? 'Refreshing data...' : 'Refresh data'">
             <i class="fas fa-sync" [class.fa-spin]="loading"></i>
-            <span class="tw-ml-1 tw-hidden tw-md:tw-inline">Refresh</span>
+            <span class="tw-ml-1 tw-hidden md:tw-inline">Refresh</span>
           </button>
         </div>
       </div>
       
       <!-- Header Actions -->
-      <div class="col-lg-4 col-md-4 tw-lg:tw-col-span-4 tw-md:tw-col-span-4" [class.col-4]="compact">
+      <div class="col-lg-4 col-md-4 lg:tw-col-span-4 md:tw-col-span-4" [class.col-4]="compact">
         <div class="tw-flex tw-justify-end tw-items-center">
           <div class="form-check form-switch tw-mr-3" *ngIf="showComparison && !compact">
             <input class="form-check-input" 

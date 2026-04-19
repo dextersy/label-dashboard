@@ -1,5 +1,5 @@
 <div class="row tw-grid tw-grid-cols-1">
-  <div class="col-md-12 tw-md:tw-col-span-12">
+  <div class="col-md-12 md:tw-col-span-12">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
         <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-start tw-gap-3">
@@ -14,7 +14,7 @@
             <ng-container *ngIf="headerActions.length === 1 && !isHeaderActionHidden(headerActions[0])">
               <button
                 type="button"
-                class="btn-sm tw-sm:tw-hidden"
+                class="btn-sm sm:tw-hidden"
                 [class.btn-secondary]="!headerActions[0].type || headerActions[0].type === 'secondary'"
                 [class.btn-primary]="headerActions[0].type === 'primary'"
                 [class.btn-danger]="headerActions[0].type === 'danger'"
@@ -28,7 +28,7 @@
             <button
               *ngIf="headerActions.length > 1"
               type="button"
-              class="kebab-btn tw-sm:tw-hidden"
+              class="kebab-btn sm:tw-hidden"
               [class.active]="mobileActionsOpen"
               (click)="toggleMobileActions($event)"
               title="Actions">
@@ -36,7 +36,7 @@
             </button>
 
             <!-- Desktop header action buttons (≥ 576px) -->
-            <div class="tw-hidden tw-sm:tw-flex tw-items-center tw-gap-2" *ngIf="headerActions.length > 0">
+            <div class="tw-hidden sm:tw-flex tw-items-center tw-gap-2" *ngIf="headerActions.length > 0">
               <ng-container *ngFor="let action of headerActions">
                 <button
                   *ngIf="!isHeaderActionHidden(action)"

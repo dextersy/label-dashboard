@@ -1,7 +1,7 @@
 <div class="label-finance-tab">
   <!-- Date Range Filter -->
   <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-    <div class="col-md-12 tw-md:tw-col-span-12">
+    <div class="col-md-12 md:tw-col-span-12">
       <app-date-range-filter
         [compact]="true"
         [loading]="loading"
@@ -14,7 +14,7 @@
 
   <!-- Dashboard Metrics -->
   <div class="row tw-mb-4 tw-items-center tw-grid tw-grid-cols-1">
-    <div class="col-lg-4 col-md-12 tw-mb-3 mb-lg-0 tw-lg:tw-col-span-4 tw-md:tw-col-span-12">
+    <div class="col-lg-4 col-md-12 tw-mb-3 mb-lg-0 lg:tw-col-span-4 md:tw-col-span-12">
       <div class="current-balance-section tw-p-4 tw-text-center">
         <h2 class="balance-title">Receivable Balance</h2>
         <h1 class="balance-amount" [ngClass]="getAmountClass(dashboard?.receivable_balance ?? 0)">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div class="col-lg-8 col-md-12 tw-lg:tw-col-span-8 tw-md:tw-col-span-12">
+    <div class="col-lg-8 col-md-12 lg:tw-col-span-8 md:tw-col-span-12">
       <div class="financial-summary-card">
         <div class="financial-summary-item" (click)="showBreakdown('music')">
           <span class="financial-item-label">Net Music Earnings</span>
@@ -51,7 +51,7 @@
   <!-- Payment Methods and Payment History Section -->
   <div class="row tw-grid tw-grid-cols-1">
     <!-- Payment Methods -->
-    <div class="col-lg-4 tw-mb-4 mb-lg-0 tw-lg:tw-col-span-4">
+    <div class="col-lg-4 tw-mb-4 mb-lg-0 lg:tw-col-span-4">
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full">
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
           <h5 class="tw-mb-0">Payment Methods</h5>
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Payment History -->
-    <div class="col-lg-8 tw-lg:tw-col-span-8">
+    <div class="col-lg-8 lg:tw-col-span-8">
       <app-paginated-table
         title="Payment History"
         [data]="payments"

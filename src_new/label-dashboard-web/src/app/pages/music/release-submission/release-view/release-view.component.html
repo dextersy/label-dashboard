@@ -3,7 +3,7 @@
   <div class="release-view-header">
     <h2 class="release-title">{{ release.title }}</h2>
     <!-- Desktop action buttons -->
-    <div class="header-actions tw-hidden tw-md:tw-flex">
+    <div class="header-actions tw-hidden md:tw-flex">
       <button *ngIf="canSubmitRelease()"
               class="btn-primary btn-sm"
               (click)="onSubmitRelease()"
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Mobile kebab menu -->
-    <div class="kebab-menu tw-md:tw-hidden" *ngIf="isAdmin || canSubmitRelease()">
+    <div class="kebab-menu md:tw-hidden" *ngIf="isAdmin || canSubmitRelease()">
       <button class="kebab-toggle" (click)="kebabOpen = !kebabOpen">
         <i class="fas fa-ellipsis-v"></i>
       </button>

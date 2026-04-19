@@ -1,5 +1,5 @@
 <div class="row tw-grid tw-grid-cols-1">
-  <div class="col-md-8 tw-md:tw-col-span-8">
+  <div class="col-md-8 md:tw-col-span-8">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
         <h5>Add New Payment</h5>
@@ -7,13 +7,13 @@
       <div class="tw-px-card-pad tw-pb-card-pad">
         <form (ngSubmit)="onSubmitPayment()">
           <div class="row tw-grid tw-grid-cols-1">
-            <div class="col-md-6 tw-md:tw-col-span-6">
+            <div class="col-md-6 md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label>Date Paid</label>
                 <input type="datetime-local" class="tw-input" [(ngModel)]="newPaymentForm.date_paid" name="date_paid" required>
               </div>
             </div>
-            <div class="col-md-6 tw-md:tw-col-span-6">
+            <div class="col-md-6 md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label>Amount (PHP)</label>
                 <input type="number" class="tw-input" [(ngModel)]="newPaymentForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>

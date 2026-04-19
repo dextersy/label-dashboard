@@ -20,7 +20,7 @@
     <div class="tw-px-card-pad tw-pb-card-pad">
       <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
         <div class="row tw-items-end tw-grid tw-grid-cols-1">
-          <div class="col-md-8 tw-md:tw-col-span-8">
+          <div class="col-md-8 md:tw-col-span-8">
             <div class="tw-mb-5 tw-mb-0">
               <label for="inviteEmail" class="tw-label">Email Address</label>
               <input type="email"
@@ -34,7 +34,7 @@
                      [disabled]="sendingInvite">
             </div>
           </div>
-          <div class="col-md-4 tw-md:tw-col-span-4">
+          <div class="col-md-4 md:tw-col-span-4">
             <div class="tw-mb-5 tw-mb-0">
               <button type="submit"
                       class="btn-primary tw-w-full"

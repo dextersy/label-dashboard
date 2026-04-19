@@ -31,10 +31,10 @@
     <!-- Quick Menu + Stats Row -->
     <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
       <!-- Quick Menu Cards -->
-      <div class="col-lg-8 col-md-12 tw-mb-3 mb-lg-0 tw-lg:tw-col-span-8 tw-md:tw-col-span-12">
+      <div class="col-lg-8 col-md-12 tw-mb-3 mb-lg-0 lg:tw-col-span-8 md:tw-col-span-12">
         <h6 class="section-label section-label-lg">What do you want to do today?</h6>
         <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-12 col-sm-6 tw-mb-3 mb-sm-0 tw-col-span-12 tw-sm:tw-col-span-6">
+          <div class="col-12 col-sm-6 tw-mb-3 mb-sm-0 tw-col-span-12 sm:tw-col-span-6">
             <a routerLink="/music/releases/new" class="quick-menu-card quick-menu-card-primary">
               <div class="quick-menu-icon-wrap">
                 <i class="fas fa-upload"></i>
@@ -80,7 +80,7 @@
       </div>
 
       <!-- Compact Stats Card -->
-      <div class="col-lg-4 col-md-12 tw-flex tw-flex-col tw-lg:tw-col-span-4 tw-md:tw-col-span-12">
+      <div class="col-lg-4 col-md-12 tw-flex tw-flex-col lg:tw-col-span-4 md:tw-col-span-12">
         <h6 class="section-label">Quick Stats</h6>
         <div class="stats-compact-card">
           <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
@@ -112,20 +112,20 @@
     <!-- Dashboard widgets -->
     <!-- Row 1: Latest releases + Release Pipeline -->
     <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-      <div class="col-lg-6 tw-mb-4 mb-lg-0 tw-lg:tw-col-span-6">
+      <div class="col-lg-6 tw-mb-4 mb-lg-0 lg:tw-col-span-6">
         <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
       </div>
-      <div class="col-lg-6 tw-lg:tw-col-span-6">
+      <div class="col-lg-6 lg:tw-col-span-6">
         <app-release-pipeline [stages]="dashboardData.releasePipeline || []"></app-release-pipeline>
       </div>
     </div>
 
     <!-- Row 2: Top earning releases + Balance summary -->
     <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-lg-8 tw-mb-4 mb-lg-0 tw-lg:tw-col-span-8">
+      <div class="col-lg-8 tw-mb-4 mb-lg-0 lg:tw-col-span-8">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
-      <div class="col-lg-4 tw-lg:tw-col-span-4">
+      <div class="col-lg-4 lg:tw-col-span-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>
     </div>

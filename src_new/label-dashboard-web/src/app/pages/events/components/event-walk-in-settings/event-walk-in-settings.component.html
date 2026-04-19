@@ -90,7 +90,7 @@
       <div class="tw-px-card-pad tw-pb-card-pad">
         <!-- Types Card Grid -->
         <div class="row g-3 tw-grid tw-grid-cols-1" *ngIf="walkInTypes.length > 0 || showNewForm">
-          <div *ngFor="let type of walkInTypes; let i = index" class="col-md-6 col-lg-4 tw-md:tw-col-span-6 tw-lg:tw-col-span-4">
+          <div *ngFor="let type of walkInTypes; let i = index" class="col-md-6 col-lg-4 md:tw-col-span-6 lg:tw-col-span-4">
             <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full tw-pt-2 tw-relative" [ngClass]="editingIndex === i ? 'border-primary' : 'walk-in-type-card'">
               <!-- Card Header for Static Cards -->
               <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-bg-transparent tw-border-0 tw-pb-2" *ngIf="editingIndex !== i">
@@ -181,7 +181,7 @@
           </div>
 
           <!-- New Walk-In Type Form as a card in the same grid -->
-          <div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4 tw-md:tw-col-span-6 tw-lg:tw-col-span-4">
+          <div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4 md:tw-col-span-6 lg:tw-col-span-4">
             <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full border-success">
               <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
                 <h6 class="card-title tw-text-success tw-mb-3">

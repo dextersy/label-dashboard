@@ -13,7 +13,7 @@
 
     <ng-template #customButtons>
       <div class="filter-controls tw-flex tw-items-center">
-        <div class="btn-group tw-hidden tw-md:tw-flex" role="group">
+        <div class="btn-group tw-hidden md:tw-flex" role="group">
           <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
           <label class="btn-sm btn-secondary" for="epkFilterAll">All</label>
 
@@ -27,7 +27,7 @@
             <i class="fa fa-eye-slash"></i> <span class="tw-hidden d-lg-inline">Hidden from EPK</span>
           </label>
         </div>
-        <select class="form-select form-select-sm tw-md:tw-hidden tw-input" [(ngModel)]="epkFilter">
+        <select class="form-select form-select-sm md:tw-hidden tw-input" [(ngModel)]="epkFilter">
           <option value="all">All</option>
           <option value="visible">Visible in EPK</option>
           <option value="hidden">Hidden from EPK</option>
