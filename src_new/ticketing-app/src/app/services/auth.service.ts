@@ -19,6 +19,7 @@ export class AuthService {
   private readonly USER_KEY = 'your_scene_user';
   private readonly TEMP_TOKEN_KEY = 'your_scene_temp_token';
   private readonly NEEDS_TERMS_KEY = 'your_scene_needs_terms';
+  private readonly NEEDS_BRAND_NAME_KEY = 'your_scene_needs_brand_name';
   private currentUserSubject = new BehaviorSubject<User | null>(this.loadUser());
 
   currentUser$ = this.currentUserSubject.asObservable();
@@ -37,7 +38,7 @@ export class AuthService {
     );
   }
 
-  completeProfile(data: { username: string; terms_accepted?: boolean }): Observable<any> {
+  completeProfile(data: { username: string; terms_accepted?: boolean; brand_name?: string }): Observable<any> {
     const tempToken = this.getTempToken();
     return this.http.post(`${environment.apiUrl}/auth/complete-profile`, data, {
       headers: { Authorization: `Bearer ${tempToken}` }
@@ -65,6 +66,7 @@ export class AuthService {
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.TEMP_TOKEN_KEY);
     localStorage.removeItem(this.NEEDS_TERMS_KEY);
+    localStorage.removeItem(this.NEEDS_BRAND_NAME_KEY);
     this.currentUserSubject.next(null);
   }
 
@@ -82,6 +84,10 @@ export class AuthService {
 
   needsTerms(): boolean {
     return localStorage.getItem(this.NEEDS_TERMS_KEY) === 'true';
+  }
+
+  needsBrandName(): boolean {
+    return localStorage.getItem(this.NEEDS_BRAND_NAME_KEY) === 'true';
   }
 
   /**
@@ -109,6 +115,7 @@ export class AuthService {
   clearTempToken(): void {
     localStorage.removeItem(this.TEMP_TOKEN_KEY);
     localStorage.removeItem(this.NEEDS_TERMS_KEY);
+    localStorage.removeItem(this.NEEDS_BRAND_NAME_KEY);
   }
 
   getCurrentUser(): User | null {
@@ -122,6 +129,7 @@ export class AuthService {
         localStorage.setItem(this.TEMP_TOKEN_KEY, res.token);
       }
       localStorage.setItem(this.NEEDS_TERMS_KEY, res.needs_terms ? 'true' : 'false');
+      localStorage.setItem(this.NEEDS_BRAND_NAME_KEY, res.needs_brand_name ? 'true' : 'false');
       return;
     }
 

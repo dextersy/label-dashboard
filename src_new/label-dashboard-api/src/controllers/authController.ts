@@ -22,6 +22,7 @@ interface ExchangeEntry {
   brandId: number;
   profileIncomplete: boolean;
   needsTerms: boolean;
+  needsBrandName: boolean;
   expiresAt: number;
 }
 const oauthExchangeCodes = new Map<string, ExchangeEntry>();
@@ -346,7 +347,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
 export const completeProfile = async (req: Request, res: Response) => {
   try {
-    const { username, first_name, last_name, terms_accepted } = req.body;
+    const { username, first_name, last_name, terms_accepted, brand_name } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
@@ -419,6 +420,11 @@ export const completeProfile = async (req: Request, res: Response) => {
       updates.terms_accepted_at = new Date();
     }
     await user.update(updates);
+
+    // Update brand name if provided (for new Google signups that haven't set it yet)
+    if (brand_name && typeof brand_name === 'string' && brand_name.trim()) {
+      await Brand.update({ brand_name: brand_name.trim() }, { where: { id: user.brand_id } });
+    }
 
     // Generate full JWT token now that profile is complete
     const fullToken = jwt.sign(
@@ -1093,7 +1099,7 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
     if (user) {
       // Existing organizer — issue a one-time exchange code redeemed by the frontend
       if (!user.username) {
-        const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: true, needsTerms: false });
+        const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: true, needsTerms: false, needsBrandName: false });
         return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
       }
 
@@ -1135,7 +1141,7 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
       // No username or terms_accepted_at yet — both collected in the complete-profile step
     });
 
-    const exchangeCode = createExchangeCode({ userId: newUser.id, brandId: newUser.brand_id, profileIncomplete: true, needsTerms: true });
+    const exchangeCode = createExchangeCode({ userId: newUser.id, brandId: newUser.brand_id, profileIncomplete: true, needsTerms: true, needsBrandName: true });
     return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
   } catch (error) {
     console.error('Google callback error:', error);
@@ -1172,7 +1178,7 @@ export const organizerGoogleExchange = async (req: Request, res: Response) => {
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
-      return res.json({ status: 'profile_incomplete', token: tempToken, needs_terms: entry.needsTerms });
+      return res.json({ status: 'profile_incomplete', token: tempToken, needs_terms: entry.needsTerms, needs_brand_name: entry.needsBrandName });
     }
 
     const token = jwt.sign(

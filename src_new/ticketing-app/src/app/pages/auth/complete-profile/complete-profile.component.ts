@@ -29,12 +29,26 @@ import { AuthService } from '../../../services/auth.service';
           }
 
           <p class="text-xs font-mono text-white/30 mb-6">
-            Choose a username for your organizer account.
+            @if (needsBrandName()) { Set your organizer name and choose a username. }
+            @else { Choose a username for your organizer account. }
             @if (needsTerms()) { You'll also need to accept the terms. }
           </p>
 
           <form [formGroup]="form" (ngSubmit)="submit()">
             <div class="space-y-4">
+              @if (needsBrandName()) {
+                <div>
+                  <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Organizer / Brand Name</label>
+                  <input type="text" formControlName="brand_name"
+                    class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
+                    placeholder="e.g. Neon Nights Events"
+                    autocomplete="organization">
+                  @if (form.get('brand_name')?.invalid && form.get('brand_name')?.touched) {
+                    <p class="mt-1 text-xs font-mono text-red-400">Please enter your organizer or brand name.</p>
+                  }
+                </div>
+              }
+
               <div>
                 <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Username</label>
                 <input type="text" formControlName="username"
@@ -78,6 +92,7 @@ export class CompleteProfileComponent implements OnInit {
   error = signal('');
   hasTempToken = signal(false);
   needsTerms = signal(false);
+  needsBrandName = signal(false);
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.form = this.fb.group({
@@ -93,8 +108,15 @@ export class CompleteProfileComponent implements OnInit {
     const needsTerms = this.auth.needsTerms();
     this.needsTerms.set(needsTerms);
 
+    const needsBrandName = this.auth.needsBrandName();
+    this.needsBrandName.set(needsBrandName);
+
     if (needsTerms) {
       this.form.addControl('terms_accepted', this.fb.control(false, Validators.requiredTrue));
+    }
+
+    if (needsBrandName) {
+      this.form.addControl('brand_name', this.fb.control('', [Validators.required, Validators.maxLength(100)]));
     }
 
     // If somehow they land here while already fully logged in, redirect to dashboard
@@ -114,6 +136,9 @@ export class CompleteProfileComponent implements OnInit {
     const payload: any = { username: this.form.value.username };
     if (this.needsTerms()) {
       payload.terms_accepted = true;
+    }
+    if (this.needsBrandName()) {
+      payload.brand_name = this.form.value.brand_name;
     }
 
     this.auth.completeProfile(payload).subscribe({
