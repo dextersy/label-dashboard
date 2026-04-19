@@ -53,7 +53,7 @@
   @apply tw-mb-5 tw-text-left;
 
   label {
-    @apply tw-block tw-mb-2 tw-font-medium tw-text-xs tw-text-[#374151] tw-leading-normal;
+    @apply tw-block tw-mb-2 tw-font-medium tw-text-sm tw-text-[#374151] tw-leading-normal;
 
     .text-danger { @apply tw-text-danger tw-font-semibold; }
   }
@@ -161,32 +161,23 @@ textarea.form-control {
 $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
 .btn-primary {
-  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium tw-text-center
+  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-semibold tw-text-center
          tw-whitespace-nowrap tw-cursor-pointer tw-border tw-border-transparent
          tw-py-3 tw-px-6 tw-rounded-btn tw-no-underline tw-select-none tw-mb-0
-         tw-relative tw-overflow-hidden tw-align-middle;
+         tw-align-middle;
   font-size: 15px;
   line-height: 1.5;
   touch-action: manipulation;
   color: var(--brand-color-text, #ffffff);
   background: var(--brand-color, #3b82f6);
-  transition: $btn-transition;
-
-  &::before,
-  &::after {
-    content: '';
-    @apply tw-absolute tw-rounded-full tw-pointer-events-none;
-  }
-  &::before { width: 70px; height: 70px; background: rgba(255, 255, 255, 0.1); top: -25px; right: -15px; }
-  &::after  { width: 40px; height: 40px; background: rgba(255, 255, 255, 0.07); bottom: -12px; left: 12px; }
+  transition: opacity 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #ffffff);
+    opacity: 0.9;
     color: var(--brand-color-text, #ffffff);
-    transform: translateY(-1px);
   }
-  &:active:not(:disabled) { transform: translateY(0); }
-  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; background: #9ca3af; border: none; transform: none; }
+  &:active:not(:disabled) { opacity: 0.8; }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; background: #9ca3af; border: none; }
 
   i { margin-right: 8px; font-size: 14px; }
 }
@@ -199,57 +190,49 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 15px;
   line-height: 1.5;
   touch-action: manipulation;
-  transition: $btn-transition;
+  transition: opacity 0.2s ease;
 
-  &:hover:not(:disabled) {
-    @apply tw-bg-gray-50;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
-    transform: translateY(-1px);
-    color: #374151;
-  }
-  &:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
-  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed tw-bg-gray-50 tw-text-muted; box-shadow: none; transform: none; }
+  &:hover:not(:disabled) { opacity: 0.8; color: #374151; }
+  &:active:not(:disabled) { opacity: 0.7; }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed tw-bg-gray-50 tw-text-muted; box-shadow: none; }
 
   i { margin-right: 8px; font-size: 14px; }
 }
 
 .btn-danger {
-  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium tw-text-center
+  @apply tw-inline-flex tw-items-center tw-justify-center tw-font-semibold tw-text-center
          tw-whitespace-nowrap tw-cursor-pointer tw-py-3 tw-px-6 tw-rounded-btn
-         tw-no-underline tw-select-none tw-mb-0 tw-bg-transparent tw-text-danger tw-align-middle;
-  border: 1px solid #ef4444;
+         tw-no-underline tw-select-none tw-mb-0 tw-text-white tw-align-middle;
+  background: #ef4444;
+  border: none;
   font-size: 15px;
   line-height: 1.5;
   touch-action: manipulation;
-  transition: $btn-transition;
+  transition: opacity 0.2s ease;
 
-  &:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.06);
-    border-color: #dc2626;
-    color: #dc2626;
-    transform: translateY(-1px);
-  }
-  &:active:not(:disabled) { background: rgba(239, 68, 68, 0.12); transform: translateY(0); }
-  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed tw-bg-transparent tw-border-0; transform: none; }
+  &:hover:not(:disabled) { opacity: 0.9; }
+  &:active:not(:disabled) { opacity: 0.8; }
+  &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; }
 
   i { margin-right: 8px; font-size: 14px; }
 }
 
 .btn-ghost {
   @apply tw-inline-flex tw-items-center tw-justify-center tw-font-medium
-         tw-bg-transparent tw-border-0 tw-text-[#374151] tw-cursor-pointer
-         tw-rounded-md tw-no-underline tw-select-none;
-  padding: 6px 10px;
+         tw-bg-transparent tw-cursor-pointer tw-rounded-md tw-no-underline tw-select-none;
+  padding: 6px 12px;
   font-size: 14px;
-  transition: background 0.15s ease, color 0.15s ease;
+  border: 1px solid var(--brand-color, #3b82f6);
+  color: var(--brand-color, #3b82f6);
+  transition: opacity 0.15s ease;
 
-  &:hover:not(:disabled)  { background: rgba(0, 0, 0, 0.05); color: #111827; }
-  &:active:not(:disabled) { background: rgba(0, 0, 0, 0.08); }
+  &:hover:not(:disabled)  { opacity: 0.8; }
+  &:active:not(:disabled) { opacity: 0.7; }
   &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; }
 
   &.text-danger {
-    @apply tw-text-danger;
-    &:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
+    border-color: #ef4444;
+    color: #ef4444;
   }
 
   i { margin-right: 6px; font-size: 13px; }
@@ -257,7 +240,7 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
 .btn-sm {
   padding: 8px 16px !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   margin-bottom: 0 !important;
   i { margin-right: 6px !important; font-size: 12px !important; }
 }

@@ -234,7 +234,7 @@
   }
 
   .tw-label {
-    @apply tw-block tw-mb-2 tw-font-medium tw-text-xs tw-text-[#374151];
+    @apply tw-block tw-mb-2 tw-font-medium tw-text-sm tw-text-[#374151];
   }
 
   /* Compact input variant (replaces form-control-sm) */
@@ -288,7 +288,7 @@
 }
 
 .ql-editor {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
   min-height: 100px !important;
@@ -302,12 +302,12 @@
 
 /* BASIC */
 html {
-  font-size: 13px; /* Reduced from default 16px */
+  font-size: 14px;
 }
 
 body {
-  font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  font-size: 13px; /* Reduced from default 14px */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
   height: 100vh;
   margin: 0;
   padding: 0;
@@ -700,25 +700,25 @@ app-root {
 /* GLOBAL FONT SIZE OVERRIDES                  */
 /* =========================================== */
 
-/* Reduce default font sizes for dashboard components */
+/* Component font sizes */
 .table {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .btn {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .form-control {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .card {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .nav-link {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* Specific overrides for components that might have larger fonts */
@@ -728,7 +728,7 @@ app-root {
 
 /* Modern Heading Styles */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.025em;
