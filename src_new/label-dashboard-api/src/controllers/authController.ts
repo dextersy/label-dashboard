@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import axios from 'axios';
 import { User, Brand, Domain, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { getBrandIdFromDomain, getBrandFrontendUrl } from '../utils/brandUtils';
@@ -9,6 +10,34 @@ import { generateSecureToken } from '../utils/tokenUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
+
+// ─── One-time OAuth exchange code store ──────────────────────────────────────
+// Tokens are never placed in redirect URLs (logs, browser history, Referer leakage).
+// Instead the callback issues a short-lived opaque code; the frontend POSTs it to
+// POST /auth/ticketing/google/exchange to receive the actual JWT over a normal JSON
+// response body.  Codes are single-use and expire after 5 minutes.
+
+interface ExchangeEntry {
+  userId: number;
+  brandId: number;
+  profileIncomplete: boolean;
+  needsTerms: boolean;
+  expiresAt: number;
+}
+const oauthExchangeCodes = new Map<string, ExchangeEntry>();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, entry] of oauthExchangeCodes) {
+    if (entry.expiresAt < now) oauthExchangeCodes.delete(code);
+  }
+}, 60_000);
+
+function createExchangeCode(entry: Omit<ExchangeEntry, 'expiresAt'>): string {
+  const code = crypto.randomBytes(32).toString('hex');
+  oauthExchangeCodes.set(code, { ...entry, expiresAt: Date.now() + 5 * 60 * 1000 });
+  return code;
+}
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -227,17 +256,35 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Unable to determine frontend domain from request' });
     }
     
-    const brandId = await getBrandIdFromDomain(refererUrl);
-    
+    let brandId = await getBrandIdFromDomain(refererUrl);
+
+    // In dev, both apps share the same hostname (localhost) so the port is the only
+    // differentiator — but getBrandIdFromDomain strips ports.  If the referer origin
+    // matches TICKETING_FRONTEND_URL, use TICKETING_PARENT_BRAND_ID directly.
+    const ticketingFrontendUrl = process.env.TICKETING_FRONTEND_URL;
+    const ticketingParentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (ticketingFrontendUrl && ticketingParentBrandId) {
+      try {
+        if (new URL(refererUrl).origin === new URL(ticketingFrontendUrl).origin) {
+          brandId = ticketingParentBrandId;
+        }
+      } catch {}
+    }
+
     if (!brandId) {
       return res.status(400).json({ error: 'Invalid domain or brand not found' });
     }
 
-    // Find user by email (brand-scoped like original PHP)
+    // Include sub-brands in the search so that organizer sub-brand users
+    // (whose brand_id differs from the domain's brand_id) can still reset their password
+    const subBrands = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'] });
+    const brandIds = [brandId, ...subBrands.map((b: any) => b.id)];
+
+    // Find user by email across this brand and its sub-brands
     const user = await User.findOne({
       where: {
         email_address: email,
-        brand_id: brandId
+        brand_id: brandIds
       },
       include: [{ model: Brand, as: 'brand' }]
     });
@@ -253,14 +300,18 @@ export const forgotPassword = async (req: Request, res: Response) => {
         reset_hash: resetHash
       });
 
+      // Use the domain-resolved brand for email branding so that organizer sub-brand
+      // users (who have no logo on their own brand) get the parent platform's branding
+      const emailBrand = await Brand.findByPk(brandId);
+
       // Send reset email using the same function as original PHP
       await sendResetLink(
         user.email_address,
         resetHash,
-        user.brand?.brand_name || 'Label Dashboard',
-        user.brand?.brand_color || '#5fbae9',
-        user.brand?.logo_url || '',
-        user.brand_id,
+        emailBrand?.brand_name || user.brand?.brand_name || 'Label Dashboard',
+        emailBrand?.brand_color || user.brand?.brand_color || '#5fbae9',
+        emailBrand?.logo_url || user.brand?.logo_url || '',
+        brandId,
         refererUrl // Pass the frontend domain
       ).catch(error => {
         console.error('Failed to send reset email:', error);
@@ -295,7 +346,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
 export const completeProfile = async (req: Request, res: Response) => {
   try {
-    const { username, first_name, last_name } = req.body;
+    const { username, first_name, last_name, terms_accepted } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
 
     if (!token) {
@@ -357,13 +408,17 @@ export const completeProfile = async (req: Request, res: Response) => {
       });
     }
 
-    // Update user with username and optional names
-    await user.update({
+    // Update user with username, optional names, and optional terms acceptance
+    const updates: any = {
       username: username.trim(),
       first_name: first_name?.trim() || user.first_name,
       last_name: last_name?.trim() || user.last_name,
       last_logged_in: new Date()
-    });
+    };
+    if (terms_accepted === true && !user.terms_accepted_at) {
+      updates.terms_accepted_at = new Date();
+    }
+    await user.update(updates);
 
     // Generate full JWT token now that profile is complete
     const fullToken = jwt.sign(
@@ -706,10 +761,14 @@ async function completeLoginForUser(
 
 export const organizerSignup = async (req: Request, res: Response) => {
   try {
-    const { full_name, email, password, brand_name } = req.body;
+    const { full_name, email, password, brand_name, terms_accepted } = req.body;
 
     if (!full_name || !email || !password || !brand_name) {
       return res.status(400).json({ error: 'full_name, email, password, and brand_name are required' });
+    }
+
+    if (!terms_accepted) {
+      return res.status(400).json({ error: 'You must accept the terms and conditions to register' });
     }
 
     const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
@@ -765,7 +824,7 @@ export const organizerSignup = async (req: Request, res: Response) => {
     // Hash password with bcrypt
     const password_hash = await hashPassword(password);
 
-    // Create admin user for the new brand
+    // Create admin user for the new brand (no username yet — set in complete-profile step)
     const newUser = await User.create({
       email_address: email.toLowerCase().trim(),
       password_hash,
@@ -775,25 +834,32 @@ export const organizerSignup = async (req: Request, res: Response) => {
       is_admin: true,
       is_system_user: false,
       onboarding_completed: false,
+      terms_accepted_at: new Date(),
     });
 
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is required');
     }
 
-    const token = jwt.sign(
-      { userId: newUser.id, brandId: newUser.brand_id },
+    // Return profile_incomplete so the frontend redirects to the username-setup step
+    const tempToken = jwt.sign(
+      { userId: newUser.id, email: newUser.email_address, brandId: newUser.brand_id, profileIncomplete: true },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '1h' }
     );
 
     return res.status(201).json({
-      token,
+      status: 'profile_incomplete',
+      message: 'Account created. Please set your username to continue.',
+      token: tempToken,
       user: {
         id: newUser.id,
-        email: newUser.email_address,
+        email_address: newUser.email_address,
+        first_name: newUser.first_name,
+        last_name: newUser.last_name,
         brand_id: newUser.brand_id,
-      }
+      },
+      needs_terms: false,
     });
   } catch (error) {
     console.error('Organizer signup error:', error);
@@ -861,6 +927,262 @@ export const organizerLogin = async (req: Request, res: Response) => {
     return await completeLoginForUser(user, remoteIp, proxyIp, res, needsMigration, password);
   } catch (error) {
     console.error('Organizer login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ─── Google OAuth (server-side redirect flow) ─────────────────────────────────
+//
+// The browser navigates to GET /auth/ticketing/google which redirects to Google.
+// Google redirects back to GET /auth/ticketing/google/callback with an auth code.
+// The backend exchanges the code for user info, then redirects the browser back to
+// the frontend with a short-lived one-time exchange code in the query string.
+// The frontend POSTs that code to POST /auth/ticketing/google/exchange to get the JWT —
+// keeping all tokens out of URLs, logs, and browser history.
+//
+// The GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET never leave the server.
+// To add Google Sign-In to the main dashboard in the future, create equivalent
+// organizerGoogleRedirect / organizerGoogleCallback functions scoped to the desired brand.
+
+/**
+ * Derive the ticketing frontend base URL for post-auth redirects.
+ * Priority:
+ *   1. TICKETING_FRONTEND_URL env var — set this for local dev (http://localhost:4201)
+ *      and for any deployment where the frontend URL differs from the brand DB domain.
+ *   2. Parent brand's primary domain from the DB — used in production when the env var
+ *      is not set.
+ *   3. Hard-coded localhost fallback.
+ */
+async function getTicketingFrontendUrl(): Promise<string> {
+  if (process.env.TICKETING_FRONTEND_URL) return process.env.TICKETING_FRONTEND_URL;
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (parentBrandId) return await getBrandFrontendUrl(parentBrandId);
+  } catch {}
+  return 'http://localhost:4201';
+}
+
+/**
+ * Step 1 — redirect the browser to Google's OAuth consent screen.
+ * The frontend URL that initiated the request is encoded in a signed state token
+ * so the callback knows where to send the user back to.
+ */
+export const organizerGoogleRedirect = async (req: Request, res: Response) => {
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      return res.status(501).json({ error: 'Google Sign-In is not configured on this server' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    // Sign only a nonce into the state param for CSRF protection.
+    // frontendUrl is intentionally NOT included here — it is derived server-side in the
+    // callback from the brand config.  Including a client-supplied origin would allow an
+    // attacker to spoof the Origin header and redirect the victim's token to their domain.
+    const state = jwt.sign(
+      { nonce: crypto.randomBytes(16).toString('hex') },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const redirectUri = `${serverUrl}/api/auth/ticketing/google/callback`;
+
+    const googleUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    googleUrl.searchParams.set('client_id', clientId);
+    googleUrl.searchParams.set('redirect_uri', redirectUri);
+    googleUrl.searchParams.set('response_type', 'code');
+    googleUrl.searchParams.set('scope', 'openid email profile');
+    googleUrl.searchParams.set('state', state);
+    googleUrl.searchParams.set('access_type', 'online');
+
+    return res.redirect(googleUrl.toString());
+  } catch (error) {
+    console.error('Google redirect error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Step 2 — handle Google's redirect back to the server.
+ * Exchanges the auth code for user info, finds or creates the organizer account,
+ * then redirects the browser back to the frontend with a short-lived one-time
+ * exchange code.  The frontend redeems that code via POST /auth/ticketing/google/exchange.
+ */
+export const organizerGoogleCallback = async (req: Request, res: Response) => {
+  const { code, state, error: googleError } = req.query as Record<string, string>;
+
+  // Always derive frontendUrl from brand config — never from state or any client-supplied
+  // value.  This prevents open-redirect attacks where a spoofed Origin header encodes a
+  // malicious URL into the state and the callback redirects the victim's token there.
+  const frontendUrl = await getTicketingFrontendUrl();
+
+  if (state && process.env.JWT_SECRET) {
+    try {
+      jwt.verify(state, process.env.JWT_SECRET); // verify CSRF nonce only
+    } catch {
+      // State expired or tampered — redirect to login with error
+      return res.redirect(`${frontendUrl}/app/login?error=invalid_state`);
+    }
+  }
+
+  if (googleError) {
+    // User cancelled or denied access
+    return res.redirect(`${frontendUrl}/app/login?error=google_cancelled`);
+  }
+
+  if (!code) {
+    return res.redirect(`${frontendUrl}/app/login?error=missing_code`);
+  }
+
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID!;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const redirectUri = `${serverUrl}/api/auth/ticketing/google/callback`;
+
+    // Exchange authorization code for tokens
+    const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    });
+
+    // Fetch the user's profile from Google
+    const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenRes.data.access_token}` },
+    });
+
+    const { sub: googleId, email, email_verified, given_name = '', family_name = '', name = '' } = userInfoRes.data;
+
+    if (!email_verified) {
+      return res.redirect(`${frontendUrl}/app/login?error=google_unverified_email`);
+    }
+
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId) throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
+
+    // Collect all ticketing brand IDs (parent + sub-brands)
+    const subBrands = await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] });
+    const ticketingBrandIds = [parentBrandId, ...subBrands.map((b: any) => b.id)];
+
+    // Find existing user by google_id first, then fall back to email match
+    let user = await User.findOne({
+      where: { google_id: googleId, brand_id: ticketingBrandIds },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!user) {
+      user = await User.findOne({
+        where: { email_address: email, brand_id: ticketingBrandIds },
+        include: [{ model: Brand, as: 'brand' }]
+      });
+      if (user) {
+        await user.update({ google_id: googleId });
+      }
+    }
+
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+
+    if (user) {
+      // Existing organizer — issue a one-time exchange code redeemed by the frontend
+      if (!user.username) {
+        const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: true, needsTerms: false });
+        return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
+      }
+
+      await user.update({ last_logged_in: new Date() });
+      const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: false, needsTerms: false });
+      return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
+    }
+
+    // ── New organizer: create brand + user ──────────────────────────────────
+    const newBrand = await Brand.create({
+      brand_name: `${name}'s Events`,
+      parent_brand: parentBrandId,
+      brand_color: '#6366f1',
+      feature_music_workspace: false,
+      feature_campaigns_workspace: false,
+    });
+
+    // Copy parent brand domain so getBrandFrontendUrl works for this sub-brand
+    const parentDomain = await Domain.findOne({ where: { brand_id: parentBrandId, is_primary: true } })
+      || await Domain.findOne({ where: { brand_id: parentBrandId }, order: [['is_primary', 'DESC']] });
+    if (parentDomain) {
+      await Domain.create({
+        brand_id: newBrand.id,
+        domain_name: parentDomain.domain_name,
+        status: parentDomain.status,
+        is_primary: true,
+      });
+    }
+
+    const newUser = await User.create({
+      email_address: email,
+      google_id: googleId,
+      first_name: given_name,
+      last_name: family_name,
+      brand_id: newBrand.id,
+      is_admin: true,
+      is_system_user: false,
+      onboarding_completed: false,
+      // No username or terms_accepted_at yet — both collected in the complete-profile step
+    });
+
+    const exchangeCode = createExchangeCode({ userId: newUser.id, brandId: newUser.brand_id, profileIncomplete: true, needsTerms: true });
+    return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    return res.redirect(`${frontendUrl}/app/login?error=google_auth_failed`);
+  }
+};
+
+/**
+ * Step 3 — exchange the one-time code issued by the callback for a real JWT.
+ * Called by the frontend immediately after the Google OAuth redirect lands.
+ * The code is single-use and expires in 5 minutes.
+ */
+export const organizerGoogleExchange = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'code is required' });
+    }
+
+    const entry = oauthExchangeCodes.get(code);
+    if (!entry || entry.expiresAt < Date.now()) {
+      return res.status(400).json({ error: 'Invalid or expired exchange code' });
+    }
+    oauthExchangeCodes.delete(code); // single-use — invalidate immediately
+
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+
+    const user = await User.findByPk(entry.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (entry.profileIncomplete) {
+      const tempToken = jwt.sign(
+        { userId: user.id, email: user.email_address, brandId: user.brand_id, profileIncomplete: true },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+      return res.json({ status: 'profile_incomplete', token: tempToken, needs_terms: entry.needsTerms });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, username: user.username, brandId: user.brand_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    return res.json({ token, user: { id: user.id, email_address: user.email_address, first_name: user.first_name, last_name: user.last_name, brand_id: user.brand_id } });
+  } catch (error) {
+    console.error('Google exchange error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -953,17 +1275,32 @@ export const validateResetHash = async (req: Request, res: Response) => {
       return res.status(400).json({ valid: false, error: 'Unable to determine frontend domain from request' });
     }
     
-    const brandId = await getBrandIdFromDomain(refererUrl);
-    
+    let brandId = await getBrandIdFromDomain(refererUrl);
+
+    // Same localhost/port fix as forgotPassword — ticketing app shares hostname with dashboard in dev
+    const ticketingFrontendUrlForValidate = process.env.TICKETING_FRONTEND_URL;
+    const ticketingParentBrandIdForValidate = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (ticketingFrontendUrlForValidate && ticketingParentBrandIdForValidate) {
+      try {
+        if (new URL(refererUrl).origin === new URL(ticketingFrontendUrlForValidate).origin) {
+          brandId = ticketingParentBrandIdForValidate;
+        }
+      } catch {}
+    }
+
     if (!brandId) {
       return res.status(400).json({ valid: false, error: 'Invalid domain or brand not found' });
     }
 
-    // Find user with valid reset hash (matching original PHP logic)
+    // Include sub-brands so organizer sub-brand users can validate their reset hash
+    const subBrandsForValidate = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'] });
+    const brandIdsForValidate = [brandId, ...subBrandsForValidate.map((b: any) => b.id)];
+
+    // Find user with valid reset hash across this brand and its sub-brands
     const user = await User.findOne({
       where: {
         reset_hash: hash,
-        brand_id: brandId
+        brand_id: brandIdsForValidate
       }
     });
 
