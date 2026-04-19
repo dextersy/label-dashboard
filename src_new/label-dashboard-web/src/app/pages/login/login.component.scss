@@ -48,7 +48,8 @@
       flex: 1 !important;
       display: flex !important;
 
-      .form-control {
+      .form-control,
+      .tw-input {
         flex: 1 !important;
         border-radius: 0 5px 5px 0 !important;
         border-left: none !important;
@@ -100,7 +101,8 @@
       }
     }
 
-    .form-control {
+    .form-control,
+    .tw-input {
       flex: 1 !important;
       border-radius: 0 5px 5px 0 !important;
       border-left: none !important;

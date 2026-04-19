@@ -309,7 +309,7 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
   padding: 6px;
 
-  .btn {
+  button, .btn {
     display: flex !important;
     justify-content: flex-start;
     width: 100%;
@@ -347,25 +347,45 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 /* ----------------------------------------------------------------- */
 /* BOOTSTRAP GRID COMPAT (transitional — remove as templates migrate) */
 /* ----------------------------------------------------------------- */
-.row {
-  @apply tw-flex tw-flex-wrap tw-items-start;
-  margin-left: -12px;
-  margin-right: -12px;
+/* IMPORTANT: .row flex rules must be in @layer components so that    */
+/* tw-grid (from @layer utilities) can override display to grid.      */
+/* The grid-template-columns rule at md+ stays UNLAYERED (below) so  */
+/* it beats tw-grid-cols-1 (from @layer utilities).                   */
+@layer components {
+  .row {
+    @apply tw-flex tw-flex-wrap tw-items-start;
+    margin-left: -12px;
+    margin-right: -12px;
 
-  [class*="col-"] {
-    padding-left: 12px;
-    padding-right: 12px;
-    @apply tw-flex tw-flex-col;
+    [class*="col-"] {
+      padding-left: 12px;
+      padding-right: 12px;
+      @apply tw-flex tw-flex-col;
+    }
+
+    .form-group { @apply tw-flex-1 tw-flex tw-flex-col; }
   }
 
-  .form-group { @apply tw-flex-1 tw-flex tw-flex-col; }
-}
+  @media (max-width: 768px) {
+    .row {
+      margin-left: -8px;
+      margin-right: -8px;
+      [class*="col-"] { padding-left: 8px; padding-right: 8px; }
+    }
+  }
 
-@media (max-width: 768px) {
-  .row {
-    margin-left: -8px;
-    margin-right: -8px;
-    [class*="col-"] { padding-left: 8px; padding-right: 8px; }
+  /* When .row is a CSS grid, reset margins (gap handles spacing)
+     and default all direct children to full-width (span all columns).
+     Responsive col-span utilities from @layer utilities override this. */
+  .row.tw-grid {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .row.tw-grid > * {
+    grid-column: 1 / -1;
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
@@ -477,13 +497,58 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 .tab-content > .active   { @apply tw-block; }
 
 /* ----------------------------------------------------------------- */
+/* GRID (Bootstrap row/col compatibility)                             */
+/* ----------------------------------------------------------------- */
+/* All .row elements have tw-grid tw-grid-cols-1 in their templates. */
+/* At md+ (768px) switch to 12-column grid so md:tw-col-span-N       */
+/* children lay out correctly. tw-grid-cols-1 handles mobile stack.  */
+/* Must stay UNLAYERED to override tw-grid-cols-1 (@layer utilities). */
+@media (min-width: 768px) {
+  .row { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+}
+
+/* Bootstrap gutter compatibility: g-N classes add gap */
+.row.g-1 { gap: 0.25rem; }
+.row.g-2 { gap: 0.5rem; }
+.row.g-3 { gap: 1rem; }
+.row.g-4 { gap: 1.5rem; }
+.row.g-5 { gap: 3rem; }
+
+/* ----------------------------------------------------------------- */
+/* BREADCRUMB                                                         */
+/* ----------------------------------------------------------------- */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  list-style: none;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+
+  + .breadcrumb-item::before {
+    content: "›";
+    color: #6c757d;
+    font-weight: bold;
+    margin: 0 8px;
+  }
+}
+
+/* ----------------------------------------------------------------- */
 /* INPUT GROUP                                                        */
 /* ----------------------------------------------------------------- */
 .input-group {
   @apply tw-relative tw-flex tw-flex-wrap tw-items-stretch tw-w-full;
 
   > .form-control,
-  > .form-select { @apply tw-relative tw-min-w-0; flex: 1 1 auto; width: 1%; }
+  > .form-select,
+  > .tw-input,
+  > .tw-input-sm,
+  > .tw-input-lg { @apply tw-relative tw-min-w-0; flex: 1 1 auto; width: 1%; }
 }
 
 .input-group-prepend,
@@ -495,7 +560,10 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .input-group-prepend + .form-control,
-.input-group-prepend + .form-select { @apply tw-rounded-l-none; }
+.input-group-prepend + .form-select,
+.input-group-prepend + .tw-input,
+.input-group-prepend + .tw-input-sm,
+.input-group-prepend + .tw-input-lg { @apply tw-rounded-l-none; }
 
 /* ----------------------------------------------------------------- */
 /* FORM CHECK                                                         */
