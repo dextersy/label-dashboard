@@ -114,6 +114,7 @@ export class SignupComponent {
   loading = signal(false);
   error = signal('');
   googleAuthEnabled = environment.googleAuthEnabled;
+  passwordValue = signal('');
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     if (this.auth.isLoggedIn()) {
@@ -126,6 +127,7 @@ export class SignupComponent {
       password: ['', [Validators.required, Validators.minLength(8)]],
       terms_accepted: [false, Validators.requiredTrue]
     });
+    this.form.get('password')!.valueChanges.subscribe(v => this.passwordValue.set(v || ''));
   }
 
   googleSignUp(): void {
@@ -133,7 +135,7 @@ export class SignupComponent {
   }
 
   passwordStrength = computed(() => {
-    const p = this.form.get('password')?.value || '';
+    const p = this.passwordValue();
     let score = 0;
     if (p.length >= 8) score++;
     if (/[A-Z]/.test(p)) score++;
