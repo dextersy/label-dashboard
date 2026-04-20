@@ -797,6 +797,12 @@ export const organizerSignup = async (req: Request, res: Response) => {
       throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
     }
 
+    // Load parent brand to inherit default fee settings
+    const parentBrand = await Brand.findByPk(parentBrandId);
+    if (!parentBrand) {
+      throw new Error('Ticketing parent brand not found');
+    }
+
     // Check for duplicate email within ticketing brands only (parent + all sub-brands)
     // Users on unrelated brands can share the same email — login is scoped to ticketing brands anyway
     const ticketingSubBrandIds = (await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] })).map(b => b.id);
@@ -815,7 +821,7 @@ export const organizerSignup = async (req: Request, res: Response) => {
     const first_name = nameParts[0];
     const last_name = nameParts.slice(1).join(' ') || '';
 
-    // Create a new sub-brand under the configured parent
+    // Create a new sub-brand under the configured parent, inheriting default fee settings from parent brand
     const newBrand = await Brand.create({
       brand_name: brand_name.trim(),
       parent_brand: parentBrandId,
@@ -823,8 +829,15 @@ export const organizerSignup = async (req: Request, res: Response) => {
       feature_music_workspace: false,
       feature_campaigns_workspace: true,
       feature_sublabels: false,
-      event_revenue_percentage_fee: 9,
-      event_fee_revenue_type: 'gross',
+      event_transaction_fixed_fee: parentBrand.event_transaction_fixed_fee ?? 0,
+      event_revenue_percentage_fee: parentBrand.event_revenue_percentage_fee ?? 9,
+      event_fee_revenue_type: parentBrand.event_fee_revenue_type ?? 'gross',
+      music_transaction_fixed_fee: parentBrand.music_transaction_fixed_fee ?? 0,
+      music_revenue_percentage_fee: parentBrand.music_revenue_percentage_fee ?? 0,
+      music_fee_revenue_type: parentBrand.music_fee_revenue_type ?? 'net',
+      fundraiser_transaction_fixed_fee: parentBrand.fundraiser_transaction_fixed_fee ?? 0,
+      fundraiser_revenue_percentage_fee: parentBrand.fundraiser_revenue_percentage_fee ?? 0,
+      fundraiser_fee_revenue_type: parentBrand.fundraiser_fee_revenue_type ?? 'net',
     });
 
     // Copy the parent brand's primary domain to the new organizer brand so that
