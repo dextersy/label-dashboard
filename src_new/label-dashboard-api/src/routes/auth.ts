@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin } from '../controllers/authController';
+import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
@@ -19,6 +19,9 @@ router.get('/validate-reset-hash/:hash', validateResetHash);
 const ticketingRouter = Router();
 ticketingRouter.post('/signup', authRateLimit, organizerSignup);
 ticketingRouter.post('/login', authRateLimit, organizerLogin);
+ticketingRouter.get('/google', authRateLimit, organizerGoogleRedirect);
+ticketingRouter.get('/google/callback', organizerGoogleCallback);
+ticketingRouter.post('/google/exchange', authRateLimit, organizerGoogleExchange);
 router.use('/ticketing', ticketingRouter);
 
 export default router;

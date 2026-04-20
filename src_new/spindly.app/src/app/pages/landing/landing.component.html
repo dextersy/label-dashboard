@@ -6,7 +6,8 @@
     </a>
     <div class="flex items-center gap-6">
       <a href="#what-we-handle" class="hidden md:block text-sm text-white/40 hover:text-white/70 transition-colors">how it works</a>
-      <a routerLink="/login" class="text-sm text-white/60 hover:text-white transition-colors font-medium">sign in →</a>
+      <a routerLink="/login" class="text-sm text-white/60 hover:text-white transition-colors font-medium">sign in</a>
+      <a routerLink="/contact" class="inline-flex items-center gap-2 bg-primary text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-primary-dark transition-all">get started</a>
     </div>
   </div>
 </nav>
@@ -31,7 +32,7 @@
 
   <!-- Mobile hero background -->
   <div class="absolute inset-0 md:hidden pointer-events-none">
-    <img src="assets/hero.png" alt="" class="absolute object-contain object-right" style="mix-blend-mode: screen; opacity: 0.25; height: 65%; right: -5%; top: 10%;">
+    <img src="assets/hero.png" alt="" class="absolute object-contain object-right" style="mix-blend-mode: screen; opacity: 0.25; height: 40%; right: -5%; top: 15%;">
   </div>
 
   <div class="relative max-w-5xl mx-auto px-6 py-12 w-full grid md:grid-cols-2 gap-0 items-center">
@@ -45,12 +46,11 @@
       </div>
 
       <!-- Headline -->
-      <h1 class="font-display font-black text-white mb-8"
-          style="font-size: clamp(1.8rem, 3vw, 2.75rem); line-height: 1.15; letter-spacing: -0.015em;">
-        managing<br>
-        labels is<br>
-        hard.<br>
-        <span class="text-gradient">we've got you.</span>
+      <h1 class="font-display font-black text-white mb-8 leading-none" style="letter-spacing: -0.02em;">
+        <span class="block" style="font-size: clamp(1.1rem, 1.8vw, 1.5rem);">managing</span>
+        <span class="block" style="font-size: clamp(1.6rem, 2.6vw, 2.25rem);">labels is</span>
+        <span class="block" style="font-size: clamp(2.8rem, 4.5vw, 4rem);">hard.</span>
+        <span class="block text-gradient" style="font-size: clamp(1.8rem, 3vw, 2.6rem);">we've got you.</span>
       </h1>
 
       <!-- Subheading -->
@@ -60,14 +60,14 @@
       </p>
 
       <!-- CTAs -->
-      <div class="flex flex-wrap gap-3">
-        <a routerLink="/login" class="inline-flex items-center gap-2 bg-primary text-white font-bold px-7 py-3.5 rounded-lg hover:bg-primary-dark transition-all hover:scale-[1.02]">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a routerLink="/contact" class="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-7 py-3.5 rounded-lg hover:bg-primary-dark transition-all">
           get started free
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
           </svg>
         </a>
-        <a href="#what-we-handle" class="inline-flex items-center gap-2 text-white/50 font-medium px-3 py-2 hover:text-white/80 transition-all">
+        <a href="#what-we-handle" class="inline-flex items-center justify-center gap-2 text-white/50 font-medium px-3 py-2 hover:text-white/80 transition-all">
           see how it works
         </a>
       </div>
@@ -297,9 +297,9 @@
       Start free. Bring your artists. Get back to the music.
     </p>
 
-    <a routerLink="/login" class="inline-flex items-center gap-2 bg-primary text-white font-bold text-lg px-8 py-4 rounded-lg hover:bg-primary-dark transition-all hover:scale-[1.02]">
+    <a routerLink="/contact" class="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold text-lg px-8 py-4 rounded-lg hover:bg-primary-dark transition-all w-full sm:w-auto">
       get started free
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
       </svg>
     </a>
@@ -315,9 +315,9 @@
       <img src="assets/logo.png" alt="Spindly" class="h-6 mb-2">
       <p class="text-white/25 text-xs">label management for independent music.</p>
     </div>
-    <div class="flex items-center gap-6 text-white/30 text-sm">
+    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-white/30 text-sm">
       <a href="#what-we-handle" class="hover:text-white/60 transition-colors">features</a>
-      <a href="mailto:hello@spindly.app" class="hover:text-white/60 transition-colors">contact</a>
+      <a routerLink="/contact" class="hover:text-white/60 transition-colors">get in touch</a>
       <a routerLink="/login" class="hover:text-white/60 transition-colors">sign in</a>
     </div>
   </div>

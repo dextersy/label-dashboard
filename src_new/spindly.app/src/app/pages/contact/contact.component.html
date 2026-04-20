@@ -1,0 +1,170 @@
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-dark/95 backdrop-blur-sm border-b border-white/[0.06]">
+  <div class="max-w-5xl mx-auto px-6 flex items-center justify-between h-14">
+    <a routerLink="/" class="shrink-0">
+      <img src="assets/logo.png" alt="Spindly" class="h-9">
+    </a>
+    <div class="flex items-center gap-6">
+      <a routerLink="/login" class="text-sm text-white/60 hover:text-white transition-colors font-medium">sign in →</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ===== CONTACT FORM ===== -->
+<main class="min-h-screen bg-dark pt-14">
+
+  <!-- Dot pattern texture -->
+  <div class="fixed inset-0 opacity-[0.035] pointer-events-none"
+    style="background-image: radial-gradient(circle, #019D92 1px, transparent 1px); background-size: 28px 28px;">
+  </div>
+
+  <div class="relative max-w-2xl mx-auto px-6 py-16 sm:py-24">
+
+    <!-- Eyebrow badge -->
+    <div class="inline-block bg-primary-light text-primary font-display font-bold text-xs px-3 py-1.5 rounded-sm -rotate-1 mb-8 select-none">
+      get in touch
+    </div>
+
+    <!-- Headline -->
+    <h1 class="font-display font-black text-white leading-tight mb-4"
+        style="font-size: clamp(1.8rem, 3vw, 2.75rem); line-height: 1.15; letter-spacing: -0.015em;">
+      let's talk<br>about your label.
+    </h1>
+
+    <p class="text-white/40 text-lg leading-relaxed mb-4 max-w-md">
+      Interested in using Spindly for your label? Tell us about yourself and we'll be in touch.
+    </p>
+    <p class="text-white/25 text-sm mb-12">
+      Already have an account? <a routerLink="/login" class="text-primary hover:text-primary-dark transition-colors">Sign in →</a>
+    </p>
+
+    @if (submitted()) {
+      <!-- Success state -->
+      <div class="bg-primary/10 border border-primary/30 rounded-2xl p-10 text-center">
+        <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-5">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <p class="font-display font-black text-white text-xl mb-2">message sent.</p>
+        <p class="text-white/40 text-sm leading-relaxed mb-8">Thanks! We'll review your message and get back to you soon.</p>
+        <a routerLink="/" class="text-sm text-primary font-medium hover:text-primary-dark transition-colors">← back to home</a>
+      </div>
+    } @else {
+      <!-- Form -->
+      <form (ngSubmit)="submit()" #f="ngForm" class="space-y-6">
+
+        <div class="grid sm:grid-cols-2 gap-6">
+          <!-- Name -->
+          <div>
+            <label class="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+              Name <span class="text-primary">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              [(ngModel)]="form.name"
+              required
+              placeholder="Your full name"
+              class="w-full bg-white/[0.04] border border-white/10 focus:border-primary/50 text-white text-sm px-4 py-3 rounded-lg outline-none transition-colors placeholder:text-white/20">
+          </div>
+
+          <!-- Contact number -->
+          <div>
+            <label class="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+              Contact Number <span class="text-white/20 normal-case font-normal">(optional)</span>
+            </label>
+            <input
+              type="tel"
+              name="contact_number"
+              [(ngModel)]="form.contact_number"
+              required
+              placeholder="+63 900 000 0000"
+              class="w-full bg-white/[0.04] border border-white/10 focus:border-primary/50 text-white text-sm px-4 py-3 rounded-lg outline-none transition-colors placeholder:text-white/20">
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+            Email Address <span class="text-primary">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="form.email"
+            required
+            placeholder="you@yourlabel.com"
+            class="w-full bg-white/[0.04] border border-white/10 focus:border-primary/50 text-white text-sm px-4 py-3 rounded-lg outline-none transition-colors placeholder:text-white/20">
+        </div>
+
+        <!-- Label name (optional) -->
+        <div>
+          <label class="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+            Label Name <span class="text-white/20 normal-case font-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            name="label_name"
+            [(ngModel)]="form.label_name"
+            placeholder="Your label or brand name"
+            class="w-full bg-white/[0.04] border border-white/10 focus:border-primary/50 text-white text-sm px-4 py-3 rounded-lg outline-none transition-colors placeholder:text-white/20">
+        </div>
+
+        <!-- About -->
+        <div>
+          <label class="block text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
+            Tell us about your label <span class="text-primary">*</span>
+          </label>
+          <textarea
+            name="about"
+            [(ngModel)]="form.about"
+            required
+            rows="5"
+            placeholder="What kind of label do you run? How many artists? What are you currently using to manage finances and royalties?"
+            class="w-full bg-white/[0.04] border border-white/10 focus:border-primary/50 text-white text-sm px-4 py-3 rounded-lg outline-none transition-colors placeholder:text-white/20 resize-none"></textarea>
+        </div>
+
+        @if (errorMsg()) {
+          <p class="text-red-400 text-sm">{{ errorMsg() }}</p>
+        }
+
+        <div class="pt-2">
+          <button
+            type="submit"
+            [disabled]="submitting()"
+            class="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-8 py-3.5 rounded-lg hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+            {{ submitting() ? 'Sending...' : 'Send message' }}
+            @if (!submitting()) {
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            }
+          </button>
+        </div>
+
+      </form>
+    }
+
+  </div>
+</main>
+
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-dark border-t border-white/[0.06] py-10">
+  <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <img src="assets/logo.png" alt="Spindly" class="h-6 mb-2">
+      <p class="text-white/25 text-xs">label management for independent music.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-white/30 text-sm">
+      <a routerLink="/" class="hover:text-white/60 transition-colors">home</a>
+      <a routerLink="/login" class="hover:text-white/60 transition-colors">sign in</a>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-6 mt-8 pt-6 border-t border-white/[0.05] flex items-center justify-between">
+    <p class="text-white/20 text-xs">&copy; 2026 Spindly.</p>
+    <p class="text-white/20 text-xs">made with love for indie music ♥</p>
+  </div>
+</footer>

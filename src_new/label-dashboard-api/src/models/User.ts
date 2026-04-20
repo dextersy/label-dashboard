@@ -17,6 +17,8 @@ interface UserAttributes {
   reset_hash?: string;
   last_logged_in?: Date;
   onboarding_completed: boolean;
+  google_id?: string;
+  terms_accepted_at?: Date;
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'is_admin' | 'is_system_user' | 'brand_id' | 'onboarding_completed'> {}
@@ -36,6 +38,8 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public reset_hash?: string;
   public last_logged_in?: Date;
   public onboarding_completed!: boolean;
+  public google_id?: string;
+  public terms_accepted_at?: Date;
 
   public brand?:Brand;
 
@@ -117,6 +121,14 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    google_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    terms_accepted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

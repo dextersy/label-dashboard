@@ -4,6 +4,7 @@ import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { sendEmail } from '../utils/emailService';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
@@ -2964,6 +2965,78 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
     if (!res.headersSent) {
       res.status(500).json({ error: 'Internal server error' });
     }
+  }
+};
+
+// Submit a lead inquiry (label partnership / organizer interest form)
+export const submitLeadInquiry = async (req: Request, res: Response) => {
+  try {
+    const { name, contact_number, email, label_name, about } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return res.status(400).json({ error: 'A valid email address is required' });
+    }
+    if (!about || typeof about !== 'string' || about.trim().length === 0) {
+      return res.status(400).json({ error: 'Please tell us about your label' });
+    }
+
+    const spindlyBrandId = parseInt(process.env.SPINDLY_BRAND_ID || '0', 10);
+    if (!spindlyBrandId) {
+      console.error('SPINDLY_BRAND_ID not configured — lead inquiry cannot be delivered');
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    const adminUsers = await User.findAll({
+      where: { brand_id: spindlyBrandId, is_admin: true },
+      attributes: ['email_address']
+    });
+
+    const adminEmails = adminUsers.map((u: any) => u.email_address).filter(Boolean);
+    if (adminEmails.length === 0) {
+      console.error(`No admin users found for SPINDLY_BRAND_ID=${spindlyBrandId}`);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    const htmlBody = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#111;color:#fff;border:1px solid #333;">
+        <h2 style="margin:0 0 20px;font-size:20px;letter-spacing:2px;text-transform:uppercase;color:#facc15;">New Lead Inquiry</h2>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #333;color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px;width:140px;">Name</td>
+            <td style="padding:10px 0;border-bottom:1px solid #333;font-size:15px;">${name.trim()}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #333;color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Contact #</td>
+            <td style="padding:10px 0;border-bottom:1px solid #333;font-size:15px;">${contact_number.trim()}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #333;color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Email</td>
+            <td style="padding:10px 0;border-bottom:1px solid #333;font-size:15px;">${email.trim()}</td>
+          </tr>
+          ${label_name && label_name.trim() ? `
+          <tr>
+            <td style="padding:10px 0;border-bottom:1px solid #333;color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Label Name</td>
+            <td style="padding:10px 0;border-bottom:1px solid #333;font-size:15px;">${label_name.trim()}</td>
+          </tr>` : ''}
+          <tr>
+            <td style="padding:10px 0;color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:1px;vertical-align:top;">About</td>
+            <td style="padding:10px 0;font-size:15px;white-space:pre-wrap;">${about.trim()}</td>
+          </tr>
+        </table>
+      </div>
+    `;
+
+    const textBody = `New Lead Inquiry\n\nName: ${name.trim()}\nContact #: ${contact_number.trim()}\nEmail: ${email.trim()}${label_name && label_name.trim() ? `\nLabel Name: ${label_name.trim()}` : ''}\n\nAbout:\n${about.trim()}`;
+
+    await sendEmail(adminEmails, 'New Lead Inquiry', htmlBody, spindlyBrandId, textBody);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Submit lead inquiry error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 

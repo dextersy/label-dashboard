@@ -10,6 +10,12 @@ This is the Melt Records Artist Dashboard - a multi-brand label management syste
 2. **Node.js/TypeScript API** (`src_new/label-dashboard-api/`) - Modern backend API
 3. **Angular Frontend** (`src_new/label-dashboard-web/`) - Modern web interface
 4. **Ticketing App** (`src_new/ticketing-app/`) - Standalone Angular app for event organizers to manage ticket sales, walk-in sales, affiliates, and communications
+5. **Spindly.app** (`src_new/spindly.app/`) - Standalone Angular marketing/landing site for spindly.app
+
+## Project Aliases
+- **"spindly.app project"** or **"Spindly"** always refers to `src_new/spindly.app/`. Never confuse with `src_new/ticketing-app/`.
+- **"Your Scene"** is interchangeable with **"ticketing-app"** — it is the current brand name for `src_new/ticketing-app/`.
+- **"Dashboard"** refers to `src_new/label-dashboard-web/`.
 
 ## Common Development Commands
 

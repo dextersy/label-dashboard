@@ -7,6 +7,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
   },
   {
+    // Root-level reset-password so the email link (generated without /app/ prefix) works
+    path: 'reset-password',
+    loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
     path: 'app',
     children: [
       {
@@ -20,6 +25,22 @@ export const routes: Routes = [
       {
         path: 'forgot-password',
         loadComponent: () => import('./pages/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+      },
+      {
+        path: 'reset-password',
+        loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+      },
+      {
+        path: 'complete-profile',
+        loadComponent: () => import('./pages/auth/complete-profile/complete-profile.component').then(m => m.CompleteProfileComponent)
+      },
+      {
+        path: 'google-callback',
+        loadComponent: () => import('./pages/auth/google-callback/google-callback.component').then(m => m.GoogleCallbackComponent)
+      },
+      {
+        path: 'terms',
+        loadComponent: () => import('./pages/legal/terms.component').then(m => m.TermsComponent)
       },
       {
         path: '',
