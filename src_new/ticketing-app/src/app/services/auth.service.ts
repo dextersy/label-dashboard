@@ -10,6 +10,7 @@ export interface User {
   first_name?: string;
   last_name?: string;
   brand_id: number;
+  brand_name?: string;
   is_admin?: boolean;
 }
 

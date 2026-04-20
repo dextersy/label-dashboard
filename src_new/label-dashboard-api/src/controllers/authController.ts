@@ -773,6 +773,7 @@ async function completeLoginForUser(
       is_admin: user.is_admin,
       is_superadmin: isSuperadmin,
       brand_id: user.brand_id,
+      brand_name: user.brand?.brand_name || null,
       onboarding_completed: user.onboarding_completed || false
     }
   });
@@ -1182,7 +1183,7 @@ export const organizerGoogleExchange = async (req: Request, res: Response) => {
 
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
 
-    const user = await User.findByPk(entry.userId);
+    const user = await User.findByPk(entry.userId, { include: [{ model: Brand, as: 'brand' }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (entry.profileIncomplete) {
@@ -1199,7 +1200,7 @@ export const organizerGoogleExchange = async (req: Request, res: Response) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    return res.json({ token, user: { id: user.id, email_address: user.email_address, first_name: user.first_name, last_name: user.last_name, brand_id: user.brand_id } });
+    return res.json({ token, user: { id: user.id, email_address: user.email_address, first_name: user.first_name, last_name: user.last_name, brand_id: user.brand_id, brand_name: user.brand?.brand_name || null } });
   } catch (error) {
     console.error('Google exchange error:', error);
     res.status(500).json({ error: 'Internal server error' });

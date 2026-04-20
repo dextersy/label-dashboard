@@ -42,7 +42,10 @@ import { AuthService } from '../../services/auth.service';
               <span class="text-black text-xs font-black">{{ userInitial() }}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-mono text-white/40 truncate">{{ userName() }}</p>
+              <p class="text-xs font-mono text-white truncate">{{ userName() }}</p>
+              @if (brandName()) {
+                <p class="text-xs text-white/40 truncate">{{ brandName() }}</p>
+              }
             </div>
             <button (click)="logout()" class="text-white/25 hover:text-white transition-colors flex-shrink-0" title="Logout">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,6 +109,10 @@ export class ShellComponent {
   userName = () => {
     const u = this.auth.getCurrentUser();
     return u?.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : u?.email || 'User';
+  };
+
+  brandName = () => {
+    return this.auth.getCurrentUser()?.brand_name || null;
   };
 
   userInitial = () => {
