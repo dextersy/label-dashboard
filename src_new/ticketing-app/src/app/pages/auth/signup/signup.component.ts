@@ -13,7 +13,7 @@ import { environment } from '../../../../environments/environment';
     <div class="min-h-screen bg-black flex items-center justify-center px-4 py-8">
       <div class="w-full max-w-sm">
         <div class="mb-8">
-          <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-5 opacity-30">
+          <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-5 opacity-30"></a>
           <p class="text-xs font-mono text-white/30 uppercase tracking-widest mt-4">Create your organizer account</p>
         </div>
 
@@ -116,6 +116,9 @@ export class SignupComponent {
   googleAuthEnabled = environment.googleAuthEnabled;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    if (this.auth.isLoggedIn()) {
+      this.router.navigate(['/app/dashboard']);
+    }
     this.form = this.fb.group({
       full_name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],

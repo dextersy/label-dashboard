@@ -17,7 +17,7 @@ import { environment } from '../../../../environments/environment';
         <div class="absolute inset-0 opacity-[0.04]"
           style="background-image: repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%); background-size: 12px 12px;"></div>
         <div class="relative z-10">
-          <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-5 opacity-30">
+          <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-5 opacity-30"></a>
         </div>
         <div class="relative z-10">
           <p class="text-xs font-mono text-yellow-400 uppercase tracking-[0.25em] mb-5">— organizer portal —</p>
@@ -38,7 +38,7 @@ import { environment } from '../../../../environments/environment';
         <div class="w-full max-w-sm">
 
           <div class="lg:hidden mb-8">
-            <img src="/assets/logo-light-bg.png" alt="Your Scene" class="h-6">
+            <a routerLink="/"><img src="/assets/logo-light-bg.png" alt="Your Scene" class="h-6"></a>
           </div>
 
           <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-7">Sign in to your account</p>
@@ -109,6 +109,9 @@ export class LoginComponent {
   googleAuthEnabled = environment.googleAuthEnabled;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+    if (this.auth.isLoggedIn()) {
+      this.router.navigate(['/app/dashboard']);
+    }
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]

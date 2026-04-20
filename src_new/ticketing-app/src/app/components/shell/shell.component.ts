@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
       <aside class="hidden md:flex flex-col w-52 bg-black border-r-2 border-white/15 flex-shrink-0">
         <!-- Logo -->
         <div class="flex items-center h-12 px-5 border-b-2 border-white/15">
-          <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6">
+          <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
         </div>
 
         <!-- Nav -->
@@ -65,7 +65,7 @@ import { AuthService } from '../../services/auth.service';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
-          <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6 ml-3">
+          <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6 ml-3"></a>
         </header>
 
         <!-- Mobile slide-over -->
@@ -74,7 +74,7 @@ import { AuthService } from '../../services/auth.service';
             <div class="fixed inset-0 bg-black/80" (click)="mobileMenuOpen.set(false)"></div>
             <aside class="relative w-52 bg-black border-r-2 border-white/15 flex flex-col">
               <div class="flex items-center justify-between h-12 px-5 border-b-2 border-white/15">
-                <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6">
+                <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
                 <button (click)="mobileMenuOpen.set(false)" class="text-white/40 hover:text-white">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

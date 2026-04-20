@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../services/auth.service';
 
 interface PublicEvent {
   id: number;
@@ -32,12 +33,43 @@ interface PublicBrand {
     <!-- Nav -->
     <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
-        <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6">
+        <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
         <div class="flex items-center gap-4">
-          <a routerLink="/app/login" class="text-xs text-white/50 hover:text-white uppercase tracking-wider transition-colors">Sign in</a>
-          <a routerLink="/app/signup" class="text-xs font-bold bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-1.5 uppercase tracking-wider transition-colors">
-            List a Show
-          </a>
+          @if (isLoggedIn()) {
+            <a routerLink="/app/dashboard" class="text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors hidden sm:block">
+              Go to organizer portal
+            </a>
+            <!-- Avatar + dropdown -->
+            <div class="relative">
+              <button (click)="userMenuOpen.set(!userMenuOpen())"
+                class="w-7 h-7 bg-yellow-400 flex items-center justify-center flex-shrink-0 focus:outline-none">
+                <span class="text-black text-xs font-black">{{ userInitial() }}</span>
+              </button>
+              @if (userMenuOpen()) {
+                <div class="absolute right-0 top-full mt-2 w-44 bg-black border border-white/20 shadow-xl z-50">
+                  <div class="px-4 py-3 border-b border-white/10">
+                    <p class="text-xs font-mono text-white truncate">{{ userName() }}</p>
+                    @if (brandName()) {
+                      <p class="text-xs font-mono text-white/40 truncate">{{ brandName() }}</p>
+                    }
+                  </div>
+                  <a routerLink="/app/dashboard" (click)="userMenuOpen.set(false)"
+                    class="flex items-center gap-2 px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
+                    Organizer portal
+                  </a>
+                  <button (click)="logout()"
+                    class="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors border-t border-white/10">
+                    Log out
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <a routerLink="/app/login" class="text-xs text-white/50 hover:text-white uppercase tracking-wider transition-colors">Sign in</a>
+            <a routerLink="/app/signup" class="text-xs font-bold bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-1.5 uppercase tracking-wider transition-colors">
+              List a Show
+            </a>
+          }
         </div>
       </div>
     </header>
@@ -184,8 +216,34 @@ interface PublicBrand {
 export class LandingComponent implements OnInit {
   loading = signal(true);
   allEvents = signal<PublicEvent[]>([]);
+  userMenuOpen = signal(false);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService, private router: Router) {}
+
+  isLoggedIn = () => this.auth.isLoggedIn();
+  userInitial = () => {
+    const u = this.auth.getCurrentUser();
+    return (u?.first_name?.[0] || u?.email_address?.[0] || u?.email?.[0] || 'U').toUpperCase();
+  };
+  userName = () => {
+    const u = this.auth.getCurrentUser();
+    return u?.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : (u?.email_address || u?.email || 'User');
+  };
+  brandName = () => this.auth.getCurrentUser()?.brand_name || null;
+
+  logout(): void {
+    this.auth.logout();
+    this.userMenuOpen.set(false);
+    this.router.navigate(['/']);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.relative')) {
+      this.userMenuOpen.set(false);
+    }
+  }
 
   ngOnInit(): void {
     this.http.get<{ brands: PublicBrand[] }>(
