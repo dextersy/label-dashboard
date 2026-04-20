@@ -781,10 +781,20 @@ async function completeLoginForUser(
 
 export const organizerSignup = async (req: Request, res: Response) => {
   try {
-    const { full_name, email, password, brand_name, terms_accepted } = req.body;
+    const { full_name, email, password, brand_name, terms_accepted, username } = req.body;
 
     if (!full_name || !email || !password || !brand_name) {
       return res.status(400).json({ error: 'full_name, email, password, and brand_name are required' });
+    }
+
+    // Validate username if provided
+    if (username) {
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+      if (!usernameRegex.test(username)) {
+        return res.status(400).json({
+          error: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
+        });
+      }
     }
 
     if (!terms_accepted) {
@@ -814,6 +824,16 @@ export const organizerSignup = async (req: Request, res: Response) => {
     console.log('[organizerSignup] existingUser:', existingUser ? `id=${existingUser.id} brand_id=${existingUser.brand_id}` : 'none');
     if (existingUser) {
       return res.status(409).json({ error: 'An account with this email already exists' });
+    }
+
+    // Check username uniqueness across all ticketing brands (if provided)
+    if (username) {
+      const existingUsername = await User.findOne({
+        where: { username: username.trim(), brand_id: ticketingBrandIds }
+      });
+      if (existingUsername) {
+        return res.status(409).json({ error: 'Username already taken' });
+      }
     }
 
     // Split full_name into first and last
@@ -860,12 +880,13 @@ export const organizerSignup = async (req: Request, res: Response) => {
     // Hash password with bcrypt
     const password_hash = await hashPassword(password);
 
-    // Create admin user for the new brand (no username yet — set in complete-profile step)
+    // Create admin user for the new brand
     const newUser = await User.create({
       email_address: email.toLowerCase().trim(),
       password_hash,
       first_name,
       last_name,
+      username: username ? username.trim() : undefined,
       brand_id: newBrand.id,
       is_admin: true,
       is_system_user: false,
@@ -877,7 +898,31 @@ export const organizerSignup = async (req: Request, res: Response) => {
       throw new Error('JWT_SECRET environment variable is required');
     }
 
-    // Return profile_incomplete so the frontend redirects to the username-setup step
+    // If username was provided, return a full token and go straight to dashboard.
+    // Otherwise return profile_incomplete so the frontend prompts for a username.
+    if (username) {
+      const fullToken = jwt.sign(
+        { userId: newUser.id, username: newUser.username, brandId: newUser.brand_id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      return res.status(201).json({
+        message: 'Account created successfully.',
+        token: fullToken,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email_address: newUser.email_address,
+          first_name: newUser.first_name,
+          last_name: newUser.last_name,
+          is_admin: newUser.is_admin,
+          brand_id: newUser.brand_id,
+          brand_name: newBrand.brand_name,
+          onboarding_completed: false,
+        },
+      });
+    }
+
     const tempToken = jwt.sign(
       { userId: newUser.id, email: newUser.email_address, brandId: newUser.brand_id, profileIncomplete: true },
       process.env.JWT_SECRET,
