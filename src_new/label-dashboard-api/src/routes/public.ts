@@ -20,7 +20,8 @@ import {
   streamPublicAudio,
   getReleasePlayer,
   getFundraiserForPublic,
-  makeDonation
+  makeDonation,
+  submitLeadInquiry
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 
@@ -60,5 +61,8 @@ router.post('/tickets/verify', publicRateLimit, verifyTicket);
 // Webhook endpoints (PayMongo) - no rate limiting for webhooks as they come from trusted sources
 router.post('/webhook/payment', ticketPaymentWebhook);
 router.post('/webhook/transfer', transferWebhook);
+
+// Lead inquiry (label partnership interest form)
+router.post('/lead-inquiry', publicRateLimit, submitLeadInquiry);
 
 export default router;
