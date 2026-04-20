@@ -1118,7 +1118,7 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
       }
 
       await user.update({ last_logged_in: new Date() });
-      const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: false, needsTerms: false });
+      const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: false, needsTerms: false, needsBrandName: false });
       return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
     }
 
