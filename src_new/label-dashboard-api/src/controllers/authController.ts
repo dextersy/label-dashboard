@@ -821,7 +821,10 @@ export const organizerSignup = async (req: Request, res: Response) => {
       parent_brand: parentBrandId,
       brand_color: '#6366f1',
       feature_music_workspace: false,
-      feature_campaigns_workspace: false,
+      feature_campaigns_workspace: true,
+      feature_sublabels: false,
+      event_revenue_percentage_fee: 9,
+      event_fee_revenue_type: 'gross',
     });
 
     // Copy the parent brand's primary domain to the new organizer brand so that
