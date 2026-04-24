@@ -85,7 +85,6 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id as string, 10);
-    const requestDomain = getRequestDomain(req);
 
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -97,35 +96,16 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         status: 'published'
       },
       include: [
-        { 
-          model: Brand, 
+        {
+          model: Brand,
           as: 'brand',
-          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
-          include: [{
-            model: Domain,
-            as: 'domains',
-            attributes: ['domain_name']
-          }]
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
         }
       ]
     });
 
-
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Validate that the event belongs to the brand associated with the current domain
-    if (event.brand && event.brand.domains && requestDomain) {
-      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = eventBrandDomains.includes(requestDomain);
-
-      if (!isDomainValid) {
-        return res.status(403).json({ error: 'Invalid domain' });
-      }
-    } else {
-      // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(403).json({ error: 'Can\'t validate domain : ' + requestDomain });
     }
 
     // Get ticket types with availability information
@@ -533,14 +513,9 @@ export const buyTicket = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: { id: eventIdNum },
       include: [
-        { 
-          model: Brand, 
-          as: 'brand',
-          include: [{
-            model: Domain,
-            as: 'domains',
-            attributes: ['domain_name']
-          }]
+        {
+          model: Brand,
+          as: 'brand'
         },
         {
           model: TicketType,
@@ -555,17 +530,25 @@ export const buyTicket = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Validate that the event belongs to the brand associated with the current domain
-    if (event.brand && event.brand.domains && requestDomain) {
-      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
-      if (!isDomainValid) {
-        return res.status(404).json({ error: 'Invalid domain' });
+    // Validate the request domain belongs to the event's brand hierarchy (walk up to root brand)
+    if (requestDomain) {
+      let brandId: number | null = event.brand_id;
+      let domainValid = false;
+      while (brandId !== null) {
+        const brand = await Brand.findOne({
+          where: { id: brandId },
+          include: [{ model: Domain, as: 'domains', attributes: ['domain_name'] }]
+        });
+        if (!brand) break;
+        if (brand.domains?.some((d: any) => d.domain_name === requestDomain)) {
+          domainValid = true;
+          break;
+        }
+        brandId = brand.parent_brand ?? null;
       }
-    } else {
-      // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(404).json({ error: 'Invalid domain' });
+      if (!domainValid) {
+        return res.status(403).json({ error: 'Invalid domain' });
+      }
     }
 
     // Check if event is closed (fall back to event start if no close_time set)
@@ -1533,6 +1516,7 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
     const mainBrand = domainRecord.brand;
 
     // Get all descendant brands (sublabels) recursively
+    const visitedBrandIds = new Set<number>([mainBrand.id]);
     const allBrands = [mainBrand];
     const queue = [mainBrand.id];
     while (queue.length > 0) {
@@ -1540,8 +1524,13 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
       const children = await Brand.findAll({
         where: { parent_brand: parentIds }
       });
-      allBrands.push(...children);
-      queue.push(...children.map((b: any) => b.id));
+      for (const child of children) {
+        if (!visitedBrandIds.has(child.id)) {
+          visitedBrandIds.add(child.id);
+          allBrands.push(child);
+          queue.push(child.id);
+        }
+      }
     }
 
     const brandIds = allBrands.map(brand => brand.id);
@@ -1632,6 +1621,7 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
     const mainBrand = domainRecord.brand;
 
     // Get all descendant brands (sublabels) recursively
+    const visitedBrandIds2 = new Set<number>([mainBrand.id]);
     const allBrands = [mainBrand];
     const queue = [mainBrand.id];
     while (queue.length > 0) {
@@ -1639,8 +1629,13 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
       const children = await Brand.findAll({
         where: { parent_brand: parentIds }
       });
-      allBrands.push(...children);
-      queue.push(...children.map((b: any) => b.id));
+      for (const child of children) {
+        if (!visitedBrandIds2.has(child.id)) {
+          visitedBrandIds2.add(child.id);
+          allBrands.push(child);
+          queue.push(child.id);
+        }
+      }
     }
 
     const brandIds = allBrands.map(brand => brand.id);
