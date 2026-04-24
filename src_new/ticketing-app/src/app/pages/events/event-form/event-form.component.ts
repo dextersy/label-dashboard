@@ -8,6 +8,8 @@ import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/o
 import { EventsService } from '../../../services/events.service';
 import { TicketTypeService } from '../../../services/ticket-type.service';
 import { GooglePlacesService, GooglePlacesPrediction, VenueSelection } from '../../../services/google-places.service';
+import { AuthService } from '../../../services/auth.service';
+import { OrganizationService, EventFeeSettings } from '../../../services/organization.service';
 
 interface TicketTypeFormItem {
   id?: number;
@@ -180,6 +182,25 @@ function newTicketTypeItem(): TicketTypeFormItem {
               + Add Type
             </button>
           </div>
+
+          @if (feeSettings(); as fee) {
+            <div class="mb-4 p-3 bg-gray-50 border border-gray-200 text-xs font-mono text-gray-500 space-y-1">
+              <span class="block font-black text-gray-700 uppercase tracking-wider">Platform Fees</span>
+              @if (fee.revenue_percentage_fee > 0) {
+                <p>
+                  YourScene will take a <span class="text-gray-900 font-bold">{{ fee.revenue_percentage_fee }}%</span> fee from your sales{{ fee.fee_revenue_type === 'net' ? ' (after payment processor fees)' : '' }}{{ fee.transaction_fixed_fee > 0 ? ', plus a ₱' + (fee.transaction_fixed_fee | number:'1.0-2') + ' fixed fee per ticket' : '' }}.
+                  You will receive <span class="text-gray-900 font-bold">{{ 100 - fee.revenue_percentage_fee }}%</span> of your {{ fee.fee_revenue_type }} sales.
+                </p>
+              } @else if (fee.transaction_fixed_fee > 0) {
+                <p>
+                  YourScene will take a <span class="text-gray-900 font-bold">₱{{ fee.transaction_fixed_fee | number:'1.0-2' }}</span> fixed fee per ticket.
+                  You will receive the remaining amount from each sale.
+                </p>
+              } @else {
+                <p>No platform fee — you keep 100% of your sales.</p>
+              }
+            </div>
+          }
 
           @if (ticketTypes.length === 0) {
             <p class="text-xs font-mono text-gray-400 text-center py-4">no ticket types yet.</p>
@@ -446,6 +467,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   posterFile = signal<File | null>(null);
   verificationPin = signal<string | null>(null);
   ticketTypeError = signal('');
+  feeSettings = signal<EventFeeSettings | null>(null);
 
   // Ticket types
   ticketTypes: TicketTypeFormItem[] = [];
@@ -485,7 +507,9 @@ export class EventFormComponent implements OnInit, OnDestroy {
     private router: Router,
     private eventsService: EventsService,
     private ticketTypeService: TicketTypeService,
-    private googlePlacesService: GooglePlacesService
+    private googlePlacesService: GooglePlacesService,
+    private authService: AuthService,
+    private orgService: OrganizationService
   ) {
     this.form = this.fb.group({
       title: ['', Validators.required],
@@ -505,6 +529,15 @@ export class EventFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Load brand fee settings
+    const user = this.authService.getCurrentUser();
+    if (user?.brand_id) {
+      this.orgService.getFeeSettings(user.brand_id).subscribe({
+        next: (res) => this.feeSettings.set(res.event),
+        error: () => {} // silently ignore — fee info is informational only
+      });
+    }
+
     // Venue search debounce
     this.venueSearch$.pipe(
       debounceTime(300),
