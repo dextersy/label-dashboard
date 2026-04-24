@@ -7,6 +7,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
   },
   {
+    path: 'events/:id',
+    loadComponent: () => import('./pages/events/event-view/event-view.component').then(m => m.EventViewComponent)
+  },
+  {
     // Root-level reset-password so the email link (generated without /app/ prefix) works
     path: 'reset-password',
     loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
@@ -52,6 +56,7 @@ export const routes: Routes = [
           { path: 'events/new', loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
           { path: 'events/:id/edit', loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
           { path: 'events/:id', loadComponent: () => import('./pages/events/event-detail/event-detail.component').then(m => m.EventDetailComponent) },
+          { path: 'payouts', loadComponent: () => import('./pages/payouts/payouts.component').then(m => m.PayoutsComponent) },
           { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) },
         ]
       }

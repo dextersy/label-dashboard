@@ -141,20 +141,22 @@ interface PublicBrand {
               <div class="group bg-black hover:bg-zinc-950 transition-colors">
                 <!-- Poster -->
                 @if (event.poster_url) {
-                  <div class="aspect-[4/3] overflow-hidden bg-zinc-900">
+                  <a [routerLink]="['/events', event.id]" class="block aspect-[4/3] overflow-hidden bg-zinc-900">
                     <img [src]="event.poster_url" [alt]="event.title"
                       class="w-full h-full object-cover group-hover:opacity-90 transition-opacity duration-300">
-                  </div>
+                  </a>
                 } @else {
-                  <div class="aspect-[4/3] bg-zinc-950 flex items-center justify-center border-b border-white/5"
+                  <a [routerLink]="['/events', event.id]" class="block aspect-[4/3] bg-zinc-950 flex items-center justify-center border-b border-white/5"
                     style="background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 0, transparent 50%); background-size: 8px 8px;">
                     <span class="text-white/10 font-black text-4xl uppercase tracking-widest">GIG</span>
-                  </div>
+                  </a>
                 }
 
                 <!-- Info -->
                 <div class="p-4">
-                  <h3 class="font-black text-white text-base leading-snug line-clamp-2 mb-3 uppercase">{{ event.title }}</h3>
+                  <a [routerLink]="['/events', event.id]">
+                    <h3 class="font-black text-white text-base leading-snug line-clamp-2 mb-3 uppercase hover:text-yellow-400 transition-colors">{{ event.title }}</h3>
+                  </a>
 
                   <!-- Date -->
                   <p class="font-mono text-yellow-400/80 text-xs mb-1 uppercase tracking-wide">
@@ -254,6 +256,9 @@ export class LandingComponent implements OnInit {
         events.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
         this.allEvents.set(events);
         this.loading.set(false);
+        if (window.location.hash === '#shows') {
+          setTimeout(() => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' }), 50);
+        }
       },
       error: () => this.loading.set(false)
     });
