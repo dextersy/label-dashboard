@@ -100,6 +100,25 @@ import { AuthService } from '../../services/auth.service';
                    routerLinkActive="bg-yellow-400 !text-black"
                    class="flex items-center gap-3 px-3 py-2 text-xs font-bold text-white/40 hover:text-white uppercase tracking-widest">Settings</a>
               </nav>
+              <!-- User -->
+              <div class="p-3 border-t border-white/10">
+                <div class="flex items-center gap-3 px-3 py-2">
+                  <div class="w-7 h-7 bg-yellow-400 flex items-center justify-center flex-shrink-0">
+                    <span class="text-black text-xs font-black">{{ userInitial() }}</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-mono text-white truncate">{{ userName() }}</p>
+                    @if (brandName()) {
+                      <p class="text-xs text-white/40 truncate">{{ brandName() }}</p>
+                    }
+                  </div>
+                  <button (click)="logout()" class="text-white/25 hover:text-white transition-colors flex-shrink-0" title="Logout">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </aside>
           </div>
         }
