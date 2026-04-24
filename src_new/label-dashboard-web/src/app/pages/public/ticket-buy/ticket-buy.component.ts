@@ -144,14 +144,6 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
             // Ticket types are already filtered (enabled only) in the event response
 
-            // Additional frontend validation: check if event belongs to current brand
-            if (loadedEvent.brand?.id && this.currentBrand?.id &&
-                loadedEvent.brand.id !== this.currentBrand.id) {
-              console.warn('Event belongs to different brand than current domain');
-              this.showError();
-              return;
-            }
-
             // Set brand color from current brand or event brand
             if (this.currentBrand?.brand_color) {
               this.brandColor = this.currentBrand.brand_color;

@@ -1532,13 +1532,18 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
 
     const mainBrand = domainRecord.brand;
 
-    // Get all child brands (sublabels)
-    const childBrands = await Brand.findAll({
-      where: { parent_brand: mainBrand.id }
-    });
+    // Get all descendant brands (sublabels) recursively
+    const allBrands = [mainBrand];
+    const queue = [mainBrand.id];
+    while (queue.length > 0) {
+      const parentIds = queue.splice(0, queue.length);
+      const children = await Brand.findAll({
+        where: { parent_brand: parentIds }
+      });
+      allBrands.push(...children);
+      queue.push(...children.map((b: any) => b.id));
+    }
 
-    // Combine main brand and child brands
-    const allBrands = [mainBrand, ...childBrands];
     const brandIds = allBrands.map(brand => brand.id);
 
     // Get all events for these brands
@@ -1626,13 +1631,18 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
 
     const mainBrand = domainRecord.brand;
 
-    // Get all child brands (sublabels)
-    const childBrands = await Brand.findAll({
-      where: { parent_brand: mainBrand.id }
-    });
+    // Get all descendant brands (sublabels) recursively
+    const allBrands = [mainBrand];
+    const queue = [mainBrand.id];
+    while (queue.length > 0) {
+      const parentIds = queue.splice(0, queue.length);
+      const children = await Brand.findAll({
+        where: { parent_brand: parentIds }
+      });
+      allBrands.push(...children);
+      queue.push(...children.map((b: any) => b.id));
+    }
 
-    // Combine main brand and child brands
-    const allBrands = [mainBrand, ...childBrands];
     const brandIds = allBrands.map(brand => brand.id);
 
     // Get latest events for SEO
