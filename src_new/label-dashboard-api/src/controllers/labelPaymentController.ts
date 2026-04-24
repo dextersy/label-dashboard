@@ -537,3 +537,40 @@ export const updateLabelPaymentStatus = async (req: AuthRequest, res: Response) 
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deleteLabelPaymentMethod = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { brandId, id } = req.params;
+    const targetBrandId = parseInt(brandId as string, 10);
+
+    // Allow access to own brand or child brands
+    if (targetBrandId !== req.user.brand_id) {
+      const targetBrand = await Brand.findOne({
+        where: { id: targetBrandId, parent_brand: req.user.brand_id }
+      });
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Brand not found or not accessible' });
+      }
+    }
+
+    const paymentMethod = await LabelPaymentMethod.findOne({
+      where: { id, brand_id: targetBrandId }
+    });
+
+    if (!paymentMethod) {
+      return res.status(404).json({ error: 'Payment method not found' });
+    }
+
+    await paymentMethod.destroy();
+
+    res.json({ message: 'Payment method deleted successfully' });
+  } catch (error) {
+    console.error('Delete label payment method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
