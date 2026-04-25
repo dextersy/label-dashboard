@@ -641,6 +641,18 @@ end_phase "Phase 7: Deploy Spindly"
 # Phase 8: Deploy Ticketing App
 start_phase
 print_status "Phase 8: Deploying Ticketing App..."
+
+# Substitute API URL placeholder in .htaccess for social media crawler SEO redirects
+HTACCESS_PATH="$SCRIPT_DIR/src_new/ticketing-app/dist/ticketing-app/browser/.htaccess"
+if [ -f "$HTACCESS_PATH" ]; then
+    if [ -n "$TICKETING_API_URL" ]; then
+        sed -i "s|YOUR_API_URL_HERE|$TICKETING_API_URL|g" "$HTACCESS_PATH"
+        print_status "Ticketing app .htaccess: substituted API URL for SEO crawler rules"
+    else
+        print_warning "TICKETING_API_URL not set in deploy.config — SEO crawler redirects in .htaccess will be broken"
+    fi
+fi
+
 upload_files "$SCRIPT_DIR/src_new/ticketing-app/dist/ticketing-app/browser" "$TICKETING_APP_DEPLOY_PATH" "Ticketing App"
 print_success "✅ Phase 8: Ticketing App deployed and live!"
 end_phase "Phase 8: Deploy Ticketing App"

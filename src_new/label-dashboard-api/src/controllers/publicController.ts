@@ -1239,7 +1239,11 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     if (!brandDomain) {
       return res.status(404).send('Event not found');
     }
-    const frontendUrl = `https://${brandDomain}/public/tickets/buy/${event.id}`;
+    // Support different URL patterns: the ticketing app uses /events/:id, the
+    // dashboard uses /public/tickets/buy/:id. Callers pass ?redirectPath=events
+    // to get the ticketing app URL.
+    const redirectPath = req.query.redirectPath === 'events' ? 'events' : 'public/tickets/buy';
+    const frontendUrl = `https://${brandDomain}/${redirectPath}/${event.id}`;
 
     // Always serve the SEO page with meta tags for all visitors.
     // Crawlers (Linktree, Facebook, Twitter, etc.) read the OG tags.
@@ -1247,10 +1251,13 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     // This avoids needing to maintain a list of crawler user-agent strings.
 
     // Generate meta tags for social sharing
-    const title = `Buy tickets to ${event.title}`;
+    const siteName = event.brand?.brand_name || 'Melt Records';
+    const isTicketingApp = req.query.redirectPath === 'events';
+    const title = isTicketingApp
+      ? `${event.title}${siteName ? ' by ' + siteName : ''} | Your Scene`
+      : `Buy tickets to ${event.title}`;
     const description = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
     const image = event.poster_url || '';
-    const siteName = event.brand?.brand_name || 'Melt Records';
 
     // Get display price from ticket types
     const priceDisplay = getEventDisplayPriceSync(event);

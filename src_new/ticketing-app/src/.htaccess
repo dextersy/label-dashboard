@@ -1,5 +1,16 @@
 RewriteEngine On
 
+# Social media crawler detection for public event pages
+# Proxies crawlers (Facebook, Twitter, WhatsApp, Linktree, etc.) to the API-generated
+# SEO page which serves proper Open Graph meta tags. Regular users load the Angular SPA.
+# Uses [P,L] (transparent reverse proxy) instead of [R=302] — many crawlers including
+# Linktree do NOT follow cross-domain redirects for OG tag fetching.
+# YOUR_API_URL_HERE is replaced by the deploy script using TICKETING_API_URL from deploy.config.
+# Requires: mod_proxy and mod_proxy_http enabled. Add "SSLProxyEngine On" to your
+# Apache VirtualHost config (not here — VHost-level directive, risks 500 in .htaccess).
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktree|linktr\.ee|preview|LinkPreview|previewbot|iframely|embedly|outbrain|Quora|Pinterestbot|vkShare|W3C_Validator|redditbot|Slurp|DuckDuckBot|YandexBot|Baiduspider|AhrefsBot|SemrushBot) [NC]
+RewriteRule ^events/([0-9]+)$ https://api.spindly.app:3001/public/seo/event-$1.html?redirectPath=events [P,L]
+
 # Handle Angular Router (client-side routing)
 # If the requested resource doesn't exist as a file or directory
 # Serve the index.html file instead

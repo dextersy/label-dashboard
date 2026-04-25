@@ -1,20 +1,31 @@
 RewriteEngine On
 
 # SEO Configuration for Social Media Crawlers
-# Detects social media crawlers and redirects them to API-generated SEO pages
-# Replace "your-api-server" with your actual API server URL
+# Detects social media crawlers and proxies them to API-generated SEO pages.
+# Uses [P,L] (transparent reverse proxy via mod_proxy) instead of [R=302] redirect.
+# A proxy is critical: many crawlers (including Linktree) do NOT follow cross-domain
+# 302 redirects for OG tag fetching. With a proxy, the SEO HTML is served at the
+# original URL — the crawler never sees a redirect.
+#
+# User-Agent list includes known patterns plus generic HTTP clients often used by
+# link-preview services whose exact UA strings are not publicly documented.
+# If a crawler is still missed, check Apache access logs for its UA and add it here.
+#
+# Requires: mod_proxy and mod_proxy_http enabled on Apache.
+# For proxying to HTTPS targets, add "SSLProxyEngine On" to your Apache VirtualHost
+# config (not here — it is a VHost-level directive and can 500 the site if put in .htaccess).
 
 # Detect social media crawlers for ticket purchase pages
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
-RewriteRule ^public/tickets/buy/([0-9]+)$ https://api.spindly.app:3001/api/public/seo/event-$1.html [R=302,L]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktree|linktr\.ee|preview|LinkPreview|previewbot|iframely|embedly|outbrain|Quora|Pinterestbot|vkShare|W3C_Validator|redditbot|Slurp|DuckDuckBot|YandexBot|Baiduspider|AhrefsBot|SemrushBot) [NC]
+RewriteRule ^public/tickets/buy/([0-9]+)$ https://api.spindly.app:3001/api/public/seo/event-$1.html [P,L]
 
 # Detect social media crawlers for public events listing page
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
-RewriteRule ^public/events$ https://api.spindly.app:3001/api/public/seo/events-%{HTTP_HOST}.html [R=302,L]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktree|linktr\.ee|preview|LinkPreview|previewbot|iframely|embedly|outbrain|Quora|Pinterestbot|vkShare|W3C_Validator|redditbot|Slurp|DuckDuckBot|YandexBot|Baiduspider|AhrefsBot|SemrushBot) [NC]
+RewriteRule ^public/events$ https://api.spindly.app:3001/api/public/seo/events-%{HTTP_HOST}.html [P,L]
 
 # Detect social media crawlers for artist EPK pages
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
-RewriteRule ^public/epk/([0-9]+)$ https://api.spindly.app:3001/api/public/seo/epk-$1.html [R=302,L]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktree|linktr\.ee|preview|LinkPreview|previewbot|iframely|embedly|outbrain|Quora|Pinterestbot|vkShare|W3C_Validator|redditbot|Slurp|DuckDuckBot|YandexBot|Baiduspider|AhrefsBot|SemrushBot) [NC]
+RewriteRule ^public/epk/([0-9]+)$ https://api.spindly.app:3001/api/public/seo/epk-$1.html [P,L]
 
 # Backward compatibility for old ticket URLs
 # Redirect /public/tickets/buy.php?id=<x> to /public/tickets/buy/<x>
