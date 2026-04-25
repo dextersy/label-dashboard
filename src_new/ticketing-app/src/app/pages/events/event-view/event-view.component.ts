@@ -284,6 +284,7 @@ export class EventViewComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
       this.error.set(true);
