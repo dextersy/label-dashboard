@@ -15,6 +15,7 @@ interface PublicEvent {
   ticket_naming?: string;
   buy_shortlink?: string;
   is_closed: boolean;
+  tickets_sold?: number;
 }
 
 interface PublicBrand {
@@ -136,9 +137,9 @@ interface PublicBrand {
             </a>
           </div>
         } @else {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @for (event of allEvents(); track event.id) {
-              <div class="group bg-black hover:bg-zinc-950 transition-colors">
+              <div class="group bg-black hover:bg-zinc-950 transition-colors border border-white/10">
                 <!-- Poster -->
                 @if (event.poster_url) {
                   <a [routerLink]="['/events', event.id]" class="block aspect-[4/3] overflow-hidden bg-zinc-900">
@@ -168,6 +169,16 @@ interface PublicBrand {
                     <p class="font-mono text-white/35 text-xs mb-4 truncate">{{ event.venue }}</p>
                   } @else {
                     <div class="mb-4"></div>
+                  }
+
+                  <!-- Attending count -->
+                  @if (event.tickets_sold && event.tickets_sold > 0) {
+                    <div class="inline-flex items-center gap-1.5 mb-3 px-2 py-1 bg-white/5 border border-white/10">
+                      <svg class="w-3.5 h-3.5 text-yellow-400/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      <span class="font-mono text-xs text-white/70"><span class="text-white font-bold">{{ event.tickets_sold }}</span> attending</span>
+                    </div>
                   }
 
                   <!-- Footer -->

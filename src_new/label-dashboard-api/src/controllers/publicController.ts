@@ -157,9 +157,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
 
     // Calculate remaining tickets if max_tickets is set
+    const totalSold = await getTotalTicketsSold(eventId);
     let remainingTickets = null;
     if (event.max_tickets && event.max_tickets > 0) {
-      const totalSold = await getTotalTicketsSold(eventId);
       remainingTickets = event.max_tickets - totalSold;
     }
 
@@ -216,6 +216,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         venue_phone: event.venue_phone,
         venue_website: event.venue_website,
         venue_maps_url: event.venue_maps_url,
+        tickets_sold: totalSold,
         walk_in_enabled: event.walk_in_enabled || false,
         walkInTypes,
         brand: event.brand ? {
@@ -1568,6 +1569,27 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
       order: [['date_and_time', 'ASC']]
     });
 
+    // Get ticket counts for all events in one query
+    const eventIds = events.map(e => e.id);
+    const ticketCounts: Record<number, number> = {};
+    if (eventIds.length > 0) {
+      const countRows = await Ticket.findAll({
+        attributes: [
+          'event_id',
+          [sequelize.fn('SUM', sequelize.col('number_of_entries')), 'total']
+        ],
+        where: {
+          event_id: { [Op.in]: eventIds },
+          status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] }
+        },
+        group: ['event_id'],
+        raw: true
+      }) as any[];
+      for (const row of countRows) {
+        ticketCounts[row.event_id] = parseInt(row.total, 10) || 0;
+      }
+    }
+
     // Group events by brand
     const brandEvents = allBrands.map(brand => {
       const brandEventsFiltered = events
@@ -1584,7 +1606,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
             ticket_price_display: priceDisplay.displayText,
             ticket_naming: event.ticket_naming,
             buy_shortlink: event.buy_shortlink,
-            is_closed: new Date() > new Date(event.close_time || event.date_and_time)
+            is_closed: new Date() > new Date(event.close_time || event.date_and_time),
+            tickets_sold: ticketCounts[event.id] || 0
           };
         });
 

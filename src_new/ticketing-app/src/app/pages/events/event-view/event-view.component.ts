@@ -17,6 +17,7 @@ interface PublicEventView {
   ticket_naming?: string;
   buy_shortlink?: string;
   is_closed: boolean;
+  tickets_sold?: number;
   venue_address?: string;
   venue_maps_url?: string;
   venue_phone?: string;
@@ -145,6 +146,16 @@ interface PublicEventView {
 
                 <!-- Price -->
                 <p class="text-white/30 font-mono text-xs mt-3 uppercase tracking-wider">{{ event()!.ticket_price_display }}</p>
+
+                <!-- Attending count -->
+                @if (event()!.tickets_sold && event()!.tickets_sold! > 0) {
+                  <div class="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-white/5 border border-white/10">
+                    <svg class="w-4 h-4 text-yellow-400/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="font-mono text-sm text-white/70"><span class="text-white font-bold">{{ event()!.tickets_sold }}</span> people attending</span>
+                  </div>
+                }
               </div>
             </div>
           </div>
