@@ -16,6 +16,7 @@ interface PublicEvent {
   buy_shortlink?: string;
   is_closed: boolean;
   tickets_sold?: number;
+  brand_name?: string;
 }
 
 interface PublicBrand {
@@ -155,6 +156,9 @@ interface PublicBrand {
 
                 <!-- Info -->
                 <div class="p-4">
+                  @if (event.brand_name) {
+                    <p class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate">{{ event.brand_name }}</p>
+                  }
                   <a [routerLink]="['/events', event.id]">
                     <h3 class="font-black text-white text-base leading-snug line-clamp-2 mb-3 uppercase hover:text-yellow-400 transition-colors">{{ event.title }}</h3>
                   </a>
@@ -263,7 +267,7 @@ export class LandingComponent implements OnInit {
       `${environment.apiUrl}/public/events/domain/${environment.publicListingDomain}`
     ).subscribe({
       next: (res) => {
-        const events = res.brands.flatMap(b => b.events);
+        const events = res.brands.flatMap(b => b.events.map(e => ({ ...e, brand_name: b.name })));
         events.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
         this.allEvents.set(events);
         this.loading.set(false);
