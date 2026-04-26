@@ -1,20 +1,19 @@
 RewriteEngine On
 
 # Social media crawler detection for public event pages
-# Redirects crawlers (Facebook, Twitter, WhatsApp, Linktree, etc.) to the API-generated
-# SEO page which serves proper Open Graph meta tags. Regular users load the Angular SPA.
-# Using [R=302,L] for now. Upgrade to [P,L] (transparent proxy) once SSLProxyEngine On
-# is added to the Apache VirtualHost config — proxying eliminates the cross-domain
-# redirect issue that prevents some crawlers (e.g. Linktree) from reading OG tags.
-RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktree|linktr\.ee|preview|LinkPreview|previewbot|iframely|embedly|outbrain|Quora|Pinterestbot|vkShare|W3C_Validator|redditbot|Slurp|DuckDuckBot|YandexBot|Baiduspider|AhrefsBot|SemrushBot) [NC]
+# Redirects crawlers to the API-generated SEO page which serves proper Open Graph meta tags.
+# Regular users load the Angular SPA normally.
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree) [NC]
 RewriteRule ^events/([0-9]+)$ https://api.spindly.app:3001/api/public/seo/event-$1.html?redirectPath=events [R=302,L]
 
 # Handle Angular Router (client-side routing)
+# Explicitly handle root URL
+RewriteRule ^$ /index.html [L]
 # If the requested resource doesn't exist as a file or directory
 # Serve the index.html file instead
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^.*$ /index.html [L]
+RewriteRule ^ /index.html [L]
 
 # Optional: Enable compression for better performance
 <IfModule mod_deflate.c>

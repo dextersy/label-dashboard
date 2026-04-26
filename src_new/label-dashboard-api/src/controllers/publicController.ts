@@ -1242,21 +1242,27 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     // Support different URL patterns: the ticketing app uses /events/:id, the
     // dashboard uses /public/tickets/buy/:id. Callers pass ?redirectPath=events
     // to get the ticketing app URL.
-    const redirectPath = req.query.redirectPath === 'events' ? 'events' : 'public/tickets/buy';
-    const frontendUrl = `https://${brandDomain}/${redirectPath}/${event.id}`;
-
-    // Always serve the SEO page with meta tags for all visitors.
-    // Crawlers (Linktree, Facebook, Twitter, etc.) read the OG tags.
-    // Real browsers get redirected via <meta http-equiv="refresh"> and JavaScript.
-    // This avoids needing to maintain a list of crawler user-agent strings.
+    // For the ticketing app, the .htaccess also passes ?host= so we use the
+    // actual frontend hostname rather than the brand's DB domain (which may be
+    // an API domain and not the frontend URL).
+    const isTicketingApp = req.query.redirectPath === 'events';
+    const redirectPath = isTicketingApp ? 'events' : 'public/tickets/buy';
+    const frontendHost = isTicketingApp && process.env.TICKETING_FRONTEND_URL
+      ? process.env.TICKETING_FRONTEND_URL as string
+      : `https://` + brandDomain;
+    const frontendUrl = `${frontendHost}/${redirectPath}/${event.id}`;
 
     // Generate meta tags for social sharing
     const siteName = event.brand?.brand_name || 'Melt Records';
-    const isTicketingApp = req.query.redirectPath === 'events';
     const title = isTicketingApp
       ? `${event.title}${siteName ? ' by ' + siteName : ''} | Your Scene`
       : `Buy tickets to ${event.title}`;
-    const description = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
+    // Strip HTML tags from description (event descriptions may contain HTML markup)
+    const rawDescription = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
+    const description = rawDescription.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, (e) => {
+      const entities: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" };
+      return entities[e] || e;
+    }).trim();
     const image = event.poster_url || '';
 
     // Get display price from ticket types
@@ -1318,15 +1324,12 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
 
-  <!-- Meta refresh for browsers that don't run JavaScript -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
 
-  <!-- Auto-redirect for regular browsers -->
+  <!-- Auto-redirect for regular browsers (crawlers don't execute JS) -->
   <script>
     (function() {
       window.location.replace('${frontendUrl}');
@@ -1761,21 +1764,18 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
-  
-  <!-- Meta refresh backup for non-crawler users -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-  
+
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
-  
-  <!-- Auto-redirect for regular users (non-crawlers) -->
+
+  <!-- Auto-redirect for regular users (crawlers don't execute JS) -->
   <script>
     (function() {
       const userAgent = navigator.userAgent.toLowerCase();
       const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree/i.test(userAgent);
-      
+
       if (!isCrawler) {
         window.location.replace('${frontendUrl}');
       }
@@ -2296,15 +2296,12 @@ export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
-  
-  <!-- Meta refresh backup for non-crawler users -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-  
+
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
-  
+
   <link rel="icon" type="image/x-icon" href="${artist.brand?.favicon_url || '/favicon.ico'}">
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, ${artist.brand?.brand_color || '#667eea'} 0%, #ffffff 100%); min-height: 100vh;">
