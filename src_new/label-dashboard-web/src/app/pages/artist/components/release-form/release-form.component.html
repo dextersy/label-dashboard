@@ -1,7 +1,7 @@
 <form [formGroup]="releaseForm" (ngSubmit)="onSubmit()" (keydown.escape)="$event.stopPropagation()">
   <!-- Basic Release Information -->
-  <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-6 md:tw-col-span-6">
+  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+    <div class="md:tw-col-span-6">
       <div class="tw-mb-5">
         <label for="title">Title <span class="tw-text-danger">*</span></label>
         <input type="text"
@@ -16,7 +16,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-6 md:tw-col-span-6" *ngIf="isAdmin">
+    <div class="md:tw-col-span-6" *ngIf="isAdmin">
       <div class="tw-mb-5">
         <label for="catalogNo">Catalog Number <span class="tw-text-danger">*</span></label>
         <input type="text"
@@ -35,8 +35,8 @@
     </div>
   </div>
 
-  <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-6 md:tw-col-span-6" *ngIf="isAdmin">
+  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+    <div class="md:tw-col-span-6" *ngIf="isAdmin">
       <div class="tw-mb-5">
         <label for="upc">UPC Code</label>
         <input type="text"
@@ -46,7 +46,7 @@
                placeholder="Universal Product Code">
       </div>
     </div>
-    <div class="col-md-6 md:tw-col-span-6">
+    <div class="md:tw-col-span-6">
       <div class="tw-mb-5">
         <label for="releaseDate">Release Date <span class="tw-text-danger">*</span></label>
         <input type="date"
@@ -62,8 +62,8 @@
     </div>
   </div>
 
-  <div class="row tw-grid tw-grid-cols-1" *ngIf="isAdmin && showStatus">
-    <div class="col-md-6 md:tw-col-span-6">
+  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isAdmin && showStatus">
+    <div class="md:tw-col-span-6">
       <div class="tw-mb-5">
         <label for="status">Status</label>
         <select class="tw-input" id="status" formControlName="status">
@@ -80,8 +80,8 @@
   <!-- Cover Art -->
   <div class="tw-mb-5">
     <label for="coverArt">Cover Art</label>
-    <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-md-6 md:tw-col-span-6">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+      <div class="md:tw-col-span-6">
         <input type="file"
                class="form-control-file"
                id="coverArt"
@@ -94,7 +94,7 @@
           JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
         </small>
       </div>
-      <div class="col-md-6 md:tw-col-span-6" *ngIf="coverArtPreview">
+      <div class="md:tw-col-span-6" *ngIf="coverArtPreview">
         <div class="cover-art-preview">
           <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
         </div>
@@ -144,7 +144,7 @@
   <!-- Royalty Artists (Admin Only) -->
   <div *ngIf="isAdmin" class="artist-royalty-section" formArrayName="royaltyArtists">
     <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
-      <h5 class="tw-mb-0">Artist Royalty Splits</h5>
+      <h3 class="tw-mb-0">Artist Royalty Splits</h3>
       <button type="button" 
               class="btn-sm btn-secondary" 
               (click)="addRoyaltyArtist()"
@@ -166,8 +166,8 @@
            class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3" 
            [formGroupName]="i">
         <div class="tw-px-card-pad tw-pb-card-pad">
-          <div class="row tw-items-center tw-grid tw-grid-cols-1">
-            <div class="col-md-3">
+          <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+            <div >
               <div class="tw-mb-5 tw-mb-0">
                 <label class="small font-weight-bold tw-text-sm">Artist</label>
                 <select class="tw-input-sm tw-input" 
@@ -181,7 +181,7 @@
                 </select>
               </div>
             </div>
-            <div class="col-md-2">
+            <div >
               <div class="tw-mb-5 tw-mb-0">
                 <label class="small font-weight-bold tw-text-sm">Streaming %</label>
                 <input type="number" 
@@ -190,7 +190,7 @@
                        min="0" max="100" step="1">
               </div>
             </div>
-            <div class="col-md-2">
+            <div >
               <div class="tw-mb-5 tw-mb-0">
                 <label class="small font-weight-bold tw-text-sm">Sync %</label>
                 <input type="number" 
@@ -199,7 +199,7 @@
                        min="0" max="100" step="1">
               </div>
             </div>
-            <div class="col-md-2">
+            <div >
               <div class="tw-mb-5 tw-mb-0">
                 <label class="small font-weight-bold tw-text-sm">Download %</label>
                 <input type="number" 
@@ -208,7 +208,7 @@
                        min="0" max="100" step="1">
               </div>
             </div>
-            <div class="col-md-2">
+            <div >
               <div class="tw-mb-5 tw-mb-0">
                 <label class="small font-weight-bold tw-text-sm">Physical %</label>
                 <input type="number" 
@@ -217,7 +217,7 @@
                        min="0" max="100" step="1">
               </div>
             </div>
-            <div class="col-md-1">
+            <div >
               <button type="button" 
                       class="btn-sm btn-danger" 
                       (click)="removeRoyaltyArtist(i)"
@@ -233,31 +233,31 @@
       <!-- Royalty Totals -->
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50">
         <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
-          <div class="row tw-text-center tw-grid tw-grid-cols-1">
-            <div class="col-md-3">
+          <div class="tw-text-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+            <div >
               <strong>Label Royalty:</strong>
             </div>
-            <div class="col-md-2">
+            <div >
               <span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
                 {{ getLabelRoyalty('streaming') }}%
               </span>
             </div>
-            <div class="col-md-2">
+            <div >
               <span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
                 {{ getLabelRoyalty('sync') }}%
               </span>
             </div>
-            <div class="col-md-2">
+            <div >
               <span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
                 {{ getLabelRoyalty('download') }}%
               </span>
             </div>
-            <div class="col-md-2">
+            <div >
               <span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
                 {{ getLabelRoyalty('physical') }}%
               </span>
             </div>
-            <div class="col-md-1"></div>
+            <div ></div>
           </div>
         </div>
       </div>
@@ -279,8 +279,8 @@
   </div>
 
   <!-- Action Buttons -->
-  <div *ngIf="showActionButtons" class="row tw-mt-4 tw-grid tw-grid-cols-1">
-    <div class="col-md-6 md:tw-col-span-6">
+  <div *ngIf="showActionButtons" class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+    <div class="md:tw-col-span-6">
       <button type="submit" 
               class="btn-primary tw-w-full"
               [disabled]="loading || !isFormValid">
@@ -289,7 +289,7 @@
         {{ loading ? 'Saving...' : submitButtonText }}
       </button>
     </div>
-    <div class="col-md-6 md:tw-col-span-6">
+    <div class="md:tw-col-span-6">
       <button type="button" 
               class="btn-secondary tw-w-full"
               [disabled]="loading"

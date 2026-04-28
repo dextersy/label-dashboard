@@ -23,7 +23,7 @@
 
         <form (ngSubmit)="onSubmit()" #songFormRef="ngForm">
           <!-- Basic Information -->
-          <h5 class="tw-mb-3">Basic Information</h5>
+          <h3 class="tw-mb-3">Basic Information</h3>
 
           <div class="tw-mb-5">
             <label for="songTitle">Song Title <span class="tw-text-danger">*</span></label>
@@ -39,8 +39,8 @@
               [readonly]="isRestrictedMode()">
           </div>
 
-          <div class="row tw-grid tw-grid-cols-1" *ngIf="isAdmin">
-            <div class="col-md-6 md:tw-col-span-6">
+          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isAdmin">
+            <div class="md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label for="duration">Duration (seconds)</label>
                 <input
@@ -55,7 +55,7 @@
                 <small class="form-text tw-text-muted">Duration in seconds (e.g., 180 = 3:00)</small>
               </div>
             </div>
-            <div class="col-md-6 md:tw-col-span-6">
+            <div class="md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label for="isrc">ISRC Code</label>
                 <input
@@ -84,7 +84,7 @@
 
           <!-- Streaming Links -->
           <div *ngIf="isAdmin">
-            <h5 class="tw-mb-3 tw-mt-4">Streaming Links</h5>
+            <h3 class="tw-mb-3 tw-mt-4">Streaming Links</h3>
 
             <div class="tw-mb-5">
               <label for="spotifyLink">Spotify Link</label>
@@ -124,7 +124,7 @@
           </div>
 
           <!-- Collaborators -->
-          <h5 class="tw-mb-3 tw-mt-4">Collaborators (Artists)</h5>
+          <h3 class="tw-mb-3 tw-mt-4">Collaborators (Artists)</h3>
           <p class="small tw-mb-3 tw-text-muted tw-text-sm">
             Indicate performing artists that are involved in this track. If the artist you collaborated with does not appear, inform your label administrator.
           </p>
@@ -181,7 +181,7 @@
           </div>
 
           <!-- Authors -->
-          <h5 class="tw-mb-3 tw-mt-4">Authors (Lyricists)</h5>
+          <h3 class="tw-mb-3 tw-mt-4">Authors (Lyricists)</h3>
           <p class="small tw-mb-3 tw-text-muted tw-text-sm">
             <strong>Use full legal names.</strong> Indicate people who contributed to the lyrics of this song. Select from the list of songwriters in our database or add a new songwriter.
           </p>
@@ -249,8 +249,8 @@
               <!-- Create new songwriter form (shown when in create mode) -->
               <div *ngIf="isCreatingNewAuthor" class="create-songwriter-form">
                 <h6 class="tw-mb-3">Create New Songwriter</h6>
-                <div class="row tw-grid tw-grid-cols-1">
-                  <div class="col-md-12 tw-mb-2 md:tw-col-span-12">
+                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+                  <div class="tw-mb-2 md:tw-col-span-12">
                     <label for="newAuthorName" class="tw-label tw-mb-1"><small>Name <span class="tw-text-danger">*</span></small></label>
                     <input
                       type="text"
@@ -261,7 +261,7 @@
                       placeholder="Songwriter name"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
+                  <div class="tw-mb-2 md:tw-col-span-6">
                     <label for="newAuthorPro" class="tw-label tw-mb-1"><small>PRO Affiliation (optional)</small></label>
                     <input
                       type="text"
@@ -272,7 +272,7 @@
                       placeholder="e.g., ASCAP, BMI"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
+                  <div class="tw-mb-2 md:tw-col-span-6">
                     <label for="newAuthorIpi" class="tw-label tw-mb-1"><small>IPI Number (optional)</small></label>
                     <input
                       type="text"
@@ -283,7 +283,7 @@
                       placeholder="IPI Number"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6" *ngIf="isAdmin">
+                  <div class="tw-mb-2 md:tw-col-span-6" *ngIf="isAdmin">
                     <label for="newAuthorShare" class="tw-label tw-mb-1"><small>Share % (optional)</small></label>
                     <input
                       type="number"
@@ -311,7 +311,7 @@
           </div>
 
           <!-- Composers -->
-          <h5 class="tw-mb-3 tw-mt-4">Composers</h5>
+          <h3 class="tw-mb-3 tw-mt-4">Composers</h3>
           <p class="small tw-mb-3 tw-text-muted tw-text-sm">
             <strong>Use full legal names.</strong> Indicate who contributed to the music for each track. Generally, "composer" refers to who made the main melody of the song (the tune that is sung), but you can take liberty to decide who should be credited for the music. Select from the list of songwriters in our database or add a new songwriter.
           </p>
@@ -379,8 +379,8 @@
               <!-- Create new songwriter form (shown when in create mode) -->
               <div *ngIf="isCreatingNewComposer" class="create-songwriter-form">
                 <h6 class="tw-mb-3">Create New Songwriter</h6>
-                <div class="row tw-grid tw-grid-cols-1">
-                  <div class="col-md-12 tw-mb-2 md:tw-col-span-12">
+                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+                  <div class="tw-mb-2 md:tw-col-span-12">
                     <label for="newComposerName" class="tw-label tw-mb-1"><small>Name <span class="tw-text-danger">*</span></small></label>
                     <input
                       type="text"
@@ -391,7 +391,7 @@
                       placeholder="Songwriter name"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
+                  <div class="tw-mb-2 md:tw-col-span-6">
                     <label for="newComposerPro" class="tw-label tw-mb-1"><small>PRO Affiliation (optional)</small></label>
                     <input
                       type="text"
@@ -402,7 +402,7 @@
                       placeholder="e.g., ASCAP, BMI"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6">
+                  <div class="tw-mb-2 md:tw-col-span-6">
                     <label for="newComposerIpi" class="tw-label tw-mb-1"><small>IPI Number (optional)</small></label>
                     <input
                       type="text"
@@ -413,7 +413,7 @@
                       placeholder="IPI Number"
                       [readonly]="isRestrictedMode()">
                   </div>
-                  <div class="col-md-6 tw-mb-2 md:tw-col-span-6" *ngIf="isAdmin">
+                  <div class="tw-mb-2 md:tw-col-span-6" *ngIf="isAdmin">
                     <label for="newComposerShare" class="tw-label tw-mb-1"><small>Share % (optional)</small></label>
                     <input
                       type="number"

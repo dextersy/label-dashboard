@@ -106,7 +106,7 @@
 
       <!-- Streaming Links -->
       <div class="streaming-links" *ngIf="hasStreamingLinks()">
-        <h4 class="subsection-title">Streaming Links</h4>
+        <h3 class="subsection-title">Streaming Links</h3>
         <div class="links-row">
           <a *ngIf="release.spotify_link" [href]="release.spotify_link" target="_blank" class="streaming-link spotify">
             <i class="fab fa-spotify"></i> Spotify
@@ -144,7 +144,7 @@
 
       <!-- Liner Notes -->
       <div class="liner-notes" *ngIf="release.liner_notes">
-        <h4 class="subsection-title">Liner Notes</h4>
+        <h3 class="subsection-title">Liner Notes</h3>
         <div class="liner-notes-text" [innerHTML]="sanitizeHtml(release.liner_notes)"></div>
       </div>
     </section>

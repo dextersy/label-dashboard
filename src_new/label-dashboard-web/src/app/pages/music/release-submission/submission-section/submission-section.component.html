@@ -1,22 +1,22 @@
 <div class="submission-section">
-  <h4>Release Summary</h4>
+  <h3>Release Summary</h3>
 
   <!-- Release Information Summary - Full Width -->
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="releaseInfoData">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h5 class="tw-mb-0">Release Information</h5>
+      <h3 class="tw-mb-0">Release Information</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('info')">
         <i class="fa fa-edit tw-mr-1"></i>Edit
       </button>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
-      <div class="row tw-grid tw-grid-cols-1">
-        <div class="col-md-6 md:tw-col-span-6">
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+        <div class="md:tw-col-span-6">
           <p><strong>Title:</strong> {{ releaseInfoData.title || 'Not specified' }}</p>
           <p><strong>Catalog Number:</strong> {{ releaseInfoData.catalog_no || 'Not specified' }}</p>
           <p><strong>UPC:</strong> {{ releaseInfoData.UPC || 'Not specified' }}</p>
         </div>
-        <div class="col-md-6 md:tw-col-span-6">
+        <div class="md:tw-col-span-6">
           <p><strong>Release Date:</strong> {{ formatDate(releaseInfoData.release_date) || 'Not specified' }}</p>
           <p><strong>Cover Art:</strong>
             <span *ngIf="releaseInfoData.cover_art_preview || releaseInfoData.cover_art"> ✓ Uploaded</span>
@@ -35,7 +35,7 @@
   <!-- Album Credits Summary - Full Width -->
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="albumCreditsData">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h5 class="tw-mb-0">Album Credits</h5>
+      <h3 class="tw-mb-0">Album Credits</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('credits')">
         <i class="fa fa-edit tw-mr-1"></i>Edit
       </button>
@@ -70,8 +70,8 @@
 
         <!-- Non-admin view: simple list -->
         <div *ngIf="!isAdmin">
-          <div class="row tw-grid tw-grid-cols-1">
-            <div class="col-md-12 md:tw-col-span-12">
+          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+            <div class="md:tw-col-span-12">
               <p class="tw-mb-2"><strong>Artists:</strong></p>
               <ul class="list-unstyled">
                 <li *ngFor="let artist of albumCreditsData.artists" class="tw-mb-1">
@@ -98,7 +98,7 @@
   <!-- Track List Summary - Full Width -->
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="trackListData">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h5 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h5>
+      <h3 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('tracks')">
         <i class="fa fa-edit tw-mr-1"></i>Edit
       </button>
@@ -132,12 +132,12 @@
   </div>
 
   <!-- Bottom Section: Validation and Submit -->
-  <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-6 md:tw-col-span-6">
+  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+    <div class="md:tw-col-span-6">
       <!-- Validation Summary -->
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-          <h5 class="tw-mb-0">Validation Summary</h5>
+          <h3 class="tw-mb-0">Validation Summary</h3>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
           <!-- Errors -->
@@ -172,7 +172,7 @@
       </div>
     </div>
 
-    <div class="col-md-6 md:tw-col-span-6">
+    <div class="md:tw-col-span-6">
       <!-- Submission Warning -->
       <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
         <i class="fa fa-exclamation-triangle tw-mr-2"></i>

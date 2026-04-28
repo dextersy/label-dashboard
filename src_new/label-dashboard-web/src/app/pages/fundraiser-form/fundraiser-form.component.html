@@ -76,8 +76,8 @@
           </small>
         </div>
 
-        <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-12 tw-mb-3 tw-col-span-12">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="tw-mb-3 tw-col-span-12">
             <label for="fundraiserTitle" class="tw-label required">Fundraiser Title</label>
             <input
               type="text"
@@ -92,7 +92,7 @@
             </small>
           </div>
 
-          <div class="col-12 tw-mb-3 tw-col-span-12">
+          <div class="tw-mb-3 tw-col-span-12">
             <label for="fundraiserDescription" class="tw-label">Description</label>
             <quill-editor
               id="fundraiserDescription"
@@ -107,7 +107,7 @@
             </small>
           </div>
 
-          <div class="col-12 tw-mb-3 tw-col-span-12">
+          <div class="tw-mb-3 tw-col-span-12">
             <label class="tw-label">Fundraiser Poster</label>
             <div *ngIf="!posterPreview && !fundraiserData.poster_url"
                  class="poster-upload-zone"

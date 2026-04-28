@@ -15,12 +15,12 @@
   <!-- Invite New Member Section -->
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 invite-section tw-mt-4">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-      <h5>Invite Team Member</h5>
+      <h3>Invite Team Member</h3>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
       <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
-        <div class="row tw-items-end tw-grid tw-grid-cols-1">
-          <div class="col-md-8 md:tw-col-span-8">
+        <div class="tw-items-end tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="md:tw-col-span-8">
             <div class="tw-mb-5 tw-mb-0">
               <label for="inviteEmail" class="tw-label">Email Address</label>
               <input type="email"
@@ -34,7 +34,7 @@
                      [disabled]="sendingInvite">
             </div>
           </div>
-          <div class="col-md-4 md:tw-col-span-4">
+          <div class="md:tw-col-span-4">
             <div class="tw-mb-5 tw-mb-0">
               <button type="submit"
                       class="btn-primary tw-w-full"

@@ -2,8 +2,8 @@
   <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
     <!-- Main Content -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="selectedArtist">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="selectedArtist">
+      <div class="tw-col-span-12">
         
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
         <!-- Profile Tab (no card wrapper for minimalist design) -->
@@ -53,8 +53,8 @@
     </div>
     
     <!-- Loading Artists -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="loading">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="loading">
+      <div class="tw-col-span-12">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <div class="loading-dots">
@@ -68,8 +68,8 @@
     </div>
 
     <!-- No Artists Available -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && !selectedArtist && availableArtists.length === 0">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!loading && !selectedArtist && availableArtists.length === 0">
+      <div class="tw-col-span-12">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <i class="fas fa-user-plus fa-4x tw-mb-3 tw-text-muted"></i>
@@ -84,8 +84,8 @@
     </div>
 
     <!-- No Artist Selected (but artists are available) -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="!loading && !selectedArtist && availableArtists.length > 0">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!loading && !selectedArtist && availableArtists.length > 0">
+      <div class="tw-col-span-12">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <i class="far fa-user-circle fa-4x tw-mb-3 tw-text-muted"></i>

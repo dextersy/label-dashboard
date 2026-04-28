@@ -3,7 +3,7 @@
     <!-- Artists & Royalty Splits -->
     <div class="artists-section" formArrayName="royaltyArtists">
       <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
-        <h5 class="tw-mb-0">Artists & Royalty Splits</h5>
+        <h3 class="tw-mb-0">Artists & Royalty Splits</h3>
         <button type="button"
                 class="btn-sm btn-secondary"
                 (click)="addRoyaltyArtistFromUI()"
@@ -29,7 +29,7 @@
              class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3"
              [formGroupName]="i">
           <div class="tw-px-card-pad tw-pb-card-pad">
-            <div class="row tw-items-center tw-grid tw-grid-cols-1">
+            <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
               <div [class]="isAdmin ? 'col-md-3' : 'col-md-10'">
                 <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Artist</label>
@@ -51,7 +51,7 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-2" *ngIf="isAdmin">
+              <div  *ngIf="isAdmin">
                 <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Streaming %</label>
                   <input type="number"
@@ -61,7 +61,7 @@
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
-              <div class="col-md-2" *ngIf="isAdmin">
+              <div  *ngIf="isAdmin">
                 <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Sync %</label>
                   <input type="number"
@@ -71,7 +71,7 @@
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
-              <div class="col-md-2" *ngIf="isAdmin">
+              <div  *ngIf="isAdmin">
                 <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Download %</label>
                   <input type="number"
@@ -81,7 +81,7 @@
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
-              <div class="col-md-2" *ngIf="isAdmin">
+              <div  *ngIf="isAdmin">
                 <div class="tw-mb-5 tw-mb-0">
                   <label class="small font-weight-bold tw-text-sm">Physical %</label>
                   <input type="number"
@@ -91,7 +91,7 @@
                          [disabled]="!canModifyArtists">
                 </div>
               </div>
-              <div class="col-md-1">
+              <div >
                 <button type="button"
                         class="btn-sm btn-danger"
                         (click)="removeRoyaltyArtist(i)"
@@ -107,31 +107,31 @@
         <!-- Royalty Totals -->
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50" *ngIf="isAdmin">
           <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
-            <div class="row tw-text-center tw-grid tw-grid-cols-1">
-              <div class="col-md-3">
+            <div class="tw-text-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div >
                 <strong>Label Royalty:</strong>
               </div>
-              <div class="col-md-2">
+              <div >
                 <span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
                   {{ getLabelRoyalty('streaming') }}%
                 </span>
               </div>
-              <div class="col-md-2">
+              <div >
                 <span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
                   {{ getLabelRoyalty('sync') }}%
                 </span>
               </div>
-              <div class="col-md-2">
+              <div >
                 <span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
                   {{ getLabelRoyalty('download') }}%
                 </span>
               </div>
-              <div class="col-md-2">
+              <div >
                 <span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
                   {{ getLabelRoyalty('physical') }}%
                 </span>
               </div>
-              <div class="col-md-1"></div>
+              <div ></div>
             </div>
           </div>
         </div>

@@ -1,21 +1,21 @@
 <div class="container-fluid">
   <!-- Page Header -->
   <div class="page-header tw-flex tw-justify-between tw-items-center tw-mb-3">
-    <h5 class="tw-mb-0">
+    <h3 class="tw-mb-0">
       <i class="fas fa-user-cog tw-mr-2 text-primary"></i>
       Profile Settings
-    </h5>
+    </h3>
   </div>
 
-  <div class="row tw-grid tw-grid-cols-1">
-    <div class="col-md-8 col-lg-6 tw-mx-auto md:tw-col-span-8 lg:tw-col-span-6">
+  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+    <div class="tw-mx-auto md:tw-col-span-8 lg:tw-col-span-6">
           
           <!-- Original Page Header (keeping for form styling) -->
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
-              <h4 class="card-title tw-mb-0">
+              <h3 class="card-title tw-mb-0">
                 <i class="fa fa-user"></i> Edit Profile
-              </h4>
+              </h3>
               <button class="btn-sm btn-secondary" (click)="goBack()">
                 <i class="fa fa-arrow-left"></i> Back to Dashboard
               </button>
@@ -36,13 +36,13 @@
           <!-- Profile Information Card -->
           <div *ngIf="!loading && profile" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-              <h5 class="card-title tw-mb-0">Profile Information</h5>
+              <h3 class="card-title tw-mb-0">Profile Information</h3>
             </div>
             <div class="tw-px-card-pad tw-pb-card-pad">
               
               <!-- Profile Details (Read-only) -->
-              <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-                <div class="col-md-6 md:tw-col-span-6">
+              <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+                <div class="md:tw-col-span-6">
                   <div class="info-item">
                     <label class="tw-label small tw-text-sm tw-text-muted">Account Status</label>
                     <div class="tw-flex tw-items-center">
@@ -53,7 +53,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-6 md:tw-col-span-6">
+                <div class="md:tw-col-span-6">
                   <div class="info-item">
                     <label class="tw-label small tw-text-sm tw-text-muted">Last Login</label>
                     <div class="text-dark tw-text-gray-900">{{ formatLastLogin(profile.last_login) }}</div>
@@ -63,9 +63,9 @@
 
               <!-- Profile Form -->
               <form (ngSubmit)="onSubmitProfile()" #profileFormRef="ngForm">
-                <div class="row tw-grid tw-grid-cols-1">
+                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
                   <!-- Username (read-only as per original PHP) -->
-                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+                  <div class="tw-mb-3 md:tw-col-span-6">
                     <label for="username" class="tw-label">Username</label>
                     <input 
                       type="text" 
@@ -79,7 +79,7 @@
                   </div>
                   
                   <!-- Email (read-only as per original PHP) -->
-                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+                  <div class="tw-mb-3 md:tw-col-span-6">
                     <label for="email" class="tw-label">Email Address</label>
                     <input 
                       type="email" 
@@ -93,9 +93,9 @@
                   </div>
                 </div>
 
-                <div class="row tw-grid tw-grid-cols-1">
+                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
                   <!-- First Name -->
-                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+                  <div class="tw-mb-3 md:tw-col-span-6">
                     <label for="first_name" class="tw-label">First Name <span class="tw-text-danger">*</span></label>
                     <input 
                       type="text" 
@@ -112,7 +112,7 @@
                   </div>
                   
                   <!-- Last Name -->
-                  <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+                  <div class="tw-mb-3 md:tw-col-span-6">
                     <label for="last_name" class="tw-label">Last Name <span class="tw-text-danger">*</span></label>
                     <input 
                       type="text" 
@@ -147,7 +147,7 @@
           <!-- Password Section -->
           <div *ngIf="!loading && profile" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-              <h5 class="card-title tw-mb-0">Password</h5>
+              <h3 class="card-title tw-mb-0">Password</h3>
             </div>
             <div class="tw-px-card-pad tw-pb-card-pad">
               
