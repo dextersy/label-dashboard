@@ -60,8 +60,8 @@
             <h3>Details</h3>
             <p>Basic event details and description</p>
 
-            <div class="row tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="eventTitle" class="tw-label required">Event Title</label>
                 <input 
                   type="text" 
@@ -74,7 +74,7 @@
                   required>
               </div>
 
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="eventDateTime" class="tw-label required">Event Date & Time <span class="tw-text-muted">(GMT+8 PH)</span></label>
                 <input 
                   type="datetime-local" 
@@ -85,7 +85,7 @@
                   required>
               </div>
 
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label class="tw-label required">Venue</label>
                 <app-venue-autocomplete
                   placeholder="Search for venue or enter manually..."
@@ -98,7 +98,7 @@
                 </app-venue-autocomplete>
               </div>
 
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="rsvpLink" class="tw-label">RSVP or Social Media Link</label>
                 <input 
                   type="url" 
@@ -112,7 +112,7 @@
                 </small>
               </div>
 
-              <div class="col-12 tw-mb-3 tw-col-span-12" *ngIf="isEventDraft()">
+              <div class="tw-mb-3 tw-col-span-12" *ngIf="isEventDraft()">
                 <label for="urlSlug" class="tw-label">URL Slug</label>
                 <div class="input-group">
                   <input 
@@ -137,7 +137,7 @@
                 </small>
               </div>
 
-              <div class="col-12 tw-mb-3 tw-col-span-12">
+              <div class="tw-mb-3 tw-col-span-12">
                 <label for="eventDescription" class="tw-label">Description</label>
                 <quill-editor
                   id="eventDescription"
@@ -151,7 +151,7 @@
                 </small>
               </div>
 
-              <div class="col-12 tw-mb-3 tw-col-span-12">
+              <div class="tw-mb-3 tw-col-span-12">
                 <label class="tw-label">Event Poster</label>
                 <div *ngIf="!posterPreview && !eventData.poster_url" 
                      class="poster-upload-zone" 
@@ -227,8 +227,8 @@
               </small>
             </div>
 
-            <div class="row tw-mb-4 tw-grid tw-grid-cols-1" *ngIf="!event || !event.buy_shortlink">
-              <div class="col-12 tw-col-span-12">
+            <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!event || !event.buy_shortlink">
+              <div class="tw-col-span-12">
                 <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
                   <i class="fa fa-info-circle tw-mr-2"></i>
                   The ticket purchase link will be generated after publishing the event.
@@ -237,8 +237,8 @@
             </div>
 
             <!-- Maximum Tickets and Show Remaining -->
-            <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+            <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="maxTickets" class="tw-label">Maximum Tickets (Total)</label>
                 <div class="tw-flex tw-items-center tw-gap-2 tw-mb-2">
                   <div class="form-check form-switch tw-mb-0">
@@ -267,7 +267,7 @@
                 </small>
               </div>
 
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label class="tw-label">Show Tickets Remaining</label>
                 <div class="form-check form-switch">
                   <input 
@@ -288,8 +288,8 @@
             </div>
 
             <!-- Ticket Sales Settings -->
-            <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+            <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="closeTime" class="tw-label">Ticket Sales Close Time</label>
                 <div class="tw-flex tw-items-center tw-gap-2 tw-mb-2">
                   <div class="form-check form-switch tw-mb-0">
@@ -323,7 +323,7 @@
                 </div>
               </div>
 
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="countdownDisplay" class="tw-label">Show Countdown on Ticket Page</label>
                 <select id="countdownDisplay" class="form-select tw-input" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
                   <option value="always">Always show</option>
@@ -338,8 +338,8 @@
               </div>
             </div>
 
-            <div class="row tw-grid tw-grid-cols-1">
-              <div class="col-12 tw-mb-4 tw-col-span-12">
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="tw-mb-4 tw-col-span-12">
                 <label class="tw-label">Accepted Payment Methods</label>
                 <div class="payment-methods-grid">
                   <div class="payment-method-card">
@@ -498,8 +498,8 @@
               </small>
             </div>
 
-            <div class="row tw-mb-4 tw-grid tw-grid-cols-1" *ngIf="!event || !event.verification_link">
-              <div class="col-12 tw-col-span-12">
+            <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!event || !event.verification_link">
+              <div class="tw-col-span-12">
                 <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
                   <i class="fa fa-info-circle tw-mr-2"></i>
                   The verification link will be generated after publishing the event.
@@ -507,8 +507,8 @@
               </div>
             </div>
 
-            <div class="row tw-grid tw-grid-cols-1">
-              <div class="col-md-6 tw-mb-3 md:tw-col-span-6">
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="tw-mb-3 md:tw-col-span-6">
                 <label for="verificationPin" class="tw-label">Verification PIN</label>
                 <div class="input-group">
                   <input 

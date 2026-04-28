@@ -22,19 +22,19 @@
     </div>
 
     <!-- View Toggle -->
-    <div class="row tw-mb-4 tw-grid tw-grid-cols-1" *ngIf="canCreateCustomTickets()">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="canCreateCustomTickets()">
+      <div class="tw-col-span-12">
         <div class="tw-flex tw-justify-center tw-items-center tw-flex-col">
           <div class="btn-group view-toggle" role="group" aria-label="Ticket creation mode toggle">
             <button type="button" 
-                    class=""
+                    
                     [class.active]="currentView === 'single'"
                     (click)="switchToSingleView()"
                     [attr.aria-pressed]="currentView === 'single'">
               <i class="fa fa-user tw-mr-2"></i>Single Ticket
             </button>
             <button type="button" 
-                    class=""
+                    
                     [class.active]="currentView === 'bulk'"
                     (click)="switchToBulkView()"
                     [attr.aria-pressed]="currentView === 'bulk'">
@@ -52,13 +52,13 @@
 
     <!-- Single Ticket Form -->
     <ng-container *ngIf="canCreateCustomTickets() && currentView === 'single'">
-    <div class="row tw-grid tw-grid-cols-1">
-      <div class="col-lg-8 col-xl-6 lg:tw-col-span-8 xl:tw-col-span-6">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+      <div class="lg:tw-col-span-8 xl:tw-col-span-6">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-            <h5 class="tw-mb-0">
+            <h3 class="tw-mb-0">
               <i class="fa fa-ticket-alt tw-mr-2"></i>Ticket Details
-            </h5>
+            </h3>
           </div>
           <div class="tw-px-card-pad tw-pb-card-pad">
             <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
@@ -71,15 +71,15 @@
                 <h6 class="tw-mb-2 tw-text-muted">
                   <i class="fa fa-calendar tw-mr-2"></i>Event
                 </h6>
-                <h5 class="tw-mb-0">{{ selectedEvent.title }}</h5>
+                <h3 class="tw-mb-0">{{ selectedEvent.title }}</h3>
                 <small class="tw-text-muted" *ngIf="selectedEvent.date_and_time">
                   {{ selectedEvent.date_and_time | date:'medium' }}
                   <span *ngIf="selectedEvent.venue"> • {{ selectedEvent.venue }}</span>
                 </small>
               </div>
 
-              <div class="row tw-grid tw-grid-cols-1">
-                <div class="col-md-6 md:tw-col-span-6">
+              <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+                <div class="md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Name</label>
                     <input 
@@ -92,7 +92,7 @@
                   </div>
                 </div>
 
-                <div class="col-md-6 md:tw-col-span-6">
+                <div class="md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Email Address</label>
                     <input 
@@ -106,8 +106,8 @@
                 </div>
               </div>
 
-              <div class="row tw-grid tw-grid-cols-1">
-                <div class="col-md-6 md:tw-col-span-6">
+              <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+                <div class="md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Contact Number</label>
                     <input 
@@ -120,7 +120,7 @@
                   </div>
                 </div>
 
-                <div class="col-md-6 md:tw-col-span-6">
+                <div class="md:tw-col-span-6">
                   <div class="tw-mb-3">
                     <label class="tw-label required">Number of Entries</label>
                     <input
@@ -252,7 +252,7 @@
       </div>
 
       <!-- Summary Card -->
-      <div class="col-lg-4 col-xl-6 lg:tw-col-span-4 xl:tw-col-span-6">
+      <div class="lg:tw-col-span-4 xl:tw-col-span-6">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
             <h6 class="tw-mb-0">
@@ -335,8 +335,8 @@
     <!-- Bulk Ticket Creation View -->
     <div *ngIf="canCreateCustomTickets() && currentView === 'bulk'">
       <!-- Event Information for Bulk View -->
-      <div class="row tw-mb-3 tw-grid tw-grid-cols-1" *ngIf="selectedEvent">
-        <div class="col-12 tw-col-span-12">
+      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="selectedEvent">
+        <div class="tw-col-span-12">
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 border-primary">
             <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
               <div class="tw-flex tw-items-center tw-justify-between">
@@ -589,8 +589,8 @@
 
         <!-- Mobile layout (self-contained) -->
         <div class="tw-block lg:tw-hidden tw-w-full">
-          <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-            <div class="col-12 tw-col-span-12">
+          <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+            <div class="tw-col-span-12">
               <div class="btn-group tw-w-full" role="group">
                 <button type="button" class="btn-secondary btn-sm" (click)="addBulkRows(1)">
                   Add Row

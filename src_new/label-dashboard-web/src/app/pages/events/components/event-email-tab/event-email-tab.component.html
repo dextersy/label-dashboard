@@ -2,8 +2,8 @@
   
   <div *ngIf="selectedEvent">
     <!-- Recipients Info -->
-    <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+      <div class="tw-col-span-12">
         <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-flex tw-items-center">
           <i class="fas fa-info-circle tw-mr-2"></i>
           <div>
@@ -23,8 +23,8 @@
     <!-- Email Form -->
     <form #emailForm="ngForm" (ngSubmit)="sendEmail()">
       <!-- Subject Line -->
-      <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-        <div class="col-12 tw-col-span-12">
+      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+        <div class="tw-col-span-12">
           <label for="emailSubject" class="tw-label tw-font-bold">
             Subject Line <span class="tw-text-danger">*</span>
           </label>
@@ -50,8 +50,8 @@
       </div>
 
       <!-- Banner Option -->
-      <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-        <div class="col-12 tw-col-span-12">
+      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+        <div class="tw-col-span-12">
           <div class="form-check">
             <input
               type="checkbox"
@@ -71,8 +71,8 @@
       </div>
 
       <!-- Message Editor -->
-      <div class="row tw-mb-4 tw-grid tw-grid-cols-1">
-        <div class="col-12 tw-col-span-12">
+      <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+        <div class="tw-col-span-12">
           <label for="emailMessage" class="tw-label tw-font-bold">
             Message <span class="tw-text-danger">*</span>
           </label>

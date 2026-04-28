@@ -1,18 +1,18 @@
 <div class="event-tickets-tab">
   <!-- Sub-tab toggle -->
-  <div class="row tw-mb-4 tw-grid tw-grid-cols-1" *ngIf="isAdmin">
-    <div class="col-12 tw-col-span-12">
+  <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isAdmin">
+    <div class="tw-col-span-12">
       <div class="tw-flex tw-justify-center tw-items-center tw-flex-col">
         <div class="btn-group view-toggle" role="group" aria-label="View toggle">
           <button type="button"
-                  class=""
+                  
                   [class.active]="activeSubTab === 'tickets'"
                   (click)="setSubTab('tickets')"
                   [attr.aria-pressed]="activeSubTab === 'tickets'">
             <i class="fa fa-ticket-alt tw-mr-2"></i>Tickets
           </button>
           <button type="button"
-                  class=""
+                  
                   [class.active]="activeSubTab === 'walk-in'"
                   (click)="setSubTab('walk-in')"
                   [attr.aria-pressed]="activeSubTab === 'walk-in'">

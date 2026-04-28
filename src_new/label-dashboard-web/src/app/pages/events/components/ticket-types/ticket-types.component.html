@@ -9,12 +9,12 @@
 </div>
 
 <!-- Ticket Types Grid -->
-<div class="row g-3 tw-grid tw-grid-cols-1">
-    <div *ngFor="let ticketType of ticketTypes; let i = index" class="col-md-6 col-lg-4 md:tw-col-span-6 lg:tw-col-span-4">
+<div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-4">
+    <div *ngFor="let ticketType of ticketTypes; let i = index" class="md:tw-col-span-6 lg:tw-col-span-4">
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full tw-pt-2 tw-relative" [ngClass]="editingIndex === i ? 'border-primary' : 'ticket-type-card'">
         <!-- Card Header for Static Cards -->
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-bg-transparent tw-border-0 tw-pb-2" *ngIf="editingIndex !== i">
-          <h5 class="card-title tw-mb-0 tw-font-bold tw-text-center">{{ ticketType.name }}</h5>
+          <h3 class="card-title tw-mb-0 tw-font-bold tw-text-center">{{ ticketType.name }}</h3>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad" [class.tw-pt-0]="editingIndex !== i">
           <ng-container *ngIf="editingIndex === i; else staticRow">
@@ -24,8 +24,8 @@
               <input type="text" class="tw-input-sm tw-input" [(ngModel)]="ticketType.name" placeholder="Enter ticket name">
             </div>
 
-            <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-              <div class="col-6 tw-col-span-6">
+            <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="tw-col-span-6">
                 <label class="tw-label small tw-font-semibold tw-text-sm">Price</label>
                 <div class="tw-flex tw-items-center tw-gap-2">
                   <div class="form-check form-switch tw-mb-0">
@@ -35,7 +35,7 @@
                 </div>
                 <input *ngIf="!ticketType.isFree" type="number" class="tw-input-sm tw-mt-1 tw-input" [(ngModel)]="ticketType.price" min="0" step="0.01" placeholder="0.00">
               </div>
-              <div class="col-6 tw-col-span-6">
+              <div class="tw-col-span-6">
                 <label class="tw-label small tw-font-semibold tw-text-sm">Capacity</label>
                 <div class="tw-flex tw-items-center tw-gap-2">
                   <div class="form-check form-switch tw-mb-0">
@@ -171,7 +171,7 @@
 </div>
 
 <!-- New Ticket Type Form as a card in the same grid -->
-<div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4 md:tw-col-span-6 lg:tw-col-span-4">
+<div *ngIf="isAdmin && showNewForm" class="md:tw-col-span-6 lg:tw-col-span-4">
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full border-success">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h6 class="card-title tw-text-success tw-mb-3">
@@ -185,8 +185,8 @@
         <input type="text" class="tw-input-sm tw-input" [(ngModel)]="newTicketType.name" placeholder="Enter ticket type name">
       </div>
 
-      <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-        <div class="col-6 tw-col-span-6">
+      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+        <div class="tw-col-span-6">
           <label class="tw-label small tw-font-semibold tw-text-sm">Price</label>
           <div class="tw-flex tw-items-center tw-gap-2">
             <div class="form-check form-switch tw-mb-0">
@@ -196,7 +196,7 @@
           </div>
           <input *ngIf="!newTicketType.isFree" type="number" class="tw-input-sm tw-mt-1 tw-input" [(ngModel)]="newTicketType.price" min="0" step="0.01" placeholder="0.00">
         </div>
-        <div class="col-6 tw-col-span-6">
+        <div class="tw-col-span-6">
           <label class="tw-label small tw-font-semibold tw-text-sm">Capacity</label>
           <div class="tw-flex tw-items-center tw-gap-2">
             <div class="form-check form-switch tw-mb-0">
