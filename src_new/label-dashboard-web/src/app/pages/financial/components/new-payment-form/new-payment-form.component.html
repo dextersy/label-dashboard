@@ -1,33 +1,28 @@
 <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
   <div class="md:tw-col-span-8">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3>Add New Payment</h3>
-      </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
-        <form (ngSubmit)="onSubmitPayment()">
-          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-            <div class="md:tw-col-span-6">
-              <div class="tw-mb-5">
-                <label>Date Paid</label>
-                <input type="datetime-local" class="tw-input" [(ngModel)]="newPaymentForm.date_paid" name="date_paid" required>
-              </div>
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-6">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Add New Payment</h3>
+      <form (ngSubmit)="onSubmitPayment()">
+        <div class="tw-space-y-4">
+
+          <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+            <div>
+              <label class="tw-label">Date Paid</label>
+              <input type="datetime-local" class="tw-input" [(ngModel)]="newPaymentForm.date_paid" name="date_paid" required>
             </div>
-            <div class="md:tw-col-span-6">
-              <div class="tw-mb-5">
-                <label>Amount (PHP)</label>
-                <input type="number" class="tw-input" [(ngModel)]="newPaymentForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
-              </div>
+            <div>
+              <label class="tw-label">Amount (PHP)</label>
+              <input type="number" class="tw-input" [(ngModel)]="newPaymentForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
             </div>
           </div>
-          
-          <div class="tw-mb-5">
-            <label>Description</label>
+
+          <div>
+            <label class="tw-label">Description</label>
             <input type="text" class="tw-input" [(ngModel)]="newPaymentForm.description" name="description" placeholder="Enter payment description" required>
           </div>
-          
-          <div class="tw-mb-5">
-            <label>Paid through</label>
+
+          <div>
+            <label class="tw-label">Paid through</label>
             <select class="tw-input" [(ngModel)]="selectedPaymentMethodId" (change)="onPaymentMethodChange($event)" name="paymentMethodSelect" required>
               <option value="">Select payment method</option>
               <option value="-1">Non-cash / adjustment</option>
@@ -37,62 +32,63 @@
             </select>
           </div>
 
-          <!-- Offline Payment Checkbox - Hidden when non-cash is selected -->
-          <div class="tw-mb-5" *ngIf="shouldShowOfflineCheckbox()">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" [(ngModel)]="isManualPayment" name="manualPayment" (change)="toggleManualPayment()">
-              <label class="form-check-label">
-                This is an offline payment.
-              </label>
-            </div>
+          <!-- Offline Payment Toggle -->
+          <div *ngIf="shouldShowOfflineCheckbox()" class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" [(ngModel)]="isManualPayment" name="manualPayment" (change)="toggleManualPayment()">
+            <label class="form-check-label">This is an offline payment.</label>
           </div>
 
-          <!-- Non-cash Selection Message -->
-          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal alert-secondary" *ngIf="isNonCashSelected()">
+          <!-- Non-cash info -->
+          <div *ngIf="isNonCashSelected()" class="tw-px-4 tw-py-3 tw-rounded-lg tw-text-sm tw-leading-normal alert-secondary">
             <i class="fa fa-info-circle"></i> Non-cash payments are automatically processed as offline payments.
           </div>
 
-          <!-- Wallet Balance Display -->
-          <div *ngIf="shouldShowWalletBalance()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal" [class.alert-info]="!isInsufficientBalance()" [class.alert-warning]="isInsufficientBalance()">
+          <!-- Wallet Balance -->
+          <div *ngIf="shouldShowWalletBalance()"
+               class="tw-px-4 tw-py-3 tw-rounded-lg tw-text-sm tw-leading-normal"
+               [class.alert-info]="!isInsufficientBalance()"
+               [class.alert-warning]="isInsufficientBalance()">
             <div class="tw-flex tw-justify-between tw-items-center">
               <span><i class="fa fa-credit-card"></i> Available Wallet Balance:</span>
               <strong>{{ formatCurrency(walletBalance) }}</strong>
             </div>
-            <small class="tw-text-muted" *ngIf="!isInsufficientBalance()">This payment will be processed through Paymongo wallet.</small>
-            <small class="tw-text-warning" *ngIf="isInsufficientBalance()">
+            <p class="tw-mt-1 tw-text-xs tw-text-muted" *ngIf="!isInsufficientBalance()">This payment will be processed through Paymongo wallet.</p>
+            <p class="tw-mt-1 tw-text-xs tw-text-warning" *ngIf="isInsufficientBalance()">
               <i class="fa fa-exclamation-triangle"></i> Insufficient wallet balance. Payment amount exceeds available balance.
-            </small>
+            </p>
           </div>
 
-          <div *ngIf="newPaymentForm.manualPayment === '1'">
-            <div class="tw-mb-5">
-              <label>Reference Number</label>
+          <!-- Offline payment fields -->
+          <div *ngIf="newPaymentForm.manualPayment === '1'" class="tw-space-y-4">
+            <div>
+              <label class="tw-label">Reference Number</label>
               <input type="text" class="tw-input" [(ngModel)]="newPaymentForm.reference_number" name="reference_number" placeholder="Reference Number">
             </div>
-            <div class="tw-mb-5">
-              <label>Processing Fee (PHP)</label>
+            <div>
+              <label class="tw-label">Processing Fee (PHP)</label>
               <div class="input-group">
-                <div class="input-group-addon">₱</div>
+                <div class="input-group-prepend"><span class="input-group-text">₱</span></div>
                 <input type="number" class="tw-input" [(ngModel)]="newPaymentForm.payment_processing_fee" name="payment_processing_fee" min="0" step="0.01" placeholder="0.00" value="0">
               </div>
             </div>
           </div>
 
-          <!-- Hidden fields for payment method details (populated automatically) -->
-          <input type="hidden" [(ngModel)]="newPaymentForm.paid_thru_type" name="paid_thru_type">
-          <input type="hidden" [(ngModel)]="newPaymentForm.paid_thru_account_name" name="paid_thru_account_name">
-          <input type="hidden" [(ngModel)]="newPaymentForm.paid_thru_account_number" name="paid_thru_account_number">
-          <input type="hidden" [(ngModel)]="newPaymentForm.payment_method_id" name="payment_method_id">
-          
-          <div class="text-right">
-            <button type="submit" class="btn-primary" [disabled]="isSubmittingPayment">
-              <span *ngIf="isSubmittingPayment" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
-              <i *ngIf="!isSubmittingPayment" class="fa fa-plus"></i> 
-              {{ isSubmittingPayment ? 'Adding Payment...' : 'Add Payment' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+
+        <!-- Hidden fields -->
+        <input type="hidden" [(ngModel)]="newPaymentForm.paid_thru_type" name="paid_thru_type">
+        <input type="hidden" [(ngModel)]="newPaymentForm.paid_thru_account_name" name="paid_thru_account_name">
+        <input type="hidden" [(ngModel)]="newPaymentForm.paid_thru_account_number" name="paid_thru_account_number">
+        <input type="hidden" [(ngModel)]="newPaymentForm.payment_method_id" name="payment_method_id">
+
+        <div class="tw-mt-5 tw-flex tw-justify-end">
+          <button type="submit" class="btn-primary" [disabled]="isSubmittingPayment">
+            <span *ngIf="isSubmittingPayment" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
+            <i *ngIf="!isSubmittingPayment" class="fa fa-plus"></i>
+            {{ isSubmittingPayment ? 'Adding Payment...' : 'Add Payment' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

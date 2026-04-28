@@ -21,7 +21,7 @@
         
         <form (ngSubmit)="onSubmit()" #expenseFormRef="ngForm">
           <div class="tw-mb-5">
-            <label for="expenseDate">Recorded Date <span class="tw-text-danger">*</span></label>
+            <label for="expenseDate" class="tw-label">Recorded Date <span class="tw-text-danger">*</span></label>
             <input 
               type="date" 
               class="tw-input" 
@@ -32,7 +32,7 @@
           </div>
           
           <div class="tw-mb-5">
-            <label for="expenseDescription">Description <span class="tw-text-danger">*</span></label>
+            <label for="expenseDescription" class="tw-label">Description <span class="tw-text-danger">*</span></label>
             <input 
               type="text" 
               class="tw-input" 
@@ -46,7 +46,7 @@
           </div>
           
           <div class="tw-mb-5">
-            <label for="expenseAmount">Amount <span class="tw-text-danger">*</span></label>
+            <label for="expenseAmount" class="tw-label">Amount <span class="tw-text-danger">*</span></label>
             <div class="input-group">
               <div class="input-group-prepend">
                 <span class="input-group-text">₱</span>
