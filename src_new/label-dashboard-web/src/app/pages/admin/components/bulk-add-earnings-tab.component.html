@@ -1,30 +1,28 @@
 <!-- View Toggle -->
-<div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-  <div class="tw-col-span-12">
-    <div class="tw-flex tw-justify-center tw-items-center tw-flex-col">
-      <div class="btn-group view-toggle" role="group" aria-label="View toggle">
-        <button type="button" 
-                
-                [class.active]="currentView === 'manual'"
-                (click)="switchToManualView()"
-                [attr.aria-pressed]="currentView === 'manual'">
-          <i class="fa fa-edit tw-mr-2"></i>Manual Entry
-        </button>
-        <button type="button" 
-                
-                [class.active]="currentView === 'csv'"
-                (click)="switchToCsvView()"
-                [attr.aria-pressed]="currentView === 'csv'">
-          <i class="fa fa-file-csv tw-mr-2"></i>CSV Import
-        </button>
-      </div>
-      <small class="tw-mt-2 tw-text-muted">
-        <i class="fa fa-info-circle tw-mr-1"></i>
-        <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
-        <span *ngIf="currentView === 'csv'">Bulk import earnings from CSV file</span>
-      </small>
-    </div>
+<div class="tw-flex tw-flex-col tw-items-center tw-mb-5">
+  <div class="sub-tab-toggle" role="group" aria-label="View toggle">
+    <button type="button"
+            class="sub-tab-btn"
+            [class.sub-tab-btn-active]="currentView === 'manual'"
+            (click)="switchToManualView()"
+            [attr.aria-pressed]="currentView === 'manual'">
+      <i class="fa fa-edit"></i>
+      <span>Manual Entry</span>
+    </button>
+    <button type="button"
+            class="sub-tab-btn"
+            [class.sub-tab-btn-active]="currentView === 'csv'"
+            (click)="switchToCsvView()"
+            [attr.aria-pressed]="currentView === 'csv'">
+      <i class="fa fa-file-csv"></i>
+      <span>CSV Import</span>
+    </button>
   </div>
+  <small class="tw-mt-2 tw-text-gray-400">
+    <i class="fa fa-info-circle tw-mr-1"></i>
+    <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
+    <span *ngIf="currentView === 'csv'">Bulk import earnings from CSV file</span>
+  </small>
 </div>
 
 <!-- Manual Entry View -->
