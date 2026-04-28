@@ -89,14 +89,18 @@
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <!-- Types Card Grid -->
-        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-4" *ngIf="walkInTypes.length > 0 || showNewForm">
-          <div *ngFor="let type of walkInTypes; let i = index" class="md:tw-col-span-6 lg:tw-col-span-4">
-            <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full tw-pt-2 tw-relative" [ngClass]="editingIndex === i ? 'border-primary' : 'walk-in-type-card'">
-              <!-- Card Header for Static Cards -->
-              <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-bg-transparent tw-border-0 tw-pb-2" *ngIf="editingIndex !== i">
-                <h3 class="card-title tw-mb-0 tw-font-bold tw-text-center">{{ type.name }}</h3>
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4" *ngIf="walkInTypes.length > 0 || showNewForm">
+          <div *ngFor="let type of walkInTypes; let i = index">
+            <div class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-h-full tw-relative tw-overflow-hidden tw-transition-shadow hover:tw-shadow-md"
+                 [class.tw-ring-2]="editingIndex === i"
+                 [class.walk-in-type-card]="editingIndex !== i">
+
+              <!-- Card Header (static view) -->
+              <div class="tw-px-4 tw-pt-4 tw-pb-3 tw-border-b tw-border-gray-100" *ngIf="editingIndex !== i">
+                <h4 class="tw-font-semibold tw-text-gray-800 tw-text-center tw-mb-0 tw-truncate">{{ type.name }}</h4>
               </div>
-              <div class="tw-px-card-pad tw-pb-card-pad" [class.tw-pt-0]="editingIndex !== i">
+
+              <div class="tw-p-4">
                 <ng-container *ngIf="editingIndex === i; else staticCard">
                   <!-- Editable Card -->
                   <div class="tw-mb-3">
@@ -104,8 +108,8 @@
                     <input type="text" class="tw-input-sm tw-input" [(ngModel)]="typeForm.name" placeholder="e.g. Regular, VIP">
                   </div>
 
-                  <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-                    <div class="tw-col-span-6">
+                  <div class="tw-mb-3 tw-grid tw-grid-cols-2 tw-gap-3">
+                    <div>
                       <label class="tw-label small tw-font-semibold tw-text-sm">Price</label>
                       <div class="tw-flex tw-items-center tw-gap-2">
                         <div class="form-check form-switch tw-mb-0">
@@ -121,7 +125,7 @@
                         <input type="number" class="tw-input-sm tw-input" [(ngModel)]="typeForm.price" min="0" step="0.01">
                       </div>
                     </div>
-                    <div class="tw-col-span-6">
+                    <div>
                       <label class="tw-label small tw-font-semibold tw-text-sm">Max Slots</label>
                       <div class="tw-flex tw-items-center tw-gap-2">
                         <div class="form-check form-switch tw-mb-0">
@@ -148,21 +152,18 @@
               </div>
 
               <ng-template #staticCard>
-                <!-- Static Card Content -->
                 <div class="tw-text-center">
-                  <div class="tw-mb-2">
-                    <span class="badge bg-primary fs-6 tw-px-3 tw-py-2" *ngIf="!type.price || type.price === 0">FREE</span>
-                    <span class="badge bg-success fs-6 tw-px-3 tw-py-2" *ngIf="type.price && type.price > 0">{{ formatPrice(type.price) }}</span>
+                  <div class="tw-mb-3">
+                    <span class="badge bg-primary tw-px-3 tw-py-1.5 tw-text-sm" *ngIf="!type.price || type.price === 0">FREE</span>
+                    <span class="badge bg-success tw-px-3 tw-py-1.5 tw-text-sm" *ngIf="type.price && type.price > 0">{{ formatPrice(type.price) }}</span>
                   </div>
-
-                  <div class="tw-mb-1">
-                    <small class="tw-text-muted">
-                      <i class="fas fa-users tw-mr-1"></i>
+                  <div class="tw-flex tw-flex-col tw-gap-1 tw-mb-3 tw-text-xs tw-text-gray-500">
+                    <span>
+                      <i class="fas fa-users tw-mr-1 tw-text-gray-400"></i>
                       <span *ngIf="type.max_slots === 0">Unlimited capacity</span>
                       <span *ngIf="type.max_slots !== 0">{{ type.max_slots }} slots max</span>
-                    </small>
+                    </span>
                   </div>
-
                   <div class="tw-flex tw-gap-2 tw-justify-center" *ngIf="isAdmin">
                     <button type="button" class="btn-secondary btn-sm"
                             [disabled]="editingIndex !== null || showNewForm"
@@ -180,22 +181,23 @@
             </div>
           </div>
 
-          <!-- New Walk-In Type Form as a card in the same grid -->
-          <div *ngIf="isAdmin && showNewForm" class="md:tw-col-span-6 lg:tw-col-span-4">
-            <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full border-success">
-              <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-                <h6 class="card-title tw-text-success tw-mb-3">
-                  <i class="fas fa-plus tw-mr-2"></i>Add New Walk-In Type
-                </h6>
+          <!-- New Walk-In Type Form card in the same grid -->
+          <div *ngIf="isAdmin && showNewForm">
+            <div class="tw-bg-white tw-rounded-lg tw-border-2 tw-border-green-400 tw-shadow-sm tw-h-full"
+                 style="box-shadow: 0 0 0 3px rgba(40,167,69,0.15)">
+              <div class="tw-px-4 tw-pt-4 tw-pb-3 tw-border-b tw-border-gray-100">
+                <p class="tw-text-sm tw-font-semibold tw-text-green-600 tw-mb-0">
+                  <i class="fas fa-plus tw-mr-1.5"></i>Add New Walk-In Type
+                </p>
               </div>
-              <div class="tw-px-card-pad tw-pb-card-pad">
+              <div class="tw-p-4">
                 <div class="tw-mb-3">
                   <label class="tw-label small tw-font-semibold tw-text-sm">Name</label>
                   <input type="text" class="tw-input-sm tw-input" [(ngModel)]="typeForm.name" placeholder="e.g. Regular, VIP">
                 </div>
 
-                <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-                  <div class="tw-col-span-6">
+                <div class="tw-mb-3 tw-grid tw-grid-cols-2 tw-gap-3">
+                  <div>
                     <label class="tw-label small tw-font-semibold tw-text-sm">Price</label>
                     <div class="tw-flex tw-items-center tw-gap-2">
                       <div class="form-check form-switch tw-mb-0">
@@ -211,7 +213,7 @@
                       <input type="number" class="tw-input-sm tw-input" [(ngModel)]="typeForm.price" min="0" step="0.01" placeholder="0.00">
                     </div>
                   </div>
-                  <div class="tw-col-span-6">
+                  <div>
                     <label class="tw-label small tw-font-semibold tw-text-sm">Max Slots</label>
                     <div class="tw-flex tw-items-center tw-gap-2">
                       <div class="form-check form-switch tw-mb-0">

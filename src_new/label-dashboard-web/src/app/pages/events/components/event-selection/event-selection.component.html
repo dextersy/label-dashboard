@@ -1,142 +1,145 @@
 <div class="event-selection-container">
-  <div class="event-selection-row">
-    <div class="dropdown" [class.open]="isDropdownOpen">
-    <button class="btn-secondary event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
-      <div class="event-info" *ngIf="selectedEvent">
-        <div class="event-poster">
-          <img *ngIf="selectedEvent.poster_url; else defaultPoster" 
-               [src]="selectedEvent.poster_url" 
-               class="event-image" 
+  <div class="dropdown" [class.open]="isDropdownOpen">
+    <button class="event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+
+      <!-- Selected event -->
+      <div class="tw-flex tw-items-center tw-flex-1 tw-min-w-0" *ngIf="selectedEvent">
+        <!-- Poster -->
+        <div class="tw-flex-shrink-0 tw-mr-3">
+          <img *ngIf="hasValidImage(selectedEvent); else defaultPoster"
+               [src]="selectedEvent.poster_url"
+               class="tw-w-12 tw-h-12 tw-rounded-md tw-object-cover tw-border tw-border-gray-200"
                [alt]="selectedEvent.title"
-               (error)="onImageError($event)">
+               (error)="onImageError($event, selectedEvent.id)">
           <ng-template #defaultPoster>
-            <div class="default-event-image">
+            <div class="tw-w-12 tw-h-12 tw-rounded-md tw-flex tw-items-center tw-justify-center tw-text-white tw-text-xl tw-border tw-border-gray-200"
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
               <i class="fa fa-calendar-alt"></i>
             </div>
           </ng-template>
         </div>
-        <div class="event-details">
-          <div class="event-title">{{ selectedEvent.title }}</div>
-          <div class="event-meta">
-            <span class="event-date">
-              <i class="fa fa-clock tw-mr-1"></i>
+        <!-- Details -->
+        <div class="tw-flex-1 tw-min-w-0">
+          <div class="tw-font-semibold tw-text-base tw-text-gray-800 tw-truncate tw-mb-0.5">{{ selectedEvent.title }}</div>
+          <div class="tw-flex tw-items-center tw-gap-3 tw-mb-1 tw-flex-wrap">
+            <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
+              <i class="fa fa-clock tw-text-gray-400"></i>
               {{ selectedEvent.date_and_time | date:'MMM d, y • h:mm a' }}
             </span>
-            <span class="event-venue tw-ml-2">
-              <i class="fas fa-map-marker-alt tw-mr-1"></i>
+            <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
+              <i class="fas fa-map-marker-alt tw-text-gray-400"></i>
               {{ selectedEvent.venue }}
             </span>
           </div>
-          <div class="event-status">
-            <span class="badge" [class]="getEventStatusClass(selectedEvent)">
-              {{ getEventStatusText(selectedEvent) }}
-            </span>
-          </div>
+          <span class="badge" [class]="getEventStatusClass(selectedEvent)">{{ getEventStatusText(selectedEvent) }}</span>
         </div>
       </div>
-      <div *ngIf="!selectedEvent && !loading" class="no-event">
-        <i class="fa fa-calendar-plus tw-mr-2"></i>
+
+      <!-- Placeholder -->
+      <div *ngIf="!selectedEvent && !loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm">
+        <i class="fa fa-calendar-plus"></i>
         Select an Event
       </div>
-      <div *ngIf="loading" class="loading-inline">
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm">
         <div class="loading-spinner"></div>Loading events...
       </div>
+
       <span class="caret"></span>
     </button>
-    
+
     <ul class="dropdown-menu" *ngIf="isDropdownOpen">
-      <!-- Mobile header with close button -->
+      <!-- Mobile header -->
       <li class="mobile-dropdown-header">
-        <span class="mobile-dropdown-title">Select Event</span>
-        <button type="button" class="mobile-dropdown-close" (click)="toggleDropdown(); $event.stopPropagation()">
-          <i class="fa fa-times"></i>
+        <span class="tw-text-lg tw-font-semibold tw-text-gray-800">Select Event</span>
+        <button type="button" class="tw-w-10 tw-h-10 tw-rounded-full tw-bg-gray-100 tw-border-0 tw-flex tw-items-center tw-justify-center tw-cursor-pointer hover:tw-bg-gray-200"
+                (click)="toggleDropdown(); $event.stopPropagation()">
+          <i class="fa fa-times tw-text-gray-500"></i>
         </button>
       </li>
 
-      <!-- Search input for many events -->
-      <li class="search-container" *ngIf="events.length > 5">
-        <div class="search-input-wrapper">
-          <i class="fa fa-search search-icon"></i>
-          <input 
-            type="text" 
-            class="search-input tw-input" 
+      <!-- Search -->
+      <li class="tw-px-3 tw-py-2 tw-border-b tw-border-gray-100" *ngIf="events.length > 5">
+        <div class="tw-relative tw-flex tw-items-center">
+          <i class="fa fa-search tw-absolute tw-left-3 tw-text-gray-400 tw-z-10"></i>
+          <input
+            type="text"
+            class="tw-input tw-pl-8 tw-pr-8 tw-rounded-full tw-text-sm tw-h-9 tw-w-full"
             placeholder="Search events..."
             [(ngModel)]="searchTerm"
             (click)="$event.stopPropagation()"
             #searchInput>
-          <button 
-            class="btn-ghost search-clear" 
+          <button
+            class="tw-absolute tw-right-2 tw-border-0 tw-bg-transparent tw-text-gray-400 hover:tw-text-gray-600 tw-cursor-pointer"
             *ngIf="searchTerm"
             (click)="clearSearch(); $event.stopPropagation()">
-            <i class="fa fa-times"></i>
+            <i class="fa fa-times tw-text-xs"></i>
           </button>
         </div>
       </li>
-      
-      <li class="divider" *ngIf="events.length > 5"></li>
-      
-      <!-- Create new event option at the top -->
-      <li *ngIf="isAdmin" class="create-event-item">
-        <a (click)="createEvent()" class="create-new-event">
-          <i class="fa fa-plus tw-mr-2"></i>
+
+      <li class="tw-h-px tw-bg-gray-100 tw-my-1" *ngIf="events.length > 5"></li>
+
+      <!-- Create new event -->
+      <li *ngIf="isAdmin" class="tw-border-t tw-border-gray-100 tw-mt-1 tw-pt-1">
+        <a (click)="createEvent()" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-font-semibold tw-cursor-pointer hover:tw-bg-gray-50 tw-no-underline" style="color: var(--brand-color, #3b82f6)">
+          <i class="fa fa-plus" style="color: var(--brand-color, #3b82f6)"></i>
           Create New Event
         </a>
       </li>
-      
-      <li class="divider" *ngIf="isAdmin && events.length > 0"></li>
-      
-      <li *ngFor="let event of filteredEvents" 
+
+      <li class="tw-h-px tw-bg-gray-100 tw-my-1" *ngIf="isAdmin && events.length > 0"></li>
+
+      <!-- Event items -->
+      <li *ngFor="let event of filteredEvents"
           [class.active]="selectedEvent?.id === event.id"
           class="event-item">
-        <a (click)="selectEvent(event)">
-          <div class="dropdown-event-poster">
-            <img *ngIf="event.poster_url; else dropdownDefaultPoster" 
-                 [src]="event.poster_url" 
-                 class="dropdown-event-image" 
+        <a (click)="selectEvent(event)" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-cursor-pointer tw-no-underline tw-text-gray-800">
+          <!-- Poster -->
+          <div class="tw-flex-shrink-0">
+            <img *ngIf="hasValidImage(event); else dropdownDefaultPoster"
+                 [src]="event.poster_url"
+                 class="tw-w-10 tw-h-10 tw-rounded tw-object-cover tw-border tw-border-gray-200"
                  [alt]="event.title"
-                 (error)="onDropdownImageError($event)">
+                 (error)="onDropdownImageError($event, event.id)">
             <ng-template #dropdownDefaultPoster>
-              <div class="dropdown-default-event-image">
-                <i class="fa fa-calendar-alt"></i>
+              <div class="tw-w-10 tw-h-10 tw-rounded tw-flex tw-items-center tw-justify-center tw-text-white tw-border tw-border-gray-200"
+                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                <i class="fa fa-calendar-alt tw-text-sm"></i>
               </div>
             </ng-template>
           </div>
-          <div class="dropdown-event-info">
-            <div class="dropdown-event-title">{{ event.title }}</div>
-            <div class="dropdown-event-meta">
-              <div class="dropdown-event-date">
-                <i class="fa fa-clock tw-mr-1"></i>
+          <!-- Info -->
+          <div class="tw-flex-1 tw-min-w-0">
+            <div class="tw-font-semibold tw-text-base tw-truncate tw-mb-0.5">{{ event.title }}</div>
+            <div class="tw-flex tw-flex-col tw-gap-0.5 tw-mb-1">
+              <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
+                <i class="fa fa-clock tw-text-gray-400"></i>
                 {{ event.date_and_time | date:'MMM d, y • h:mm a' }}
-              </div>
-              <div class="dropdown-event-venue">
-                <i class="fas fa-map-marker-alt tw-mr-1"></i>
+              </span>
+              <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
+                <i class="fas fa-map-marker-alt tw-text-gray-400"></i>
                 {{ event.venue }}
-              </div>
-            </div>
-            <div class="dropdown-event-status">
-              <span class="badge badge-sm" [class]="getEventStatusClass(event)">
-                {{ getEventStatusText(event) }}
               </span>
             </div>
+            <span class="badge badge-sm" [class]="getEventStatusClass(event)">{{ getEventStatusText(event) }}</span>
           </div>
         </a>
       </li>
-      
-      <li class="no-results" *ngIf="filteredEvents.length === 0 && searchTerm">
-        <div class="no-results-content">
-          <i class="fa fa-search tw-text-muted"></i>
-          <span>No events found matching "{{ searchTerm }}"</span>
-        </div>
+
+      <!-- No results -->
+      <li *ngIf="filteredEvents.length === 0 && searchTerm" class="tw-py-5 tw-text-center tw-text-sm tw-text-gray-400">
+        <i class="fa fa-search tw-mr-2"></i>
+        No events found matching "{{ searchTerm }}"
       </li>
     </ul>
-    </div>
-    
   </div>
-  
-  <!-- Event search results summary -->
-  <div class="search-summary tw-mt-2" *ngIf="searchTerm && filteredEvents.length > 0">
-    <small class="tw-text-muted">
-      <i class="fa fa-filter tw-mr-1"></i>
+
+  <!-- Search summary -->
+  <div class="tw-mt-1.5" *ngIf="searchTerm && filteredEvents.length > 0">
+    <small class="tw-text-gray-500">
+      <i class="fa fa-filter tw-mr-1" style="color: var(--brand-color, #3b82f6)"></i>
       Showing {{ filteredEvents.length }} of {{ events.length }} events
     </small>
   </div>

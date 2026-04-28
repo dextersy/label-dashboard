@@ -1,25 +1,23 @@
 <div class="event-tickets-tab">
   <!-- Sub-tab toggle -->
-  <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isAdmin">
-    <div class="tw-col-span-12">
-      <div class="tw-flex tw-justify-center tw-items-center tw-flex-col">
-        <div class="btn-group view-toggle" role="group" aria-label="View toggle">
-          <button type="button"
-                  
-                  [class.active]="activeSubTab === 'tickets'"
-                  (click)="setSubTab('tickets')"
-                  [attr.aria-pressed]="activeSubTab === 'tickets'">
-            <i class="fa fa-ticket-alt tw-mr-2"></i>Tickets
-          </button>
-          <button type="button"
-                  
-                  [class.active]="activeSubTab === 'walk-in'"
-                  (click)="setSubTab('walk-in')"
-                  [attr.aria-pressed]="activeSubTab === 'walk-in'">
-            <i class="fa fa-walking tw-mr-2"></i>Walk-In Transactions
-          </button>
-        </div>
-      </div>
+  <div class="tw-flex tw-justify-center tw-mb-5" *ngIf="isAdmin">
+    <div class="sub-tab-toggle" role="group" aria-label="View toggle">
+      <button type="button"
+              class="sub-tab-btn"
+              [class.sub-tab-btn-active]="activeSubTab === 'tickets'"
+              (click)="setSubTab('tickets')"
+              [attr.aria-pressed]="activeSubTab === 'tickets'">
+        <i class="fa fa-ticket-alt"></i>
+        <span>Tickets</span>
+      </button>
+      <button type="button"
+              class="sub-tab-btn"
+              [class.sub-tab-btn-active]="activeSubTab === 'walk-in'"
+              (click)="setSubTab('walk-in')"
+              [attr.aria-pressed]="activeSubTab === 'walk-in'">
+        <i class="fa fa-walking"></i>
+        <span>Walk-In Transactions</span>
+      </button>
     </div>
   </div>
 
