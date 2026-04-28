@@ -5,24 +5,24 @@
     <div class="tw-items-center date-range-header tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
       <div class="lg:tw-col-span-8 md:tw-col-span-8" [class.col-8]="compact">
         <div class="tw-flex tw-items-center">
-          <button class="btn-ghost btn-sm text-decoration-none tw-p-0 tw-mr-2"
+          <button class="tw-inline-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-600 tw-bg-transparent tw-border-0 tw-cursor-pointer hover:tw-bg-gray-100 hover:tw-text-gray-800 tw-transition-colors tw-mr-2"
                   (click)="toggleExpanded()"
                   [title]="isExpanded ? 'Collapse date range options' : 'Expand date range options'">
-            <i class="fa fa-calendar tw-mr-1"></i>
-            <strong>{{ getPresetDisplayName() }}</strong>
-            <i class="fa tw-ml-1" [class.fa-chevron-down]="!isExpanded" [class.fa-chevron-up]="isExpanded"></i>
+            <i class="fa fa-calendar tw-text-gray-400"></i>
+            <strong class="tw-font-semibold">{{ getPresetDisplayName() }}</strong>
+            <i class="fa tw-text-gray-400" [class.fa-chevron-down]="!isExpanded" [class.fa-chevron-up]="isExpanded"></i>
           </button>
-          <span class="small tw-mr-2 tw-text-muted tw-text-sm" [ngClass]="{'tw-hidden': compact, 'sm:tw-inline': compact}">
-            {{ formatDateForDisplay(startDate) }} - {{ formatDateForDisplay(endDate) }}
-            <span class="tw-text-success tw-ml-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
-            <span class="tw-text-success tw-ml-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
+          <span class="tw-text-sm tw-text-gray-400 tw-mr-2" [ngClass]="{'tw-hidden': compact, 'sm:tw-inline': compact}">
+            {{ formatDateForDisplay(startDate) }} – {{ formatDateForDisplay(endDate) }}
+            <span class="tw-text-green-600 tw-ml-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
+            <span class="tw-text-green-600 tw-ml-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
           </span>
-          <button class="btn-ghost btn-sm"
+          <button class="tw-inline-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-500 tw-bg-transparent tw-border-0 tw-cursor-pointer hover:tw-bg-gray-100 hover:tw-text-gray-700 tw-transition-colors disabled:tw-opacity-50 disabled:tw-cursor-not-allowed"
                   (click)="onRefresh()"
                   [disabled]="loading"
                   [title]="loading ? 'Refreshing data...' : 'Refresh data'">
-            <i class="fas fa-sync" [class.fa-spin]="loading"></i>
-            <span class="tw-ml-1 tw-hidden md:tw-inline">Refresh</span>
+            <i class="fas fa-sync tw-text-gray-400" [class.fa-spin]="loading"></i>
+            <span class="tw-hidden md:tw-inline">Refresh</span>
           </button>
         </div>
       </div>
@@ -60,66 +60,16 @@
     <div class="tw-items-center tw-mt-3 expanded-content tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isExpanded">
       <!-- Date Range Presets -->
       <div class="tw-col-span-12">
-        <div class="tw-flex tw-flex-wrap tw-items-center tw-mb-3">
-          <span class="tw-mr-3 tw-mb-2 tw-text-muted" [class.small]="compact">Quick Select:</span>
-          <div class="btn-group tw-mr-3 tw-mb-2" role="group">
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'today'"
-                    [class.btn-secondary]="selectedPreset !== 'today'"
-                    (click)="applyDatePreset('today')">
-              Today
+        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-1.5 tw-mb-3">
+          <span class="tw-text-sm tw-text-gray-400 tw-mr-1">Quick select:</span>
+          <ng-container *ngFor="let preset of presetOptions">
+            <button type="button"
+                    class="preset-btn"
+                    [class.preset-btn--active]="selectedPreset === preset.value"
+                    (click)="applyDatePreset(preset.value)">
+              {{ preset.label }}
             </button>
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'yesterday'"
-                    [class.btn-secondary]="selectedPreset !== 'yesterday'"
-                    (click)="applyDatePreset('yesterday')">
-              Yesterday
-            </button>
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'last7days'"
-                    [class.btn-secondary]="selectedPreset !== 'last7days'"
-                    (click)="applyDatePreset('last7days')">
-              Last 7 days
-            </button>
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'last30days'"
-                    [class.btn-secondary]="selectedPreset !== 'last30days'"
-                    (click)="applyDatePreset('last30days')">
-              Last 30 days
-            </button>
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'thismonth'"
-                    [class.btn-secondary]="selectedPreset !== 'thismonth'"
-                    (click)="applyDatePreset('thismonth')">
-              This month
-            </button>
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'lastmonth'"
-                    [class.btn-secondary]="selectedPreset !== 'lastmonth'"
-                    (click)="applyDatePreset('lastmonth')">
-              Last month
-            </button>
-            <button type="button" 
-                     
-                    [class.btn-sm]="compact"
-                    [class.btn-primary]="selectedPreset === 'alltime'"
-                    [class.btn-secondary]="selectedPreset !== 'alltime'"
-                    (click)="applyDatePreset('alltime')">
-              All Time
-            </button>
-          </div>
+          </ng-container>
         </div>
         
         <!-- Custom Date Range -->

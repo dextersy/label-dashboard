@@ -32,8 +32,18 @@ export class DateRangeFilterComponent implements OnInit {
   selectedPreset: string = 'alltime';
   lastUpdated: Date = new Date();
   showComparisonToggle: boolean = false;
-  isExpanded: boolean = false; // Track if the date fields are expanded
-  private initialized: boolean = false; // Track if component is initialized
+  isExpanded: boolean = false;
+  private initialized: boolean = false;
+
+  readonly presetOptions = [
+    { value: 'today',      label: 'Today' },
+    { value: 'yesterday',  label: 'Yesterday' },
+    { value: 'last7days',  label: 'Last 7 days' },
+    { value: 'last30days', label: 'Last 30 days' },
+    { value: 'thismonth',  label: 'This month' },
+    { value: 'lastmonth',  label: 'Last month' },
+    { value: 'alltime',    label: 'All time' },
+  ];
 
   constructor() {
     // Set max date to today
