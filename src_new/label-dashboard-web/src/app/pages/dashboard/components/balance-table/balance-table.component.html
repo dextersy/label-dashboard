@@ -1,9 +1,9 @@
 <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-    <h5>Balance Summary</h5>
+    <h3>Balance Summary</h3>
   </div>
   <div class="tw-px-card-pad tw-pb-card-pad">
-    <div class="row row-cols-2 row-cols-md-1 g-2 g-md-0 artist-balance-grid tw-grid tw-grid-cols-1">
+    <div class="-cols-2 -cols-md-1 g-md-0 artist-balance-grid tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
       <div class="col" *ngFor="let artist of artists">
         <div class="artist-balance-item">
           <div class="artist-info">
@@ -17,7 +17,7 @@
           </div>
         </div>
       </div>
-      <div class="col-12 tw-col-span-12" *ngIf="artists.length === 0">
+      <div class="tw-col-span-12" *ngIf="artists.length === 0">
         <p class="tw-py-2 tw-text-center tw-text-muted">No artists found</p>
       </div>
     </div>
