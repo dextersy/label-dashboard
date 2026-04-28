@@ -20,8 +20,9 @@
   .card-header {
     @apply tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-bg-transparent tw-border-none;
 
-    h5 {
-      @apply tw-m-0 tw-text-xl tw-font-medium tw-text-heading tw-leading-snug;
+    h3, h4, h5, h6 {
+      @apply tw-m-0 tw-font-medium tw-text-heading tw-leading-snug;
+      font-size: 1.3rem;
       letter-spacing: -0.025em;
     }
   }
@@ -37,7 +38,7 @@
 
     .card-header {
       @apply tw-px-card-pad-mobile tw-pt-card-pad-mobile tw-pb-3;
-      h5 { @apply tw-text-lg; }
+      h3, h4, h5, h6 { font-size: 1.1rem; }
     }
 
     .card-body {
@@ -63,9 +64,8 @@
 /* FORM CONTROLS                                                      */
 /* ----------------------------------------------------------------- */
 .form-control {
-  @apply tw-w-full tw-px-4 tw-py-3 tw-text-[#1f2937] tw-bg-input-bg
+  @apply tw-w-full tw-px-3 tw-py-2 tw-text-sm tw-text-[#1f2937] tw-bg-input-bg
          tw-border-0 tw-rounded-input tw-m-0 tw-text-left;
-  font-size: 15px;
   line-height: 1.5;
   box-shadow: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

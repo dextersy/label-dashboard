@@ -216,9 +216,8 @@
   /* Use tw-input / tw-label when migrating form-control / form-label */
 
   .tw-input {
-    @apply tw-w-full tw-px-4 tw-py-3 tw-text-[#1f2937]
+    @apply tw-w-full tw-px-3 tw-py-2 tw-text-sm tw-text-[#1f2937]
            tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
-    font-size: 15px;
 
     &:focus {
       @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring;
@@ -234,12 +233,12 @@
   }
 
   .tw-label {
-    @apply tw-block tw-mb-2 tw-font-medium tw-text-sm tw-text-[#374151];
+    @apply tw-block tw-mb-1.5 tw-font-medium tw-text-sm tw-text-[#374151];
   }
 
   /* Compact input variant (replaces form-control-sm) */
   .tw-input-sm {
-    @apply tw-w-full tw-px-2 tw-py-1 tw-text-sm tw-text-[#1f2937]
+    @apply tw-w-full tw-px-2.5 tw-py-1.5 tw-text-xs tw-text-[#1f2937]
            tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
 
     &:focus { @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring; }
@@ -248,7 +247,7 @@
 
   /* Large input variant (replaces form-control-lg) */
   .tw-input-lg {
-    @apply tw-w-full tw-px-5 tw-py-4 tw-text-lg tw-text-[#1f2937]
+    @apply tw-w-full tw-px-4 tw-py-2.5 tw-text-base tw-text-[#1f2937]
            tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
 
     &:focus { @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring; }
@@ -390,36 +389,6 @@ app-login .wrapper {
   border-bottom: 2px solid #5fbae9;
 }
 
-/* FORM TYPOGRAPHY */
-input[type=text], input[type=password], input[type=email] {
-  background-color: #f6f6f6;
-  border: none;
-  color: #0d0d0d;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 10px 0px 0px 0px;
-  width: 100%;
-  border: 2px solid #f6f6f6;
-  -webkit-transition: all 0.5s ease-in-out;
-  -moz-transition: all 0.5s ease-in-out;
-  -ms-transition: all 0.5s ease-in-out;
-  -o-transition: all 0.5s ease-in-out;
-  transition: all 0.5s ease-in-out;
-  -webkit-border-radius: 5px 5px 5px 5px;
-  border-radius: 5px 5px 5px 5px;
-}
-
-input[type=text]:focus, input[type=password]:focus {
-  background-color: #fff;
-  border-bottom: 2px solid #5fbae9;
-}
-
-input[type=text]:placeholder, input[type=password]:placeholder  {
-  color: #cccccc;
-}
 
 /* For floating input labels */
 .material-textfield {
