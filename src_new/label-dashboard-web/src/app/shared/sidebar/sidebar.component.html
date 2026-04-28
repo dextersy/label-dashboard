@@ -1,153 +1,155 @@
-<div class="sidebar" 
-     [class.open]="isOpen" 
+<div class="sidebar"
+     [class.open]="isOpen"
      [class.collapsed]="isCollapsed && !isMobileView"
-     [style.background]="brandColor">
+     [style.--active]="activeColor">
+
   <div class="sidebar-wrapper">
-    <!-- Workspace watermark -->
+
+    <!-- Workspace indicator -->
     <div class="workspace-indicator"
          *ngIf="currentWorkspace"
          [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1"
          (click)="onWorkspaceIndicatorClick()"
          [title]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1 ? 'Switch workspace' : ''">
-      <i [class]="getWorkspaceInfo(currentWorkspace).icon" class="workspace-icon"></i>
-      <span class="workspace-name">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
+      <span class="workspace-icon-wrap">
+        <i [class]="getWorkspaceInfo(currentWorkspace).icon"></i>
+      </span>
+      <span class="workspace-label">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
     </div>
-    <button class="workspace-switch-btn" *ngIf="availableWorkspaceInfos.length > 1" (click)="openWorkspaceSwitchModal()">
-      <i class="fas fa-exchange-alt"></i> Switch workspace
+
+    <button class="switch-workspace-btn"
+            *ngIf="availableWorkspaceInfos.length > 1"
+            (click)="openWorkspaceSwitchModal()">
+      <i class="fas fa-shuffle"></i>
+      <span>Switch workspace</span>
     </button>
 
-    <ul class="nav" *ngIf="isInitialized">
-      <!-- Iterate through sections -->
-      <ng-container *ngFor="let section of visibleSections; let sectionIndex = index">
-        <!-- Only show section if it has visible content -->
-        <ng-container *ngIf="shouldShowSection(section)">
+    <!-- Nav -->
+    <nav *ngIf="isInitialized">
+      <ul class="nav-list">
 
-          <!-- Artist Selection (if section has showArtistIndicator flag) -->
-          <li *ngIf="section.showArtistIndicator" class="artist-selection-container">
-            <app-artist-selection
-              [currentArtist]="selectedArtist"
-              (artistSelected)="onArtistSelected($event)">
-            </app-artist-selection>
-          </li>
+        <ng-container *ngFor="let section of visibleSections">
+          <ng-container *ngIf="shouldShowSection(section)">
 
-          <!-- Section menu items -->
-          <ng-container *ngFor="let item of section.items">
-            <ng-container *ngTemplateOutlet="menuItemTemplate; context: { item: item }"></ng-container>
-          </ng-container>
-
-          <!-- Separator after dashboard sections -->
-          <li *ngIf="section.id === 'dashboard'" class="section-divider"></li>
-        </ng-container>
-      </ng-container>
-      
-      <!-- Mobile-only profile/logout links -->
-      <li class="separator mobile-only"></li>
-      <li class="mobile-only">
-        <a routerLink="/profile" (click)="onMenuItemClick()" [style.color]="textColor">
-          <i class="fa fa-edit" [style.color]="iconColor"></i>
-          <p [style.color]="textColor">Edit Profile</p>
-        </a>
-      </li>
-      <li class="mobile-only">
-        <a (click)="logout(); onMenuItemClick()" style="cursor: pointer;" [style.color]="textColor">
-          <i class="fas fa-sign-out-alt" [style.color]="iconColor"></i>
-          <p [style.color]="textColor">Log Out</p>
-        </a>
-      </li>
-    </ul>
-
-    <!-- Reusable menu item template -->
-    <ng-template #menuItemTemplate let-item="item">
-      <li [class.active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)"
-          [ngClass]="getMenuItemClass(item.route)">
-        <!-- Menu item without children -->
-        <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)" 
-           [routerLink]="item.route" 
-           (click)="onMenuItemClick(item)" 
-           [style.color]="isActiveRoute(item.route) ? activeColor : textColor"
-           [style.opacity]="isActiveRoute(item.route) ? '1' : '0.7'"
-           [title]="isCollapsed && !isMobileView ? item.title : ''">
-          <i [class]="item.icon"
-             [style.color]="isActiveRoute(item.route) ? activeColor : iconColor"></i>
-          <p [style.color]="isActiveRoute(item.route) ? activeColor : textColor">
-            {{ item.title }}
-          </p>
-        </a>
-        
-        <!-- Menu item with children (collapsible) -->
-        <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)" class="menu-with-children">
-          <a (click)="onParentMenuClick($event, item)" 
-             style="cursor: pointer;"
-             [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor"
-             [style.opacity]="isActiveParentRoute(item.route) ? '1' : '0.7'"
-             class="parent-menu-item"
-             [title]="isCollapsed && !isMobileView ? item.title : ''">
-            <i [class]="item.icon" 
-               [style.color]="isActiveParentRoute(item.route) ? activeColor : iconColor"></i>
-            <p [style.color]="isActiveParentRoute(item.route) ? activeColor : textColor">{{ item.title }}</p>
-            <i class="fas fa-chevron-down submenu-arrow" 
-               [class.rotated]="isSubmenuExpanded(item.route)"
-               [style.color]="iconColor"></i>
-          </a>
-          
-          <!-- Inline submenu items (for expanded sidebar) -->
-          <ul class="submenu" [class.expanded]="isSubmenuExpanded(item.route) && (!isCollapsed || isMobileView)">
-            <li *ngFor="let child of item.children">
-              <a *ngIf="shouldShowMenuItem(child)" 
-                 [routerLink]="child.route" 
-                 (click)="onMenuItemClick(child)" 
-                 [style.color]="isActiveRoute(child.route) ? activeColor : textColor"
-                 [style.opacity]="isActiveRoute(child.route) ? '1' : '0.7'"
-                 [style.font-weight]="isActiveRoute(child.route) ? '400' : '300'"
-                 class="submenu-item">
-                <span [style.color]="isActiveRoute(child.route) ? activeColor : textColor">
-                  {{ child.title }}
-                </span>
-              </a>
+            <li *ngIf="section.showArtistIndicator" class="artist-selection-container">
+              <app-artist-selection
+                [currentArtist]="selectedArtist"
+                (artistSelected)="onArtistSelected($event)">
+              </app-artist-selection>
             </li>
-          </ul>
-        </div>
-      </li>
-    </ng-template>
-  </div>
+
+            <ng-container *ngFor="let item of section.items">
+              <ng-container *ngTemplateOutlet="menuItemTemplate; context: { item: item }"></ng-container>
+            </ng-container>
+
+            <li *ngIf="section.id === 'dashboard'" class="nav-divider" aria-hidden="true"></li>
+
+          </ng-container>
+        </ng-container>
+
+        <!-- Mobile-only: profile & logout -->
+        <li class="nav-divider mobile-only" aria-hidden="true"></li>
+
+        <li class="mobile-only">
+          <a routerLink="/profile" (click)="onMenuItemClick()" class="nav-link">
+            <span class="nav-icon"><i class="fa fa-pen-to-square"></i></span>
+            <span class="nav-label">Edit Profile</span>
+          </a>
+        </li>
+
+        <li class="mobile-only">
+          <a (click)="logout(); onMenuItemClick()" class="nav-link tw-cursor-pointer">
+            <span class="nav-icon"><i class="fas fa-arrow-right-from-bracket"></i></span>
+            <span class="nav-label">Log Out</span>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+
+  </div><!-- /.sidebar-wrapper -->
+
+  <!-- Menu item template -->
+  <ng-template #menuItemTemplate let-item="item">
+    <li class="nav-item"
+        [class.is-active]="isActiveRoute(item.route) || isActiveParentRoute(item.route)"
+        [ngClass]="getMenuItemClass(item.route)">
+
+      <!-- Leaf item -->
+      <a *ngIf="shouldShowMenuItem(item) && !hasChildren(item)"
+         [routerLink]="item.route"
+         (click)="onMenuItemClick(item)"
+         class="nav-link"
+         [class.nav-link-active]="isActiveRoute(item.route)"
+         [title]="isCollapsed && !isMobileView ? item.title : ''">
+        <span class="nav-icon"><i [class]="item.icon"></i></span>
+        <span class="nav-label">{{ item.title }}</span>
+      </a>
+
+      <!-- Parent item -->
+      <div *ngIf="shouldShowMenuItem(item) && hasChildren(item)">
+        <a (click)="onParentMenuClick($event, item)"
+           class="nav-link nav-link-parent"
+           [class.nav-link-active]="isActiveParentRoute(item.route)"
+           [title]="isCollapsed && !isMobileView ? item.title : ''">
+          <span class="nav-icon"><i [class]="item.icon"></i></span>
+          <span class="nav-label">{{ item.title }}</span>
+          <i class="fas fa-chevron-down submenu-arrow"
+             [class.rotated]="isSubmenuExpanded(item.route)"></i>
+        </a>
+
+        <!-- Submenu -->
+        <ul class="submenu"
+            [class.expanded]="isSubmenuExpanded(item.route) && (!isCollapsed || isMobileView)">
+          <li *ngFor="let child of item.children">
+            <a *ngIf="shouldShowMenuItem(child)"
+               [routerLink]="child.route"
+               (click)="onMenuItemClick(child)"
+               class="submenu-link"
+               [class.submenu-link-active]="isActiveRoute(child.route)">
+              {{ child.title }}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </li>
+  </ng-template>
+
 </div>
 
-<!-- Flyout submenu panel (for collapsed desktop sidebar) -->
-<div class="flyout-panel" 
+<!-- Flyout (collapsed desktop) -->
+<div class="flyout-panel"
      *ngIf="isCollapsed && !isMobileView && flyoutMenu"
-     [style.background]="brandColor"
      [style.top.px]="flyoutTop">
-  <div class="flyout-header" [style.color]="textColor">
-    {{ flyoutMenu.title }}
-  </div>
-  <ul class="flyout-menu">
+  <p class="flyout-title">{{ flyoutMenu.title }}</p>
+  <ul class="flyout-list">
     <li *ngFor="let child of flyoutMenu.children">
-      <a *ngIf="shouldShowMenuItem(child)" 
-         [routerLink]="child.route" 
+      <a *ngIf="shouldShowMenuItem(child)"
+         [routerLink]="child.route"
          (click)="closeFlyout(); onMenuItemClick(child)"
-         [style.color]="isActiveRoute(child.route) ? activeColor : textColor"
-         [class.active]="isActiveRoute(child.route)">
+         class="flyout-link"
+         [class.flyout-link-active]="isActiveRoute(child.route)">
         {{ child.title }}
       </a>
     </li>
   </ul>
 </div>
 
-<!-- Flyout backdrop (for closing flyout when clicking outside) -->
 <div class="flyout-backdrop"
      *ngIf="isCollapsed && !isMobileView && flyoutMenu"
      (click)="closeFlyout()">
 </div>
 
 <!-- Workspace Switch Modal -->
-<div class="modal fade show" appModalToBody *ngIf="showWorkspaceSwitchModal" tabindex="-1" style="display: block;">
+<div class="modal fade show" appModalToBody *ngIf="showWorkspaceSwitchModal" tabindex="-1" style="display:block;">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
-      <div class="modal-header tw-border-0 tw-px-4 tw-pt-4 tw-pb-2">
-        <h5 class="modal-title workspace-switch-modal-title">Switch Workspace</h5>
+      <div class="modal-header tw-border-0 tw-px-6 tw-pt-5 tw-pb-2">
+        <h5 class="modal-title tw-text-lg tw-font-semibold tw-text-gray-800">Switch Workspace</h5>
         <button type="button" class="btn-close" (click)="closeWorkspaceSwitchModal()"></button>
       </div>
-      <div class="modal-body tw-px-4 tw-pb-4 tw-pt-2">
+      <div class="modal-body tw-px-6 tw-pb-6 tw-pt-2">
         <div class="workspace-options">
           <button *ngFor="let info of availableWorkspaceInfos"
                   class="workspace-option-btn"
