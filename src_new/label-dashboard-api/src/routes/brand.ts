@@ -1,6 +1,6 @@
 import express from 'express';
 import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles } from '../controllers/brandController';
-import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus } from '../controllers/labelPaymentController';
+import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, deleteLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus } from '../controllers/labelPaymentController';
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
@@ -53,6 +53,7 @@ router.post('/:brandId/payment-methods', authenticateToken, requireAdmin, addLab
 router.get('/:brandId/payment-methods', authenticateToken, requireAdmin, getLabelPaymentMethods);
 router.put('/:brandId/payment-methods/:id', authenticateToken, requireAdmin, updateLabelPaymentMethod);
 router.put('/:brandId/payment-methods/:id/set-default', authenticateToken, requireAdmin, setDefaultLabelPaymentMethod);
+router.delete('/:brandId/payment-methods/:id', authenticateToken, requireAdmin, deleteLabelPaymentMethod);
 
 // Label payments routes
 router.post('/:brandId/payments', authenticateToken, requireAdmin, addLabelPayment);

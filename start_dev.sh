@@ -15,6 +15,7 @@ TICKETING_DIR="$SCRIPT_DIR/src_new/ticketing-app"
 
 API_LOG="$SCRIPT_DIR/dev_api.log"
 WEB_LOG="$SCRIPT_DIR/dev_web.log"
+WEB_SUBBRAND_LOG="$SCRIPT_DIR/dev_web_subbrand.log"
 NGROK_LOG="$SCRIPT_DIR/dev_ngrok.log"
 SPINDLY_LOG="$SCRIPT_DIR/dev_spindly.log"
 TICKETING_LOG="$SCRIPT_DIR/dev_ticketing.log"
@@ -24,16 +25,18 @@ NGROK_DOMAIN="$1"
 # Clear log files (fresh start)
 > "$API_LOG"
 > "$WEB_LOG"
+> "$WEB_SUBBRAND_LOG"
 > "$NGROK_LOG"
 > "$SPINDLY_LOG"
 > "$TICKETING_LOG"
 
 echo "Starting development services..."
-echo "API logs:      $API_LOG"
-echo "Web logs:      $WEB_LOG"
-echo "Ngrok logs:    $NGROK_LOG"
-echo "Spindly logs:  $SPINDLY_LOG"
-echo "Ticketing logs: $TICKETING_LOG"
+echo "API logs:           $API_LOG"
+echo "Web logs:           $WEB_LOG"
+echo "Web subbrand logs:  $WEB_SUBBRAND_LOG"
+echo "Ngrok logs:         $NGROK_LOG"
+echo "Spindly logs:       $SPINDLY_LOG"
+echo "Ticketing logs:     $TICKETING_LOG"
 
 # Start ngrok tunnel
 if [ -n "$NGROK_DOMAIN" ]; then
@@ -86,15 +89,26 @@ API_PID=$!
 echo "API server started (PID: $API_PID)"
 
 # Start Web server (use local config with ngrok to point API at the tunnel)
-echo "Starting Web server..."
+echo "Starting Web server (localhost:80)..."
 cd "$WEB_DIR"
 if [ -n "$NGROK_DOMAIN" ]; then
-    npx ng serve -c local > "$WEB_LOG" 2>&1 &
+    npx ng serve -c local --host localhost --port 80 > "$WEB_LOG" 2>&1 &
 else
-    npm start > "$WEB_LOG" 2>&1 &
+    npx ng serve --host localhost --port 80 > "$WEB_LOG" 2>&1 &
 fi
 WEB_PID=$!
 echo "Web server started (PID: $WEB_PID)"
+
+# Start second Web server instance for subbrand
+echo "Starting Web server subbrand (localhost.subbrand:80)..."
+cd "$WEB_DIR"
+if [ -n "$NGROK_DOMAIN" ]; then
+    npx ng serve -c local --host localhost.subbrand --port 80 > "$WEB_SUBBRAND_LOG" 2>&1 &
+else
+    npx ng serve --host localhost.subbrand --port 80 > "$WEB_SUBBRAND_LOG" 2>&1 &
+fi
+WEB_SUBBRAND_PID=$!
+echo "Web server subbrand started (PID: $WEB_SUBBRAND_PID)"
 
 # Start Spindly public site
 echo "Starting Spindly public site..."
@@ -121,6 +135,7 @@ cleanup() {
     [ -n "$NGROK_PID" ] && kill $NGROK_PID 2>/dev/null
     [ -n "$API_PID" ] && kill $API_PID 2>/dev/null
     [ -n "$WEB_PID" ] && kill $WEB_PID 2>/dev/null
+    [ -n "$WEB_SUBBRAND_PID" ] && kill $WEB_SUBBRAND_PID 2>/dev/null
     [ -n "$SPINDLY_PID" ] && kill $SPINDLY_PID 2>/dev/null
     [ -n "$TICKETING_PID" ] && kill $TICKETING_PID 2>/dev/null
     echo "All services stopped."

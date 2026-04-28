@@ -44,7 +44,7 @@ import { environment } from '../../../../environments/environment';
                   class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
                   placeholder="••••••••"
                   autocomplete="new-password">
-                @if (form.get('password')?.value) {
+                @if (passwordValue()) {
                   <div class="mt-2">
                     <div class="flex gap-1">
                       @for (i of [1,2,3,4]; track i) {
@@ -86,6 +86,7 @@ export class ResetPasswordComponent implements OnInit {
   tokenValid = signal(false);
   done = signal(false);
   private resetCode = '';
+  passwordValue = signal('');
 
   constructor(
     private fb: FormBuilder,
@@ -100,6 +101,7 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.form.get('password')!.valueChanges.subscribe(v => this.passwordValue.set(v || ''));
     this.resetCode = this.route.snapshot.queryParamMap.get('code') || '';
     if (!this.resetCode) {
       this.validating.set(false);
@@ -113,7 +115,7 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   passwordStrength = computed(() => {
-    const p = this.form.get('password')?.value || '';
+    const p = this.passwordValue();
     let score = 0;
     if (p.length >= 8) score++;
     if (/[A-Z]/.test(p)) score++;

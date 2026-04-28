@@ -781,10 +781,20 @@ async function completeLoginForUser(
 
 export const organizerSignup = async (req: Request, res: Response) => {
   try {
-    const { full_name, email, password, brand_name, terms_accepted } = req.body;
+    const { full_name, email, password, brand_name, terms_accepted, username } = req.body;
 
     if (!full_name || !email || !password || !brand_name) {
       return res.status(400).json({ error: 'full_name, email, password, and brand_name are required' });
+    }
+
+    // Validate username if provided
+    if (username) {
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+      if (!usernameRegex.test(username)) {
+        return res.status(400).json({
+          error: 'Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens'
+        });
+      }
     }
 
     if (!terms_accepted) {
@@ -795,6 +805,12 @@ export const organizerSignup = async (req: Request, res: Response) => {
     console.log('[organizerSignup] TICKETING_PARENT_BRAND_ID:', process.env.TICKETING_PARENT_BRAND_ID, '→ parsed:', parentBrandId);
     if (!parentBrandId) {
       throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
+    }
+
+    // Load parent brand to inherit default fee settings
+    const parentBrand = await Brand.findByPk(parentBrandId);
+    if (!parentBrand) {
+      throw new Error('Ticketing parent brand not found');
     }
 
     // Check for duplicate email within ticketing brands only (parent + all sub-brands)
@@ -810,18 +826,38 @@ export const organizerSignup = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
 
+    // Check username uniqueness across all ticketing brands (if provided)
+    if (username) {
+      const existingUsername = await User.findOne({
+        where: { username: username.trim(), brand_id: ticketingBrandIds }
+      });
+      if (existingUsername) {
+        return res.status(409).json({ error: 'Username already taken' });
+      }
+    }
+
     // Split full_name into first and last
     const nameParts = full_name.trim().split(' ');
     const first_name = nameParts[0];
     const last_name = nameParts.slice(1).join(' ') || '';
 
-    // Create a new sub-brand under the configured parent
+    // Create a new sub-brand under the configured parent, inheriting default fee settings from parent brand
     const newBrand = await Brand.create({
       brand_name: brand_name.trim(),
       parent_brand: parentBrandId,
       brand_color: '#6366f1',
       feature_music_workspace: false,
-      feature_campaigns_workspace: false,
+      feature_campaigns_workspace: true,
+      feature_sublabels: false,
+      event_transaction_fixed_fee: parentBrand.event_transaction_fixed_fee ?? 0,
+      event_revenue_percentage_fee: parentBrand.event_revenue_percentage_fee ?? 9,
+      event_fee_revenue_type: parentBrand.event_fee_revenue_type ?? 'gross',
+      music_transaction_fixed_fee: parentBrand.music_transaction_fixed_fee ?? 0,
+      music_revenue_percentage_fee: parentBrand.music_revenue_percentage_fee ?? 0,
+      music_fee_revenue_type: parentBrand.music_fee_revenue_type ?? 'net',
+      fundraiser_transaction_fixed_fee: parentBrand.fundraiser_transaction_fixed_fee ?? 0,
+      fundraiser_revenue_percentage_fee: parentBrand.fundraiser_revenue_percentage_fee ?? 0,
+      fundraiser_fee_revenue_type: parentBrand.fundraiser_fee_revenue_type ?? 'net',
     });
 
     // Copy the parent brand's primary domain to the new organizer brand so that
@@ -844,12 +880,13 @@ export const organizerSignup = async (req: Request, res: Response) => {
     // Hash password with bcrypt
     const password_hash = await hashPassword(password);
 
-    // Create admin user for the new brand (no username yet — set in complete-profile step)
+    // Create admin user for the new brand
     const newUser = await User.create({
       email_address: email.toLowerCase().trim(),
       password_hash,
       first_name,
       last_name,
+      username: username ? username.trim() : undefined,
       brand_id: newBrand.id,
       is_admin: true,
       is_system_user: false,
@@ -861,7 +898,31 @@ export const organizerSignup = async (req: Request, res: Response) => {
       throw new Error('JWT_SECRET environment variable is required');
     }
 
-    // Return profile_incomplete so the frontend redirects to the username-setup step
+    // If username was provided, return a full token and go straight to dashboard.
+    // Otherwise return profile_incomplete so the frontend prompts for a username.
+    if (username) {
+      const fullToken = jwt.sign(
+        { userId: newUser.id, username: newUser.username, brandId: newUser.brand_id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      return res.status(201).json({
+        message: 'Account created successfully.',
+        token: fullToken,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email_address: newUser.email_address,
+          first_name: newUser.first_name,
+          last_name: newUser.last_name,
+          is_admin: newUser.is_admin,
+          brand_id: newUser.brand_id,
+          brand_name: newBrand.brand_name,
+          onboarding_completed: false,
+        },
+      });
+    }
+
     const tempToken = jwt.sign(
       { userId: newUser.id, email: newUser.email_address, brandId: newUser.brand_id, profileIncomplete: true },
       process.env.JWT_SECRET,

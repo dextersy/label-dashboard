@@ -61,6 +61,17 @@ import { environment } from '../../../../environments/environment';
                 placeholder="My Events Co.">
             </div>
             <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Username</label>
+              <input type="text" formControlName="username"
+                class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="your_username"
+                autocomplete="username">
+              <p class="mt-1 text-xs font-mono text-white/20">3–30 characters. Letters, numbers, _ and - only.</p>
+              @if (form.get('username')?.invalid && form.get('username')?.touched) {
+                <p class="mt-1 text-xs font-mono text-red-400">3–30 characters, letters, numbers, _ and - only.</p>
+              }
+            </div>
+            <div>
               <label class="block text-xs font-mono text-white/40 uppercase tracking-widest mb-1.5">Password</label>
               <input type="password" formControlName="password"
                 class="w-full px-3 py-2.5 bg-zinc-900 border border-white/15 text-white text-sm placeholder-white/20 focus:outline-none focus:border-yellow-400 transition-colors"
@@ -124,6 +135,8 @@ export class SignupComponent {
       full_name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       brand_name: ['', Validators.required],
+      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30),
+        Validators.pattern(/^[a-zA-Z0-9_-]+$/)]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       terms_accepted: [false, Validators.requiredTrue]
     });
@@ -179,8 +192,11 @@ export class SignupComponent {
     this.auth.signup(this.form.value).subscribe({
       next: (res: any) => {
         this.loading.set(false);
-        // Signup always returns profile_incomplete (username setup required)
-        this.router.navigate(['/app/complete-profile']);
+        if (res.status === 'profile_incomplete') {
+          this.router.navigate(['/app/complete-profile']);
+        } else {
+          this.router.navigate(['/app/dashboard']);
+        }
       },
       error: (err: any) => {
         this.error.set(err.error?.error || 'Signup failed. Please try again.');

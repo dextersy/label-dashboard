@@ -35,7 +35,55 @@ The project consists of three main components:
 - MySQL
 - npm
 
-### Backend API
+### Hosts File Setup
+
+The web server runs on port 80 and serves different brands based on the hostname. You need to add the following entries to your hosts file before running the dev script:
+
+**Windows:** `C:\Windows\System32\drivers\etc\hosts`
+**macOS/Linux:** `/etc/hosts`
+
+```
+127.0.0.1   localhost
+127.0.0.1   localhost.subbrand
+```
+
+Add one entry per brand domain you want to test locally. The main brand uses `localhost` and sub-brands use additional hostnames (e.g. `localhost.subbrand`). You can add as many as needed — just make sure each hostname is registered in the database as a domain for the corresponding brand.
+
+### Development Script (Recommended)
+
+`start_dev.sh` starts all services together with a single command:
+
+```bash
+bash start_dev.sh [optional-ngrok-domain]
+```
+
+This starts:
+| Service | URL |
+|---|---|
+| Backend API | `http://localhost:3000` |
+| Dashboard (main brand) | `http://localhost` |
+| Dashboard (sub-brand) | `http://localhost.subbrand` |
+| Spindly public site | `http://localhost:1234` |
+| Ticketing app organizer portal | `http://localhost:4201` |
+
+Each service writes logs to a separate `.log` file in the project root. Press `Ctrl+C` to stop all services.
+
+**Optional ngrok tunnel** — pass your static ngrok domain to expose the API publicly (needed for payment callbacks):
+
+```bash
+bash start_dev.sh your-domain.ngrok-free.app
+```
+
+Get a free static domain at https://dashboard.ngrok.com/domains, then install ngrok and authenticate:
+
+```bash
+npm install -g ngrok
+ngrok config add-authtoken <your-token>
+```
+
+### Manual Start
+
+#### Backend API
 
 ```bash
 cd src_new/label-dashboard-api
@@ -44,7 +92,7 @@ npm install
 npm run dev                # Start development server with nodemon
 ```
 
-### Frontend
+#### Frontend
 
 ```bash
 cd src_new/label-dashboard-web

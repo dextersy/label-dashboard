@@ -123,6 +123,14 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  updateUserBrandName(brandName: string): void {
+    const user = this.currentUserSubject.value;
+    if (!user) return;
+    const updated = { ...user, brand_name: brandName };
+    this.currentUserSubject.next(updated);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(updated));
+  }
+
   private handleAuthResponse(res: any): void {
     if (res.status === 'profile_incomplete') {
       // Store temp token separately — don't set as main auth token

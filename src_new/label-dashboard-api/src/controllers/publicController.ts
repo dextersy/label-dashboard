@@ -85,7 +85,6 @@ export const getEventForPublic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const eventId = parseInt(id as string, 10);
-    const requestDomain = getRequestDomain(req);
 
     if (isNaN(eventId)) {
       return res.status(400).json({ error: 'Invalid event ID' });
@@ -97,35 +96,16 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         status: 'published'
       },
       include: [
-        { 
-          model: Brand, 
+        {
+          model: Brand,
           as: 'brand',
-          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
-          include: [{
-            model: Domain,
-            as: 'domains',
-            attributes: ['domain_name']
-          }]
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
         }
       ]
     });
 
-
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Validate that the event belongs to the brand associated with the current domain
-    if (event.brand && event.brand.domains && requestDomain) {
-      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = eventBrandDomains.includes(requestDomain);
-
-      if (!isDomainValid) {
-        return res.status(403).json({ error: 'Invalid domain' });
-      }
-    } else {
-      // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(403).json({ error: 'Can\'t validate domain : ' + requestDomain });
     }
 
     // Get ticket types with availability information
@@ -177,9 +157,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
 
     // Calculate remaining tickets if max_tickets is set
+    const totalSold = await getTotalTicketsSold(eventId);
     let remainingTickets = null;
     if (event.max_tickets && event.max_tickets > 0) {
-      const totalSold = await getTotalTicketsSold(eventId);
       remainingTickets = event.max_tickets - totalSold;
     }
 
@@ -236,6 +216,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         venue_phone: event.venue_phone,
         venue_website: event.venue_website,
         venue_maps_url: event.venue_maps_url,
+        tickets_sold: totalSold,
         walk_in_enabled: event.walk_in_enabled || false,
         walkInTypes,
         brand: event.brand ? {
@@ -533,14 +514,9 @@ export const buyTicket = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: { id: eventIdNum },
       include: [
-        { 
-          model: Brand, 
-          as: 'brand',
-          include: [{
-            model: Domain,
-            as: 'domains',
-            attributes: ['domain_name']
-          }]
+        {
+          model: Brand,
+          as: 'brand'
         },
         {
           model: TicketType,
@@ -555,17 +531,25 @@ export const buyTicket = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Validate that the event belongs to the brand associated with the current domain
-    if (event.brand && event.brand.domains && requestDomain) {
-      const eventBrandDomains = event.brand.domains.map((d: any) => d.domain_name);
-      const isDomainValid = eventBrandDomains.includes(requestDomain);
-      
-      if (!isDomainValid) {
-        return res.status(404).json({ error: 'Invalid domain' });
+    // Validate the request domain belongs to the event's brand hierarchy (walk up to root brand)
+    if (requestDomain) {
+      let brandId: number | null = event.brand_id;
+      let domainValid = false;
+      while (brandId !== null) {
+        const brand = await Brand.findOne({
+          where: { id: brandId },
+          include: [{ model: Domain, as: 'domains', attributes: ['domain_name'] }]
+        });
+        if (!brand) break;
+        if (brand.domains?.some((d: any) => d.domain_name === requestDomain)) {
+          domainValid = true;
+          break;
+        }
+        brandId = brand.parent_brand ?? null;
       }
-    } else {
-      // Fail securely: if we cannot validate brand/domain, deny access
-      return res.status(404).json({ error: 'Invalid domain' });
+      if (!domainValid) {
+        return res.status(403).json({ error: 'Invalid domain' });
+      }
     }
 
     // Check if event is closed (fall back to event start if no close_time set)
@@ -1256,18 +1240,31 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     if (!brandDomain) {
       return res.status(404).send('Event not found');
     }
-    const frontendUrl = `https://${brandDomain}/public/tickets/buy/${event.id}`;
-
-    // Always serve the SEO page with meta tags for all visitors.
-    // Crawlers (Linktree, Facebook, Twitter, etc.) read the OG tags.
-    // Real browsers get redirected via <meta http-equiv="refresh"> and JavaScript.
-    // This avoids needing to maintain a list of crawler user-agent strings.
+    // Support different URL patterns: the ticketing app uses /events/:id, the
+    // dashboard uses /public/tickets/buy/:id. Callers pass ?redirectPath=events
+    // to get the ticketing app URL.
+    // For the ticketing app, the .htaccess also passes ?host= so we use the
+    // actual frontend hostname rather than the brand's DB domain (which may be
+    // an API domain and not the frontend URL).
+    const isTicketingApp = req.query.redirectPath === 'events';
+    const redirectPath = isTicketingApp ? 'events' : 'public/tickets/buy';
+    const frontendHost = isTicketingApp && process.env.TICKETING_FRONTEND_URL
+      ? process.env.TICKETING_FRONTEND_URL as string
+      : `https://` + brandDomain;
+    const frontendUrl = `${frontendHost}/${redirectPath}/${event.id}`;
 
     // Generate meta tags for social sharing
-    const title = `Buy tickets to ${event.title}`;
-    const description = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
-    const image = event.poster_url || '';
     const siteName = event.brand?.brand_name || 'Melt Records';
+    const title = isTicketingApp
+      ? `${event.title}${siteName ? ' by ' + siteName : ''} | Your Scene`
+      : `Buy tickets to ${event.title}`;
+    // Strip HTML tags from description (event descriptions may contain HTML markup)
+    const rawDescription = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
+    const description = rawDescription.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, (e) => {
+      const entities: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" };
+      return entities[e] || e;
+    }).trim();
+    const image = event.poster_url || '';
 
     // Get display price from ticket types
     const priceDisplay = getEventDisplayPriceSync(event);
@@ -1328,15 +1325,12 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
 
-  <!-- Meta refresh for browsers that don't run JavaScript -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
 
-  <!-- Auto-redirect for regular browsers -->
+  <!-- Auto-redirect for regular browsers (crawlers don't execute JS) -->
   <script>
     (function() {
       window.location.replace('${frontendUrl}');
@@ -1532,13 +1526,24 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
 
     const mainBrand = domainRecord.brand;
 
-    // Get all child brands (sublabels)
-    const childBrands = await Brand.findAll({
-      where: { parent_brand: mainBrand.id }
-    });
+    // Get all descendant brands (sublabels) recursively
+    const visitedBrandIds = new Set<number>([mainBrand.id]);
+    const allBrands = [mainBrand];
+    const queue = [mainBrand.id];
+    while (queue.length > 0) {
+      const parentIds = queue.splice(0, queue.length);
+      const children = await Brand.findAll({
+        where: { parent_brand: parentIds }
+      });
+      for (const child of children) {
+        if (!visitedBrandIds.has(child.id)) {
+          visitedBrandIds.add(child.id);
+          allBrands.push(child);
+          queue.push(child.id);
+        }
+      }
+    }
 
-    // Combine main brand and child brands
-    const allBrands = [mainBrand, ...childBrands];
     const brandIds = allBrands.map(brand => brand.id);
 
     // Get all events for these brands
@@ -1564,6 +1569,27 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
       order: [['date_and_time', 'ASC']]
     });
 
+    // Get ticket counts for all events in one query
+    const eventIds = events.map(e => e.id);
+    const ticketCounts: Record<number, number> = {};
+    if (eventIds.length > 0) {
+      const countRows = await Ticket.findAll({
+        attributes: [
+          'event_id',
+          [sequelize.fn('SUM', sequelize.col('number_of_entries')), 'total']
+        ],
+        where: {
+          event_id: { [Op.in]: eventIds },
+          status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] }
+        },
+        group: ['event_id'],
+        raw: true
+      }) as any[];
+      for (const row of countRows) {
+        ticketCounts[row.event_id] = parseInt(row.total, 10) || 0;
+      }
+    }
+
     // Group events by brand
     const brandEvents = allBrands.map(brand => {
       const brandEventsFiltered = events
@@ -1580,7 +1606,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
             ticket_price_display: priceDisplay.displayText,
             ticket_naming: event.ticket_naming,
             buy_shortlink: event.buy_shortlink,
-            is_closed: new Date() > new Date(event.close_time || event.date_and_time)
+            is_closed: new Date() > new Date(event.close_time || event.date_and_time),
+            tickets_sold: ticketCounts[event.id] || 0
           };
         });
 
@@ -1626,13 +1653,24 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
 
     const mainBrand = domainRecord.brand;
 
-    // Get all child brands (sublabels)
-    const childBrands = await Brand.findAll({
-      where: { parent_brand: mainBrand.id }
-    });
+    // Get all descendant brands (sublabels) recursively
+    const visitedBrandIds2 = new Set<number>([mainBrand.id]);
+    const allBrands = [mainBrand];
+    const queue = [mainBrand.id];
+    while (queue.length > 0) {
+      const parentIds = queue.splice(0, queue.length);
+      const children = await Brand.findAll({
+        where: { parent_brand: parentIds }
+      });
+      for (const child of children) {
+        if (!visitedBrandIds2.has(child.id)) {
+          visitedBrandIds2.add(child.id);
+          allBrands.push(child);
+          queue.push(child.id);
+        }
+      }
+    }
 
-    // Combine main brand and child brands
-    const allBrands = [mainBrand, ...childBrands];
     const brandIds = allBrands.map(brand => brand.id);
 
     // Get latest events for SEO
@@ -1749,21 +1787,18 @@ export const generateEventsListSEOPage = async (req: Request, res: Response) => 
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
-  
-  <!-- Meta refresh backup for non-crawler users -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-  
+
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
-  
-  <!-- Auto-redirect for regular users (non-crawlers) -->
+
+  <!-- Auto-redirect for regular users (crawlers don't execute JS) -->
   <script>
     (function() {
       const userAgent = navigator.userAgent.toLowerCase();
       const isCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|applebot|googlebot|bingbot|linktreebot|linktree/i.test(userAgent);
-      
+
       if (!isCrawler) {
         window.location.replace('${frontendUrl}');
       }
@@ -2284,15 +2319,12 @@ export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${frontendUrl}">
-  
-  <!-- Meta refresh backup for non-crawler users -->
-  <meta http-equiv="refresh" content="0; url=${frontendUrl}">
-  
+
   <!-- Structured Data -->
   <script type="application/ld+json">
 ${JSON.stringify(structuredData, null, 4)}
   </script>
-  
+
   <link rel="icon" type="image/x-icon" href="${artist.brand?.favicon_url || '/favicon.ico'}">
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, ${artist.brand?.brand_color || '#667eea'} 0%, #ffffff 100%); min-height: 100vh;">

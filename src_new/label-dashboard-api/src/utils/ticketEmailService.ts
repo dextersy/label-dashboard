@@ -95,6 +95,17 @@ export const sendTicketEmail = async (
       timeZone: 'Asia/Manila'
     });
 
+    // Generate Google Calendar "Add to Calendar" link
+    const formatGoogleCalendarDate = (date: Date): string => {
+      return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    };
+    const calendarStart = formatGoogleCalendarDate(eventDate);
+    const calendarEnd = formatGoogleCalendarDate(new Date(eventDate.getTime() + 2 * 60 * 60 * 1000));
+    const calendarLocation = event.venue_address
+      ? `${event.venue}, ${event.venue_address}`
+      : event.venue;
+    const addToCalendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calendarStart}/${calendarEnd}&location=${encodeURIComponent(calendarLocation)}`;
+
     // Generate Google Maps link only if specific location data is available
     let mapsLink = '';
     if (event.venue_maps_url && event.venue_maps_url.trim()) {
@@ -117,6 +128,7 @@ export const sendTicketEmail = async (
       qr_code: qrCodeUrl,
       ticket_code: ticket.ticket_code,
       no_of_entries: ticket.number_of_entries,
+      add_to_calendar_link: addToCalendarLink,
       rsvp_link: event.rsvp_link || '',
       brand_name: brand.brand_name || 'Melt Records',
       ticket_type_name: ticket.ticket_type?.name || 'Regular'

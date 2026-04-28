@@ -21,6 +21,9 @@ TICKETING_BUILD_COMMAND="npm run build"
 # Ticketing App Configuration
 # Domain where public show listings are served (used by the organizer portal to generate links)
 TICKETING_APP_PUBLIC_LISTING_DOMAIN="your-listing-domain.com"
+# API base URL used in the ticketing app .htaccess for social media crawler SEO redirects
+# Must match the apiUrl in environment.prod.ts (without trailing slash)
+TICKETING_API_URL="https://your-api-server.com:3001/api"
 
 # PM2 Configuration
 PM2_APP_NAME="app"
