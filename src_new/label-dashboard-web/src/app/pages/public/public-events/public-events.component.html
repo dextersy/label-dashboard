@@ -27,8 +27,8 @@
 
     <!-- All Events -->
     <div class="container">
-      <div class="row g-4 tw-grid tw-grid-cols-1">
-        <div *ngFor="let event of getAllEventsSorted()" class="col-12 col-md-6 col-lg-4 tw-col-span-12 md:tw-col-span-6 lg:tw-col-span-4">
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+        <div *ngFor="let event of getAllEventsSorted()" class="tw-col-span-12 md:tw-col-span-6 lg:tw-col-span-4">
           <div class="event-tile tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-h-full shadow-sm" [class.event-closed]="event.is_closed">
             <!-- Event Poster -->
             <div class="poster-container">
@@ -44,7 +44,7 @@
 
             <!-- Event Details -->
             <div class="tw-px-card-pad tw-pb-card-pad">
-              <h5 class="card-title event-title">{{ event.title }}</h5>
+              <h3 class="card-title event-title">{{ event.title }}</h3>
               <p class="event-brand tw-mb-3">By {{ event.brandName }}</p>
               
               <div class="event-details tw-mb-3">

@@ -67,14 +67,14 @@
       <div class="tw-flex tw-justify-center tw-mb-4" *ngIf="isPinValidated && walkInEnabled">
         <div class="btn-group view-toggle" role="group" aria-label="Mode toggle">
           <button type="button"
-                  class=""
+                  
                   [class.active]="activeMode === 'scan'"
                   (click)="switchMode('scan')"
                   [attr.aria-pressed]="activeMode === 'scan'">
             <i class="fa fa-qrcode tw-mr-2"></i>Scan Tickets
           </button>
           <button type="button"
-                  class=""
+                  
                   [class.active]="activeMode === 'walk-in'"
                   (click)="switchMode('walk-in')"
                   [attr.aria-pressed]="activeMode === 'walk-in'">

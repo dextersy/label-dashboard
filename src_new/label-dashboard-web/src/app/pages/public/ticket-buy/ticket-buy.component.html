@@ -57,7 +57,7 @@
         <!-- Event info -->
         <div class="event-info-section">
           <div *ngIf="canBuyTickets()">
-            <h5 class="tw-mb-0">Get tickets to</h5>
+            <h3 class="tw-mb-0">Get tickets to</h3>
             <h1 style="margin-top: 0 !important;"><strong>{{ event.title }}</strong></h1>
 
             <div class="event-details tw-mt-3 tw-mb-3 tw-p-3" style="background-color: #f8f9fa; border-radius: 8px;">
@@ -291,10 +291,10 @@
 
             <!-- Payment Calculation -->
             <div id="div_paymentCalculation">
-              <h5 *ngIf="totalAmount > 0">Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h5>
-              <h5 *ngIf="totalAmount === 0" class="tw-text-success">
+              <h3 *ngIf="totalAmount > 0">Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h3>
+              <h3 *ngIf="totalAmount === 0" class="tw-text-success">
                 <i class="fas fa-check-circle tw-mr-2"></i><b>Admission is FREE</b>
-              </h5>
+              </h3>
             </div>
 
             <!-- Privacy Consent -->
