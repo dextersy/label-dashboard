@@ -1,5 +1,5 @@
-<div class="row tw-items-center tw-grid tw-grid-cols-1" *ngIf="summary">
-  <div class="col-md-4 md:tw-col-span-4">
+<div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="summary">
+  <div class="md:tw-col-span-4">
     <div class="current-balance-section tw-p-4 tw-text-center">
       <h2 class="balance-title">Current Balance</h2>
       <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
@@ -12,7 +12,7 @@
       </button>
     </div>
   </div>
-  <div class="col-md-8 md:tw-col-span-8">
+  <div class="md:tw-col-span-8">
     <div class="financial-summary-card">
       <div class="financial-summary-item" (click)="viewEarningsDetails.emit()">
         <span class="financial-item-label">Total Earnings</span>
@@ -33,21 +33,21 @@
   </div>
 </div>
 
-<div class="row tw-mt-4 tw-grid tw-grid-cols-1">
-  <div class="col-md-6 md:tw-col-span-6">
+<div class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-6">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h4>Latest Earnings</h4>
+        <h3>Latest Earnings</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
       </div>
     </div>
   </div>
-  <div class="col-md-6 md:tw-col-span-6">
+  <div class="md:tw-col-span-6">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h4>Latest Royalties</h4>
+        <h3>Latest Royalties</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>

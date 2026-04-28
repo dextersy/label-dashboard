@@ -1,5 +1,5 @@
-<div class="row tw-grid tw-grid-cols-1">
-  <div class="col-md-8 md:tw-col-span-8">
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-8">
     <app-payments-table 
       [payments]="payments"
       [pagination]="paymentsPagination"
@@ -12,10 +12,10 @@
     </app-payments-table>
   </div>
   
-  <div class="col-md-4 md:tw-col-span-4">
+  <div class="md:tw-col-span-4">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5>Payment Methods</h5>
+        <h3>Payment Methods</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <div *ngFor="let method of paymentMethods" class="payment-method-item">
@@ -93,7 +93,7 @@
     
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mt-3" *ngIf="payoutSettings">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5>Payout Settings</h5>
+        <h3>Payout Settings</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <form (ngSubmit)="onUpdatePayoutSettings()">

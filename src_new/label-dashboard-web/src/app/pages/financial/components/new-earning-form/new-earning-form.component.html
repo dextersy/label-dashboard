@@ -1,13 +1,13 @@
-<div class="row tw-grid tw-grid-cols-1">
-  <div class="col-md-8 md:tw-col-span-8">
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-8">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5>Add New Earning</h5>
+        <h3>Add New Earning</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <form (ngSubmit)="onSubmitEarning()">
-          <div class="row tw-grid tw-grid-cols-1">
-            <div class="col-md-6 md:tw-col-span-6">
+          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+            <div class="md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label>Release</label>
                 <select class="tw-input" [(ngModel)]="newEarningForm.release_id" name="release_id" required>
@@ -18,7 +18,7 @@
                 </select>
               </div>
             </div>
-            <div class="col-md-6 md:tw-col-span-6">
+            <div class="md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label>Earning Type</label>
                 <select class="tw-input" [(ngModel)]="newEarningForm.type" name="type" required>
@@ -31,14 +31,14 @@
             </div>
           </div>
 
-          <div class="row tw-grid tw-grid-cols-1">
-            <div class="col-md-6 md:tw-col-span-6">
+          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+            <div class="md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label>Date Recorded</label>
                 <input type="date" class="tw-input" [(ngModel)]="newEarningForm.date_recorded" name="date_recorded" required>
               </div>
             </div>
-            <div class="col-md-6 md:tw-col-span-6">
+            <div class="md:tw-col-span-6">
               <div class="tw-mb-5">
                 <label>Amount (PHP)</label>
                 <input type="number" class="tw-input" [(ngModel)]="newEarningForm.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>

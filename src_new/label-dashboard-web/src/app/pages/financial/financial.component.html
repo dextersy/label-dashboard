@@ -2,8 +2,8 @@
   <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
     <!-- Main Content -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="selectedArtist">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="selectedArtist">
+      <div class="tw-col-span-12">
         
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
         <!-- Summary Tab -->
@@ -133,8 +133,8 @@
     </div>
     
     <!-- No Artist Selected -->
-    <div class="row tw-grid tw-grid-cols-1" *ngIf="!selectedArtist">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!selectedArtist">
+      <div class="tw-col-span-12">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <i class="fas fa-money-bill fa-4x tw-mb-3 tw-text-muted"></i>
