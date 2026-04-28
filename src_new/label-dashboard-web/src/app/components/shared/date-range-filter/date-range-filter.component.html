@@ -2,8 +2,8 @@
 <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 date-range-filter" [class.compact]="compact">
   <div class="tw-px-card-pad tw-pb-card-pad" [class.tw-py-2]="compact">
     <!-- Collapsed Header - Always visible -->
-    <div class="row tw-items-center date-range-header tw-grid tw-grid-cols-1">
-      <div class="col-lg-8 col-md-8 lg:tw-col-span-8 md:tw-col-span-8" [class.col-8]="compact">
+    <div class="tw-items-center date-range-header tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+      <div class="lg:tw-col-span-8 md:tw-col-span-8" [class.col-8]="compact">
         <div class="tw-flex tw-items-center">
           <button class="btn-ghost btn-sm text-decoration-none tw-p-0 tw-mr-2"
                   (click)="toggleExpanded()"
@@ -28,7 +28,7 @@
       </div>
       
       <!-- Header Actions -->
-      <div class="col-lg-4 col-md-4 lg:tw-col-span-4 md:tw-col-span-4" [class.col-4]="compact">
+      <div class="lg:tw-col-span-4 md:tw-col-span-4" [class.col-4]="compact">
         <div class="tw-flex tw-justify-end tw-items-center">
           <div class="form-check form-switch tw-mr-3" *ngIf="showComparison && !compact">
             <input class="form-check-input" 
@@ -57,14 +57,14 @@
     </div>
 
     <!-- Expanded Content - Show/hide based on isExpanded -->
-    <div class="row tw-items-center tw-mt-3 expanded-content tw-grid tw-grid-cols-1" *ngIf="isExpanded">
+    <div class="tw-items-center tw-mt-3 expanded-content tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isExpanded">
       <!-- Date Range Presets -->
-      <div class="col-12 tw-col-span-12">
+      <div class="tw-col-span-12">
         <div class="tw-flex tw-flex-wrap tw-items-center tw-mb-3">
           <span class="tw-mr-3 tw-mb-2 tw-text-muted" [class.small]="compact">Quick Select:</span>
           <div class="btn-group tw-mr-3 tw-mb-2" role="group">
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'today'"
                     [class.btn-secondary]="selectedPreset !== 'today'"
@@ -72,7 +72,7 @@
               Today
             </button>
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'yesterday'"
                     [class.btn-secondary]="selectedPreset !== 'yesterday'"
@@ -80,7 +80,7 @@
               Yesterday
             </button>
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'last7days'"
                     [class.btn-secondary]="selectedPreset !== 'last7days'"
@@ -88,7 +88,7 @@
               Last 7 days
             </button>
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'last30days'"
                     [class.btn-secondary]="selectedPreset !== 'last30days'"
@@ -96,7 +96,7 @@
               Last 30 days
             </button>
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'thismonth'"
                     [class.btn-secondary]="selectedPreset !== 'thismonth'"
@@ -104,7 +104,7 @@
               This month
             </button>
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'lastmonth'"
                     [class.btn-secondary]="selectedPreset !== 'lastmonth'"
@@ -112,7 +112,7 @@
               Last month
             </button>
             <button type="button" 
-                    class="" 
+                     
                     [class.btn-sm]="compact"
                     [class.btn-primary]="selectedPreset === 'alltime'"
                     [class.btn-secondary]="selectedPreset !== 'alltime'"
@@ -156,8 +156,8 @@
     </div>
 
     <!-- Last Updated Display - Only show when not loading and not expanded -->
-    <div class="row tw-mt-2 tw-grid tw-grid-cols-1" *ngIf="!loading && !isExpanded && !compact">
-      <div class="col-12 tw-col-span-12">
+    <div class="tw-mt-2 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!loading && !isExpanded && !compact">
+      <div class="tw-col-span-12">
         <small class="tw-flex tw-justify-end tw-text-muted">
           Last updated: {{ lastUpdated | date:'medium' }}
         </small>

@@ -70,7 +70,7 @@
       <div *ngIf="documentType === 'office'" class="office-viewer">
         <div class="office-preview">
           <i [class]="'fa fa-5x ' + getFileIcon()"></i>
-          <h4 class="tw-mt-3">{{ document?.title }}</h4>
+          <h3 class="tw-mt-3">{{ document?.title }}</h3>
           <p class="tw-text-muted">Office documents cannot be previewed directly.</p>
           <div class="tw-mt-3">
             <button 
@@ -107,7 +107,7 @@
       <div *ngIf="documentType === 'unsupported'" class="unsupported-viewer">
         <div class="unsupported-preview">
           <i class="fa fa-file fa-5x tw-text-muted"></i>
-          <h4 class="tw-mt-3">{{ document?.title }}</h4>
+          <h3 class="tw-mt-3">{{ document?.title }}</h3>
           <p class="tw-text-muted">This file type cannot be previewed.</p>
           <div class="tw-mt-3">
             <button 

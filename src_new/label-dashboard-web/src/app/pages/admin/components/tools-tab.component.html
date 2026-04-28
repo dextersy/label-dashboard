@@ -1,8 +1,8 @@
 <h3>Administrative Tools</h3>
 
 <!-- Email Logs Section -->
-<div class="row tw-grid tw-grid-cols-1">
-  <div class="col-12 tw-col-span-12">
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="tw-col-span-12">
     <app-paginated-table
       title="Email Logs"
       [data]="emailLogs"
@@ -30,21 +30,21 @@
         </button>
       </div>
       <div class="modal-body" *ngIf="selectedEmail">
-        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-          <div class="col-sm-3"><strong>Timestamp:</strong></div>
-          <div class="col-sm-9">{{ formatDate(selectedEmail.timestamp) }}</div>
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div ><strong>Timestamp:</strong></div>
+          <div >{{ formatDate(selectedEmail.timestamp) }}</div>
         </div>
-        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-          <div class="col-sm-3"><strong>Recipients:</strong></div>
-          <div class="col-sm-9">{{ selectedEmail.recipients }}</div>
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div ><strong>Recipients:</strong></div>
+          <div >{{ selectedEmail.recipients }}</div>
         </div>
-        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-          <div class="col-sm-3"><strong>Subject:</strong></div>
-          <div class="col-sm-9">{{ selectedEmail.subject }}</div>
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div ><strong>Subject:</strong></div>
+          <div >{{ selectedEmail.subject }}</div>
         </div>
-        <div class="row tw-mb-3 tw-grid tw-grid-cols-1">
-          <div class="col-sm-3"><strong>Result:</strong></div>
-          <div class="col-sm-9">
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div ><strong>Result:</strong></div>
+          <div >
             <span class="badge" 
                   [class.bg-success]="selectedEmail.result === 'Success'"
                   [class.bg-danger]="selectedEmail.result === 'Failed'">
@@ -52,9 +52,9 @@
             </span>
           </div>
         </div>
-        <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-sm-3"><strong>Content:</strong></div>
-          <div class="col-sm-9">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div ><strong>Content:</strong></div>
+          <div >
             <div class="border tw-p-3" style="max-height: 400px; overflow-y: auto;">
               <div [innerHTML]="selectedEmail.body"></div>
             </div>

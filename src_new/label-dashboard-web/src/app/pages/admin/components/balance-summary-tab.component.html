@@ -1,6 +1,6 @@
 <!-- Balance Summary Table -->
-<div class="row tw-grid tw-grid-cols-1">
-  <div class="col-md-12 md:tw-col-span-12">
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-12">
     <app-paginated-table 
       title="Balance Summary"
       [data]="artistBalances"
@@ -76,11 +76,11 @@
 </div>
 
 <!-- Summary Cards -->
-<div class="row tw-mt-4 tw-grid tw-grid-cols-1">
-  <div class="col-md-4 md:tw-col-span-4">
+<div class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-4">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5 class="card-title tw-mb-0">Total Balance</h5>
+        <h3 class="card-title tw-mb-0">Total Balance</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
         <h3><strong [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_balance || 0) }}</strong></h3>
@@ -88,10 +88,10 @@
     </div>
   </div>
 
-  <div class="col-md-4 md:tw-col-span-4">
+  <div class="md:tw-col-span-4">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5 class="card-title tw-mb-0">Total Due For Payment</h5>
+        <h3 class="card-title tw-mb-0">Total Due For Payment</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
         <h3><strong [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}</strong></h3>
@@ -99,12 +99,12 @@
     </div>
   </div>
 
-  <div class="col-md-4 md:tw-col-span-4">
+  <div class="md:tw-col-span-4">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5 class="card-title tw-mb-0">Ready to Pay 
+        <h3 class="card-title tw-mb-0">Ready to Pay 
           <i class="fas fa-info-circle" title="Due for payment and has bank account"></i>
-        </h5>
+        </h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
         <h3><strong [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}</strong></h3>
