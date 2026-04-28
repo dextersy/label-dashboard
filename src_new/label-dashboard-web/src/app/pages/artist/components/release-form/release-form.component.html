@@ -1,9 +1,10 @@
 <form [formGroup]="releaseForm" (ngSubmit)="onSubmit()" (keydown.escape)="$event.stopPropagation()">
-  <!-- Basic Release Information -->
-  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-    <div class="md:tw-col-span-6">
-      <div class="tw-mb-5">
-        <label for="title">Title <span class="tw-text-danger">*</span></label>
+  <div class="tw-space-y-4">
+
+    <!-- Title + Catalog -->
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div>
+        <label for="title" class="tw-label">Title <span class="tw-text-danger">*</span></label>
         <input type="text"
                class="tw-input"
                id="title"
@@ -11,291 +12,219 @@
                [class.is-invalid]="isFieldInvalid('title')"
                [readonly]="isRestrictedMode()"
                placeholder="Enter release title">
-        <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">
-          {{ getFieldError('title') }}
-        </div>
+        <div *ngIf="isFieldInvalid('title')" class="invalid-feedback">{{ getFieldError('title') }}</div>
       </div>
-    </div>
-    <div class="md:tw-col-span-6" *ngIf="isAdmin">
-      <div class="tw-mb-5">
-        <label for="catalogNo">Catalog Number <span class="tw-text-danger">*</span></label>
+      <div *ngIf="isAdmin">
+        <label for="catalogNo" class="tw-label">Catalog Number <span class="tw-text-danger">*</span></label>
         <input type="text"
                class="tw-input"
                id="catalogNo"
                formControlName="catalog_no"
                [class.is-invalid]="isFieldInvalid('catalog_no')"
                placeholder="e.g. MELT001">
-        <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text tw-text-muted">
-          Default is auto-generated
-        </small>
-        <div *ngIf="isFieldInvalid('catalog_no')" class="invalid-feedback">
-          {{ getFieldError('catalog_no') }}
-        </div>
+        <small *ngIf="generateCatalogNumber && !editingRelease" class="tw-mt-1 tw-text-xs tw-text-muted tw-block">Default is auto-generated</small>
+        <div *ngIf="isFieldInvalid('catalog_no')" class="invalid-feedback">{{ getFieldError('catalog_no') }}</div>
       </div>
     </div>
-  </div>
 
-  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-    <div class="md:tw-col-span-6" *ngIf="isAdmin">
-      <div class="tw-mb-5">
-        <label for="upc">UPC Code</label>
-        <input type="text"
-               class="tw-input"
-               id="upc"
-               formControlName="UPC"
-               placeholder="Universal Product Code">
+    <!-- UPC + Release Date -->
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div *ngIf="isAdmin">
+        <label for="upc" class="tw-label">UPC Code</label>
+        <input type="text" class="tw-input" id="upc" formControlName="UPC" placeholder="Universal Product Code">
       </div>
-    </div>
-    <div class="md:tw-col-span-6">
-      <div class="tw-mb-5">
-        <label for="releaseDate">Release Date <span class="tw-text-danger">*</span></label>
+      <div>
+        <label for="releaseDate" class="tw-label">Release Date <span class="tw-text-danger">*</span></label>
         <input type="date"
                class="tw-input"
                id="releaseDate"
                formControlName="release_date"
                [class.is-invalid]="isFieldInvalid('release_date')"
                [readonly]="isRestrictedMode()">
-        <div *ngIf="isFieldInvalid('release_date')" class="invalid-feedback">
-          {{ getFieldError('release_date') }}
+        <div *ngIf="isFieldInvalid('release_date')" class="invalid-feedback">{{ getFieldError('release_date') }}</div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div *ngIf="isAdmin && showStatus">
+      <label for="status" class="tw-label">Status</label>
+      <select class="tw-input" id="status" formControlName="status" style="max-width: 240px;">
+        <option value="Draft">Draft</option>
+        <option value="For Submission">For Submission</option>
+        <option value="Pending">Pending</option>
+        <option value="Live">Live</option>
+        <option value="Taken Down">Taken Down</option>
+      </select>
+    </div>
+
+    <!-- Cover Art -->
+    <div>
+      <label for="coverArt" class="tw-label">Cover Art</label>
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-items-start">
+        <div>
+          <input type="file"
+                 class="tw-block tw-w-full tw-text-sm tw-text-gray-500
+                        file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
+                        file:tw-rounded file:tw-border-0
+                        file:tw-text-sm file:tw-font-medium
+                        file:tw-bg-gray-100 file:tw-text-gray-700
+                        hover:file:tw-bg-gray-200 tw-cursor-pointer"
+                 id="coverArt"
+                 accept="image/*"
+                 (change)="onCoverArtSelected($event)"
+                 (click)="$event.stopPropagation()"
+                 (cancel)="$event.stopPropagation()"
+                 [disabled]="isRestrictedMode()">
+          <p class="tw-mt-1 tw-text-xs tw-text-muted">
+            JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG.' }}
+          </p>
+        </div>
+        <div *ngIf="coverArtPreview">
+          <img [src]="coverArtPreview" alt="Cover art preview" class="tw-w-24 tw-h-24 tw-object-cover tw-rounded tw-border tw-border-gray-200">
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isAdmin && showStatus">
-    <div class="md:tw-col-span-6">
-      <div class="tw-mb-5">
-        <label for="status">Status</label>
-        <select class="tw-input" id="status" formControlName="status">
-          <option value="Draft">Draft</option>
-          <option value="For Submission">For Submission</option>
-          <option value="Pending">Pending</option>
-          <option value="Live">Live</option>
-          <option value="Taken Down">Taken Down</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cover Art -->
-  <div class="tw-mb-5">
-    <label for="coverArt">Cover Art</label>
-    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-      <div class="md:tw-col-span-6">
-        <input type="file"
-               class="form-control-file"
-               id="coverArt"
-               accept="image/*"
-               (change)="onCoverArtSelected($event)"
-               (click)="$event.stopPropagation()"
-               (cancel)="$event.stopPropagation()"
-               [disabled]="isRestrictedMode()">
-        <small class="form-text tw-text-muted">
-          JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
-        </small>
-      </div>
-      <div class="md:tw-col-span-6" *ngIf="coverArtPreview">
-        <div class="cover-art-preview">
-          <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Description and Liner Notes -->
-  <div class="tw-mb-5">
-    <label for="description">Tell us about this release</label>
-    <small class="form-text tw-mb-2 tw-text-muted">
-      Give us a quick statement about the release, indicating what the song is about, the musical approach,
-      production stories, and any future plans related to the song. We will use this to craft our pitch to
-      playlists as well as for our press releases. Feel free to give us a bullet list or just a rough statement.
-    </small>
-    <quill-editor
-      id="description"
-      formControlName="description"
-      [modules]="quillConfig"
-      (onContentChanged)="onDescriptionContentChanged($event)"
-      placeholder="Description of the release, musical approach, stories...">
-    </quill-editor>
-    <small class="form-text" [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit" [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
-      {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
-    </small>
-  </div>
-
-  <div class="tw-mb-5">
-    <label for="linerNotes">Liner Notes</label>
-    <small class="form-text tw-mb-2 tw-text-muted">
-      Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
-      It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
-      <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
-    </small>
-    <quill-editor
-      id="linerNotes"
-      formControlName="liner_notes"
-      [modules]="quillConfig"
-      (onContentChanged)="onLinerNotesContentChanged($event)"
-      placeholder="Liner notes, acknowledgments, credits...">
-    </quill-editor>
-    <small class="form-text" [class.tw-text-danger]="linerNotesCharCount > linerNotesCharLimit" [class.tw-text-muted]="linerNotesCharCount <= linerNotesCharLimit">
-      {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters
-    </small>
-  </div>
-
-  <!-- Royalty Artists (Admin Only) -->
-  <div *ngIf="isAdmin" class="artist-royalty-section" formArrayName="royaltyArtists">
-    <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
-      <h3 class="tw-mb-0">Artist Royalty Splits</h3>
-      <button type="button" 
-              class="btn-sm btn-secondary" 
-              (click)="addRoyaltyArtist()"
-              [disabled]="loadingArtists">
-        <i class="fa fa-plus"></i> Add Artist
-      </button>
+    <!-- Description -->
+    <div>
+      <label for="description" class="tw-label">Tell us about this release</label>
+      <p class="tw-mb-2 tw-text-xs tw-text-muted">
+        Give us a quick statement about the release, indicating what the song is about, the musical approach,
+        production stories, and any future plans related to the song. We will use this to craft our pitch to
+        playlists as well as for our press releases.
+      </p>
+      <quill-editor
+        id="description"
+        formControlName="description"
+        [modules]="quillConfig"
+        (onContentChanged)="onDescriptionContentChanged($event)"
+        placeholder="Description of the release, musical approach, stories...">
+      </quill-editor>
+      <p class="tw-mt-1 tw-text-xs"
+         [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit"
+         [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
+        {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
+      </p>
     </div>
 
-    <div *ngIf="loadingArtists" class="tw-py-3 tw-text-center">
-      <div class="loading-dots">
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
+    <!-- Liner Notes -->
+    <div>
+      <label for="linerNotes" class="tw-label">Liner Notes</label>
+      <p class="tw-mb-2 tw-text-xs tw-text-muted">
+        Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
+        It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
+        <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
+      </p>
+      <quill-editor
+        id="linerNotes"
+        formControlName="liner_notes"
+        [modules]="quillConfig"
+        (onContentChanged)="onLinerNotesContentChanged($event)"
+        placeholder="Liner notes, acknowledgments, credits...">
+      </quill-editor>
+      <p class="tw-mt-1 tw-text-xs"
+         [class.tw-text-danger]="linerNotesCharCount > linerNotesCharLimit"
+         [class.tw-text-muted]="linerNotesCharCount <= linerNotesCharLimit">
+        {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters
+      </p>
     </div>
 
-    <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">
-      <div *ngFor="let artistControl of royaltyArtists.controls; let i = index" 
-           class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3" 
-           [formGroupName]="i">
-        <div class="tw-px-card-pad tw-pb-card-pad">
-          <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-            <div >
-              <div class="tw-mb-5 tw-mb-0">
-                <label class="small font-weight-bold tw-text-sm">Artist</label>
-                <select class="tw-input-sm tw-input" 
-                        formControlName="artist_id"
-                        [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched">
-                  <option value="">Select Artist</option>
-                  <option *ngFor="let artist of getAvailableArtists(i)" 
-                          [value]="artist.id">
-                    {{ artist.name }}
-                  </option>
-                </select>
-              </div>
+    <!-- Royalty Artists (Admin Only) -->
+    <div *ngIf="isAdmin" formArrayName="royaltyArtists">
+      <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Artist Royalty Splits</h3>
+        <button type="button"
+                class="btn-sm btn-secondary"
+                (click)="addRoyaltyArtist()"
+                [disabled]="loadingArtists">
+          <i class="fa fa-plus"></i> Add Artist
+        </button>
+      </div>
+
+      <div *ngIf="loadingArtists" class="tw-py-4 tw-text-center">
+        <div class="loading-dots"><div></div><div></div><div></div></div>
+      </div>
+
+      <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="tw-space-y-2">
+        <div *ngFor="let artistControl of royaltyArtists.controls; let i = index"
+             class="tw-bg-gray-50 tw-rounded-lg tw-p-3"
+             [formGroupName]="i">
+          <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-6 tw-gap-3 tw-items-end">
+            <div class="tw-col-span-2">
+              <label class="tw-label tw-text-xs">Artist</label>
+              <select class="tw-input tw-input-sm"
+                      formControlName="artist_id"
+                      [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched">
+                <option value="">Select Artist</option>
+                <option *ngFor="let artist of getAvailableArtists(i)" [value]="artist.id">{{ artist.name }}</option>
+              </select>
             </div>
-            <div >
-              <div class="tw-mb-5 tw-mb-0">
-                <label class="small font-weight-bold tw-text-sm">Streaming %</label>
-                <input type="number" 
-                       class="tw-input-sm tw-input" 
-                       formControlName="streaming_royalty_percentage" 
-                       min="0" max="100" step="1">
-              </div>
+            <div>
+              <label class="tw-label tw-text-xs">Streaming %</label>
+              <input type="number" class="tw-input tw-input-sm" formControlName="streaming_royalty_percentage" min="0" max="100" step="1">
             </div>
-            <div >
-              <div class="tw-mb-5 tw-mb-0">
-                <label class="small font-weight-bold tw-text-sm">Sync %</label>
-                <input type="number" 
-                       class="tw-input-sm tw-input" 
-                       formControlName="sync_royalty_percentage" 
-                       min="0" max="100" step="1">
-              </div>
+            <div>
+              <label class="tw-label tw-text-xs">Sync %</label>
+              <input type="number" class="tw-input tw-input-sm" formControlName="sync_royalty_percentage" min="0" max="100" step="1">
             </div>
-            <div >
-              <div class="tw-mb-5 tw-mb-0">
-                <label class="small font-weight-bold tw-text-sm">Download %</label>
-                <input type="number" 
-                       class="tw-input-sm tw-input" 
-                       formControlName="download_royalty_percentage" 
-                       min="0" max="100" step="1">
-              </div>
+            <div>
+              <label class="tw-label tw-text-xs">Download %</label>
+              <input type="number" class="tw-input tw-input-sm" formControlName="download_royalty_percentage" min="0" max="100" step="1">
             </div>
-            <div >
-              <div class="tw-mb-5 tw-mb-0">
-                <label class="small font-weight-bold tw-text-sm">Physical %</label>
-                <input type="number" 
-                       class="tw-input-sm tw-input" 
-                       formControlName="physical_royalty_percentage" 
-                       min="0" max="100" step="1">
-              </div>
-            </div>
-            <div >
-              <button type="button" 
-                      class="btn-sm btn-danger" 
-                      (click)="removeRoyaltyArtist(i)"
-                      [disabled]="royaltyArtists.length <= 1"
-                      title="Remove Artist">
-                <i class="fa fa-trash"></i>
-              </button>
+            <div>
+              <label class="tw-label tw-text-xs">Physical %</label>
+              <input type="number" class="tw-input tw-input-sm" formControlName="physical_royalty_percentage" min="0" max="100" step="1">
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Royalty Totals -->
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50">
-        <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
-          <div class="tw-text-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-            <div >
-              <strong>Label Royalty:</strong>
-            </div>
-            <div >
-              <span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
-                {{ getLabelRoyalty('streaming') }}%
-              </span>
-            </div>
-            <div >
-              <span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
-                {{ getLabelRoyalty('sync') }}%
-              </span>
-            </div>
-            <div >
-              <span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
-                {{ getLabelRoyalty('download') }}%
-              </span>
-            </div>
-            <div >
-              <span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
-                {{ getLabelRoyalty('physical') }}%
-              </span>
-            </div>
-            <div ></div>
+          <div class="tw-flex tw-justify-end tw-mt-2">
+            <button type="button"
+                    class="btn-sm btn-danger"
+                    (click)="removeRoyaltyArtist(i)"
+                    [disabled]="royaltyArtists.length <= 1"
+                    title="Remove Artist">
+              <i class="fa fa-trash"></i>
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Royalty Split Notes -->
-      <div class="tw-mt-3">
-        <small class="tw-text-muted">
+        <!-- Royalty Totals -->
+        <div class="tw-bg-gray-100 tw-rounded-lg tw-p-3">
+          <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-6 tw-gap-3 tw-text-xs tw-text-center">
+            <div class="tw-col-span-2 tw-text-left tw-font-semibold tw-text-gray-600">Label Royalty:</div>
+            <div><span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">{{ getLabelRoyalty('streaming') }}%</span></div>
+            <div><span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">{{ getLabelRoyalty('sync') }}%</span></div>
+            <div><span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">{{ getLabelRoyalty('download') }}%</span></div>
+            <div><span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">{{ getLabelRoyalty('physical') }}%</span></div>
+          </div>
+        </div>
+
+        <p class="tw-text-xs tw-text-muted">
           <i class="fa fa-info-circle"></i>
-          <strong>Note:</strong> Artist percentages for each royalty type should not exceed 100%. 
-          The label row shows the remaining percentage (100% - total artist percentages).
-        </small>
+          Artist percentages for each royalty type should not exceed 100%. The label row shows the remaining percentage.
+        </p>
       </div>
+
+      <p *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="tw-text-sm tw-text-muted tw-text-center tw-py-3">
+        <i class="fa fa-info-circle"></i> No artists added yet. Click "Add Artist" to get started.
+      </p>
     </div>
 
-    <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="tw-py-3 tw-text-center tw-text-muted">
-      <i class="fa fa-info-circle"></i>
-      No artists added yet. Click "Add Artist" to get started.
-    </div>
   </div>
 
   <!-- Action Buttons -->
-  <div *ngIf="showActionButtons" class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-    <div class="md:tw-col-span-6">
-      <button type="submit" 
-              class="btn-primary tw-w-full"
-              [disabled]="loading || !isFormValid">
-        <i class="fa fa-save" *ngIf="!loading"></i>
-        <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
-        {{ loading ? 'Saving...' : submitButtonText }}
-      </button>
-    </div>
-    <div class="md:tw-col-span-6">
-      <button type="button" 
-              class="btn-secondary tw-w-full"
-              [disabled]="loading"
-              (click)="onCancel()">
-        {{ cancelButtonText }}
-      </button>
-    </div>
+  <div *ngIf="showActionButtons" class="tw-mt-6 tw-flex tw-gap-3 tw-justify-end">
+    <button type="button"
+            class="btn-secondary"
+            [disabled]="loading"
+            (click)="onCancel()">
+      {{ cancelButtonText }}
+    </button>
+    <button type="submit"
+            class="btn-primary"
+            [disabled]="loading || !isFormValid">
+      <i class="fa fa-save" *ngIf="!loading"></i>
+      <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+      {{ loading ? 'Saving...' : submitButtonText }}
+    </button>
   </div>
 </form>
