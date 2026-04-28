@@ -2,12 +2,12 @@
   <form id="profileForm" (ngSubmit)="saveProfile()" #profileForm="ngForm" *ngIf="artist">
     
     <!-- Top Row: Basic Information and Profile Photo side by side -->
-    <div class="row tw-grid tw-grid-cols-1">
+    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-6">
       <!-- Basic Information Section -->
-      <div class="col-lg-8 lg:tw-col-span-8">
+      <div class="lg:tw-col-span-8">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-            <h5>Basic Information</h5>
+            <h3>Basic Information</h3>
           </div>
           <div class="tw-px-card-pad tw-pb-card-pad">
             <div class="tw-mb-5">
@@ -50,10 +50,10 @@
       </div>
 
       <!-- Profile Photo Section -->
-      <div class="col-lg-4 lg:tw-col-span-4">
+      <div class="lg:tw-col-span-4">
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-            <h5>Profile Photo</h5>
+            <h3>Profile Photo</h3>
           </div>
           <div class="tw-px-card-pad tw-pb-card-pad">
             <div class="current-photo">
@@ -90,11 +90,11 @@
     <!-- Social Links Section -->
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h5>Social Media & Links</h5>
+        <h3>Social Media & Links</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
-        <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-md-6 md:tw-col-span-6">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-x-6">
+          <div>
             <div class="tw-mb-5">
               <label for="website">Website</label>
               <input type="url" 
@@ -105,7 +105,7 @@
                      placeholder="https://www.example.com">
             </div>
           </div>
-          <div class="col-md-6 md:tw-col-span-6">
+          <div>
             <div class="tw-mb-5">
               <label for="facebook">Facebook</label>
               <input type="text" 
@@ -118,8 +118,8 @@
           </div>
         </div>
         
-        <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-md-6 md:tw-col-span-6">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-x-6">
+          <div>
             <div class="tw-mb-5">
               <label for="instagram">Instagram</label>
               <input type="text" 
@@ -130,7 +130,7 @@
                      placeholder="Instagram username">
             </div>
           </div>
-          <div class="col-md-6 md:tw-col-span-6">
+          <div>
             <div class="tw-mb-5">
               <label for="twitter">Twitter</label>
               <input type="text" 
@@ -143,8 +143,8 @@
           </div>
         </div>
         
-        <div class="row tw-grid tw-grid-cols-1">
-          <div class="col-md-6 md:tw-col-span-6">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-x-6">
+          <div>
             <div class="tw-mb-5">
               <label for="tiktok">TikTok</label>
               <input type="text" 
@@ -155,7 +155,7 @@
                      placeholder="TikTok username">
             </div>
           </div>
-          <div class="col-md-6 md:tw-col-span-6">
+          <div>
             <div class="tw-mb-5">
               <label for="youtube">YouTube Channel</label>
               <input type="text" 

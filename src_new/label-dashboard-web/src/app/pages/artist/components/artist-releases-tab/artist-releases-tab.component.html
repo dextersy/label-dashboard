@@ -13,19 +13,26 @@
 
     <ng-template #customButtons>
       <div class="filter-controls tw-flex tw-items-center">
-        <div class="btn-group tw-hidden md:tw-flex" role="group">
-          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterAll" value="all" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn-sm btn-secondary" for="epkFilterAll">All</label>
-
-          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterVisible" value="visible" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn-sm btn-secondary" for="epkFilterVisible">
-            <i class="fa fa-globe"></i> <span class="tw-hidden d-lg-inline">Visible in EPK</span>
-          </label>
-
-          <input type="radio" class="btn-check" name="epkFilter" id="epkFilterHidden" value="hidden" [(ngModel)]="epkFilter" autocomplete="off">
-          <label class="btn-sm btn-secondary" for="epkFilterHidden">
-            <i class="fa fa-eye-slash"></i> <span class="tw-hidden d-lg-inline">Hidden from EPK</span>
-          </label>
+        <div class="tw-hidden md:tw-flex tw-rounded-lg tw-overflow-hidden tw-border tw-border-gray-200" role="group">
+          <button type="button"
+                  class="btn-sm tw-rounded-none tw-border-0"
+                  [class.btn-primary]="epkFilter === 'all'"
+                  [class.btn-secondary]="epkFilter !== 'all'"
+                  (click)="epkFilter = 'all'">All</button>
+          <button type="button"
+                  class="btn-sm tw-rounded-none tw-border-0 tw-border-l tw-border-gray-200"
+                  [class.btn-primary]="epkFilter === 'visible'"
+                  [class.btn-secondary]="epkFilter !== 'visible'"
+                  (click)="epkFilter = 'visible'">
+            <i class="fa fa-globe"></i> <span class="tw-hidden lg:tw-inline">Visible in EPK</span>
+          </button>
+          <button type="button"
+                  class="btn-sm tw-rounded-none tw-border-0 tw-border-l tw-border-gray-200"
+                  [class.btn-primary]="epkFilter === 'hidden'"
+                  [class.btn-secondary]="epkFilter !== 'hidden'"
+                  (click)="epkFilter = 'hidden'">
+            <i class="fa fa-eye-slash"></i> <span class="tw-hidden lg:tw-inline">Hidden from EPK</span>
+          </button>
         </div>
         <select class="form-select form-select-sm md:tw-hidden tw-input" [(ngModel)]="epkFilter">
           <option value="all">All</option>
