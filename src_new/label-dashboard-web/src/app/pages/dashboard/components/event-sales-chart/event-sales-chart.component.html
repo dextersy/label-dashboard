@@ -1,29 +1,18 @@
-<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-    <h3>Event Sales Analytics</h3>
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-flex-col">
+  <div class="tw-p-6 tw-border-b tw-border-gray-100">
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Event Sales Analytics</h3>
   </div>
-  <div class="tw-px-card-pad tw-pb-card-pad">
-    <div *ngIf="eventSales.length === 0" class="tw-py-4 tw-text-center tw-text-muted">
-      <i class="fas fa-chart-bar fa-3x tw-mb-3"></i>
-      <p>No event sales data found</p>
+  <div class="tw-p-6 tw-flex-1">
+
+    <div *ngIf="eventSales.length === 0" class="tw-py-8 tw-text-center tw-text-muted">
+      <i class="fas fa-chart-bar tw-text-4xl tw-text-gray-200 tw-mb-3 tw-block"></i>
+      <p class="tw-mb-0 tw-text-sm">No event sales data found</p>
     </div>
-    
-    <div *ngIf="eventSales.length > 0">
-      <!-- Charts Section -->
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-        <div class="md:tw-col-span-6">
-          <div class="chart-container" style="position: relative; height: 300px;">
-            <canvas #salesChart></canvas>
-          </div>
-        </div>
-        <div class="md:tw-col-span-6">
-          <div class="chart-container" style="position: relative; height: 300px;">
-            <canvas #ticketsChart></canvas>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Event Details Section -->
+
+    <div *ngIf="eventSales.length > 0" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+      <div class="tw-relative tw-h-[300px]"><canvas #salesChart></canvas></div>
+      <div class="tw-relative tw-h-[300px]"><canvas #ticketsChart></canvas></div>
     </div>
+
   </div>
 </div>
