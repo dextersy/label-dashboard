@@ -1,33 +1,52 @@
-<div class="tw-mt-12 tw-flex tw-justify-center tw-px-4">
-  <div class="tw-w-full tw-max-w-lg">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden">
-      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+<div class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-12">
+  <div class="tw-w-full tw-max-w-sm">
 
-        <div *ngIf="loading" class="tw-p-4">
-          <div class="loading-dots">
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-          <h3 class="tw-mt-3">Processing Admin Invitation...</h3>
-          <p class="tw-text-muted">Please wait while we process your invitation.</p>
+    <!-- Card -->
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-lg tw-p-8 tw-text-center">
+
+      <!-- Loading state -->
+      <div *ngIf="loading" class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+        <svg class="tw-animate-spin tw-h-10 tw-w-10 tw-text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <div>
+          <h2 class="tw-text-base tw-font-semibold tw-text-gray-900">Processing Admin Invitation...</h2>
+          <p class="tw-text-sm tw-text-gray-500 tw-mt-1">Please wait while we process your invitation.</p>
+        </div>
+      </div>
+
+      <!-- Result state -->
+      <div *ngIf="!loading && message" class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+
+        <!-- Success icon -->
+        <div *ngIf="messageType === 'success'" class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-green-100 tw-flex tw-items-center tw-justify-center">
+          <i class="fas fa-check tw-text-xl tw-text-green-600"></i>
         </div>
 
-        <div *ngIf="!loading && message" class="tw-p-4">
-          <div
-            [ngClass]="{
-              'tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal': true,
-              'tw-border-green-200 tw-bg-green-50 tw-text-green-800': messageType === 'success',
-              'tw-border-red-200 tw-bg-red-50 tw-text-red-800': messageType !== 'success'
-            }">
-            {{ message }}
-          </div>
-          <button class="btn-primary" (click)="router.navigate(['/login'])">
-            Return to Login
-          </button>
+        <!-- Error icon -->
+        <div *ngIf="messageType !== 'success'" class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-red-100 tw-flex tw-items-center tw-justify-center">
+          <i class="fas fa-exclamation-triangle tw-text-xl tw-text-red-600"></i>
         </div>
+
+        <div
+          [ngClass]="{
+            'tw-px-4 tw-py-3 tw-rounded-lg tw-text-sm tw-leading-normal tw-border tw-w-full': true,
+            'tw-bg-green-50 tw-border-green-200 tw-text-green-800': messageType === 'success',
+            'tw-bg-red-50 tw-border-red-200 tw-text-red-800': messageType !== 'success'
+          }">
+          {{ message }}
+        </div>
+
+        <button
+          class="tw-w-full tw-py-2.5 tw-px-4 tw-rounded-lg tw-bg-gray-800 tw-text-white tw-font-semibold tw-text-sm hover:tw-bg-gray-700 tw-transition-colors"
+          (click)="router.navigate(['/login'])">
+          Return to Login
+        </button>
 
       </div>
+
     </div>
+
   </div>
 </div>
