@@ -9,7 +9,7 @@
 /* CARD                                                               */
 /* ----------------------------------------------------------------- */
 .card {
-  @apply tw-bg-surface tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8;
+  @apply tw-bg-surface tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-5;
   transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
@@ -54,7 +54,7 @@
   @apply tw-mb-5 tw-text-left;
 
   label {
-    @apply tw-block tw-mb-2 tw-font-medium tw-text-sm tw-text-[#374151] tw-leading-normal;
+    @apply tw-block tw-mb-2 tw-font-medium tw-text-base tw-text-[#374151] tw-leading-normal;
 
     .text-danger { @apply tw-text-danger tw-font-semibold; }
   }
@@ -64,7 +64,7 @@
 /* FORM CONTROLS                                                      */
 /* ----------------------------------------------------------------- */
 .form-control {
-  @apply tw-w-full tw-px-3 tw-py-2 tw-text-sm tw-text-[#1f2937] tw-bg-input-bg
+  @apply tw-w-full tw-px-3.5 tw-py-2.5 tw-text-base tw-text-[#1f2937] tw-bg-input-bg
          tw-border-0 tw-rounded-input tw-m-0 tw-text-left;
   line-height: 1.5;
   box-shadow: none;

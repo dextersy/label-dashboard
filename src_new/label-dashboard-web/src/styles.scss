@@ -216,7 +216,7 @@
   /* Use tw-input / tw-label when migrating form-control / form-label */
 
   .tw-input {
-    @apply tw-w-full tw-px-3 tw-py-2 tw-text-sm tw-text-[#1f2937]
+    @apply tw-w-full tw-px-3.5 tw-py-2.5 tw-text-base tw-text-[#1f2937]
            tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
 
     &:focus {
@@ -233,7 +233,7 @@
   }
 
   .tw-label {
-    @apply tw-block tw-mb-1.5 tw-font-medium tw-text-sm tw-text-[#374151];
+    @apply tw-block tw-mb-1.5 tw-font-medium tw-text-base tw-text-[#374151];
   }
 
   /* Compact input variant (replaces form-control-sm) */
@@ -745,9 +745,9 @@ h6 {
   color: #6b7280;
 }
 
-/* Card section headers — subtle separator between header and body */
+/* Card section headers — spacer between header and body */
 .tw-pt-card-pad {
-  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 1.5rem;
 }
 
 /* =========================================== */
