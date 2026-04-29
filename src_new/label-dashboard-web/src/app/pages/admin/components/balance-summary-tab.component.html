@@ -1,7 +1,20 @@
-<!-- Balance Summary Table -->
-<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-  <div class="md:tw-col-span-12">
-    <app-paginated-table 
+<!-- Page Header -->
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+    <h3 class="tw-mb-2">
+      <i class="fas fa-wallet tw-mr-2"></i>
+      Artist Balances
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">Current balance summary for each artist on the label.</p>
+  </div>
+</div>
+
+<!-- Balance Summary Table + Summary Cards -->
+<div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-6">
+
+  <!-- Table (left) -->
+  <div class="lg:tw-col-span-8">
+    <app-paginated-table
       title="Balance Summary"
       [data]="artistBalances"
       [pagination]="balancePagination"
@@ -11,15 +24,15 @@
       [sortInfo]="balanceSort"
       (pageChange)="onBalancePageChange($event)"
       (filtersChange)="onBalanceFiltersChange($event)">
-      
+
       <ng-template #tableContent let-data>
         <div class="table-responsive" *ngIf="!balanceLoading">
           <table class="table table-financial">
             <thead>
               <tr>
                 <th class="mobile-text" style="cursor: pointer;" (click)="onBalanceSortToggle('name')">
-                  Artist 
-                  <i class="fas fa-sort tw-ml-1" 
+                  Artist
+                  <i class="fas fa-sort tw-ml-1"
                      [class.fa-sort-up]="balanceSort?.column === 'name' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'"></i>
                 </th>
@@ -73,55 +86,74 @@
       </ng-template>
     </app-paginated-table>
   </div>
-</div>
 
-<!-- Summary Cards -->
-<div class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-  <div class="md:tw-col-span-4">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3 class="card-title tw-mb-0">Total Balance</h3>
-      </div>
-      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-        <h3><strong [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_balance || 0) }}</strong></h3>
+  <!-- Summary Cards (right, stacked) -->
+  <div class="lg:tw-col-span-4 tw-flex tw-flex-col tw-gap-4">
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payment Overview</h3>
+
+    <!-- Total Balance -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
+      <div class="tw-flex tw-items-center">
+        <div class="tw-text-3xl tw-mr-5 tw-text-success tw-opacity-80">
+          <i class="fas fa-coins"></i>
+        </div>
+        <div class="tw-flex-1">
+          <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : '#333'">
+            {{ formatCurrency(balanceSummary?.total_balance || 0) }}
+          </div>
+          <div class="tw-text-sm tw-text-gray-500 tw-mt-1">Total Balance</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="md:tw-col-span-4">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3 class="card-title tw-mb-0">Total Due For Payment</h3>
-      </div>
-      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-        <h3><strong [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}</strong></h3>
+    <!-- Total Due For Payment -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
+      <div class="tw-flex tw-items-center">
+        <div class="tw-text-3xl tw-mr-5 tw-text-warning tw-opacity-80">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="tw-flex-1">
+          <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+            {{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}
+          </div>
+          <div class="tw-text-sm tw-text-gray-500 tw-mt-1">Total Due For Payment</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="md:tw-col-span-4">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3 class="card-title tw-mb-0">Ready to Pay 
-          <i class="fas fa-info-circle" title="Due for payment and has bank account"></i>
-        </h3>
+    <!-- Ready to Pay -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
+      <div class="tw-flex tw-items-center">
+        <div class="tw-text-3xl tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="tw-flex-1">
+          <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+            {{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}
+          </div>
+          <div class="tw-text-sm tw-text-gray-500 tw-mt-1">
+            Ready to Pay
+            <i class="fas fa-info-circle tw-ml-1" title="Due for payment and has bank account"></i>
+          </div>
+        </div>
       </div>
-      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-        <h3><strong [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}</strong></h3>
+      <div class="tw-mt-4">
         <button class="btn-primary tw-w-full"
                 [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
                 (click)="payAllBalances()">
           <i class="fas fa-credit-card"></i> Pay Now
         </button>
-        <small class="tw-block tw-mt-2"><strong>On hold:</strong> <span [style.color]="(balanceSummary?.paused_payouts || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</span></small>
       </div>
-      <div class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle tw-text-center">
+      <div class="tw-mt-3 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-2 tw-text-center">
         <div class="badge bg-info">
           Available balance: <span [style.color]="walletBalance < 0 ? '#FF4A55' : ''">{{ formatCurrency(walletBalance) }}</span>
         </div>
+        <small><strong>On hold:</strong> <span [style.color]="(balanceSummary?.paused_payouts || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</span></small>
       </div>
     </div>
+
   </div>
+
 </div>
 
 <!-- Payment Confirmation Dialog -->

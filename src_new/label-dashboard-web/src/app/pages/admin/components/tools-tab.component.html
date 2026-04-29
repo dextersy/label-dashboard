@@ -1,10 +1,18 @@
-<h3>Administrative Tools</h3>
+<!-- Page Header -->
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+    <h3 class="tw-mb-2">
+      <i class="fas fa-envelope tw-mr-2"></i>
+      Email Logs
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">View and inspect all outbound emails sent by the system.</p>
+  </div>
+</div>
 
 <!-- Email Logs Section -->
 <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
   <div class="tw-col-span-12">
     <app-paginated-table
-      title="Email Logs"
       [data]="emailLogs"
       [pagination]="emailLogsPagination"
       [loading]="emailLogsLoading"
