@@ -1,9 +1,15 @@
 <app-breadcrumb></app-breadcrumb>
 <div class="container-fluid tw-py-4">
 
-  <div class="tw-mb-4">
-    <h2 class="tw-mb-0">Sync Licensing</h2>
-    <p class="tw-mt-2 tw-mb-0 tw-text-muted">Create and manage sync licensing pitches for your catalog.</p>
+  <!-- Page Header -->
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h3 class="tw-mb-2">
+        <i class="fas fa-file-contract tw-mr-2"></i>
+        Sync Licensing
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Create and manage sync licensing pitches for your catalog.</p>
+    </div>
   </div>
 
   <!-- Pitches Table -->
@@ -35,7 +41,7 @@
       <div class="modal-body">
         <!-- Pitch Details -->
         <div class="tw-mb-4">
-          <h6 class="tw-mb-3 tw-text-muted">Pitch Details</h6>
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Pitch Details</h6>
           <div class="tw-mb-3">
             <label for="pitchTitle" class="tw-label">Title <span class="tw-text-danger">*</span></label>
             <input type="text" class="tw-input" id="pitchTitle" [(ngModel)]="pitchForm.title" placeholder="Enter pitch title">
@@ -48,7 +54,7 @@
 
         <!-- Song Selection -->
         <div class="tw-mb-4">
-          <h6 class="tw-mb-3 tw-text-muted">Songs</h6>
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Songs</h6>
 
           <!-- Song Search -->
           <div class="tw-mb-3">

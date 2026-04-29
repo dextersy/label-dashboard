@@ -201,26 +201,28 @@
               <label class="tw-label tw-font-semibold tw-mb-2">
                 <i class="fa fa-link text-primary tw-mr-2"></i>Ticket Purchase Link
               </label>
-              <div class="input-group input-group-lg link-action-group">
+              <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
                 <input
                   type="text"
-                  class="tw-input"
+                  class="tw-input tw-flex-1 tw-min-w-0"
                   [value]="event.buy_shortlink"
                   readonly>
-                <button
-                  type="button"
-                  class="btn-primary"
-                  (click)="copyToClipboard(event.buy_shortlink)"
-                  title="Copy to clipboard">
-                  <i class="fa fa-copy tw-mr-2"></i>Copy Link
-                </button>
-                <button
-                  type="button"
-                  class="btn-secondary"
-                  (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
-                  title="Download QR Code">
-                  <i class="fa fa-qrcode"></i>
-                </button>
+                <div class="tw-flex tw-gap-2 tw-shrink-0">
+                  <button
+                    type="button"
+                    class="btn-primary tw-flex-1 sm:tw-flex-none"
+                    (click)="copyToClipboard(event.buy_shortlink)"
+                    title="Copy to clipboard">
+                    <i class="fa fa-copy tw-mr-2"></i>Copy Link
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secondary tw-flex-1 sm:tw-flex-none"
+                    (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
+                    title="Download QR Code">
+                    <i class="fa fa-qrcode"></i>
+                  </button>
+                </div>
               </div>
               <small class="tw-mt-2 tw-block tw-text-muted">
                 <i class="fa fa-info-circle"></i> Share this link for customers to purchase tickets
@@ -479,15 +481,15 @@
               <label class="tw-label tw-font-semibold tw-mb-2">
                 <i class="fa fa-qrcode text-primary tw-mr-2"></i>Verification Link
               </label>
-              <div class="input-group input-group-lg link-action-group">
+              <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
                 <input
                   type="text"
-                  class="tw-input"
+                  class="tw-input tw-flex-1 tw-min-w-0"
                   [value]="event.verification_link"
                   readonly>
                 <button
                   type="button"
-                  class="btn-primary"
+                  class="btn-primary tw-shrink-0"
                   (click)="copyToClipboard(event.verification_link)"
                   title="Copy to clipboard">
                   <i class="fa fa-copy tw-mr-2"></i>Copy Link
