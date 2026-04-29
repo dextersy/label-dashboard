@@ -14,28 +14,30 @@
         </p>
 
         <!-- Link Copy Box -->
-        <div class="input-group link-action-group tw-mb-2">
-          <input 
-            type="text" 
-            class="link-input tw-input" 
-            [value]="data?.buyLink || ''" 
+        <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2 tw-mb-2">
+          <input
+            type="text"
+            class="tw-input tw-flex-1 tw-min-w-0"
+            [value]="data?.buyLink || ''"
             readonly
             aria-label="Event ticket purchase link"
             #linkInput>
-          <button
-            class="btn-primary"
-            type="button"
-            (click)="copyLink()">
-            <i class="fas" [ngClass]="copySuccess ? 'fa-check' : 'fa-copy'"></i>
-            {{ copySuccess ? 'Copied!' : 'Copy' }}
-          </button>
-          <button
-            class="btn-secondary"
-            type="button"
-            (click)="downloadBuyLinkQR()"
-            title="Download QR Code">
-            <i class="fas fa-qrcode"></i>
-          </button>
+          <div class="tw-flex tw-gap-2 tw-shrink-0">
+            <button
+              class="btn-primary tw-flex-1 sm:tw-flex-none"
+              type="button"
+              (click)="copyLink()">
+              <i class="fas" [ngClass]="copySuccess ? 'fa-check' : 'fa-copy'"></i>
+              {{ copySuccess ? 'Copied!' : 'Copy' }}
+            </button>
+            <button
+              class="btn-secondary tw-flex-1 sm:tw-flex-none"
+              type="button"
+              (click)="downloadBuyLinkQR()"
+              title="Download QR Code">
+              <i class="fas fa-qrcode"></i>
+            </button>
+          </div>
         </div>
         
         <p class="small tw-mb-4 tw-text-muted tw-text-sm">

@@ -1,8 +1,8 @@
 <!-- Date Range Filter Component -->
-<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 date-range-filter" [class.compact]="compact">
-  <div class="tw-px-card-pad tw-pb-card-pad" [class.tw-py-2]="compact">
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-2 date-range-filter" [class.compact]="compact">
+  <div class="tw-px-card-pad tw-py-3" [class.tw-py-2]="compact">
     <!-- Collapsed Header - Always visible -->
-    <div class="tw-items-center date-range-header tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+    <div class="tw-items-center date-range-header tw-grid tw-grid-cols-1 md:tw-grid-cols-12">
       <div class="lg:tw-col-span-8 md:tw-col-span-8" [class.col-8]="compact">
         <div class="tw-flex tw-items-center">
           <button class="tw-inline-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-600 tw-bg-transparent tw-border-0 tw-cursor-pointer hover:tw-bg-gray-100 hover:tw-text-gray-800 tw-transition-colors tw-mr-2"
@@ -57,10 +57,10 @@
     </div>
 
     <!-- Expanded Content - Show/hide based on isExpanded -->
-    <div class="tw-items-center tw-mt-3 expanded-content tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="isExpanded">
+    <div class="tw-items-center tw-mt-2 expanded-content tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-3" *ngIf="isExpanded">
       <!-- Date Range Presets -->
       <div class="tw-col-span-12">
-        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-1.5 tw-mb-3">
+        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-1.5 tw-mb-2">
           <span class="tw-text-sm tw-text-gray-400 tw-mr-1">Quick select:</span>
           <ng-container *ngFor="let preset of presetOptions">
             <button type="button"
@@ -106,7 +106,7 @@
     </div>
 
     <!-- Last Updated Display - Only show when not loading and not expanded -->
-    <div class="tw-mt-2 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!loading && !isExpanded && !compact">
+    <div class="tw-mt-1 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-3" *ngIf="!loading && !isExpanded && !compact">
       <div class="tw-col-span-12">
         <small class="tw-flex tw-justify-end tw-text-muted">
           Last updated: {{ lastUpdated | date:'medium' }}
