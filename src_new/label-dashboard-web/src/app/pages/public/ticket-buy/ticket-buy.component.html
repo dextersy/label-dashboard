@@ -80,43 +80,49 @@
           <p *ngIf="event.brand?.name" class="tw-text-sm tw-italic tw-text-gray-500 tw-mb-0 tw-text-center">by {{ event.brand?.name }}</p>
 
           <!-- Date / venue cards -->
-          <div class="tw-flex tw-gap-3 tw-mt-5 tw-justify-center tw-min-w-0">
+          <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-3 tw-mt-5 sm:tw-justify-center tw-min-w-0">
 
             <!-- Date card -->
-            <div class="tw-flex tw-items-stretch tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0">
+            <div class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-center tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0">
               <!-- Calendar icon block -->
-              <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-text-white"
+              <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-self-stretch tw-text-white"
                 [style.background-color]="brandColor">
                 <span class="tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-75">{{ formatEventWeekday(event.date_and_time) }}</span>
                 <span class="tw-text-2xl tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[1] }}</span>
                 <span class="tw-text-[11px] tw-font-semibold tw-opacity-75 tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[0] }}</span>
               </div>
-              <!-- Time + calendar link -->
-              <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-2">
+              <!-- Time info -->
+              <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-1">
                 <span class="tw-text-base tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
-                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
-                  class="tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium tw-leading-none">
-                  + Add to calendar
-                </a>
+                <span class="tw-text-[11px] tw-text-gray-400 tw-leading-none sm:tw-hidden">{{ formatEventDate(event.date_and_time) }}</span>
               </div>
+              <!-- Action -->
+              <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
+                class="tw-flex tw-items-center tw-gap-1.5 tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium tw-px-4 tw-py-3 tw-whitespace-nowrap">
+                <i class="fas fa-calendar-plus tw-text-xs sm:tw-hidden"></i>
+                <span class="tw-hidden sm:tw-inline">+ Add to calendar</span>
+                <span class="sm:tw-hidden">Add to calendar</span>
+              </a>
             </div>
 
             <!-- Venue card -->
-            <div *ngIf="event.venue" class="tw-flex tw-items-stretch tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0 tw-shrink tw-max-w-[220px]">
+            <div *ngIf="event.venue" class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-center tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0">
               <!-- Pin icon block -->
-              <div class="tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-text-white"
+              <div class="tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-self-stretch tw-text-white"
                 [style.background-color]="brandColor">
                 <i class="fas fa-map-marker-alt tw-text-xl"></i>
               </div>
               <!-- Venue info -->
               <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-0.5 tw-min-w-0">
-                <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-snug">{{ event.venue }}</span>
-                <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-500 tw-leading-snug">{{ event.venue_address }}</span>
-                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank"
-                  class="tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium">
-                  View on map
-                </a>
+                <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-snug tw-truncate">{{ event.venue }}</span>
+                <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-500 tw-leading-snug tw-truncate">{{ event.venue_address }}</span>
               </div>
+              <!-- Action -->
+              <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank"
+                class="tw-flex tw-items-center tw-gap-1.5 tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium tw-px-4 tw-py-3 tw-whitespace-nowrap">
+                <i class="fas fa-external-link-alt tw-text-xs sm:tw-hidden"></i>
+                <span>View on map</span>
+              </a>
             </div>
 
           </div>
