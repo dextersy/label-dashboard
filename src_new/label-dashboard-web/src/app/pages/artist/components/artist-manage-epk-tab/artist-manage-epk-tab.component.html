@@ -1,47 +1,49 @@
 <div class="manage-epk-tab">
   <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h3 class="tw-mb-0">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h3 class="tw-mb-2">
         <i class="fas fa-link tw-mr-2"></i>
         Manage EPK
       </h3>
+      <p class="tw-mb-0 tw-text-muted">
+        Share your Electronic Press Kit (EPK) with industry professionals, media, and fans using the link below.
+      </p>
     </div>
 
     <div class="tw-px-card-pad tw-pb-card-pad">
       <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
         <div class="tw-col-span-12">
-          <p class="tw-mb-3 tw-text-muted">
-            Share your Electronic Press Kit (EPK) with industry professionals, media, and fans using the link below.
-          </p>
 
           <!-- EPK Link (hidden when EPK is disabled) -->
-          <div class="tw-mb-5 tw-mb-4 link-accent" *ngIf="selectedTemplate !== 0">
+          <div class="tw-mb-5 link-accent" *ngIf="selectedTemplate !== 0">
             <label for="epkUrl" class="tw-label">EPK Link</label>
-            <div class="input-group link-action-group">
+            <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
               <input
                 type="text"
                 id="epkUrl"
-                class="tw-input"
+                class="tw-input tw-flex-1 tw-min-w-0"
                 [value]="epkUrl"
                 readonly
                 placeholder="Generating EPK URL...">
-              <button
-                class="btn-secondary"
-                type="button"
-                (click)="copyToClipboard()"
-                [disabled]="!epkUrl">
-                <i class="fas fa-copy tw-mr-1"></i>
-                Copy
-              </button>
-              <button
-                class="btn-secondary"
-                type="button"
-                (click)="downloadEPKQRCode()"
-                [disabled]="!epkUrl"
-                title="Download QR Code">
-                <i class="fas fa-qrcode tw-mr-1"></i>
-                QR Code
-              </button>
+              <div class="tw-flex tw-gap-2 tw-shrink-0">
+                <button
+                  class="btn-secondary tw-flex-1 sm:tw-flex-none"
+                  type="button"
+                  (click)="copyToClipboard()"
+                  [disabled]="!epkUrl">
+                  <i class="fas fa-copy tw-mr-1"></i>
+                  Copy
+                </button>
+                <button
+                  class="btn-secondary tw-flex-1 sm:tw-flex-none"
+                  type="button"
+                  (click)="downloadEPKQRCode()"
+                  [disabled]="!epkUrl"
+                  title="Download QR Code">
+                  <i class="fas fa-qrcode tw-mr-1"></i>
+                  QR Code
+                </button>
+              </div>
             </div>
             <div class="form-text">
               This link provides public access to your artist profile, gallery, and releases.

@@ -1,6 +1,18 @@
 <div class="artist-releases-tab">
+
+  <!-- Page Header -->
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h3 class="tw-mb-2">
+        <i class="fas fa-music tw-mr-2"></i>
+        Releases
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Manage your discography — albums, EPs, and singles.</p>
+    </div>
+  </div>
+
   <app-paginated-table
-    title="Artist Releases"
+    title=""
     [data]="filteredReleases"
     [pagination]="null"
     [loading]="loading"
@@ -12,7 +24,7 @@
     [headerActions]="headerActions">
 
     <ng-template #customButtons>
-      <div class="filter-controls tw-flex tw-items-center">
+      <div class="filter-controls tw-flex tw-items-center tw-flex-1">
         <div class="tw-hidden md:tw-flex tw-rounded-lg tw-overflow-hidden tw-border tw-border-gray-200" role="group">
           <button type="button"
                   class="btn-sm tw-rounded-none tw-border-0"
@@ -34,10 +46,10 @@
             <i class="fa fa-eye-slash"></i> <span class="tw-hidden lg:tw-inline">Hidden from EPK</span>
           </button>
         </div>
-        <select class="form-select form-select-sm md:tw-hidden tw-input" [(ngModel)]="epkFilter">
+        <select class="form-select form-select-sm md:tw-hidden tw-input tw-w-24" [(ngModel)]="epkFilter">
           <option value="all">All</option>
-          <option value="visible">Visible in EPK</option>
-          <option value="hidden">Hidden from EPK</option>
+          <option value="visible">In EPK</option>
+          <option value="hidden">Hidden</option>
         </select>
       </div>
     </ng-template>

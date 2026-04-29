@@ -1,4 +1,16 @@
 <div class="artist-profile-tab">
+
+  <!-- Page Header -->
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h3 class="tw-mb-2">
+        <i class="fas fa-id-card tw-mr-2"></i>
+        Manage Profile
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Update your artist bio, social links, and public-facing profile information.</p>
+    </div>
+  </div>
+
   <form id="profileForm" (ngSubmit)="saveProfile()" #profileForm="ngForm" *ngIf="artist">
 
     <!-- Top row: Basic Info + Photo -->

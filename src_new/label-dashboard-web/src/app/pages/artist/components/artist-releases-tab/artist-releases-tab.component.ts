@@ -150,6 +150,7 @@ export class ArtistReleasesTabComponent {
       label: () => this.isAdmin ? 'Create Release' : 'Submit Release',
       handler: () => this.navigateToCreateRelease(),
       title: () => this.isAdmin ? 'Create new release' : 'Submit release for review',
+      type: 'primary' as const,
     }];
   }
 

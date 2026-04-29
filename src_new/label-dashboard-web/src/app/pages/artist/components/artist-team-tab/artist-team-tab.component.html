@@ -1,5 +1,16 @@
 <div class="artist-team-tab">
 
+  <!-- Page Header -->
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h3 class="tw-mb-2">
+        <i class="fas fa-users tw-mr-2"></i>
+        Team
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Manage team members who have access to this artist's profile.</p>
+    </div>
+  </div>
+
   <app-paginated-table
     title="Team Members"
     [data]="teamMembers"
@@ -13,37 +24,33 @@
   </app-paginated-table>
 
   <!-- Invite New Member Section -->
-  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 invite-section tw-mt-4">
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 invite-section tw-mt-4 md:tw-max-w-lg">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-      <h3>Invite Team Member</h3>
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Invite Team Member</h3>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
       <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
-        <div class="tw-items-end tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-          <div class="md:tw-col-span-8">
-            <div class="tw-mb-5 tw-mb-0">
-              <label for="inviteEmail" class="tw-label">Email Address</label>
-              <input type="email"
-                     class="tw-input"
-                     id="inviteEmail"
-                     name="inviteEmail"
-                     [(ngModel)]="inviteEmail"
-                     required
-                     email
-                     placeholder="Enter team member's email address"
-                     [disabled]="sendingInvite">
-            </div>
+        <div class="tw-flex tw-flex-wrap md:tw-flex-nowrap tw-items-end tw-gap-2">
+          <div class="tw-w-full md:tw-flex-1">
+            <label for="inviteEmail" class="tw-label">Email Address</label>
+            <input type="email"
+                   class="tw-input"
+                   id="inviteEmail"
+                   name="inviteEmail"
+                   [(ngModel)]="inviteEmail"
+                   required
+                   email
+                   placeholder="Enter team member's email address"
+                   [disabled]="sendingInvite">
           </div>
-          <div class="md:tw-col-span-4">
-            <div class="tw-mb-5 tw-mb-0">
+          <div class="tw-w-full md:tw-w-auto tw-shrink-0">
               <button type="submit"
-                      class="btn-primary tw-w-full"
+                      class="btn-sm btn-primary tw-w-full md:tw-w-auto"
                       [disabled]="!inviteForm.form.valid || sendingInvite">
                 <div class="loading-spinner" *ngIf="sendingInvite"></div>
                 <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>
                 {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
               </button>
-            </div>
           </div>
         </div>
       </form>

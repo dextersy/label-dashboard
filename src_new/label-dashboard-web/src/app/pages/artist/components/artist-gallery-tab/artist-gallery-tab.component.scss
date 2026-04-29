@@ -358,7 +358,7 @@
 // Responsive design
 @media (max-width: 992px) {
   .artist-gallery-tab {
-    .photo-grid {
+    .gallery-section .photo-grid {
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
     }
@@ -367,8 +367,8 @@
 
 @media (max-width: 768px) {
   .artist-gallery-tab {
-    .photo-grid {
-      grid-template-columns: repeat(3, 1fr);
+    .gallery-section .photo-grid {
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
     }
     
@@ -388,7 +388,7 @@
 
 @media (max-width: 480px) {
   .artist-gallery-tab {
-    .photo-grid {
+    .gallery-section .photo-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 6px;
     }
