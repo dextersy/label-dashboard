@@ -43,33 +43,26 @@
           <label class="tw-label tw-font-semibold tw-mb-2">
             <i class="fa fa-link tw-mr-1"></i> Public Donation Link
           </label>
-          <div class="input-group link-action-group">
+          <div class="tw-flex tw-flex-wrap tw-gap-2 tw-items-center">
             <input
               type="text"
-              class="tw-input"
+              class="tw-input tw-w-full md:tw-flex-1 md:tw-min-w-0"
               [value]="getPublicFundraiserUrl()"
               readonly>
             <button
               type="button"
-              class="btn-secondary tw-flex tw-items-center"
+              class="btn-secondary tw-flex tw-items-center tw-gap-1 tw-shrink-0"
               (click)="copyPublicLink()"
               title="Copy link to clipboard">
-              <i class="fa fa-copy"></i>
+              <i class="fa fa-copy"></i> Copy
             </button>
             <button
               type="button"
-              class="btn-secondary tw-flex tw-items-center"
+              class="btn-secondary tw-flex tw-items-center tw-gap-1 tw-shrink-0"
               (click)="downloadFundraiserQR()"
               title="Download QR Code">
-              <i class="fa fa-qrcode"></i>
+              <i class="fa fa-qrcode"></i> QR Code
             </button>
-            <a
-              [href]="getPublicFundraiserUrl()"
-              target="_blank"
-              class="btn-secondary tw-flex tw-items-center"
-              title="Open in new tab">
-              <i class="fa fa-external-link"></i>
-            </a>
           </div>
           <small class="form-text tw-text-muted">
             <i class="fa fa-info-circle"></i> Share this link with potential donors
