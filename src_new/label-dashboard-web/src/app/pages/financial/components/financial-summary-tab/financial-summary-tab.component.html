@@ -1,3 +1,14 @@
+<!-- Page Header -->
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+    <h3 class="tw-mb-2">
+      <i class="fas fa-tachometer-alt tw-mr-2"></i>
+      Summary
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">An overview of the current balance, latest earnings, and royalties.</p>
+  </div>
+</div>
+
 <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="summary">
   <div class="md:tw-col-span-4">
     <div class="current-balance-section tw-p-4 tw-text-center">
@@ -37,7 +48,7 @@
   <div class="md:tw-col-span-6">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3>Latest Earnings</h3>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Earnings</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
@@ -47,7 +58,7 @@
   <div class="md:tw-col-span-6">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3>Latest Royalties</h3>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Royalties</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>

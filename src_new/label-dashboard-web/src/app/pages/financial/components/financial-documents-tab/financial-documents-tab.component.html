@@ -1,3 +1,14 @@
+<!-- Page Header -->
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+    <h3 class="tw-mb-2">
+      <i class="fas fa-folder-open tw-mr-2"></i>
+      Documents
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">Upload and manage financial documents for this artist.</p>
+  </div>
+</div>
+
 <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
   <div class="md:tw-col-span-8">
     <app-paginated-table
@@ -16,7 +27,7 @@
   <div class="md:tw-col-span-4">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3>Upload Document</h3>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Document</h3>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <form (ngSubmit)="onUploadDocument()">
