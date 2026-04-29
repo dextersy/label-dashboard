@@ -79,44 +79,41 @@
           <!-- By brand -->
           <p *ngIf="event.brand?.name" class="tw-text-sm tw-italic tw-text-gray-500 tw-mb-0 tw-text-center">by {{ event.brand?.name }}</p>
 
-          <!-- Date / venue cards -->
-          <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-3 tw-mt-5 sm:tw-justify-center tw-min-w-0">
+          <!-- Unified date / venue info bar -->
+          <div class="tw-mt-5 tw-rounded-xl tw-bg-white tw-flex tw-divide-x tw-divide-gray-100" style="border: 0.5px solid #e5e7eb;">
 
-            <!-- Date card -->
-            <div class="tw-grid tw-grid-cols-[auto_1fr] tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0 sm:tw-w-1/2 sm:tw-flex-shrink-0">
-              <!-- Calendar icon block -->
-              <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-self-stretch tw-text-white"
-                [style.background-color]="brandColor">
-                <span class="tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-75">{{ formatEventWeekday(event.date_and_time) }}</span>
-                <span class="tw-text-2xl tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[1] }}</span>
-                <span class="tw-text-[11px] tw-font-semibold tw-opacity-75 tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[0] }}</span>
+            <!-- Left: Date & Time -->
+            <div class="tw-flex tw-items-center tw-gap-3.5 tw-flex-1 tw-px-5 tw-py-4 tw-min-w-0">
+              <!-- Date badge -->
+              <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-12 tw-h-12 tw-text-white" style="background-color: #2D28B8;">
+                <span class="tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(event.date_and_time) }}</span>
+                <span class="tw-text-xl tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[1] }}</span>
+                <span class="tw-text-[9px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[0] }}</span>
               </div>
-              <!-- Time info + action -->
-              <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-1">
-                <span class="tw-text-base tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
-                <span class="tw-text-[11px] tw-text-gray-400 tw-leading-none sm:tw-hidden">{{ formatEventDate(event.date_and_time) }}</span>
+              <!-- Time + calendar link -->
+              <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
+                <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
                 <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
-                  class="tw-flex tw-items-center tw-gap-1.5 tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium tw-mt-1 tw-whitespace-nowrap">
-                  <i class="fas fa-calendar-plus tw-text-xs"></i>
+                  class="tw-flex tw-items-center tw-gap-1 tw-text-[11px] tw-text-indigo-500 hover:tw-text-indigo-700 tw-no-underline tw-font-medium tw-whitespace-nowrap tw-transition-colors">
+                  <i class="fas fa-calendar-plus tw-text-[10px]"></i>
                   <span>Add to calendar</span>
                 </a>
               </div>
             </div>
 
-            <!-- Venue card -->
-            <div *ngIf="event.venue" class="tw-grid tw-grid-cols-[auto_1fr] tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0 sm:tw-w-1/2 sm:tw-flex-shrink-0">
-              <!-- Pin icon block -->
-              <div class="tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-self-stretch tw-text-white"
-                [style.background-color]="brandColor">
-                <i class="fas fa-map-marker-alt tw-text-xl"></i>
+            <!-- Right: Venue -->
+            <div *ngIf="event.venue" class="tw-flex tw-items-center tw-gap-3.5 tw-flex-1 tw-px-5 tw-py-4 tw-min-w-0">
+              <!-- Pin icon chip -->
+              <div class="tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-8 tw-h-8" style="background-color: #EEEDFE;">
+                <i class="fas fa-map-marker-alt tw-text-sm" style="color: #534AB7;"></i>
               </div>
-              <!-- Venue info + action -->
-              <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-0.5 tw-min-w-0">
-                <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-snug tw-truncate">{{ event.venue }}</span>
-                <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-500 tw-leading-snug tw-truncate">{{ event.venue_address }}</span>
+              <!-- Venue info -->
+              <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
+                <span class="tw-text-sm tw-font-semibold tw-text-gray-900 tw-leading-snug tw-truncate">{{ event.venue }}</span>
+                <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-400 tw-leading-snug tw-truncate">{{ event.venue_address }}</span>
                 <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank"
-                  class="tw-flex tw-items-center tw-gap-1.5 tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium tw-mt-1 tw-whitespace-nowrap">
-                  <i class="fas fa-external-link-alt tw-text-xs"></i>
+                  class="tw-flex tw-items-center tw-gap-1 tw-text-[11px] tw-text-indigo-500 hover:tw-text-indigo-700 tw-no-underline tw-font-medium tw-whitespace-nowrap tw-transition-colors">
+                  <i class="fas fa-external-link-alt tw-text-[10px]"></i>
                   <span>View on map</span>
                 </a>
               </div>
