@@ -23,34 +23,31 @@
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="container">
-          <div class="tw-justify-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-            <div class="tw-text-center">
-              <div class="profile-photo-wrapper">
-                <img 
-                  [src]="getProfilePhotoUrl(epkData.artist.profile_photo)" 
-                  [alt]="epkData.artist.name + ' Profile Photo'"
-                  class="hero-profile-photo">
-              </div>
-              <h1 class="hero-title">{{ epkData.artist.name }}</h1>
-              <div *ngIf="epkData.brand" class="hero-label">
-                <span class="brand-tag" 
-                      [style.color]="getBrandColor()" 
-                      [style.background-color]="getBrandTagBackgroundColor()">
-                  {{ epkData.brand.name }}
-                </span>
-              </div>
-              
-              <!-- Social Media Links -->
-              <div *ngIf="getSocialMediaLinks().length > 0" class="hero-social-links">
-                <a 
-                  *ngFor="let link of getSocialMediaLinks()" 
-                  [href]="link.url" 
-                  target="_blank" 
-                  class="hero-social-link"
-                  [title]="link.name">
-                  <i [class]="link.icon"></i>
-                </a>
-              </div>
+          <div class="tw-text-center">
+            <div class="profile-photo-wrapper">
+              <img
+                [src]="getProfilePhotoUrl(epkData.artist.profile_photo)"
+                [alt]="epkData.artist.name + ' Profile Photo'"
+                class="hero-profile-photo">
+            </div>
+            <h1 class="hero-title">{{ epkData.artist.name }}</h1>
+            <div *ngIf="epkData.brand" class="hero-label">
+              <span class="brand-tag"
+                    [style.color]="getBrandColor()"
+                    [style.background-color]="getBrandTagBackgroundColor()">
+                {{ epkData.brand.name }}
+              </span>
+            </div>
+            <!-- Social Media Links -->
+            <div *ngIf="getSocialMediaLinks().length > 0" class="hero-social-links">
+              <a
+                *ngFor="let link of getSocialMediaLinks()"
+                [href]="link.url"
+                target="_blank"
+                class="hero-social-link"
+                [title]="link.name">
+                <i [class]="link.icon"></i>
+              </a>
             </div>
           </div>
         </div>
@@ -60,8 +57,8 @@
     <!-- Artist Bio -->
     <div *ngIf="epkData.artist.bio" class="content-section bio-section">
       <div class="container">
-        <div class="tw-justify-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-          <div class="lg:tw-col-span-8">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="tw-col-span-12 lg:tw-col-span-8 lg:tw-col-start-3">
             <div class="section-header">
               <h2 class="section-title">About</h2>
             </div>
@@ -223,7 +220,7 @@
         <div class="minimal-releases-list">
           <div *ngFor="let release of epkData.releases" class="minimal-release-card">
             <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-              <div >
+              <div class="md:tw-col-span-3">
                 <div class="minimal-release-cover-wrapper">
                   <img
                     [src]="getCoverArtUrl(release.cover_art_url)"
@@ -249,7 +246,7 @@
                 <h3 class="minimal-release-title">{{ release.title }}</h3>
                 <p class="minimal-release-date">{{ formatReleaseDate(release.release_date) }}</p>
               </div>
-              <div class="tw-col-span-12">
+              <div class="md:tw-col-span-3">
                 <div *ngIf="getStreamingLinks(release).length > 0" class="minimal-streaming-links">
                   <a
                     *ngFor="let link of getStreamingLinks(release)"

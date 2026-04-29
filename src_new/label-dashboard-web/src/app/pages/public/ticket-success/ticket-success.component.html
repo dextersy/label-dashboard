@@ -1,123 +1,133 @@
-<div class="wrapper tw-h-full tw-flex tw-justify-center">
-  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3">
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="tw-px-card-pad tw-pb-card-pad tw-py-5 tw-text-center">
-      <div class="loading-dots">
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-    </div>
+<div class="public-page">
 
-    <!-- Error State (404) -->
-    <div *ngIf="isError" class="tw-px-card-pad tw-pb-card-pad tw-py-5 tw-text-center">
-      <i class="fas fa-exclamation-triangle fa-3x tw-text-danger tw-mb-3"></i>
-      <h1 class="tw-text-danger">404 - Event Not Found</h1>
-      <p class="tw-text-muted">The event you're looking for could not be found.</p>
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center">
+    <div class="tw-w-12 tw-h-12 tw-rounded-full tw-border-4 tw-border-gray-200 tw-border-t-orange-500 tw-animate-spin"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="isError" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-6">
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-text-center tw-max-w-sm tw-w-full tw-p-10">
+      <i class="fas fa-exclamation-triangle fa-3x tw-text-red-400 tw-mb-4 tw-block"></i>
+      <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-2">Ticket Not Found</h2>
+      <p class="tw-text-gray-500 tw-text-base tw-mb-6">We couldn't find your ticket details. The link may have expired.</p>
       <button class="btn-primary" (click)="goToEventPage()">
         <i class="fas fa-arrow-left tw-mr-1"></i>Go Back
       </button>
     </div>
+  </div>
 
-    <!-- Success State -->
-    <div *ngIf="isSuccess && event">
-      <!-- Event Poster -->
-      <img *ngIf="event.poster_url" 
-           [src]="event.poster_url" 
-           class="card-img-top" 
-           style="max-height:250px;object-fit:cover;"
-           [alt]="event.title + ' poster'">
+  <!-- Success -->
+  <div *ngIf="isSuccess && event" class="tw-min-h-screen tw-bg-[#fafafa] tw-flex tw-items-start tw-justify-center tw-py-8 tw-px-4">
+    <div class="tw-w-full tw-max-w-lg tw-bg-white tw-rounded-2xl tw-shadow-xl tw-overflow-hidden">
 
-      <!-- Success Header -->
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-text-center"
-           [style.background-color]="event.brand?.color || '#28a745'">
-        <h1 [style.color]="getContrastingColor(event.brand?.color)"
-            style="font-weight: 700;">
-          <strong>Thank you! 🙌</strong>
-        </h1>
+      <!-- Poster -->
+      <div *ngIf="event.poster_url" class="tw-relative tw-h-48 tw-overflow-hidden">
+        <img [src]="event.poster_url" [alt]="event.title + ' poster'"
+          class="tw-w-full tw-h-full tw-object-cover tw-object-center">
+        <div class="tw-absolute tw-inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)"></div>
       </div>
 
-      <!-- Success Message -->
-      <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+      <!-- Brand colour header -->
+      <div class="tw-px-8 tw-py-5 tw-text-center"
+        [style.background-color]="event.brand?.color || '#16a34a'">
+        <p class="tw-text-3xl tw-font-extrabold tw-mb-0"
+          [style.color]="getContrastingColor(event.brand?.color)">
+          Thank you! 🙌
+        </p>
+      </div>
 
-        <p><i class="fas fa-check-circle" style="font-size:150px;color:green;"></i></p>
-        <p>All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.</p>
+      <!-- Body -->
+      <div class="tw-px-8 tw-py-6">
 
-        <!-- Download PDF Button -->
-        <div class="tw-mb-4 tw-p-4 tw-bg-gray-50 border border-primary rounded" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-          <button
-            class="btn-primary tw-py-3 tw-px-5"
-            style="font-size: 1.5rem; font-weight: bold; min-width: 300px;"
+        <!-- Check + message -->
+        <div class="tw-text-center tw-mb-6">
+          <div class="tw-w-20 tw-h-20 tw-rounded-full tw-bg-green-50 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+            <i class="fas fa-check-circle tw-text-green-500" style="font-size: 2.5rem;"></i>
+          </div>
+          <p class="tw-text-base tw-text-gray-700 tw-mb-0">
+            All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.
+          </p>
+        </div>
+
+        <!-- Download button -->
+        <div class="tw-mb-5">
+          <button class="btn-primary tw-w-full tw-py-4 tw-text-base tw-font-bold"
             (click)="downloadPDF()"
-            [disabled]="isDownloading"
-            [attr.aria-busy]="isDownloading">
-            <i class="fas tw-mr-2" style="font-size: 1.75rem;" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'" aria-hidden="true"></i>
+            [disabled]="isDownloading">
+            <i class="fas tw-mr-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'"></i>
             {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
-          <p class="tw-mt-3 tw-mb-0 tw-text-muted" style="font-size: 1rem;">Save or print your ticket for easy access at the event</p>
-          <div *ngIf="downloadError" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-mt-3 tw-mb-0" role="alert">
-            <i class="fas fa-exclamation-triangle tw-mr-1"></i>
-            Failed to download PDF. Please try again or contact support if the issue persists.
+          <p class="tw-text-sm tw-text-gray-400 tw-text-center tw-mt-2">Save or print your ticket for easy access at the event</p>
+          <div *ngIf="downloadError"
+            class="tw-mt-3 tw-flex tw-items-start tw-gap-2 tw-text-base tw-text-red-700 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-3 tw-py-2.5">
+            <i class="fas fa-exclamation-triangle tw-flex-shrink-0 tw-mt-0.5"></i>
+            <span>Failed to download PDF. Please try again or contact support if the issue persists.</span>
           </div>
         </div>
 
-        <!-- Instructions -->
-      <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 field-description text-dark text-left tw-text-gray-900">
-        <i class="fas fa-info-circle"></i> <b>How to use your ticket</b><br>
-        <ul>
-          <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
-          <li>You may be required to provide identification to verify your ticket at the gate.</li>
-          <li>Please do not share your ticket with anyone else to avoid unauthorized use of the ticket at the event.</li>
-          <li>Didn't receive your ticket? Don't worry, we're ready to help. Send us an email at 
-            <a (click)="contactSupport()" style="cursor: pointer;">
-              support&#64;melt-records.com
-            </a> or use the chat widget on the lower right.
-          </li>
-        </ul>
+        <!-- How to use -->
+        <div class="tw-rounded-xl tw-border tw-border-blue-100 tw-bg-blue-50 tw-p-4 tw-mb-5">
+          <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-blue-600 tw-mb-2">
+            <i class="fas fa-info-circle tw-mr-1"></i>How to use your ticket
+          </p>
+          <ul class="tw-text-base tw-text-blue-800 tw-space-y-1.5 tw-pl-4 tw-list-disc">
+            <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
+            <li>You may be required to provide identification to verify your ticket at the gate.</li>
+            <li>Please do not share your ticket with anyone else to avoid unauthorized use of the ticket at the event.</li>
+            <li>
+              Didn't receive your ticket? Don't worry, we're ready to help. Send us an email at
+              <a (click)="contactSupport()" class="tw-underline tw-cursor-pointer tw-text-blue-700">support&#64;melt-records.com</a>
+              or use the chat widget on the lower right.
+            </li>
+          </ul>
         </div>
-      </div>
 
-      <!-- Share Buttons Footer -->
-      <div class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle tw-bg-gray-50 text-dark tw-text-center tw-text-gray-900" *ngIf="event.buy_shortlink || getGoogleCalendarUrl()">
-        <p>
-          <strong>Tell your friends about this show!</strong>
-        </p>
-        <div class="tw-flex tw-justify-center tw-gap-2 tw-flex-wrap">
-          <a *ngIf="event.buy_shortlink"
-             (click)="shareOnFacebook()"
-             class="btn-primary"
-             style="background-color: #1877f2; border-color: #1877f2;">
-            <i class="fab fa-facebook"></i> Share
-          </a>
-          <a *ngIf="event.buy_shortlink"
-             (click)="shareOnTwitter()"
-             class="btn-secondary"
-             style="background-color: #1da1f2; border-color: #1da1f2;">
-            <i class="fab fa-twitter"></i> Tweet
-          </a>
-          <a *ngIf="getGoogleCalendarUrl()"
-             [href]="getGoogleCalendarUrl()" target="_blank"
-             class="btn-primary"
-             style="background-color: #4285f4; border-color: #4285f4;">
-            <i class="fas fa-calendar-plus"></i> Add to Calendar
-          </a>
+        <!-- Share -->
+        <div *ngIf="event.buy_shortlink || getGoogleCalendarUrl()" class="tw-text-center">
+          <p class="tw-text-base tw-font-semibold tw-text-gray-600 tw-mb-3">Tell your friends about this show!</p>
+          <div class="tw-flex tw-justify-center tw-gap-2 tw-flex-wrap">
+            <button *ngIf="event.buy_shortlink" type="button"
+              class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-lg tw-text-base tw-font-semibold tw-text-white tw-border-none tw-cursor-pointer tw-transition-opacity hover:tw-opacity-90"
+              style="background-color: #1877f2;"
+              (click)="shareOnFacebook()">
+              <i class="fab fa-facebook"></i> Share
+            </button>
+            <button *ngIf="event.buy_shortlink" type="button"
+              class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-lg tw-text-base tw-font-semibold tw-text-white tw-border-none tw-cursor-pointer tw-transition-opacity hover:tw-opacity-90"
+              style="background-color: #1da1f2;"
+              (click)="shareOnTwitter()">
+              <i class="fab fa-twitter"></i> Tweet
+            </button>
+            <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
+              class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-lg tw-text-base tw-font-semibold tw-text-white tw-no-underline tw-transition-opacity hover:tw-opacity-90"
+              style="background-color: #4285f4;">
+              <i class="fas fa-calendar-plus"></i> Add to Calendar
+            </a>
+          </div>
         </div>
-      </div>
 
-      <!-- Brand Logo Footer -->
-      <div class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle tw-py-3 tw-text-center"
-           *ngIf="event?.brand?.logo_url"
-           [style.background-color]="event.brand?.color || '#ffffff'">
-        <img [src]="event.brand?.logo_url"
-             [alt]="(event.brand?.name || 'Brand') + ' logo'"
-             class="tw-mb-2"
-             style="max-height: 30px; max-width: 120px; opacity: 0.9;">
-        <p class="tw-mb-0 small tw-text-sm"
-           [style.color]="getContrastingColor(event.brand?.color)"
-           style="opacity: 0.7;">
-          Powered by Spindly
+      </div><!-- end body -->
+
+      <!-- Brand footer -->
+      <div *ngIf="event?.brand?.logo_url"
+        class="tw-px-8 tw-py-4 tw-border-t tw-border-gray-100 tw-text-center"
+        [style.background-color]="event.brand?.color || '#ffffff'">
+        <img [src]="event.brand?.logo_url" [alt]="(event.brand?.name || 'Brand') + ' logo'"
+          class="tw-mb-1 tw-inline-block"
+          style="max-height: 28px; max-width: 110px; opacity: 0.85;">
+        <p class="tw-text-xs tw-mb-0" style="opacity: 0.6;"
+          [style.color]="getContrastingColor(event.brand?.color)">
+          Powered by Spindly.
         </p>
       </div>
+
+      <!-- Powered by (no logo) -->
+      <div *ngIf="!event?.brand?.logo_url" class="tw-px-8 tw-py-4 tw-border-t tw-border-gray-100 tw-text-center">
+        <p class="tw-text-xs tw-text-gray-400 tw-mb-0">Powered by Spindly.</p>
+      </div>
+
     </div>
   </div>
+
 </div>

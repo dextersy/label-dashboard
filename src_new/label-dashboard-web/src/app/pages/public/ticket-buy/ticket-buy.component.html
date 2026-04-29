@@ -1,11 +1,13 @@
 <div class="public-page" [style.background-color]="brandColor">
+
   <!-- Preview Banner -->
-  <div *ngIf="isPreview" class="preview-banner">
+  <div *ngIf="isPreview"
+    class="tw-sticky tw-top-0 tw-z-[1050] tw-bg-amber-400 tw-text-black tw-text-center tw-px-4 tw-py-2 tw-text-sm tw-font-bold tw-shadow">
     <i class="fas fa-eye tw-mr-2"></i>
-    <strong>Preview Mode</strong> — This is how the buy page will look. Purchasing is disabled.
+    Preview Mode — This is how the buy page will look. Purchasing is disabled.
   </div>
 
-  <!-- Countdown Notification Bar -->
+  <!-- Countdown -->
   <app-countdown-notification
     *ngIf="event && event.show_countdown && !isLoading && !isError && canBuyTickets() && !isPreview"
     [eventDate]="event.date_and_time"
@@ -14,345 +16,376 @@
     [brandColor]="brandColor">
   </app-countdown-notification>
 
-  <!-- Loading Overlay -->
-  <div *ngIf="isLoading" class="loading-overlay">
-    <div class="loading"></div>
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="tw-fixed tw-inset-0 tw-bg-white/60 tw-z-10 tw-flex tw-items-center tw-justify-center">
+    <div class="tw-w-16 tw-h-16 tw-rounded-full tw-border-4 tw-border-gray-200 tw-border-t-orange-500 tw-animate-spin"></div>
   </div>
 
-  <!-- Error State (404) -->
-  <div *ngIf="isError" class="wrapper tw-h-full tw-flex tw-justify-center tw-items-center">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-text-center" style="max-width: 500px;">
-      <div class="tw-px-card-pad tw-pb-card-pad tw-py-5">
-        <i class="fas fa-exclamation-triangle fa-3x tw-text-danger tw-mb-3"></i>
-        <h1 class="tw-text-danger">404 - Event Not Found</h1>
-        <p class="tw-text-muted">The event you're looking for could not be found.</p>
-        <button class="btn-primary" (click)="goBack()">
-          <i class="fas fa-arrow-left tw-mr-1"></i>Go Back
-        </button>
-      </div>
+  <!-- 404 -->
+  <div *ngIf="isError" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-6">
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-text-center tw-max-w-sm tw-w-full tw-p-10">
+      <i class="fas fa-exclamation-triangle fa-3x tw-text-red-400 tw-mb-4 tw-block"></i>
+      <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-2">Event Not Found</h2>
+      <p class="tw-text-gray-500 tw-text-sm tw-mb-6">The event you're looking for could not be found.</p>
+      <button class="btn-primary" (click)="goBack()">
+        <i class="fas fa-arrow-left tw-mr-1"></i>Go Back
+      </button>
     </div>
   </div>
 
-  <!-- Content shown only when event is loaded -->
-  <div *ngIf="!isLoading && !isError && event"
-       class="wrapper fadeInDown"
-       [class.with-countdown]="event.show_countdown && canBuyTickets()">
+  <!-- Main layout -->
+  <div *ngIf="!isLoading && !isError && event" class="page-layout" [class.no-poster]="!event.poster_url">
 
-    <div class="page-layout" [class.no-poster]="!event.poster_url">
-
-      <!-- Left: Sticky poster panel -->
-      <div class="poster-panel" *ngIf="event.poster_url" (click)="openLightbox()">
-        <img #posterImg [src]="event.poster_url" class="poster-fill" alt="Event poster">
-        <button
-          class="view-full-image-btn"
-          (click)="openLightbox(); $event.stopPropagation()"
-          title="View full image">
-          <i class="fas fa-search-plus"></i>
-        </button>
+    <!-- LEFT: sticky poster -->
+    <div class="poster-panel" *ngIf="event.poster_url" (click)="openLightbox()">
+      <img #posterImg [src]="event.poster_url" class="poster-fill" alt="Event poster">
+      <!-- Info overlay at bottom -->
+      <div class="tw-absolute tw-bottom-0 tw-inset-x-0 tw-p-6 tw-z-10"
+        style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)">
+        <div *ngIf="event.brand?.name" class="tw-text-white/50 tw-text-xs tw-font-medium tw-uppercase tw-tracking-widest tw-mb-1">
+          {{ event.brand?.name }}
+        </div>
+        <p class="tw-text-white tw-font-bold tw-text-lg tw-leading-tight tw-mb-2">{{ event.title }}</p>
+        <p class="tw-text-white/70 tw-text-sm tw-mb-0.5">
+          <i class="fas fa-calendar-alt tw-mr-1.5 tw-text-white/40"></i>{{ formatEventDate(event.date_and_time) }} · {{ formatEventTime(event.date_and_time) }}
+        </p>
+        <p *ngIf="event.venue" class="tw-text-white/70 tw-text-sm">
+          <i class="fas fa-map-marker-alt tw-mr-1.5 tw-text-white/40"></i>{{ event.venue }}
+        </p>
       </div>
+      <button class="view-full-image-btn" (click)="openLightbox(); $event.stopPropagation()" title="View full image">
+        <i class="fas fa-expand-alt"></i>
+      </button>
+    </div>
 
-      <!-- Right: All content -->
-      <div class="content-panel" [class.closed-state]="!canBuyTickets()">
+    <!-- RIGHT: form area -->
+    <div class="content-panel" [class.closed-state]="!canBuyTickets()">
 
-        <!-- Event info -->
-        <div class="event-info-section">
-          <div *ngIf="canBuyTickets()">
-            <h3 class="tw-mb-0">Get tickets to</h3>
-            <h1 style="margin-top: 0 !important;"><strong>{{ event.title }}</strong></h1>
+      <!-- OPEN: event summary + form -->
+      <div *ngIf="canBuyTickets()" class="tw-flex tw-flex-col tw-flex-1 tw-min-h-0">
+        <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="tw-flex tw-flex-col tw-flex-1 tw-min-h-0">
+        <div class="content-scroll" #contentScroll>
+        <div class="content-inner">
 
-            <div class="event-details tw-mt-3 tw-mb-3 tw-p-3" style="background-color: #f8f9fa; border-radius: 8px;">
-              <div class="tw-mb-2">
-                <span class="tw-font-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="tw-font-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
-                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
-                  (<i class="fas fa-calendar-plus tw-mr-1"></i>Add to Calendar)
-</a>
+        <!-- Event summary (no poster = show full info here, with poster = brief) -->
+        <div class="tw-mb-8">
+
+          <!-- Pre-title -->
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-1 tw-text-center">Get tickets to</p>
+
+          <!-- Title -->
+          <h1 class="tw-text-4xl tw-font-black tw-text-gray-900 tw-leading-tight tw-tracking-tight tw-mb-1 tw-text-center">{{ event.title }}</h1>
+
+          <!-- By brand -->
+          <p *ngIf="event.brand?.name" class="tw-text-sm tw-italic tw-text-gray-500 tw-mb-0 tw-text-center">by {{ event.brand?.name }}</p>
+
+          <!-- Date / venue cards -->
+          <div class="tw-flex tw-gap-3 tw-mt-5 tw-justify-center tw-min-w-0">
+
+            <!-- Date card -->
+            <div class="tw-flex tw-items-stretch tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0">
+              <!-- Calendar icon block -->
+              <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-text-white"
+                [style.background-color]="brandColor">
+                <span class="tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-75">{{ formatEventWeekday(event.date_and_time) }}</span>
+                <span class="tw-text-2xl tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[1] }}</span>
+                <span class="tw-text-[11px] tw-font-semibold tw-opacity-75 tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[0] }}</span>
               </div>
-              <div class="tw-mb-0">
-                <span class="tw-font-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
-                  (<i class="fas fa-map-marker-alt tw-mr-1"></i>View Map)
-</a>
+              <!-- Time + calendar link -->
+              <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-2">
+                <span class="tw-text-base tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
+                <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
+                  class="tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium tw-leading-none">
+                  + Add to calendar
+                </a>
               </div>
             </div>
 
-            <small [innerHTML]="sanitizeHtml(event.description)" style="font-size: 1rem;" class="description-text"></small>
+            <!-- Venue card -->
+            <div *ngIf="event.venue" class="tw-flex tw-items-stretch tw-rounded-2xl tw-border tw-border-gray-200 tw-overflow-hidden tw-bg-white tw-shadow-sm tw-min-w-0 tw-shrink tw-max-w-[220px]">
+              <!-- Pin icon block -->
+              <div class="tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-3 tw-min-w-[64px] tw-text-white"
+                [style.background-color]="brandColor">
+                <i class="fas fa-map-marker-alt tw-text-xl"></i>
+              </div>
+              <!-- Venue info -->
+              <div class="tw-flex tw-flex-col tw-justify-center tw-px-4 tw-py-3 tw-gap-0.5 tw-min-w-0">
+                <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-snug">{{ event.venue }}</span>
+                <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-500 tw-leading-snug">{{ event.venue_address }}</span>
+                <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank"
+                  class="tw-text-[11px] tw-text-gray-400 hover:tw-text-gray-600 tw-no-underline tw-font-medium">
+                  View on map
+                </a>
+              </div>
+            </div>
+
           </div>
-          <div *ngIf="!canBuyTickets()" class="tw-text-center">
-            <h1>Online ticket sales for <strong>{{ event.title }}</strong> has ended.</h1>
 
-            <!-- Walk-in available -->
-            <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()">
-              <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mt-4 tw-mb-3 tw-text-center" style="font-size: 1.2rem;">
-                <i class="fas fa-walking tw-mr-2"></i>
-                <strong>Walk-in tickets are available at the venue!</strong>
-                <hr class="tw-my-2">
-                <div *ngFor="let wit of event.walkInTypes">
-                  <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0" class="tw-mb-1">
-                    <strong>{{ wit.name }}</strong> — {{ formatPriceDisplay(wit.price) }}
-                    <span *ngIf="wit.remaining_slots !== null" class="tw-text-muted">({{ wit.remaining_slots }} slots available)</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="event-details tw-mt-3 tw-mb-3 tw-p-3 tw-text-left" style="background-color: #f8f9fa; border-radius: 8px;">
-                <div class="tw-mb-2">
-                  <span class="tw-font-semibold">📅 {{ formatEventDate(event.date_and_time) }}</span> at <span class="tw-font-semibold">🕐 {{ formatEventTime(event.date_and_time) }}</span>
-                  <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
-                    (<i class="fas fa-calendar-plus tw-mr-1"></i>Add to Calendar)
-                  </a>
-                </div>
-                <div class="tw-mb-0">
-                  <span class="tw-font-semibold">📍 {{ event.venue }}</span><span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span>
-                  <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" class="text-decoration-none tw-ml-2" style="color: #1595e7;">
-                    (<i class="fas fa-map-marker-alt tw-mr-1"></i>View Map)
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <!-- No walk-in -->
-            <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()">
-              <small class="tw-mt-2 tw-block tw-text-muted">Tickets or walk-in may still be available at the show. Please check <strong>{{ event.brand?.name || 'the event organizer' }}</strong> social media for more information.</small>
-            </div>
+          <!-- Description -->
+          <div *ngIf="event.description" class="tw-mt-3 tw-text-sm tw-text-gray-600 tw-leading-relaxed description-text"
+            [innerHTML]="sanitizeHtml(event.description)">
           </div>
         </div>
 
-        <!-- Form -->
-        <div class="form-section" *ngIf="canBuyTickets()">
-          <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+          <!-- Name -->
+          <div class="tw-mb-4">
+            <label class="tw-label" for="name">Full name</label>
+            <input type="text" id="name" class="tw-input" formControlName="name"
+              placeholder="Your full name"
+              [class.invalid]="isFieldInvalid('name')" required>
+            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500" *ngIf="isFieldInvalid('name')">Full name is required.</p>
+            <p class="tw-mt-1.5 tw-text-xs tw-text-green-600"
+              *ngIf="!isFieldInvalid('name') && ticketForm.get('name')?.value">
+              <i class="fas fa-check-circle tw-mr-1"></i>Please make sure your full name is as it appears on your identification.
+            </p>
+          </div>
 
-            <h6><strong>Step 1.</strong> Please provide your details.</h6>
-
-            <!-- Name Field -->
-            <div class="name-container fadeIn first">
-              <div class="input-group">
-                <div class="form-floating tw-flex-1">
-                  <input
-                    type="text"
-                    class="tw-input"
-                    id="name"
-                    formControlName="name"
-                    placeholder="Full name"
-                    [class.is-invalid]="isFieldInvalid('name')"
-                    required>
-                  <label for="name">Full name</label>
-                </div>
-              </div>
-              <div class="invalid-feedback tw-block" *ngIf="isFieldInvalid('name')">
-                Full name is required.
-              </div>
-              <div class="valid-feedback tw-block"
-                   *ngIf="!isFieldInvalid('name') && ticketForm.get('name')?.value">
-                <i class="fas fa-check-circle tw-text-success"></i>
-                Please make sure your full name is as it appears on your identification.
-              </div>
-            </div>
-
-            <!-- Email Field -->
-            <div class="email-container fadeIn second">
-              <div class="input-group">
-                <div class="form-floating tw-flex-1">
-                  <input
-                    type="email"
-                    class="tw-input"
-                    id="email_address"
-                    formControlName="email_address"
-                    placeholder="Email address"
-                    [class.is-invalid]="isFieldInvalid('email_address')"
-                    required>
-                  <label for="email_address">Email address</label>
-                </div>
-              </div>
-              <div class="invalid-feedback tw-block"
-                   *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">
-                Email address is required.
-              </div>
-              <div class="invalid-feedback tw-block"
-                   *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">
-                Email address is not valid.
-              </div>
-              <div class="valid-feedback tw-block"
-                   *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
-                <i class="fas fa-check-circle tw-text-success"></i>
-                Please make sure your email address is correct.
-              </div>
-              <div class="tw-text-warning tw-block" *ngIf="emailTypoResult?.suggestedEmail">
-                <i class="fas fa-exclamation-triangle"></i>
+          <!-- Email -->
+          <div class="tw-mb-4">
+            <label class="tw-label" for="email_address">Email address</label>
+            <input type="email" id="email_address" class="tw-input" formControlName="email_address"
+              placeholder="Your email address"
+              [class.invalid]="isFieldInvalid('email_address')" required>
+            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
+              *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">Email address is required.</p>
+            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
+              *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">Enter a valid email address.</p>
+            <p class="tw-mt-1.5 tw-text-xs tw-text-green-600"
+              *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
+              <i class="fas fa-check-circle tw-mr-1"></i>Please make sure your email address is correct.
+            </p>
+            <div class="tw-mt-2 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-amber-600" *ngIf="emailTypoResult?.suggestedEmail">
+              <i class="fas fa-exclamation-triangle tw-flex-shrink-0"></i>
+              <span>
                 Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?
-                <a class="tw-ml-2 text-decoration-underline" style="cursor: pointer;" (click)="applySuggestedEmail()">Yes</a>
-                <a class="tw-ml-1 text-decoration-underline" style="cursor: pointer;" (click)="dismissEmailSuggestion()">No</a>
+                <button type="button" class="tw-ml-1 tw-underline tw-text-blue-600" (click)="applySuggestedEmail()">Yes</button>
+                <button type="button" class="tw-ml-1 tw-underline tw-text-gray-500" (click)="dismissEmailSuggestion()">No</button>
+              </span>
+            </div>
+          </div>
+
+          <!-- Contact number -->
+          <div class="tw-mb-4">
+            <label class="tw-label" for="contact_number">Contact number</label>
+            <div class="tw-flex">
+              <span class="tw-flex tw-items-center tw-px-3 tw-bg-[#f9fafb] tw-rounded-l-input tw-text-sm tw-text-gray-500 tw-whitespace-nowrap tw-font-medium">
+                🇵🇭 +63
+              </span>
+              <input type="text" id="contact_number" class="tw-input tw-rounded-l-none tw-border-l tw-border-gray-200"
+                formControlName="contact_number" placeholder="9xx xxx xxxx"
+                [class.invalid]="isFieldInvalid('contact_number')">
+            </div>
+            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500" *ngIf="isFieldInvalid('contact_number')">Contact number is required.</p>
+          </div>
+
+          <!-- Ticket type selection -->
+          <div class="tw-mb-5" *ngIf="event.ticketTypes && getAvailableTicketTypes().length > 1">
+            <p class="tw-label tw-mb-3">Select ticket type</p>
+            <div class="tw-grid tw-grid-cols-2 tw-gap-2 sm:tw-grid-cols-3">
+              <button type="button" *ngFor="let ticketType of getAvailableTicketTypes()"
+                class="tw-relative tw-flex tw-flex-col tw-items-center tw-text-center tw-rounded-xl tw-border-2 tw-p-3 tw-transition-all tw-select-none"
+                [class.tw-border-gray-200]="selectedTicketType?.id !== ticketType.id && !ticketType.is_sold_out"
+                [class.tw-border-indigo-500]="selectedTicketType?.id === ticketType.id"
+                [class.tw-bg-indigo-50]="selectedTicketType?.id === ticketType.id"
+                [class.tw-ring-2]="selectedTicketType?.id === ticketType.id"
+                [class.tw-ring-indigo-400]="selectedTicketType?.id === ticketType.id"
+                [class.tw-opacity-50]="ticketType.is_sold_out"
+                [class.tw-cursor-not-allowed]="ticketType.is_sold_out"
+                [class.tw-cursor-pointer]="!ticketType.is_sold_out"
+                [class.hover:tw-border-indigo-300]="!ticketType.is_sold_out"
+                [disabled]="ticketType.is_sold_out"
+                (click)="selectTicketTypeCard(ticketType)">
+                <span class="tw-font-semibold tw-text-sm tw-text-gray-900 tw-leading-tight">{{ ticketType.name }}</span>
+                <span class="tw-mt-1 tw-font-bold tw-text-base"
+                  [class.tw-text-indigo-600]="!ticketType.is_sold_out"
+                  [class.tw-text-gray-400]="ticketType.is_sold_out">
+                  {{ formatPriceDisplay(ticketType.price) }}
+                </span>
+                <span *ngIf="ticketType.is_sold_out"
+                  class="tw-mt-1 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wider tw-text-gray-400">
+                  Sold Out
+                </span>
+                <span *ngIf="!ticketType.is_sold_out && event.show_tickets_remaining && ticketType.remaining_tickets != null"
+                  class="tw-mt-1 tw-text-[11px] tw-text-gray-500">
+                  {{ ticketType.remaining_tickets }} left
+                </span>
+                <span *ngIf="selectedTicketType?.id === ticketType.id"
+                  class="tw-absolute tw-top-2 tw-right-2 tw-w-4 tw-h-4 tw-rounded-full tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
+                  <i class="fas fa-check tw-text-white" style="font-size: 8px;"></i>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Special instructions -->
+          <div *ngIf="selectedTicketType?.special_instructions"
+            class="tw-mb-4 tw-flex tw-items-start tw-gap-2 tw-text-sm tw-text-green-700 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-3 tw-py-2.5">
+            <i class="fas fa-info-circle tw-flex-shrink-0 tw-mt-0.5"></i>
+            <span>{{ selectedTicketType?.special_instructions }}</span>
+          </div>
+
+          <!-- Single type display -->
+          <div *ngIf="getAvailableTicketTypes().length <= 1"
+            class="tw-mb-4 tw-flex tw-items-center tw-justify-between tw-bg-gray-50 tw-rounded-lg tw-px-4 tw-py-3 tw-text-sm">
+            <span class="tw-font-medium tw-text-gray-700">{{ selectedTicketType?.name || event.ticket_naming || 'Regular' }}</span>
+            <span class="tw-font-bold tw-text-gray-900">{{ formatPriceDisplay(selectedTicketType?.price ?? event.ticket_price) }}</span>
+          </div>
+
+          <!-- Quantity -->
+          <div class="tw-mb-5">
+            <label class="tw-label" for="number_of_entries">Number of tickets</label>
+            <input type="number" id="number_of_entries" class="tw-input"
+              min="1" [max]="getRemainingTicketsDisplay() || 99" step="1"
+              formControlName="number_of_entries" placeholder="1"
+              (input)="calculateTotal()"
+              [class.invalid]="isFieldInvalid('number_of_entries')">
+            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500" *ngIf="isFieldInvalid('number_of_entries')">Number of tickets is required.</p>
+            <p class="tw-mt-1.5 tw-text-sm tw-text-gray-400" *ngIf="event.show_tickets_remaining && getRemainingTicketsDisplay()">
+              <strong class="tw-text-gray-600">{{ getRemainingTicketsDisplay() }}</strong> tickets remaining
+            </p>
+          </div>
+
+          <!-- Referral code -->
+          <div class="tw-mb-5" *ngIf="!referralCode">
+            <label class="tw-label" for="referral_code">Referral code <span class="tw-font-normal tw-text-gray-400">(optional)</span></label>
+            <input type="text" id="referral_code" class="tw-input"
+              formControlName="referral_code" placeholder="Enter code if you have one">
+          </div>
+          <div *ngIf="referralCode" class="tw-mb-5 tw-flex tw-items-center tw-gap-2 tw-text-sm">
+            <i class="fas fa-tag tw-text-gray-400"></i>
+            <span class="tw-text-gray-600">Referral code:</span>
+            <span class="tw-bg-cyan-100 tw-text-cyan-800 tw-font-semibold tw-px-2.5 tw-py-0.5 tw-rounded-full">{{ referralCode }}</span>
+          </div>
+
+          <!-- Reminders -->
+          <div class="tw-mb-5 tw-rounded-xl tw-border tw-border-blue-100 tw-bg-blue-50 tw-p-4">
+            <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-blue-600 tw-mb-2">
+              <i class="fas fa-info-circle tw-mr-1"></i>Before you submit
+            </p>
+            <ul class="tw-text-sm tw-text-blue-800 tw-space-y-1.5 tw-pl-4 tw-list-disc">
+              <li>Please make sure your full name is as it appears on your identification.</li>
+              <li>Please make sure your email address is correct.</li>
+              <li>Tickets are non-refundable once paid.</li>
+              <li *ngIf="selectedTicketType?.special_instructions">
+                For <strong>"{{ selectedTicketType?.name }}"</strong>: {{ selectedTicketType?.special_instructions }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Privacy consent -->
+          <div class="tw-mb-5">
+            <mat-checkbox formControlName="privacy_consent"
+              [class.mat-checkbox-invalid]="isFieldInvalid('privacy_consent')">
+              <span class="tw-text-sm tw-text-gray-600 tw-leading-relaxed">
+                I agree to share my data to <strong>{{ event.brand?.name || 'the event organizer' }}</strong> for the sole purpose of processing my ticket purchase.
+              </span>
+            </mat-checkbox>
+            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500 tw-ml-8" *ngIf="isFieldInvalid('privacy_consent')">
+              You must accept the privacy consent to proceed.
+            </p>
+          </div>
+
+          <!-- Footer -->
+          <div class="tw-mt-10 tw-pt-6 tw-border-t tw-border-gray-100 tw-text-center tw-text-xs tw-text-gray-400">
+            <p class="tw-font-semibold tw-mb-0.5">Powered by Spindly.</p>
+            <p>
+              Having trouble?
+              <a [href]="'mailto:support@melt-records.com?subject=Issue with ticketing for ' + event.title"
+                class="tw-text-blue-400 hover:tw-text-blue-600">Contact us</a>
+              or use the chat widget.
+            </p>
+          </div>
+
+        </div><!-- end content-inner -->
+        </div><!-- end content-scroll -->
+
+        <!-- Sticky total + submit -->
+        <div class="sticky-cta">
+          <div class="content-inner tw-mx-auto">
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+              <div class="tw-flex tw-flex-col tw-gap-0.5">
+                <span class="tw-text-sm tw-font-medium tw-text-gray-500">Total</span>
+                <span class="tw-text-xs tw-text-gray-400">
+                  {{ ticketForm.get('number_of_entries')?.value || 1 }}x {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} ticket
+                </span>
               </div>
+              <span *ngIf="totalAmount > 0" class="tw-text-2xl tw-font-extrabold tw-text-gray-900">₱{{ formatPrice(totalAmount) }}</span>
+              <span *ngIf="totalAmount === 0" class="tw-flex tw-items-center tw-gap-1.5 tw-text-green-600 tw-font-bold tw-text-lg">
+                <i class="fas fa-check-circle"></i> FREE
+              </span>
             </div>
-
-            <!-- Contact Number Field -->
-            <div class="contact-number-container fadeIn third">
-              <div class="input-group">
-                <span class="input-group-text">🇵🇭 +63</span>
-                <div class="form-floating tw-flex-1">
-                  <input
-                    type="text"
-                    class="tw-input"
-                    id="contact_number"
-                    formControlName="contact_number"
-                    placeholder="Contact number"
-                    [class.is-invalid]="isFieldInvalid('contact_number')">
-                  <label for="contact_number">Contact number</label>
-                </div>
-              </div>
-              <div class="invalid-feedback tw-block" *ngIf="isFieldInvalid('contact_number')">
-                Contact number is required.
-              </div>
-            </div>
-
-            <!-- Ticket Type Selection -->
-            <div class="ticket-type-container fadeIn fourth" *ngIf="event.ticketTypes && getAvailableTicketTypes().length > 1">
-              <h6><strong>Select ticket type</strong></h6>
-              <div class="ticket-type-cards">
-                <div
-                  *ngFor="let ticketType of getAvailableTicketTypes()"
-                  class="ticket-type-card"
-                  [class.selected]="selectedTicketType?.id === ticketType.id"
-                  [class.sold-out]="ticketType.is_sold_out"
-                  (click)="selectTicketTypeCard(ticketType)">
-                  <div class="ticket-type-name">{{ ticketType.name }}</div>
-                  <div class="ticket-type-price">{{ formatPriceDisplay(ticketType.price) }}</div>
-                  <span *ngIf="ticketType.is_sold_out" class="sold-out-badge">Sold Out</span>
-                  <div *ngIf="!ticketType.is_sold_out && event.show_tickets_remaining && ticketType.remaining_tickets != null"
-                       class="ticket-type-remaining">
-                    {{ ticketType.remaining_tickets }} left
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Ticket type special instructions -->
-            <div class="tw-block tw-text-success tw-mb-3" *ngIf="selectedTicketType?.special_instructions">
-              <i class="fas fa-info-circle tw-mr-1"></i>{{ selectedTicketType?.special_instructions }}
-            </div>
-
-            <!-- Number of Tickets -->
-            <div *ngIf="getAvailableTicketTypes().length <= 1" class="single-ticket-type-display fadeIn fourth tw-mb-3">
-              {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} &mdash;
-              <strong>{{ formatPriceDisplay(selectedTicketType?.price ?? event.ticket_price) }}</strong>
-            </div>
-            <small class="fadeIn fourth" *ngIf="event.show_tickets_remaining && getRemainingTicketsDisplay()">
-              <strong>{{ getRemainingTicketsDisplay() }}</strong> tickets available.
-            </small>
-            <div class="ticket-quantity-container fadeIn fourth">
-              <div class="form-floating">
-                <input
-                  type="number"
-                  min="1"
-                  [max]="getRemainingTicketsDisplay() || 99"
-                  step="1"
-                  class="tw-input"
-                  id="number_of_entries"
-                  formControlName="number_of_entries"
-                  placeholder="Number of tickets"
-                  (input)="calculateTotal()"
-                  [class.is-invalid]="isFieldInvalid('number_of_entries')">
-                <label for="number_of_entries">Number of tickets</label>
-              </div>
-              <div class="invalid-feedback tw-block" *ngIf="isFieldInvalid('number_of_entries')">
-                Number of tickets is required.
-              </div>
-            </div>
-
-            <!-- Referral Code -->
-            <div class="referral-code-container fadeIn fifth" *ngIf="!referralCode">
-              <div class="input-group">
-                <div class="form-floating tw-flex-1">
-                  <input
-                    type="text"
-                    class="tw-input"
-                    id="referral_code"
-                    formControlName="referral_code"
-                    placeholder="Referral code (optional)">
-                  <label for="referral_code">Referral code (optional)</label>
-                </div>
-              </div>
-            </div>
-            <div *ngIf="referralCode" class="referral-code-display fadeIn fifth">
-              <strong>Referral code: </strong><span class="badge bg-info tw-text-white">{{ referralCode }}</span>
-            </div>
-
-            <hr class="tw-my-4">
-
-            <!-- Reminders -->
-            <h6><i class="fas fa-info-circle"></i> <strong>Important reminders before submitting</strong></h6>
-            <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 field-description text-dark tw-text-gray-900">
-              <ul>
-                <li>Please use a name that is shown in any valid ID, as you may be requested to present identification at the gate.</li>
-                <li>Please make sure your email address is correct to make sure that you receive your ticket without any problem.</li>
-                <li>Tickets are non-refundable once paid.</li>
-                <li *ngIf="selectedTicketType?.special_instructions">For <strong>"{{ selectedTicketType?.name }}"</strong>: {{ selectedTicketType?.special_instructions }}</li>
-              </ul>
-            </div>
-
-            <!-- Payment Calculation -->
-            <div id="div_paymentCalculation">
-              <h3 *ngIf="totalAmount > 0">Total amount is <b>₱{{ formatPrice(totalAmount) }}</b>.</h3>
-              <h3 *ngIf="totalAmount === 0" class="tw-text-success">
-                <i class="fas fa-check-circle tw-mr-2"></i><b>Admission is FREE</b>
-              </h3>
-            </div>
-
-            <!-- Privacy Consent -->
-            <div class="privacy-consent-container">
-              <mat-checkbox
-                formControlName="privacy_consent"
-                class="field-description"
-                [class.mat-checkbox-invalid]="isFieldInvalid('privacy_consent')">
-                I agree to share my data to {{ event.brand?.name || 'the event organizer' }} and its affiliates for the sole purpose of processing my purchase of tickets.
-              </mat-checkbox>
-              <div class="error-message" *ngIf="isFieldInvalid('privacy_consent')">
-                You need to accept the privacy consent to proceed.
-              </div>
-            </div>
-
-            <button
-              mat-raised-button
-              color="primary"
-              type="submit"
-              class="submit-button tw-w-full"
+            <button type="submit" class="btn-primary tw-w-full tw-py-4"
               [disabled]="ticketForm.invalid || isSubmitting || isPreview">
-              <i class="fas tw-mr-1" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
+              <i class="fas tw-mr-2" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
               {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>
-            <div *ngIf="totalAmount > 0" class="fadeIn sixth" style="font-size:12px;">
-              Clicking <b>Proceed to Payment</b> will bring you to our Paymongo checkout page.
-              Payee information will be <strong>Melt Records</strong>.
-            </div>
+            <p *ngIf="totalAmount > 0" class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">
+              You'll be redirected to Paymongo to complete payment. Payee information will be <strong>Melt Records</strong>.
+            </p>
+          </div><!-- end content-inner -->
+        </div><!-- end sticky-cta -->
+        </form>
+      </div><!-- end canBuyTickets wrapper -->
 
-          </form>
+      <!-- CLOSED state -->
+      <div *ngIf="!canBuyTickets()" class="tw-text-center tw-max-w-sm tw-mx-auto">
+        <div class="tw-w-16 tw-h-16 tw-rounded-full tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
+          <i class="fas fa-ticket-alt tw-text-2xl tw-text-gray-400"></i>
         </div>
+        <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-1">Online Sales Ended</h2>
+        <p class="tw-text-gray-500 tw-text-sm tw-mb-6">Online ticket sales for <strong>{{ event.title }}</strong> have closed.</p>
 
-        <!-- Footer -->
-        <div class="tw-text-center" style="padding-top: 1.5rem;">
-          <p>
-            <span style="font-size:12px; font-weight:bold;">Powered by Spindly.</span><br>
-            <span style="font-size:12px; font-style:italic;">
-              Having trouble? Contact us via email
-              <a [href]="'mailto:support@melt-records.com?subject=Issue with ticketing for ' + event.title">here</a>
-              or use the chat widget on the lower right.
-            </span>
+        <!-- Walk-in available -->
+        <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
+          class="tw-rounded-2xl tw-border-2 tw-border-blue-200 tw-bg-blue-50 tw-p-5 tw-text-left">
+          <p class="tw-flex tw-items-center tw-gap-2 tw-font-bold tw-text-blue-800 tw-text-base tw-mb-3">
+            <i class="fas fa-walking tw-text-blue-500"></i>
+            Walk-in tickets available at the venue!
           </p>
+          <div *ngFor="let wit of event.walkInTypes">
+            <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0"
+              class="tw-flex tw-items-center tw-justify-between tw-py-2 tw-border-b tw-border-blue-100 last:tw-border-0">
+              <span class="tw-font-semibold tw-text-blue-900 tw-text-sm">{{ wit.name }}</span>
+              <div class="tw-text-right">
+                <span class="tw-font-bold tw-text-blue-700 tw-text-sm">{{ formatPriceDisplay(wit.price) }}</span>
+                <span *ngIf="wit.remaining_slots !== null" class="tw-block tw-text-xs tw-text-blue-500">{{ wit.remaining_slots }} slots left</span>
+              </div>
+            </div>
+          </div>
+          <div class="tw-mt-4 tw-text-sm tw-text-blue-700 tw-space-y-1">
+            <p class="tw-mb-0"><i class="fas fa-calendar-alt tw-mr-1.5 tw-text-blue-400"></i>{{ formatEventDate(event.date_and_time) }} at {{ formatEventTime(event.date_and_time) }}</p>
+            <p class="tw-mb-0"><i class="fas fa-map-marker-alt tw-mr-1.5 tw-text-blue-400"></i>{{ event.venue }}<span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span></p>
+          </div>
         </div>
 
-      </div><!-- end content-panel -->
-    </div><!-- end page-layout -->
-  </div><!-- end wrapper -->
+        <!-- No walk-in -->
+        <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()"
+          class="tw-text-sm tw-text-gray-500">
+          <p>Tickets or walk-in may still be available at the show.</p>
+          <p>Check <strong>{{ event.brand?.name || 'the event organizer' }}</strong>'s social media for more information.</p>
+        </div>
+      </div>
 
-  <!-- Lightbox Modal -->
-  <div class="lightbox-overlay" *ngIf="showLightbox" (click)="closeLightbox()">
-    <div class="lightbox-content" (click)="$event.stopPropagation()">
-      <button class="lightbox-close" (click)="closeLightbox()">
+    </div><!-- end content-panel -->
+  </div><!-- end page-layout -->
+
+  <!-- Lightbox -->
+  <div *ngIf="showLightbox"
+    class="tw-fixed tw-inset-0 tw-bg-black/90 tw-z-[9999] tw-flex tw-items-center tw-justify-center tw-p-4 tw-overflow-y-auto"
+    (click)="closeLightbox()">
+    <div class="tw-relative tw-max-w-[90%] tw-flex tw-flex-col tw-items-center" (click)="$event.stopPropagation()">
+      <button
+        class="tw-absolute tw-top-[-2.5rem] tw-right-0 tw-w-9 tw-h-9 tw-rounded-full tw-bg-white/20 tw-border tw-border-white/40 tw-text-white tw-flex tw-items-center tw-justify-center tw-cursor-pointer tw-transition-colors hover:tw-bg-white/35"
+        (click)="closeLightbox()">
         <i class="fas fa-times"></i>
       </button>
-      <img [src]="event?.poster_url" class="lightbox-image" alt="Event poster">
-      <div class="lightbox-caption" *ngIf="event?.description">
-        <div [innerHTML]="sanitizeHtml(event?.description)"></div>
+      <img [src]="event?.poster_url" alt="Event poster"
+        class="tw-max-w-full tw-max-h-[72vh] tw-object-contain tw-rounded-xl tw-shadow-2xl">
+      <div *ngIf="event?.description"
+        class="tw-mt-4 tw-max-w-xl tw-max-h-40 tw-overflow-y-auto tw-text-center tw-text-white/80 tw-text-sm description-text"
+        [innerHTML]="sanitizeHtml(event?.description)">
       </div>
     </div>
   </div>
+
 </div>

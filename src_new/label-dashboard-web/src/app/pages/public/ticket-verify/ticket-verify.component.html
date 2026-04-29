@@ -1,322 +1,371 @@
-<!-- Loading Overlay -->
-<div class="loading-overlay" *ngIf="isLoading">
-  <div class="loading"></div>
+<!-- Loading overlay -->
+<div *ngIf="isLoading" class="tw-fixed tw-inset-0 tw-bg-white/60 tw-z-10 tw-flex tw-items-center tw-justify-center">
+  <div class="tw-w-12 tw-h-12 tw-rounded-full tw-border-4 tw-border-gray-200 tw-border-t-orange-500 tw-animate-spin"></div>
 </div>
 
-<!-- Camera Container (QR Scanner) — full-screen fixed overlay -->
-<div id="cameraContainer" [style.display]="isScanning ? 'block' : 'none'">
-  <div class="tw-h-full tw-flex tw-justify-center">
-    <div class="tw-w-full" style="height:auto;">
-      <div id="qr-reader" height="600"></div>
-      <div>
-        <button type="button" id="btnCancelScan" class="btn-primary tw-w-full" (click)="stopScanner()">
-          <i class="fa fa-times"></i> Cancel Scanning
-        </button>
-      </div>
-    </div>
+<!-- QR Camera — full-screen overlay -->
+<div id="cameraContainer" [style.display]="isScanning ? 'flex' : 'none'"
+  class="tw-flex-col tw-items-center tw-justify-center">
+  <div class="tw-w-full tw-max-w-lg">
+    <div id="qr-reader" height="600"></div>
+    <button type="button" id="btnCancelScan" (click)="stopScanner()">
+      <i class="fa fa-times tw-mr-2"></i>Cancel Scanning
+    </button>
   </div>
 </div>
 
+<!-- Page -->
 <div class="public-page">
   <div class="page-layout" [class.no-poster]="!currentEvent?.poster_url">
 
-    <!-- Left: Sticky poster panel -->
+    <!-- Left: poster -->
     <div class="poster-panel" *ngIf="currentEvent?.poster_url">
       <img [src]="currentEvent.poster_url" class="poster-fill" alt="Event poster">
     </div>
 
-    <!-- Right: Content -->
+    <!-- Right: scanner content -->
     <div class="content-panel">
 
       <!-- Event header -->
-      <div class="event-info-section tw-text-center">
-        <h5 class="tw-mb-0 tw-text-muted">Verify tickets for</h5>
-        <h1><strong>{{ currentEvent?.title || 'Event' }}</strong></h1>
+      <div class="tw-text-center tw-mb-6">
+        <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-1">Ticket Verification</p>
+        <h1 class="tw-text-2xl tw-font-extrabold tw-text-gray-900">{{ currentEvent?.title || 'Event' }}</h1>
       </div>
 
-      <!-- PIN Validation Form -->
-      <div class="scanner-section" *ngIf="!isPinValidated">
-        <p class="tw-mb-4 tw-text-muted">Enter the event PIN to access the ticket scanner.</p>
+      <!-- PIN entry -->
+      <div class="tw-max-w-sm tw-mx-auto" *ngIf="!isPinValidated">
+        <div class="tw-rounded-2xl tw-border tw-border-gray-200 tw-bg-white tw-p-6 tw-shadow-sm">
+          <p class="tw-text-sm tw-text-gray-500 tw-text-center tw-mb-5">
+            Enter the 6-digit event PIN to access the scanner.
+          </p>
 
-        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert" *ngIf="showAlert && alertType === 'error'">
-          {{ alertMessage }}
-        </div>
-
-        <form [formGroup]="pinForm" (ngSubmit)="validatePin()">
-          <div class="tw-mb-3">
-            <div class="form-floating">
-              <input type="password"
-                     class="tw-input"
-                     formControlName="pin"
-                     id="pin"
-                     placeholder="PIN code"
-                     maxlength="6"
-                     [disabled]="isLoading" />
-              <label for="pin">Event PIN (6 digits)</label>
-            </div>
+          <div *ngIf="showAlert && alertType === 'error'"
+            class="tw-mb-4 tw-flex tw-items-center tw-gap-2 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-px-4 tw-py-3 tw-text-sm tw-text-red-700">
+            <i class="fas fa-exclamation-circle tw-flex-shrink-0"></i>
+            <span>{{ alertMessage }}</span>
           </div>
-          <button type="submit"
-                  class="btn-primary btn-lg tw-w-full"
-                  [disabled]="!pinForm.valid || isLoading">
-            <i class="fa fa-sign-in"></i> Sign In
-          </button>
-        </form>
+
+          <form [formGroup]="pinForm" (ngSubmit)="validatePin()">
+            <div class="tw-mb-4">
+              <label class="tw-label" for="pin">Event PIN</label>
+              <input type="password" id="pin" class="tw-input tw-text-center tw-text-2xl tw-font-bold tw-tracking-[0.5em]"
+                formControlName="pin" placeholder="••••••" maxlength="6"
+                [disabled]="isLoading">
+            </div>
+            <button type="submit" class="btn-primary tw-w-full"
+              [disabled]="!pinForm.valid || isLoading">
+              <i class="fa fa-sign-in tw-mr-1.5"></i>Sign In
+            </button>
+          </form>
+        </div>
       </div>
 
-      <!-- Mode Tabs (only show if walk-in is enabled) -->
-      <div class="tw-flex tw-justify-center tw-mb-4" *ngIf="isPinValidated && walkInEnabled">
-        <div class="sub-tab-toggle" role="group" aria-label="Mode toggle">
+      <!-- Mode toggle (scan / walk-in) -->
+      <div *ngIf="isPinValidated && walkInEnabled"
+        class="tw-mb-6 sm:tw-mx-40">
+        <div class="tw-flex tw-items-center tw-gap-1 tw-bg-gray-100 tw-rounded-xl tw-p-1 tw-border tw-border-gray-200">
           <button type="button"
-                  class="sub-tab-btn"
-                  [class.sub-tab-btn-active]="activeMode === 'scan'"
-                  (click)="switchMode('scan')"
-                  [attr.aria-pressed]="activeMode === 'scan'">
-            <i class="fa fa-qrcode"></i>
-            <span>Scan Tickets</span>
+            class="tw-flex-1 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-px-5 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-transition-all"
+            [class.tw-bg-white]="activeMode === 'scan'"
+            [class.tw-text-blue-600]="activeMode === 'scan'"
+            [class.tw-font-semibold]="activeMode === 'scan'"
+            [class.tw-shadow-sm]="activeMode === 'scan'"
+            [class.tw-text-gray-500]="activeMode !== 'scan'"
+            (click)="switchMode('scan')">
+            <i class="fa fa-qrcode"></i>Scan Tickets
           </button>
           <button type="button"
-                  class="sub-tab-btn"
-                  [class.sub-tab-btn-active]="activeMode === 'walk-in'"
-                  (click)="switchMode('walk-in')"
-                  [attr.aria-pressed]="activeMode === 'walk-in'">
-            <i class="fa fa-walking"></i>
-            <span>Walk-Ins</span>
+            class="tw-flex-1 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-px-5 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-transition-all"
+            [class.tw-bg-white]="activeMode === 'walk-in'"
+            [class.tw-text-blue-600]="activeMode === 'walk-in'"
+            [class.tw-font-semibold]="activeMode === 'walk-in'"
+            [class.tw-shadow-sm]="activeMode === 'walk-in'"
+            [class.tw-text-gray-500]="activeMode !== 'walk-in'"
+            (click)="switchMode('walk-in')">
+            <i class="fa fa-walking"></i>Walk-Ins
           </button>
         </div>
       </div>
 
-      <!-- Walk-In Interface -->
-      <div class="scanner-section" *ngIf="isPinValidated && activeMode === 'walk-in' && walkInEnabled">
+      <!-- ======= WALK-IN MODE ======= -->
+      <div *ngIf="isPinValidated && activeMode === 'walk-in' && walkInEnabled" class="sm:tw-mx-40">
 
         <!-- Loading -->
-        <div *ngIf="walkInLoading" class="tw-py-4 tw-text-center">
-          <div class="loading"></div>
+        <div *ngIf="walkInLoading" class="tw-flex tw-justify-center tw-py-8">
+          <div class="tw-w-10 tw-h-10 tw-rounded-full tw-border-4 tw-border-gray-200 tw-border-t-blue-500 tw-animate-spin"></div>
         </div>
 
-        <!-- Registration Success -->
-        <div *ngIf="walkInRegistered" class="result-alert result-alert--success tw-text-center">
-          <i class="fa fa-3x fa-check-circle"></i>
-          <h4 class="tw-mt-2"><strong>{{ walkInRegisteredMessage }}</strong></h4>
-          <p class="tw-mb-0">Walk-in has been registered.</p>
-        </div>
-        <div *ngIf="walkInRegistered" class="tw-mt-3">
-          <button type="button" class="btn-primary btn-lg tw-w-full" (click)="resetWalkIn()">
-            <i class="fa fa-plus"></i> Register Another Walk-In
+        <!-- Success -->
+        <div *ngIf="walkInRegistered" class="tw-rounded-2xl tw-border-2 tw-border-green-400 tw-bg-green-50 tw-p-8 tw-text-center">
+          <i class="fa fa-check-circle tw-text-green-500 tw-text-5xl tw-mb-3"></i>
+          <h3 class="tw-text-xl tw-font-bold tw-text-green-800 tw-mb-1">{{ walkInRegisteredMessage }}</h3>
+          <p class="tw-text-sm tw-text-green-700 tw-mb-5">Walk-in registered successfully.</p>
+          <button type="button" class="btn-primary tw-w-full" (click)="resetWalkIn()">
+            <i class="fa fa-plus tw-mr-1.5"></i>Register Another
           </button>
         </div>
 
-        <!-- Walk-In Type Selection -->
+        <!-- Walk-in form -->
         <div *ngIf="!walkInLoading && !walkInRegistered">
 
-          <!-- Transient Alerts -->
-          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
+          <div *ngIf="showAlert && alertType === 'error'"
+            class="tw-mb-4 tw-flex tw-items-center tw-gap-2 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-px-4 tw-py-3 tw-text-sm tw-text-red-700">
+            <i class="fas fa-exclamation-circle tw-flex-shrink-0"></i>
+            <span>{{ alertMessage }}</span>
+          </div>
 
-          <p class="tw-mb-3 tw-text-muted" *ngIf="walkInMaxCount <= 0 || getWalkInRemainingCount()! > 0">Tap a type to select it. Tap again to add more.</p>
+          <!-- Quota info -->
+          <div *ngIf="walkInMaxCount > 0" class="tw-mb-4 tw-text-center">
+            <div *ngIf="getWalkInRemainingCount()! > 0"
+              class="tw-text-xs tw-text-gray-500">
+              <i class="fa fa-info-circle tw-mr-1"></i>
+              {{ walkInTotalSoldCount }} / {{ walkInMaxCount }} registered &middot;
+              <strong>{{ getWalkInRemainingCount() }} left</strong>
+            </div>
+            <div *ngIf="getWalkInRemainingCount() === 0 && !hasWalkInSelections()"
+              class="tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-text-sm tw-text-red-600 tw-font-semibold">
+              <i class="fa fa-ban"></i> Walk-in limit reached
+            </div>
+          </div>
 
-          <!-- Walk-In Max Count Info -->
-          <p class="tw-mb-3 small tw-text-muted tw-text-sm" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount()! > 0">
-            <i class="fa fa-info-circle tw-mr-1"></i>{{ walkInTotalSoldCount }} / {{ walkInMaxCount }} walk-ins registered &middot; <strong>{{ getWalkInRemainingCount() }} left</strong>
+          <p class="tw-text-sm tw-text-gray-500 tw-text-center tw-mb-3"
+            *ngIf="walkInMaxCount <= 0 || getWalkInRemainingCount()! > 0">
+            Tap a type to select. Tap again to add more.
           </p>
-          <p class="tw-text-danger tw-mb-3" *ngIf="walkInMaxCount > 0 && getWalkInRemainingCount() === 0 && !hasWalkInSelections()">
-            <i class="fa fa-ban tw-mr-1"></i> Walk-in limit has been reached.
-          </p>
 
-          <div class="walk-in-types">
+          <!-- Walk-in type cards -->
+          <div class="tw-space-y-2 tw-mb-4">
             <div *ngFor="let type of walkInTypes"
-                 class="walk-in-type-card"
-                 [class.selected]="getWalkInQty(type.id) > 0"
-                 [class.sold-out]="type.remaining_slots === 0"
-                 (click)="type.remaining_slots !== 0 && onWalkInTypeTap(type)">
-              <div class="walk-in-type-info">
-                <div class="walk-in-type-name">{{ type.name }}</div>
-                <div class="walk-in-type-price">{{ formatWalkInPrice(type.price) }}</div>
-                <div class="walk-in-type-slots" *ngIf="type.remaining_slots !== null && type.remaining_slots !== undefined">
-                  <span *ngIf="type.remaining_slots > 0">{{ type.remaining_slots }} slots left</span>
-                  <span *ngIf="type.remaining_slots === 0" class="tw-text-danger tw-font-bold">Sold Out</span>
-                </div>
+              class="tw-flex tw-items-center tw-justify-between tw-rounded-xl tw-border-2 tw-p-4 tw-transition-all tw-select-none"
+              [class.tw-border-gray-200]="getWalkInQty(type.id) === 0 && type.remaining_slots !== 0"
+              [class.hover:tw-border-blue-300]="type.remaining_slots !== 0"
+              [class.tw-border-blue-500]="getWalkInQty(type.id) > 0"
+              [class.tw-bg-blue-50]="getWalkInQty(type.id) > 0"
+              [class.tw-opacity-45]="type.remaining_slots === 0"
+              [class.tw-cursor-not-allowed]="type.remaining_slots === 0"
+              [class.tw-cursor-pointer]="type.remaining_slots !== 0"
+              (click)="type.remaining_slots !== 0 && onWalkInTypeTap(type)">
+
+              <div class="tw-flex-1 tw-min-w-0">
+                <p class="tw-font-bold tw-text-base tw-text-gray-900 tw-mb-0">{{ type.name }}</p>
+                <p class="tw-font-semibold tw-text-sm tw-text-green-600 tw-mb-0">{{ formatWalkInPrice(type.price) }}</p>
+                <p *ngIf="type.remaining_slots !== null && type.remaining_slots !== undefined"
+                  class="tw-text-xs tw-mb-0"
+                  [class.tw-text-gray-400]="type.remaining_slots > 0"
+                  [class.tw-text-red-500]="type.remaining_slots === 0"
+                  [class.tw-font-bold]="type.remaining_slots === 0">
+                  {{ type.remaining_slots === 0 ? 'Sold Out' : (type.remaining_slots + ' slots left') }}
+                </p>
               </div>
-              <div class="walk-in-type-qty" *ngIf="getWalkInQty(type.id) > 0" (click)="$event.stopPropagation()">
-                <button class="btn-sm btn-outline-secondary qty-btn" (click)="decrementWalkIn(type.id, $event)">
-                  <i class="fa fa-minus"></i>
+
+              <div *ngIf="getWalkInQty(type.id) > 0"
+                class="tw-flex tw-items-center tw-gap-2 tw-ml-3"
+                (click)="$event.stopPropagation()">
+                <button type="button"
+                  class="tw-w-8 tw-h-8 tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-flex tw-items-center tw-justify-center tw-text-gray-600 hover:tw-bg-gray-50 tw-transition-colors"
+                  (click)="decrementWalkIn(type.id, $event)">
+                  <i class="fa fa-minus tw-text-xs"></i>
                 </button>
-                <span class="qty-value">{{ getWalkInQty(type.id) }}</span>
-                <button class="btn-sm btn-outline-secondary qty-btn" (click)="incrementWalkIn(type.id, $event)">
-                  <i class="fa fa-plus"></i>
+                <span class="tw-text-xl tw-font-bold tw-text-gray-900 tw-min-w-[2rem] tw-text-center">
+                  {{ getWalkInQty(type.id) }}
+                </span>
+                <button type="button"
+                  class="tw-w-8 tw-h-8 tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-flex tw-items-center tw-justify-center tw-text-gray-600 hover:tw-bg-gray-50 tw-transition-colors"
+                  (click)="incrementWalkIn(type.id, $event)">
+                  <i class="fa fa-plus tw-text-xs"></i>
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- Payment Method -->
-          <div class="tw-mt-3" *ngIf="hasWalkInSelections()">
-            <label class="tw-label tw-font-semibold">Payment Method</label>
-            <div class="tw-flex tw-gap-2 tw-flex-wrap">
-              <button *ngIf="walkInPaymentMethods.cash"
-                      class="payment-method-btn"
-                      [class.btn-primary]="walkInPaymentMethod === 'cash'"
-                      [class.btn-outline-secondary]="walkInPaymentMethod !== 'cash'"
-                      (click)="walkInPaymentMethod = 'cash'">
-                <i class="fa fa-money-bill-wave tw-mr-1"></i> Cash
+          <!-- Payment method -->
+          <div *ngIf="hasWalkInSelections()" class="tw-mt-4">
+            <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-2">Payment Method</p>
+            <div class="tw-flex tw-gap-2">
+              <button *ngIf="walkInPaymentMethods.cash" type="button"
+                class="tw-flex-1 tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-lg tw-border-2 tw-py-2 tw-text-sm tw-font-semibold tw-transition-all"
+                [class.tw-border-blue-500]="walkInPaymentMethod === 'cash'"
+                [class.tw-bg-blue-50]="walkInPaymentMethod === 'cash'"
+                [class.tw-text-blue-700]="walkInPaymentMethod === 'cash'"
+                [class.tw-border-gray-200]="walkInPaymentMethod !== 'cash'"
+                [class.tw-text-gray-600]="walkInPaymentMethod !== 'cash'"
+                (click)="walkInPaymentMethod = 'cash'">
+                <i class="fa fa-money-bill-wave"></i> Cash
               </button>
-              <button *ngIf="walkInPaymentMethods.gcash"
-                      class="payment-method-btn"
-                      [class.btn-primary]="walkInPaymentMethod === 'gcash'"
-                      [class.btn-outline-secondary]="walkInPaymentMethod !== 'gcash'"
-                      (click)="walkInPaymentMethod = 'gcash'">
-                <i class="fa fa-mobile-alt tw-mr-1"></i> GCash
+              <button *ngIf="walkInPaymentMethods.gcash" type="button"
+                class="tw-flex-1 tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-lg tw-border-2 tw-py-2 tw-text-sm tw-font-semibold tw-transition-all"
+                [class.tw-border-blue-500]="walkInPaymentMethod === 'gcash'"
+                [class.tw-bg-blue-50]="walkInPaymentMethod === 'gcash'"
+                [class.tw-text-blue-700]="walkInPaymentMethod === 'gcash'"
+                [class.tw-border-gray-200]="walkInPaymentMethod !== 'gcash'"
+                [class.tw-text-gray-600]="walkInPaymentMethod !== 'gcash'"
+                (click)="walkInPaymentMethod = 'gcash'">
+                <i class="fa fa-mobile-alt"></i> GCash
               </button>
-              <button *ngIf="walkInPaymentMethods.card"
-                      class="payment-method-btn"
-                      [class.btn-primary]="walkInPaymentMethod === 'card'"
-                      [class.btn-outline-secondary]="walkInPaymentMethod !== 'card'"
-                      (click)="walkInPaymentMethod = 'card'">
-                <i class="fa fa-credit-card tw-mr-1"></i> Card
+              <button *ngIf="walkInPaymentMethods.card" type="button"
+                class="tw-flex-1 tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-rounded-lg tw-border-2 tw-py-2 tw-text-sm tw-font-semibold tw-transition-all"
+                [class.tw-border-blue-500]="walkInPaymentMethod === 'card'"
+                [class.tw-bg-blue-50]="walkInPaymentMethod === 'card'"
+                [class.tw-text-blue-700]="walkInPaymentMethod === 'card'"
+                [class.tw-border-gray-200]="walkInPaymentMethod !== 'card'"
+                [class.tw-text-gray-600]="walkInPaymentMethod !== 'card'"
+                (click)="walkInPaymentMethod = 'card'">
+                <i class="fa fa-credit-card"></i> Card
               </button>
             </div>
 
-            <!-- Optional payment reference -->
             <div class="tw-mt-2" *ngIf="walkInPaymentMethod === 'gcash' || walkInPaymentMethod === 'card'">
               <input type="text" class="tw-input" placeholder="Reference # (optional)"
-                     [(ngModel)]="walkInPaymentReference">
+                [(ngModel)]="walkInPaymentReference">
             </div>
           </div>
 
-          <!-- Total & Register -->
-          <div class="walk-in-total-bar" *ngIf="hasWalkInSelections()">
-            <div class="tw-flex tw-justify-between tw-items-center tw-mb-2">
-              <span class="tw-font-bold fs-5">Total</span>
-              <span class="tw-font-bold fs-4">{{ formatWalkInPrice(getWalkInTotal()) }}</span>
+          <!-- Total + register -->
+          <div *ngIf="hasWalkInSelections()" class="tw-mt-5 tw-pt-4 tw-border-t tw-border-gray-200">
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+              <span class="tw-font-bold tw-text-gray-700">Total</span>
+              <span class="tw-text-2xl tw-font-extrabold tw-text-gray-900">{{ formatWalkInPrice(getWalkInTotal()) }}</span>
             </div>
             <button class="btn-success btn-lg tw-w-full"
-                    [disabled]="!walkInPaymentMethod || walkInLoading"
-                    (click)="registerWalkIn()">
-              <i class="fa fa-check-circle tw-mr-1"></i> Register Walk-In
+              [disabled]="!walkInPaymentMethod || walkInLoading"
+              (click)="registerWalkIn()">
+              <i class="fa fa-check-circle tw-mr-1.5"></i>Register Walk-In
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Verification Interface -->
-      <div class="scanner-section" *ngIf="isPinValidated && (activeMode === 'scan' || !walkInEnabled)">
+      <!-- ======= SCAN MODE ======= -->
+      <div class="sm:tw-mx-40" *ngIf="isPinValidated && (activeMode === 'scan' || !walkInEnabled)">
 
-        <!-- Transient Alerts -->
-        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert" *ngIf="showAlert && alertType === 'error'">{{ alertMessage }}</div>
-        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-green-200 tw-bg-green-50 tw-text-green-800" role="alert" *ngIf="showAlert && alertType === 'success'">{{ alertMessage }}</div>
-        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800" role="alert" *ngIf="showAlert && alertType === 'info'">{{ alertMessage }}</div>
-
-        <!-- Persistent Result -->
-        <div class="result-alert tw-text-center"
-             [ngClass]="{'result-alert--success': persistentAlertType === 'success', 'result-alert--error': persistentAlertType === 'error'}"
-             *ngIf="showPersistentAlert">
-          <i class="fa fa-3x"
-             [ngClass]="{'fa-check-circle': persistentAlertType === 'success', 'fa-times-circle': persistentAlertType === 'error'}"></i>
-          <h4 class="tw-mt-2"><strong>{{ persistentAlertMessage }}</strong></h4>
-          <p class="tw-mb-0" *ngIf="persistentAlertType === 'success'">Ticket has been processed successfully.</p>
+        <!-- Transient alerts -->
+        <div *ngIf="showAlert && alertType === 'error'"
+          class="tw-mb-4 tw-flex tw-items-start tw-gap-2 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-px-4 tw-py-3 tw-text-sm tw-text-red-700">
+          <i class="fas fa-exclamation-circle tw-flex-shrink-0 tw-mt-0.5"></i><span>{{ alertMessage }}</span>
+        </div>
+        <div *ngIf="showAlert && alertType === 'success'"
+          class="tw-mb-4 tw-flex tw-items-start tw-gap-2 tw-rounded-lg tw-border tw-border-green-200 tw-bg-green-50 tw-px-4 tw-py-3 tw-text-sm tw-text-green-700">
+          <i class="fas fa-check-circle tw-flex-shrink-0 tw-mt-0.5"></i><span>{{ alertMessage }}</span>
+        </div>
+        <div *ngIf="showAlert && alertType === 'info'"
+          class="tw-mb-4 tw-flex tw-items-start tw-gap-2 tw-rounded-lg tw-border tw-border-blue-200 tw-bg-blue-50 tw-px-4 tw-py-3 tw-text-sm tw-text-blue-700">
+          <i class="fas fa-info-circle tw-flex-shrink-0 tw-mt-0.5"></i><span>{{ alertMessage }}</span>
         </div>
 
-        <!-- Ticket Input Form -->
+        <!-- Persistent result -->
+        <div *ngIf="showPersistentAlert"
+          class="tw-rounded-2xl tw-p-8 tw-text-center tw-mb-4"
+          [class.tw-bg-green-50]="persistentAlertType === 'success'"
+          [class.tw-border-2]="true"
+          [class.tw-border-green-400]="persistentAlertType === 'success'"
+          [class.tw-bg-red-50]="persistentAlertType === 'error'"
+          [class.tw-border-red-400]="persistentAlertType === 'error'">
+          <i class="fa fa-3x tw-mb-3"
+            [class.fa-check-circle]="persistentAlertType === 'success'"
+            [class.tw-text-green-500]="persistentAlertType === 'success'"
+            [class.fa-times-circle]="persistentAlertType === 'error'"
+            [class.tw-text-red-500]="persistentAlertType === 'error'">
+          </i>
+          <h3 class="tw-text-xl tw-font-bold tw-mb-1"
+            [class.tw-text-green-800]="persistentAlertType === 'success'"
+            [class.tw-text-red-800]="persistentAlertType === 'error'">
+            {{ persistentAlertMessage }}
+          </h3>
+          <p *ngIf="persistentAlertType === 'success'" class="tw-text-sm tw-text-green-700 tw-mb-0">
+            Ticket processed successfully.
+          </p>
+        </div>
+
+        <!-- Ticket code lookup -->
         <form [formGroup]="ticketForm" (ngSubmit)="lookupTicket()" *ngIf="showInputForm">
-          <div class="tw-mb-3">
-            <label class="tw-label tw-font-semibold tw-mb-2">Enter ticket code</label>
-            <div class="input-group">
-              <input type="text"
-                     class="ticket-code-input tw-text-center tw-input"
-                     formControlName="ticketCode"
-                     id="ticketCode"
-                     placeholder="e.g. AB12C"
-                     style="text-transform: uppercase;"
-                     maxlength="5"
-                     [disabled]="isLoading" />
-              <button type="button"
-                      id="btnScanQR"
-                      class="btn-outline-secondary"
-                      (click)="toggleScanner()"
-                      [disabled]="isLoading"
-                      title="Scan QR code">
-                <i class="fa fa-qrcode fa-lg"></i>
+          <div class="tw-mb-4">
+            <label class="tw-label" for="ticketCode">Enter ticket code</label>
+            <div class="tw-flex tw-gap-2">
+              <input type="text" id="ticketCode" class="tw-input tw-text-center tw-text-xl tw-font-bold tw-tracking-[0.3em] tw-uppercase"
+                formControlName="ticketCode" placeholder="AB12C"
+                maxlength="5" [disabled]="isLoading"
+                style="text-transform: uppercase;">
+              <button type="button" id="btnScanQR"
+                class="tw-flex tw-items-center tw-justify-center tw-w-12 tw-h-12 tw-rounded-lg tw-border tw-border-gray-300 tw-bg-white tw-text-gray-500 hover:tw-bg-gray-50 tw-transition-colors tw-flex-shrink-0"
+                (click)="toggleScanner()" [disabled]="isLoading" title="Scan QR code">
+                <i class="fa fa-qrcode tw-text-xl"></i>
               </button>
             </div>
           </div>
-
-          <button type="submit"
-                  class="btn-primary btn-lg tw-w-full"
-                  [disabled]="!ticketForm.valid || isLoading"
-                  *ngIf="!currentTicket">
-            <i class="fa fa-search"></i> Look Up Ticket
+          <button type="submit" class="btn-primary btn-lg tw-w-full"
+            [disabled]="!ticketForm.valid || isLoading" *ngIf="!currentTicket">
+            <i class="fa fa-search tw-mr-1.5"></i>Look Up Ticket
           </button>
         </form>
 
-        <!-- Check-in Form -->
-        <div *ngIf="showCheckInForm" class="checkin-section">
+        <!-- Check-in form -->
+        <div *ngIf="showCheckInForm" class="tw-mt-2">
 
-          <!-- Large entries display for gate staff -->
-          <div class="entries-display tw-text-center">
-            <div class="entries-label">ENTRIES AVAILABLE</div>
-            <div class="entries-number">{{ currentTicket?.remaining_entries }}</div>
-            <div class="entries-subtitle">{{ currentTicket?.name }}</div>
-            <div class="entries-ticket-type" *ngIf="currentTicket?.ticketType">
-              <strong>{{ currentTicket.ticketType.name }}</strong>
-              <div *ngIf="currentTicket?.ticketType?.special_instructions_for_scanner" class="tw-mt-2 small tw-text-sm">
-                <i class="fa fa-exclamation-triangle tw-mr-1"></i>
-                <strong>Note:</strong> {{ currentTicket.ticketType.special_instructions_for_scanner }}
-              </div>
+          <!-- BIG entries display for gate staff -->
+          <div class="tw-rounded-2xl tw-border-4 tw-border-green-400 tw-bg-green-50 tw-p-6 tw-text-center tw-mb-4">
+            <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-green-600 tw-mb-1">Entries Available</p>
+            <p class="entries-number tw-text-green-600">{{ currentTicket?.remaining_entries }}</p>
+            <p class="tw-font-bold tw-text-green-700 tw-uppercase tw-text-sm tw-mt-2">{{ currentTicket?.name }}</p>
+            <div *ngIf="currentTicket?.ticketType"
+              class="tw-mt-3 tw-inline-flex tw-items-start tw-gap-1.5 tw-rounded-lg tw-bg-blue-50 tw-border tw-border-blue-200 tw-px-3 tw-py-2 tw-text-sm tw-text-blue-700">
+              <i class="fas fa-tag tw-flex-shrink-0 tw-mt-0.5"></i>
+              <span>
+                <strong>{{ currentTicket.ticketType.name }}</strong>
+                <span *ngIf="currentTicket?.ticketType?.special_instructions_for_scanner"
+                  class="tw-block tw-text-xs tw-text-amber-700 tw-mt-0.5">
+                  <i class="fa fa-exclamation-triangle tw-mr-1"></i>{{ currentTicket.ticketType.special_instructions_for_scanner }}
+                </span>
+              </span>
             </div>
           </div>
 
-          <!-- Claim All -->
-          <button id="btnClaimAll"
-                  type="button"
-                  class="btn-success btn-lg tw-w-full tw-mb-3"
-                  (click)="claimAllEntries()"
-                  [disabled]="isLoading || (currentTicket?.remaining_entries || 0) <= 0">
-            <i class="fa fa-users"></i> Claim All
+          <!-- Claim all -->
+          <button id="btnClaimAll" type="button"
+            class="btn-success btn-lg tw-w-full tw-mb-3"
+            (click)="claimAllEntries()"
+            [disabled]="isLoading || (currentTicket?.remaining_entries || 0) <= 0">
+            <i class="fa fa-users tw-mr-1.5"></i>Claim All
           </button>
 
-          <p class="tw-mb-2 tw-text-center tw-text-muted"><strong>Or enter number of people checking in</strong></p>
+          <p class="tw-text-sm tw-text-center tw-text-gray-500 tw-mb-3 tw-font-medium">
+            — or enter number of people checking in —
+          </p>
 
           <form [formGroup]="checkInForm" (ngSubmit)="checkInTicket()">
             <div class="tw-mb-3">
-              <input type="number"
-                     class="tw-input-lg tw-text-center tw-input"
-                     min="1"
-                     [max]="currentTicket?.remaining_entries || 1"
-                     formControlName="entriesToClaim"
-                     id="numberOfAttendees"
-                     placeholder="Number of attendees"
-                     [disabled]="isLoading" />
-              <div class="field-error-message"
-                   [style.display]="checkInForm.get('entriesToClaim')?.invalid && checkInForm.get('entriesToClaim')?.touched ? 'block' : 'none'">
-                Number is more than remaining entries.
-              </div>
+              <input type="number" id="numberOfAttendees" class="tw-input tw-text-center tw-text-2xl tw-font-bold"
+                min="1" [max]="currentTicket?.remaining_entries || 1"
+                formControlName="entriesToClaim" placeholder="1"
+                [disabled]="isLoading">
+              <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
+                *ngIf="checkInForm.get('entriesToClaim')?.invalid && checkInForm.get('entriesToClaim')?.touched">
+                Number exceeds remaining entries.
+              </p>
             </div>
-            <button id="btnCheckIn"
-                    type="submit"
-                    class="btn-primary btn-lg tw-w-full"
-                    [disabled]="!checkInForm.valid || isLoading">
-              <i class="fa fa-check-circle"></i> Check In
+            <button id="btnCheckIn" type="submit" class="btn-primary btn-lg tw-w-full"
+              [disabled]="!checkInForm.valid || isLoading">
+              <i class="fa fa-check-circle tw-mr-1.5"></i>Check In
             </button>
           </form>
         </div>
 
         <!-- Reset -->
         <div *ngIf="showCheckInForm || showPersistentAlert" class="tw-mt-3">
-          <button type="button"
-                  class="btn-outline-secondary btn-lg tw-w-full"
-                  (click)="resetTicketLookup()"
-                  [disabled]="isLoading">
-            <i class="fa fa-refresh"></i> Look Up Another Ticket
+          <button type="button" class="btn-outline-secondary btn-lg tw-w-full"
+            (click)="resetTicketLookup()" [disabled]="isLoading">
+            <i class="fa fa-arrow-left tw-mr-1.5"></i>Look Up Another Ticket
           </button>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="tw-text-center" style="padding-top: 2.5rem; padding-bottom: 1rem;">
-        <p *ngIf="isPinValidated" class="tw-mb-1" style="font-size: 12px; color: #999;">
-          <i class="fa fa-circle" style="color: #28a745; font-size: 8px; vertical-align: middle; margin-right: 4px;"></i>Logged in. (<a href="javascript:void(0)" (click)="logoutScanner()" style="color: #999;">Log out?</a>)
+      <div class="tw-mt-10 tw-text-center tw-text-xs tw-text-gray-400">
+        <p *ngIf="isPinValidated" class="tw-mb-1 tw-flex tw-items-center tw-justify-center tw-gap-1.5">
+          <span class="tw-w-2 tw-h-2 tw-rounded-full tw-bg-green-400 tw-inline-block"></span>
+          Signed in.
+          <a href="javascript:void(0)" (click)="logoutScanner()" class="tw-underline hover:tw-text-gray-600">Sign out</a>
         </p>
-        <p>
-          <span style="font-size:12px; font-weight:bold;">Powered by Spindly.</span>
-        </p>
+        <p class="tw-font-semibold">Powered by Spindly.</p>
       </div>
 
     </div><!-- end content-panel -->

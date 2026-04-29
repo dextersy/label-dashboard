@@ -4,7 +4,6 @@
   --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --dark-text: #1a1a1a;
   --light-text: #666;
-  --section-spacing: 5rem;
   --border-radius: 20px;
   --shadow-light: 0 10px 40px rgba(0,0,0,0.08);
   --shadow-medium: 0 20px 60px rgba(0,0,0,0.12);
@@ -65,6 +64,15 @@
   background: #fafafa;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
   // Hero Section - Profile photo background with overlay
   .hero-section {
     position: relative;
@@ -111,8 +119,10 @@
       width: 100%;
       
       .profile-photo-wrapper {
+        display: flex;
+        justify-content: center;
         margin-bottom: 1rem;
-        
+
         .hero-profile-photo {
           width: 200px;
           height: 200px;
@@ -202,7 +212,7 @@
   
   // Content Sections - Modern layout
   .content-section {
-    padding: var(--section-spacing) 0;
+    padding: 7rem 0;
     
     &:nth-child(even) {
       background: white;
@@ -263,7 +273,7 @@
   .releases-section {
     .releases-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
       gap: 2.5rem;
       
       .release-item {
@@ -454,7 +464,7 @@
   .gallery-section {
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
       gap: 1.5rem;
       
       .gallery-photo {
@@ -530,30 +540,30 @@
         margin-bottom: 1rem;
         
         .powered-by {
-          color: #333;
+          color: #adb5bd;
           font-size: 0.9rem;
           margin: 0;
-          
+
           strong {
-            color: #1a1a1a;
+            color: #ffffff;
           }
         }
       }
-      
+
       .footer-contact {
         .contact-text {
-          color: #666;
+          color: #6c757d;
           font-size: 0.85rem;
           margin: 0;
-          
+
           .contact-link {
-            color: #667eea;
+            color: #9ca3af;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
             
             &:hover {
-              color: #764ba2;
+              color: #ffffff;
             }
           }
         }
@@ -576,7 +586,7 @@
     }
     
     .gallery-grid {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
     }
   }
 }
@@ -622,8 +632,8 @@
     }
     
     .content-section {
-      padding: 3rem 0;
-      
+      padding: 5rem 0;
+
       .section-header {
         margin-bottom: 2.5rem;
         
@@ -690,7 +700,7 @@
     }
     
     .content-section {
-      padding: 2.5rem 0;
+      padding: 4rem 0;
       
       .section-header .section-title {
         font-size: 1.8rem;
@@ -867,6 +877,15 @@
   background: #ffffff;
   font-family: 'Georgia', 'Times New Roman', serif;
 
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
   // Minimal Header
   .minimal-header {
     background: #f8f9fa;
@@ -874,6 +893,10 @@
     border-bottom: 2px solid #e9ecef;
 
     .minimal-profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
       .minimal-profile-photo {
         width: 160px;
         height: 160px;
@@ -941,7 +964,7 @@
 
   // Content Sections
   .minimal-section {
-    padding: 4rem 0;
+    padding: 6rem 0;
 
     .minimal-section-title {
       font-size: 2rem;
@@ -1154,7 +1177,7 @@
 
     .minimal-gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
       gap: 1rem;
       max-width: 1000px;
       margin: 0 auto;

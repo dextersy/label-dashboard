@@ -35,8 +35,24 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 })
 export class TicketBuyComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+  private contentScrollListener?: () => void;
+  private _contentScrollEl?: ElementRef<HTMLElement>;
+
   @ViewChild('posterImg') posterImg?: ElementRef<HTMLImageElement>;
+
+  @ViewChild('contentScroll') set contentScrollEl(el: ElementRef<HTMLElement> | undefined) {
+    // Remove old listener if element is being destroyed
+    if (this._contentScrollEl?.nativeElement && this.contentScrollListener) {
+      this._contentScrollEl.nativeElement.removeEventListener('scroll', this.contentScrollListener);
+      this.contentScrollListener = undefined;
+    }
+    this._contentScrollEl = el;
+    // Attach listener once the element appears (after *ngIf resolves)
+    if (el?.nativeElement) {
+      this.contentScrollListener = () => this.applyParallax(el.nativeElement.scrollTop);
+      el.nativeElement.addEventListener('scroll', this.contentScrollListener);
+    }
+  }
 
   event: PublicEvent | null = null;
   ticketForm: FormGroup;
@@ -116,7 +132,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    
+
+    if (this._contentScrollEl?.nativeElement && this.contentScrollListener) {
+      this._contentScrollEl.nativeElement.removeEventListener('scroll', this.contentScrollListener);
+    }
+
     // Clean up metadata when leaving the page
     this.metaService.clearMetadata();
   }
@@ -229,7 +249,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   calculateTotal() {
     const numberOfTickets = this.ticketForm.get('number_of_entries')?.value || 0;
-    const ticketPrice = this.selectedTicketType?.price || this.event?.ticket_price || 0;
+    const ticketPrice = this.selectedTicketType != null ? (this.selectedTicketType.price ?? 0) : (this.event?.ticket_price ?? 0);
     this.totalAmount = ticketPrice * numberOfTickets;
   }
 
@@ -315,11 +335,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   formatEventDate(dateString?: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   }
 
@@ -331,6 +351,18 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
       minute: '2-digit',
       hour12: true
     });
+  }
+
+  formatEventMonthDay(dateString?: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  formatEventWeekday(dateString?: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   }
 
   formatVenueDisplay(event: PublicEvent): string {
@@ -471,21 +503,20 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   @HostListener('window:scroll')
   onWindowScroll() {
+    if (window.innerWidth > 768) return; // desktop handled by content-scroll listener
     if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      const panel = this.posterImg.nativeElement.parentElement;
-      if (!panel) return;
-      const rect = panel.getBoundingClientRect();
-      // Only apply parallax while the poster is visible
-      if (rect.bottom < 0) return;
-      // Translate image down to counteract container scrolling up — makes it appear slower
-      const translate = window.scrollY * 0.5;
-      this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
-    } else {
-      const translate = -(window.scrollY * 0.2);
-      this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
-    }
+    const panel = this.posterImg.nativeElement.parentElement;
+    if (!panel) return;
+    const rect = panel.getBoundingClientRect();
+    if (rect.bottom < 0) return;
+    const translate = window.scrollY * 0.5;
+    this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+  }
+
+  private applyParallax(scrollTop: number) {
+    if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
+    const translate = -(scrollTop * 0.3);
+    this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
   }
 
   getHeroBgImageStyle(): SafeStyle | null {
