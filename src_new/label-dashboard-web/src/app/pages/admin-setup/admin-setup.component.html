@@ -1,172 +1,179 @@
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header text-center" [style.background-color]="brandColor" style="color: white;">
-          <img [src]="brandLogo" alt="Logo" class="mb-2" style="max-height: 60px; width: auto;">
-          <h4>{{ brandName }} - Admin Setup</h4>
-          <p class="mb-0">Complete your admin profile setup</p>
-        </div>
-        <div class="card-body">
-          <div *ngIf="loading" class="text-center p-4">
-            <div class="loading-dots">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-            <p class="mt-3">Loading...</p>
-          </div>
-          
-          <div *ngIf="!loading && profile">
-            <!-- General error message -->
-            <div *ngIf="message" [class]="'alert alert-' + (messageType === 'success' ? 'success' : 'danger')">
-              {{ message }}
-            </div>
-            
-            <form (ngSubmit)="onSubmit()" #setupForm="ngForm">
-              <!-- Email (read-only) -->
-              <div class="mb-3">
-                <label for="email" class="form-label">Email Address</label>
-                <input type="email" class="form-control" id="email" 
-                       [value]="profile.email_address" readonly>
-              </div>
-              
-              <!-- Username -->
-              <div class="mb-3" *ngIf="canChangeUsername">
-                <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="username"
-                       [(ngModel)]="profile.username" 
-                       name="username"
-                       (input)="onUsernameChange(profile.username)"
-                       [class.is-invalid]="errors.username || usernameExists || usernameInvalid"
-                       [class.is-valid]="usernameValid && !errors.username"
-                       placeholder="Choose a username"
-                       required>
-                
-                <!-- Username validation feedback -->
-                <div class="invalid-feedback" *ngIf="errors.username">
-                  {{ errors.username }}
-                </div>
-                <div class="invalid-feedback" *ngIf="usernameExists && !errors.username">
-                  Sorry, this username is already in use. Please choose another.
-                </div>
-                <div class="invalid-feedback" *ngIf="usernameInvalid && !errors.username">
-                  Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens.
-                </div>
-                <div class="valid-feedback" *ngIf="usernameValid && !errors.username">
-                  Username is available!
-                </div>
-              </div>
-              
-              <!-- First Name -->
-              <div class="mb-3">
-                <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="firstName"
-                       [(ngModel)]="profile.first_name" 
-                       name="firstName"
-                       [class.is-invalid]="errors.first_name"
-                       placeholder="Enter your first name"
-                       required>
-                <div class="invalid-feedback" *ngIf="errors.first_name">
-                  {{ errors.first_name }}
-                </div>
-              </div>
-              
-              <!-- Last Name -->
-              <div class="mb-3">
-                <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="lastName"
-                       [(ngModel)]="profile.last_name" 
-                       name="lastName"
-                       [class.is-invalid]="errors.last_name"
-                       placeholder="Enter your last name"
-                       required>
-                <div class="invalid-feedback" *ngIf="errors.last_name">
-                  {{ errors.last_name }}
-                </div>
-              </div>
-              
-              <!-- Password -->
-              <div class="mb-3">
-                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                <div class="password-field-wrapper">
-                  <input
-                    [type]="showPassword ? 'text' : 'password'"
-                    class="form-control"
-                    id="password"
-                    [(ngModel)]="password"
-                    name="password"
-                    [class.is-invalid]="errors.password || errors.passwordMismatch"
-                    placeholder="Choose a password"
-                    required>
-                  <button
-                    type="button"
-                    class="password-toggle-icon-btn"
-                    (click)="togglePasswordVisibility()"
-                    tabindex="-1"
-                    aria-label="Toggle password visibility">
-                    <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                  </button>
-                </div>
-                <div class="invalid-feedback d-block" *ngIf="errors.password">
-                  {{ errors.password }}
-                </div>
-                <small class="text-muted" *ngIf="!errors.password">
-                  Must include: 8+ characters, uppercase, lowercase, number, and special character
-                </small>
-              </div>
+<!-- Full-page loading state -->
+<div *ngIf="loading" class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center">
+  <div class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+    <svg class="tw-animate-spin tw-h-8 tw-w-8 tw-text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <p class="tw-text-sm tw-text-gray-500">Loading...</p>
+  </div>
+</div>
 
-              <!-- Confirm Password -->
-              <div class="mb-3">
-                <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                <div class="password-field-wrapper">
-                  <input
-                    [type]="showConfirmPassword ? 'text' : 'password'"
-                    class="form-control"
-                    id="confirmPassword"
-                    [(ngModel)]="confirmPassword"
-                    name="confirmPassword"
-                    [class.is-invalid]="errors.confirmPassword || errors.passwordMismatch"
-                    placeholder="Confirm your password"
-                    required>
-                  <button
-                    type="button"
-                    class="password-toggle-icon-btn"
-                    (click)="toggleConfirmPasswordVisibility()"
-                    tabindex="-1"
-                    aria-label="Toggle password visibility">
-                    <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                  </button>
-                </div>
-                <div class="invalid-feedback d-block" *ngIf="errors.confirmPassword">
-                  {{ errors.confirmPassword }}
-                </div>
-                <div class="invalid-feedback d-block" *ngIf="errors.passwordMismatch">
-                  {{ errors.passwordMismatch }}
-                </div>
-              </div>
-              
-              <!-- Submit Button -->
-              <div class="d-grid mb-3">
-                <button type="submit" 
-                        class="btn btn-primary"
-                        [disabled]="saving || !setupForm.form.valid || (canChangeUsername && (usernameExists || usernameInvalid))"
-                        [style.background-color]="brandColor"
-                        [style.border-color]="brandColor">
-                  <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  {{ saving ? 'Setting up...' : 'Complete Setup' }}
-                </button>
-              </div>
-            </form>
-            
-            <div class="text-center">
-              <small class="text-muted">
-                Already have an account? <a href="#" (click)="goToLogin()" class="text-decoration-none">Sign in here</a>
-              </small>
-            </div>
-          </div>
-        </div>
+<div *ngIf="!loading" class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-12">
+  <div class="tw-w-full tw-max-w-sm">
+
+    <!-- Brand header -->
+    <div class="tw-flex tw-flex-col tw-items-center tw-mb-8">
+      <div
+        class="tw-w-20 tw-h-20 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mb-4 tw-overflow-hidden tw-shadow-md"
+        [style.background-color]="brandColor">
+        <img [src]="brandLogo" [alt]="brandName" class="tw-max-w-full tw-max-h-full tw-object-contain tw-p-2">
       </div>
+      <h1 class="tw-text-xl tw-font-bold tw-text-gray-900">{{ brandName }}</h1>
+      <p class="tw-text-sm tw-text-gray-500 tw-mt-1">Complete your admin profile setup</p>
+    </div>
+
+    <!-- Card -->
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-lg tw-p-8">
+
+      <!-- Alerts -->
+      <div *ngIf="message && messageType === 'error'"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-red-50 tw-border tw-border-red-200 tw-text-red-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-exclamation-circle tw-mt-0.5 tw-shrink-0"></i>
+        <span>{{ message }}</span>
+      </div>
+      <div *ngIf="message && messageType === 'success'"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-green-50 tw-border tw-border-green-200 tw-text-green-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-check-circle tw-mt-0.5 tw-shrink-0"></i>
+        <span>{{ message }}</span>
+      </div>
+
+      <form *ngIf="profile" (ngSubmit)="onSubmit()" #setupForm="ngForm">
+        <div class="tw-space-y-5">
+
+          <!-- Email (readonly) -->
+          <div>
+            <label for="email" class="tw-label">Email Address</label>
+            <input type="email" class="tw-input" id="email" [value]="profile.email_address" readonly>
+          </div>
+
+          <!-- Username (editable) -->
+          <div *ngIf="canChangeUsername">
+            <label for="username" class="tw-label">Username</label>
+            <input
+              type="text"
+              class="tw-input"
+              id="username"
+              [(ngModel)]="profile.username"
+              name="username"
+              (input)="onUsernameChange(profile.username)"
+              placeholder="Choose a username"
+              required>
+            <p *ngIf="errors.username" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.username }}</p>
+            <p *ngIf="usernameExists && !errors.username" class="tw-text-xs tw-text-red-600 tw-mt-1">
+              This username is already taken. Please choose another.
+            </p>
+            <p *ngIf="usernameInvalid && !errors.username" class="tw-text-xs tw-text-red-600 tw-mt-1">
+              Must be 3–30 characters: letters, numbers, underscores, or hyphens only.
+            </p>
+            <p *ngIf="usernameValid && !errors.username" class="tw-text-xs tw-text-green-600 tw-mt-1">
+              Username is available!
+            </p>
+          </div>
+
+          <!-- First Name -->
+          <div>
+            <label for="firstName" class="tw-label">First Name</label>
+            <input
+              type="text"
+              class="tw-input"
+              id="firstName"
+              [(ngModel)]="profile.first_name"
+              name="firstName"
+              placeholder="Enter your first name"
+              required>
+            <p *ngIf="errors.first_name" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.first_name }}</p>
+          </div>
+
+          <!-- Last Name -->
+          <div>
+            <label for="lastName" class="tw-label">Last Name</label>
+            <input
+              type="text"
+              class="tw-input"
+              id="lastName"
+              [(ngModel)]="profile.last_name"
+              name="lastName"
+              placeholder="Enter your last name"
+              required>
+            <p *ngIf="errors.last_name" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.last_name }}</p>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label for="password" class="tw-label">Password</label>
+            <div class="tw-relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                class="tw-input tw-pr-10"
+                id="password"
+                [(ngModel)]="password"
+                name="password"
+                placeholder="Choose a password"
+                required>
+              <button
+                type="button"
+                class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-px-3 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                (click)="togglePasswordVisibility()"
+                tabindex="-1"
+                aria-label="Toggle password visibility">
+                <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+            <p *ngIf="errors.password" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.password }}</p>
+            <p *ngIf="!errors.password" class="tw-text-xs tw-text-gray-400 tw-mt-1">
+              8+ characters — uppercase, lowercase, number, and special character required.
+            </p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label for="confirmPassword" class="tw-label">Confirm Password</label>
+            <div class="tw-relative">
+              <input
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                class="tw-input tw-pr-10"
+                id="confirmPassword"
+                [(ngModel)]="confirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                required>
+              <button
+                type="button"
+                class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-px-3 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                (click)="toggleConfirmPasswordVisibility()"
+                tabindex="-1"
+                aria-label="Toggle password visibility">
+                <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+            <p *ngIf="errors.confirmPassword" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.confirmPassword }}</p>
+            <p *ngIf="errors.passwordMismatch" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.passwordMismatch }}</p>
+          </div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="tw-w-full tw-py-2.5 tw-px-4 tw-rounded-lg tw-text-white tw-font-semibold tw-text-sm tw-transition-opacity disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-2"
+            [style.background-color]="brandColor"
+            [disabled]="saving || !setupForm.form.valid || (canChangeUsername && (usernameExists || usernameInvalid))">
+            <svg *ngIf="saving" class="tw-animate-spin tw-h-4 tw-w-4 tw-text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            {{ saving ? 'Setting up...' : 'Complete Setup' }}
+          </button>
+
+        </div>
+      </form>
+
+      <p class="tw-text-center tw-text-xs tw-text-gray-400 tw-mt-6">
+        Already have an account?
+        <a (click)="goToLogin()" class="tw-font-medium tw-cursor-pointer hover:tw-underline" [style.color]="brandColor">Sign in</a>
+      </p>
+
     </div>
   </div>
 </div>

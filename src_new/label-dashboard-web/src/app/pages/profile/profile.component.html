@@ -1,279 +1,252 @@
-<div class="container-fluid">
+<div class="tw-p-6 tw-max-w-4xl tw-mx-auto">
+
   <!-- Page Header -->
-  <div class="page-header d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">
-      <i class="fas fa-user-cog me-2 text-primary"></i>
-      Profile Settings
-    </h5>
-  </div>
-
-  <div class="row">
-    <div class="col-md-8 col-lg-6 mx-auto">
-          
-          <!-- Original Page Header (keeping for form styling) -->
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h4 class="card-title mb-0">
-                <i class="fa fa-user"></i> Edit Profile
-              </h4>
-              <button class="btn btn-sm btn-secondary" (click)="goBack()">
-                <i class="fa fa-arrow-left"></i> Back to Dashboard
-              </button>
-            </div>
-          </div>
-
-          <!-- Loading State -->
-          <div *ngIf="loading" class="card">
-            <div class="card-body text-center p-4">
-              <div class="loading-dots">
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Profile Information Card -->
-          <div *ngIf="!loading && profile" class="card">
-            <div class="card-header">
-              <h5 class="card-title mb-0">Profile Information</h5>
-            </div>
-            <div class="card-body">
-              
-              <!-- Profile Details (Read-only) -->
-              <div class="row mb-4">
-                <div class="col-md-6">
-                  <div class="info-item">
-                    <label class="form-label small text-muted">Account Status</label>
-                    <div class="d-flex align-items-center">
-                      <span class="badge bg-success me-2">Active</span>
-                      <span *ngIf="profile.is_admin" class="badge bg-primary">
-                        <i class="fa fa-shield"></i> Administrator
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="info-item">
-                    <label class="form-label small text-muted">Last Login</label>
-                    <div class="text-dark">{{ formatLastLogin(profile.last_login) }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Profile Form -->
-              <form (ngSubmit)="onSubmitProfile()" #profileFormRef="ngForm">
-                <div class="row">
-                  <!-- Username (read-only as per original PHP) -->
-                  <div class="col-md-6 mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input 
-                      type="text" 
-                      id="username"
-                      class="form-control"
-                      [(ngModel)]="profileForm.username"
-                      name="username"
-                      readonly
-                      placeholder="Username">
-                    <small class="text-muted">Username cannot be changed</small>
-                  </div>
-                  
-                  <!-- Email (read-only as per original PHP) -->
-                  <div class="col-md-6 mb-3">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input 
-                      type="email" 
-                      id="email"
-                      class="form-control"
-                      [(ngModel)]="profileForm.email"
-                      name="email"
-                      readonly
-                      placeholder="Email address">
-                    <small class="text-muted">Email cannot be changed</small>
-                  </div>
-                </div>
-
-                <div class="row">
-                  <!-- First Name -->
-                  <div class="col-md-6 mb-3">
-                    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-                    <input 
-                      type="text" 
-                      id="first_name"
-                      class="form-control"
-                      [class.is-invalid]="errors.first_name"
-                      [(ngModel)]="profileForm.first_name"
-                      name="first_name"
-                      placeholder="First name"
-                      required>
-                    <div *ngIf="errors.first_name" class="invalid-feedback">
-                      {{ errors.first_name }}
-                    </div>
-                  </div>
-                  
-                  <!-- Last Name -->
-                  <div class="col-md-6 mb-3">
-                    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-                    <input 
-                      type="text" 
-                      id="last_name"
-                      class="form-control"
-                      [class.is-invalid]="errors.last_name"
-                      [(ngModel)]="profileForm.last_name"
-                      name="last_name"
-                      placeholder="Last name"
-                      required>
-                    <div *ngIf="errors.last_name" class="invalid-feedback">
-                      {{ errors.last_name }}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-flex justify-content-end">
-                  <button 
-                    type="submit" 
-                    class="btn btn-primary"
-                    [disabled]="saving">
-                    <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    <i *ngIf="!saving" class="fa fa-save me-2"></i>
-                    {{ saving ? 'Saving...' : 'Save Changes' }}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- Password Section -->
-          <div *ngIf="!loading && profile" class="card">
-            <div class="card-header">
-              <h5 class="card-title mb-0">Password</h5>
-            </div>
-            <div class="card-body">
-              
-              <!-- Password Display (when not changing) -->
-              <div *ngIf="!showPasswordChange" class="d-flex justify-content-between align-items-center">
-                <div>
-                  <span class="text-muted">••••••••••</span>
-                  <small class="text-muted d-block">Your password is secure</small>
-                </div>
-                <button 
-                  type="button" 
-                  class="btn btn-secondary btn-sm"
-                  (click)="togglePasswordChange()">
-                  <i class="fa fa-key me-2"></i>Change Password
-                </button>
-              </div>
-
-              <!-- Password Change Form -->
-              <div *ngIf="showPasswordChange">
-                <form (ngSubmit)="onSubmitPassword()" #passwordFormRef="ngForm">
-                  
-                  <!-- Current Password -->
-                  <div class="mb-3">
-                    <label for="current_password" class="form-label">Current Password <span class="text-danger">*</span></label>
-                    <div class="password-field-wrapper">
-                      <input
-                        [type]="showCurrentPassword ? 'text' : 'password'"
-                        id="current_password"
-                        class="form-control"
-                        [class.is-invalid]="errors.current_password"
-                        [(ngModel)]="passwordForm.current_password"
-                        name="current_password"
-                        placeholder="Enter your current password"
-                        required>
-                      <button
-                        type="button"
-                        class="password-toggle-icon-btn"
-                        (click)="toggleCurrentPasswordVisibility()"
-                        tabindex="-1"
-                        aria-label="Toggle password visibility">
-                        <i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                      </button>
-                    </div>
-                    <div *ngIf="errors.current_password" class="invalid-feedback d-block">
-                      {{ errors.current_password }}
-                    </div>
-                  </div>
-
-                  <!-- New Password -->
-                  <div class="mb-3">
-                    <label for="new_password" class="form-label">New Password <span class="text-danger">*</span></label>
-                    <div class="password-field-wrapper">
-                      <input
-                        [type]="showNewPassword ? 'text' : 'password'"
-                        id="new_password"
-                        class="form-control"
-                        [class.is-invalid]="errors.new_password"
-                        [(ngModel)]="passwordForm.new_password"
-                        name="new_password"
-                        placeholder="Enter your new password"
-                        required>
-                      <button
-                        type="button"
-                        class="password-toggle-icon-btn"
-                        (click)="toggleNewPasswordVisibility()"
-                        tabindex="-1"
-                        aria-label="Toggle password visibility">
-                        <i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                      </button>
-                    </div>
-                    <div *ngIf="errors.new_password" class="invalid-feedback d-block">
-                      {{ errors.new_password }}
-                    </div>
-                    <small class="text-muted">Must include: 8+ characters, uppercase, lowercase, number, and special character</small>
-                  </div>
-
-                  <!-- Confirm Password -->
-                  <div class="mb-3">
-                    <label for="confirm_password" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
-                    <div class="password-field-wrapper">
-                      <input
-                        [type]="showConfirmPassword ? 'text' : 'password'"
-                        id="confirm_password"
-                        class="form-control"
-                        [class.is-invalid]="errors.confirm_password"
-                        [(ngModel)]="passwordForm.confirm_password"
-                        name="confirm_password"
-                        placeholder="Confirm your new password"
-                        required>
-                      <button
-                        type="button"
-                        class="password-toggle-icon-btn"
-                        (click)="toggleConfirmPasswordVisibility()"
-                        tabindex="-1"
-                        aria-label="Toggle password visibility">
-                        <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                      </button>
-                    </div>
-                    <div *ngIf="errors.confirm_password" class="invalid-feedback d-block">
-                      {{ errors.confirm_password }}
-                    </div>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div class="d-flex justify-content-end gap-2">
-                    <button 
-                      type="button" 
-                      class="btn btn-secondary"
-                      (click)="togglePasswordChange()"
-                      [disabled]="changingPassword">
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit" 
-                      class="btn btn-secondary"
-                      [disabled]="changingPassword">
-                      <span *ngIf="changingPassword" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                      <i *ngIf="!changingPassword" class="fa fa-key me-2"></i>
-                      {{ changingPassword ? 'Changing...' : 'Change Password' }}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-start">
+      <div>
+        <h3 class="tw-mb-2">
+          <i class="fas fa-user-cog tw-mr-2"></i>
+          Profile Settings
+        </h3>
+        <p class="tw-mb-0 tw-text-muted">Update your name and account password.</p>
+      </div>
+      <button class="btn-sm btn-secondary tw-shrink-0" (click)="goBack()">
+        <i class="fa fa-arrow-left tw-mr-1"></i> Back to Dashboard
+      </button>
     </div>
   </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-8 tw-text-center tw-mb-6">
+    <div class="loading-dots">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
+
+  <!-- Profile Information Card -->
+  <div *ngIf="!loading && profile" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h4 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Profile Information</h4>
+    </div>
+    <div class="tw-p-6 tw-space-y-5">
+
+      <!-- Read-only info row -->
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5">
+        <div>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Account Status</p>
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <span class="tw-inline-flex tw-items-center tw-px-2 tw-py-0.5 tw-rounded tw-text-xs tw-font-semibold tw-bg-green-100 tw-text-green-700">Active</span>
+            <span *ngIf="profile.is_admin" class="tw-inline-flex tw-items-center tw-gap-1 tw-px-2 tw-py-0.5 tw-rounded tw-text-xs tw-font-semibold tw-text-white" style="background-color: var(--brand-color, #3b82f6)">
+              <i class="fa fa-shield tw-text-xs"></i> Administrator
+            </span>
+          </div>
+        </div>
+        <div>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Last Login</p>
+          <p class="tw-text-sm tw-text-gray-800 tw-mb-0">{{ formatLastLogin(profile.last_login) }}</p>
+        </div>
+      </div>
+
+      <!-- Profile Form -->
+      <form (ngSubmit)="onSubmitProfile()" #profileFormRef="ngForm">
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5 tw-mb-5">
+          <!-- Username (read-only) -->
+          <div>
+            <label for="username" class="tw-label">Username</label>
+            <input
+              type="text"
+              id="username"
+              class="tw-input tw-bg-gray-50 tw-text-gray-500 tw-cursor-not-allowed"
+              [(ngModel)]="profileForm.username"
+              name="username"
+              readonly
+              placeholder="Username">
+            <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Username cannot be changed</p>
+          </div>
+
+          <!-- Email (read-only) -->
+          <div>
+            <label for="email" class="tw-label">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              class="tw-input tw-bg-gray-50 tw-text-gray-500 tw-cursor-not-allowed"
+              [(ngModel)]="profileForm.email"
+              name="email"
+              readonly
+              placeholder="Email address">
+            <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Email cannot be changed</p>
+          </div>
+        </div>
+
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5 tw-mb-5">
+          <!-- First Name -->
+          <div>
+            <label for="first_name" class="tw-label">First Name <span class="tw-text-red-500">*</span></label>
+            <input
+              type="text"
+              id="first_name"
+              class="tw-input"
+              [class.is-invalid]="errors.first_name"
+              [(ngModel)]="profileForm.first_name"
+              name="first_name"
+              placeholder="First name"
+              required>
+            <p *ngIf="errors.first_name" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.first_name }}</p>
+          </div>
+
+          <!-- Last Name -->
+          <div>
+            <label for="last_name" class="tw-label">Last Name <span class="tw-text-red-500">*</span></label>
+            <input
+              type="text"
+              id="last_name"
+              class="tw-input"
+              [class.is-invalid]="errors.last_name"
+              [(ngModel)]="profileForm.last_name"
+              name="last_name"
+              placeholder="Last name"
+              required>
+            <p *ngIf="errors.last_name" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.last_name }}</p>
+          </div>
+        </div>
+
+        <div class="tw-flex tw-justify-end">
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="saving">
+            <span *ngIf="saving" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
+            <i *ngIf="!saving" class="fa fa-save tw-mr-2"></i>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Password Card -->
+  <div *ngIf="!loading && profile" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <h4 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Password</h4>
+    </div>
+    <div class="tw-p-6">
+
+      <!-- Password display (not changing) -->
+      <div *ngIf="!showPasswordChange" class="tw-flex tw-justify-between tw-items-center">
+        <div>
+          <span class="tw-text-gray-400 tw-text-lg tw-tracking-widest">••••••••••</span>
+          <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Your password is secure</p>
+        </div>
+        <button
+          type="button"
+          class="btn-secondary btn-sm"
+          (click)="togglePasswordChange()">
+          <i class="fa fa-key tw-mr-2"></i>Change Password
+        </button>
+      </div>
+
+      <!-- Password change form -->
+      <form *ngIf="showPasswordChange" (ngSubmit)="onSubmitPassword()" #passwordFormRef="ngForm" class="tw-space-y-4">
+
+        <!-- Current Password -->
+        <div>
+          <label for="current_password" class="tw-label">Current Password <span class="tw-text-red-500">*</span></label>
+          <div class="tw-relative">
+            <input
+              [type]="showCurrentPassword ? 'text' : 'password'"
+              id="current_password"
+              class="tw-input tw-pr-12"
+              [class.is-invalid]="errors.current_password"
+              [(ngModel)]="passwordForm.current_password"
+              name="current_password"
+              placeholder="Enter your current password"
+              required>
+            <button
+              type="button"
+              class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+              (click)="toggleCurrentPasswordVisibility()"
+              tabindex="-1"
+              aria-label="Toggle password visibility">
+              <i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <p *ngIf="errors.current_password" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.current_password }}</p>
+        </div>
+
+        <!-- New Password -->
+        <div>
+          <label for="new_password" class="tw-label">New Password <span class="tw-text-red-500">*</span></label>
+          <div class="tw-relative">
+            <input
+              [type]="showNewPassword ? 'text' : 'password'"
+              id="new_password"
+              class="tw-input tw-pr-12"
+              [class.is-invalid]="errors.new_password"
+              [(ngModel)]="passwordForm.new_password"
+              name="new_password"
+              placeholder="Enter your new password"
+              required>
+            <button
+              type="button"
+              class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+              (click)="toggleNewPasswordVisibility()"
+              tabindex="-1"
+              aria-label="Toggle password visibility">
+              <i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <p *ngIf="errors.new_password" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.new_password }}</p>
+          <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Must include: 8+ characters, uppercase, lowercase, number, and special character</p>
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label for="confirm_password" class="tw-label">Confirm New Password <span class="tw-text-red-500">*</span></label>
+          <div class="tw-relative">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              id="confirm_password"
+              class="tw-input tw-pr-12"
+              [class.is-invalid]="errors.confirm_password"
+              [(ngModel)]="passwordForm.confirm_password"
+              name="confirm_password"
+              placeholder="Confirm your new password"
+              required>
+            <button
+              type="button"
+              class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+              (click)="toggleConfirmPasswordVisibility()"
+              tabindex="-1"
+              aria-label="Toggle password visibility">
+              <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <p *ngIf="errors.confirm_password" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.confirm_password }}</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="tw-flex tw-justify-end tw-gap-2 tw-pt-2">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="togglePasswordChange()"
+            [disabled]="changingPassword">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="changingPassword">
+            <span *ngIf="changingPassword" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
+            <i *ngIf="!changingPassword" class="fa fa-key tw-mr-2"></i>
+            {{ changingPassword ? 'Changing...' : 'Change Password' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>

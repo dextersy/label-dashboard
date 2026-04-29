@@ -251,8 +251,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     // Get brand ID from referer URL (frontend domain)
     const refererUrl = req.get('referer') || req.get('referrer') || '';
-    console.log('Referer URL:', refererUrl);
-    
     if (!refererUrl) {
       return res.status(400).json({ error: 'Unable to determine frontend domain from request' });
     }
@@ -802,7 +800,6 @@ export const organizerSignup = async (req: Request, res: Response) => {
     }
 
     const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    console.log('[organizerSignup] TICKETING_PARENT_BRAND_ID:', process.env.TICKETING_PARENT_BRAND_ID, '→ parsed:', parentBrandId);
     if (!parentBrandId) {
       throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
     }
@@ -817,11 +814,9 @@ export const organizerSignup = async (req: Request, res: Response) => {
     // Users on unrelated brands can share the same email — login is scoped to ticketing brands anyway
     const ticketingSubBrandIds = (await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] })).map(b => b.id);
     const ticketingBrandIds = [parentBrandId, ...ticketingSubBrandIds];
-    console.log('[organizerSignup] ticketingBrandIds:', ticketingBrandIds);
     const existingUser = await User.findOne({
       where: { email_address: email.toLowerCase().trim(), brand_id: ticketingBrandIds }
     });
-    console.log('[organizerSignup] existingUser:', existingUser ? `id=${existingUser.id} brand_id=${existingUser.brand_id}` : 'none');
     if (existingUser) {
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
@@ -1290,8 +1285,6 @@ function generateEmailFromTemplate(resetHash: string, brandName: string, brandCo
   }
   
   const resetUrl = `${frontendBaseUrl}/reset-password?code=${resetHash}`;
-  console.log('Generated reset URL:', resetUrl);
-
   try {
     const templatePath = path.join(__dirname, '../assets/templates/reset_password_email.html');
     let template = fs.readFileSync(templatePath, 'utf8');
@@ -1350,8 +1343,6 @@ export const validateResetHash = async (req: Request, res: Response) => {
 
     // Get brand ID from referer URL (frontend domain)
     const refererUrl = req.get('referer') || req.get('referrer') || '';
-    console.log('Referer URL:', refererUrl);
-    
     if (!refererUrl) {
       return res.status(400).json({ valid: false, error: 'Unable to determine frontend domain from request' });
     }

@@ -2264,7 +2264,10 @@ export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
     const siteName = artist.brand?.brand_name || 'Melt Records';
     
     // Use the brand's primary domain for the frontend URL
-    const brandDomain = artist.brand?.domains?.[0]?.domain_name || 'testbrand.spindly.app';
+    const brandDomain = artist.brand?.domains?.[0]?.domain_name;
+    if (!brandDomain) {
+      return res.status(500).json({ error: 'No domain configured for this brand' });
+    }
     const frontendUrl = `https://${brandDomain}/public/epk/${artist.id}`;
 
     // Generate structured data for Artist/MusicGroup

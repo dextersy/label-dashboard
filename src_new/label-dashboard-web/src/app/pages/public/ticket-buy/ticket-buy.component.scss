@@ -1,123 +1,39 @@
-/* BASIC - Override global dashboard styles for public pages */
-
 :host {
   display: block;
   min-height: 100vh;
 }
 
-/* Preview Banner */
-.preview-banner {
-  position: sticky;
-  top: 0;
-  z-index: 1050;
-  background-color: #ffc107;
-  color: #000;
-  text-align: center;
-  padding: 0.6rem 1rem;
-  font-size: 0.9rem;
-  font-family: Arial, sans-serif;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-
-// Force override of global dashboard styles
+/* Force override of global dashboard styles for public-facing pages */
 .public-page {
   background-color: #fafafa !important;
-  font-family: Arial, sans-serif !important; // Use Arial as default font
-  font-size: 14px !important; // Standard readable size instead of global 13px
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 16px !important;
   line-height: 1.5 !important;
   min-height: 100vh;
-  
-  
-  // Override any existing background gradients
   background-image: none !important;
-  
-  // Reset any dashboard margins/padding
   margin: 0 !important;
   padding: 0 !important;
-  
-  // Use system default fonts and sizes for everything, including headers
+
   h1, h2, h3, h4, h5, h6 {
     font-family: inherit !important;
   }
-  
-  // Override all possible font-family sources with higher specificity
-  // BUT exclude FontAwesome classes and their pseudo-elements
-  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]), 
-  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]):before, 
-  *:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]):after,
-  body,
-  div:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
-  span:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
-  p:not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(i[class*="fa-"]),
-  label,
-  input,
-  button,
-  .form-control,
-  .input-group-text,
-  .btn {
-    font-family: Arial, sans-serif !important;
+
+  *:not(.fa):not(.fas):not(.far):not(.fab):not(i[class*="fa-"]) {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   }
-  
-  // BUT ensure FontAwesome icons keep their proper font-family (v7) - higher specificity
-  .fa, .fas, .far, .fab, .fal,
-  i.fa, i.fas, i.far, i.fab, i.fal,
-  .fa::before, .fas::before, .far::before, .fab::before, .fal::before,
-  i.fa::before, i.fas::before, i.far::before, i.fab::before, i.fal::before {
+
+  .fa, .fas, .far, .fab,
+  i.fa, i.fas, i.far, i.fab {
     font-family: "Font Awesome 7 Free", "Font Awesome 7 Brands" !important;
   }
-  
-  // Override global heading sizes to match PHP styling
-  h1, h2, h3, h4, h5, h6 {
-    margin-top: 0.5em !important;
-  }
-  h1 {
-    font-size: 2.5em !important; // Larger size for event title
-    font-weight: bold;
-    margin-bottom: 0.5em;
-  }
-  
-  h5 {
-    font-size: 1.25em !important; // Smaller than global 1.1rem, matches PHP usage
-    font-weight: normal;
-    margin-bottom: 0.5em;
-  }
-  
-  h6 {
-    font-size: 1em !important; // Same as body text for step labels
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-  }
 
-  body {
-    font-size: 13px;
-  }
+  h1 { font-size: 1.875rem !important; font-weight: 800; margin: 0 0 0.25rem; }
+  h2 { font-size: 1.375rem !important; font-weight: 700; margin: 0 0 0.25rem; }
 }
 
-a {
-  color: #92badd;
-  display: inline-block;
-  text-decoration: none;
-  font-weight: 400;
-}
-
-h2 {
-  text-align: center;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  display: inline-block;
-  margin: 40px 8px 10px 8px; 
-  color: #cccccc;
-}
-
-/* STRUCTURE */
-
-// Remove the duplicate .public-page since it's already defined above
-
-/* ============================================
-   SPLIT LAYOUT — sticky poster left, content right
-   ============================================ */
+/* ============================================================
+   SPLIT LAYOUT — sticky poster left, scrollable content right
+   ============================================================ */
 
 .page-layout {
   display: flex;
@@ -126,9 +42,8 @@ h2 {
   width: 100%;
 }
 
-/* Left: sticky poster panel (~50%) */
 .poster-panel {
-  width: 50%;
+  width: 46%;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -140,1046 +55,196 @@ h2 {
     content: '';
     position: absolute;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: rgba(0, 0, 0, 0.15);
     pointer-events: none;
+    z-index: 1;
   }
 
-  &:hover .view-full-image-btn {
-    opacity: 1;
-  }
+  &:hover .view-full-image-btn { opacity: 1; }
 
   .poster-fill {
     position: absolute;
-    top: 0;
+    top: -10%;
     left: 0;
     width: 100%;
     height: 120%;
     object-fit: cover;
-    object-position: center top;
+    object-position: center center;
     display: block;
-    will-change: transform;
   }
 }
 
-/* Right: scrollable content panel */
 .content-panel {
   flex: 1;
   min-width: 0;
-  background-color: #ffffff;
-  padding: 4rem 5rem;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 
   &.closed-state {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-}
-
-@media (min-width: 769px) {
-  .no-poster .content-panel {
-    max-width: 50%;
-    margin: 0 auto;
-  }
-}
-
-.event-info-section {
-  padding-bottom: 1.25rem;
-}
-
-.form-section {
-  padding: 2rem 0;
-}
-
-/* Mobile: stack vertically */
-@media (max-width: 768px) {
-  .page-layout {
-    flex-direction: column;
-  }
-
-  .poster-panel {
-    width: 100%;
-    height: 260px;
-    position: relative;
-    top: auto;
-
-    .poster-fill {
-      height: 200%;
-      top: -50%;
-    }
-  }
-
-  .content-panel {
-    padding: 1.25rem 1rem;
-  }
-
-  .event-info-section {
-    padding-bottom: 0;
-  }
-
-  .form-section {
-    padding: 0.75rem 0;
-  }
-
-  .name-container,
-  .email-container,
-  .contact-number-container,
-  .ticket-quantity-container,
-  .referral-code-container {
-    margin-bottom: 0.75rem;
-  }
-}
-
-.wrapper {
-  margin: 0 auto;
-  display: block;
-  width: 100%;
-  padding: 0px;
-}
-
-#formContent {
-  -webkit-border-radius: 10px 10px 10px 10px;
-  border-radius: 10px 10px 10px 10px;
-  background: #fff;
-  padding: 10px;
-  width: 100%;
-  max-width: 768px;
-  position: relative;
-  padding: 0px;
-  -webkit-box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
-  box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
-  text-align: center;
-}
-
-#formHeader {
-  padding: 25px;
-  text-align: center;
-  width: 90%;
-  max-width: 768px;
-}
-
-#formFooter {
-  background-color: #f6f6f6;
-  border-top: 1px solid #dce8f1;
-  padding: 25px;
-  text-align: center;
-  -webkit-border-radius: 0 0 10px 10px;
-  border-radius: 0 0 10px 10px;
-}
-
-@media only screen and (max-device-width: 400px) {
-  .wrapper {
-    height: auto !important;
-  }
-  .wrapper, .header-section, .container {
-    padding: 0px;
-  }
-}
-
-/* TABS */
-
-h2.inactive {
-  color: #cccccc;
-}
-
-h2.active {
-  color: #0d0d0d;
-  border-bottom: 2px solid #5fbae9;
-}
-
-/* For floating input labels */
-
-.material-textfield {
-  position: relative;
-  margin: 15px 0 0 0;
-}
-
-label.floating {
-  position: absolute;
-  font-size: 1rem;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: white;
-  color: gray;
-  padding: 0 0.3rem;
-  margin: 0 0.5rem;
-  transition: 0.1s ease-out;
-  transform-origin: left top;
-  pointer-events: none;
-}
-
-label.indent {
-  margin: 0 5rem !important;
-}
-
-input.error {
-  border: 1px solid red !important;
-}
-
-.field-error-message {
-  font-size: 14px;
-  color: #ff0000;
-}
-
-/* Angular Material Form Field Styling - Default styles only */
-.mat-mdc-form-field {
-  width: 100%;
-  margin-bottom: 1rem;
-  
-  // Just basic styling, let Material handle the rest
-  .mat-mdc-form-field-hint-wrapper .hint-icon {
-    color: #28a745;
-    font-size: 16px;
-    vertical-align: middle;
-    margin-right: 4px;
-  }
-}
-
-/* Bootstrap Form Controls - Consistent styling for all form fields */
-.name-container,
-.email-container,
-.contact-number-container,
-.ticket-quantity-container,
-.referral-code-container {
-  margin-bottom: 1.5rem;
-  
-  // Override Bootstrap form-floating height constraints
-  .form-floating {
-    > .form-control {
-      height: 4rem !important; // Force height on form-floating inputs
-      padding-top: 1.625rem !important; // More top padding for taller field
-      padding-bottom: 0.625rem !important; // Less bottom padding
-      padding-left: 0.75rem !important;
-      padding-right: 0.75rem !important;
-    }
-    
-    // Default label position (when field is empty) - center vertically
-    > label {
-      top: 0 !important;
-      height: 4rem !important;
-      padding: 1rem 0.75rem !important; // Center in the 4rem height
-      line-height: 2rem !important; // Center text vertically
-    }
-    
-    // Floating label position (when focused or filled) - move to top
-    > .form-control:focus ~ label,
-    > .form-control:not(:placeholder-shown) ~ label {
-      opacity: 0.65 !important;
-      transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem) !important;
-    }
-  }
-  
-  .input-group-text {
-    background-color: white;
-    border-color: #ced4da;
-    font-weight: 500;
-  }
-  
-  .form-control {
-    border-color: #ced4da;
-    
-    // Make all form controls significantly taller - override all Bootstrap defaults
-    &.form-control {
-      height: 4rem !important; // Force explicit height (64px)
-      padding: 1.5rem 0.75rem !important; // Increased padding to match taller height
-      line-height: 1.2 !important; // Adjust line height for better vertical centering
-      font-size: 1rem !important;
-    }
-    
-    // Override global styles that interfere with Bootstrap form-floating
-    &[type="text"], 
-    &[type="email"] {
-      background-color: white !important;
-      border: 1px solid #ced4da !important;
-      height: 4rem !important; // Force explicit height for text/email
-      padding: 1.5rem 0.75rem !important;
-      text-align: left !important;
-      margin: 0 !important;
-      font-size: 1rem !important;
-      border-radius: 0.375rem !important;
-      line-height: 1.2 !important;
-      
-      &:focus {
-        background-color: white !important;
-        border-color: #80bdff !important;
-        border-bottom: 1px solid #80bdff !important;
-      }
-    }
-    
-    // Make all form controls (including number type) taller with explicit height
-    &[type="number"] {
-      height: 4rem !important; // Force explicit height for number inputs
-      padding: 1.5rem 0.75rem !important;
-      line-height: 1.2 !important;
-    }
-    
-    &:focus {
-      border-color: #80bdff;
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-    
-    &.is-invalid {
-      border-color: #dc3545;
-    }
-  }
-  
-  .invalid-feedback {
-    color: #dc3545;
-    font-size: 14px;
-    margin-top: 0.25rem;
-  }
-  
-  .valid-feedback {
-    color: #28a745;
-    font-size: 14px;
-    margin-top: 0.25rem;
-
-  }
-}
-
-/* Single ticket type display (when only one type) */
-.single-ticket-type-display {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-}
-
-/* Ticket type card selection */
-.ticket-type-container {
-  margin-bottom: 1.5rem;
-}
-
-.ticket-type-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-
-  @media (max-width: 480px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.ticket-type-card {
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 0.875rem 0.75rem;
-  cursor: pointer;
-  text-align: center;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-  user-select: none;
-  position: relative;
-
-  &:hover:not(.sold-out) {
-    border-color: #6f42c1;
-    background-color: #f8f5ff;
-  }
-
-  &.selected {
-    border-color: #6f42c1;
-    background-color: #ede9ff;
-    box-shadow: 0 0 0 1px #6f42c1;
-  }
-
-  &.sold-out {
-    opacity: 0.55;
-    cursor: not-allowed;
-    background-color: #f8f9fa;
-  }
-
-  .ticket-type-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-    line-height: 1.3;
-    margin-bottom: 0.35rem;
-    color: #212529;
-  }
-
-  .ticket-type-price {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #6f42c1;
-  }
-
-  &.sold-out .ticket-type-price {
-    color: #6c757d;
-  }
-
-  .sold-out-badge {
-    display: inline-block;
-    margin-top: 0.35rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6c757d;
-    background-color: #e9ecef;
-    padding: 0.15rem 0.5rem;
-    border-radius: 99px;
-  }
-
-  .ticket-type-remaining {
-    margin-top: 0.35rem;
-    font-size: 0.75rem;
-    color: #6c757d;
-  }
-}
-
-// Special styling for contact number field with prepend text
-.contact-number-container {
-  .form-control {
-    border-left: 0; // Remove left border since it connects to the prepend
-  }
-}
-
-/* Legacy material input support (if any remain) */
-input.material {
-  font-size: 1rem !important;
-  outline: none !important;
-  border: 1px solid gray !important;
-  border-radius: 5px !important;
-  padding: 1rem 0.7rem !important;
-  color: rgb(0, 0, 0) !important;
-  transition: 0.1s ease-out !important;
-  width: 100% !important;
-  background-color: white !important;
-  
-  // Override any bootstrap/dashboard form styling
-  box-shadow: none !important;
-  font-family: inherit !important; // Use inherited system font
-}
-
-input.material:focus {
-  border-color: #003059;
-}
-
-input.material:focus+label.floating {
-  color: #003059;
-  top: 0;
-  transform: translateY(-50%) scale(0.9) !important;
-  z-index: 999;
-}
-
-input.material:not(:placeholder-shown)+label {
-  top: 0;
-  transform: translateY(-50%) scale(0.9) !important;
-}
-
-input.material:not(:focus)::placeholder {
-  opacity: 0;
-}
-
-.paymentLinkButton {
-  color: #000000;
-  font-weight: 800;
-}
-
-.field-description {
-  font-size: 14px;
-  padding-bottom: 15px;
-}
-
-.text-white {
-  color: white;
-}
-
-.text-dark {
-  color: black;
-}
-
-.text-form {
-  font-size: 14px;
-}
-
-/* LOADING SPINNER */
-.loading {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 10px solid #656565;
-  border-top-color: orange;
-  animation: loading 1s linear infinite;
-  margin: 0 auto;
-}
-
-@keyframes loading {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-overlay {
-  opacity: 0.5; 
-  background: #FFF; 
-  width: 100%;
-  height: 100%; 
-  z-index: 10;
-  top: 0; 
-  left: 0; 
-  position: fixed; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ANIMATIONS */
-
-/* Simple CSS3 Fade-in-down Animation */
-.fadeInDown {
-  -webkit-animation-name: fadeInDown;
-  animation-name: fadeInDown;
-  -webkit-animation-duration: 1s;
-  animation-duration: 1s;
-  -webkit-animation-fill-mode: both;
-  animation-fill-mode: both;
-}
-
-@keyframes fadeInDown {
-  0% {
-    opacity: 0;
-    -webkit-transform: translate3d(0, -100%, 0);
-    transform: translate3d(0, -100%, 0);
-  }
-  100% {
-    opacity: 1;
-    -webkit-transform: none;
-    transform: none;
-  }
-}
-
-/* Simple CSS3 Fade-in Animation */
-@-webkit-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-@-moz-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-
-.fadeIn {
-  opacity: 0;
-  -webkit-animation: fadeIn ease-in 1;
-  -moz-animation: fadeIn ease-in 1;
-  animation: fadeIn ease-in 1;
-
-  -webkit-animation-fill-mode: forwards;
-  -moz-animation-fill-mode: forwards;
-  animation-fill-mode: forwards;
-
-  -webkit-animation-duration: 1s;
-  -moz-animation-duration: 1s;
-  animation-duration: 1s;
-}
-
-.fadeIn.first {
-  -webkit-animation-delay: 0.4s;
-  -moz-animation-delay: 0.4s;
-  animation-delay: 0.4s;
-}
-
-.fadeIn.second {
-  -webkit-animation-delay: 0.6s;
-  -moz-animation-delay: 0.6s;
-  animation-delay: 0.6s;
-}
-
-.fadeIn.third {
-  -webkit-animation-delay: 0.8s;
-  -moz-animation-delay: 0.8s;
-  animation-delay: 0.8s;
-}
-
-.fadeIn.fourth {
-  -webkit-animation-delay: 1s;
-  -moz-animation-delay: 1s;
-  animation-delay: 1s;
-}
-
-.fadeIn.fifth {
-  -webkit-animation-delay: 1.2s;
-  -moz-animation-delay: 1.2s;
-  animation-delay: 1.2s;
-}
-
-.fadeIn.sixth {
-  -webkit-animation-delay: 1.4s;
-  -moz-animation-delay: 1.4s;
-  animation-delay: 1.4s;
-}
-
-/* Simple CSS3 Fade-in Animation */
-.underlineHover:after {
-  display: block;
-  left: 0;
-  bottom: -10px;
-  width: 0;
-  height: 2px;
-  background-color: #56baed;
-  content: "";
-  transition: width 0.2s;
-}
-
-.underlineHover:hover {
-  color: #0d0d0d;
-}
-
-.underlineHover:hover:after{
-  width: 100%;
-}
-
-/* OTHERS */
-
-*:focus {
-    outline: none;
-} 
-
-#icon {
-  width: 60%;
-}
-
-/* FOR POSTER IMAGE */
-.event-poster-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.event-poster {
-  object-fit: cover; /* Do not scale the image */
-  object-position: center; /* Center the image within the element */
-  width: 300px;
-  height: 300px;
-  margin-bottom: 1rem;
-  border-radius: 100%;
-}
-
-@media only screen and (max-device-width: 400px) {
-  .event-poster {
-    object-fit: cover; /* Do not scale the image */
-    object-position: center; /* Center the image within the element */
-    width: 100%;
-    max-height: 200px;
-    margin: 0px;
-    border-radius: 0;
-  }
-
-  .event-poster-container {
-    padding: 0px;
-    display: flex;
     align-items: center;
     justify-content: center;
   }
 }
 
-/* STICKY PANEL */
-@media only screen and (max-device-width: 400px) {
-  #div_paymentCalculation {
-    padding: 10px 0px 10px 0px;
-    border-top: 1px solid #fdfdfd;
-    background-color: #ffffff;
+// The *ngIf wrapper div and form must both be flex columns that fill height
+.content-panel > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.content-panel form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 3.5rem 4rem 1.5rem;
+}
+
+.content-inner {
+  max-width: 520px;
+}
+
+@media (min-width: 769px) {
+  .no-poster .content-panel {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .content-scroll {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .content-inner {
+    width: 100%;
+  }
+
+  .sticky-cta .content-inner {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+}
+
+.sticky-cta {
+  flex-shrink: 0;
+  background-color: #fff;
+  border-top: 1.5px solid #f0f0f0;
+  padding: 1rem 4rem 1.5rem;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  .page-layout { flex-direction: column; }
+
+  .poster-panel {
+    width: 100%;
+    height: 240px;
+    position: relative;
+    top: auto;
+    flex-shrink: 0;
+
+    .poster-fill { height: 200%; top: -50%; }
+  }
+
+  // On mobile the whole page scrolls — remove the fixed-height constraint
+  .content-panel {
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+
+  .content-panel > div,
+  .content-panel form {
+    display: block;
+    flex: unset;
+  }
+
+  .content-scroll {
+    flex: unset;
+    overflow-y: visible;
+    padding: 1.5rem 1.25rem 1rem;
+  }
+
+  .sticky-cta {
+    padding: 1rem 1.25rem 1.25rem;
     position: sticky;
     bottom: 0;
   }
 }
 
-/* Contact number field */
-.contact-number-prefix {
-  background-color: white !important;
-  border-color: gray;
-}
+/* ============================================================
+   VIEW FULL IMAGE BUTTON (on poster)
+   ============================================================ */
 
-/* QR Code button for Verify */
-#btnScanQR {
-  font-size: 24px;
-  border-top: 1px solid #ced4da;
-  border-right: 1px solid #ced4da;
-  border-bottom: 1px solid #ced4da;
-  border-left: 0px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  border-color: #ced4da;
-
-  background-color: white;
-  padding: 13px 10px 12px 10px;
-}
-
-#txtTicketCode {
-  border-right: 0px;
-}
-
-#cameraContainer {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: black;
-  z-index: 999;
-}
-
-/* Privacy Consent Checkbox - Default Material styling */
-.privacy-consent-container {
-  margin: 1rem 0;
-  
-  .mat-mdc-checkbox {
-    .mdc-form-field {
-      color: #666;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-  }
-  
-  .error-message {
-    color: #dc3545;
-    font-size: 14px;
-    margin-top: 0.5rem;
-    margin-left: 2rem;
-  }
-}
-
-/* Submit Button - Default Material styling */
-.submit-button {
-  margin: 1rem 0;
-  width: 100%;
-  
-  mat-icon {
-    margin-right: 8px;
-  }
-}
-
-/* Button disabled state */
-.btn:disabled,
-.mat-mdc-button:disabled {
-  border: 1px solid #999999;
-  background-color: #cccccc !important;
-  color: #666666 !important;
-}
-
-/* Referral code display */
-.referral-code-display {
-  margin-bottom: 1rem;
-  
-  .badge {
-    font-size: 0.875rem;
-    padding: 0.5rem 0.75rem;
-  }
-}
-
-/* Event description styling */
-.header-section {
-  small {
-    display: block !important;
-    max-width: 100% !important;
-    line-height: 1.4 !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-  }
-  
-  // Handle paragraph elements within the description to make them more compact
-  .description-text {
-    ::ng-deep p {
-      margin: 0 !important;
-      padding: 0 !important;
-      line-height: 1.3 !important;
-      font-size: 1.5em;
-    }
-  }
-}
-
-/* Utility classes */
-.w-100 {
-  width: 100% !important;
-}
-
-/* Countdown notification spacing */
-.wrapper.with-countdown {
-  padding-top: 48px;
-
-  @media (max-width: 768px) {
-    padding-top: 42px;
-  }
-}
-
-/* ============================================
-   DESKTOP HERO - Poster as full-bleed background
-   ============================================ */
-
-.header-section.has-hero {
-  @media (min-width: 769px) {
-    position: relative;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    min-height: 420px;
-    display: flex;
-    align-items: center;
-    padding: 0;
-  }
-}
-
-/* Dark gradient overlay */
-.hero-overlay {
-  display: none;
-
-  @media (min-width: 769px) {
-    display: block;
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0.50) 100%);
-    z-index: 1;
-  }
-}
-
-/* Content wrapper sits above overlay */
-.hero-content-wrapper {
-  position: relative;
-  z-index: 2;
-}
-
-/* White text in hero mode (desktop only) */
-.has-hero {
-  @media (min-width: 769px) {
-    .hero-content-wrapper {
-      h1, h5, h6, p, small {
-        color: rgba(255, 255, 255, 0.95) !important;
-      }
-
-      a {
-        color: rgba(180, 220, 255, 0.95) !important;
-      }
-
-      // Event details box — glassmorphism style
-      .event-details {
-        background-color: rgba(255, 255, 255, 0.10) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-
-        span, .fw-semibold {
-          color: rgba(255, 255, 255, 0.95) !important;
-        }
-
-        a {
-          color: rgba(150, 210, 255, 0.95) !important;
-        }
-      }
-
-      // Description text
-      .description-text {
-        color: rgba(255, 255, 255, 0.88) !important;
-
-        ::ng-deep p, ::ng-deep * {
-          color: rgba(255, 255, 255, 0.88) !important;
-        }
-      }
-    }
-  }
-}
-
-/* View poster button — corner of hero on desktop */
-.hero-lightbox-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 10;
-  background-color: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: white;
-  padding: 0.35rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  align-items: center;
-  gap: 0.35rem;
-  transition: background-color 0.2s, border-color 0.2s;
-  font-family: Arial, sans-serif !important;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.70);
-    border-color: rgba(255, 255, 255, 0.65);
-  }
-
-  i {
-    font-size: 0.8rem;
-  }
-}
-
-/* Poster wrapper with icon overlay */
-.poster-wrapper {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-
-  &:hover .view-full-image-btn {
-    opacity: 1;
-  }
-}
-
-/* View full image button - subtle icon in corner */
 .view-full-image-btn {
   position: absolute;
-  bottom: 1.5rem;
-  left: 1.5rem;
-  background-color: rgba(0, 0, 0, 0.6);
-  border: none;
-  color: white;
-  font-size: 1.25rem;
-  width: 2.5rem;
-  height: 2.5rem;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 20;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: white;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0.7;
-  transition: all 0.3s ease;
-  z-index: 10;
+  opacity: 0.6;
+  transition: opacity 0.2s, background-color 0.2s;
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.8);
     opacity: 1;
-    transform: scale(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  i {
-    margin: 0;
   }
 }
 
-/* Lightbox overlay */
-.lightbox-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  animation: fadeIn 0.3s ease;
-  overflow-y: auto;
+/* tw-input invalid state (public page) */
+.tw-input.invalid {
+  background-color: #fef2f2;
+  box-shadow: 0 0 0 2px #ef4444;
 }
 
-/* Lightbox content container */
-.lightbox-content {
-  position: relative;
-  max-width: 90%;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: scaleIn 0.3s ease;
+/* ============================================================
+   STICKY TOTAL + CTA BAR (base styles defined above media queries)
+   ============================================================ */
+
+/* ============================================================
+   MAT-CHECKBOX — match public page font
+   ============================================================ */
+
+.public-page .mat-mdc-checkbox .mdc-form-field,
+.public-page .mat-mdc-checkbox label {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 13px !important;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
-/* Lightbox image */
-.lightbox-image {
-  max-width: 100%;
-  max-height: 70vh;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-}
+/* ============================================================
+   DESCRIPTION HTML CONTENT (from innerHTML)
+   ============================================================ */
 
-/* Lightbox caption */
-.lightbox-caption {
-  color: rgba(255, 255, 255, 0.9);
-  padding: 1rem 1.5rem;
-  margin-top: 1rem;
-  max-width: 800px;
-  max-height: 200px;
-  overflow-y: auto;
-  text-align: center;
-
+.description-text {
   ::ng-deep p {
-    margin: 0.5rem 0;
+    margin: 0 0 0.5rem;
+    padding: 0;
     line-height: 1.5;
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  ::ng-deep p:first-child {
-    margin-top: 0;
-  }
-
-  ::ng-deep p:last-child {
-    margin-bottom: 0;
-  }
-}
-
-/* Lightbox close button */
-.lightbox-close {
-  position: absolute;
-  top: -2.5rem;
-  right: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  color: white;
-  font-size: 1.5rem;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: white;
-    transform: rotate(90deg);
-  }
-}
-
-/* Animations */
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Mobile responsive styles */
-@media only screen and (max-width: 768px) {
-  .view-full-image-btn {
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 2rem;
-    height: 2rem;
-    font-size: 1rem;
-  }
-
-  .lightbox-content {
-    max-width: 95%;
-  }
-
-  .lightbox-image {
-    max-height: 60vh;
-  }
-
-  .lightbox-caption {
     font-size: 0.875rem;
-    padding: 0.75rem 1rem;
-    max-height: 150px;
   }
 
-  .lightbox-close {
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.25rem;
-  }
+  ::ng-deep p:last-child { margin-bottom: 0; }
 }
-
-

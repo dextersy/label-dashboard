@@ -28,66 +28,56 @@
 <!-- Sticky Summary Cards - Outside main container -->
 <div class="summary-cards-sticky" *ngIf="!loading && childBrands.length > 0">
   <div class="container-fluid">
-    <div class="row">
-    <div class="col-md-6 col-lg">
-      <div class="card summary-card">
-        <div class="card-body text-center">
+    <!-- 2 per row on mobile, 3 per row at lg+ (6 cards total = 2 rows) -->
+    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-2">
+
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+        <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title text-primary" [ngClass]="getAmountClass(getTotalBalance())">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Balance</p>
+          <p class="card-text tw-text-muted">Total Balance</p>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-6 col-lg">
-      <div class="card summary-card">
-        <div class="card-body text-center">
-          <h4 class="card-title text-info" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Music Earnings + Royalties</p>
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+        <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+          <h4 class="card-title tw-text-[#0891b2]" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text tw-text-muted">Total Music Earnings + Royalties</p>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-6 col-lg">
-      <div class="card summary-card clickable-card" (click)="openTotalEventBreakdown()" style="cursor: pointer;">
-        <div class="card-body text-center">
-          <h4 class="card-title text-warning" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card clickable-card" (click)="openTotalEventBreakdown()" style="cursor: pointer;">
+        <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+          <h4 class="card-title tw-text-warning" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text tw-text-muted">
             Total Event Earnings
-            <i class="fas fa-info-circle ms-1" style="font-size: 0.8em;"></i>
+            <i class="fas fa-info-circle tw-ml-1" style="font-size: 0.8em;"></i>
           </p>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-6 col-lg">
-      <div class="card summary-card">
-        <div class="card-body text-center">
-          <h4 class="card-title text-danger" [ngClass]="getAmountClass(getTotalFundraiserEarnings())">₱{{ getTotalFundraiserEarnings() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Fundraiser Earnings</p>
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+        <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+          <h4 class="card-title tw-text-danger" [ngClass]="getAmountClass(getTotalFundraiserEarnings())">₱{{ getTotalFundraiserEarnings() | number:'1.2-2' }}</h4>
+          <p class="card-text tw-text-muted">Total Fundraiser Earnings</p>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-6 col-lg">
-      <div class="card summary-card">
-        <div class="card-body text-center">
-          <h4 class="card-title text-secondary" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">Total Payments Made</p>
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+        <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+          <h4 class="card-title tw-text-gray-500" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</h4>
+          <p class="card-text tw-text-muted">Total Payments Made</p>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-6 col-lg">
-      <div class="card summary-card clickable-card" (click)="openTotalPlatformFeesBreakdown()" style="cursor: pointer;">
-        <div class="card-body text-center">
-          <h4 class="card-title text-dark" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
-          <p class="card-text text-muted">
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card clickable-card" (click)="openTotalPlatformFeesBreakdown()" style="cursor: pointer;">
+        <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
+          <h4 class="card-title tw-text-gray-900" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
+          <p class="card-text tw-text-muted">
             Total Platform Fees
-            <i class="fas fa-info-circle ms-1" style="font-size: 0.8em;"></i>
+            <i class="fas fa-info-circle tw-ml-1" style="font-size: 0.8em;"></i>
           </p>
         </div>
       </div>
-    </div>
 
     </div>
   </div>

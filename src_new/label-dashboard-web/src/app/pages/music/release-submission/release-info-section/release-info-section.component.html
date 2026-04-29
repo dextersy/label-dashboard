@@ -1,12 +1,12 @@
 <div class="release-info-section">
   <form [formGroup]="releaseForm">
     <!-- Basic Release Information -->
-    <div class="row">
-      <div class="col-md-6">
-        <div class="form-group">
-          <label for="title">Title <span class="text-danger">*</span></label>
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div>
+        <div class="tw-mb-5">
+          <label for="title" class="tw-label">Title <span class="tw-text-danger">*</span></label>
           <input type="text"
-                 class="form-control"
+                 class="tw-input"
                  id="title"
                  formControlName="title"
                  [class.is-invalid]="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched"
@@ -17,16 +17,16 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6" *ngIf="isAdmin">
-        <div class="form-group">
-          <label for="catalogNo">Catalog Number <span class="text-danger">*</span></label>
+      <div *ngIf="isAdmin">
+        <div class="tw-mb-5">
+          <label for="catalogNo" class="tw-label">Catalog Number <span class="tw-text-danger">*</span></label>
           <input type="text"
-                class="form-control"
+                class="tw-input"
                 id="catalogNo"
                 formControlName="catalog_no"
                 [class.is-invalid]="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched"
                 placeholder="e.g. MELT001">
-          <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text text-muted">
+          <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text tw-text-muted">
             Default is auto-generated
           </small>
           <div *ngIf="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched" class="invalid-feedback">
@@ -36,22 +36,22 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-6" *ngIf="isAdmin">
-        <div class="form-group">
-          <label for="upc">Barcode (UPC/EAN/Code128)</label>
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div *ngIf="isAdmin">
+        <div class="tw-mb-5">
+          <label for="upc" class="tw-label">Barcode (UPC/EAN/Code128)</label>
           <input type="text"
-                class="form-control"
+                class="tw-input"
                 id="upc"
                 formControlName="UPC"
                 placeholder="UPC, EAN, or Code 128 barcode">
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="form-group">
-          <label for="releaseDate">Release Date <span class="text-danger">*</span></label>
+      <div>
+        <div class="tw-mb-5">
+          <label for="releaseDate" class="tw-label">Release Date <span class="tw-text-danger">*</span></label>
           <input type="date"
-                class="form-control"
+                class="tw-input"
                 id="releaseDate"
                 formControlName="release_date"
                 [class.is-invalid]="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched"
@@ -63,11 +63,11 @@
       </div>
     </div>
 
-    <div class="row" *ngIf="isAdmin && showStatus">
-      <div class="col-md-6">
-        <div class="form-group">
-          <label for="status">Status</label>
-          <select class="form-control" id="status" formControlName="status">
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4" *ngIf="isAdmin && showStatus">
+      <div>
+        <div class="tw-mb-5">
+          <label for="status" class="tw-label">Status</label>
+          <select class="tw-input" id="status" formControlName="status">
             <option value="Draft">Draft</option>
             <option value="For Submission">For Submission</option>
             <option value="Pending">Pending</option>
@@ -79,10 +79,10 @@
     </div>
 
     <!-- Cover Art -->
-    <div class="form-group">
-      <label for="coverArt">Cover Art <span class="text-danger">*</span></label>
-      <div class="row">
-        <div class="col-md-6">
+    <div class="tw-mb-5">
+      <label for="coverArt" class="tw-label">Cover Art <span class="tw-text-danger">*</span></label>
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+        <div>
           <input type="file"
                 class="form-control-file"
                 id="coverArt"
@@ -92,18 +92,18 @@
                 (cancel)="$event.stopPropagation()"
                 [disabled]="isRestrictedMode()"
                 [class.is-invalid]="!hasCoverArt()">
-          <small class="form-text text-muted">
+          <small class="form-text tw-text-muted">
             JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
           </small>
-          <div *ngIf="!hasCoverArt()" class="invalid-feedback d-block">
+          <div *ngIf="!hasCoverArt()" class="invalid-feedback tw-block">
             Cover art is required
           </div>
         </div>
-        <div class="col-md-6" *ngIf="coverArtPreview">
+        <div *ngIf="coverArtPreview">
           <div class="cover-art-preview">
             <img [src]="coverArtPreview" alt="Cover art preview" class="img-thumbnail cover-preview">
             <button type="button"
-                    class="btn btn-sm btn-danger mt-2"
+                    class="btn-sm btn-danger tw-mt-2"
                     (click)="removeCoverArt()"
                     [disabled]="isRestrictedMode()">
               <i class="fa fa-trash"></i> Remove
@@ -114,9 +114,9 @@
     </div>
 
     <!-- Description and Liner Notes -->
-    <div class="form-group description-form-group">
-      <label for="description">Tell us about this release</label>
-      <small class="form-text text-muted mb-2">
+    <div class="tw-mb-5 description-form-group">
+      <label for="description" class="tw-label">Tell us about this release</label>
+      <small class="form-text tw-mb-2 tw-text-muted">
         Give us a quick statement about the release, indicating what the song is about, the musical approach,
         production stories, and any future plans related to the song. We will use this to craft our pitch to
         playlists as well as for our press releases. Feel free to give us a bullet list or just a rough statement.
@@ -128,20 +128,20 @@
         (onContentChanged)="onDescriptionContentChanged($event)"
         placeholder="Description of the release, musical approach, stories...">
       </quill-editor>
-      <small class="form-text" [class.text-danger]="descriptionCharCount > descriptionCharLimit" [class.text-muted]="descriptionCharCount <= descriptionCharLimit">
+      <small class="form-text" [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit" [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
         {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
       </small>
     </div>
 
     <!-- Save Information Button -->
-    <div class="save-info-section mt-5">
+    <div class="save-info-section tw-mt-5">
       <button
         type="button"
-        class="btn btn-primary save-info-btn"
+        class="btn-primary save-info-btn"
         [disabled]="savingRelease"
         (click)="saveRelease()">
-        <i class="fa fa-save me-2" *ngIf="!savingRelease"></i>
-        <i class="fa fa-spinner fa-spin me-2" *ngIf="savingRelease"></i>
+        <i class="fa fa-save tw-mr-2" *ngIf="!savingRelease"></i>
+        <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="savingRelease"></i>
         {{ savingRelease ? 'Saving...' : 'Save Information' }}
       </button>
     </div>

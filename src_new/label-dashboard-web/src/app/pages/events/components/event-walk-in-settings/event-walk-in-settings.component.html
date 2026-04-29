@@ -1,10 +1,10 @@
 <div class="walk-in-settings">
   <!-- Walk-In Toggle -->
-  <div class="card mb-3">
-    <div class="card-body d-flex align-items-center justify-content-between">
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3">
+    <div class="tw-px-card-pad tw-pb-card-pad tw-flex tw-items-center tw-justify-between">
       <div>
-        <h5 class="mb-1"><i class="fas fa-walking me-2"></i>Walk-In Registration</h5>
-        <small class="text-muted">Allow gate staff to register walk-in attendees and collect payment on-site.</small>
+        <h3 class="tw-mb-1"><i class="fas fa-walking tw-mr-2"></i>Walk-In Registration</h3>
+        <small class="tw-text-muted">Allow gate staff to register walk-in attendees and collect payment on-site.</small>
       </div>
       <div class="form-check form-switch" *ngIf="isAdmin">
         <input class="form-check-input" type="checkbox" role="switch"
@@ -21,11 +21,11 @@
   <div *ngIf="eventData.walk_in_enabled">
 
     <!-- Payment Methods -->
-    <div class="card mb-3" *ngIf="isAdmin">
-      <div class="card-header">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3" *ngIf="isAdmin">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
         <strong>Payment Methods</strong>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <div class="payment-methods-grid">
           <div class="payment-method-card">
             <input type="checkbox" id="walkInCash"
@@ -56,14 +56,14 @@
     </div>
 
     <!-- Maximum Walk-In Count -->
-    <div class="card mb-3" *ngIf="isAdmin">
-      <div class="card-header">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3" *ngIf="isAdmin">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
         <strong>Maximum Walk-Ins</strong>
       </div>
-      <div class="card-body">
-        <small class="text-muted d-block mb-2">Set a cap on the total number of walk-in registrations allowed (across all types).</small>
-        <div class="d-flex align-items-center gap-3">
-          <div class="form-check form-switch mb-0">
+      <div class="tw-px-card-pad tw-pb-card-pad">
+        <small class="tw-block tw-mb-2 tw-text-muted">Set a cap on the total number of walk-in registrations allowed (across all types).</small>
+        <div class="tw-flex tw-items-center tw-gap-3">
+          <div class="form-check form-switch tw-mb-0">
             <input class="form-check-input" type="checkbox" role="switch"
                    id="walkInMaxCountUnlimited"
                    [ngModel]="isMaxCountUnlimited"
@@ -71,76 +71,80 @@
             <label class="form-check-label" for="walkInMaxCountUnlimited">Unlimited</label>
           </div>
           <div *ngIf="!isMaxCountUnlimited" class="input-group" style="max-width: 200px;">
-            <input type="number" class="form-control" [(ngModel)]="eventData.walk_in_max_count" min="1" placeholder="Max count">
+            <input type="number" class="tw-input" [(ngModel)]="eventData.walk_in_max_count" min="1" placeholder="Max count">
           </div>
         </div>
       </div>
     </div>
 
     <!-- Walk-In Types -->
-    <div class="card mb-3">
-      <div class="card-header d-flex align-items-center justify-content-between">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-items-center tw-justify-between">
         <strong>Walk-In Types</strong>
         <div *ngIf="isAdmin && editingIndex === null && !showNewForm">
-          <button class="btn btn-sm btn-secondary me-2" (click)="startAddNew()">
+          <button class="btn-sm btn-secondary tw-mr-2" (click)="startAddNew()">
             <i class="fas fa-plus"></i> Add New
           </button>
         </div>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <!-- Types Card Grid -->
-        <div class="row g-3" *ngIf="walkInTypes.length > 0 || showNewForm">
-          <div *ngFor="let type of walkInTypes; let i = index" class="col-md-6 col-lg-4">
-            <div class="card h-100 pt-2 position-relative" [ngClass]="editingIndex === i ? 'border-primary' : 'walk-in-type-card'">
-              <!-- Card Header for Static Cards -->
-              <div class="card-header bg-transparent border-0 pb-2" *ngIf="editingIndex !== i">
-                <h5 class="card-title mb-0 fw-bold text-center">{{ type.name }}</h5>
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4" *ngIf="walkInTypes.length > 0 || showNewForm">
+          <div *ngFor="let type of walkInTypes; let i = index">
+            <div class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-h-full tw-relative tw-overflow-hidden tw-transition-shadow hover:tw-shadow-md"
+                 [class.tw-ring-2]="editingIndex === i"
+                 [class.walk-in-type-card]="editingIndex !== i">
+
+              <!-- Card Header (static view) -->
+              <div class="tw-px-4 tw-pt-4 tw-pb-3 tw-border-b tw-border-gray-100" *ngIf="editingIndex !== i">
+                <h4 class="tw-font-semibold tw-text-gray-800 tw-text-center tw-mb-0 tw-truncate">{{ type.name }}</h4>
               </div>
-              <div class="card-body" [class.pt-0]="editingIndex !== i">
+
+              <div class="tw-p-4">
                 <ng-container *ngIf="editingIndex === i; else staticCard">
                   <!-- Editable Card -->
-                  <div class="mb-3">
-                    <label class="form-label small fw-semibold">Name</label>
-                    <input type="text" class="form-control form-control-sm" [(ngModel)]="typeForm.name" placeholder="e.g. Regular, VIP">
+                  <div class="tw-mb-3">
+                    <label class="tw-label small tw-font-semibold tw-text-sm">Name</label>
+                    <input type="text" class="tw-input-sm tw-input" [(ngModel)]="typeForm.name" placeholder="e.g. Regular, VIP">
                   </div>
 
-                  <div class="row mb-3">
-                    <div class="col-6">
-                      <label class="form-label small fw-semibold">Price</label>
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="form-check form-switch mb-0">
+                  <div class="tw-mb-3 tw-grid tw-grid-cols-2 tw-gap-3">
+                    <div>
+                      <label class="tw-label small tw-font-semibold tw-text-sm">Price</label>
+                      <div class="tw-flex tw-items-center tw-gap-2">
+                        <div class="form-check form-switch tw-mb-0">
                           <input class="form-check-input" type="checkbox" role="switch"
                                  [(ngModel)]="typeForm.isFree"
                                  (ngModelChange)="typeForm.price = $event ? 0 : typeForm.price"
                                  [attr.id]="'editFreeToggle' + i">
-                          <label class="form-check-label small" [attr.for]="'editFreeToggle' + i">Free</label>
+                          <label class="form-check-label small tw-text-sm" [attr.for]="'editFreeToggle' + i">Free</label>
                         </div>
                       </div>
-                      <div *ngIf="!typeForm.isFree" class="input-group input-group-sm mt-1">
+                      <div *ngIf="!typeForm.isFree" class="input-group input-group-sm tw-mt-1">
                         <span class="input-group-text">₱</span>
-                        <input type="number" class="form-control form-control-sm" [(ngModel)]="typeForm.price" min="0" step="0.01">
+                        <input type="number" class="tw-input-sm tw-input" [(ngModel)]="typeForm.price" min="0" step="0.01">
                       </div>
                     </div>
-                    <div class="col-6">
-                      <label class="form-label small fw-semibold">Max Slots</label>
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="form-check form-switch mb-0">
+                    <div>
+                      <label class="tw-label small tw-font-semibold tw-text-sm">Max Slots</label>
+                      <div class="tw-flex tw-items-center tw-gap-2">
+                        <div class="form-check form-switch tw-mb-0">
                           <input class="form-check-input" type="checkbox" role="switch"
                                  [(ngModel)]="typeForm.isUnlimited"
                                  (ngModelChange)="typeForm.max_slots = $event ? 0 : typeForm.max_slots"
                                  [attr.id]="'editUnlimitedToggle' + i">
-                          <label class="form-check-label small" [attr.for]="'editUnlimitedToggle' + i">Unlimited</label>
+                          <label class="form-check-label small tw-text-sm" [attr.for]="'editUnlimitedToggle' + i">Unlimited</label>
                         </div>
                       </div>
-                      <input *ngIf="!typeForm.isUnlimited" type="number" class="form-control form-control-sm mt-1" [(ngModel)]="typeForm.max_slots" min="1" placeholder="Max slots">
+                      <input *ngIf="!typeForm.isUnlimited" type="number" class="tw-input-sm tw-mt-1 tw-input" [(ngModel)]="typeForm.max_slots" min="1" placeholder="Max slots">
                     </div>
                   </div>
 
-                  <div class="d-flex gap-2 justify-content-end">
-                    <button type="button" class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="!typeForm.name.trim()" title="Save changes">
+                  <div class="tw-flex tw-gap-2 tw-justify-end">
+                    <button type="button" class="btn-primary btn-sm" (click)="saveEdit()" [disabled]="!typeForm.name.trim()" title="Save changes">
                       <i class="fas fa-check"></i>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelForm()" title="Cancel editing">
+                    <button type="button" class="btn-secondary btn-sm" (click)="cancelForm()" title="Cancel editing">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
@@ -148,28 +152,25 @@
               </div>
 
               <ng-template #staticCard>
-                <!-- Static Card Content -->
-                <div class="text-center">
-                  <div class="mb-2">
-                    <span class="badge bg-primary fs-6 px-3 py-2" *ngIf="!type.price || type.price === 0">FREE</span>
-                    <span class="badge bg-success fs-6 px-3 py-2" *ngIf="type.price && type.price > 0">{{ formatPrice(type.price) }}</span>
+                <div class="tw-text-center">
+                  <div class="tw-mb-3">
+                    <span class="badge bg-primary tw-px-3 tw-py-1.5 tw-text-sm" *ngIf="!type.price || type.price === 0">FREE</span>
+                    <span class="badge bg-success tw-px-3 tw-py-1.5 tw-text-sm" *ngIf="type.price && type.price > 0">{{ formatPrice(type.price) }}</span>
                   </div>
-
-                  <div class="mb-1">
-                    <small class="text-muted">
-                      <i class="fas fa-users me-1"></i>
+                  <div class="tw-flex tw-flex-col tw-gap-1 tw-mb-3 tw-text-xs tw-text-gray-500">
+                    <span>
+                      <i class="fas fa-users tw-mr-1 tw-text-gray-400"></i>
                       <span *ngIf="type.max_slots === 0">Unlimited capacity</span>
                       <span *ngIf="type.max_slots !== 0">{{ type.max_slots }} slots max</span>
-                    </small>
+                    </span>
                   </div>
-
-                  <div class="d-flex gap-2 justify-content-center" *ngIf="isAdmin">
-                    <button type="button" class="btn btn-secondary btn-sm"
+                  <div class="tw-flex tw-gap-2 tw-justify-center" *ngIf="isAdmin">
+                    <button type="button" class="btn-secondary btn-sm"
                             [disabled]="editingIndex !== null || showNewForm"
                             (click)="startEdit(i)" title="Edit walk-in type">
                       <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm"
+                    <button type="button" class="btn-danger btn-sm"
                             [disabled]="editingIndex !== null || showNewForm"
                             (click)="deleteType(i)" title="Delete walk-in type">
                       <i class="fas fa-trash"></i>
@@ -180,57 +181,58 @@
             </div>
           </div>
 
-          <!-- New Walk-In Type Form as a card in the same grid -->
-          <div *ngIf="isAdmin && showNewForm" class="col-md-6 col-lg-4">
-            <div class="card h-100 border-success">
-              <div class="card-header">
-                <h6 class="card-title text-success mb-3">
-                  <i class="fas fa-plus me-2"></i>Add New Walk-In Type
-                </h6>
+          <!-- New Walk-In Type Form card in the same grid -->
+          <div *ngIf="isAdmin && showNewForm">
+            <div class="tw-bg-white tw-rounded-lg tw-border-2 tw-border-green-400 tw-shadow-sm tw-h-full"
+                 style="box-shadow: 0 0 0 3px rgba(40,167,69,0.15)">
+              <div class="tw-px-4 tw-pt-4 tw-pb-3 tw-border-b tw-border-gray-100">
+                <p class="tw-text-sm tw-font-semibold tw-text-green-600 tw-mb-0">
+                  <i class="fas fa-plus tw-mr-1.5"></i>Add New Walk-In Type
+                </p>
               </div>
-              <div class="card-body">
-                <div class="mb-3">
-                  <label class="form-label small fw-semibold">Name</label>
-                  <input type="text" class="form-control form-control-sm" [(ngModel)]="typeForm.name" placeholder="e.g. Regular, VIP">
+              <div class="tw-p-4">
+                <div class="tw-mb-3">
+                  <label class="tw-label small tw-font-semibold tw-text-sm">Name</label>
+                  <input type="text" class="tw-input-sm tw-input" [(ngModel)]="typeForm.name" placeholder="e.g. Regular, VIP">
                 </div>
 
-                <div class="row mb-3">
-                  <div class="col-6">
-                    <label class="form-label small fw-semibold">Price</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="form-check form-switch mb-0">
+                <div class="tw-mb-3 tw-grid tw-grid-cols-2 tw-gap-3">
+                  <div>
+                    <label class="tw-label small tw-font-semibold tw-text-sm">Price</label>
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <div class="form-check form-switch tw-mb-0">
                         <input class="form-check-input" type="checkbox" role="switch"
                                [(ngModel)]="typeForm.isFree"
                                (ngModelChange)="typeForm.price = $event ? 0 : typeForm.price"
                                id="newWalkInFreeToggle">
-                        <label class="form-check-label small" for="newWalkInFreeToggle">Free</label>
+                        <label class="form-check-label small tw-text-sm" for="newWalkInFreeToggle">Free</label>
                       </div>
                     </div>
-                    <div *ngIf="!typeForm.isFree" class="input-group input-group-sm mt-1">
+                    <div *ngIf="!typeForm.isFree" class="input-group input-group-sm tw-mt-1">
                       <span class="input-group-text">₱</span>
-                      <input type="number" class="form-control form-control-sm" [(ngModel)]="typeForm.price" min="0" step="0.01" placeholder="0.00">
+                      <input type="number" class="tw-input-sm tw-input" [(ngModel)]="typeForm.price" min="0" step="0.01" placeholder="0.00">
                     </div>
                   </div>
-                  <div class="col-6">
-                    <label class="form-label small fw-semibold">Max Slots</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="form-check form-switch mb-0">
+                  <div>
+                    <label class="tw-label small tw-font-semibold tw-text-sm">Max Slots</label>
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <div class="form-check form-switch tw-mb-0">
                         <input class="form-check-input" type="checkbox" role="switch"
                                [(ngModel)]="typeForm.isUnlimited"
                                (ngModelChange)="typeForm.max_slots = $event ? 0 : typeForm.max_slots"
                                id="newWalkInUnlimitedToggle">
-                        <label class="form-check-label small" for="newWalkInUnlimitedToggle">Unlimited</label>
+                        <label class="form-check-label small tw-text-sm" for="newWalkInUnlimitedToggle">Unlimited</label>
                       </div>
                     </div>
-                    <input *ngIf="!typeForm.isUnlimited" type="number" class="form-control form-control-sm mt-1" [(ngModel)]="typeForm.max_slots" min="1" placeholder="Max slots">
+                    <input *ngIf="!typeForm.isUnlimited" type="number" class="tw-input-sm tw-mt-1 tw-input" [(ngModel)]="typeForm.max_slots" min="1" placeholder="Max slots">
                   </div>
                 </div>
 
-                <div class="d-flex gap-2 justify-content-end">
-                  <button type="button" class="btn btn-primary btn-sm" [disabled]="!typeForm.name.trim()" (click)="saveNew()" title="Save new walk-in type">
+                <div class="tw-flex tw-gap-2 tw-justify-end">
+                  <button type="button" class="btn-primary btn-sm" [disabled]="!typeForm.name.trim()" (click)="saveNew()" title="Save new walk-in type">
                     <i class="fas fa-check"></i>
                   </button>
-                  <button type="button" class="btn btn-secondary btn-sm" (click)="cancelForm()" title="Cancel adding walk-in type">
+                  <button type="button" class="btn-secondary btn-sm" (click)="cancelForm()" title="Cancel adding walk-in type">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -240,8 +242,8 @@
         </div>
 
         <!-- Empty State -->
-        <div *ngIf="walkInTypes.length === 0 && !showNewForm" class="text-center text-muted py-3">
-          <i class="fas fa-ticket-alt fa-2x mb-2 d-block"></i>
+        <div *ngIf="walkInTypes.length === 0 && !showNewForm" class="tw-py-3 tw-text-center tw-text-muted">
+          <i class="fas fa-ticket-alt fa-2x tw-mb-2 tw-block"></i>
           No walk-in types defined yet. Add one to get started.
         </div>
       </div>

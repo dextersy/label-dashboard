@@ -1,5 +1,16 @@
-<div class="row">
-  <div class="col-md-8">
+<!-- Page Header -->
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+    <h3 class="tw-mb-2">
+      <i class="fas fa-folder-open tw-mr-2"></i>
+      Documents
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">Upload and manage financial documents for this artist.</p>
+  </div>
+</div>
+
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-8">
     <app-paginated-table
       title="Financial Documents"
       [data]="documents"
@@ -13,45 +24,45 @@
     </app-paginated-table>
   </div>
   
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header">
-        <h5>Upload Document</h5>
+  <div class="md:tw-col-span-4">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Document</h3>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <form (ngSubmit)="onUploadDocument()">
-          <div class="form-group mb-3">
-            <label for="documentTitle">Document Title</label>
+          <div class="tw-mb-5 tw-mb-3">
+            <label for="documentTitle" class="tw-label">Document Title</label>
             <input 
               type="text" 
               id="documentTitle"
-              class="form-control" 
+              class="tw-input" 
               [(ngModel)]="documentUploadForm.title" 
               name="documentTitle" 
               placeholder="Enter document title"
               required>
           </div>
           
-          <div class="form-group mb-3">
-            <label for="documentFile">Choose File</label>
+          <div class="tw-mb-5 tw-mb-3">
+            <label for="documentFile" class="tw-label">Choose File</label>
             <input 
               type="file" 
               id="documentFile"
-              class="form-control" 
+              class="tw-input" 
               (change)="onFileSelected($event)"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
               required>
-            <small class="form-text text-muted">
+            <small class="form-text tw-text-muted">
               Supported formats: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF (Max 25MB)
             </small>
           </div>
           
           <button 
             type="submit" 
-            class="btn btn-primary btn-sm w-100"
+            class="btn-primary btn-sm tw-w-full"
             [disabled]="uploadingDocument || !documentUploadForm.title || !documentUploadForm.file">
-            <span *ngIf="uploadingDocument" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            <i *ngIf="!uploadingDocument" class="fa fa-upload me-1"></i>
+            <span *ngIf="uploadingDocument" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
+            <i *ngIf="!uploadingDocument" class="fa fa-upload tw-mr-1"></i>
             {{ uploadingDocument ? 'Uploading...' : 'Upload Document' }}
           </button>
         </form>

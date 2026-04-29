@@ -21,6 +21,7 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
 
   isDropdownOpen = false;
   searchTerm = '';
+  brokenImages = new Set<number>();
 
   private boundHandleOutsideClick = this.handleOutsideClick.bind(this);
 
@@ -117,14 +118,16 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
     }
   }
 
-  onImageError(event: any): void {
-    // Hide broken image, show default icon
-    event.target.style.display = 'none';
+  onImageError(domEvent: any, eventId: number): void {
+    this.brokenImages.add(eventId);
   }
 
-  onDropdownImageError(event: any): void {
-    // Hide broken image, show default icon
-    event.target.style.display = 'none';
+  onDropdownImageError(domEvent: any, eventId: number): void {
+    this.brokenImages.add(eventId);
+  }
+
+  hasValidImage(event: Event): boolean {
+    return !!event.poster_url && !this.brokenImages.has(event.id);
   }
 
   private handleOutsideClick(domEvent: MouseEvent): void {

@@ -907,7 +907,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       if (key === 'ticketTypes' || key === 'walkInTypes') {
         formData.append(key, JSON.stringify(eventData[key]));
       } else if (eventData[key] !== null && eventData[key] !== undefined) {
-        formData.append(key, eventData[key].toString());
+        const val = eventData[key];
+        formData.append(key, typeof val === 'boolean' ? (val ? '1' : '0') : val.toString());
       }
     });
 

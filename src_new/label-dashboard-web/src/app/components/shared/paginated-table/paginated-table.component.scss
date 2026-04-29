@@ -114,24 +114,24 @@
 // Paginated table styles
 .pagination {
   .page-link {
-    color: #007bff;
+    color: var(--brand-color, #3b82f6);
     background-color: #fff;
     border: 1px solid #dee2e6;
     
     &:hover {
-      color: #0056b3;
+      color: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
       background-color: #e9ecef;
       border-color: #dee2e6;
     }
     
     &:focus {
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
     }
   }
   
   .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--brand-color, #3b82f6);
+    border-color: var(--brand-color, #3b82f6);
     color: white;
   }
   
@@ -251,8 +251,8 @@
 }
 
 .bulk-operations-row {
-  border-top: 2px solid #007bff;
-  border-bottom: 2px solid #007bff;
+  border-top: 2px solid var(--brand-color, #3b82f6);
+  border-bottom: 2px solid var(--brand-color, #3b82f6);
   
   .bulk-actions {
     display: flex;
@@ -270,8 +270,8 @@
   margin: 0;
   
   &:indeterminate {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--brand-color, #3b82f6);
+    border-color: var(--brand-color, #3b82f6);
   }
 }
 

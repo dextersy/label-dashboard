@@ -1,6 +1,6 @@
 <div class="artist-epk-page" (keydown)="onKeyDown($event)" tabindex="0">
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+  <div *ngIf="isLoading" class="tw-flex tw-justify-center tw-items-center" style="min-height: 400px;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading artist information...</span>
     </div>
@@ -23,34 +23,31 @@
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-lg-10 text-center">
-              <div class="profile-photo-wrapper">
-                <img 
-                  [src]="getProfilePhotoUrl(epkData.artist.profile_photo)" 
-                  [alt]="epkData.artist.name + ' Profile Photo'"
-                  class="hero-profile-photo">
-              </div>
-              <h1 class="hero-title">{{ epkData.artist.name }}</h1>
-              <div *ngIf="epkData.brand" class="hero-label">
-                <span class="brand-tag" 
-                      [style.color]="getBrandColor()" 
-                      [style.background-color]="getBrandTagBackgroundColor()">
-                  {{ epkData.brand.name }}
-                </span>
-              </div>
-              
-              <!-- Social Media Links -->
-              <div *ngIf="getSocialMediaLinks().length > 0" class="hero-social-links">
-                <a 
-                  *ngFor="let link of getSocialMediaLinks()" 
-                  [href]="link.url" 
-                  target="_blank" 
-                  class="hero-social-link"
-                  [title]="link.name">
-                  <i [class]="link.icon"></i>
-                </a>
-              </div>
+          <div class="tw-text-center">
+            <div class="profile-photo-wrapper">
+              <img
+                [src]="getProfilePhotoUrl(epkData.artist.profile_photo)"
+                [alt]="epkData.artist.name + ' Profile Photo'"
+                class="hero-profile-photo">
+            </div>
+            <h1 class="hero-title">{{ epkData.artist.name }}</h1>
+            <div *ngIf="epkData.brand" class="hero-label">
+              <span class="brand-tag"
+                    [style.color]="getBrandColor()"
+                    [style.background-color]="getBrandTagBackgroundColor()">
+                {{ epkData.brand.name }}
+              </span>
+            </div>
+            <!-- Social Media Links -->
+            <div *ngIf="getSocialMediaLinks().length > 0" class="hero-social-links">
+              <a
+                *ngFor="let link of getSocialMediaLinks()"
+                [href]="link.url"
+                target="_blank"
+                class="hero-social-link"
+                [title]="link.name">
+                <i [class]="link.icon"></i>
+              </a>
             </div>
           </div>
         </div>
@@ -60,8 +57,8 @@
     <!-- Artist Bio -->
     <div *ngIf="epkData.artist.bio" class="content-section bio-section">
       <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="tw-col-span-12 lg:tw-col-span-8 lg:tw-col-start-3">
             <div class="section-header">
               <h2 class="section-title">About</h2>
             </div>
@@ -74,7 +71,7 @@
     <!-- Releases Section -->
     <div *ngIf="epkData.releases.length > 0" class="content-section releases-section">
       <div class="container">
-        <div class="section-header text-center">
+        <div class="section-header tw-text-center">
           <h2 class="section-title">Music</h2>
           <p class="section-subtitle">Latest releases and discography</p>
         </div>
@@ -125,7 +122,7 @@
     <!-- Media Gallery Section -->
     <div *ngIf="epkData.gallery.length > 0" class="content-section gallery-section">
       <div class="container">
-        <div class="section-header text-center">
+        <div class="section-header tw-text-center">
           <h2 class="section-title">Gallery</h2>
           <p class="section-subtitle">Behind the scenes and live moments</p>
         </div>
@@ -149,7 +146,7 @@
     <!-- Footer -->
     <div class="epk-footer">
       <div class="container">
-        <div class="footer-content text-center">
+        <div class="footer-content tw-text-center">
           <div class="footer-branding">
             <p class="powered-by">Powered by <strong>Spindly</strong></p>
           </div>
@@ -170,8 +167,8 @@
     <!-- Minimal Header -->
     <div class="minimal-header">
       <div class="container">
-        <div class="row">
-          <div class="col-12 text-center">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="tw-text-center tw-col-span-12">
             <div class="minimal-profile">
               <img
                 [src]="getProfilePhotoUrl(epkData.artist.profile_photo)"
@@ -207,8 +204,8 @@
     <!-- Bio Section -->
     <div *ngIf="epkData.artist.bio" class="minimal-section minimal-bio-section">
       <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-8 col-md-10">
+        <div class="tw-justify-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="lg:tw-col-span-8">
             <h2 class="minimal-section-title">About</h2>
             <div class="minimal-bio-content" [innerHTML]="epkData.artist.bio"></div>
           </div>
@@ -219,11 +216,11 @@
     <!-- Music Section -->
     <div *ngIf="epkData.releases.length > 0" class="minimal-section minimal-music-section">
       <div class="container">
-        <h2 class="minimal-section-title text-center">Music</h2>
+        <h2 class="minimal-section-title tw-text-center">Music</h2>
         <div class="minimal-releases-list">
           <div *ngFor="let release of epkData.releases" class="minimal-release-card">
-            <div class="row align-items-center">
-              <div class="col-md-3 col-sm-4">
+            <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+              <div class="md:tw-col-span-3">
                 <div class="minimal-release-cover-wrapper">
                   <img
                     [src]="getCoverArtUrl(release.cover_art_url)"
@@ -245,11 +242,11 @@
                   </button>
                 </div>
               </div>
-              <div class="col-md-6 col-sm-8">
+              <div class="md:tw-col-span-6">
                 <h3 class="minimal-release-title">{{ release.title }}</h3>
                 <p class="minimal-release-date">{{ formatReleaseDate(release.release_date) }}</p>
               </div>
-              <div class="col-md-3 col-12">
+              <div class="md:tw-col-span-3">
                 <div *ngIf="getStreamingLinks(release).length > 0" class="minimal-streaming-links">
                   <a
                     *ngFor="let link of getStreamingLinks(release)"
@@ -270,7 +267,7 @@
     <!-- Gallery Section -->
     <div *ngIf="epkData.gallery.length > 0" class="minimal-section minimal-gallery-section">
       <div class="container">
-        <h2 class="minimal-section-title text-center">Gallery</h2>
+        <h2 class="minimal-section-title tw-text-center">Gallery</h2>
         <div class="minimal-gallery-grid">
           <div *ngFor="let item of epkData.gallery; let i = index" class="minimal-gallery-item" (click)="openLightbox(i)">
             <img

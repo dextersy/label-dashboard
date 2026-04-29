@@ -1,10 +1,10 @@
-<div class="row">
-  <div class="col-md-12">
-    <div class="card">
-      <div class="card-header">
-        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-          <h5 class="mb-0">{{ title }}</h5>
-          <div class="table-actions d-flex align-items-center gap-2">
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-12">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-5">
+      <div class="tw-px-card-pad tw-pt-3 tw-pb-3">
+        <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-start tw-gap-3">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">{{ title }}</h3>
+          <div class="table-actions tw-flex tw-items-center tw-gap-2">
             <!-- Custom controls slot (filter dropdowns, etc.) — always visible -->
             <ng-container *ngIf="customButtons">
               <ng-container *ngTemplateOutlet="customButtons"></ng-container>
@@ -14,7 +14,7 @@
             <ng-container *ngIf="headerActions.length === 1 && !isHeaderActionHidden(headerActions[0])">
               <button
                 type="button"
-                class="btn btn-sm d-sm-none"
+                class="btn-sm sm:tw-hidden"
                 [class.btn-secondary]="!headerActions[0].type || headerActions[0].type === 'secondary'"
                 [class.btn-primary]="headerActions[0].type === 'primary'"
                 [class.btn-danger]="headerActions[0].type === 'danger'"
@@ -22,13 +22,13 @@
                 [title]="resolveHeaderActionTitle(headerActions[0])"
                 (click)="headerActions[0].handler()">
                 <i [class]="resolveHeaderActionIcon(headerActions[0])"></i>
-                <span class="ms-1">{{ resolveHeaderActionLabel(headerActions[0]) }}</span>
+                <span class="tw-ml-1">{{ resolveHeaderActionLabel(headerActions[0]) }}</span>
               </button>
             </ng-container>
             <button
               *ngIf="headerActions.length > 1"
               type="button"
-              class="kebab-btn d-sm-none"
+              class="kebab-btn sm:tw-hidden"
               [class.active]="mobileActionsOpen"
               (click)="toggleMobileActions($event)"
               title="Actions">
@@ -36,11 +36,11 @@
             </button>
 
             <!-- Desktop header action buttons (≥ 576px) -->
-            <div class="d-none d-sm-flex align-items-center gap-2" *ngIf="headerActions.length > 0">
+            <div class="tw-hidden sm:tw-flex tw-items-center tw-gap-2" *ngIf="headerActions.length > 0">
               <ng-container *ngFor="let action of headerActions">
                 <button
                   *ngIf="!isHeaderActionHidden(action)"
-                  class="btn btn-sm"
+                  class="btn-sm"
                   [class.btn-secondary]="!action.type || action.type === 'secondary'"
                   [class.btn-primary]="action.type === 'primary'"
                   [class.btn-danger]="action.type === 'danger'"
@@ -48,14 +48,14 @@
                   [title]="resolveHeaderActionTitle(action)"
                   (click)="action.handler()">
                   <i [class]="resolveHeaderActionIcon(action)"></i>
-                  <span class="ms-1">{{ resolveHeaderActionLabel(action) }}</span>
+                  <span class="tw-ml-1">{{ resolveHeaderActionLabel(action) }}</span>
                 </button>
               </ng-container>
             </div>
 
             <button
               *ngIf="showSearch && displayColumns.length > 0"
-              class="btn btn-icon flex-shrink-0"
+              class="btn-icon tw-shrink-0"
               [class.search-active]="showSearchFilters"
               (click)="toggleSearchFilters()"
               title="Search">
@@ -64,8 +64,8 @@
           </div>
         </div>
         <!-- Pagination info moved to its own line on mobile -->
-        <div class="pagination-info mt-2" *ngIf="pagination">
-          <small class="text-muted">
+        <div class="pagination-info tw-mt-2" *ngIf="pagination">
+          <small class="tw-text-muted">
             Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
             {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }} 
             of {{ pagination.total_count }} entries
@@ -81,7 +81,7 @@
             <input
               *ngIf="!column.type || column.type === 'text'"
               type="text"
-              class="form-control form-control-sm"
+              class="tw-input-sm tw-input"
               [placeholder]="column.label"
               [value]="searchFilters[column.key] || ''"
               (input)="onFilterChange(column.key, $any($event.target).value)">
@@ -89,7 +89,7 @@
             <input
               *ngIf="column.type === 'number'"
               type="number"
-              class="form-control form-control-sm"
+              class="tw-input-sm tw-input"
               [placeholder]="column.label"
               [value]="searchFilters[column.key] || ''"
               (input)="onFilterChange(column.key, $any($event.target).value)">
@@ -97,13 +97,13 @@
             <input
               *ngIf="column.type === 'date'"
               type="date"
-              class="form-control form-control-sm"
+              class="tw-input-sm tw-input"
               [value]="searchFilters[column.key] || ''"
               (input)="onFilterChange(column.key, $any($event.target).value)">
 
             <select
               *ngIf="column.type === 'select'"
-              class="form-control form-control-sm"
+              class="tw-input-sm tw-input"
               [value]="searchFilters[column.key] || ''"
               (change)="onFilterChange(column.key, $any($event.target).value)">
               <option value="">{{ column.label }}</option>
@@ -113,15 +113,15 @@
             </select>
           </div>
         </div>
-        <button *ngIf="hasActiveFilters()" type="button" class="btn btn-icon search-bar-clear" (click)="clearFilters()" title="Clear filters">
+        <button *ngIf="hasActiveFilters()" type="button" class="btn-icon search-bar-clear" (click)="clearFilters()" title="Clear filters">
           <i class="fa fa-filter-circle-xmark"></i>
         </button>
-        <button type="button" class="btn btn-icon search-bar-close" (click)="toggleSearchFilters()" title="Hide search">
+        <button type="button" class="btn-icon search-bar-close" (click)="toggleSearchFilters()" title="Hide search">
           <i class="fa fa-times"></i>
         </button>
       </div>
-      <div class="card-body">
-        <div *ngIf="loading" class="text-center p-4">
+      <div class="tw-px-card-pad tw-pb-card-pad">
+        <div *ngIf="loading" class="tw-p-4 tw-text-center">
           <div class="loading-dots">
             <div></div>
             <div></div>
@@ -154,7 +154,7 @@
                       [style.cursor]="column.sortable ? 'pointer' : 'default'">
                     {{ column.label }}
                     <i *ngIf="column.sortable" 
-                       class="fa ms-1" 
+                       class="fa tw-ml-1" 
                        [class]="getSortIcon(column)"></i>
                   </th>
                   <th *ngIf="hasActionsColumn()" class="actions-column"></th>
@@ -162,14 +162,14 @@
               </thead>
               <tbody>
                 <!-- Bulk operations row (appears when items are selected) -->
-                <tr *ngIf="enableBulkOperations && getSelectedCount() > 0" class="bulk-operations-row bg-light">
-                  <td [attr.colspan]="getTotalColspan()" class="p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                      <span class="fw-bold text-primary">
-                        <i class="fa fa-check-circle me-2" *ngIf="!bulkOperationsLoading"></i>
-                        <i class="fa fa-spinner fa-spin me-2" *ngIf="bulkOperationsLoading"></i>
+                <tr *ngIf="enableBulkOperations && getSelectedCount() > 0" class="bulk-operations-row tw-bg-gray-50">
+                  <td [attr.colspan]="getTotalColspan()" class="tw-p-3">
+                    <div class="tw-flex tw-items-center tw-justify-between">
+                      <span class="tw-font-bold text-primary">
+                        <i class="fa fa-check-circle tw-mr-2" *ngIf="!bulkOperationsLoading"></i>
+                        <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="bulkOperationsLoading"></i>
                         {{ getSelectedCount() }} item(s) selected
-                        <span *ngIf="bulkOperationsLoading" class="ms-2 text-muted">- Processing...</span>
+                        <span *ngIf="bulkOperationsLoading" class="tw-ml-2 tw-text-muted">- Processing...</span>
                       </span>
                       <div class="bulk-actions">
                         <ng-container *ngIf="bulkOperationsContent">
@@ -177,7 +177,7 @@
                         </ng-container>
                         <button 
                           type="button" 
-                          class="btn btn-sm btn-secondary ms-2"
+                          class="btn-sm btn-secondary tw-ml-2"
                           [disabled]="isOperationsDisabled()"
                           (click)="clearSelection()"
                           title="Clear selection">
@@ -230,19 +230,19 @@
                           [href]="item[column.key]"
                           target="_blank"
                           *ngIf="item[column.key]"
-                          class="btn btn-sm btn-secondary">
+                          class="btn-sm btn-secondary">
                           <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <span *ngIf="!item[column.key]" class="text-muted">-</span>
+                        <span *ngIf="!item[column.key]" class="tw-text-muted">-</span>
                       </span>
 
                       <!-- HTML rendering for columns with renderHtml flag (status badges, formatted text, etc.) -->
                       <span *ngIf="column.renderHtml && !column.showBreakdownButton" class="html-cell" [innerHTML]="getColumnValue(item, column)"></span>
 
                       <!-- Earnings columns with breakdown buttons -->
-                      <div *ngIf="column.showBreakdownButton" class="d-flex align-items-center justify-content-end">
-                        <span class="me-2">{{ getColumnValue(item, column) }}</span>
-                        <button class="btn btn-sm btn-ghost text-muted p-1"
+                      <div *ngIf="column.showBreakdownButton" class="tw-flex tw-items-center tw-justify-end">
+                        <span class="tw-mr-2">{{ getColumnValue(item, column) }}</span>
+                        <button class="btn-sm btn-ghost tw-p-1 tw-text-muted"
                                 (click)="onBreakdownButtonClick(item, column.key)"
                                 title="View breakdown"
                                 style="border: none; box-shadow: none;">
@@ -252,7 +252,7 @@
 
                       <!-- Balance column with color coding -->
                       <span *ngIf="column.key === 'balance' && !column.renderHtml">
-                        <strong [class]="item.balance > 0 ? 'text-success' : (item.balance < 0 ? 'text-danger' : 'text-muted')">
+                        <strong [class]="item.balance > 0 ? 'tw-text-success' : (item.balance < 0 ? 'tw-text-danger' : 'tw-text-muted')">
                           {{ getColumnValue(item, column) }}
                         </strong>
                       </span>
@@ -288,7 +288,7 @@
 
                 </tr>
                 <tr *ngIf="data.length === 0">
-                  <td [attr.colspan]="getTotalColspan()" class="text-center">No data available.</td>
+                  <td [attr.colspan]="getTotalColspan()" class="tw-text-center">No data available.</td>
                 </tr>
               </tbody>
             </table>
@@ -300,8 +300,8 @@
           </ng-container>
           
           <!-- Pagination Controls -->
-          <nav *ngIf="pagination && pagination.total_pages > 1" class="mt-3">
-            <ul class="pagination justify-content-center">
+          <nav *ngIf="pagination && pagination.total_pages > 1" class="tw-mt-3">
+            <ul class="pagination tw-justify-center">
               <li class="page-item" [class.disabled]="!pagination.has_prev">
                 <button class="page-link" 
                         (click)="loadPage(pagination.current_page - 1)"
@@ -343,7 +343,7 @@
     <button
       *ngIf="!isHeaderActionHidden(action)"
       type="button"
-      class="btn btn-sm"
+      class="btn-sm"
       [class.btn-secondary]="!action.type || action.type === 'secondary'"
       [class.btn-primary]="action.type === 'primary'"
       [class.btn-danger]="action.type === 'danger'"
@@ -363,7 +363,7 @@
   <ng-container *ngIf="actions.length > 0">
     <button *ngFor="let action of getVisibleActions(openKebabItem)"
             type="button"
-            class="btn btn-sm"
+            class="btn-sm"
             [class.btn-primary]="action.type === 'primary'"
             [class.btn-danger]="action.type === 'danger'"
             [class.btn-secondary]="!action.type || action.type === 'secondary'"

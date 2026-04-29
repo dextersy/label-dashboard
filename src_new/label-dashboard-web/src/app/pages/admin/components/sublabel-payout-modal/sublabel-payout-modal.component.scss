@@ -15,7 +15,7 @@
 }
 
 .summary-card {
-  border-left: 4px solid var(--bs-primary);
+  border-left: 4px solid var(--brand-color, #3b82f6);
   transition: all 0.3s ease;
 }
 
@@ -36,7 +36,7 @@
 
 .form-control:focus {
   border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
 }
 
 .btn-success {

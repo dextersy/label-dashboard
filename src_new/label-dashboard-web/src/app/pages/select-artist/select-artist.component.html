@@ -2,7 +2,7 @@
 <div class="container-fluid">
 
   <!-- Loading state -->
-  <div *ngIf="loading" class="text-center py-5">
+  <div *ngIf="loading" class="tw-py-5 tw-text-center">
     <div class="loading-dots">
       <div></div>
       <div></div>
@@ -11,9 +11,9 @@
   </div>
 
   <!-- Error state -->
-  <div *ngIf="error" class="alert alert-danger" role="alert">
+  <div *ngIf="error" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert">
     <i class="fa fa-exclamation-triangle"></i> {{ error }}
-    <button class="btn btn-sm btn-danger ml-2" (click)="loadArtists()">
+    <button class="btn-sm btn-danger ml-2" (click)="loadArtists()">
       <i class="fas fa-sync"></i> Retry
     </button>
   </div>
@@ -21,20 +21,20 @@
   <!-- Artist Selection Content -->
   <div *ngIf="!loading && !error" class="select-artist-content">
     <!-- Header -->
-    <div class="select-artist-header text-center mb-5">
+    <div class="select-artist-header tw-mb-5 tw-text-center">
       <h1 class="select-title">Select an Artist</h1>
       <p class="select-subtitle">Choose an artist to view and manage their profile</p>
     </div>
 
     <!-- No Artists State -->
-    <div *ngIf="artists.length === 0" class="no-artists text-center py-5">
-      <div class="no-artists-icon mb-4">
+    <div *ngIf="artists.length === 0" class="no-artists tw-py-5 tw-text-center">
+      <div class="no-artists-icon tw-mb-4">
         <i class="fas fa-users"></i>
       </div>
       <h3>No Artists Found</h3>
-      <p class="text-muted">You don't have any artists yet.</p>
-      <button *ngIf="isAdmin" class="btn btn-primary mt-3" (click)="addNewArtist()">
-        <i class="fas fa-plus me-2"></i>Add New Artist
+      <p class="tw-text-muted">You don't have any artists yet.</p>
+      <button *ngIf="isAdmin" class="btn-primary tw-mt-3" (click)="addNewArtist()">
+        <i class="fas fa-plus tw-mr-2"></i>Add New Artist
       </button>
     </div>
 

@@ -1,195 +1,210 @@
-<!-- Profile page matching reset-password design -->
-<div class="login-wrapper fadeInDown" *ngIf="!loading">
-  <!-- Form Header with Brand Logo -->
-  <div id="formHeader" [style.background-color]="brandColor">
-    <div class="fadeIn first">
-      <img [src]="brandLogo" id="icon" [alt]="brandName" />
-    </div>
-  </div>
-
-  <!-- Form Content -->
-  <div id="formContent" *ngIf="profile">
-    <!-- Header Text - different for profile completion vs invite -->
-    <h3 *ngIf="!isProfileCompletionMode"><strong>Complete Your Profile 🏁</strong></h3>
-    <small class="text-muted" *ngIf="!isProfileCompletionMode">Please update your profile information so we can set up your account correctly.</small>
-
-    <h3 *ngIf="isProfileCompletionMode"><strong>Set Your Username 🏁</strong></h3>
-    <small class="text-muted" *ngIf="isProfileCompletionMode">Your password is already set. Just choose a username to complete your profile.</small>
-
-    <!-- Error Alert -->
-    <div class="alert alert-danger" role="alert" *ngIf="message && messageType === 'error'">
-      {{ message }}
-    </div>
-    
-    <!-- Success Alert -->
-    <div class="alert alert-success" role="alert" *ngIf="message && messageType === 'success'">
-      {{ message }}
-    </div>
-
-    <form (ngSubmit)="onSubmit()" #profileForm="ngForm" novalidate>
-      <!-- Username field (only if can be changed) -->
-      <div *ngIf="canChangeUsername">
-        <input 
-          type="text" 
-          id="username" 
-          class="fadeIn second"
-          name="username" 
-          placeholder="Username"
-          [(ngModel)]="profile.username"
-          (input)="onUsernameChange($any($event.target).value)"
-          [disabled]="saving"
-          required
-        >
-        <!-- Username validation messages -->
-        <div class="field-error-message" *ngIf="errors.username">
-          {{ errors.username }}
-        </div>
-        <div class="field-error-message" *ngIf="usernameInvalid && !errors.username">
-          Username must be 3-30 characters and contain only letters, numbers, underscores, and hyphens.
-        </div>
-        <div class="field-error-message" *ngIf="usernameExists && !errors.username">
-          Sorry, this username is already in use. Please choose another.
-        </div>
-        <div class="field-success-message" *ngIf="usernameValid && !errors.username">
-          Username can no longer be changed once saved.
-        </div>
-      </div>
-
-      <!-- Username display (if cannot be changed) -->
-      <div *ngIf="!canChangeUsername">
-        <input 
-          type="text" 
-          id="username-readonly" 
-          class="fadeIn second"
-          [value]="profile.username"
-          readonly
-          placeholder="Username"
-        >
-        <div class="field-info-message">
-          Username cannot be changed once set.
-        </div>
-      </div>
-
-      <!-- First Name -->
-      <input 
-        type="text" 
-        id="firstName" 
-        class="fadeIn third"
-        name="firstName" 
-        placeholder="First Name"
-        [(ngModel)]="profile.first_name"
-        [disabled]="saving"
-        required
-      >
-      <div class="field-error-message" *ngIf="errors.first_name">
-        {{ errors.first_name }}
-      </div>
-
-      <!-- Last Name -->
-      <input 
-        type="text" 
-        id="lastName" 
-        class="fadeIn fourth"
-        name="lastName" 
-        placeholder="Last Name"
-        [(ngModel)]="profile.last_name"
-        [disabled]="saving"
-        required
-      >
-      <div class="field-error-message" *ngIf="errors.last_name">
-        {{ errors.last_name }}
-      </div>
-
-      <!-- Password fields - only show in invite mode, not in profile completion mode -->
-      <ng-container *ngIf="!isProfileCompletionMode">
-        <!-- Password -->
-        <div class="password-input-wrapper">
-          <input
-            [type]="showPassword ? 'text' : 'password'"
-            id="password"
-            class="fadeIn fifth password-input"
-            name="password"
-            placeholder="Password"
-            [(ngModel)]="password"
-            [disabled]="saving"
-            required
-          >
-          <button
-            type="button"
-            class="password-toggle-btn"
-            (click)="togglePasswordVisibility()"
-            [disabled]="saving"
-            tabindex="-1"
-            aria-label="Toggle password visibility"
-          >
-            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-          </button>
-        </div>
-        <div class="field-error-message" *ngIf="errors.password">
-          {{ errors.password }}
-        </div>
-        <small class="field-hint-message" *ngIf="!errors.password">
-          Must include: 8+ characters, uppercase, lowercase, number, and special character
-        </small>
-
-        <!-- Confirm Password -->
-        <div class="password-input-wrapper">
-          <input
-            [type]="showConfirmPassword ? 'text' : 'password'"
-            id="confirmPassword"
-            class="fadeIn sixth password-input"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            [(ngModel)]="confirmPassword"
-            [disabled]="saving"
-            required
-          >
-          <button
-            type="button"
-            class="password-toggle-btn"
-            (click)="toggleConfirmPasswordVisibility()"
-            [disabled]="saving"
-            tabindex="-1"
-            aria-label="Toggle password visibility"
-          >
-            <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-          </button>
-        </div>
-        <div class="field-error-message" *ngIf="errors.confirmPassword">
-          {{ errors.confirmPassword }}
-        </div>
-        <div class="field-error-message" *ngIf="errors.passwordMismatch">
-          {{ errors.passwordMismatch }}
-        </div>
-      </ng-container>
-
-      <!-- Info message for profile completion mode -->
-      <div class="alert alert-info" role="alert" *ngIf="isProfileCompletionMode" style="margin-top: 15px;">
-        <i class="fa fa-info-circle"></i> Your password is already set. You only need to choose a username.
-      </div>
-
-      <!-- Submit button -->
-      <input 
-        type="submit" 
-        class="fadeIn seventh btn btn-primary btn-block" 
-        style="margin-top:20px;" 
-        [value]="saving ? 'Saving Changes...' : 'Save Changes'"
-        [disabled]="saving"
-      >
-    </form>
-  </div>
-
-  <!-- Form Footer -->
-  <div id="formFooter">
-    <a class="" (click)="goToLogin()">Back to login</a>
+<!-- Full-page loading state -->
+<div *ngIf="loading" class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center">
+  <div class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+    <svg class="tw-animate-spin tw-h-8 tw-w-8 tw-text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <p class="tw-text-sm tw-text-gray-500">Loading your profile...</p>
   </div>
 </div>
 
-<!-- Loading state -->
-<div class="loading-container" *ngIf="loading">
-  <div class="loading-dots">
-    <div></div>
-    <div></div>
-    <div></div>
+<div *ngIf="!loading" class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-12">
+  <div class="tw-w-full tw-max-w-sm">
+
+    <!-- Brand header -->
+    <div class="tw-flex tw-flex-col tw-items-center tw-mb-8">
+      <div
+        class="tw-w-20 tw-h-20 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mb-4 tw-overflow-hidden tw-shadow-md"
+        [style.background-color]="brandColor">
+        <img [src]="brandLogo" [alt]="brandName" class="tw-max-w-full tw-max-h-full tw-object-contain tw-p-2">
+      </div>
+      <h1 class="tw-text-xl tw-font-bold tw-text-gray-900">
+        <ng-container *ngIf="!isProfileCompletionMode">Complete Your Profile</ng-container>
+        <ng-container *ngIf="isProfileCompletionMode">Set Your Username</ng-container>
+      </h1>
+      <p class="tw-text-sm tw-text-gray-500 tw-mt-1 tw-text-center">
+        <ng-container *ngIf="!isProfileCompletionMode">Update your details to finish setting up your account.</ng-container>
+        <ng-container *ngIf="isProfileCompletionMode">Your password is already set — just choose a username.</ng-container>
+      </p>
+    </div>
+
+    <!-- Card -->
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-lg tw-p-8" *ngIf="profile">
+
+      <!-- Alerts -->
+      <div *ngIf="message && messageType === 'error'"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-red-50 tw-border tw-border-red-200 tw-text-red-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-exclamation-circle tw-mt-0.5 tw-shrink-0"></i>
+        <span>{{ message }}</span>
+      </div>
+      <div *ngIf="message && messageType === 'success'"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-green-50 tw-border tw-border-green-200 tw-text-green-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-check-circle tw-mt-0.5 tw-shrink-0"></i>
+        <span>{{ message }}</span>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #profileForm="ngForm" novalidate>
+        <div class="tw-space-y-5">
+
+          <!-- Username (editable) -->
+          <div *ngIf="canChangeUsername">
+            <label for="username" class="tw-label">Username</label>
+            <input
+              type="text"
+              id="username"
+              class="tw-input"
+              name="username"
+              placeholder="Choose a username"
+              [(ngModel)]="profile.username"
+              (input)="onUsernameChange($any($event.target).value)"
+              [disabled]="saving"
+              required>
+            <p *ngIf="errors.username" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.username }}</p>
+            <p *ngIf="usernameInvalid && !errors.username" class="tw-text-xs tw-text-red-600 tw-mt-1">
+              Must be 3–30 characters: letters, numbers, underscores, or hyphens only.
+            </p>
+            <p *ngIf="usernameExists && !errors.username" class="tw-text-xs tw-text-red-600 tw-mt-1">
+              This username is already taken. Please choose another.
+            </p>
+            <p *ngIf="usernameValid && !errors.username" class="tw-text-xs tw-text-green-600 tw-mt-1">
+              Username cannot be changed once saved.
+            </p>
+          </div>
+
+          <!-- Username (readonly) -->
+          <div *ngIf="!canChangeUsername">
+            <label for="username-readonly" class="tw-label">Username</label>
+            <input
+              type="text"
+              id="username-readonly"
+              class="tw-input"
+              [value]="profile.username"
+              readonly>
+            <p class="tw-text-xs tw-text-gray-400 tw-mt-1">Username cannot be changed once set.</p>
+          </div>
+
+          <!-- First Name -->
+          <div>
+            <label for="firstName" class="tw-label">First Name</label>
+            <input
+              type="text"
+              id="firstName"
+              class="tw-input"
+              name="firstName"
+              placeholder="First name"
+              [(ngModel)]="profile.first_name"
+              [disabled]="saving"
+              required>
+            <p *ngIf="errors.first_name" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.first_name }}</p>
+          </div>
+
+          <!-- Last Name -->
+          <div>
+            <label for="lastName" class="tw-label">Last Name</label>
+            <input
+              type="text"
+              id="lastName"
+              class="tw-input"
+              name="lastName"
+              placeholder="Last name"
+              [(ngModel)]="profile.last_name"
+              [disabled]="saving"
+              required>
+            <p *ngIf="errors.last_name" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.last_name }}</p>
+          </div>
+
+          <!-- Password fields — invite mode only -->
+          <ng-container *ngIf="!isProfileCompletionMode">
+
+            <!-- Password -->
+            <div>
+              <label for="password" class="tw-label">Password</label>
+              <div class="tw-relative">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  id="password"
+                  class="tw-input tw-pr-10"
+                  name="password"
+                  placeholder="Choose a password"
+                  [(ngModel)]="password"
+                  [disabled]="saving"
+                  required>
+                <button
+                  type="button"
+                  class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-px-3 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                  (click)="togglePasswordVisibility()"
+                  tabindex="-1"
+                  aria-label="Toggle password visibility">
+                  <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              <p *ngIf="errors.password" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.password }}</p>
+              <p *ngIf="!errors.password" class="tw-text-xs tw-text-gray-400 tw-mt-1">
+                8+ characters — uppercase, lowercase, number, and special character required.
+              </p>
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+              <label for="confirmPassword" class="tw-label">Confirm Password</label>
+              <div class="tw-relative">
+                <input
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  id="confirmPassword"
+                  class="tw-input tw-pr-10"
+                  name="confirmPassword"
+                  placeholder="Confirm your password"
+                  [(ngModel)]="confirmPassword"
+                  [disabled]="saving"
+                  required>
+                <button
+                  type="button"
+                  class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-px-3 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  tabindex="-1"
+                  aria-label="Toggle password visibility">
+                  <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              <p *ngIf="errors.confirmPassword" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.confirmPassword }}</p>
+              <p *ngIf="errors.passwordMismatch" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.passwordMismatch }}</p>
+            </div>
+
+          </ng-container>
+
+          <!-- Profile completion info -->
+          <div *ngIf="isProfileCompletionMode"
+            class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-rounded-lg tw-bg-blue-50 tw-border tw-border-blue-200 tw-text-blue-800 tw-text-sm">
+            <i class="fas fa-info-circle tw-mt-0.5 tw-shrink-0"></i>
+            <span>Your password is already set. You only need to choose a username.</span>
+          </div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="tw-w-full tw-py-2.5 tw-px-4 tw-rounded-lg tw-text-white tw-font-semibold tw-text-sm tw-transition-opacity disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-2"
+            [style.background-color]="brandColor"
+            [disabled]="saving">
+            <svg *ngIf="saving" class="tw-animate-spin tw-h-4 tw-w-4 tw-text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            {{ saving ? 'Saving...' : 'Save Changes' }}
+          </button>
+
+        </div>
+      </form>
+    </div>
+
+    <!-- Back link -->
+    <p class="tw-text-center tw-text-sm tw-text-gray-500 tw-mt-6">
+      <a (click)="goToLogin()" class="tw-font-medium tw-cursor-pointer hover:tw-underline" [style.color]="brandColor">
+        ← Back to login
+      </a>
+    </p>
+
   </div>
 </div>

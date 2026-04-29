@@ -33,17 +33,17 @@
       <div class="button-group">
         <button
           *ngIf="canGoPrevious"
-          class="btn btn-secondary"
+          class="btn-secondary"
           (click)="onPrevious()">
           <i class="fas fa-arrow-left"></i> Previous
         </button>
         <button
-          class="btn btn-secondary"
+          class="btn-secondary"
           (click)="onSkip()">
           Skip Tour
         </button>
         <button
-          class="btn btn-primary"
+          class="btn-primary"
           (click)="onNext()">
           {{ isLastStep ? 'Get Started' : 'Next' }}
           <i class="fas fa-arrow-right" *ngIf="!isLastStep"></i>

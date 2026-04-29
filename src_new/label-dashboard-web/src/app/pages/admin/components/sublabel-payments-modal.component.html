@@ -7,17 +7,17 @@
       </div>
       <div class="modal-body">
 
-        <div class="row mb-3" *ngIf="pagination">
-          <div class="col-6">
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="pagination">
+          <div class="tw-col-span-6">
             <div class="summary-box">
               <div class="summary-label">Total Payments</div>
-              <div class="summary-value text-success">₱{{ totalAmount | number:'1.2-2' }}</div>
+              <div class="summary-value tw-text-success">₱{{ totalAmount | number:'1.2-2' }}</div>
             </div>
           </div>
-          <div class="col-6">
+          <div class="tw-col-span-6">
             <div class="summary-box">
               <div class="summary-label">Total Processing Fees</div>
-              <div class="summary-value text-info">₱{{ totalProcessingFees | number:'1.2-2' }}</div>
+              <div class="summary-value tw-text-[#0891b2]">₱{{ totalProcessingFees | number:'1.2-2' }}</div>
             </div>
           </div>
         </div>
@@ -40,7 +40,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
+        <button type="button" class="btn-secondary" (click)="onClose()">Close</button>
       </div>
     </div>
   </div>

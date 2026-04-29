@@ -37,64 +37,13 @@
   margin: 0;
 }
 
-// Dashboard layout styles
-.wrapper {
-  position: relative;
-  top: 0;
-  height: 100vh;
-  min-height: 100vh;
-  width: 100%; // Default full width for mobile
-  margin-left: 0; // Default for mobile
-  margin-top: 50px; // Push content below fixed navbar
-  transition: all 0.3s ease; // Animate both margin and width
-
-  // Override any login page wrapper styles for dashboard layout
-  display: block;
-  align-items: unset;
-  flex-direction: unset;
-  justify-content: unset;
-  padding: 0;
-}
-
-.main-panel {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  min-height: 100vh;
-}
+// Dashboard layout styles (.wrapper, .main-panel, .content) moved to
+// styles.scss @layer components — Bootstrap CDN does not define these classes
+// so they are safe to layer without cascade regressions.
 
 .artist-selection-container {
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
   padding: 10px 0;
   margin-bottom: 0;
-}
-
-.content {
-  padding: 15px;
-  padding-top: 20px;
-  min-height: calc(100vh - 123px);
-}
-
-// Desktop layout - use direct class binding approach
-@media (min-width: 992px) {
-  // Default state: sidebar collapsed (70px width)
-  .wrapper {
-    margin-left: 86px !important;
-    width: calc(100% - 86px) !important;
-    transition: margin-left 0.3s ease, width 0.3s ease;
-  }
-
-  // When sidebar is open/expanded: add full margin and constrain width
-  .wrapper.sidebar-open {
-    margin-left: 260px !important;
-    width: calc(100% - 260px) !important;
-  }
-}
-
-// Mobile layout - full width layout
-@media (max-width: 991px) {
-  .wrapper {
-    margin-left: 0; // No margin on mobile
-  }
 }

@@ -1,28 +1,29 @@
-<div class="card">
-  <div class="card-header">
-    <h5>Latest releases</h5>
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-h-full tw-flex tw-flex-col">
+  <div class="tw-p-6 tw-border-b tw-border-gray-100">
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Releases</h3>
   </div>
-  <div class="card-body">
-    <div *ngIf="releases.length === 0" class="text-center text-muted py-3">
-      No releases found
-    </div>
-    <div class="release-tiles" *ngIf="releases.length > 0">
-      <div class="release-tile" *ngFor="let release of releases.slice(0, 4)">
-        <span class="release-tile-date text-muted">
+
+  <div class="tw-p-6 tw-flex-1">
+    <p *ngIf="releases.length === 0" class="tw-py-3 tw-text-center tw-text-muted tw-mb-0">No releases found</p>
+    <div *ngIf="releases.length > 0" class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-4">
+      <div *ngFor="let release of releases.slice(0, 4)"
+           class="tw-flex tw-flex-col tw-items-center tw-gap-1.5 tw-text-center tw-min-w-0">
+        <span class="tw-text-xs tw-text-gray-400 tw-whitespace-nowrap">
           {{ release.release_date | date:'MMM d, y' }}
         </span>
-        <img
-          [src]="getImageSrc(release.cover_art)"
-          [alt]="release.title"
-          class="release-tile-cover">
-        <span class="release-tile-title" [title]="release.title">{{ release.title }}</span>
-        <a class="btn-ghost btn-sm release-tile-link" style="cursor: pointer;" (click)="goToRelease(release)">
+        <img [src]="getImageSrc(release.cover_art)"
+             [alt]="release.title"
+             class="tw-block tw-w-full tw-aspect-square tw-object-cover tw-rounded-lg">
+        <span class="tw-font-bold tw-text-sm tw-text-gray-800 tw-truncate tw-w-full tw-leading-snug"
+              [title]="release.title">{{ release.title }}</span>
+        <a class="btn-ghost btn-sm tw-p-0 tw-text-xs" style="cursor: pointer;" (click)="goToRelease(release)">
           See release <i class="far fa-arrow-alt-circle-right"></i>
         </a>
       </div>
     </div>
   </div>
-  <div class="card-footer text-right">
+
+  <div class="tw-px-6 tw-py-4 tw-border-t tw-border-gray-100 tw-text-right">
     <a (click)="goToReleases()" class="btn-ghost" style="cursor: pointer;">
       Go to releases <i class="far fa-arrow-alt-circle-right"></i>
     </a>

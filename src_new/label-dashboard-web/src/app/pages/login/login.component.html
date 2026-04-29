@@ -1,100 +1,114 @@
-<!-- Login page structure exactly matching the original PHP version -->
-<div class="login-wrapper fadeInDown">
-  <!-- Form Header with Brand Logo -->
-  <div id="formHeader" [style.background-color]="brandColor">
-    <div class="fadeIn first">
-      <img [src]="brandLogo" id="icon" [alt]="brandName" />
-    </div>
-  </div>
+<div class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-12">
+  <div class="tw-w-full tw-max-w-sm">
 
-  <!-- Form Content -->
-  <div id="formContent">
-    <!-- Error and Success Alerts -->
-    <div *ngIf="errorType === 'lock'" class="alert alert-danger" role="alert">
-      Your account is temporarily locked due to too many failed logins. Please try again in {{lockTimeMinutes}} minutes.
-    </div>
-    <div *ngIf="showResetSuccess" class="alert alert-success" role="alert">
-      Your password has been successfully reset. Please log in again.
-    </div>
-    <div *ngIf="errorMessage && !errorType" class="alert alert-danger" role="alert">
-      {{errorMessage}}
+    <!-- Brand header -->
+    <div class="tw-flex tw-flex-col tw-items-center tw-mb-8">
+      <div
+        class="tw-w-20 tw-h-20 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mb-4 tw-overflow-hidden tw-shadow-md"
+        [style.background-color]="brandColor">
+        <img [src]="brandLogo" [alt]="brandName" class="tw-max-w-full tw-max-h-full tw-object-contain tw-p-2">
+      </div>
+      <h1 class="tw-text-xl tw-font-bold tw-text-gray-900">{{ brandName }}</h1>
+      <p class="tw-text-sm tw-text-gray-500 tw-mt-1">Sign in to your account</p>
     </div>
 
-    <!-- Login Form (matching original structure) -->
-    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-      <input type="hidden" name="redirectTo" [value]="redirectUrl" *ngIf="redirectUrl" />
+    <!-- Card -->
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-lg tw-p-8">
 
-      <!-- Username/Email Input -->
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text fadeIn second" style="background-color:#f6f6f6;border:0px;">
-            <i class="fa fa-user"></i>
-          </span>
-        </div>
-        <input 
-          type="text" 
-          id="login" 
-          class="fadeIn second form-control" 
-          name="login" 
-          placeholder="Username / email" 
-          [(ngModel)]="loginField"
-          required>
+      <!-- Alerts -->
+      <div *ngIf="errorType === 'lock'"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-red-50 tw-border tw-border-red-200 tw-text-red-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-lock tw-mt-0.5 tw-shrink-0"></i>
+        <span>Your account is temporarily locked due to too many failed logins. Please try again in {{lockTimeMinutes}} minutes.</span>
+      </div>
+      <div *ngIf="showResetSuccess"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-green-50 tw-border tw-border-green-200 tw-text-green-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-check-circle tw-mt-0.5 tw-shrink-0"></i>
+        <span>Your password has been successfully reset. Please log in again.</span>
+      </div>
+      <div *ngIf="errorMessage && !errorType"
+        class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-red-50 tw-border tw-border-red-200 tw-text-red-800 tw-text-sm"
+        role="alert">
+        <i class="fas fa-exclamation-circle tw-mt-0.5 tw-shrink-0"></i>
+        <span>{{errorMessage}}</span>
       </div>
 
-      <!-- Password Input -->
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text fadeIn third" style="background-color:#f6f6f6;border:0px;">
-            <i class="fas fa-unlock"></i>
-          </span>
-        </div>
-        <div class="password-field-container">
-          <input
-            [type]="showPassword ? 'text' : 'password'"
-            id="password"
-            class="fadeIn third form-control"
-            name="password"
-            placeholder="Password"
-            [(ngModel)]="password"
-            #passwordField
-            required>
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <input type="hidden" name="redirectTo" [value]="redirectUrl" *ngIf="redirectUrl" />
+
+        <div class="tw-space-y-5">
+
+          <!-- Username / Email -->
+          <div>
+            <label for="login" class="tw-label">Username or Email</label>
+            <input
+              type="text"
+              id="login"
+              class="tw-input"
+              name="login"
+              placeholder="you@example.com"
+              [(ngModel)]="loginField"
+              autocomplete="username"
+              required>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-1">
+              <label for="password" class="tw-label tw-mb-0">Password</label>
+              <a href="/forgot-password" class="tw-text-xs tw-font-medium hover:tw-underline" [style.color]="brandColor">
+                Forgot password?
+              </a>
+            </div>
+            <div class="tw-relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                class="tw-input tw-pr-10"
+                name="password"
+                placeholder="••••••••"
+                [(ngModel)]="password"
+                #passwordField
+                autocomplete="current-password"
+                required>
+              <button
+                type="button"
+                class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-px-3 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                (click)="togglePasswordVisibility()"
+                tabindex="-1"
+                aria-label="Toggle password visibility">
+                <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit -->
           <button
-            type="button"
-            class="password-toggle-icon-btn fadeIn third"
-            (click)="togglePasswordVisibility()"
-            tabindex="-1"
-            aria-label="Toggle password visibility">
-            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            type="submit"
+            class="tw-w-full tw-py-2.5 tw-px-4 tw-rounded-lg tw-text-white tw-font-semibold tw-text-sm tw-transition-opacity disabled:tw-opacity-60 disabled:tw-cursor-not-allowed tw-flex tw-items-center tw-justify-center tw-gap-2"
+            [style.background-color]="brandColor"
+            [disabled]="loading || loginForm.invalid">
+            <ng-container *ngIf="!loading">Log In</ng-container>
+            <ng-container *ngIf="loading">
+              <svg class="tw-animate-spin tw-h-4 tw-w-4 tw-text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Logging in...
+            </ng-container>
           </button>
+
         </div>
-      </div>
+      </form>
+    </div>
 
-      &nbsp;
-
-      <!-- Submit Button -->
-      <button 
-        type="submit" 
-        class="fadeIn fourth btn btn-primary btn-block"
-        [disabled]="loading || loginForm.invalid">
-        <span *ngIf="!loading">Log In <i class="fas fa-sign-in-alt"></i></span>
-        <span *ngIf="loading" class="loading-inline">
-          <div class="loading-spinner"></div>Logging in...
-        </span>
-      </button>
-    </form>
-  </div>
-
-  <!-- Form Footer -->
-  <div id="formFooter">
-    <a class="" href="/forgot-password">Forgot Password?</a>
-  </div>
-
-  <!-- Footer Text -->
-  &nbsp;
-  <div class="text-center">
-    <p>
-      <small class="text-muted">Powered by <strong>Spindly</strong>.</small><br>
-      <small class="text-muted"><em>Having trouble? <a href="mailto:support@melt-records.com">Contact us here</a> or use the chat widget.</em></small>
+    <!-- Footer -->
+    <p class="tw-text-center tw-text-xs tw-text-gray-400 tw-mt-6">
+      Powered by <strong>{{ brandName }}</strong>.<br>
+      <em>Having trouble? <a href="mailto:support@melt-records.com" class="tw-underline">Contact us</a> or use the chat widget.</em>
     </p>
+
   </div>
 </div>

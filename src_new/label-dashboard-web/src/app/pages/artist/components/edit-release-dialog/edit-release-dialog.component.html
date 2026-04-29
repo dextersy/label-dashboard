@@ -16,20 +16,20 @@
       </div>
       <div class="modal-body">
         <!-- Info Message for Non-Draft Releases -->
-        <div *ngIf="isRestrictedMode()" class="alert alert-info mb-3">
-          <i class="fa fa-info-circle me-2"></i>
+        <div *ngIf="isRestrictedMode()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mb-3">
+          <i class="fa fa-info-circle tw-mr-2"></i>
           <strong>This release is {{ editingRelease?.status }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
         </div>
 
         <!-- Validation Messages for Draft Releases -->
-        <div *ngIf="validation.hasErrors || validation.hasWarnings" class="mb-3">
+        <div *ngIf="validation.hasErrors || validation.hasWarnings" class="tw-mb-3">
           <!-- Errors -->
-          <div *ngIf="validation.hasErrors" class="alert alert-danger mb-2">
-            <div class="d-flex align-items-start">
-              <i class="fa fa-exclamation-circle mt-1 me-2"></i>
-              <div class="flex-grow-1">
+          <div *ngIf="validation.hasErrors" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-mb-2">
+            <div class="tw-flex tw-items-start">
+              <i class="fa fa-exclamation-circle tw-mt-1 tw-mr-2"></i>
+              <div class="tw-grow tw-flex-grow">
                 <strong>Missing Required Information</strong>
-                <ul class="mb-0 mt-1">
+                <ul class="tw-mb-0 tw-mt-1">
                   <li *ngFor="let error of validationErrors">{{ error.message }}</li>
                 </ul>
               </div>
@@ -37,15 +37,15 @@
           </div>
 
           <!-- Warnings -->
-          <div *ngIf="validation.hasWarnings" class="alert alert-warning mb-2">
-            <div class="d-flex align-items-start">
-              <i class="fa fa-exclamation-triangle mt-1 me-2"></i>
-              <div class="flex-grow-1">
+          <div *ngIf="validation.hasWarnings" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-2">
+            <div class="tw-flex tw-items-start">
+              <i class="fa fa-exclamation-triangle tw-mt-1 tw-mr-2"></i>
+              <div class="tw-grow tw-flex-grow">
                 <strong>Recommended Information</strong>
-                <ul class="mb-0 mt-1">
+                <ul class="tw-mb-0 tw-mt-1">
                   <li *ngFor="let warning of validationWarnings">
                     <strong>{{ warning.message }}</strong>
-                    <div class="small text-muted">{{ warning.description }}</div>
+                    <div class="small tw-text-sm tw-text-muted">{{ warning.description }}</div>
                   </li>
                 </ul>
               </div>
@@ -70,13 +70,13 @@
       </div>
       <div class="modal-footer">
         <button type="button" 
-                class="btn btn-secondary" 
+                class="btn-secondary" 
                 (click)="onClose()"
                 [disabled]="loading">
           Cancel
         </button>
         <button type="button" 
-                class="btn btn-primary" 
+                class="btn-primary" 
                 (click)="onSubmitFromButton()"
                 [disabled]="loading || !isFormValid">
           <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1" role="status"></span>

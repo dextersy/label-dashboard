@@ -1,7 +1,7 @@
 <div class="fundraiser-selection-container">
   <div class="fundraiser-selection-row">
     <div class="dropdown" [class.open]="isDropdownOpen">
-      <button class="btn btn-secondary fundraiser-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+      <button class="btn-secondary fundraiser-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
         <div class="fundraiser-info" *ngIf="selectedFundraiser">
           <div class="fundraiser-poster">
             <img *ngIf="selectedFundraiser.poster_url; else defaultPoster"
@@ -18,24 +18,24 @@
           <div class="fundraiser-details">
             <div class="fundraiser-title">
               {{ selectedFundraiser.title }}
-              <span class="badge badge-sm ms-2" [class]="getFundraiserStatusClass(selectedFundraiser)">
+              <span class="badge badge-sm tw-ml-2" [class]="getFundraiserStatusClass(selectedFundraiser)">
                 {{ getFundraiserStatusText(selectedFundraiser) }}
               </span>
             </div>
             <div class="fundraiser-meta">
               <span class="fundraiser-raised">
-                <i class="fa fa-peso-sign me-1"></i>
+                <i class="fa fa-peso-sign tw-mr-1"></i>
                 {{ formatCurrency(selectedFundraiser.totalRaised) }} raised
               </span>
-              <span class="fundraiser-donors ms-2" *ngIf="selectedFundraiser.donationCount">
-                <i class="fas fa-users me-1"></i>
+              <span class="fundraiser-donors tw-ml-2" *ngIf="selectedFundraiser.donationCount">
+                <i class="fas fa-users tw-mr-1"></i>
                 {{ selectedFundraiser.donationCount }} donors
               </span>
             </div>
           </div>
         </div>
         <div *ngIf="!selectedFundraiser && !loading" class="no-fundraiser">
-          <i class="fa fa-hand-holding-heart me-2"></i>
+          <i class="fa fa-hand-holding-heart tw-mr-2"></i>
           Select a Fundraiser
         </div>
         <div *ngIf="loading" class="loading-inline">
@@ -59,13 +59,13 @@
             <i class="fa fa-search search-icon"></i>
             <input
               type="text"
-              class="form-control search-input"
+              class="search-input tw-input"
               placeholder="Search fundraisers..."
               [(ngModel)]="searchTerm"
               (click)="$event.stopPropagation()"
               #searchInput>
             <button
-              class="btn btn-ghost search-clear"
+              class="btn-ghost search-clear"
               *ngIf="searchTerm"
               (click)="clearSearch(); $event.stopPropagation()">
               <i class="fa fa-times"></i>
@@ -78,7 +78,7 @@
         <!-- Create new fundraiser option at the top -->
         <li *ngIf="isAdmin" class="create-fundraiser-item">
           <a (click)="createFundraiser()" class="create-new-fundraiser">
-            <i class="fa fa-plus me-2"></i>
+            <i class="fa fa-plus tw-mr-2"></i>
             Create New Fundraiser
           </a>
         </li>
@@ -104,17 +104,17 @@
             <div class="dropdown-fundraiser-info">
               <div class="dropdown-fundraiser-title">
                 {{ fundraiser.title }}
-                <span class="badge badge-sm ms-2" [class]="getFundraiserStatusClass(fundraiser)">
+                <span class="badge badge-sm tw-ml-2" [class]="getFundraiserStatusClass(fundraiser)">
                   {{ getFundraiserStatusText(fundraiser) }}
                 </span>
               </div>
               <div class="dropdown-fundraiser-meta">
                 <span class="dropdown-fundraiser-raised">
-                  <i class="fa fa-peso-sign me-1"></i>
+                  <i class="fa fa-peso-sign tw-mr-1"></i>
                   {{ formatCurrency(fundraiser.totalRaised) }} raised
                 </span>
-                <span class="dropdown-fundraiser-donors ms-2" *ngIf="fundraiser.donationCount">
-                  <i class="fas fa-users me-1"></i>
+                <span class="dropdown-fundraiser-donors tw-ml-2" *ngIf="fundraiser.donationCount">
+                  <i class="fas fa-users tw-mr-1"></i>
                   {{ fundraiser.donationCount }} donors
                 </span>
               </div>
@@ -124,7 +124,7 @@
 
         <li class="no-results" *ngIf="filteredFundraisers.length === 0 && searchTerm">
           <div class="no-results-content">
-            <i class="fa fa-search text-muted"></i>
+            <i class="fa fa-search tw-text-muted"></i>
             <span>No fundraisers found matching "{{ searchTerm }}"</span>
           </div>
         </li>
@@ -133,9 +133,9 @@
   </div>
 
   <!-- Fundraiser search results summary -->
-  <div class="search-summary mt-2" *ngIf="searchTerm && filteredFundraisers.length > 0">
-    <small class="text-muted">
-      <i class="fa fa-filter me-1"></i>
+  <div class="search-summary tw-mt-2" *ngIf="searchTerm && filteredFundraisers.length > 0">
+    <small class="tw-text-muted">
+      <i class="fa fa-filter tw-mr-1"></i>
       Showing {{ filteredFundraisers.length }} of {{ fundraisers.length }} fundraisers
     </small>
   </div>

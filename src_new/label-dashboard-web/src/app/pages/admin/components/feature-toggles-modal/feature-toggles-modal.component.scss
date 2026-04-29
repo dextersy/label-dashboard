@@ -217,12 +217,12 @@
 
 .btn-primary {
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: var(--brand-color, #3b82f6);
+  border-color: var(--brand-color, #3b82f6);
 
   &:hover:not(:disabled) {
-    background-color: #0056b3;
-    border-color: #0056b3;
+    background-color: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
+    border-color: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
   }
 }
 

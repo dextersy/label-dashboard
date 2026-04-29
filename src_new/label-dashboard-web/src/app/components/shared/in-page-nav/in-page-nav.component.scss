@@ -13,7 +13,7 @@
 .ipn-sidebar {
   flex: 0 0 200px;
   position: sticky;
-  top: 20px;
+  top: 70px; /* 50px navbar + 20px breathing room */
 
   .ipn-items {
     display: flex;
@@ -56,8 +56,8 @@
     &.active,
     &.active:focus,
     &.active:focus-visible {
-      color: var(--brand-color, #007bff);
-      border-left-color: var(--brand-color, #007bff);
+      color: var(--brand-color, var(--brand-color, #3b82f6));
+      border-left-color: var(--brand-color, var(--brand-color, #3b82f6));
     }
 
     &:disabled {
@@ -142,7 +142,7 @@
 
       &.active {
         border-left-color: transparent;
-        border-bottom-color: var(--brand-color, #007bff);
+        border-bottom-color: var(--brand-color, var(--brand-color, #3b82f6));
       }
 
       &.ipn-item--danger {

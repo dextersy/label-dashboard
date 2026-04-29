@@ -1,12 +1,264 @@
 /* Global styles for Label Dashboard Web */
 
-/* Import Angular Material Theme */
+/* =========================================== */
+/* SCSS @use imports — MUST be first in SCSS   */
+/* =========================================== */
 @use './app/material-theme.scss';
-
-/* Import Modern Component Styles */
 @use './styles/components.scss';
 
-/* Angular Material tooltip — allow multi-line text (used by in-page-nav) */
+/* =========================================== */
+/* TAILWIND CSS — processed by PostCSS         */
+/* prefix: 'tw-' eliminates all BS conflicts   */
+/* preflight: false — safe during coexistence  */
+/* =========================================== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================== */
+/* CSS @import (quill — inlined by esbuild)    */
+/* =========================================== */
+@import 'quill/dist/quill.snow.css';
+
+/* =========================================== */
+/* @layer utilities: brand color passthrough   */
+/* CSS-var-based — work alongside Tailwind JIT */
+/* =========================================== */
+@layer utilities {
+  .text-brand     { color: var(--brand-color, #3b82f6); }
+  .bg-brand       { background-color: var(--brand-color, #3b82f6); }
+  .border-brand   { border-color: var(--brand-color, #3b82f6); }
+  .ring-brand     { box-shadow: 0 0 0 3px rgba(var(--brand-color-rgb, 59,130,246), 0.1); }
+  .text-brand-text { color: var(--brand-color-text, #ffffff); }
+}
+
+/* =========================================== */
+/* @layer components: layout shell + modals    */
+/* (Bootstrap CDN does not define these — safe) */
+/* =========================================== */
+@layer components {
+  /* ----- Dashboard layout shell (moved from app.component.scss) ----- */
+
+  .wrapper {
+    position: relative;
+    top: 0;
+    height: 100vh;
+    min-height: 100vh;
+    width: 100%;
+    margin-left: 0;
+    margin-top: 50px;
+    transition: all 0.3s ease;
+    /* Override any login-page wrapper styles for dashboard layout */
+    display: block;
+    align-items: unset;
+    flex-direction: unset;
+    justify-content: unset;
+    padding: 0;
+  }
+
+  .main-panel {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .content {
+    padding: 15px;
+    padding-top: 20px;
+    min-height: calc(100vh - 123px);
+  }
+
+  /* Desktop layout */
+  @media (min-width: 992px) {
+    /* Default state: sidebar collapsed (86px width) */
+    .wrapper {
+      margin-left: 86px !important;
+      width: calc(100% - 86px) !important;
+      transition: margin-left 0.3s ease, width 0.3s ease;
+    }
+
+    /* Sidebar open/expanded */
+    .wrapper.sidebar-open {
+      margin-left: 260px !important;
+      width: calc(100% - 260px) !important;
+    }
+  }
+
+  /* Mobile layout — full width */
+  @media (max-width: 991px) {
+    .wrapper {
+      margin-left: 0;
+    }
+  }
+
+  /* ----- Mobile sidebar responsive ----- */
+
+  @media (max-width: 991px) {
+    .main-panel {
+      transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
+    }
+
+    html.nav-open .main-panel {
+      transform: translateX(-260px);
+    }
+
+    html.nav-open body {
+      position: relative;
+      overflow-x: hidden;
+    }
+  }
+
+  /* Ensure sidebar is properly positioned on larger screens */
+  @media (min-width: 992px) {
+    .sidebar {
+      transform: translateX(0px) !important;
+    }
+
+    .main-panel {
+      transform: none !important;
+    }
+
+    #bodyClick {
+      display: none !important;
+    }
+  }
+
+  /* ----- Modal positioning fixes ----- */
+  /* Fix for .wrapper and .main-panel positioning context breaking modals.
+     Both have position:relative which creates positioning contexts, causing
+     position:fixed children (modals) to position relative to those containers.
+     IMPORTANT: Modals must also be moved to document.body using JavaScript. */
+
+  .modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1050;
+  }
+
+  .modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 1040;
+  }
+
+  /* On mobile: keep modals within safe area between navbar and bottom nav */
+  @media (max-width: 991px) {
+    .modal {
+      padding-top: 50px !important;
+      padding-bottom: 100px !important;
+    }
+
+    .modal-content {
+      max-height: calc(100vh - 50px - 100px) !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    .modal-body {
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 !important;
+      min-height: 0 !important;
+    }
+  }
+
+  body.modal-open {
+    overflow: hidden !important;
+  }
+
+  .modal-open .main-panel {
+    overflow: hidden !important;
+  }
+
+  .modal-open .content {
+    overflow: hidden !important;
+  }
+
+  /* ----- Modal component classes (Phase 4B) ----- */
+  /* Use tw-modal-* classes when migrating Bootstrap modal templates */
+
+  .tw-modal-overlay {
+    @apply tw-fixed tw-inset-0 tw-bg-black/50;
+    z-index: 1040;
+  }
+
+  .tw-modal-dialog {
+    @apply tw-relative tw-mx-auto tw-max-w-lg tw-w-full
+           tw-rounded-card tw-bg-white tw-shadow-modal;
+    z-index: 1050;
+    margin-top: 60px;
+  }
+
+  .tw-modal-header {
+    @apply tw-flex tw-items-center tw-justify-between
+           tw-px-7 tw-py-5 tw-border-b tw-border-border-subtle;
+  }
+
+  .tw-modal-body {
+    @apply tw-px-7 tw-py-5;
+  }
+
+  .tw-modal-footer {
+    @apply tw-flex tw-items-center tw-justify-end tw-gap-3
+           tw-px-7 tw-py-5 tw-border-t tw-border-border-subtle;
+  }
+
+  /* ----- Form component classes (Phase 4C) ----- */
+  /* Use tw-input / tw-label when migrating form-control / form-label */
+
+  .tw-input {
+    @apply tw-w-full tw-px-3.5 tw-py-2.5 tw-text-base tw-text-[#1f2937]
+           tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
+
+    &:focus {
+      @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring;
+    }
+
+    &:hover:not(:focus) {
+      @apply tw-bg-input-bg-hover;
+    }
+
+    &::placeholder {
+      @apply tw-text-muted;
+    }
+  }
+
+  .tw-label {
+    @apply tw-block tw-mb-1.5 tw-font-medium tw-text-base tw-text-[#374151];
+  }
+
+  /* Compact input variant (replaces form-control-sm) */
+  .tw-input-sm {
+    @apply tw-w-full tw-px-2.5 tw-py-1.5 tw-text-xs tw-text-[#1f2937]
+           tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
+
+    &:focus { @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring; }
+    &::placeholder { @apply tw-text-muted; }
+  }
+
+  /* Large input variant (replaces form-control-lg) */
+  .tw-input-lg {
+    @apply tw-w-full tw-px-4 tw-py-2.5 tw-text-base tw-text-[#1f2937]
+           tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
+
+    &:focus { @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring; }
+    &::placeholder { @apply tw-text-muted; }
+  }
+}
+
+/* =========================================== */
+/* Angular Material tooltip                    */
+/* (unlayered — needs !important priority)     */
+/* =========================================== */
 .mat-mdc-tooltip {
   white-space: pre-line !important;
   max-width: 300px !important;
@@ -14,15 +266,9 @@
   line-height: 1.4 !important;
 }
 
-/* Import Modern Fonts - moved to index.html to avoid build issues */
-/* @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); */
-
-/* Font Awesome is loaded via angular.json styles array */
-
-/* Import Quill Editor Styles */
-@import 'quill/dist/quill.snow.css';
-
-/* Custom Quill Editor Styling to match Bootstrap */
+/* =========================================== */
+/* Custom Quill Editor Styling                 */
+/* =========================================== */
 .ql-toolbar {
   border-top: 1px solid #ced4da !important;
   border-left: 1px solid #ced4da !important;
@@ -41,98 +287,26 @@
 }
 
 .ql-editor {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
   min-height: 100px !important;
 }
 
-/* ================================= */
-/* MODAL FIXES - PREVENT SCROLLING  */
-/* ================================= */
+/* Bootstrap removed (Phase 5). Tailwind + custom component styles in styles/components.scss replace Bootstrap. */
 
-/* Fix for .wrapper and .main-panel positioning context breaking modals
-   Both .wrapper and .main-panel have position:relative which creates
-   positioning contexts, causing position:fixed children (modals) to
-   position relative to these containers instead of the viewport.
-
-   IMPORTANT: This CSS fix alone won't work. Modals must be moved to
-   document.body using JavaScript to escape the positioning context.
-   The lightbox component now does this automatically. For Bootstrap modals,
-   they should already append to body by default, but if not, ensure they
-   have data-bs-container="body" attribute. */
-
-/* Ensure all modals use fixed positioning to stay centered in viewport */
-.modal {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  overflow-x: hidden;
-  overflow-y: auto;
-  z-index: 1050;
-}
-
-.modal-backdrop {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 1040;
-}
-
-/* On mobile, keep modals within the safe area between navbar (50px) and bottom nav (~70px) */
-@media (max-width: 991px) {
-  .modal {
-    padding-top: 50px !important;
-    padding-bottom: 100px !important;
-  }
-
-  .modal-content {
-    max-height: calc(100vh - 50px - 100px) !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  .modal-body {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    flex: 1 !important;
-    min-height: 0 !important;
-  }
-}
-
-/* Prevent scrolling when modals are open */
-body.modal-open {
-  overflow: hidden !important;
-}
-
-.modal-open .main-panel {
-  overflow: hidden !important;
-}
-
-.modal-open .content {
-  overflow: hidden !important;
-}
-
-/* Bootstrap 5.3.2 is already loaded in index.html - no need to import again */
-
-/* Light Bootstrap Dashboard Theme is loaded via angular.json styles array */
-
-/* ================================= */
-/* LOGIN STYLES FROM ORIGINAL PHP   */
-/* ================================= */
+/* =========================================== */
+/* LOGIN STYLES FROM ORIGINAL PHP              */
+/* =========================================== */
 
 /* BASIC */
 html {
-  font-size: 13px; /* Reduced from default 16px */
+  font-size: 14px;
 }
 
 body {
-  font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  font-size: 13px; /* Reduced from default 14px */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
   height: 100vh;
   margin: 0;
   padding: 0;
@@ -149,7 +323,8 @@ a {
   font-weight: 400;
 }
 
-h2 {
+/* Login tab headings — scoped to avoid conflicting with global h2 styles */
+.login-wrapper h2 {
   text-align: center;
   font-size: 16px;
   font-weight: 600;
@@ -205,45 +380,15 @@ app-login .wrapper {
 }
 
 /* TABS */
-h2.inactive {
+.login-wrapper h2.inactive {
   color: #cccccc;
 }
 
-h2.active {
+.login-wrapper h2.active {
   color: #0d0d0d;
   border-bottom: 2px solid #5fbae9;
 }
 
-/* FORM TYPOGRAPHY */
-input[type=text], input[type=password], input[type=email] {
-  background-color: #f6f6f6;
-  border: none;
-  color: #0d0d0d;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 10px 0px 0px 0px;
-  width: 100%;
-  border: 2px solid #f6f6f6;
-  -webkit-transition: all 0.5s ease-in-out;
-  -moz-transition: all 0.5s ease-in-out;
-  -ms-transition: all 0.5s ease-in-out;
-  -o-transition: all 0.5s ease-in-out;
-  transition: all 0.5s ease-in-out;
-  -webkit-border-radius: 5px 5px 5px 5px;
-  border-radius: 5px 5px 5px 5px;
-}
-
-input[type=text]:focus, input[type=password]:focus {
-  background-color: #fff;
-  border-bottom: 2px solid #5fbae9;
-}
-
-input[type=text]:placeholder, input[type=password]:placeholder  {
-  color: #cccccc;
-}
 
 /* For floating input labels */
 .material-textfield {
@@ -414,9 +559,9 @@ input.material:not(:focus)::placeholder {
 }
 
 
-/* ================================= */
-/* UNIFIED LOADING OVERLAY SYSTEM    */
-/* ================================= */
+/* =========================================== */
+/* UNIFIED LOADING OVERLAY SYSTEM              */
+/* =========================================== */
 
 /* Spinning dots for full-screen overlays */
 .loading-dots {
@@ -433,7 +578,7 @@ input.material:not(:focus)::placeholder {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--bs-primary, #007bff);
+  background: var(--brand-color, #3b82f6);
   animation: loading-dots 1.2s linear infinite;
 }
 
@@ -473,7 +618,7 @@ input.material:not(:focus)::placeholder {
   width: 16px;
   height: 16px;
   border: 2px solid #f3f3f3;
-  border-top: 2px solid var(--bs-primary, #007bff);
+  border-top: 2px solid var(--brand-color, #3b82f6);
   border-radius: 50%;
   animation: loading-spin 1s linear infinite;
   margin-right: 8px;
@@ -521,29 +666,29 @@ app-root {
   height: 100vh;
 }
 
-/* ================================= */
-/* GLOBAL FONT SIZE OVERRIDES       */
-/* ================================= */
+/* =========================================== */
+/* GLOBAL FONT SIZE OVERRIDES                  */
+/* =========================================== */
 
-/* Reduce default font sizes for dashboard components */
+/* Component font sizes */
 .table {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .btn {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .form-control {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .card {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .nav-link {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* Specific overrides for components that might have larger fonts */
@@ -553,98 +698,75 @@ app-root {
 
 /* Modern Heading Styles */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.025em;
-  color: #2d3748; /* Softer dark gray for headings */
+  line-height: 1.3;
+  margin-top: 0;
+  color: #111827;
 }
 
 h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  letter-spacing: -0.035em;
-}
-
-h2 {
-  font-size: 1.6rem;
+  font-size: 2.25rem;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
-h3 {
-  font-size: 1.4rem;
-  font-weight: 600;
+h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
   letter-spacing: -0.025em;
 }
 
-h4 {
-  font-size: 1.2rem;
-  font-weight: 600;
+h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
+h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* h5 is used for sub-section labels throughout the app */
 h5 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1f2937;
 }
 
 h6 {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
 }
 
-/* ================================= */
-/* GLOBAL PAGE HEADER STYLES         */
-/* ================================= */
-
-/* Global page header styling - matches event-header styling */
-.page-header {
-  h5 {
-    color: #333;
-    font-weight: 600;
-  }
+/* Card section headers — spacer between header and body */
+.tw-pt-card-pad {
+  padding-bottom: 1.5rem;
 }
 
-/* ================================= */
-/* MOBILE SIDEBAR RESPONSIVE STYLES */
-/* ================================= */
+/* =========================================== */
+/* GLOBAL PAGE HEADER STYLES                   */
+/* =========================================== */
 
-/* Main panel adjustment for mobile sidebar */
-@media (max-width: 991px) {
-  .main-panel {
-    transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
-  }
-
-  html.nav-open {
-    .main-panel {
-      transform: translateX(-260px);
-    }
-
-    body {
-      position: relative;
-      overflow-x: hidden;
-    }
-  }
+/* Global page header styling */
+.page-header h5 {
+  color: #1f2937;
 }
 
-/* Ensure sidebar is properly positioned on larger screens */
-@media (min-width: 992px) {
-  .sidebar {
-    transform: translateX(0px) !important;
-  }
-
-  .main-panel {
-    transform: none !important;
-  }
-
-  #bodyClick {
-    display: none !important;
-  }
+/* Override legacy light-bootstrap-dashboard sidebar nav uppercase */
+.sidebar .nav p {
+  text-transform: none !important;
 }
 
-/* ================================= */
-/* MODERN TABLE STYLES               */
-/* ================================= */
+/* =========================================== */
+/* MODERN TABLE STYLES                         */
+/* =========================================== */
 
 /* Global table container styling */
 .table-responsive {
@@ -695,11 +817,6 @@ div .table thead th {
   font-size: 14px !important;
   text-transform: none !important;
   letter-spacing: 0.2px !important;
-}
-
-/* Override legacy light-bootstrap-dashboard sidebar nav uppercase */
-.sidebar .nav p {
-  text-transform: none !important;
 }
 
 /* Body styling for all tables */
@@ -776,7 +893,7 @@ div .table tbody {
   }
 
   &.badge-primary {
-    background-color: #007bff;
+    background-color: var(--brand-color, #3b82f6);
   }
 
   &.badge-info {
@@ -1185,13 +1302,13 @@ div .table tbody {
   }
 }
 
-/* ================================= */
-/* LINK DISPLAY UTILITIES           */
-/* ================================= */
+/* =========================================== */
+/* LINK DISPLAY UTILITIES                      */
+/* =========================================== */
 
 /* Accent left border for prominent link/URL sections */
 .link-accent {
-  border-left: 3px solid #007bff;
+  border-left: 3px solid var(--brand-color, #3b82f6);
   padding-left: 12px;
 }
 
@@ -1226,14 +1343,15 @@ div .table tbody {
   }
 }
 
-/* ================================= */
-/* FLOATING ACTIONS FIX             */
-/* ================================= */
+/* =========================================== */
+/* FLOATING ACTIONS FIX                        */
+/* =========================================== */
 /* Note: Floating actions use sticky positioning in component styles
    to work within the wrapper container, similar to artist profile. */
-/* ================================= */
-/* MOBILE BOTTOM NAV SPACING        */
-/* ================================= */
+
+/* =========================================== */
+/* MOBILE BOTTOM NAV SPACING                   */
+/* =========================================== */
 /* Add bottom padding on mobile to prevent content from being hidden
    behind the floating bottom workspace navigation bar */
 @media (max-width: 991px) {
@@ -1251,9 +1369,9 @@ div .table tbody {
   }
 }
 
-/* ================================= */
-/* GLOBAL MOBILE STICKY BOTTOM FIX  */
-/* ================================= */
+/* =========================================== */
+/* GLOBAL MOBILE STICKY BOTTOM FIX             */
+/* =========================================== */
 /* Adjust any sticky/fixed bottom elements for mobile workspace bar */
 @media (max-width: 991px) {
   .floating-actions,

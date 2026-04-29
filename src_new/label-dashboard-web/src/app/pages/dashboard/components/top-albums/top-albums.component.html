@@ -1,14 +1,14 @@
-<div class="card">
-  <div class="card-header">
-    <h5>Top earning releases (all-time)</h5>
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-h-full tw-flex tw-flex-col">
+  <div class="tw-p-6 tw-border-b tw-border-gray-100">
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Top Earning Releases (all-time)</h3>
   </div>
-  <div class="card-body chart-body">
-    <div *ngIf="releases.length === 0" class="text-center text-muted py-3">
-      No earnings data found
-    </div>
+
+  <div class="tw-p-6 tw-flex-1 chart-body">
+    <p *ngIf="releases.length === 0" class="tw-py-3 tw-text-center tw-text-muted tw-mb-0">No earnings data found</p>
     <canvas #earningsChart *ngIf="releases.length > 0"></canvas>
   </div>
-  <div class="card-footer text-right">
+
+  <div class="tw-px-6 tw-py-4 tw-border-t tw-border-gray-100 tw-text-right">
     <a (click)="goToFinancial()" class="btn-ghost" style="cursor: pointer;">
       Go to release earnings <i class="far fa-arrow-alt-circle-right"></i>
     </a>

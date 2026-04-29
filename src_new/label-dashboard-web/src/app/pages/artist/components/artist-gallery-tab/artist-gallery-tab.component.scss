@@ -114,8 +114,8 @@
     
     .photo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
       margin-top: 20px;
 
       &.reorder-mode {
@@ -356,11 +356,20 @@
 }
 
 // Responsive design
+@media (max-width: 992px) {
+  .artist-gallery-tab {
+    .gallery-section .photo-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .artist-gallery-tab {
-    .photo-grid {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
+    .gallery-section .photo-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
     }
     
     .photo-container .photo-image {
@@ -379,8 +388,9 @@
 
 @media (max-width: 480px) {
   .artist-gallery-tab {
-    .photo-grid {
-      grid-template-columns: 1fr;
+    .gallery-section .photo-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
     }
   }
 }

@@ -21,17 +21,17 @@
     
     <!-- Bulk operations template -->
     <ng-template #bulkOperationsContent let-selectedOrders let-disabled="disabled">
-      <div class="bulk-operations d-flex flex-wrap gap-2">
-        <button type="button" class="btn btn-sm btn-secondary" (click)="onBulkSendTickets(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkSendTickets(selectedOrders)" title="Send tickets for selected orders (only Payment Confirmed)">
-          <i class="fa fa-paper-plane me-1"></i>
+      <div class="bulk-operations tw-flex tw-flex-wrap tw-gap-2">
+        <button type="button" class="btn-sm btn-secondary" (click)="onBulkSendTickets(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkSendTickets(selectedOrders)" title="Send tickets for selected orders (only Payment Confirmed)">
+          <i class="fa fa-paper-plane tw-mr-1"></i>
           Send {{ getBulkSendCount(selectedOrders) }} Ticket(s)
         </button>
-        <button type="button" class="btn btn-sm btn-primary" (click)="onBulkMarkAsPaid(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkMarkAsPaid(selectedOrders)" title="Mark selected orders as paid (only New)">
-          <i class="fa fa-check me-1"></i>
+        <button type="button" class="btn-sm btn-primary" (click)="onBulkMarkAsPaid(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkMarkAsPaid(selectedOrders)" title="Mark selected orders as paid (only New)">
+          <i class="fa fa-check tw-mr-1"></i>
           Mark {{ getBulkMarkPaidCount(selectedOrders) }} as Paid
         </button>
-        <button type="button" class="btn btn-sm btn-danger" (click)="onBulkCancel(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkCancel(selectedOrders)" title="Cancel selected orders (only New)">
-          <i class="fa fa-times me-1"></i>
+        <button type="button" class="btn-sm btn-danger" (click)="onBulkCancel(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkCancel(selectedOrders)" title="Cancel selected orders (only New)">
+          <i class="fa fa-times tw-mr-1"></i>
           Cancel {{ getBulkCancelCount(selectedOrders) }}
         </button>
       </div>
@@ -40,12 +40,12 @@
   </app-paginated-table>
 
   <div class="sticky-bottom" *ngIf="orders.length > 0">
-    <div class="card-footer bg-light border-top shadow-sm d-flex justify-content-center align-items-center">
-      <div class="d-flex flex-wrap justify-content-center align-items-center gap-4">
+    <div class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle tw-bg-gray-50 border-top shadow-sm tw-flex tw-justify-center tw-items-center">
+      <div class="tw-flex tw-flex-wrap tw-justify-center tw-items-center tw-gap-4">
         <strong class="text-primary fs-5">Totals</strong>
         
-        <span class="summary-stat text-warning" title="Number of pending tickets">
-          <i class="far fa-dot-circle me-2"></i>
+        <span class="summary-stat tw-text-warning" title="Number of pending tickets">
+          <i class="far fa-dot-circle tw-mr-2"></i>
           {{ getTotalPendingOrders() }} pending tickets
         </span>
       </div>
@@ -53,8 +53,8 @@
   </div>
 
   <!-- Event Past Message -->
-  <div class="alert alert-warning mt-4" *ngIf="isAdmin && isEventPast()">
-    <i class="far fa-clock me-2"></i>
+  <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mt-4" *ngIf="isAdmin && isEventPast()">
+    <i class="far fa-clock tw-mr-2"></i>
     <strong>Event Past:</strong> This event has already occurred. Custom ticket creation is disabled.
   </div>
 </div>

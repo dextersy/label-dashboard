@@ -1,28 +1,28 @@
-<div class="card">
-  <div class="card-header">
-    <h5>Balance Summary</h5>
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-h-full tw-flex tw-flex-col">
+  <div class="tw-p-6 tw-border-b tw-border-gray-100">
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Balance Summary</h3>
   </div>
-  <div class="card-body">
-    <div class="row row-cols-2 row-cols-md-1 g-2 g-md-0 artist-balance-grid">
-      <div class="col" *ngFor="let artist of artists">
-        <div class="artist-balance-item">
-          <div class="artist-info">
-            <img [src]="getProfilePhotoUrl(artist.profile_photo)"
-                 [alt]="artist.name + ' photo'"
-                 class="artist-photo">
-            <span class="artist-name">{{ artist.name }}</span>
-          </div>
-          <div class="balance-amount" [ngClass]="getBalanceClass(artist.balance)">
-            {{ formatCurrency(artist.balance) }}
-          </div>
+
+  <div class="tw-p-6 tw-flex-1">
+    <p *ngIf="artists.length === 0" class="tw-py-2 tw-text-center tw-text-muted tw-mb-0">No artists found</p>
+    <div *ngIf="artists.length > 0" class="tw-divide-y tw-divide-gray-100">
+      <div *ngFor="let artist of artists"
+           class="tw-flex tw-items-center tw-justify-between tw-py-2.5">
+        <div class="tw-flex tw-items-center tw-gap-2.5 tw-min-w-0">
+          <img [src]="getProfilePhotoUrl(artist.profile_photo)"
+               [alt]="artist.name + ' photo'"
+               class="tw-w-9 tw-h-9 tw-rounded-full tw-object-cover tw-shrink-0">
+          <span class="tw-text-sm tw-truncate">{{ artist.name }}</span>
         </div>
-      </div>
-      <div class="col-12" *ngIf="artists.length === 0">
-        <p class="text-center text-muted py-2">No artists found</p>
+        <span class="tw-font-bold tw-text-sm tw-whitespace-nowrap tw-ml-2"
+              [ngClass]="getBalanceClass(artist.balance)">
+          {{ formatCurrency(artist.balance) }}
+        </span>
       </div>
     </div>
   </div>
-  <div class="card-footer text-right">
+
+  <div class="tw-px-6 tw-py-4 tw-border-t tw-border-gray-100 tw-text-right">
     <a (click)="goToFinancial()" class="btn-ghost" style="cursor: pointer;">
       Go to financial overview <i class="far fa-arrow-alt-circle-right"></i>
     </a>

@@ -1,31 +1,23 @@
 .breadcrumb {
-  background: transparent;
   padding: 0 0 0 0.5rem;
-  margin: 0 0 1rem 0;
+  background: transparent;
   font-size: 12px;
-  
+
   .breadcrumb-item {
     font-weight: 300;
-    
-    + .breadcrumb-item::before {
-      content: "›";
-      color: #6c757d;
-      font-weight: bold;
-      margin: 0 8px;
-    }
-    
+
     &.active {
       color: #495057;
     }
   }
   
   .breadcrumb-link {
-    color: #007bff;
+    color: var(--brand-color, #3b82f6);
     text-decoration: none;
     transition: color 0.2s ease;
     
     &:hover {
-      color: #0056b3;
+      color: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
       text-decoration: underline;
     }
     

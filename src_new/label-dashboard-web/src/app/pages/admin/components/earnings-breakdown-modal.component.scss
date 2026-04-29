@@ -59,7 +59,7 @@ hr {
 }
 
 .text-primary {
-  color: #007bff !important;
+  color: var(--brand-color, #3b82f6) !important;
 }
 
 .text-muted {

@@ -3,21 +3,21 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-toggle-on me-2"></i>Toggle Features — {{ sublabelName }}
+          <i class="fas fa-toggle-on tw-mr-2"></i>Toggle Features — {{ sublabelName }}
         </h5>
         <button type="button" class="btn-close" (click)="onClose()" [disabled]="loading || saving"></button>
       </div>
 
       <div class="modal-body">
         <!-- Loading state -->
-        <div class="text-center py-5" *ngIf="loading">
-          <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
-          <p class="text-muted mt-2 mb-0">Loading feature settings...</p>
+        <div class="tw-py-5 tw-text-center" *ngIf="loading">
+          <i class="fas fa-spinner fa-spin fa-2x tw-text-muted"></i>
+          <p class="tw-mt-2 tw-mb-0 tw-text-muted">Loading feature settings...</p>
         </div>
 
         <ng-container *ngIf="!loading">
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
+          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
+            <i class="fas fa-info-circle tw-mr-2"></i>
             Control which workspaces and features are available on this sublabel's domain. Click a card to toggle a feature. Changes take effect after saving.
           </div>
 
@@ -86,15 +86,15 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="loading || saving">
+        <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="loading || saving">
           Cancel
         </button>
-        <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="loading || saving">
+        <button type="button" class="btn-primary" (click)="onSave()" [disabled]="loading || saving">
           <span *ngIf="saving">
-            <i class="fas fa-spinner fa-spin me-2"></i>Saving...
+            <i class="fas fa-spinner fa-spin tw-mr-2"></i>Saving...
           </span>
           <span *ngIf="!saving">
-            <i class="fas fa-save me-2"></i>Save Changes
+            <i class="fas fa-save tw-mr-2"></i>Save Changes
           </span>
         </button>
       </div>

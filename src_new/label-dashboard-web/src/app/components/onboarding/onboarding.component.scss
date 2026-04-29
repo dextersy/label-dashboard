@@ -20,9 +20,9 @@
 
 .onboarding-highlight {
   position: absolute;
-  border: 3px solid #007bff;
+  border: 3px solid var(--brand-color, #3b82f6);
   border-radius: 8px;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 20px color-mix(in srgb, var(--brand-color, #3b82f6) 60%, transparent), 0 0 40px color-mix(in srgb, var(--brand-color, #3b82f6) 30%, transparent);
   pointer-events: none;
   animation: pulse 2s ease-in-out infinite;
   transition: opacity 0.2s ease, top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
@@ -133,7 +133,7 @@
           transition: all 0.2s ease;
 
           &.active {
-            background: #007bff;
+            background: var(--brand-color, #3b82f6);
             width: 24px;
             border-radius: 4px;
           }
@@ -162,15 +162,15 @@
         }
 
         &.btn-primary {
-          background: #007bff;
-          border-color: #007bff;
+          background: var(--brand-color, #3b82f6);
+          border-color: var(--brand-color, #3b82f6);
           color: white;
 
           &:hover {
-            background: #0056b3;
-            border-color: #0056b3;
+            background: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
+            border-color: color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-color, #3b82f6) 30%, transparent);
           }
         }
 
@@ -231,9 +231,9 @@
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 123, 255, 0.6), 0 0 40px rgba(0, 123, 255, 0);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 20px color-mix(in srgb, var(--brand-color, #3b82f6) 60%, transparent), 0 0 40px color-mix(in srgb, var(--brand-color, #3b82f6) 0%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 123, 255, 0.8), 0 0 60px rgba(0, 123, 255, 0.5);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4), 0 0 30px color-mix(in srgb, var(--brand-color, #3b82f6) 80%, transparent), 0 0 60px color-mix(in srgb, var(--brand-color, #3b82f6) 50%, transparent);
   }
 }

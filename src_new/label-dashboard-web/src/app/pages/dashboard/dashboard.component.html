@@ -1,133 +1,132 @@
 <app-breadcrumb></app-breadcrumb>
-<div class="container-fluid">
+<div class="tw-px-4 tw-py-6">
 
-  <!-- Loading state -->
-  <div *ngIf="loading" class="text-center py-5">
-    <div class="loading-dots">
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
+  <!-- Loading -->
+  <div *ngIf="loading" class="tw-py-12 tw-text-center">
+    <div class="loading-dots"><div></div><div></div><div></div></div>
   </div>
 
-  <!-- Error state -->
-  <div *ngIf="error" class="alert alert-danger" role="alert">
-    <i class="fa fa-exclamation-triangle"></i> {{ error }}
-    <button class="btn btn-sm btn-danger ml-2" (click)="loadDashboardData()">
-      <i class="fas fa-sync"></i> Retry
+  <!-- Error -->
+  <div *ngIf="error" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-mb-6 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-text-sm" role="alert">
+    <span><i class="fa fa-exclamation-triangle tw-mr-2"></i>{{ error }}</span>
+    <button class="btn-sm btn-danger" (click)="loadDashboardData()">
+      <i class="fas fa-sync tw-mr-1"></i> Retry
     </button>
   </div>
 
-  <!-- Dashboard content -->
   <div *ngIf="!loading && !error && dashboardData">
-    <!-- Welcome Header - Minimalist -->
-    <div class="welcome-section mb-4">
-      <h1 class="welcome-greeting">
-        Good {{ getTimeOfDay() }}, <span class="welcome-name">{{ userFirstName }}! ✨</span>
-      </h1>
-      <p class="welcome-subtitle">This is your <strong>Music</strong> dashboard.</p>
+
+    <!-- ── Section 1: Welcome + Quick Stats ───────────────── -->
+    <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-end sm:tw-justify-between tw-gap-6 tw-mb-8">
+
+      <!-- Greeting -->
+      <div>
+        <h3 class="tw-mb-2">Good {{ getTimeOfDay() }}, {{ userFirstName }}!</h3>
+        <p class="tw-mb-0 tw-text-muted">This is your Music dashboard.</p>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="tw-flex tw-items-stretch tw-divide-x tw-divide-gray-100 tw-bg-white tw-border tw-border-gray-100 tw-rounded-xl tw-shrink-0">
+
+        <button type="button"
+                class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-6 tw-py-4 tw-gap-1 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-xl tw-border-0 tw-bg-transparent tw-cursor-pointer"
+                (click)="goToArtistSelection()">
+          <span class="tw-text-2xl tw-font-bold tw-text-gray-900 tw-leading-none">{{ dashboardData.stats?.totalArtists || 0 }}</span>
+          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium">Artists</span>
+        </button>
+
+        <a routerLink="/music/releases"
+           class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-6 tw-py-4 tw-gap-1 hover:tw-bg-gray-50 tw-transition-colors tw-no-underline">
+          <span class="tw-text-2xl tw-font-bold tw-text-gray-900 tw-leading-none">{{ dashboardData.stats?.totalReleases || 0 }}</span>
+          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium">Releases</span>
+        </a>
+
+        <button type="button"
+                class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-4 tw-gap-1.5 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-xl tw-border-0 tw-bg-transparent tw-min-w-[80px]"
+                [class.tw-cursor-pointer]="dashboardData.stats?.latestRelease"
+                [class.tw-cursor-default]="!dashboardData.stats?.latestRelease"
+                (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
+          <img *ngIf="dashboardData.stats?.latestRelease"
+               [src]="getCoverArtUrl(dashboardData.stats?.latestRelease?.cover_art)"
+               [alt]="dashboardData.stats?.latestRelease?.title"
+               class="tw-w-10 tw-h-10 tw-rounded-md tw-object-cover tw-shrink-0">
+          <i *ngIf="!dashboardData.stats?.latestRelease" class="fas fa-music tw-text-gray-200 tw-text-lg"></i>
+          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium">Latest</span>
+        </button>
+
+      </div>
     </div>
 
-    <!-- Quick Menu + Stats Row -->
-    <div class="row mb-4">
-      <!-- Quick Menu Cards -->
-      <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
-        <h6 class="section-label section-label-lg">What do you want to do today?</h6>
-        <div class="row">
-          <div class="col-12 col-sm-6 mb-3 mb-sm-0">
-            <a routerLink="/music/releases/new" class="quick-menu-card quick-menu-card-primary">
-              <div class="quick-menu-icon-wrap">
-                <i class="fas fa-upload"></i>
-              </div>
-              <div class="quick-menu-footer">
-                <div>
-                  <div class="quick-menu-label">Submit a Release</div>
-                  <div class="quick-menu-sublabel">Distribute new music across all platforms</div>
-                </div>
-                <span class="quick-menu-arrow">↗</span>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-sm-3">
-            <a routerLink="/artist/profile" class="quick-menu-card">
-              <div class="quick-menu-icon-wrap">
-                <i class="fas fa-user-edit"></i>
-              </div>
-              <div class="quick-menu-footer">
-                <div>
-                  <div class="quick-menu-label">Update Profile</div>
-                  <div class="quick-menu-sublabel">Edit bio, links &amp; press photos</div>
-                </div>
-                <span class="quick-menu-arrow">↗</span>
-              </div>
-            </a>
-          </div>
-          <div class="col-6 col-sm-3">
-            <a routerLink="/financial/summary" class="quick-menu-card">
-              <div class="quick-menu-icon-wrap">
-                <i class="fas fa-chart-pie"></i>
-              </div>
-              <div class="quick-menu-footer">
-                <div>
-                  <div class="quick-menu-label">View Financials</div>
-                  <div class="quick-menu-sublabel">Revenue, royalties &amp; statements</div>
-                </div>
-                <span class="quick-menu-arrow">↗</span>
-              </div>
-            </a>
-          </div>
+    <!-- ── Section 2: Quick Actions ───────────────────────── -->
+    <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-4 tw-mb-8">
+
+      <!-- Primary action -->
+      <a routerLink="/music/releases/new"
+         class="tw-col-span-2 sm:tw-col-span-2 tw-relative tw-overflow-hidden tw-flex tw-flex-col tw-justify-between tw-bg-[var(--brand-color,#667eea)] tw-rounded-2xl tw-p-6 tw-no-underline tw-min-h-[160px] hover:tw-opacity-95 tw-transition-opacity">
+        <!-- decorative blobs -->
+        <div class="tw-absolute tw-w-40 tw-h-40 tw-rounded-full tw-bg-white/[0.06] tw-top-[-3rem] tw-right-[-2rem] tw-pointer-events-none"></div>
+        <div class="tw-absolute tw-w-24 tw-h-24 tw-rounded-full tw-bg-white/[0.04] tw-bottom-4 tw-right-4 tw-pointer-events-none"></div>
+        <!-- icon -->
+        <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-black/[0.15] tw-flex tw-items-center tw-justify-center tw-shrink-0">
+          <i class="fas fa-upload tw-text-white tw-text-lg"></i>
         </div>
-      </div>
-
-      <!-- Compact Stats Card -->
-      <div class="col-lg-4 col-md-12 d-flex flex-column">
-        <h6 class="section-label">Quick Stats</h6>
-        <div class="stats-compact-card">
-          <div class="stats-compact-item stats-compact-item-clickable" (click)="goToArtistSelection()">
-            <i class="fas fa-users"></i>
-            <span class="stats-compact-value">{{ (dashboardData.stats?.totalArtists) || 0 }}</span>
-            <span class="stats-compact-label">Artists</span>
+        <!-- label -->
+        <div class="tw-flex tw-items-end tw-justify-between tw-gap-2">
+          <div>
+            <div class="tw-text-xl tw-font-bold tw-text-white tw-leading-tight">Submit a Release</div>
+            <div class="tw-text-sm tw-text-white/70 tw-mt-0.5">Distribute new music across all platforms</div>
           </div>
-          <div class="stats-compact-item stats-compact-item-clickable" routerLink="/music/releases">
-            <i class="fas fa-compact-disc"></i>
-            <span class="stats-compact-value">{{ (dashboardData.stats?.totalReleases) || 0 }}</span>
-            <span class="stats-compact-label">Releases</span>
-          </div>
-          <div class="stats-compact-item"
-               [class.stats-compact-item-clickable]="dashboardData.stats?.latestRelease"
-               (click)="dashboardData.stats?.latestRelease && goToLatestRelease()">
-            <i class="fas fa-music"></i>
-            <img class="stats-compact-cover"
-                 [src]="getCoverArtUrl(dashboardData.stats?.latestRelease?.cover_art)"
-                 [alt]="dashboardData.stats?.latestRelease?.title || 'Latest release'">
-            <span class="stats-compact-value stats-compact-value-text">
-              {{ dashboardData.stats?.latestRelease?.title || '—' }}
-            </span>
-            <span class="stats-compact-label">Latest</span>
-          </div>
+          <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-black/20 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-text-white tw-text-sm">↗</div>
         </div>
-      </div>
+      </a>
+
+      <!-- Secondary action -->
+      <a routerLink="/artist/profile"
+         class="tw-flex tw-flex-col tw-justify-between tw-bg-white tw-border tw-border-gray-200 tw-rounded-2xl tw-p-5 tw-no-underline tw-min-h-[160px] hover:tw-border-gray-300 tw-transition-colors">
+        <div class="tw-w-11 tw-h-11 tw-rounded-xl tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+          <i class="fas fa-user-edit tw-text-gray-600 tw-text-lg"></i>
+        </div>
+        <div class="tw-flex tw-items-end tw-justify-between tw-gap-1">
+          <div>
+            <div class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-tight">Update Profile</div>
+            <div class="tw-text-xs tw-text-gray-400 tw-mt-0.5">Bio, links &amp; press photos</div>
+          </div>
+          <div class="tw-w-7 tw-h-7 tw-rounded-full tw-bg-[var(--brand-color,#667eea)] tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-text-white tw-text-xs">↗</div>
+        </div>
+      </a>
+
+      <!-- Secondary action -->
+      <a routerLink="/financial/summary"
+         class="tw-flex tw-flex-col tw-justify-between tw-bg-white tw-border tw-border-gray-200 tw-rounded-2xl tw-p-5 tw-no-underline tw-min-h-[160px] hover:tw-border-gray-300 tw-transition-colors">
+        <div class="tw-w-11 tw-h-11 tw-rounded-xl tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-shrink-0">
+          <i class="fas fa-chart-pie tw-text-gray-600 tw-text-lg"></i>
+        </div>
+        <div class="tw-flex tw-items-end tw-justify-between tw-gap-1">
+          <div>
+            <div class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-tight">View Financials</div>
+            <div class="tw-text-xs tw-text-gray-400 tw-mt-0.5">Revenue, royalties &amp; statements</div>
+          </div>
+          <div class="tw-w-7 tw-h-7 tw-rounded-full tw-bg-[var(--brand-color,#667eea)] tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-text-white tw-text-xs">↗</div>
+        </div>
+      </a>
+
     </div>
 
-    <!-- Dashboard widgets -->
-    <!-- Row 1: Latest releases + Release Pipeline -->
-    <div class="row mb-4">
-      <div class="col-lg-6 mb-4 mb-lg-0">
-        <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
-      </div>
-      <div class="col-lg-6">
-        <app-release-pipeline [stages]="dashboardData.releasePipeline || []"></app-release-pipeline>
-      </div>
+    <!-- ── Section 3: Latest Releases + Pipeline ──────────── -->
+    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-6 tw-mb-6">
+      <app-latest-albums [releases]="dashboardData.latestReleases"></app-latest-albums>
+      <app-release-pipeline [stages]="dashboardData.releasePipeline || []"></app-release-pipeline>
     </div>
 
-    <!-- Row 2: Top earning releases + Balance summary -->
-    <div class="row">
-      <div class="col-lg-8 mb-4 mb-lg-0">
+    <!-- ── Section 4: Top Earnings + Balance ─────────────── -->
+    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-6 tw-mb-6">
+      <div class="lg:tw-col-span-8">
         <app-top-albums [releases]="dashboardData.topEarningReleases"></app-top-albums>
       </div>
-      <div class="col-lg-4">
+      <div class="lg:tw-col-span-4">
         <app-balance-table [artists]="dashboardData.balanceSummary"></app-balance-table>
       </div>
     </div>
+
   </div>
 </div>

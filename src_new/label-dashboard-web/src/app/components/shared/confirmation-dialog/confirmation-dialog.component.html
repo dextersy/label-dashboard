@@ -19,7 +19,7 @@
         'bg-info text-white': data?.type === 'info'
       }">
         <h5 class="modal-title" id="confirmation-dialog-title">
-          <i class="fas me-2" [ngClass]="{
+          <i class="fas tw-mr-2" [ngClass]="{
             'fa-exclamation-triangle': data?.type === 'danger' || data?.type === 'warning',
             'fa-info-circle': data?.type === 'info'
           }"></i>
@@ -33,14 +33,14 @@
       </div>
       <div class="modal-footer">
         <button type="button"
-                class="btn"
+                
                 [ngClass]="data?.primaryAction === 'cancel' ? 'btn-primary' : 'btn-secondary'"
                 (click)="onCancel()">
           {{ data?.cancelText || 'No' }}
         </button>
         <button #confirmButton
                 type="button"
-                class="btn"
+                
                 [ngClass]="data?.primaryAction === 'cancel'
                   ? 'btn-secondary'
                   : {

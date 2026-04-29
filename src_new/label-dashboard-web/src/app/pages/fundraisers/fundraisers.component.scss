@@ -43,7 +43,7 @@
   div {
     width: 12px;
     height: 12px;
-    background-color: #007bff;
+    background-color: var(--brand-color, #3b82f6);
     border-radius: 50%;
     animation: loading-dot 1.4s infinite ease-in-out both;
 

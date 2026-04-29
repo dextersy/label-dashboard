@@ -1,24 +1,6 @@
-.card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
+:host { display: block; }
 
-.card-header {
-  background: transparent;
-  border-bottom: 1px solid #eee;
-  padding: 16px 20px;
-
-  h5 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-  }
-}
-
-.card-body {
-  padding: 20px;
-}
-
-.chart-container {
-  min-height: 300px;
+canvas {
+  width: 100% !important;
+  height: 100% !important;
 }

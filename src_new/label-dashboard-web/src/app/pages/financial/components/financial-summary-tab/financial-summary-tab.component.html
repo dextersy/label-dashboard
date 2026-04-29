@@ -1,18 +1,29 @@
-<div class="row align-items-center" *ngIf="summary">
-  <div class="col-md-4">
-    <div class="current-balance-section text-center p-4">
+<!-- Page Header -->
+<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+    <h3 class="tw-mb-2">
+      <i class="fas fa-tachometer-alt tw-mr-2"></i>
+      Summary
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">An overview of the current balance, latest earnings, and royalties.</p>
+  </div>
+</div>
+
+<div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="summary">
+  <div class="md:tw-col-span-4">
+    <div class="current-balance-section tw-p-4 tw-text-center">
       <h2 class="balance-title">Current Balance</h2>
       <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
       <p class="balance-subtitle" *ngIf="!isAdmin">This is your total earned royalties less payments and advances made to you. Once this reaches your set payout point, this will be transferred to you on the 15th of the month.</p>
-      <button class="btn btn-primary pay-now-btn" 
+      <button class="btn-primary pay-now-btn" 
               *ngIf="isAdmin"
               (click)="onPayNow()"
               [disabled]="summary.currentBalance <= 0">
-        <i class="fas fa-credit-card me-2"></i>Pay Now
+        <i class="fas fa-credit-card tw-mr-2"></i>Pay Now
       </button>
     </div>
   </div>
-  <div class="col-md-8">
+  <div class="md:tw-col-span-8">
     <div class="financial-summary-card">
       <div class="financial-summary-item" (click)="viewEarningsDetails.emit()">
         <span class="financial-item-label">Total Earnings</span>
@@ -33,23 +44,23 @@
   </div>
 </div>
 
-<div class="row mt-4">
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header">
-        <h4>Latest Earnings</h4>
+<div class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-6">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Earnings</h3>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
       </div>
     </div>
   </div>
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header">
-        <h4>Latest Royalties</h4>
+  <div class="md:tw-col-span-6">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Royalties</h3>
       </div>
-      <div class="card-body">
+      <div class="tw-px-card-pad tw-pb-card-pad">
         <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>
       </div>
     </div>

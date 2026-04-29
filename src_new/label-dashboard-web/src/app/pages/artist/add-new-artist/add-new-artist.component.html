@@ -2,49 +2,47 @@
   <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
 
-    
     <!-- Alert Messages -->
-    <div *ngIf="alertMessage" class="alert" [class.alert-success]="alertMessage.type === 'success'" [class.alert-danger]="alertMessage.type === 'error'" role="alert">
+    <div *ngIf="alertMessage"
+         class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal"
+         [class.alert-success]="alertMessage.type === 'success'"
+         [class.alert-danger]="alertMessage.type === 'error'"
+         role="alert">
       {{ alertMessage.message }}
       <button type="button" class="btn-close" aria-label="Close" (click)="alertMessage = null"></button>
     </div>
 
-    <div class="add-new-artist">
-  <form id="newArtistForm" (ngSubmit)="createArtist()" #newArtistForm="ngForm">
-    
-    <!-- Top Row: Basic Information and Profile Photo side by side -->
-    <div class="row">
-      <!-- Basic Information Section -->
-      <div class="col-lg-8">
-        <div class="card">
-          <div class="card-header">
-            <h5>Basic Information</h5>
-          </div>
-          <div class="card-body">
-            <div class="form-group">
-              <label for="artistName">Artist Name <span class="text-danger">*</span></label>
-              <input type="text" 
-                     class="form-control" 
+    <form id="newArtistForm" (ngSubmit)="createArtist()" #newArtistForm="ngForm">
+
+      <!-- Top row: Basic Info + Photo -->
+      <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-6 tw-mb-6">
+
+        <!-- Basic Information -->
+        <div class="lg:tw-col-span-2 tw-bg-white tw-rounded-card tw-shadow-card tw-p-6">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Basic Information</h3>
+          <div class="tw-space-y-4">
+            <div>
+              <label for="artistName" class="tw-label">Artist Name <span class="tw-text-danger">*</span></label>
+              <input type="text"
+                     class="tw-input"
                      id="artistName"
                      name="artistName"
                      [(ngModel)]="newArtist.name"
                      required
                      placeholder="Enter artist name">
             </div>
-            
-            <div class="form-group">
-              <label for="bandMembers">Band Members</label>
-              <textarea class="form-control" 
+            <div>
+              <label for="bandMembers" class="tw-label">Band Members</label>
+              <textarea class="tw-input"
                         id="bandMembers"
                         name="bandMembers"
                         rows="3"
                         [(ngModel)]="newArtist.band_members"
                         placeholder="Enter band members, one per line or separated by commas"></textarea>
             </div>
-            
-            <div class="form-group">
-              <label for="bio">Biography</label>
-              <textarea class="form-control" 
+            <div>
+              <label for="bio" class="tw-label">Biography</label>
+              <textarea class="tw-input"
                         id="bio"
                         name="bio"
                         rows="4"
@@ -53,147 +51,120 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Profile Photo Section -->
-      <div class="col-lg-4">
-        <div class="card">
-          <div class="card-header">
-            <h5>Profile Photo</h5>
-          </div>
-          <div class="card-body">
-            <div class="current-photo">
-              <img [src]="previewImageUrl || 'assets/img/placeholder.jpg'" 
-                   class="img-thumbnail current-photo-img" 
-                   alt="Artist photo preview">
-            </div>
-            
-            <div class="form-group">
-              <label for="profilePhoto" class="file-upload-label">Upload Photo</label>
-              <input type="file" 
-                     class="form-control-file" 
+        <!-- Profile Photo -->
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-6">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Profile Photo</h3>
+          <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
+            <img [src]="previewImageUrl || 'assets/img/placeholder.jpg'"
+                 alt="Artist photo preview"
+                 class="tw-w-32 tw-h-32 tw-rounded-full tw-object-cover tw-border-2 tw-border-gray-100">
+            <div class="tw-w-full tw-space-y-1">
+              <label for="profilePhoto" class="tw-label">Upload Photo</label>
+              <input type="file"
+                     class="tw-block tw-w-full tw-text-sm tw-text-gray-500
+                            file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
+                            file:tw-rounded file:tw-border-0
+                            file:tw-text-sm file:tw-font-medium
+                            file:tw-bg-gray-100 file:tw-text-gray-700
+                            hover:file:tw-bg-gray-200 tw-cursor-pointer"
                      id="profilePhoto"
                      name="profilePhoto"
                      (change)="onFileSelected($event)"
                      accept="image/jpeg,image/jpg,image/png,image/gif">
-              <small class="form-text">
-                Accepted formats: JPEG, PNG, GIF. Maximum size: 5MB.
-              </small>
+              <p class="tw-text-xs tw-text-muted">JPEG, PNG or GIF · max 5 MB</p>
             </div>
-            
-            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress mt-2">
-              <div class="progress-bar" 
-                   role="progressbar" 
-                   [style.width.%]="uploadProgress">
-                {{ uploadProgress }}%
+            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="tw-w-full">
+              <div class="tw-w-full tw-bg-gray-100 tw-rounded-full tw-h-1.5">
+                <div class="tw-bg-blue-500 tw-h-1.5 tw-rounded-full tw-transition-all"
+                     [style.width.%]="uploadProgress"></div>
               </div>
+              <p class="tw-mt-1 tw-text-xs tw-text-muted tw-text-right">{{ uploadProgress }}%</p>
             </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Social Media & Links -->
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-6 tw-mb-6">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Social Media & Links</h3>
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+          <div>
+            <label for="website" class="tw-label">Website</label>
+            <input type="url"
+                   class="tw-input"
+                   id="website"
+                   name="website"
+                   [(ngModel)]="newArtist.website_page_url"
+                   placeholder="https://www.example.com">
+          </div>
+          <div>
+            <label for="facebook" class="tw-label">Facebook</label>
+            <input type="text"
+                   class="tw-input"
+                   id="facebook"
+                   name="facebook"
+                   [(ngModel)]="newArtist.facebook_handle"
+                   placeholder="Facebook username">
+          </div>
+          <div>
+            <label for="instagram" class="tw-label">Instagram</label>
+            <input type="text"
+                   class="tw-input"
+                   id="instagram"
+                   name="instagram"
+                   [(ngModel)]="newArtist.instagram_handle"
+                   placeholder="Instagram username">
+          </div>
+          <div>
+            <label for="twitter" class="tw-label">Twitter / X</label>
+            <input type="text"
+                   class="tw-input"
+                   id="twitter"
+                   name="twitter"
+                   [(ngModel)]="newArtist.twitter_handle"
+                   placeholder="Twitter username">
+          </div>
+          <div>
+            <label for="tiktok" class="tw-label">TikTok</label>
+            <input type="text"
+                   class="tw-input"
+                   id="tiktok"
+                   name="tiktok"
+                   [(ngModel)]="newArtist.tiktok_handle"
+                   placeholder="TikTok username">
+          </div>
+          <div>
+            <label for="youtube" class="tw-label">YouTube Channel</label>
+            <input type="text"
+                   class="tw-input"
+                   id="youtube"
+                   name="youtube"
+                   [(ngModel)]="newArtist.youtube_channel"
+                   placeholder="YouTube channel URL or name">
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Social Links Section -->
-    <div class="card">
-      <div class="card-header">
-        <h5>Social Media & Links</h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="website">Website</label>
-              <input type="url" 
-                     class="form-control" 
-                     id="website"
-                     name="website"
-                     [(ngModel)]="newArtist.website_page_url"
-                     placeholder="https://www.example.com">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="facebook">Facebook</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="facebook"
-                     name="facebook"
-                     [(ngModel)]="newArtist.facebook_handle"
-                     placeholder="Facebook username">
-            </div>
-          </div>
-        </div>
-        
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="instagram">Instagram</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="instagram"
-                     name="instagram"
-                     [(ngModel)]="newArtist.instagram_handle"
-                     placeholder="Instagram username">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="twitter">Twitter</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="twitter"
-                     name="twitter"
-                     [(ngModel)]="newArtist.twitter_handle"
-                     placeholder="Twitter username">
-            </div>
-          </div>
-        </div>
-        
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="tiktok">TikTok</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="tiktok"
-                     name="tiktok"
-                     [(ngModel)]="newArtist.tiktok_handle"
-                     placeholder="TikTok username">
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="youtube">YouTube Channel</label>
-              <input type="text" 
-                     class="form-control" 
-                     id="youtube"
-                     name="youtube"
-                     [(ngModel)]="newArtist.youtube_channel"
-                     placeholder="YouTube channel URL or name">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </form>
+  </div>
 
-  </form>
-</div>
-
-<!-- Floating Action Bar -->
-<app-floating-action-bar>
-  <button type="button"
-          class="btn btn-secondary"
-          (click)="cancel()"
-          [disabled]="creating">
-    Cancel
-  </button>
-  <button type="button"
-          class="btn btn-primary fab-primary-btn"
-          [disabled]="creating || !isFormValid()"
-          (click)="createArtist()">
-    <i class="fa fa-spinner fa-spin" *ngIf="creating"></i>
-    <i class="fa fa-plus" *ngIf="!creating"></i>
-    {{ creating ? 'Creating...' : 'Create Artist' }}
-  </button>
-</app-floating-action-bar>
+  <!-- Floating Action Bar -->
+  <app-floating-action-bar>
+    <button type="button"
+            class="btn-secondary"
+            (click)="cancel()"
+            [disabled]="creating">
+      Cancel
+    </button>
+    <button type="button"
+            class="btn-primary fab-primary-btn"
+            [disabled]="creating || !isFormValid()"
+            (click)="createArtist()">
+      <i class="fa fa-spinner fa-spin" *ngIf="creating"></i>
+      <i class="fa fa-plus" *ngIf="!creating"></i>
+      {{ creating ? 'Creating...' : 'Create Artist' }}
+    </button>
+  </app-floating-action-bar>
 </div>

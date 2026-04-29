@@ -1,5 +1,5 @@
 <div class="artist-selection-container">
-  <button class="btn btn-secondary artist-dropdown-btn"
+  <button class="btn-secondary artist-dropdown-btn"
           type="button"
           (click)="openModal()"
           [disabled]="loading || isNewArtistMode">
@@ -37,18 +37,18 @@
 <div class="modal fade show" appModalToBody *ngIf="isModalOpen" tabindex="-1" style="display: block;" (click)="closeModal()">
   <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
     <div class="modal-content">
-      <div class="modal-header border-0 px-4 pt-4 pb-2">
+      <div class="modal-header tw-border-0 tw-px-4 tw-pt-4 tw-pb-2">
         <h5 class="modal-title artist-switch-modal-title">Switch Artist</h5>
         <button type="button" class="btn-close" (click)="closeModal()"></button>
       </div>
-      <div class="modal-body px-4 pb-3 pt-2">
+      <div class="modal-body tw-px-4 tw-pb-3 tw-pt-2">
 
         <!-- Search + Create New Artist -->
-        <div class="artist-modal-search mb-3">
+        <div class="artist-modal-search tw-mb-3">
           <div class="search-input-wrapper">
             <i class="fa fa-search search-icon"></i>
             <input type="text"
-                   class="form-control artist-search-input"
+                   class="artist-search-input tw-input"
                    [(ngModel)]="searchTerm"
                    (input)="onSearchChange()"
                    placeholder="Search artists..."
@@ -76,19 +76,19 @@
 
           <!-- No results -->
           <div class="artist-modal-no-results" *ngIf="filteredArtists.length === 0">
-            <i class="fa fa-search me-2"></i>No artists found matching "{{ searchTerm }}"
+            <i class="fa fa-search tw-mr-2"></i>No artists found matching "{{ searchTerm }}"
           </div>
         </div>
 
         <!-- Pagination -->
         <div class="artist-modal-pagination" *ngIf="totalPages > 1">
-          <button class="btn btn-sm btn-outline-secondary"
+          <button class="btn-sm btn-outline-secondary"
                   [disabled]="currentPage === 0"
                   (click)="prevPage()">
             <i class="fas fa-chevron-left"></i>
           </button>
           <span class="pagination-info">{{ currentPage + 1 }} / {{ totalPages }}</span>
-          <button class="btn btn-sm btn-outline-secondary"
+          <button class="btn-sm btn-outline-secondary"
                   [disabled]="currentPage === totalPages - 1"
                   (click)="nextPage()">
             <i class="fas fa-chevron-right"></i>

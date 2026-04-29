@@ -14,7 +14,7 @@
 
 .payment-method-type {
   font-weight: bold;
-  color: #007bff;
+  color: var(--brand-color, #3b82f6);
 }
 
 .payment-method-details {
@@ -35,7 +35,7 @@
 }
 
 .badge-primary {
-  background-color: #007bff;
+  background-color: var(--brand-color, #3b82f6);
 }
 
 .form-group {

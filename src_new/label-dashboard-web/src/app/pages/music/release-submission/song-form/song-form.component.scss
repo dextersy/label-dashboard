@@ -95,7 +95,7 @@
   &.create-new {
     border-bottom: 1px solid #dee2e6;
     font-weight: 500;
-    color: #007bff;
+    color: var(--brand-color, #3b82f6);
   }
 }
 
@@ -162,7 +162,7 @@
     &.focused {
       border-color: #80bdff;
       outline: 0;
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
     }
 
     &.readonly {
@@ -258,7 +258,7 @@
 
       &.create-new-item {
         border-top: 1px solid #dee2e6;
-        color: #007bff;
+        color: var(--brand-color, #3b82f6);
         font-weight: 500;
       }
     }
