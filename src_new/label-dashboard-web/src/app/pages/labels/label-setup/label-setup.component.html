@@ -1,3 +1,5 @@
+<div class="tw-flex tw-flex-col" style="min-height: calc(100vh - 130px)">
+
 <app-breadcrumb></app-breadcrumb>
 
 <app-in-page-nav [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onTabChange($event)">
@@ -211,6 +213,8 @@
 
 </app-in-page-nav>
 
+<div class="tw-flex-1"></div>
+
 <app-floating-action-bar>
   <button *ngIf="activeSection === 'brand-settings'"
           type="button"
@@ -220,3 +224,5 @@
     <i class="fas fa-save"></i> Save Settings
   </button>
 </app-floating-action-bar>
+
+</div>
