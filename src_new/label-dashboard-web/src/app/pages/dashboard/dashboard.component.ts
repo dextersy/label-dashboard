@@ -55,6 +55,7 @@ export class DashboardComponent implements OnInit {
   loading = true;
   error: string | null = null;
   brandColor: string = '#667eea';
+  brandName: string = '';
   gradientStart: string = '#667eea';
   gradientEnd: string = '#764ba2';
   shadowColor: string = 'rgba(102, 126, 234, 0.3)';
@@ -136,6 +137,7 @@ export class DashboardComponent implements OnInit {
 
   private applyBrandColors(settings: BrandSettings): void {
     this.brandColor = settings.brand_color;
+    this.brandName = settings.name || '';
     this.generateGradientColors(settings.brand_color);
   }
 
@@ -234,6 +236,33 @@ export class DashboardComponent implements OnInit {
       return 'assets/img/placeholder.jpg';
     }
     return coverArt.startsWith('http') ? coverArt : `${environment.apiUrl}/uploads/covers/${coverArt}`;
+  }
+
+  getPipelineTotal(): number {
+    if (!this.dashboardData?.releasePipeline) return 0;
+    return this.dashboardData.releasePipeline.reduce((sum, s) => sum + s.count, 0);
+  }
+
+  getPipelineStageCount(status: string): number {
+    if (!this.dashboardData?.releasePipeline) return 0;
+    return this.dashboardData.releasePipeline.find(s => s.status === status)?.count ?? 0;
+  }
+
+  getPipelinePct(status: string): number {
+    const total = this.getPipelineTotal();
+    if (total === 0) return 0;
+    return Math.round((this.getPipelineStageCount(status) / total) * 100);
+  }
+
+  goToReleases(): void {
+    this.router.navigate(['/music/releases']);
+  }
+
+  goToRelease(release: LatestRelease): void {
+    if (release.artist_id) {
+      localStorage.setItem('selected_artist_id', release.artist_id.toString());
+    }
+    this.router.navigate(['/music/releases/edit', release.id]);
   }
 
   goToLatestRelease(): void {

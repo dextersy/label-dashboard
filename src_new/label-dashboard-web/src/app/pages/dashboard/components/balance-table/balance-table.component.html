@@ -1,30 +1,52 @@
-<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-h-full tw-flex tw-flex-col">
-  <div class="tw-p-6 tw-border-b tw-border-gray-100">
-    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Balance Summary</h3>
-  </div>
+<div style="border-top: 0.5px solid #e5e7eb;">
 
-  <div class="tw-p-6 tw-flex-1">
-    <p *ngIf="artists.length === 0" class="tw-py-2 tw-text-center tw-text-muted tw-mb-0">No artists found</p>
-    <div *ngIf="artists.length > 0" class="tw-divide-y tw-divide-gray-100">
-      <div *ngFor="let artist of artists"
-           class="tw-flex tw-items-center tw-justify-between tw-py-2.5">
-        <div class="tw-flex tw-items-center tw-gap-2.5 tw-min-w-0">
-          <img [src]="getProfilePhotoUrl(artist.profile_photo)"
-               [alt]="artist.name + ' photo'"
-               class="tw-w-9 tw-h-9 tw-rounded-full tw-object-cover tw-shrink-0">
-          <span class="tw-text-sm tw-truncate">{{ artist.name }}</span>
+  <!-- Section label -->
+  <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4 tw-mt-5">Balance Summary</p>
+
+  <!-- Empty state -->
+  <p *ngIf="artists.length === 0" class="tw-text-sm tw-text-muted tw-text-center tw-py-6">No artists found</p>
+
+  <!-- Artist rows -->
+  <div *ngIf="artists.length > 0" class="tw-flex tw-flex-col">
+    <div *ngFor="let artist of artists"
+         class="tw-flex tw-items-center tw-justify-between tw-py-2.5 tw-gap-2"
+         style="border-bottom: 0.5px solid #e5e7eb;">
+
+      <!-- Left: avatar + name + sign badge -->
+      <div class="tw-flex tw-items-center tw-gap-2.5 tw-min-w-0 tw-flex-1">
+
+        <!-- Photo avatar -->
+        <img *ngIf="getProfilePhotoUrl(artist.profile_photo)"
+             [src]="getProfilePhotoUrl(artist.profile_photo)"
+             [alt]="artist.name"
+             class="tw-w-8 tw-h-8 tw-min-w-[2rem] tw-rounded-full tw-object-cover tw-flex-shrink-0">
+
+        <!-- Initials avatar fallback -->
+        <div *ngIf="!getProfilePhotoUrl(artist.profile_photo)"
+             class="tw-w-8 tw-h-8 tw-min-w-[2rem] tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-xs tw-font-bold tw-flex-shrink-0"
+             [style.background]="getAvatarBg(artist.name)"
+             [style.color]="getAvatarColor(artist.name)">
+          {{ getInitials(artist.name) }}
         </div>
-        <span class="tw-font-bold tw-text-sm tw-whitespace-nowrap tw-ml-2"
-              [ngClass]="getBalanceClass(artist.balance)">
-          {{ formatCurrency(artist.balance) }}
-        </span>
+
+        <span class="tw-text-sm tw-text-gray-900 tw-truncate" [title]="artist.name">{{ artist.name }}</span>
+
       </div>
+
+      <!-- Right: amount -->
+      <span class="tw-text-sm tw-font-mono tw-font-semibold tw-whitespace-nowrap tw-flex-shrink-0"
+            [class.tw-text-green-700]="artist.balance >= 0"
+            [class.tw-text-red-600]="artist.balance < 0">
+        {{ formatCurrency(artist.balance) }}
+      </span>
+
     </div>
   </div>
 
-  <div class="tw-px-6 tw-py-4 tw-border-t tw-border-gray-100 tw-text-right">
-    <a (click)="goToFinancial()" class="btn-ghost" style="cursor: pointer;">
-      Go to financial overview <i class="far fa-arrow-alt-circle-right"></i>
-    </a>
+
+<!-- CTA -->
+  <div class="tw-text-right" style="border-top: 0.5px solid #e5e7eb; padding-top: 14px;">
+    <button (click)="goToFinancial()" class="btn btn-ghost btn-sm">View financial overview →</button>
   </div>
+
 </div>
