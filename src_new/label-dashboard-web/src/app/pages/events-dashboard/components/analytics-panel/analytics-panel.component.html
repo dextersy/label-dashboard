@@ -1,0 +1,137 @@
+<!-- Section header -->
+<div class="tw-flex tw-items-center tw-justify-between tw-mb-4">
+  <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Analytics</p>
+
+  <!-- Time filter button group -->
+  <div style="display: inline-flex; border: 0.5px solid #d1d5db; border-radius: 6px; overflow: hidden;">
+    <button *ngFor="let f of filterOptions"
+            (click)="setFilter(f.key)"
+            [style.background]="activeFilter === f.key ? '#1f2937' : 'transparent'"
+            [style.color]="activeFilter === f.key ? '#ffffff' : '#374151'"
+            [style.border-right]="f.last ? 'none' : '0.5px solid #d1d5db'"
+            style="font-size: 11px; padding: 5px 10px; border-top: none; border-bottom: none; border-left: none; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s;">
+      {{ f.label }}
+    </button>
+  </div>
+</div>
+
+<!-- 2×2 chart grid -->
+<div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-3">
+
+  <!-- Ticket Sales -->
+  <div style="background: white; border: 0.5px solid #e5e7eb; border-radius: 6px; padding: 1.25rem;">
+    <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+      <div>
+        <div style="font-size: 13px; font-weight: 500; color: #2d3748;">Ticket sales</div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">Revenue per event</div>
+      </div>
+      <div class="tw-text-right tw-ml-3 tw-flex-shrink-0">
+        <div class="tw-font-mono" style="font-size: 22px; font-weight: 500; color: #2d3748; line-height: 1.1; white-space: nowrap;">{{ formatShortCurrency(totalTicketSales) }}</div>
+        <div style="font-size: 12px; color: #9ca3af;">total</div>
+      </div>
+    </div>
+    <ng-container *ngTemplateOutlet="barChart; context: { bars: ticketSalesBars, currency: true }"></ng-container>
+  </div>
+
+  <!-- Tickets Sold -->
+  <div style="background: white; border: 0.5px solid #e5e7eb; border-radius: 6px; padding: 1.25rem;">
+    <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+      <div>
+        <div style="font-size: 13px; font-weight: 500; color: #2d3748;">Tickets sold</div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">Units per event</div>
+      </div>
+      <div class="tw-text-right tw-ml-3 tw-flex-shrink-0">
+        <div class="tw-font-mono" style="font-size: 22px; font-weight: 500; color: #2d3748; line-height: 1.1;">{{ formatShortCount(totalTicketsSold) }}</div>
+        <div style="font-size: 12px; color: #9ca3af;">total</div>
+      </div>
+    </div>
+    <ng-container *ngTemplateOutlet="barChart; context: { bars: ticketsSoldBars, currency: false }"></ng-container>
+  </div>
+
+  <!-- Fundraiser Donations -->
+  <div style="background: white; border: 0.5px solid #e5e7eb; border-radius: 6px; padding: 1.25rem;">
+    <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+      <div>
+        <div style="font-size: 13px; font-weight: 500; color: #2d3748;">Fundraiser donations</div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">₱ per campaign</div>
+      </div>
+      <div class="tw-text-right tw-ml-3 tw-flex-shrink-0">
+        <div class="tw-font-mono" style="font-size: 22px; font-weight: 500; color: #2d3748; line-height: 1.1; white-space: nowrap;">{{ formatShortCurrency(totalDonations) }}</div>
+        <div style="font-size: 12px; color: #9ca3af;">total</div>
+      </div>
+    </div>
+    <ng-container *ngTemplateOutlet="barChart; context: { bars: donationsBars, currency: true }"></ng-container>
+  </div>
+
+  <!-- Donor Count -->
+  <div style="background: white; border: 0.5px solid #e5e7eb; border-radius: 6px; padding: 1.25rem;">
+    <div class="tw-flex tw-justify-between tw-items-start tw-mb-4">
+      <div>
+        <div style="font-size: 13px; font-weight: 500; color: #2d3748;">Donor count</div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">Donors per campaign</div>
+      </div>
+      <div class="tw-text-right tw-ml-3 tw-flex-shrink-0">
+        <div class="tw-font-mono" style="font-size: 22px; font-weight: 500; color: #2d3748; line-height: 1.1;">{{ formatShortCount(totalDonors) }}</div>
+        <div style="font-size: 12px; color: #9ca3af;">total</div>
+      </div>
+    </div>
+    <ng-container *ngTemplateOutlet="barChart; context: { bars: donorCountBars, currency: false }"></ng-container>
+  </div>
+
+</div>
+
+<!-- ─── Shared bar chart template ─────────────────────────────────────────── -->
+<ng-template #barChart let-bars="bars" let-currency="currency">
+
+  <!-- Empty state -->
+  <div *ngIf="bars.length === 0"
+       style="height: 120px; display: flex; align-items: center; justify-content: center;">
+    <span class="tw-font-mono" style="font-size: 12px; color: #9ca3af;">No data</span>
+  </div>
+
+  <!-- Chart -->
+  <div *ngIf="bars.length > 0">
+
+    <!-- Bar area -->
+    <div style="height: 120px; position: relative; display: flex; align-items: flex-end; gap: 4px;">
+
+      <!-- Grid lines -->
+      <div style="position: absolute; inset: 0; pointer-events: none;">
+        <div style="position: absolute; bottom: 75%; left: 0; right: 0; border-top: 0.5px solid #e5e7eb;"></div>
+        <div style="position: absolute; bottom: 50%; left: 0; right: 0; border-top: 0.5px solid #e5e7eb;"></div>
+        <div style="position: absolute; bottom: 25%; left: 0; right: 0; border-top: 0.5px solid #e5e7eb;"></div>
+        <div style="position: absolute; bottom: 0;   left: 0; right: 0; border-top: 0.5px solid #d1d5db;"></div>
+      </div>
+
+      <!-- Bar columns -->
+      <div *ngFor="let bar of bars"
+           style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative; z-index: 1; min-width: 0;">
+
+        <!-- Value label (shown only when bar is tall enough) -->
+        <span *ngIf="shouldShowLabel(bar.value, getMax(bars))"
+              class="tw-font-mono"
+              style="font-size: 10px; color: #9ca3af; margin-bottom: 2px; white-space: nowrap; line-height: 1;">
+          {{ currency ? formatShortCurrency(bar.value) : formatShortCount(bar.value) }}
+        </span>
+
+        <!-- Bar -->
+        <div [style.height.px]="getBarHeightPx(bar.value, getMax(bars))"
+             [style.opacity]="getBarOpacity(bar.value, getMax(bars))"
+             style="width: 100%; background: var(--brand-color, #667eea); border-radius: 3px 3px 0 0;">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Name labels below bars -->
+    <div style="display: flex; gap: 4px; margin-top: 5px;">
+      <div *ngFor="let bar of bars"
+           [style.color]="isTopBar(bar.value, getMax(bars)) ? '#374151' : '#9ca3af'"
+           [style.font-weight]="isTopBar(bar.value, getMax(bars)) ? '500' : '400'"
+           style="flex: 1; font-size: 10px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">
+        {{ bar.name }}
+      </div>
+    </div>
+
+  </div>
+</ng-template>

@@ -1,242 +1,257 @@
 <app-breadcrumb></app-breadcrumb>
-<div class="tw-px-4 tw-py-6">
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="tw-py-12 tw-text-center">
-    <div class="loading-dots"><div></div><div></div><div></div></div>
-  </div>
+<!-- Loading -->
+<div *ngIf="loading" class="tw-py-12 tw-text-center tw-px-4">
+  <div class="loading-dots"><div></div><div></div><div></div></div>
+</div>
 
-  <!-- Error -->
-  <div *ngIf="error" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-mb-6 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-text-sm" role="alert">
-    <span><i class="fa fa-exclamation-triangle tw-mr-2"></i>{{ error }}</span>
-    <button class="btn-sm btn-danger" (click)="loadDashboardData()">
-      <i class="fas fa-sync tw-mr-1"></i> Retry
-    </button>
-  </div>
+<!-- Error -->
+<div *ngIf="error" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-m-4 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-text-sm" role="alert">
+  <span><i class="fa fa-exclamation-triangle tw-mr-2"></i>{{ error }}</span>
+  <button class="btn-sm btn-danger" (click)="loadDashboardData()">
+    <i class="fas fa-sync tw-mr-1"></i> Retry
+  </button>
+</div>
 
-  <div *ngIf="!loading && !error && dashboardData">
+<ng-container *ngIf="!loading && !error && dashboardData">
 
-    <!-- ── Section 1: Welcome + Quick Stats ───────────────── -->
-    <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-end sm:tw-justify-between tw-gap-6 tw-mb-8">
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- ZONE 1: HERO STRIP                                      -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="tw-relative tw-bg-white tw-bg-cover tw-bg-center"
+       [style.background-image]="dashboardData.upcomingEvents?.[0]?.poster_url ? 'url(' + dashboardData.upcomingEvents[0].poster_url + ')' : null"
+       style="border-bottom: 0.5px solid #e5e7eb;">
+    <!-- Dark overlay when poster is present -->
+    <div *ngIf="dashboardData.upcomingEvents?.[0]?.poster_url"
+         class="tw-absolute tw-inset-0"
+         style="background: linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.45) 100%);"></div>
 
-      <div>
-        <h3 class="tw-mb-2">Good {{ getTimeOfDay() }}, {{ userFirstName }}!</h3>
-        <p class="tw-mb-0 tw-text-muted">This is your Campaigns dashboard.</p>
-      </div>
+    <div class="tw-relative tw-px-4 tw-py-6 sm:tw-px-8 sm:tw-py-8" style="max-width: 1100px; margin: 0 auto;">
 
-      <!-- Stats pill: events group | fundraisers group -->
-      <div class="tw-flex tw-items-stretch tw-bg-white tw-border tw-border-gray-100 tw-rounded-xl tw-shrink-0 tw-overflow-hidden">
+      <!-- Empty state -->
+      <p *ngIf="!dashboardData.upcomingEvents?.length" class="tw-text-sm tw-text-gray-400 tw-mb-0">
+        No upcoming events.
+        <a routerLink="/campaigns/events/new" class="tw-text-[var(--brand-color,#667eea)]">Create one?</a>
+      </p>
 
-        <a routerLink="/campaigns/events/details"
-           class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-4 tw-gap-1 hover:tw-bg-gray-50 tw-transition-colors tw-no-underline tw-min-w-[68px]">
-          <span class="tw-text-xl tw-font-bold tw-text-gray-900 tw-leading-none">{{ dashboardData.stats.activeEvents || 0 }}</span>
-          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium tw-text-center">Events</span>
-        </a>
-        <span class="tw-flex tw-items-center tw-text-gray-300 tw-text-xl tw-select-none">›</span>
-        <a routerLink="/campaigns/events/tickets"
-           class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-4 tw-gap-1 hover:tw-bg-gray-50 tw-transition-colors tw-no-underline tw-min-w-[96px]">
-          <span class="tw-text-base tw-font-bold tw-text-gray-900 tw-leading-none tw-whitespace-nowrap">{{ formatCurrency(dashboardData.stats.thisMonthSales || 0) }}</span>
-          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium tw-text-center">Ticket Sales</span>
-        </a>
+      <!-- Hero event -->
+      <ng-container *ngIf="dashboardData.upcomingEvents?.length">
+        <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-center tw-gap-5 sm:tw-gap-8"
+             [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
 
-        <div class="tw-w-px tw-bg-gray-200 tw-my-3 tw-mx-1 tw-shrink-0"></div>
-
-        <a routerLink="/campaigns/fundraisers/details"
-           class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-4 tw-gap-1 hover:tw-bg-gray-50 tw-transition-colors tw-no-underline tw-min-w-[80px]">
-          <span class="tw-text-xl tw-font-bold tw-text-gray-900 tw-leading-none">{{ dashboardData.stats.activeFundraisers || 0 }}</span>
-          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium tw-text-center">Fundraisers</span>
-        </a>
-        <span class="tw-flex tw-items-center tw-text-gray-300 tw-text-xl tw-select-none">›</span>
-        <a routerLink="/campaigns/fundraisers/donations"
-           class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-px-4 tw-py-4 tw-gap-1 hover:tw-bg-gray-50 tw-transition-colors tw-no-underline tw-min-w-[96px]">
-          <span class="tw-text-base tw-font-bold tw-text-gray-900 tw-leading-none tw-whitespace-nowrap">{{ formatCurrency(dashboardData.stats.thisMonthDonations || 0) }}</span>
-          <span class="tw-text-[11px] tw-text-gray-400 tw-uppercase tw-tracking-wider tw-font-medium tw-text-center">Donations</span>
-        </a>
-
-      </div>
-    </div>
-
-    <!-- ── Section 2: Quick Actions ───────────────────────── -->
-    <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-4 tw-mb-8">
-
-      <a routerLink="/campaigns/events/new"
-         class="tw-col-span-2 sm:tw-col-span-2 tw-relative tw-overflow-hidden tw-flex tw-flex-col tw-justify-between tw-bg-[var(--brand-color,#667eea)] tw-rounded-2xl tw-p-6 tw-no-underline tw-min-h-[160px] hover:tw-opacity-95 tw-transition-opacity">
-        <div class="tw-absolute tw-w-40 tw-h-40 tw-rounded-full tw-bg-white/[0.06] tw-top-[-3rem] tw-right-[-2rem] tw-pointer-events-none"></div>
-        <div class="tw-absolute tw-w-24 tw-h-24 tw-rounded-full tw-bg-white/[0.04] tw-bottom-4 tw-right-4 tw-pointer-events-none"></div>
-        <div class="tw-w-12 tw-h-12 tw-rounded-xl tw-bg-black/[0.15] tw-flex tw-items-center tw-justify-center tw-shrink-0">
-          <i class="fas fa-calendar-plus tw-text-white tw-text-lg"></i>
-        </div>
-        <div class="tw-flex tw-items-end tw-justify-between tw-gap-2">
-          <div>
-            <div class="tw-text-xl tw-font-bold tw-text-white tw-leading-tight">Create an Event</div>
-            <div class="tw-text-sm tw-text-white/70 tw-mt-0.5">Set up tickets, venue &amp; schedule</div>
+          <!-- Left: proximity · title · date/venue -->
+          <div class="tw-flex-1 tw-min-w-0">
+            <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-2 tw-mt-0"
+               [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+               [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">
+              Next event · {{ getDaysAwayLabel(dashboardData.upcomingEvents[0].date_and_time) }}
+            </p>
+            <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug"
+                [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
+              {{ dashboardData.upcomingEvents[0].title }}
+            </h3>
+            <p class="tw-text-sm tw-font-mono tw-mb-0"
+               [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+               [class.tw-opacity-80]="dashboardData.upcomingEvents[0].poster_url"
+               [class.tw-text-muted]="!dashboardData.upcomingEvents[0].poster_url">
+              {{ dashboardData.upcomingEvents[0].date_and_time | date:'EEE, MMM d · h:mm a' }}<span *ngIf="dashboardData.upcomingEvents[0].venue"> · {{ dashboardData.upcomingEvents[0].venue }}</span>
+            </p>
           </div>
-          <div class="tw-w-8 tw-h-8 tw-rounded-full tw-bg-black/20 tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-text-white tw-text-sm">↗</div>
-        </div>
-      </a>
 
-      <a routerLink="/campaigns/fundraisers/new"
-         class="tw-flex tw-flex-col tw-justify-between tw-bg-white tw-border tw-border-gray-200 tw-rounded-2xl tw-p-5 tw-no-underline tw-min-h-[160px] hover:tw-border-gray-300 tw-transition-colors">
-        <div class="tw-w-11 tw-h-11 tw-rounded-xl tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-shrink-0">
-          <i class="fas fa-hand-holding-heart tw-text-gray-600 tw-text-lg"></i>
-        </div>
-        <div class="tw-flex tw-items-end tw-justify-between tw-gap-1">
-          <div>
-            <div class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-tight">Start a Fundraiser</div>
-            <div class="tw-text-xs tw-text-gray-400 tw-mt-0.5">Launch a campaign for your fans</div>
-          </div>
-          <div class="tw-w-7 tw-h-7 tw-rounded-full tw-bg-[var(--brand-color,#667eea)] tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-text-white tw-text-xs">↗</div>
-        </div>
-      </a>
+          <!-- Right: stats + buttons -->
+          <div class="tw-flex tw-items-center tw-gap-6 sm:tw-gap-8 tw-flex-shrink-0 tw-flex-wrap sm:tw-flex-nowrap">
 
-    </div>
-
-    <!-- ── Section 3: Upcoming Events + Ongoing Fundraisers ─ -->
-    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-6 tw-mb-6">
-
-      <!-- Upcoming Events (8/12) -->
-      <div class="lg:tw-col-span-8">
-        <p class="tw-text-xs tw-text-gray-400 tw-uppercase tw-tracking-widest tw-font-semibold tw-mb-3">Upcoming Events</p>
-
-        <div *ngIf="!dashboardData.upcomingEvents?.length"
-             class="tw-flex tw-items-center tw-gap-3 tw-bg-white tw-border tw-border-dashed tw-border-gray-300 tw-rounded-xl tw-px-5 tw-py-8 tw-text-sm tw-text-gray-400">
-          <i class="fas fa-calendar-alt tw-text-2xl tw-text-gray-200"></i>
-          <span>No upcoming events. <a routerLink="/campaigns/events/new" class="tw-text-[var(--brand-color,#667eea)]">Create one?</a></span>
-        </div>
-
-        <div *ngIf="dashboardData.upcomingEvents?.length" class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4">
-
-          <!-- Featured event -->
-          <div class="tw-flex-1 tw-min-w-0 tw-rounded-2xl tw-overflow-hidden tw-relative tw-min-h-[220px] tw-bg-gray-900"
-               [style.backgroundImage]="dashboardData.upcomingEvents[0].poster_url ? 'url(' + dashboardData.upcomingEvents[0].poster_url + ')' : null"
-               style="background-size: cover; background-position: center;">
-            <div class="tw-absolute tw-inset-0 tw-bg-gradient-to-br tw-from-black/80 tw-to-black/50 tw-flex tw-flex-col tw-justify-between tw-p-5">
-              <div class="tw-flex tw-items-start tw-gap-3">
-                <div class="tw-flex tw-flex-col tw-items-center tw-bg-[var(--brand-color,#667eea)] tw-rounded-xl tw-px-2.5 tw-py-2 tw-shrink-0 tw-min-w-[48px]">
-                  <span class="tw-text-2xl tw-font-bold tw-text-white tw-leading-none">{{ dashboardData.upcomingEvents[0].date_and_time | date:'d' }}</span>
-                  <span class="tw-text-[10px] tw-font-semibold tw-text-white/80 tw-uppercase tw-tracking-wide">{{ dashboardData.upcomingEvents[0].date_and_time | date:'MMM' }}</span>
-                </div>
-                <div class="tw-flex-1 tw-min-w-0">
-                  <div class="tw-text-base tw-font-bold tw-text-white tw-leading-snug tw-mb-1">{{ dashboardData.upcomingEvents[0].title }}</div>
-                  <div class="tw-text-xs tw-text-white/60 tw-mb-0.5">
-                    <i class="fas fa-clock tw-mr-1"></i>{{ formatEventTime(dashboardData.upcomingEvents[0].date_and_time) }}
-                    <span class="tw-mx-1.5 tw-opacity-50">·</span>
-                    <i class="fas fa-map-marker-alt tw-mr-1"></i>{{ dashboardData.upcomingEvents[0].venue }}
-                  </div>
-                  <div class="tw-text-xs tw-text-white/60">
-                    <i class="fas fa-ticket-alt tw-mr-1"></i>{{ dashboardData.upcomingEvents[0].tickets_sold }} sold
-                    <span class="tw-mx-1.5 tw-opacity-50">·</span>
-                    {{ formatCurrency(dashboardData.upcomingEvents[0].net_earnings) }} net
-                  </div>
-                </div>
+            <!-- Stat columns -->
+            <div class="tw-flex tw-gap-6 sm:tw-gap-8">
+              <div class="tw-text-right">
+                <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-1.5 tw-mt-0"
+                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">Tickets sold</p>
+                <p class="tw-text-3xl tw-font-mono tw-font-semibold tw-leading-none tw-mb-0"
+                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url">
+                  {{ dashboardData.upcomingEvents[0].tickets_sold }}
+                </p>
               </div>
-              <div class="tw-flex tw-gap-2">
-                <button class="tw-text-xs tw-font-medium tw-text-white tw-bg-white/15 tw-border tw-border-white/25 tw-rounded-lg tw-px-3 tw-py-1.5 hover:tw-bg-white/25 tw-transition-colors"
-                        (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'details')">
-                  <i class="fas fa-cog tw-mr-1"></i> Manage
-                </button>
-                <button class="tw-text-xs tw-font-medium tw-text-white tw-bg-[var(--brand-color,#667eea)] tw-rounded-lg tw-px-3 tw-py-1.5 hover:tw-opacity-90 tw-transition-opacity tw-border-0"
-                        (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
-                  <i class="fas fa-ticket-alt tw-mr-1"></i> View tickets
-                </button>
+              <div class="tw-text-right">
+                <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-1.5 tw-mt-0"
+                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">Net revenue</p>
+                <p class="tw-text-2xl tw-font-mono tw-font-semibold tw-whitespace-nowrap tw-leading-none tw-mb-0"
+                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url">
+                  {{ formatCurrency(dashboardData.upcomingEvents[0].net_earnings) }}
+                </p>
               </div>
             </div>
-          </div>
 
-          <!-- Secondary events -->
-          <div *ngIf="dashboardData.upcomingEvents.length > 1"
-               class="tw-flex tw-flex-col tw-gap-3 tw-flex-1 tw-min-w-0">
-            <div *ngFor="let event of dashboardData.upcomingEvents.slice(1)"
-                 class="tw-flex tw-gap-3 tw-items-start tw-bg-white tw-border tw-border-gray-200 tw-rounded-xl tw-p-4 tw-flex-1">
-              <div class="tw-flex tw-flex-col tw-items-center tw-shrink-0 tw-min-w-[28px]">
-                <span class="tw-text-xl tw-font-bold tw-leading-none tw-text-[var(--brand-color,#667eea)]">{{ event.date_and_time | date:'d' }}</span>
-                <span class="tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wide tw-text-[var(--brand-color,#667eea)]">{{ event.date_and_time | date:'MMM' }}</span>
-              </div>
-              <div class="tw-flex-1 tw-min-w-0">
-                <div class="tw-text-sm tw-font-semibold tw-text-gray-900 tw-truncate tw-mb-0.5">{{ event.title }}</div>
-                <div class="tw-text-xs tw-text-gray-400 tw-mb-0.5">
-                  <i class="fas fa-clock tw-mr-1"></i>{{ formatEventTime(event.date_and_time) }}
-                  <span class="tw-mx-1.5 tw-opacity-50">·</span>
-                  <i class="fas fa-map-marker-alt tw-mr-1"></i>{{ event.venue }}
-                </div>
-                <div class="tw-text-xs tw-text-gray-400 tw-mb-2">
-                  <i class="fas fa-ticket-alt tw-mr-1"></i>{{ event.tickets_sold }} sold
-                  <span class="tw-mx-1.5 tw-opacity-50">·</span>
-                  {{ formatCurrency(event.net_earnings) }} net
-                </div>
-                <div class="tw-flex tw-gap-2">
-                  <button class="tw-text-xs tw-font-medium tw-text-gray-600 tw-bg-gray-100 tw-rounded-lg tw-px-3 tw-py-1.5 hover:tw-bg-gray-200 tw-transition-colors tw-border-0"
-                          (click)="navigateToEvent(event, 'details')">
-                    <i class="fas fa-cog tw-mr-1"></i> Manage
-                  </button>
-                  <button class="tw-text-xs tw-font-medium tw-text-white tw-bg-[var(--brand-color,#667eea)] tw-rounded-lg tw-px-3 tw-py-1.5 hover:tw-opacity-90 tw-transition-opacity tw-border-0"
-                          (click)="navigateToEvent(event, 'tickets')">
-                    <i class="fas fa-ticket-alt tw-mr-1"></i> View tickets
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Ongoing Fundraisers (4/12) -->
-      <div class="lg:tw-col-span-4 tw-flex tw-flex-col">
-        <p class="tw-text-xs tw-text-gray-400 tw-uppercase tw-tracking-widest tw-font-semibold tw-mb-3">Ongoing Fundraisers</p>
-
-        <div *ngIf="!dashboardData.ongoingFundraisers?.items?.length"
-             class="tw-flex tw-items-center tw-gap-3 tw-bg-white tw-border tw-border-dashed tw-border-gray-300 tw-rounded-xl tw-px-5 tw-py-8 tw-text-sm tw-text-gray-400 tw-flex-1">
-          <i class="fas fa-hand-holding-heart tw-text-2xl tw-text-gray-200"></i>
-          <span>No active fundraisers. <a routerLink="/campaigns/fundraisers/new" class="tw-text-[var(--brand-color,#667eea)]">Start one?</a></span>
-        </div>
-
-        <div *ngIf="dashboardData.ongoingFundraisers?.items?.length" class="tw-flex tw-flex-col tw-gap-3">
-
-          <div *ngFor="let fundraiser of dashboardData.ongoingFundraisers.items"
-               class="tw-flex tw-bg-white tw-border tw-border-gray-200 tw-rounded-xl tw-overflow-hidden hover:tw-shadow-sm tw-transition-shadow">
-            <div class="tw-w-[72px] tw-shrink-0 tw-bg-gray-800 tw-relative tw-flex tw-items-start tw-p-2"
-                 [style.backgroundImage]="fundraiser.poster_url ? 'url(' + fundraiser.poster_url + ')' : null"
-                 style="background-size: cover; background-position: center;">
-              <span class="tw-inline-flex tw-items-center tw-gap-1 tw-bg-black/40 tw-text-white tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wide tw-rounded-full tw-px-1.5 tw-py-0.5">
-                <span class="tw-w-1.5 tw-h-1.5 tw-rounded-full tw-bg-green-400 tw-animate-pulse tw-shrink-0"></span>
-                Live
-              </span>
-            </div>
-            <div class="tw-flex-1 tw-min-w-0 tw-p-3 tw-flex tw-flex-col tw-justify-between tw-gap-1">
-              <div class="tw-text-sm tw-font-semibold tw-text-gray-900 tw-leading-snug tw-line-clamp-2">{{ fundraiser.title }}</div>
-              <div>
-                <div class="tw-text-[10px] tw-text-gray-400 tw-uppercase tw-tracking-wide tw-font-medium">Total raised</div>
-                <div class="tw-text-sm tw-font-bold tw-text-[var(--brand-color,#667eea)]">{{ formatCurrency(fundraiser.total_raised) }}</div>
-              </div>
-              <button class="tw-self-start tw-text-[11px] tw-font-medium tw-text-gray-600 tw-bg-gray-100 tw-rounded-md tw-px-2.5 tw-py-1 hover:tw-bg-gray-200 tw-transition-colors tw-border-0"
-                      (click)="navigateToFundraiser(fundraiser)">
-                <i class="fas fa-cog tw-mr-1"></i> Manage
+            <!-- Action buttons -->
+            <div class="tw-flex tw-flex-row sm:tw-flex-col tw-gap-2">
+              <button class="btn btn-primary btn-sm tw-whitespace-nowrap"
+                      (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
+                View tickets
+              </button>
+              <button class="btn btn-sm tw-whitespace-nowrap"
+                      [class.btn-ghost]="!dashboardData.upcomingEvents[0].poster_url"
+                      [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.15)' : null"
+                      [style.color]="dashboardData.upcomingEvents[0].poster_url ? '#fff' : null"
+                      [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.35)' : null"
+                      (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'details')">
+                Manage
               </button>
             </div>
+
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- ZONE 2: MAIN BODY — 60/40 on desktop, stacked on mobile -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="tw-px-4 tw-py-7 sm:tw-px-8 sm:tw-py-8" style="max-width: 1100px; margin: 0 auto;">
+    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-5 tw-gap-6 lg:tw-gap-10 tw-items-start">
+
+      <!-- Left: unified campaigns list (3/5 on desktop) -->
+      <div class="lg:tw-col-span-3">
+
+        <!-- Empty state -->
+        <div *ngIf="!dashboardData.upcomingEvents?.length && !dashboardData.ongoingFundraisers?.items?.length"
+             class="tw-py-8 tw-text-sm tw-text-gray-400"
+             style="border-top: 0.5px solid #e5e7eb;">
+          No campaigns yet.
+          <a routerLink="/campaigns/events/new" class="tw-text-[var(--brand-color,#667eea)]">Create one?</a>
+        </div>
+
+        <!-- List -->
+        <div *ngIf="dashboardData.upcomingEvents?.length || dashboardData.ongoingFundraisers?.items?.length"
+             style="border-top: 0.5px solid #e5e7eb;">
+
+          <!-- Event rows -->
+          <div *ngFor="let event of dashboardData.upcomingEvents"
+               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5"
+               style="border-bottom: 0.5px solid #e5e7eb;">
+            <span class="tw-text-sm tw-font-mono tw-flex-shrink-0 tw-text-gray-500"
+                  style="background: #f3f4f6; padding: 3px 8px 4px; border-radius: 3px;">Event</span>
+            <div class="tw-flex-1 tw-min-w-0">
+              <div class="tw-text-sm tw-font-medium tw-text-gray-900 tw-truncate">{{ event.title }}</div>
+              <div class="tw-text-sm tw-font-mono tw-text-muted tw-mt-1 tw-truncate">
+                {{ event.date_and_time | date:'MMM d · h:mm a' }}<span *ngIf="event.venue"> · {{ event.venue }}</span> · {{ event.tickets_sold }} sold · {{ formatCurrency(event.net_earnings) }} net
+              </div>
+            </div>
+            <div class="tw-flex tw-gap-2 tw-flex-shrink-0">
+              <button class="btn btn-ghost btn-sm tw-whitespace-nowrap tw-hidden sm:tw-inline-flex"
+                      (click)="navigateToEvent(event, 'tickets')">Tickets</button>
+              <button class="btn btn-ghost btn-sm tw-whitespace-nowrap"
+                      (click)="navigateToEvent(event, 'details')">Manage</button>
+            </div>
           </div>
 
-          <button *ngIf="dashboardData.ongoingFundraisers.total > 2"
-                  class="tw-text-xs tw-text-gray-500 tw-text-center tw-py-2 hover:tw-text-[var(--brand-color,#667eea)] tw-transition-colors tw-border-0 tw-bg-transparent tw-cursor-pointer tw-w-full"
-                  (click)="navigateToFundraiser(dashboardData.ongoingFundraisers.items[0])">
-            <i class="fas fa-hand-holding-heart tw-mr-1"></i>
-            + {{ dashboardData.ongoingFundraisers.total - 2 }} more active fundraiser{{ dashboardData.ongoingFundraisers.total - 2 === 1 ? '' : 's' }}
-          </button>
+          <!-- Fundraiser rows -->
+          <div *ngFor="let fundraiser of dashboardData.ongoingFundraisers?.items"
+               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5"
+               style="border-bottom: 0.5px solid #e5e7eb;">
+            <span class="tw-text-sm tw-font-mono tw-flex-shrink-0 tw-text-gray-500"
+                  style="background: #f3f4f6; padding: 3px 8px 4px; border-radius: 3px;">Fundraiser</span>
+            <div class="tw-flex-1 tw-min-w-0">
+              <div class="tw-text-sm tw-font-medium tw-text-gray-900 tw-truncate">{{ fundraiser.title }}</div>
+              <div class="tw-text-sm tw-font-mono tw-text-muted tw-mt-1">
+                <span class="tw-text-green-700 tw-font-semibold tw-mr-2">Live</span>{{ formatCurrency(fundraiser.total_raised) }} raised
+              </div>
+            </div>
+            <div class="tw-flex-shrink-0">
+              <button class="btn btn-ghost btn-sm" (click)="navigateToFundraiser(fundraiser)">Manage</button>
+            </div>
+          </div>
 
         </div>
+
+        <!-- Bottom: create actions -->
+        <div class="tw-grid tw-grid-cols-2 tw-gap-3 tw-mt-5">
+          <a routerLink="/campaigns/events/new" class="btn btn-secondary btn-sm tw-no-underline tw-text-center">
+            + Create an event
+          </a>
+          <a routerLink="/campaigns/fundraisers/new" class="btn btn-secondary btn-sm tw-no-underline tw-text-center">
+            + Start a fundraiser
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Right: stat tiles + analytics link (2/5 on desktop) -->
+      <div class="lg:tw-col-span-2">
+
+        <!-- 2×2 stat tiles -->
+        <div class="tw-grid tw-grid-cols-2 tw-gap-3 tw-mb-3">
+
+          <a routerLink="/campaigns/events/details"
+             class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
+            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-[var(--brand-color,#667eea)]">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div>
+              <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
+              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Active Events</div>
+            </div>
+          </a>
+
+          <a routerLink="/campaigns/fundraisers/details"
+             class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
+            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-success">
+              <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <div>
+              <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
+              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Fundraisers</div>
+            </div>
+          </a>
+
+          <a routerLink="/campaigns/events/tickets"
+             class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
+            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-warning">
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="tw-min-w-0">
+              <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color: #333;">{{ formatCurrency(dashboardData.stats.thisMonthSales || 0) }}</div>
+              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Ticket Sales</div>
+            </div>
+          </a>
+
+          <a routerLink="/campaigns/fundraisers/donations"
+             class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
+            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-[#0891b2]">
+              <i class="fas fa-peso-sign"></i>
+            </div>
+            <div class="tw-min-w-0">
+              <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color: #333;">{{ formatCurrency(dashboardData.stats.thisMonthDonations || 0) }}</div>
+              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Donations</div>
+            </div>
+          </a>
+
+        </div>
+
+        <!-- Analytics link -->
+        <a routerLink="/campaigns/events/details"
+           class="tw-flex tw-items-center tw-justify-between tw-px-card-pad tw-py-4 tw-bg-white tw-no-underline tw-text-sm tw-text-gray-700 tw-rounded-card tw-shadow-card hover:tw-shadow-md tw-transition-shadow">
+          <span>Event sales analytics</span>
+          <span class="tw-text-muted">→</span>
+        </a>
+
       </div>
 
     </div>
-
-    <!-- ── Section 4: Event Sales Charts ──────────────────── -->
-    <div class="tw-mb-6">
-      <app-event-sales-chart [eventSales]="dashboardData.eventSales"></app-event-sales-chart>
-    </div>
-
-    <!-- ── Section 5: Fundraiser Donations Charts ─────────── -->
-    <div class="tw-mb-6">
-      <app-fundraiser-donations-chart [fundraiserDonations]="dashboardData.fundraiserDonations"></app-fundraiser-donations-chart>
-    </div>
-
   </div>
-</div>
+
+  <!-- Analytics -->
+  <div class="tw-px-4 tw-pb-8 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
+    <app-analytics-panel
+      [eventSales]="dashboardData.eventSales"
+      [fundraiserDonations]="dashboardData.fundraiserDonations">
+    </app-analytics-panel>
+  </div>
+
+</ng-container>

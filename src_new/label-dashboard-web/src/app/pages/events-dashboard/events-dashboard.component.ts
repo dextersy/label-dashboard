@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { EventSalesChartComponent, EventSales } from '../dashboard/components/event-sales-chart/event-sales-chart.component';
-import { FundraiserDonationsChartComponent, FundraiserDonations } from '../dashboard/components/fundraiser-donations-chart/fundraiser-donations-chart.component';
+import { EventSales } from '../dashboard/components/event-sales-chart/event-sales-chart.component';
+import { FundraiserDonations } from '../dashboard/components/fundraiser-donations-chart/fundraiser-donations-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { AnalyticsPanelComponent } from './components/analytics-panel/analytics-panel.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { EventService } from '../../services/event.service';
 import { FundraiserService } from '../../services/fundraiser.service';
@@ -51,8 +52,7 @@ interface CampaignsDashboardData {
     imports: [
         CommonModule,
         RouterModule,
-        EventSalesChartComponent,
-        FundraiserDonationsChartComponent,
+        AnalyticsPanelComponent,
         BreadcrumbComponent
     ],
     templateUrl: './events-dashboard.component.html',
@@ -131,5 +131,17 @@ export class EventsDashboardComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount || 0);
+  }
+
+  getDaysAway(dateStr: string): number {
+    const diff = new Date(dateStr).getTime() - new Date().getTime();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  getDaysAwayLabel(dateStr: string): string {
+    const days = this.getDaysAway(dateStr);
+    if (days === 0) return 'today';
+    if (days === 1) return '1 day away';
+    return `${days} days away`;
   }
 }
