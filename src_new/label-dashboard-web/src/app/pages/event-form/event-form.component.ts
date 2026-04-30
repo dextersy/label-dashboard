@@ -111,7 +111,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     status: 'draft',
     // Walk-in settings
     walk_in_enabled: false,
-    walk_in_supports_cash: false,
+    walk_in_supports_cash: true,
     walk_in_supports_gcash: false,
     walk_in_supports_card: false,
     walk_in_max_count: 0
@@ -139,10 +139,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   // Quill editor config
   quillConfig = {
     toolbar: [
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link'],
-      ['clean']
+      ['bold', 'italic', 'underline', 'link']
     ]
   };
 
@@ -306,7 +303,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       status: 'draft',
       // Walk-in settings
       walk_in_enabled: false,
-      walk_in_supports_cash: false,
+      walk_in_supports_cash: true,
       walk_in_supports_gcash: false,
       walk_in_supports_card: false,
       walk_in_max_count: 0
@@ -320,10 +317,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     const tabs: InPageNavTab[] = [
       { id: 'details', label: 'Details', icon: 'fa fa-info-circle' },
       { id: 'pricing', label: 'Pricing', icon: 'fa fa-ticket' },
-      { id: 'purchase', label: 'Buy Page', icon: 'fa fa-shopping-cart' },
+      { id: 'purchase', label: 'Buy page', icon: 'fa fa-shopping-cart' },
     ];
     if (!this.isNewEvent) {
-      tabs.push({ id: 'walk-in', label: 'Walk-In', icon: 'fas fa-walking' });
+      tabs.push({ id: 'walk-in', label: 'Walk-in', icon: 'fas fa-walking' });
     }
     if (!this.isEventDraft()) {
       tabs.push({ id: 'scanner', label: 'Scanner', icon: 'fa fa-qrcode' });
