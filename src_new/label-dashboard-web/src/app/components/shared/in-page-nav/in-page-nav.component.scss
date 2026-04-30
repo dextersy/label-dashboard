@@ -117,7 +117,7 @@
   .ipn-sidebar {
     flex: none;
     position: static;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
@@ -134,22 +134,28 @@
     }
 
     .ipn-item {
-      padding: 14px 20px;
+      padding: 10px 20px;
       border-left: none;
-      border-bottom: 3px solid transparent;
+      border-bottom: 2px solid transparent;
       white-space: nowrap;
       width: auto;
+      color: #6c757d;
+
+      &:hover:not(:disabled) {
+        color: #1f2937;
+      }
 
       &.active {
         border-left-color: transparent;
-        border-bottom-color: var(--brand-color, var(--brand-color, #3b82f6));
+        border-bottom-color: #7c3aed;
+        color: #7c3aed;
       }
 
       &.ipn-item--danger {
         margin-top: 0;
         margin-left: auto;
-        border-left: 1px solid #e0e0e0;
-        border-bottom: none;
+        border-left: 1px solid #e5e7eb;
+        border-bottom: 2px solid transparent;
       }
     }
   }
@@ -170,6 +176,7 @@
 
     .ipn-item {
       flex: 1;
+      min-width: 64px;
       justify-content: center;
 
       // Danger item: don't stretch, push to end
@@ -177,8 +184,8 @@
         flex: 0 0 auto;
         margin-left: auto;
         min-width: 56px;
-        border-left: 1px solid #e0e0e0;
-        border-bottom: none;
+        border-left: 1px solid #e5e7eb;
+        border-bottom: 2px solid transparent;
         color: #dc3545;
       }
     }
@@ -191,17 +198,17 @@
   // Stack mode: >2 tabs — icon stacks above label
   .ipn-stack .ipn-sidebar .ipn-item {
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     min-height: 60px;
-    padding: 14px 4px 10px !important;
+    padding: 10px 4px !important;
 
     i:first-child {
-      font-size: 20px;
+      font-size: 20px; // w-5 h-5 equivalent
       width: auto;
     }
 
     span {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 500;
       flex: unset;
     }
