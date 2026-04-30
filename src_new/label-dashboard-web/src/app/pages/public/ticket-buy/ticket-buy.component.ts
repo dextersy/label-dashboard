@@ -515,7 +515,12 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   private applyParallax(scrollTop: number) {
     if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
-    const translate = -(scrollTop * 0.3);
+    const panel = this.posterImg.nativeElement.parentElement;
+    if (!panel) return;
+    // Image is 160% tall with top: -30%, giving 30% buffer above and below.
+    // Clamp translation so the image never slides out of the panel.
+    const maxShift = panel.clientHeight * 0.30;
+    const translate = Math.max(-maxShift, Math.min(maxShift, -(scrollTop * 0.5)));
     this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
   }
 
