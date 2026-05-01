@@ -1,52 +1,51 @@
 <div class="event-selection-container">
   <div class="dropdown" [class.open]="isDropdownOpen">
-    <button class="event-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
+    <button class="event-dropdown-btn"
+            type="button"
+            (click)="toggleDropdown()"
+            [disabled]="loading"
+            [class.has-poster]="selectedEvent && hasValidImage(selectedEvent)"
+            [style.background-image]="selectedEvent && hasValidImage(selectedEvent) ? 'url(' + selectedEvent.poster_url + ')' : null">
+
+      <!-- Poster overlay -->
+      <div *ngIf="selectedEvent && hasValidImage(selectedEvent)" class="poster-overlay"></div>
 
       <!-- Selected event -->
-      <div class="tw-flex tw-items-center tw-flex-1 tw-min-w-0" *ngIf="selectedEvent">
-        <!-- Poster -->
-        <div class="tw-flex-shrink-0 tw-mr-3">
-          <img *ngIf="hasValidImage(selectedEvent); else defaultPoster"
-               [src]="selectedEvent.poster_url"
-               class="tw-w-12 tw-h-12 tw-rounded-md tw-object-cover tw-border tw-border-gray-200"
-               [alt]="selectedEvent.title"
-               (error)="onImageError($event, selectedEvent.id)">
-          <ng-template #defaultPoster>
-            <div class="tw-w-12 tw-h-12 tw-rounded-md tw-flex tw-items-center tw-justify-center tw-text-white tw-text-xl tw-border tw-border-gray-200"
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
-              <i class="fa fa-calendar-alt"></i>
-            </div>
-          </ng-template>
+      <div class="btn-content tw-flex-1 tw-min-w-0 tw-relative tw-z-10" *ngIf="selectedEvent">
+        <div class="tw-font-semibold tw-text-base tw-truncate tw-mb-0.5"
+             [class.tw-text-white]="hasValidImage(selectedEvent)"
+             [class.tw-text-gray-800]="!hasValidImage(selectedEvent)">{{ selectedEvent.title }}</div>
+        <div class="tw-flex tw-items-center tw-gap-1 tw-mb-1 tw-flex-wrap">
+          <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm"
+                [class.tw-text-white]="hasValidImage(selectedEvent)"
+                [class.tw-opacity-80]="hasValidImage(selectedEvent)"
+                [class.tw-text-gray-500]="!hasValidImage(selectedEvent)">
+            <i class="fa fa-clock"></i>
+            {{ selectedEvent.date_and_time | date:'MMM d, y • h:mm a' }}
+          </span>
+          <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm"
+                [class.tw-text-white]="hasValidImage(selectedEvent)"
+                [class.tw-opacity-80]="hasValidImage(selectedEvent)"
+                [class.tw-text-gray-500]="!hasValidImage(selectedEvent)">
+            <i class="fas fa-map-marker-alt"></i>
+            {{ selectedEvent.venue }}
+          </span>
         </div>
-        <!-- Details -->
-        <div class="tw-flex-1 tw-min-w-0">
-          <div class="tw-font-semibold tw-text-base tw-text-gray-800 tw-truncate tw-mb-0.5">{{ selectedEvent.title }}</div>
-          <div class="tw-flex tw-items-center tw-gap-3 tw-mb-1 tw-flex-wrap">
-            <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
-              <i class="fa fa-clock tw-text-gray-400"></i>
-              {{ selectedEvent.date_and_time | date:'MMM d, y • h:mm a' }}
-            </span>
-            <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
-              <i class="fas fa-map-marker-alt tw-text-gray-400"></i>
-              {{ selectedEvent.venue }}
-            </span>
-          </div>
-          <span class="badge" [class]="getEventStatusClass(selectedEvent)">{{ getEventStatusText(selectedEvent) }}</span>
-        </div>
+        <span class="badge" [class]="getEventStatusClass(selectedEvent)">{{ getEventStatusText(selectedEvent) }}</span>
       </div>
 
       <!-- Placeholder -->
-      <div *ngIf="!selectedEvent && !loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm">
+      <div *ngIf="!selectedEvent && !loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-relative tw-z-10">
         <i class="fa fa-calendar-plus"></i>
         Select an Event
       </div>
 
       <!-- Loading -->
-      <div *ngIf="loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm">
+      <div *ngIf="loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-relative tw-z-10">
         <div class="loading-spinner"></div>Loading events...
       </div>
 
-      <span class="caret"></span>
+      <span class="caret tw-relative tw-z-10" [class.caret-white]="selectedEvent && hasValidImage(selectedEvent)"></span>
     </button>
 
     <ul class="dropdown-menu" *ngIf="isDropdownOpen">

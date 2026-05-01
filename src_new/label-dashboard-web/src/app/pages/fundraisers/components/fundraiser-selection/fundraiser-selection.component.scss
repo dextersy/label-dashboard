@@ -23,31 +23,35 @@
   width: 100%;
   max-width: 100%;
   text-align: left;
-  padding: 15px 20px;
+  padding: 14px 16px;
   border: none !important;
   background: #fff;
+  background-size: cover;
+  background-position: center;
   border-radius: 8px;
   min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.2s ease;
+  gap: 12px;
+  transition: box-shadow 0.2s, transform 0.2s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 
   &::after {
     display: none !important;
   }
 
   &:hover {
-    background: #f9fafb;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #3b82f6) 20%, transparent);
   }
 
   &:disabled {
@@ -55,44 +59,18 @@
     cursor: not-allowed;
 
     &:hover {
-      background: #fff;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
       transform: none;
     }
   }
 }
 
-.fundraiser-info {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-}
-
-.fundraiser-poster {
-  margin-right: 15px;
-  flex-shrink: 0;
-}
-
-.fundraiser-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
-  object-fit: cover;
-  border: 2px solid #e1e5e9;
-}
-
-.default-fundraiser-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 20px;
-  border: 2px solid #e1e5e9;
+// Dark overlay when poster is set
+.poster-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.65) 0%, rgba(255,255,255,0.45) 100%);
+  z-index: 0;
 }
 
 .fundraiser-details {
@@ -176,6 +154,10 @@
   border-left: 5px solid transparent;
   transition: transform 0.2s ease;
   flex-shrink: 0;
+}
+
+.caret-white {
+  border-top-color: rgba(255,255,255,0.8);
 }
 
 .dropdown.open .caret {
@@ -495,24 +477,6 @@
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box;
-  }
-
-  .fundraiser-info {
-    max-width: calc(100% - 30px);
-    overflow: hidden;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .fundraiser-poster {
-    flex-shrink: 0;
-  }
-
-  .fundraiser-details {
-    flex: 1;
-    min-width: 0;
-    max-width: 100%;
-    overflow: hidden;
   }
 
   .fundraiser-title {

@@ -1,47 +1,50 @@
 <div class="fundraiser-selection-container">
   <div class="fundraiser-selection-row">
     <div class="dropdown" [class.open]="isDropdownOpen">
-      <button class="btn-secondary fundraiser-dropdown-btn" type="button" (click)="toggleDropdown()" [disabled]="loading">
-        <div class="fundraiser-info" *ngIf="selectedFundraiser">
-          <div class="fundraiser-poster">
-            <img *ngIf="selectedFundraiser.poster_url; else defaultPoster"
-                 [src]="selectedFundraiser.poster_url"
-                 class="fundraiser-image"
-                 [alt]="selectedFundraiser.title"
-                 (error)="onImageError($event)">
-            <ng-template #defaultPoster>
-              <div class="default-fundraiser-image">
-                <i class="fa fa-hand-holding-heart"></i>
-              </div>
-            </ng-template>
+      <button class="btn-secondary fundraiser-dropdown-btn"
+              type="button"
+              (click)="toggleDropdown()"
+              [disabled]="loading"
+              [class.has-poster]="selectedFundraiser?.poster_url"
+              [style.background-image]="selectedFundraiser?.poster_url ? 'url(' + selectedFundraiser?.poster_url + ')' : null">
+
+        <!-- Poster overlay -->
+        <div *ngIf="selectedFundraiser?.poster_url" class="poster-overlay"></div>
+
+        <!-- Selected fundraiser -->
+        <div class="tw-flex-1 tw-min-w-0 tw-relative tw-z-10" *ngIf="selectedFundraiser">
+          <div class="fundraiser-title"
+               [class.tw-text-white]="selectedFundraiser.poster_url"
+               [class.tw-text-gray-800]="!selectedFundraiser.poster_url">
+            {{ selectedFundraiser.title }}
+            <span class="badge badge-sm tw-ml-2" [class]="getFundraiserStatusClass(selectedFundraiser)">
+              {{ getFundraiserStatusText(selectedFundraiser) }}
+            </span>
           </div>
-          <div class="fundraiser-details">
-            <div class="fundraiser-title">
-              {{ selectedFundraiser.title }}
-              <span class="badge badge-sm tw-ml-2" [class]="getFundraiserStatusClass(selectedFundraiser)">
-                {{ getFundraiserStatusText(selectedFundraiser) }}
-              </span>
-            </div>
-            <div class="fundraiser-meta">
-              <span class="fundraiser-raised">
-                <i class="fa fa-peso-sign tw-mr-1"></i>
-                {{ formatCurrency(selectedFundraiser.totalRaised) }} raised
-              </span>
-              <span class="fundraiser-donors tw-ml-2" *ngIf="selectedFundraiser.donationCount">
-                <i class="fas fa-users tw-mr-1"></i>
-                {{ selectedFundraiser.donationCount }} donors
-              </span>
-            </div>
+          <div class="fundraiser-meta">
+            <span class="fundraiser-raised"
+                  [class.tw-text-white]="selectedFundraiser.poster_url"
+                  [class.tw-opacity-80]="selectedFundraiser.poster_url">
+              <i class="fa fa-peso-sign tw-mr-1"></i>
+              {{ formatCurrency(selectedFundraiser.totalRaised) }} raised
+            </span>
+            <span class="fundraiser-donors tw-ml-2" *ngIf="selectedFundraiser.donationCount"
+                  [class.tw-text-white]="selectedFundraiser.poster_url"
+                  [class.tw-opacity-80]="selectedFundraiser.poster_url">
+              <i class="fas fa-users tw-mr-1"></i>
+              {{ selectedFundraiser.donationCount }} donors
+            </span>
           </div>
         </div>
-        <div *ngIf="!selectedFundraiser && !loading" class="no-fundraiser">
+
+        <div *ngIf="!selectedFundraiser && !loading" class="no-fundraiser tw-relative tw-z-10">
           <i class="fa fa-hand-holding-heart tw-mr-2"></i>
           Select a Fundraiser
         </div>
-        <div *ngIf="loading" class="loading-inline">
+        <div *ngIf="loading" class="loading-inline tw-relative tw-z-10">
           <div class="loading-spinner"></div>Loading fundraisers...
         </div>
-        <span class="caret"></span>
+        <span class="caret tw-relative tw-z-10" [class.caret-white]="selectedFundraiser?.poster_url"></span>
       </button>
 
       <ul class="dropdown-menu" *ngIf="isDropdownOpen">
