@@ -86,10 +86,7 @@ quill-editor {
       color: #333;
     }
 
-    p {
-      color: #6c757d;
-      margin-bottom: 24px;
-    }
+
   }
 
   .form-label {
@@ -149,64 +146,96 @@ quill-editor {
   }
 
   .payment-methods-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-
-    // Desktop: 4 per row
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(4, 1fr);
-    }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 
     .payment-method-card {
       position: relative;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      padding: 16px;
-      transition: all 0.2s;
-      cursor: pointer;
-
-      &:hover {
-        border-color: var(--brand-color, #3b82f6);
-        background: #f8f9fa;
-      }
+      width: 135px;
+      flex-shrink: 0;
 
       input[type="checkbox"] {
         position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-
-        &:checked ~ label {
-          color: var(--brand-color, #3b82f6);
-          font-weight: 600;
-        }
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
       }
 
       label {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
-        margin: 0;
+        gap: 6px;
+        padding: 14px 10px 12px;
+        width: 135px;
+        box-sizing: border-box;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
         cursor: pointer;
-        padding-right: 24px;
+        transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+        margin: 0;
+        user-select: none;
 
         i {
-          font-size: 24px;
-          color: #6c757d;
+          font-size: 20px;
+          color: #9ca3af;
+          transition: color 0.15s;
         }
 
         span {
-          font-size: 14px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #9ca3af;
           text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          width: 100%;
+          transition: color 0.15s;
+        }
+
+        &::after {
+          content: '\f00c';
+          font-family: 'Font Awesome 7 Free', 'Font Awesome 6 Free';
+          font-weight: 900;
+          position: absolute;
+          top: 7px;
+          right: 7px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #3C34B0;
+          color: #fff;
+          font-size: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transform: scale(0.6);
+          transition: opacity 0.15s, transform 0.15s;
+        }
+
+        &:hover {
+          border-color: #d1d5db;
+          background: #f9fafb;
         }
       }
 
-      input:checked ~ label i {
-        color: var(--brand-color, #3b82f6);
+      input:checked + label {
+        border-color: #3C34B0;
+        background: #EEEDFE;
+        box-shadow: 0 0 0 1px #3C34B0;
+
+        i { color: #3C34B0; }
+        span { color: #3C34B0; font-weight: 600; }
+
+        &::after {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
     }
   }

@@ -59,7 +59,7 @@
           <div class="form-section" *ngIf="activeSection === 'details'">
 
             <!-- Event identity -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Event identity</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Event identity</p>
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
               <div>
                 <label for="eventTitle" class="tw-label required">Event Title</label>
@@ -86,7 +86,7 @@
             </div>
 
             <!-- Location -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Location</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Location</p>
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
               <div>
                 <label class="tw-label required">Venue</label>
@@ -117,7 +117,7 @@
 
             <!-- URL Slug (draft only) -->
             <div class="tw-mb-5" *ngIf="isEventDraft()">
-              <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">URL slug</p>
+              <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">URL slug</p>
               <div class="input-group">
                 <input
                   type="text"
@@ -142,7 +142,7 @@
             </div>
 
             <!-- Description -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Description</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Description</p>
             <div class="tw-mb-5">
               <quill-editor
                 id="eventDescription"
@@ -158,7 +158,7 @@
 
             <!-- Event Poster -->
             <div class="tw-mb-3">
-              <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Event poster</p>
+              <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Event poster</p>
                 <div *ngIf="!posterPreview && !eventData.poster_url" 
                      class="poster-upload-zone" 
                      role="button"
@@ -200,7 +200,7 @@
           <div class="form-section" *ngIf="activeSection === 'purchase'">
 
             <!-- Purchase link -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Purchase link</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Purchase link</p>
             <div class="tw-mb-5">
               <div *ngIf="event && event.buy_shortlink">
                 <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
@@ -226,7 +226,7 @@
             </div>
 
             <!-- Sales settings -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Sales settings</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Sales settings</p>
             <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-5">
 
               <div>
@@ -298,49 +298,50 @@
             </div>
 
             <!-- Accepted payment methods -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Accepted payment methods</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Accepted payment methods</p>
             <div class="tw-mb-5">
               <div class="payment-methods-grid">
                 <div class="payment-method-card">
                   <input type="checkbox" id="gcash" [(ngModel)]="eventData.supports_gcash" [disabled]="isEventPast()">
-                  <label for="gcash"><i class="fa fa-mobile-alt"></i><span>GCash</span></label>
+                  <label for="gcash"><i class="fas fa-mobile-alt"></i><span>GCash</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="qrph" [(ngModel)]="eventData.supports_qrph" [disabled]="isEventPast()">
-                  <label for="qrph"><i class="fa fa-qrcode"></i><span>QR Ph</span></label>
+                  <label for="qrph"><i class="fas fa-qrcode"></i><span>QR Ph</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="card" [(ngModel)]="eventData.supports_card" [disabled]="isEventPast()">
-                  <label for="card"><i class="fa fa-credit-card"></i><span>Credit/Debit Card</span></label>
+                  <label for="card"><i class="fas fa-credit-card"></i><span>Credit / Debit Card</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="ubp" [(ngModel)]="eventData.supports_ubp" [disabled]="isEventPast()">
-                  <label for="ubp"><i class="fa fa-university"></i><span>UnionBank</span></label>
+                  <label for="ubp"><i class="fas fa-university"></i><span>UnionBank</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="maya" [(ngModel)]="eventData.supports_maya" [disabled]="isEventPast()">
-                  <label for="maya"><i class="fa fa-wallet"></i><span>Maya</span></label>
+                  <label for="maya"><i class="fas fa-wallet"></i><span>Maya</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="grabpay" [(ngModel)]="eventData.supports_grabpay" [disabled]="isEventPast()">
-                  <label for="grabpay"><i class="fa fa-car"></i><span>GrabPay</span></label>
+                  <label for="grabpay"><i class="fas fa-car"></i><span>GrabPay</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="dob" [(ngModel)]="eventData.supports_dob" [disabled]="isEventPast()">
-                  <label for="dob"><i class="fa fa-landmark"></i><span>Direct Online Banking</span></label>
+                  <label for="dob"><i class="fas fa-landmark"></i><span>Direct Online Banking</span></label>
                 </div>
               </div>
               <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))"
-                   class="tw-bg-violet-50 tw-text-violet-800 tw-text-xs tw-rounded-md tw-px-3 tw-py-2 tw-mt-3">
-                <strong class="tw-block tw-mb-1">Minimum transaction requirements</strong>
-                <ul class="tw-mb-0 tw-pl-3">
-                  <li *ngIf="paymentConfig?.min_card && eventData.supports_card">
-                    Credit card payments available for transactions {{ formatMinAmount(paymentConfig!.min_card!) }} and above.
-                  </li>
-                  <li *ngIf="paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob)">
-                    Unionbank and Direct Online Banking available for transactions {{ formatMinAmount(paymentConfig!.min_dob!) }} and above.
-                  </li>
-                </ul>
+                   class="tw-inline-flex tw-items-start tw-gap-2 tw-text-sm tw-text-violet-700 tw-mt-3">
+                <i class="fas fa-info-circle tw-mt-0.5 tw-shrink-0"></i>
+                <div>
+                  <strong class="tw-font-semibold">Minimum transaction requirements</strong> —
+                  <span *ngIf="paymentConfig?.min_card && eventData.supports_card">
+                    Credit card payments are available for transactions of {{ formatMinAmount(paymentConfig!.min_card!) }} and above.
+                  </span>
+                  <span *ngIf="paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob)">
+                    UnionBank &amp; Direct Online Banking are available for transactions of {{ formatMinAmount(paymentConfig!.min_dob!) }} and above.
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -378,7 +379,7 @@
           <div class="form-section" *ngIf="activeSection === 'scanner' && !isEventDraft()">
 
             <!-- Verification link -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Verification link</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Verification link</p>
             <div class="tw-mb-5">
               <div *ngIf="event && event.verification_link">
                 <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
@@ -397,7 +398,7 @@
             </div>
 
             <!-- Verification PIN -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">Verification PIN</p>
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Verification PIN</p>
             <div class="tw-mb-3">
               <div class="tw-flex tw-items-center tw-gap-2">
                 <input type="text" id="verificationPin" class="tw-input tw-flex-1 tw-min-w-0"
