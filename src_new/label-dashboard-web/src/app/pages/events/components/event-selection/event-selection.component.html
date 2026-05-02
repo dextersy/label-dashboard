@@ -1,64 +1,59 @@
 <div class="event-selection-container">
   <div class="dropdown" [class.open]="isDropdownOpen">
-    <button class="event-dropdown-btn"
+
+    <!-- Switcher trigger -->
+    <button class="event-switcher"
             type="button"
             (click)="toggleDropdown()"
-            [disabled]="loading"
-            [class.has-poster]="selectedEvent && hasValidImage(selectedEvent)"
-            [style.background-image]="selectedEvent && hasValidImage(selectedEvent) ? 'url(' + selectedEvent.poster_url + ')' : null">
+            [disabled]="loading">
 
-      <!-- Poster overlay -->
-      <div *ngIf="selectedEvent && hasValidImage(selectedEvent)" class="poster-overlay"></div>
+      <!-- Icon dot -->
+      <div class="event-icon-dot">
+        <i class="fa fa-music"></i>
+      </div>
 
-      <!-- Selected event -->
-      <div class="btn-content tw-flex-1 tw-min-w-0 tw-relative tw-z-10" *ngIf="selectedEvent">
-        <div class="tw-font-semibold tw-text-base tw-truncate tw-mb-0.5"
-             [class.tw-text-white]="hasValidImage(selectedEvent)"
-             [class.tw-text-gray-800]="!hasValidImage(selectedEvent)">{{ selectedEvent.title }}</div>
-        <div class="tw-flex tw-items-center tw-gap-1 tw-mb-1 tw-flex-wrap">
-          <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm"
-                [class.tw-text-white]="hasValidImage(selectedEvent)"
-                [class.tw-opacity-80]="hasValidImage(selectedEvent)"
-                [class.tw-text-gray-500]="!hasValidImage(selectedEvent)">
-            <i class="fa fa-clock"></i>
-            {{ selectedEvent.date_and_time | date:'MMM d, y • h:mm a' }}
-          </span>
-          <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm"
-                [class.tw-text-white]="hasValidImage(selectedEvent)"
-                [class.tw-opacity-80]="hasValidImage(selectedEvent)"
-                [class.tw-text-gray-500]="!hasValidImage(selectedEvent)">
-            <i class="fas fa-map-marker-alt"></i>
-            {{ selectedEvent.venue }}
-          </span>
-        </div>
-        <span class="badge" [class]="getEventStatusClass(selectedEvent)">{{ getEventStatusText(selectedEvent) }}</span>
+      <!-- Selected event info -->
+      <div class="switcher-info" *ngIf="selectedEvent">
+        <div class="switcher-title">{{ selectedEvent.title }}</div>
+        <div class="switcher-meta">{{ selectedEvent.date_and_time | date:'MMM d, y · h:mm a' }} · {{ selectedEvent.venue }}</div>
       </div>
 
       <!-- Placeholder -->
-      <div *ngIf="!selectedEvent && !loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-relative tw-z-10">
+      <div class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-flex-1 tw-min-w-0" *ngIf="!selectedEvent && !loading">
         <i class="fa fa-calendar-plus"></i>
         Select an Event
       </div>
 
       <!-- Loading -->
-      <div *ngIf="loading" class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-relative tw-z-10">
+      <div class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-flex-1 tw-min-w-0" *ngIf="loading">
         <div class="loading-spinner"></div>Loading events...
       </div>
 
-      <span class="caret tw-relative tw-z-10" [class.caret-white]="selectedEvent && hasValidImage(selectedEvent)"></span>
+      <!-- Right side: status + chevron -->
+      <div class="switcher-right" *ngIf="selectedEvent">
+        <span class="event-status-pill" [ngClass]="getEventStatusClass(selectedEvent)">
+          <span class="status-dot"></span>{{ getEventStatusText(selectedEvent) }}
+        </span>
+        <svg class="switcher-chevron" [class.rotated]="isDropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
     </button>
 
+    <!-- Dropdown panel -->
     <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+
       <!-- Mobile header -->
       <li class="mobile-dropdown-header">
-        <span class="tw-text-lg tw-font-semibold tw-text-gray-800">Select Event</span>
-        <button type="button" class="tw-w-10 tw-h-10 tw-rounded-full tw-bg-gray-100 tw-border-0 tw-flex tw-items-center tw-justify-center tw-cursor-pointer hover:tw-bg-gray-200"
+        <span class="tw-text-base tw-font-semibold tw-text-gray-800">Switch event</span>
+        <button type="button"
+                class="tw-w-9 tw-h-9 tw-rounded-full tw-bg-gray-100 tw-border-0 tw-flex tw-items-center tw-justify-center tw-cursor-pointer hover:tw-bg-gray-200"
                 (click)="toggleDropdown(); $event.stopPropagation()">
           <i class="fa fa-times tw-text-gray-500"></i>
         </button>
       </li>
 
-      <!-- Search -->
+      <!-- Search (5+ events) -->
       <li class="tw-px-3 tw-py-2 tw-border-b tw-border-gray-100" *ngIf="events.length > 5">
         <div class="tw-relative tw-flex tw-items-center">
           <i class="fa fa-search tw-absolute tw-left-3 tw-text-gray-400 tw-z-10"></i>
@@ -78,52 +73,36 @@
         </div>
       </li>
 
-      <li class="tw-h-px tw-bg-gray-100 tw-my-1" *ngIf="events.length > 5"></li>
-
       <!-- Create new event -->
-      <li *ngIf="isAdmin" class="tw-border-t tw-border-gray-100 tw-mt-1 tw-pt-1">
-        <a (click)="createEvent()" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-font-semibold tw-cursor-pointer hover:tw-bg-gray-50 tw-no-underline" style="color: var(--brand-color, #3b82f6)">
+      <li *ngIf="isAdmin" class="dropdown-create-item">
+        <a (click)="createEvent()" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2.5 tw-text-sm tw-font-semibold tw-cursor-pointer hover:tw-bg-gray-50 tw-no-underline" style="color: var(--brand-color, #3b82f6)">
           <i class="fa fa-plus" style="color: var(--brand-color, #3b82f6)"></i>
           Create New Event
         </a>
       </li>
 
-      <li class="tw-h-px tw-bg-gray-100 tw-my-1" *ngIf="isAdmin && events.length > 0"></li>
+      <li class="tw-h-px tw-bg-gray-100" *ngIf="isAdmin && events.length > 0"></li>
 
       <!-- Event items -->
-      <li *ngFor="let event of filteredEvents"
-          [class.active]="selectedEvent?.id === event.id"
-          class="event-item">
-        <a (click)="selectEvent(event)" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-cursor-pointer tw-no-underline tw-text-gray-800">
-          <!-- Poster -->
-          <div class="tw-flex-shrink-0">
-            <img *ngIf="hasValidImage(event); else dropdownDefaultPoster"
-                 [src]="event.poster_url"
-                 class="tw-w-10 tw-h-10 tw-rounded tw-object-cover tw-border tw-border-gray-200"
-                 [alt]="event.title"
-                 (error)="onDropdownImageError($event, event.id)">
-            <ng-template #dropdownDefaultPoster>
-              <div class="tw-w-10 tw-h-10 tw-rounded tw-flex tw-items-center tw-justify-center tw-text-white tw-border tw-border-gray-200"
-                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
-                <i class="fa fa-calendar-alt tw-text-sm"></i>
-              </div>
-            </ng-template>
+      <li *ngFor="let event of filteredEvents; let i = index"
+          [class.selected]="selectedEvent?.id === event.id"
+          class="dropdown-event-item">
+        <a (click)="selectEvent(event)" class="dropdown-event-link">
+          <!-- Dot icon -->
+          <div class="di-dot" [ngStyle]="getEventDotStyle(i)">
+            <i class="fa fa-music"></i>
           </div>
           <!-- Info -->
-          <div class="tw-flex-1 tw-min-w-0">
-            <div class="tw-font-semibold tw-text-base tw-truncate tw-mb-0.5">{{ event.title }}</div>
-            <div class="tw-flex tw-flex-col tw-gap-0.5 tw-mb-1">
-              <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
-                <i class="fa fa-clock tw-text-gray-400"></i>
-                {{ event.date_and_time | date:'MMM d, y • h:mm a' }}
-              </span>
-              <span class="tw-flex tw-items-center tw-gap-1 tw-text-sm tw-text-gray-500">
-                <i class="fas fa-map-marker-alt tw-text-gray-400"></i>
-                {{ event.venue }}
-              </span>
-            </div>
-            <span class="badge badge-sm" [class]="getEventStatusClass(event)">{{ getEventStatusText(event) }}</span>
+          <div class="di-info">
+            <div class="di-title">{{ event.title }}</div>
+            <div class="di-date">{{ event.date_and_time | date:'MMM d, y' }}</div>
           </div>
+          <!-- Status -->
+          <span class="event-status-pill event-status-pill--sm" [ngClass]="getEventStatusClass(event)">{{ getEventStatusText(event) }}</span>
+          <!-- Selected checkmark -->
+          <svg *ngIf="selectedEvent?.id === event.id" class="di-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
         </a>
       </li>
 

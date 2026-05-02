@@ -23,6 +23,14 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   searchTerm = '';
   brokenImages = new Set<number>();
 
+  private readonly dotGradients = [
+    'linear-gradient(135deg, #3b1f7a, #6d3fd4)',
+    'linear-gradient(135deg, #0f6e56, #1d9e75)',
+    'linear-gradient(135deg, #993c1d, #d85a30)',
+    'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+    'linear-gradient(135deg, #78350f, #d97706)',
+  ];
+
   private boundHandleOutsideClick = this.handleOutsideClick.bind(this);
 
   constructor(private router: Router) {}
@@ -116,6 +124,10 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
       default:
         return 'badge-primary';
     }
+  }
+
+  getEventDotStyle(index: number): Record<string, string> {
+    return { background: this.dotGradients[index % this.dotGradients.length] };
   }
 
   onImageError(domEvent: any, eventId: number): void {
