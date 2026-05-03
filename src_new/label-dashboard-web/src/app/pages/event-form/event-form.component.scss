@@ -26,10 +26,6 @@
   }
 }
 
-quill-editor {
-  display: block;
-  width: 100%;
-}
 
 .event-form-container {
   background: white;
@@ -100,20 +96,6 @@ quill-editor {
     }
   }
 
-  .poster-upload-zone {
-    border: 2px dashed #dee2e6;
-    border-radius: 8px;
-    padding: 48px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      border-color: var(--brand-color, #3b82f6);
-      background: #f8f9fa;
-    }
-  }
-
   .poster-preview {
     position: relative;
     display: block;
@@ -129,15 +111,26 @@ quill-editor {
 
     .poster-remove-btn {
       position: absolute;
-      top: 8px;
-      right: -40px;
+      top: 6px;
+      right: 6px;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.75);
+      }
 
       i.fa {
         margin-right: 0 !important;
@@ -207,7 +200,7 @@ quill-editor {
           width: 16px;
           height: 16px;
           border-radius: 50%;
-          background: #3C34B0;
+          background: var(--brand-color, #3b82f6);
           color: #fff;
           font-size: 8px;
           display: flex;
@@ -225,12 +218,12 @@ quill-editor {
       }
 
       input:checked + label {
-        border-color: #3C34B0;
-        background: #EEEDFE;
-        box-shadow: 0 0 0 1px #3C34B0;
+        border-color: var(--brand-color, #3b82f6);
+        background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, white);
+        box-shadow: 0 0 0 1px var(--brand-color, #3b82f6);
 
-        i { color: #3C34B0; }
-        span { color: #3C34B0; font-weight: 600; }
+        i { color: var(--brand-color, #3b82f6); }
+        span { color: var(--brand-color, #3b82f6); font-weight: 600; }
 
         &::after {
           opacity: 1;
@@ -239,6 +232,294 @@ quill-editor {
       }
     }
   }
+}
+
+// ── Shared brand color shorthands (used throughout this file) ─────────────────
+// All colors expressed as color-mix(in srgb, var(--brand-color) X%, base)
+
+// ── Section label ─────────────────────────────────────────────────────────────
+.ef-section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 30%, #9ca3af);
+  margin-bottom: 14px;
+}
+
+// ── Field label ───────────────────────────────────────────────────────────────
+.ef-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #6b7280);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.ef-label-required {
+  color: #EF4444; // semantic — not brand
+  margin-left: 2px;
+}
+
+.ef-label-optional {
+  font-size: 11px;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #d1d5db);
+  margin-left: 4px;
+}
+
+// ── Field wrapper (contextual icon + filled indicator) ────────────────────────
+.ef-field {
+  position: relative;
+
+  .tw-input {
+    padding-right: 36px; // space for icon
+  }
+}
+
+.ef-field-icon-end {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #e5e7eb);
+  font-size: 13px;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.ef-field-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--brand-color, #3b82f6);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+// ── Hint text below a field ───────────────────────────────────────────────────
+.ef-hint {
+  display: block;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 25%, #9ca3af);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+// ── Description wrapper ───────────────────────────────────────────────────────
+.ef-description-wrap {
+  border: 1px solid color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: var(--brand-color, #3b82f6);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #3b82f6) 15%, transparent);
+  }
+
+  quill-editor {
+    display: block;
+    width: 100%;
+
+    ::ng-deep {
+      .ql-toolbar {
+        border: none !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--brand-color, #3b82f6) 8%, #e5e7eb) !important;
+        padding: 6px 10px;
+        background: color-mix(in srgb, var(--brand-color, #3b82f6) 2%, white);
+      }
+
+      .ql-container {
+        border: none !important;
+        font-size: 14px;
+      }
+
+      .ql-editor {
+        min-height: 140px;
+        color: #1f2937;
+        padding: 12px 14px;
+
+        &.ql-blank::before {
+          color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #e5e7eb);
+          font-style: normal;
+        }
+      }
+
+      // Toolbar buttons dimmed when empty
+      .ql-formats button,
+      .ql-formats .ql-picker {
+        color: color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #d1d5db) !important;
+        transition: color 0.15s;
+      }
+    }
+  }
+
+  &.ef-description-wrap--has-content {
+    quill-editor ::ng-deep {
+      .ql-formats button,
+      .ql-formats .ql-picker {
+        color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #6b7280) !important;
+      }
+    }
+  }
+}
+
+.ef-description-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+
+  small {
+    font-size: 11px;
+    color: color-mix(in srgb, var(--brand-color, #3b82f6) 25%, #9ca3af);
+  }
+
+  .ef-char-over {
+    color: #EF4444; // semantic — not brand
+    font-weight: 600;
+  }
+}
+
+// ── Poster upload zone ────────────────────────────────────────────────────────
+.ef-poster-zone {
+  border: 1.5px dashed color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #e5e7eb);
+  background: color-mix(in srgb, var(--brand-color, #3b82f6) 2%, white);
+  border-radius: 10px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--brand-color, #3b82f6);
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 5%, white);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--brand-color, #3b82f6);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #3b82f6) 15%, transparent);
+  }
+}
+
+.ef-poster-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: var(--brand-color, #3b82f6);
+  font-size: 20px;
+}
+
+.ef-poster-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #6b7280);
+  margin: 0 0 4px;
+}
+
+.ef-poster-hint {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #d1d5db);
+}
+
+// ── New event header ──────────────────────────────────────────────────────────
+.new-event-header {
+  margin-bottom: 20px;
+}
+
+.new-event-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.new-event-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #e5e7eb);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #6b7280);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  font-size: 13px;
+
+  &:hover {
+    border-color: var(--brand-color, #3b82f6);
+    color: var(--brand-color, #3b82f6);
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 6%, white);
+  }
+}
+
+.new-event-title-block {
+  flex: 1;
+}
+
+.new-event-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.new-event-subtitle {
+  font-size: 13px;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 25%, #9ca3af);
+  margin: 0;
+}
+
+.new-event-progress {
+  max-width: 480px;
+}
+
+.new-event-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 25%, #9ca3af);
+  margin-bottom: 6px;
+}
+
+.new-event-progress-track {
+  height: 3px;
+  background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, #e5e7eb);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.new-event-progress-fill {
+  height: 100%;
+  background: var(--brand-color, #3b82f6);
+  border-radius: 2px;
+  transition: width 0.35s ease;
+}
+
+// ── Create event CTA disabled state ──────────────────────────────────────────
+.ef-create-btn--disabled {
+  background: color-mix(in srgb, var(--brand-color, #3b82f6) 12%, #e5e7eb) !important;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #d1d5db) !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+// ── Save changes button (always visible on published edit) ────────────────────
+.ef-save-btn {
+  // Inherits btn-primary styles; no extra modifier needed
 }
 
 /* Loading State */

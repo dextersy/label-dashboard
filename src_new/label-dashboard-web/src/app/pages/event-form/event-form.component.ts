@@ -508,15 +508,15 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     const file = event.target.files[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
       if (!allowedTypes.includes(file.type)) {
-        this.notificationService.showError('Please select a valid image file (JPG, PNG, GIF).');
+        this.notificationService.showError('Please select a valid image file (JPG or PNG).');
         return;
       }
 
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        this.notificationService.showError('File is too large. Please select an image smaller than 10MB.');
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.notificationService.showError('File is too large. Please select an image smaller than 5MB.');
         return;
       }
 
@@ -708,6 +708,31 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     return (this.event?.tickets?.filter((ticket: any) => 
       ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.'
     ).length || 0) > 0;
+  }
+
+  // ── New event progress tracking ───────────────────────────────────────────
+
+  completedSections(): number {
+    let n = 0;
+    if (this.eventData.title?.trim()) n++;
+    if (this.eventData.date_and_time) n++;
+    if (this.eventData.venue?.trim()) n++;
+    if (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price))) n++;
+    return n;
+  }
+
+  progressPercent(): number {
+    return Math.round((this.completedSections() / 4) * 100);
+  }
+
+  isNewEventValid(): boolean {
+    return !!(
+      this.eventData.title?.trim() &&
+      this.eventData.date_and_time &&
+      this.eventData.venue?.trim() &&
+      this.ticketTypes.length > 0 &&
+      this.ticketTypes.every(t => t.name?.trim() && t.price !== null && t.price !== undefined && !isNaN(t.price) && t.price >= 0)
+    );
   }
 
   isFormDirty(): boolean {

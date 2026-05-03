@@ -1,10 +1,10 @@
 <div class="event-form-page">
   <app-breadcrumb></app-breadcrumb>
 
-  <!-- Page Header with Event Selector -->
-  <div class="page-header tw-mb-3">
+  <!-- Page Header with Event Selector (Edit mode) -->
+  <div class="page-header tw-mb-3" *ngIf="!isNewEvent">
     <div class="tw-flex tw-items-start tw-flex-wrap tw-gap-3">
-      <div class="event-selector-main" *ngIf="!isNewEvent && availableEvents.length > 0">
+      <div class="event-selector-main" *ngIf="availableEvents.length > 0">
         <app-event-selection
           [events]="availableEvents"
           [selectedEvent]="event"
@@ -12,6 +12,28 @@
           [isAdmin]="isAdmin"
           (eventSelected)="onEventSelection($event)">
         </app-event-selection>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Event Header (New mode) -->
+  <div class="new-event-header" *ngIf="isNewEvent">
+    <div class="new-event-top">
+      <button type="button" class="new-event-back" (click)="onCancel()">
+        <i class="fa fa-chevron-left"></i>
+      </button>
+      <div class="new-event-title-block">
+        <h1 class="new-event-title">New event</h1>
+        <p class="new-event-subtitle">Fill in the details below</p>
+      </div>
+    </div>
+    <div class="new-event-progress">
+      <div class="new-event-progress-labels">
+        <span>{{ completedSections() }} of 4 sections complete</span>
+        <span>{{ progressPercent() }}%</span>
+      </div>
+      <div class="new-event-progress-track">
+        <div class="new-event-progress-fill" [style.width.%]="progressPercent()"></div>
       </div>
     </div>
   </div>
@@ -59,37 +81,49 @@
           <div class="form-section" *ngIf="activeSection === 'details'">
 
             <!-- Event identity -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Event identity</p>
+            <p class="ef-section-label">Event identity</p>
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
               <div>
-                <label for="eventTitle" class="tw-label required">Event Title</label>
-                <input
-                  type="text"
-                  id="eventTitle"
-                  class="tw-input"
-                  [(ngModel)]="eventData.title"
-                  (input)="onTitleChange()"
-                  placeholder="Enter event title"
-                  [disabled]="isEventPast()"
-                  required>
+                <label for="eventTitle" class="ef-label">
+                  Event Title <span class="ef-label-required">*</span>
+                </label>
+                <div class="ef-field" [class.ef-field--filled]="!!eventData.title">
+                  <input
+                    type="text"
+                    id="eventTitle"
+                    class="tw-input"
+                    [(ngModel)]="eventData.title"
+                    (input)="onTitleChange()"
+                    placeholder="Enter event title"
+                    [disabled]="isEventPast()"
+                    required>
+                  <span class="ef-field-check" *ngIf="eventData.title"><i class="fa fa-check"></i></span>
+                </div>
               </div>
               <div>
-                <label for="eventDateTime" class="tw-label required">Event Date & Time <span class="tw-text-gray-400 tw-font-normal">(GMT+8 PH)</span></label>
-                <input
-                  type="datetime-local"
-                  id="eventDateTime"
-                  class="tw-input"
-                  [(ngModel)]="eventData.date_and_time"
-                  [disabled]="false"
-                  required>
+                <label for="eventDateTime" class="ef-label">
+                  Event Date & Time <span class="ef-label-required">*</span>
+                  <span class="ef-label-optional">(GMT+8 PH)</span>
+                </label>
+                <div class="ef-field ef-field--icon-end" [class.ef-field--filled]="!!eventData.date_and_time">
+                  <input
+                    type="datetime-local"
+                    id="eventDateTime"
+                    class="tw-input"
+                    [(ngModel)]="eventData.date_and_time"
+                    [disabled]="false"
+                    required>
+                  <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><i class="fa fa-calendar"></i></span>
+                  <span class="ef-field-check" *ngIf="eventData.date_and_time"><i class="fa fa-check"></i></span>
+                </div>
               </div>
             </div>
 
             <!-- Location -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Location</p>
+            <p class="ef-section-label">Location</p>
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
               <div>
-                <label class="tw-label required">Venue</label>
+                <label class="ef-label">Venue <span class="ef-label-required">*</span></label>
                 <app-venue-autocomplete
                   placeholder="Search for venue or enter manually..."
                   [required]="true"
@@ -101,15 +135,22 @@
                 </app-venue-autocomplete>
               </div>
               <div>
-                <label for="rsvpLink" class="tw-label">RSVP or Social Media Link <span class="tw-text-gray-400 tw-font-normal tw-normal-case tw-text-xs">(optional)</span></label>
-                <input
-                  type="url"
-                  id="rsvpLink"
-                  class="tw-input"
-                  [(ngModel)]="eventData.rsvp_link"
-                  placeholder="https://facebook.com/events/..."
-                  [disabled]="isEventPast()">
-                <small class="form-text tw-text-muted">
+                <label for="rsvpLink" class="ef-label">
+                  RSVP or Social Media Link
+                  <span class="ef-label-optional">(optional)</span>
+                </label>
+                <div class="ef-field ef-field--icon-end" [class.ef-field--filled]="!!eventData.rsvp_link">
+                  <input
+                    type="url"
+                    id="rsvpLink"
+                    class="tw-input"
+                    [(ngModel)]="eventData.rsvp_link"
+                    placeholder="https://facebook.com/events/..."
+                    [disabled]="isEventPast()">
+                  <span class="ef-field-icon-end" *ngIf="!eventData.rsvp_link"><i class="fa fa-link"></i></span>
+                  <span class="ef-field-check" *ngIf="eventData.rsvp_link"><i class="fa fa-check"></i></span>
+                </div>
+                <small class="ef-hint">
                   <i class="fa fa-info-circle"></i> Facebook event page link or preferred social media page
                 </small>
               </div>
@@ -117,7 +158,7 @@
 
             <!-- URL Slug (draft only) -->
             <div class="tw-mb-5" *ngIf="isEventDraft()">
-              <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">URL slug</p>
+              <p class="ef-section-label">URL slug</p>
               <div class="input-group">
                 <input
                   type="text"
@@ -142,52 +183,66 @@
             </div>
 
             <!-- Description -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Description</p>
+            <p class="ef-section-label">
+              Description <span class="ef-label-optional">(optional)</span>
+            </p>
             <div class="tw-mb-5">
-              <quill-editor
-                id="eventDescription"
-                [(ngModel)]="eventData.description"
-                [modules]="quillConfig"
-                (onContentChanged)="onDescriptionContentChanged($event)"
-                placeholder="Enter event description...">
-              </quill-editor>
-              <small class="form-text" [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit" [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
-                {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
-              </small>
+              <div class="ef-description-wrap" [class.ef-description-wrap--has-content]="descriptionCharCount > 0">
+                <quill-editor
+                  id="eventDescription"
+                  [(ngModel)]="eventData.description"
+                  [modules]="quillConfig"
+                  (onContentChanged)="onDescriptionContentChanged($event)"
+                  placeholder="Enter event description...">
+                </quill-editor>
+              </div>
+              <div class="ef-description-footer">
+                <span></span>
+                <small [class.ef-char-over]="descriptionCharCount > descriptionCharLimit">
+                  {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }}
+                </small>
+              </div>
             </div>
 
             <!-- Event Poster -->
             <div class="tw-mb-3">
-              <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Event poster</p>
-                <div *ngIf="!posterPreview && !eventData.poster_url" 
-                     class="poster-upload-zone" 
-                     role="button"
-                     tabindex="0"
-                     (click)="posterInput.click()"
-                     (keydown)="onPosterUploadKeydown($event)"
-                     aria-label="Upload event poster image">
-                  <i class="fa fa-image fa-3x tw-mb-2 tw-text-muted"></i>
-                  <p class="tw-mb-0 tw-text-muted">Click to upload poster image</p>
-                  <small class="tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
-                </div>
+              <p class="ef-section-label">
+                Event poster <span class="ef-label-optional">(optional)</span>
+              </p>
 
-                <div *ngIf="posterPreview || eventData.poster_url" class="poster-preview">
-                  <img [src]="posterPreview || eventData.poster_url" alt="Event poster">
-                  <button 
-                    type="button" 
-                    class="btn-sm btn-danger poster-remove-btn"
-                    (click)="removePoster()">
-                    <i class="fa fa-times"></i>
-                  </button>
+              <!-- Upload zone (empty) -->
+              <div *ngIf="!posterPreview && !eventData.poster_url"
+                   class="ef-poster-zone"
+                   role="button"
+                   tabindex="0"
+                   (click)="posterInput.click()"
+                   (keydown)="onPosterUploadKeydown($event)"
+                   aria-label="Upload event poster image">
+                <div class="ef-poster-icon">
+                  <i class="fa fa-cloud-upload-alt"></i>
                 </div>
+                <p class="ef-poster-label">Tap to upload a poster</p>
+                <small class="ef-poster-hint">JPG or PNG · Max 5MB</small>
+              </div>
 
-                <input
-                  type="file"
-                  #posterInput
-                  accept="image/*"
-                  (change)="onPosterSelected($event)"
-                  aria-label="Event poster image file"
-                  style="display: none;">
+              <!-- Preview (filled) -->
+              <div *ngIf="posterPreview || eventData.poster_url" class="poster-preview">
+                <img [src]="posterPreview || eventData.poster_url" alt="Event poster">
+                <button
+                  type="button"
+                  class="poster-remove-btn"
+                  (click)="removePoster()">
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+
+              <input
+                type="file"
+                #posterInput
+                accept="image/jpeg,image/jpg,image/png"
+                (change)="onPosterSelected($event)"
+                aria-label="Event poster image file"
+                style="display: none;">
             </div>
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-primary" (click)="goToNextTab()">
@@ -200,7 +255,7 @@
           <div class="form-section" *ngIf="activeSection === 'purchase'">
 
             <!-- Purchase link -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Purchase link</p>
+            <p class="ef-section-label">Purchase link</p>
             <div class="tw-mb-5">
               <div *ngIf="event && event.buy_shortlink">
                 <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
@@ -226,7 +281,7 @@
             </div>
 
             <!-- Sales settings -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Sales settings</p>
+            <p class="ef-section-label">Sales settings</p>
             <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-5">
 
               <div>
@@ -264,11 +319,11 @@
                          [(ngModel)]="eventData.close_time"
                          [disabled]="isEventPast()">
                 </div>
-                <div class="tw-flex tw-flex-wrap tw-gap-2" *ngIf="!closeAtEventStart">
-                  <button type="button" class="btn-sm btn-secondary" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
-                  <button type="button" class="btn-sm btn-secondary" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
-                  <button type="button" class="btn-sm btn-secondary" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
-                  <button type="button" class="btn-sm btn-secondary" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
+                <div class="tw-flex tw-flex-wrap tw-gap-1.5" *ngIf="!closeAtEventStart">
+                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
+                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
+                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
+                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
                 </div>
               </div>
 
@@ -298,7 +353,7 @@
             </div>
 
             <!-- Accepted payment methods -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Accepted payment methods</p>
+            <p class="ef-section-label">Accepted payment methods</p>
             <div class="tw-mb-5">
               <div class="payment-methods-grid">
                 <div class="payment-method-card">
@@ -379,7 +434,7 @@
           <div class="form-section" *ngIf="activeSection === 'scanner' && !isEventDraft()">
 
             <!-- Verification link -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Verification link</p>
+            <p class="ef-section-label">Verification link</p>
             <div class="tw-mb-5">
               <div *ngIf="event && event.verification_link">
                 <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
@@ -398,7 +453,7 @@
             </div>
 
             <!-- Verification PIN -->
-            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-5">Verification PIN</p>
+            <p class="ef-section-label">Verification PIN</p>
             <div class="tw-mb-3">
               <div class="tw-flex tw-items-center tw-gap-2">
                 <input type="text" id="verificationPin" class="tw-input tw-flex-1 tw-min-w-0"
@@ -439,26 +494,13 @@
     <i class="fa fa-eye"></i> Preview Buy Page
   </button>
 
-  <!-- Cancel button only shown when creating a new event -->
-  <button
-    type="button"
-    class="btn-secondary"
-    (click)="onCancel()"
-    [disabled]="saving"
-    *ngIf="isNewEvent">
-    Cancel
-  </button>
-
-  <!-- Draft secondary button — *ngIf directly on button so Angular's content projection
-       selector (select=".fab-primary-btn") can match the primary button correctly.
-       ng-container wrappers prevent slot matching because ng-container becomes the direct
-       projected child, not the button inside it. -->
+  <!-- Draft secondary button -->
   <button
     type="button"
     class="btn-secondary"
     (click)="onSave()"
     [disabled]="saving || isEventPast()"
-    *ngIf="isEventDraft()">
+    *ngIf="!isNewEvent && isEventDraft()">
     <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
     <i class="fa fa-save" *ngIf="!saving"></i>
     <span *ngIf="!saving">Save as Draft</span>
@@ -478,27 +520,43 @@
     <span *ngIf="saving">Unpublishing...</span>
   </button>
 
-  <!-- Primary buttons — direct children so ng-content select=".fab-primary-btn" matches -->
+  <!-- Primary: New Event — "Create event" (disabled until valid) -->
+  <button
+    type="button"
+    class="btn-primary fab-primary-btn ef-create-btn"
+    (click)="onPublish()"
+    [disabled]="saving || !isNewEventValid()"
+    [class.ef-create-btn--disabled]="!isNewEventValid()"
+    *ngIf="isNewEvent">
+    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
+    <i class="fa fa-rocket" *ngIf="!saving"></i>
+    <span *ngIf="!saving">Create event</span>
+    <span *ngIf="saving">Creating...</span>
+  </button>
+
+  <!-- Primary: Edit Draft — "Publish" -->
   <button
     type="button"
     class="btn-primary fab-primary-btn"
     (click)="onPublish()"
     [disabled]="saving || isEventPast()"
-    *ngIf="isEventDraft()">
+    *ngIf="!isNewEvent && isEventDraft()">
     <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
     <i class="fa fa-rocket" *ngIf="!saving"></i>
     <span *ngIf="!saving">Publish</span>
     <span *ngIf="saving">Publishing...</span>
   </button>
+
+  <!-- Primary: Edit Published — "Save changes" (full-width, always visible) -->
   <button
     type="button"
-    class="btn-primary fab-primary-btn"
+    class="btn-primary fab-primary-btn ef-save-btn"
     (click)="onSave()"
-    [disabled]="saving || !isFormDirty() || isEventPast()"
+    [disabled]="saving || isEventPast()"
     *ngIf="isEventPublished()">
     <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
     <i class="fa fa-save" *ngIf="!saving"></i>
-    <span *ngIf="!saving">Save Changes</span>
+    <span *ngIf="!saving">Save changes</span>
     <span *ngIf="saving">Saving...</span>
   </button>
 </app-floating-action-bar>
