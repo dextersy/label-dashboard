@@ -1398,3 +1398,34 @@ div .table tbody {
     bottom: 70px !important;
   }
 }
+
+// Avatar initials chip — used in table cells via [innerHTML] (inline styles are stripped by sanitizer)
+.avatar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+
+  .avatar-chip__circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+
+    &.ac-0 { background: #6366f1; }
+    &.ac-1 { background: #8b5cf6; }
+    &.ac-2 { background: #ec4899; }
+    &.ac-3 { background: #f59e0b; }
+    &.ac-4 { background: #10b981; }
+    &.ac-5 { background: #3b82f6; }
+    &.ac-6 { background: #14b8a6; }
+    &.ac-7 { background: #f97316; }
+  }
+}

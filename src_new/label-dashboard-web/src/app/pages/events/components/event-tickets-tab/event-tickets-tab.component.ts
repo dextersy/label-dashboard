@@ -95,7 +95,13 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   // Table configuration
   tableColumns: TableColumn[] = [
     { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true, cardHeader: true },
-    { key: 'name', label: 'Name', searchable: true, sortable: true },
+    { key: 'name', label: 'Name', searchable: true, sortable: true, renderHtml: true,
+      formatter: (item) => {
+        const initials = this.getInitials(item.name);
+        const idx = this.getAvatarColorIndex(item.name);
+        return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${item.name}</span>`;
+      }
+    },
     { key: 'email_address', label: 'Email Address', searchable: true, sortable: true },
     { key: 'contact_number', label: 'Contact Number', searchable: true, sortable: true },
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
@@ -766,12 +772,17 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
-  getAvatarColor(name: string): string {
-    const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#14b8a6', '#f97316'];
-    if (!name) return colors[0];
+  getAvatarColorIndex(name: string): number {
+    if (!name) return 0;
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    return colors[Math.abs(hash) % colors.length];
+    return Math.abs(hash) % 8;
+  }
+
+  private readonly avatarColors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+
+  getAvatarColor(name: string): string {
+    return this.avatarColors[this.getAvatarColorIndex(name)];
   }
 
   // Helper methods
