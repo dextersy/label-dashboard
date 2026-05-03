@@ -91,6 +91,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;
   @ContentChild('customButtons', { static: false }) customButtons!: TemplateRef<any>;
   @ContentChild('bulkOperationsContent', { static: false }) bulkOperationsContent!: TemplateRef<any>;
+  @ContentChild('mobileRowTemplate', { static: false }) mobileRowTemplate!: TemplateRef<any>;
 
   displayColumns: TableColumn[] = [];
 
@@ -461,6 +462,15 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   onBreakdownButtonClick(item: any, columnKey: string): void {
     this.breakdownButtonClick.emit({ item, columnKey });
+  }
+
+  getMobileRowContext(item: any): any {
+    return {
+      $implicit: item,
+      toggleKebab: (event: Event) => this.toggleKebab(item, event),
+      isKebabOpen: this.isKebabOpen(item),
+      visibleActions: this.getVisibleActions(item)
+    };
   }
 
   getAmountClass(value: any): string {

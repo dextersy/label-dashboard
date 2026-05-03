@@ -310,6 +310,21 @@ tr.text-muted {
   }
 }
 
+// Mobile row template support — hide table on mobile, show card list
+.mobile-card-list {
+  display: none; // hidden on desktop; shown on mobile via the media query below
+}
+
+@media (max-width: 575px) {
+  .has-mobile-template .table-responsive {
+    display: none;
+  }
+
+  .mobile-card-list {
+    display: block;
+  }
+}
+
 // Merged cell row — financial section headers (mobile only)
 .merged-cell-row {
   display: none;

@@ -130,7 +130,9 @@
         </div>
         <div *ngIf="!loading">
           <!-- Sortable headers (optional) -->
-          <div *ngIf="showSortableHeaders && displayColumns.length > 0" class="table-responsive">
+          <ng-container *ngIf="showSortableHeaders && displayColumns.length > 0">
+          <div [class.has-mobile-template]="!!mobileRowTemplate">
+          <div class="table-responsive">
             <table [class]="getTableClasses()">
               <thead>
                 <tr>
@@ -292,8 +294,17 @@
                 </tr>
               </tbody>
             </table>
+          </div><!-- end table-responsive -->
+          <!-- Mobile card list — rendered instead of table rows on small screens -->
+          <div *ngIf="mobileRowTemplate" class="mobile-card-list">
+            <div *ngIf="data.length === 0" class="tw-text-center tw-py-4 tw-text-sm tw-text-gray-400">No data available.</div>
+            <ng-container *ngFor="let item of data">
+              <ng-container *ngTemplateOutlet="mobileRowTemplate; context: getMobileRowContext(item)"></ng-container>
+            </ng-container>
           </div>
-          
+          </div><!-- end has-mobile-template wrapper -->
+          </ng-container><!-- end showSortableHeaders -->
+
           <!-- Table content will be projected here (when not using sortable headers) -->
           <ng-container *ngIf="!showSortableHeaders">
             <ng-container *ngTemplateOutlet="tableContent; context: { $implicit: data }"></ng-container>
