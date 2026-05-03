@@ -317,7 +317,8 @@ The primary data display component. Selector: `app-paginated-table`.
 - `key`, `label` — required
 - `type`: `'text' | 'number' | 'date' | 'select'`
 - `formatter(item)` — custom render function
-- `renderHtml: true` — render formatter output as innerHTML (for badges, HTML strings)
+- `renderHtml: true` — render formatter output as innerHTML (for badges, HTML strings). **⚠️ Angular's `[innerHTML]` sanitizer strips inline `style` attributes** — never use `style="background:..."` in formatter output. Use CSS classes instead (see Avatar chip below).
+
 - `sortable: true` — clickable header with sort icon
 - `align`: `'left' | 'center' | 'right'`
 - `cardHeader: true` — first cell becomes card title on mobile
@@ -342,6 +343,37 @@ The primary data display component. Selector: `app-paginated-table`.
 > //   Streaming royalties  ← description (main)
 > //   ● Succeeded          ← status HTML (secondary, after)
 > ```
+
+### Avatar chip in table cells
+
+Use the `.avatar-chip` / `.avatar-chip__circle.ac-N` CSS classes (defined globally in `styles.scss`) to show an avatar circle with initials inside a `renderHtml` formatter. **Do not use inline styles** — they are stripped by Angular's `[innerHTML]` sanitizer.
+
+Color index classes: `.ac-0` indigo · `.ac-1` violet · `.ac-2` pink · `.ac-3` amber · `.ac-4` emerald · `.ac-5` blue · `.ac-6` teal · `.ac-7` orange. Use `.avatar-chip__circle--anon` for unknown users.
+
+```typescript
+// In the component:
+getAvatarColorIndex(name: string): number {
+  if (!name) return 0;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return Math.abs(hash) % 8;
+}
+getInitials(name: string): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+// Column definition:
+{ key: 'name', label: 'Name', renderHtml: true, formatter: (item) => {
+  const idx = this.getAvatarColorIndex(item.name);
+  const initials = this.getInitials(item.name);
+  return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${item.name}</span>`;
+}}
+```
+
+For mobile card templates, use `getAvatarColor(name)` (returns the hex string) with `[style.background-color]` on a plain `<div>`, since that binding is not sanitized.
 
 > **Section-header row example** — inject labelled dividers into the data array:
 > ```typescript

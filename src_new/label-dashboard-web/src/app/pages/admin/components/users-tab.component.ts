@@ -91,7 +91,12 @@ export class UsersTabComponent implements OnInit {
 
   // Table column definitions
   usersColumns: TableColumn[] = [
-    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true, cardHeader: true },
+    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true, cardHeader: true, renderHtml: true, formatter: (item) => {
+      const name = this.getUserDisplayName(item);
+      const idx = this.getAvatarColorIndex(name);
+      const initials = this.getInitials(name);
+      return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${item.username}</span>`;
+    }},
     { key: 'first_name', label: 'First Name', type: 'text', searchable: true, sortable: true },
     { key: 'last_name', label: 'Last Name', type: 'text', searchable: true, sortable: true },
     { key: 'email_address', label: 'Email address', type: 'text', searchable: true, sortable: true },
@@ -100,7 +105,12 @@ export class UsersTabComponent implements OnInit {
   ];
 
   loginAttemptsColumns: TableColumn[] = [
-    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true },
+    { key: 'username', label: 'Username', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
+      const name = item.name || item.username || '?';
+      const idx = this.getAvatarColorIndex(name);
+      const initials = this.getInitials(name);
+      return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${item.username}</span>`;
+    }},
     { key: 'name', label: 'Name', type: 'text', searchable: true, sortable: true },
     { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true },
     { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
@@ -114,6 +124,30 @@ export class UsersTabComponent implements OnInit {
     }},
     { key: 'remote_ip', label: 'Remote IP', type: 'text', searchable: true, sortable: true }
   ];
+
+  getUserDisplayName(user: any): string {
+    const parts = [user.first_name, user.last_name].filter(p => !!p);
+    return parts.length ? parts.join(' ') : (user.username || user.email_address || '?');
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  }
+
+  getAvatarColorIndex(name: string): number {
+    if (!name) return 0;
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return Math.abs(hash) % 8;
+  }
+
+  getAvatarColor(name: string): string {
+    const colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+    return colors[this.getAvatarColorIndex(name)];
+  }
 
   constructor(
     private adminService: AdminService,

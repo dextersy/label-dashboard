@@ -26,6 +26,35 @@
       (pageChange)="onUsersPageChange($event)"
       (filtersChange)="onUsersFiltersChange($event)"
       (sortChange)="onUsersSortChange($event)">
+
+      <ng-template #mobileRowTemplate let-user let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+        <div class="user-card">
+          <div class="user-card__header">
+            <div class="user-card__avatar" [style.background-color]="getAvatarColor(getUserDisplayName(user))">
+              {{ getInitials(getUserDisplayName(user)) }}
+            </div>
+            <div class="user-card__info">
+              <div class="user-card__name">{{ user.username }}</div>
+              <div class="user-card__email">{{ user.email_address }}</div>
+            </div>
+            <div class="user-card__badges">
+              <span *ngIf="user.is_admin" class="user-card__badge user-card__badge--admin">Admin</span>
+              <span *ngIf="user.has_pending_invite" class="user-card__badge user-card__badge--pending">Pending</span>
+            </div>
+            <button *ngIf="visibleActions.length > 0"
+                    class="user-card__menu kebab-btn"
+                    type="button"
+                    (click)="toggleKebab($event)"
+                    [class.active]="isKebabOpen">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+          </div>
+          <div class="user-card__footer" *ngIf="user.last_logged_in">
+            <i class="fas fa-clock"></i> Last login: {{ user.last_logged_in | date:'mediumDate' }}
+          </div>
+        </div>
+      </ng-template>
+
     </app-paginated-table>
   </div>
 
@@ -42,6 +71,32 @@
       (pageChange)="onLoginAttemptsPageChange($event)"
       (filtersChange)="onLoginAttemptsFiltersChange($event)"
       (sortChange)="onLoginAttemptsSortChange($event)">
+
+      <ng-template #mobileRowTemplate let-attempt>
+        <div class="user-card">
+          <div class="user-card__header">
+            <div class="user-card__avatar" [style.background-color]="getAvatarColor(attempt.name || attempt.username || '?')">
+              {{ getInitials(attempt.name || attempt.username || '?') }}
+            </div>
+            <div class="user-card__info">
+              <div class="user-card__name">{{ attempt.username }}</div>
+              <div class="user-card__email">{{ attempt.name }}</div>
+            </div>
+            <div class="user-card__badges">
+              <span class="user-card__badge"
+                    [class.user-card__badge--success]="attempt.result === 'Success' || attempt.result === 'Successful'"
+                    [class.user-card__badge--danger]="attempt.result === 'Failed'">
+                {{ attempt.result }}
+              </span>
+            </div>
+          </div>
+          <div class="user-card__footer">
+            <span><i class="fas fa-clock"></i> {{ attempt.date_and_time | date:'medium' }}</span>
+            <span class="user-card__ip"><i class="fas fa-network-wired"></i> {{ attempt.remote_ip }}</span>
+          </div>
+        </div>
+      </ng-template>
+
     </app-paginated-table>
   </div>
 
