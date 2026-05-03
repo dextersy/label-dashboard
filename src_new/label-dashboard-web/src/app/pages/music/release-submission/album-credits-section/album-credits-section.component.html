@@ -26,7 +26,7 @@
 
       <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">
         <div *ngFor="let artistControl of royaltyArtists.controls; let i = index"
-             class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3"
+             class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3"
              [formGroupName]="i">
           <div class="tw-px-card-pad tw-pb-card-pad">
             <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
@@ -105,7 +105,7 @@
         </div>
 
         <!-- Royalty Totals -->
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50" *ngIf="isAdmin">
+        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50" *ngIf="isAdmin">
           <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
             <div class="tw-text-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
               <div >

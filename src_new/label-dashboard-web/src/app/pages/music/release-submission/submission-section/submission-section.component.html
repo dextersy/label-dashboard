@@ -2,7 +2,7 @@
   <h3>Release Summary</h3>
 
   <!-- Release Information Summary - Full Width -->
-  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="releaseInfoData">
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="releaseInfoData">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Release Information</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('info')">
@@ -33,7 +33,7 @@
   </div>
 
   <!-- Album Credits Summary - Full Width -->
-  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="albumCreditsData">
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="albumCreditsData">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Album Credits</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('credits')">
@@ -96,7 +96,7 @@
   </div>
 
   <!-- Track List Summary - Full Width -->
-  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="trackListData">
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="trackListData">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('tracks')">
@@ -135,7 +135,7 @@
   <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
     <div class="md:tw-col-span-6">
       <!-- Validation Summary -->
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
           <h3 class="tw-mb-0">Validation Summary</h3>
         </div>

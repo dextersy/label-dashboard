@@ -57,7 +57,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
     { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
     { key: 'status', label: 'Status', searchable: true, sortable: true, type: 'select', renderHtml: true, options: [
-      { value: 'New', label: 'Awaiting Payment' },
+      { value: 'New', label: 'For Payment' },
       { value: 'Payment Confirmed', label: 'Payment Confirmed' },
       { value: 'Canceled', label: 'Canceled' }
     ], formatter: (item) => this.getStatusHtml(item.status) },
@@ -471,7 +471,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   getStatusText(status: string): string {
     switch (status) {
       case 'New':
-        return 'Awaiting Payment';
+        return 'For Payment';
       case 'Payment Confirmed':
         return 'Payment Confirmed';
       case 'Canceled':

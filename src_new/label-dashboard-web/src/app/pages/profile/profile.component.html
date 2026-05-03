@@ -1,7 +1,7 @@
 <div class="tw-p-6 tw-max-w-4xl tw-mx-auto">
 
   <!-- Page Header -->
-  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-flex-col sm:tw-flex-row sm:tw-justify-between sm:tw-items-start tw-gap-3">
       <div>
         <h3 class="tw-mb-2">
@@ -17,7 +17,7 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-8 tw-text-center tw-mb-6">
+  <div *ngIf="loading" class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-p-8 tw-text-center tw-mb-6">
     <div class="loading-dots">
       <div></div>
       <div></div>
@@ -26,7 +26,7 @@
   </div>
 
   <!-- Profile Information Card -->
-  <div *ngIf="!loading && profile" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+  <div *ngIf="!loading && profile" class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h4 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Profile Information</h4>
     </div>
@@ -128,7 +128,7 @@
   </div>
 
   <!-- Password Card -->
-  <div *ngIf="!loading && profile" class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden">
+  <div *ngIf="!loading && profile" class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h4 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Password</h4>
     </div>
