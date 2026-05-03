@@ -81,6 +81,8 @@ export interface FeatureToggles {
 export interface ChildBrand {
   brand_id: number;
   brand_name: string;
+  logo_url?: string | null;
+  brand_color?: string | null;
   music_earnings: number;
   music_gross_earnings: number;
   event_earnings: number;

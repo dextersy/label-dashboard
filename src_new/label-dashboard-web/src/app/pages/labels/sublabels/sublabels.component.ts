@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { AdminService, ChildBrand, CreateSublabelResponse, SublabelCreationState, SublabelCompletionEvent, DomainVerificationState } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -67,7 +68,16 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       searchable: true,
       sortable: true,
       align: 'left',
-      cardHeader: true
+      cardHeader: true,
+      renderHtml: true,
+      formatter: (item: ChildBrand): SafeHtml => {
+        const logoUrl = this.getBrandLogoUrl(item.logo_url);
+        const bg = item.brand_color || this.getAvatarColor(item.brand_name);
+        const circle = logoUrl
+          ? `<span class="avatar-chip__circle avatar-chip__circle--img" style="background:${bg}"><img src="${logoUrl}" alt=""></span>`
+          : `<span class="avatar-chip__circle" style="background:${bg}">${this.getInitials(item.brand_name)}</span>`;
+        return this.sanitizer.bypassSecurityTrustHtml(`<span class="avatar-chip">${circle}${item.brand_name}</span>`);
+      }
     },
     {
       key: 'status',
@@ -210,7 +220,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private notificationService: NotificationService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -722,6 +733,42 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   getAmountClass(amount: number | undefined): string {
     return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
+
+  getBrandLogoUrl(logoUrl?: string | null): string {
+    if (!logoUrl) return '';
+    return logoUrl.startsWith('http') ? logoUrl : `/api/uploads/brands/${logoUrl}`;
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  }
+
+  getAvatarColorIndex(name: string): number {
+    if (!name) return 0;
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return Math.abs(hash) % 8;
+  }
+
+  getAvatarColor(name: string): string {
+    const colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+    if (!name) return colors[0];
+    return colors[this.getAvatarColorIndex(name)];
+  }
+
+  getStatusSlug(status: string | undefined): string {
+    switch (status) {
+      case 'OK':         return 'ok';
+      case 'Pending':    return 'pending';
+      case 'Warning':    return 'warning';
+      case 'Unverified': return 'unverified';
+      case 'No domains': return 'no-domains';
+      default:           return 'unknown';
+    }
   }
 
 }

@@ -962,6 +962,8 @@ const calculateSublabelStatus = (domains: Array<{ status: string }>): string => 
 interface ChildBrandData {
   brand_id: number;
   brand_name: string;
+  logo_url: string | null;
+  brand_color: string | null;
   music_earnings: number;
   music_gross_earnings: number;
   event_earnings: number;
@@ -995,7 +997,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
     // Find all child brands
     const childBrands = await Brand.findAll({
       where: { parent_brand: brandId },
-      attributes: ['id', 'brand_name']
+      attributes: ['id', 'brand_name', 'logo_url', 'brand_color']
     });
 
     if (childBrands.length === 0) {
@@ -1245,6 +1247,8 @@ export const getChildBrands = async (req: Request, res: Response) => {
       childBrandData.push({
         brand_id: childBrand.id,
         brand_name: childBrand.brand_name,
+        logo_url: childBrand.logo_url || null,
+        brand_color: childBrand.brand_color || null,
         music_earnings: musicEarnings,
         music_gross_earnings: musicGrossEarnings,
         event_earnings: eventEarnings,

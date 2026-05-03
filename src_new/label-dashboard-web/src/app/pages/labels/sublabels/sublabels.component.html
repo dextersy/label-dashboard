@@ -22,6 +22,58 @@
     (sortChange)="onSortChange($event)"
     (breakdownButtonClick)="onBreakdownButtonClick($event)">
 
+    <ng-template #mobileRowTemplate let-brand let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+      <div class="brand-card">
+        <div class="brand-card__header">
+          <div class="brand-card__avatar" [style.background-color]="brand.brand_color || getAvatarColor(brand.brand_name)">
+            <img *ngIf="getBrandLogoUrl(brand.logo_url)" [src]="getBrandLogoUrl(brand.logo_url)" [alt]="brand.brand_name" class="brand-card__logo">
+            <span *ngIf="!getBrandLogoUrl(brand.logo_url)">{{ getInitials(brand.brand_name) }}</span>
+          </div>
+          <div class="brand-card__info">
+            <div class="brand-card__name">{{ brand.brand_name }}</div>
+            <div class="brand-card__status-row">
+              <span class="brand-card__status-badge brand-card__status-badge--{{ getStatusSlug(brand.status) }}">
+                <span class="brand-card__status-dot"></span>{{ brand.status || 'Unknown' }}
+              </span>
+            </div>
+          </div>
+          <button *ngIf="visibleActions.length > 0"
+                  class="brand-card__menu kebab-btn"
+                  type="button"
+                  (click)="toggleKebab($event)"
+                  [class.active]="isKebabOpen">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+        </div>
+        <div class="brand-card__stats">
+          <div class="brand-card__stat brand-card__stat--balance" [class.brand-card__stat--balance-negative]="brand.balance < 0">
+            <span class="brand-card__stat-label">Balance</span>
+            <strong class="brand-card__stat-value">₱{{ brand.balance | number:'1.2-2' }}</strong>
+          </div>
+          <div class="brand-card__stat brand-card__stat--clickable" (click)="onBreakdownButtonClick({item: brand, columnKey: 'music_earnings'})">
+            <span class="brand-card__stat-label">Music</span>
+            <span class="brand-card__stat-value">₱{{ (brand.music_earnings + brand.total_royalties) | number:'1.2-2' }}</span>
+          </div>
+          <div class="brand-card__stat brand-card__stat--clickable" (click)="onBreakdownButtonClick({item: brand, columnKey: 'event_earnings'})">
+            <span class="brand-card__stat-label">Events</span>
+            <span class="brand-card__stat-value">₱{{ brand.event_earnings | number:'1.2-2' }}</span>
+          </div>
+          <div class="brand-card__stat brand-card__stat--clickable" (click)="onBreakdownButtonClick({item: brand, columnKey: 'fundraiser_earnings'})">
+            <span class="brand-card__stat-label">Fundraiser</span>
+            <span class="brand-card__stat-value">₱{{ (brand.fundraiser_earnings || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="brand-card__stat brand-card__stat--clickable" (click)="onBreakdownButtonClick({item: brand, columnKey: 'platform_fees'})">
+            <span class="brand-card__stat-label">Fees</span>
+            <span class="brand-card__stat-value">₱{{ brand.platform_fees | number:'1.2-2' }}</span>
+          </div>
+          <div class="brand-card__stat brand-card__stat--clickable" (click)="onBreakdownButtonClick({item: brand, columnKey: 'payments'})">
+            <span class="brand-card__stat-label">Payments</span>
+            <span class="brand-card__stat-value">₱{{ brand.payments | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
   </app-paginated-table>
 </div>
 
@@ -31,21 +83,21 @@
     <!-- 2 per row on mobile, 3 per row at lg+ (6 cards total = 2 rows) -->
     <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-2">
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title text-primary" [ngClass]="getAmountClass(getTotalBalance())">₱{{ getTotalBalance() | number:'1.2-2' }}</h4>
           <p class="card-text tw-text-muted">Total Balance</p>
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title tw-text-[#0891b2]" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</h4>
           <p class="card-text tw-text-muted">Total Music Earnings + Royalties</p>
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card clickable-card" (click)="openTotalEventBreakdown()" style="cursor: pointer;">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card summary-card clickable-card" (click)="openTotalEventBreakdown()" style="cursor: pointer;">
         <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title tw-text-warning" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</h4>
           <p class="card-text tw-text-muted">
@@ -55,21 +107,21 @@
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title tw-text-danger" [ngClass]="getAmountClass(getTotalFundraiserEarnings())">₱{{ getTotalFundraiserEarnings() | number:'1.2-2' }}</h4>
           <p class="card-text tw-text-muted">Total Fundraiser Earnings</p>
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title tw-text-gray-500" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</h4>
           <p class="card-text tw-text-muted">Total Payments Made</p>
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card summary-card clickable-card" (click)="openTotalPlatformFeesBreakdown()" style="cursor: pointer;">
+      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card summary-card clickable-card" (click)="openTotalPlatformFeesBreakdown()" style="cursor: pointer;">
         <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
           <h4 class="card-title tw-text-gray-900" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</h4>
           <p class="card-text tw-text-muted">

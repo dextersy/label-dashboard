@@ -116,6 +116,172 @@
   }
 }
 
+// Mobile brand card layout
+.brand-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    overflow: hidden;
+  }
+
+  &__logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__status-row {
+    margin-top: 4px;
+  }
+
+  &__status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+
+    &--ok           { background: #d1fae5; color: #065f46; }
+    &--pending      { background: #dbeafe; color: #1e40af; }
+    &--warning      { background: #fef3c7; color: #92400e; }
+    &--unverified   { background: #fee2e2; color: #991b1b; }
+    &--no-domains   { background: #f3f4f6; color: #6b7280; }
+    &--unknown      { background: #f3f4f6; color: #6b7280; }
+  }
+
+  &__status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    .brand-card__status-badge--ok         & { background: #10b981; }
+    .brand-card__status-badge--pending    & { background: #3b82f6; }
+    .brand-card__status-badge--warning    & { background: #f59e0b; }
+    .brand-card__status-badge--unverified & { background: #ef4444; }
+    .brand-card__status-badge--no-domains & { background: #9ca3af; }
+    .brand-card__status-badge--unknown    & { background: #9ca3af; }
+  }
+
+  &__menu {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    flex-shrink: 0;
+    line-height: 1;
+
+    &:hover {
+      color: #374151;
+      background: #f3f4f6;
+    }
+
+    &.active {
+      color: var(--brand-color, #3b82f6);
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, transparent);
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 7px 10px;
+  }
+
+  &__stat--balance {
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 12%, #fff);
+
+    .brand-card__stat-value {
+      color: var(--brand-color, #3b82f6);
+    }
+
+    &-negative {
+      background: #fee2e2;
+
+      .brand-card__stat-value {
+        color: #991b1b;
+      }
+    }
+  }
+
+  &__stat--clickable {
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: #f3f4f6;
+    }
+
+    &:active {
+      background: #e5e7eb;
+    }
+  }
+
+  &__stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+  }
+
+  &__stat-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
 // Sticky summary cards (outside main container)
 .summary-cards-sticky {
   position: sticky !important;
