@@ -217,18 +217,27 @@
 
   .tw-input {
     @apply tw-w-full tw-px-3.5 tw-py-2.5 tw-text-base tw-text-[#1f2937]
-           tw-bg-input-bg tw-border-0 tw-rounded-input tw-transition-all;
+           tw-bg-input-bg tw-rounded-input tw-transition-all;
+    border: 1px solid color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #e5e7eb);
 
     &:focus {
-      @apply tw-bg-input-bg-focus tw-outline-none tw-shadow-focus-ring;
+      @apply tw-bg-input-bg-focus tw-outline-none;
+      border-color: var(--brand-color, #3b82f6);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #3b82f6) 15%, transparent);
     }
 
     &:hover:not(:focus) {
       @apply tw-bg-input-bg-hover;
+      border-color: color-mix(in srgb, var(--brand-color, #3b82f6) 35%, #e5e7eb);
     }
 
     &::placeholder {
-      @apply tw-text-muted;
+      color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #e5e7eb);
+    }
+
+    &.is-invalid {
+      border-color: #FCA5A5;
+      box-shadow: none;
     }
   }
 
