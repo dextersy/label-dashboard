@@ -139,17 +139,17 @@
   }
 
   &.badge-warning {
-    background: #fef2f2;
-    border-color: #fca5a5;
-    color: #dc2626;
-    .status-dot { background: #ef4444; }
+    background: #fefce8;
+    border-color: #fde047;
+    color: #a16207;
+    .status-dot { background: #eab308; }
   }
 
   &.badge-secondary {
-    background: #f5f3ff;
-    border-color: #c4b5fd;
-    color: #7c3aed;
-    .status-dot { background: #8b5cf6; }
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #6b7280;
+    .status-dot { background: #9ca3af; }
   }
 
   &.badge-primary {
