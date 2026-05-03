@@ -173,8 +173,13 @@ quill-editor {
     padding-bottom: 100px;
   }
 
+  .fundraiser-form-container {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
   .fundraiser-form-content {
-    padding: 20px;
+    padding: 0;
 
     .form-section {
       h3 {
