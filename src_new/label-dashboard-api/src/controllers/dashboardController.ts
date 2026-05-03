@@ -612,10 +612,6 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       }
     });
 
-    // Get this month's sales
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
     // Get all events for this brand (used by graphs)
     const allEvents = await Event.findAll({
       where: brandFilter,
@@ -639,49 +635,43 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         })).map(e => e.id)
       : [];
 
-    // Get confirmed tickets for this month (active events only)
-    let thisMonthSales = 0;
+    // Get total confirmed ticket sales for active events (all time)
+    let activeEventsSales = 0;
     if (activeEventIds.length > 0) {
       const tickets = await Ticket.findAll({
         where: {
           event_id: activeEventIds,
-          status: ['Payment Confirmed', 'Ticket sent.'],
-          order_timestamp: {
-            [require('sequelize').Op.between]: [startOfMonth, endOfMonth]
-          }
+          status: ['Payment Confirmed', 'Ticket sent.']
         },
         attributes: ['price_per_ticket', 'number_of_entries']
       });
 
-      thisMonthSales = tickets.reduce((sum, ticket) => {
+      activeEventsSales = tickets.reduce((sum, ticket) => {
         const price = parseFloat(ticket.price_per_ticket?.toString() || '0');
         const entries = parseInt(ticket.number_of_entries?.toString() || '1');
         return sum + (price * entries);
       }, 0);
     }
 
-    // Get this month's donations
-    const fundraisers = await Fundraiser.findAll({
-      where: brandFilter,
+    // Get total donations for active fundraisers
+    const activeFundraisers = await Fundraiser.findAll({
+      where: { ...brandFilter, status: 'active' },
       attributes: ['id']
     });
 
-    const fundraiserIds = fundraisers.map(f => f.id);
+    const activeFundraiserIds = activeFundraisers.map(f => f.id);
 
-    let thisMonthDonations = 0;
-    if (fundraiserIds.length > 0) {
+    let activeFundraisersDonations = 0;
+    if (activeFundraiserIds.length > 0) {
       const donations = await Donation.findAll({
         where: {
-          fundraiser_id: fundraiserIds,
-          payment_status: 'paid',
-          date_paid: {
-            [Op.between]: [startOfMonth, endOfMonth]
-          }
+          fundraiser_id: activeFundraiserIds,
+          payment_status: 'paid'
         },
         attributes: ['amount']
       });
 
-      thisMonthDonations = donations.reduce((sum, donation) => {
+      activeFundraisersDonations = donations.reduce((sum, donation) => {
         const amount = parseFloat(donation.amount?.toString() || '0');
         return sum + (isNaN(amount) ? 0 : amount);
       }, 0);
@@ -772,8 +762,8 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       stats: {
         activeEvents: activeEventsCount,
         activeFundraisers: activeFundraisersCount,
-        thisMonthSales: thisMonthSales,
-        thisMonthDonations: thisMonthDonations
+        activeEventsSales: activeEventsSales,
+        activeFundraisersDonations: activeFundraisersDonations
       },
       ongoingFundraisers,
       upcomingEvents,
