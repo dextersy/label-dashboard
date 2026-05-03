@@ -58,6 +58,15 @@
   }
 
   i { position: relative; z-index: 1; }
+
+  .event-icon-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
 }
 
 // ── Switcher text ─────────────────────────────────────────────────────────────
@@ -230,6 +239,15 @@
   }
 
   i { position: relative; z-index: 1; }
+
+  .di-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
 }
 
 .di-info { flex: 1; min-width: 0; }

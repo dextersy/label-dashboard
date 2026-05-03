@@ -9,7 +9,12 @@
 
       <!-- Icon dot -->
       <div class="event-icon-dot">
-        <i class="fa fa-music"></i>
+        <img *ngIf="selectedEvent && hasValidImage(selectedEvent)"
+             [src]="selectedEvent.poster_url"
+             (error)="onImageError($event, selectedEvent!.id)"
+             alt=""
+             class="event-icon-poster">
+        <i class="fa fa-music" *ngIf="!selectedEvent || !hasValidImage(selectedEvent)"></i>
       </div>
 
       <!-- Selected event info -->
@@ -89,8 +94,13 @@
           class="dropdown-event-item">
         <a (click)="selectEvent(event)" class="dropdown-event-link">
           <!-- Dot icon -->
-          <div class="di-dot" [ngStyle]="getEventDotStyle(i)">
-            <i class="fa fa-music"></i>
+          <div class="di-dot" [ngStyle]="hasValidImage(event) ? {} : getEventDotStyle(i)">
+            <img *ngIf="hasValidImage(event)"
+                 [src]="event.poster_url"
+                 (error)="onDropdownImageError($event, event.id)"
+                 alt=""
+                 class="di-poster">
+            <i class="fa fa-music" *ngIf="!hasValidImage(event)"></i>
           </div>
           <!-- Info -->
           <div class="di-info">
