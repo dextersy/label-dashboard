@@ -130,6 +130,24 @@
 
   <!-- Walk-In Transactions sub-tab -->
   <div *ngIf="activeSubTab === 'walk-in'">
+
+    <!-- Stats summary -->
+    <div class="ticket-stats" *ngIf="walkInTypes.length > 0">
+      <div class="ticket-stats__main">
+        <div class="ticket-stats__stat">
+          <div class="ticket-stats__label">Walk-ins</div>
+          <div class="ticket-stats__value">{{ getWalkInTotalSold() }}</div>
+          <div class="ticket-stats__sub">total registered</div>
+        </div>
+        <div class="ticket-stats__divider"></div>
+        <div class="ticket-stats__stat">
+          <div class="ticket-stats__label">Revenue</div>
+          <div class="ticket-stats__value ticket-stats__value--highlight">{{ formatWalkInPrice(getWalkInTotalRevenue()) }}</div>
+          <div class="ticket-stats__sub">total collected</div>
+        </div>
+      </div>
+    </div>
+
     <app-paginated-table
       title=""
       [data]="walkInTransactions"
@@ -165,24 +183,5 @@
       </ng-template>
 
     </app-paginated-table>
-
-    <!-- Summary Footer -->
-    <div class="sticky-bottom tw-mt-3" *ngIf="walkInTypes.length > 0">
-      <div class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle tw-bg-gray-50 border-top shadow-sm tw-flex tw-justify-center tw-items-center">
-        <div class="tw-flex tw-flex-wrap tw-justify-center tw-items-center tw-gap-4">
-          <strong class="text-primary fs-5">Totals</strong>
-
-          <span class="summary-stat" title="Walk-ins registered">
-            <i class="fas fa-walking tw-text-success tw-mr-2"></i>
-            {{ getWalkInTotalSold() }}
-          </span>
-
-          <span class="summary-stat-highlight" title="Walk-in revenue">
-            <i class="fas fa-money-bill tw-mr-2"></i>
-            <strong>{{ formatWalkInPrice(getWalkInTotalRevenue()) }}</strong>
-          </span>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
