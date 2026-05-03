@@ -1,5 +1,5 @@
 <!-- Page Header -->
-<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-6">
+<div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
       <i class="fas fa-envelope tw-mr-2"></i>
@@ -13,6 +13,7 @@
 <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
   <div class="tw-col-span-12">
     <app-paginated-table
+      title="Email Logs"
       [data]="emailLogs"
       [pagination]="emailLogsPagination"
       [loading]="emailLogsLoading"
@@ -23,6 +24,38 @@
       (pageChange)="onEmailLogsPageChange($event)"
       (filtersChange)="onEmailLogsFiltersChange($event)"
       (sortChange)="onEmailLogsSortChange($event)">
+
+      <ng-template #mobileRowTemplate let-email let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+        <div class="email-log-card">
+          <div class="email-log-card__header">
+            <div class="email-log-card__icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="email-log-card__info">
+              <div class="email-log-card__subject">{{ email.subject }}</div>
+              <div class="email-log-card__recipients">{{ email.recipients }}</div>
+            </div>
+            <div class="email-log-card__badges">
+              <span class="email-log-card__badge"
+                    [class.email-log-card__badge--success]="email.result === 'Success' || email.result === 'Successful'"
+                    [class.email-log-card__badge--danger]="email.result === 'Failed'">
+                {{ email.result }}
+              </span>
+            </div>
+            <button *ngIf="visibleActions.length > 0"
+                    class="email-log-card__menu kebab-btn"
+                    type="button"
+                    (click)="toggleKebab($event)"
+                    [class.active]="isKebabOpen">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+          </div>
+          <div class="email-log-card__footer">
+            <i class="fas fa-clock"></i> Sent on {{ formatDate(email.timestamp) }}
+          </div>
+        </div>
+      </ng-template>
+
     </app-paginated-table>
   </div>
 </div>

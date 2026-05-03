@@ -7,7 +7,8 @@ import { PaginatedTableComponent, PaginationInfo, TableAction, TableColumn, Sear
 @Component({
     selector: 'app-tools-tab',
     imports: [CommonModule, PaginatedTableComponent],
-    templateUrl: './tools-tab.component.html'
+    templateUrl: './tools-tab.component.html',
+    styleUrls: ['./tools-tab.component.scss']
 })
 export class ToolsTabComponent implements OnInit, OnDestroy {
   emailLogs: EmailLog[] = [];
