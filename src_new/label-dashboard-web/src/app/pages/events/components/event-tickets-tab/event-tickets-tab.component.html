@@ -40,6 +40,44 @@
       (pageChange)="onPageChange($event)"
       (filtersChange)="onFiltersChange($event)"
       (sortChange)="onSortChange($event)">
+
+      <!-- Mobile card layout for tickets -->
+      <ng-template #mobileRowTemplate let-ticket let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+        <div class="ticket-card" [class.ticket-card--muted]="getRowClass(ticket)">
+          <div class="ticket-card__header">
+            <div class="ticket-card__avatar" [style.background-color]="getAvatarColor(ticket.name)">
+              {{ getInitials(ticket.name) }}
+            </div>
+            <div class="ticket-card__info">
+              <div class="ticket-card__name">{{ ticket.name }}</div>
+              <div class="ticket-card__email">{{ ticket.email_address }}</div>
+            </div>
+            <div class="ticket-card__meta">
+              <span class="ticket-card__code">{{ ticket.ticket_code }}</span>
+              <span class="ticket-card__qty">{{ ticket.number_of_entries }} ticket{{ ticket.number_of_entries !== 1 ? 's' : '' }}</span>
+            </div>
+            <button *ngIf="isAdmin && visibleActions.length > 0"
+                    class="ticket-card__menu kebab-btn"
+                    type="button"
+                    (click)="toggleKebab($event)"
+                    [class.active]="isKebabOpen">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+          </div>
+          <div class="ticket-card__phone" *ngIf="ticket.contact_number">
+            <i class="fas fa-phone"></i> {{ ticket.contact_number }}
+          </div>
+          <div class="ticket-card__footer">
+            <span class="ticket-card__claimed"
+                  [class.ticket-card__claimed--done]="ticket.number_of_claimed_entries >= ticket.number_of_entries">
+              <i class="fas fa-check-circle"></i>
+              {{ ticket.number_of_claimed_entries }}/{{ ticket.number_of_entries }} claimed
+            </span>
+            <span class="ticket-card__type">{{ ticket.ticket_type_name || 'Regular' }}</span>
+          </div>
+        </div>
+      </ng-template>
+
     </app-paginated-table>
 
     <!-- Summary Footer - Matching PHP layout -->
