@@ -1,53 +1,23 @@
 .fundraiser-selection-container {
-  margin-bottom: 0 !important;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.fundraiser-selection-row {
-  display: flex;
-  justify-content: flex-start;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.dropdown {
-  position: relative;
-  display: block;
-  width: 100%;
   max-width: 600px;
-  box-sizing: border-box;
 }
 
-.fundraiser-dropdown-btn {
+// ── Switcher trigger ──────────────────────────────────────────────────────────
+.fundraiser-switcher {
   width: 100%;
-  max-width: 100%;
   text-align: left;
-  padding: 14px 16px;
-  border: none !important;
+  padding: 12px 14px;
   background: #fff;
-  background-size: cover;
-  background-position: center;
-  border-radius: 8px;
-  min-height: 80px;
+  border: 1px solid #e8e2f5;
+  border-radius: 14px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  transition: box-shadow 0.2s, transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  box-sizing: border-box;
-  position: relative;
-  overflow: hidden;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
 
-  &::after {
-    display: none !important;
-  }
-
-  &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
-  }
+  &:hover { background: #faf7ff; }
+  &:active { background: #f5f0ff; }
 
   &:focus {
     outline: none;
@@ -57,117 +27,150 @@
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-
-    &:hover {
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-      transform: none;
-    }
   }
 }
 
-// Dark overlay when poster is set
-.poster-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.65) 0%, rgba(255,255,255,0.45) 100%);
-  z-index: 0;
+.open .fundraiser-switcher {
+  border-radius: 14px 14px 0 0;
+  border-bottom-color: transparent;
 }
 
-.fundraiser-details {
+// ── Icon dot ──────────────────────────────────────────────────────────────────
+.fundraiser-icon-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--brand-color, #3b82f6);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.25) 0%, transparent 60%);
+  }
+
+  i { position: relative; z-index: 1; }
+
+  .fundraiser-icon-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+}
+
+// ── Switcher text ─────────────────────────────────────────────────────────────
+.switcher-info {
   flex: 1;
   min-width: 0;
 }
 
-.fundraiser-title {
-  font-weight: 600;
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.fundraiser-meta {
-  display: flex;
-  align-items: center;
-  margin-bottom: 6px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.fundraiser-raised, .fundraiser-donors {
-  font-size: 13px;
-  color: #666;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-
-  i {
-    color: #999;
-    flex-shrink: 0;
-    margin-right: 4px;
-  }
-}
-
-.badge.badge-sm {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-weight: 500;
-  vertical-align: middle;
-}
-
-.no-fundraiser, .loading-inline {
-  color: #999;
+.switcher-title {
   font-size: 14px;
+  font-weight: 500;
+  color: #1a0f35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.switcher-meta {
+  font-size: 11px;
+  color: #a89fc2;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Right side ────────────────────────────────────────────────────────────────
+.switcher-right {
   display: flex;
-  align-items: center;
-}
-
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #e9ecef;
-  border-top: 2px solid var(--brand-color, #3b82f6);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 8px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.caret {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  margin-left: 10px;
-  vertical-align: middle;
-  border-top: 5px solid #666;
-  border-right: 5px solid transparent;
-  border-left: 5px solid transparent;
-  transition: transform 0.2s ease;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
   flex-shrink: 0;
 }
 
-.caret-white {
-  border-top-color: rgba(255,255,255,0.8);
+.switcher-chevron {
+  width: 16px;
+  height: 16px;
+  color: #c4bcd8;
+  transition: transform 0.2s ease;
+
+  &.rotated { transform: rotate(180deg); }
 }
 
-.dropdown.open .caret {
-  transform: rotate(180deg);
+// ── Status pills ──────────────────────────────────────────────────────────────
+.fundraiser-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-width: 0.5px;
+  border-style: solid;
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &.badge-success {
+    background: #f0fdf4;
+    border-color: #86efac;
+    color: #16a34a;
+    .status-dot { background: #22c55e; }
+  }
+
+  &.badge-warning {
+    background: #fefce8;
+    border-color: #fde047;
+    color: #a16207;
+    .status-dot { background: #eab308; }
+  }
+
+  &.badge-secondary {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #6b7280;
+    .status-dot { background: #9ca3af; }
+  }
+
+  &.badge-primary {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #2563eb;
+    .status-dot { background: #3b82f6; }
+  }
+
+  &--sm {
+    font-size: 10px;
+    padding: 2px 7px;
+    .status-dot { display: none; }
+  }
 }
 
-// When dropdown is open, adjust button border-radius to connect with menu
-.dropdown.open .fundraiser-dropdown-btn {
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+// ── Dropdown panel ────────────────────────────────────────────────────────────
+.dropdown {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
 }
 
 .dropdown-menu {
@@ -176,347 +179,145 @@
   left: 0;
   z-index: 1050;
   display: block;
-  float: left;
   width: 100%;
-  max-height: 400px;
+  max-height: 380px;
   overflow-y: auto;
-  padding: 8px 0;
+  padding: 6px 0;
   margin: 0 !important;
-  font-size: 14px;
-  text-align: left;
   list-style: none;
-  background-color: #fff;
-  border: none;
-  border-radius: 0 0 8px 8px; // Only round bottom corners to attach to selector
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  background-clip: padding-box;
-  transform-origin: top center !important;
+  background: #fff;
+  border: 1px solid #e8e2f5;
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 
-  // Remove Bootstrap arrow pseudo-elements
-  &::before,
-  &::after {
-    display: none !important;
-  }
+  &::before, &::after { display: none !important; }
 }
 
-.search-container {
-  padding: 8px 12px;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 4px;
+:not(.open) > .dropdown-menu { display: none; }
+
+// ── Fundraiser items ──────────────────────────────────────────────────────────
+.dropdown-fundraiser-item {
+  border-bottom: 0.5px solid #f0ecf8;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #faf7ff; }
+  &.selected { background: #faf7ff; }
 }
 
-.search-input-wrapper {
-  position: relative;
+.dropdown-fundraiser-link {
   display: flex;
   align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  color: #999;
-  z-index: 2;
-}
-
-.search-input {
-  padding-left: 35px;
-  padding-right: 35px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 13px;
-  height: 34px;
-
-  &:focus {
-    border-color: var(--brand-color, #3b82f6);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
-  }
-}
-
-.search-clear {
-  position: absolute;
-  right: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
-  color: #999;
-
-  &:hover {
-    color: #666;
-  }
-}
-
-.fundraiser-item {
-  &:not(.divider) {
-    &:hover {
-      background-color: #f8f9fa;
-    }
-
-    &.active {
-      background-color: var(--brand-color, #3b82f6);
-
-      a {
-        color: #fff;
-
-        .dropdown-fundraiser-title {
-          color: #fff;
-        }
-
-        .dropdown-fundraiser-raised,
-        .dropdown-fundraiser-donors {
-          color: rgba(255,255,255,0.8);
-
-          i {
-            color: rgba(255,255,255,0.7);
-          }
-        }
-
-        .badge {
-          background-color: rgba(255,255,255,0.2) !important;
-          color: #fff !important;
-        }
-      }
-    }
-  }
-}
-
-.fundraiser-item a,
-.create-fundraiser-item a {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  clear: both;
-  font-weight: normal;
-  line-height: 1.4;
-  color: #333;
-  text-decoration: none;
+  gap: 10px;
+  padding: 11px 14px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  text-decoration: none;
+  color: inherit;
 
-  &:hover {
-    text-decoration: none;
-  }
+  &:hover { color: inherit; text-decoration: none; }
 }
 
-.dropdown-fundraiser-poster {
-  margin-right: 12px;
+// ── Dropdown item dot ─────────────────────────────────────────────────────────
+.di-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   flex-shrink: 0;
-}
-
-.dropdown-fundraiser-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid #e1e5e9;
-}
-
-.dropdown-default-fundraiser-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 16px;
-  border: 1px solid #e1e5e9;
-}
-
-.dropdown-fundraiser-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.dropdown-fundraiser-title {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dropdown-fundraiser-meta {
-  margin-bottom: 4px;
-}
-
-.dropdown-fundraiser-raised,
-.dropdown-fundraiser-donors {
+  color: #fff;
   font-size: 12px;
-  color: #666;
-  margin-bottom: 2px;
-  display: flex;
-  align-items: center;
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, transparent 60%);
+  }
+
+  i { position: relative; z-index: 1; }
+
+  .di-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+}
+
+.di-info { flex: 1; min-width: 0; }
+
+.di-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a0f35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
-
-  i {
-    color: #999;
-    font-size: 11px;
-    flex-shrink: 0;
-    margin-right: 4px;
-  }
 }
 
-
-.divider {
-  height: 1px;
-  margin: 8px 0;
-  overflow: hidden;
-  background-color: #eee;
+.di-meta {
+  font-size: 11px;
+  color: #a89fc2;
+  margin-top: 1px;
 }
 
-.create-new-fundraiser {
-  font-weight: 600;
-  color: var(--brand-color, #3b82f6) !important;
-
-  &:hover {
-    background-color: #f8f9fa !important;
-  }
-
-  i {
-    color: var(--brand-color, #3b82f6);
-  }
+.di-check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--brand-color, #3b82f6);
 }
 
-.create-fundraiser-item {
-  border-top: 1px solid #eee;
-  margin-top: 4px;
-  padding-top: 4px;
+// ── Create item ───────────────────────────────────────────────────────────────
+.dropdown-create-item {
+  border-bottom: 0.5px solid #f0ecf8;
 }
 
-.no-results {
-  padding: 20px;
-  text-align: center;
+// ── Mobile header ─────────────────────────────────────────────────────────────
+.mobile-dropdown-header { display: none; }
+
+// ── Loading spinner ───────────────────────────────────────────────────────────
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: var(--brand-color, #3b82f6);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
 }
 
-.no-results-content {
-  color: #999;
-  font-size: 13px;
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  i {
-    margin-right: 8px;
-    font-size: 16px;
-  }
-}
-
-.search-summary {
-  i {
-    color: var(--brand-color, #3b82f6);
-  }
-}
-
-// Mobile dropdown header - hidden on desktop
-.mobile-dropdown-header {
-  display: none;
-}
-
-.dropdown.open .dropdown-menu {
-  display: block;
-}
-
-.dropdown:not(.open) .dropdown-menu {
-  display: none;
-}
-
-// Badge styles
-.badge-success {
-  background-color: #28a745 !important;
-  color: white !important;
-}
-
-.badge-warning {
-  background-color: #ffc107 !important;
-  color: #212529 !important;
-}
-
-.badge-secondary {
-  background-color: #6c757d !important;
-  color: white !important;
-}
-
-.badge-primary {
-  background-color: var(--brand-color, #3b82f6) !important;
-  color: white !important;
-}
-
-// Responsive adjustments
+// ── Mobile ────────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  :host {
-    display: block;
-    width: 100%;
-  }
+  :host { display: block; width: 100%; }
 
-  .fundraiser-selection-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible; // Allow dropdown to overflow
-    box-sizing: border-box;
-  }
+  .fundraiser-selection-container,
+  .dropdown { max-width: 100% !important; }
 
-  .fundraiser-selection-row {
-    display: block;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-  }
-
-  .dropdown {
-    max-width: 100% !important;
-    width: 100% !important;
-    overflow: visible; // Allow dropdown to overflow
-    box-sizing: border-box;
-    position: static; // Allow dropdown-menu to position relative to viewport
-  }
-
-  .fundraiser-dropdown-btn {
-    min-height: 70px;
-    padding: 12px 15px;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-  }
-
-  .fundraiser-title {
-    font-size: 15px;
-    max-width: 100%;
-  }
-
-  .fundraiser-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    width: 100%;
-    max-width: 100%;
-
-    .fundraiser-raised, .fundraiser-donors {
-      max-width: 100%;
-      width: 100%;
-    }
-  }
+  .dropdown { position: static; }
 
   .dropdown-menu {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+    inset: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;
-    margin: 0 !important;
     border-radius: 0 !important;
+    border: none !important;
     z-index: 9999 !important;
-    overflow-y: auto;
-    padding-top: 0;
-    padding-bottom: 80px; // Space for bottom nav
-    box-sizing: border-box;
+    padding-bottom: 80px;
   }
 
-  // Mobile dropdown header
   .mobile-dropdown-header {
     display: flex !important;
     align-items: center;
@@ -527,67 +328,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
-
-    .mobile-dropdown-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .mobile-dropdown-close {
-      width: 40px;
-      height: 40px;
-      border: none;
-      background: #f5f5f5;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      i {
-        font-size: 18px;
-        color: #666;
-      }
-
-      &:hover {
-        background: #eee;
-      }
-
-      &:active {
-        background: #ddd;
-      }
-    }
   }
 
-  .dropdown-fundraiser-meta {
-    width: 100%;
-
-    .dropdown-fundraiser-raised,
-    .dropdown-fundraiser-donors {
-      max-width: 100%;
-      width: 100%;
-    }
-  }
-
-  .caret {
-    flex-shrink: 0;
-    margin-left: 8px;
-  }
-
-  // Larger touch targets on mobile
-  .fundraiser-item a,
-  .create-fundraiser-item a {
-    padding: 16px;
-  }
-
-  .search-container {
-    padding: 12px 16px;
-  }
-
-  .search-input {
-    height: 44px;
-    font-size: 16px; // Prevent iOS zoom
-  }
+  .dropdown-fundraiser-link { padding: 14px 16px; }
 }

@@ -22,6 +22,14 @@ export class FundraiserSelectionComponent implements OnInit, OnDestroy {
   isDropdownOpen = false;
   searchTerm = '';
 
+  private readonly dotGradients = [
+    'linear-gradient(135deg, #7c3aed, #a78bfa)',
+    'linear-gradient(135deg, #0f6e56, #1d9e75)',
+    'linear-gradient(135deg, #993c1d, #d85a30)',
+    'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+    'linear-gradient(135deg, #78350f, #d97706)',
+  ];
+
   private boundHandleOutsideClick = this.handleOutsideClick.bind(this);
 
   constructor(private router: Router) {}
@@ -105,6 +113,10 @@ export class FundraiserSelectionComponent implements OnInit, OnDestroy {
       default:
         return 'badge-primary';
     }
+  }
+
+  getFundraiserDotStyle(index: number): Record<string, string> {
+    return { background: this.dotGradients[index % this.dotGradients.length] };
   }
 
   onImageError(event: any): void {

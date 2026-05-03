@@ -1,144 +1,140 @@
 <div class="fundraiser-selection-container">
-  <div class="fundraiser-selection-row">
-    <div class="dropdown" [class.open]="isDropdownOpen">
-      <button class="btn-secondary fundraiser-dropdown-btn"
-              type="button"
-              (click)="toggleDropdown()"
-              [disabled]="loading"
-              [class.has-poster]="selectedFundraiser?.poster_url"
-              [style.background-image]="selectedFundraiser?.poster_url ? 'url(' + selectedFundraiser?.poster_url + ')' : null">
+  <div class="dropdown" [class.open]="isDropdownOpen">
 
-        <!-- Poster overlay -->
-        <div *ngIf="selectedFundraiser?.poster_url" class="poster-overlay"></div>
+    <!-- Switcher trigger -->
+    <button class="fundraiser-switcher"
+            type="button"
+            (click)="toggleDropdown()"
+            [disabled]="loading">
 
-        <!-- Selected fundraiser -->
-        <div class="tw-flex-1 tw-min-w-0 tw-relative tw-z-10" *ngIf="selectedFundraiser">
-          <div class="fundraiser-title"
-               [class.tw-text-white]="selectedFundraiser.poster_url"
-               [class.tw-text-gray-800]="!selectedFundraiser.poster_url">
-            {{ selectedFundraiser.title }}
-            <span class="badge badge-sm tw-ml-2" [class]="getFundraiserStatusClass(selectedFundraiser)">
-              {{ getFundraiserStatusText(selectedFundraiser) }}
-            </span>
-          </div>
-          <div class="fundraiser-meta">
-            <span class="fundraiser-raised"
-                  [class.tw-text-white]="selectedFundraiser.poster_url"
-                  [class.tw-opacity-80]="selectedFundraiser.poster_url">
-              <i class="fa fa-peso-sign tw-mr-1"></i>
-              {{ formatCurrency(selectedFundraiser.totalRaised) }} raised
-            </span>
-            <span class="fundraiser-donors tw-ml-2" *ngIf="selectedFundraiser.donationCount"
-                  [class.tw-text-white]="selectedFundraiser.poster_url"
-                  [class.tw-opacity-80]="selectedFundraiser.poster_url">
-              <i class="fas fa-users tw-mr-1"></i>
-              {{ selectedFundraiser.donationCount }} donors
-            </span>
-          </div>
+      <!-- Icon dot -->
+      <div class="fundraiser-icon-dot">
+        <img *ngIf="selectedFundraiser && selectedFundraiser.poster_url"
+             [src]="selectedFundraiser.poster_url"
+             (error)="onImageError($event)"
+             alt=""
+             class="fundraiser-icon-poster">
+        <i class="fa fa-hand-holding-heart" *ngIf="!selectedFundraiser || !selectedFundraiser.poster_url"></i>
+      </div>
+
+      <!-- Selected fundraiser info -->
+      <div class="switcher-info" *ngIf="selectedFundraiser">
+        <div class="switcher-title">{{ selectedFundraiser.title }}</div>
+        <div class="switcher-meta">
+          <i class="fa fa-peso-sign tw-mr-1"></i>{{ formatCurrency(selectedFundraiser.totalRaised) }} raised
+          <span *ngIf="selectedFundraiser.donationCount" class="tw-ml-2">
+            · <i class="fas fa-users tw-mr-1"></i>{{ selectedFundraiser.donationCount }} donors
+          </span>
         </div>
+      </div>
 
-        <div *ngIf="!selectedFundraiser && !loading" class="no-fundraiser tw-relative tw-z-10">
-          <i class="fa fa-hand-holding-heart tw-mr-2"></i>
-          Select a Fundraiser
-        </div>
-        <div *ngIf="loading" class="loading-inline tw-relative tw-z-10">
-          <div class="loading-spinner"></div>Loading fundraisers...
-        </div>
-        <span class="caret tw-relative tw-z-10" [class.caret-white]="selectedFundraiser?.poster_url"></span>
-      </button>
+      <!-- Placeholder -->
+      <div class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-flex-1 tw-min-w-0" *ngIf="!selectedFundraiser && !loading">
+        <i class="fa fa-hand-holding-heart"></i>
+        Select a Fundraiser
+      </div>
 
-      <ul class="dropdown-menu" *ngIf="isDropdownOpen">
-        <!-- Mobile header with close button -->
-        <li class="mobile-dropdown-header">
-          <span class="mobile-dropdown-title">Select Fundraiser</span>
-          <button type="button" class="mobile-dropdown-close" (click)="toggleDropdown(); $event.stopPropagation()">
-            <i class="fa fa-times"></i>
+      <!-- Loading -->
+      <div class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-flex-1 tw-min-w-0" *ngIf="loading">
+        <div class="loading-spinner"></div>Loading fundraisers...
+      </div>
+
+      <!-- Right side: status + chevron -->
+      <div class="switcher-right" *ngIf="selectedFundraiser">
+        <span class="fundraiser-status-pill" [ngClass]="getFundraiserStatusClass(selectedFundraiser)">
+          <span class="status-dot"></span>{{ getFundraiserStatusText(selectedFundraiser) }}
+        </span>
+        <svg class="switcher-chevron" [class.rotated]="isDropdownOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </button>
+
+    <!-- Dropdown panel -->
+    <ul class="dropdown-menu" *ngIf="isDropdownOpen">
+
+      <!-- Mobile header -->
+      <li class="mobile-dropdown-header">
+        <span class="tw-text-base tw-font-semibold tw-text-gray-800">Switch fundraiser</span>
+        <button type="button"
+                class="tw-w-9 tw-h-9 tw-rounded-full tw-bg-gray-100 tw-border-0 tw-flex tw-items-center tw-justify-center tw-cursor-pointer hover:tw-bg-gray-200"
+                (click)="toggleDropdown(); $event.stopPropagation()">
+          <i class="fa fa-times tw-text-gray-500"></i>
+        </button>
+      </li>
+
+      <!-- Search (5+ fundraisers) -->
+      <li class="tw-px-3 tw-py-2 tw-border-b tw-border-gray-100" *ngIf="fundraisers.length > 5">
+        <div class="tw-relative tw-flex tw-items-center">
+          <i class="fa fa-search tw-absolute tw-left-3 tw-text-gray-400 tw-z-10"></i>
+          <input
+            type="text"
+            class="tw-input tw-pl-8 tw-pr-8 tw-rounded-full tw-text-sm tw-h-9 tw-w-full"
+            placeholder="Search fundraisers..."
+            [(ngModel)]="searchTerm"
+            (click)="$event.stopPropagation()"
+            #searchInput>
+          <button
+            class="tw-absolute tw-right-2 tw-border-0 tw-bg-transparent tw-text-gray-400 hover:tw-text-gray-600 tw-cursor-pointer"
+            *ngIf="searchTerm"
+            (click)="clearSearch(); $event.stopPropagation()">
+            <i class="fa fa-times tw-text-xs"></i>
           </button>
-        </li>
+        </div>
+      </li>
 
-        <!-- Search input for many fundraisers -->
-        <li class="search-container" *ngIf="fundraisers.length > 5">
-          <div class="search-input-wrapper">
-            <i class="fa fa-search search-icon"></i>
-            <input
-              type="text"
-              class="search-input tw-input"
-              placeholder="Search fundraisers..."
-              [(ngModel)]="searchTerm"
-              (click)="$event.stopPropagation()"
-              #searchInput>
-            <button
-              class="btn-ghost search-clear"
-              *ngIf="searchTerm"
-              (click)="clearSearch(); $event.stopPropagation()">
-              <i class="fa fa-times"></i>
-            </button>
+      <!-- Create new fundraiser -->
+      <li *ngIf="isAdmin" class="dropdown-create-item">
+        <a (click)="createFundraiser()" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2.5 tw-text-sm tw-font-semibold tw-cursor-pointer hover:tw-bg-gray-50 tw-no-underline" style="color: var(--brand-color, #3b82f6)">
+          <i class="fa fa-plus" style="color: var(--brand-color, #3b82f6)"></i>
+          Create New Fundraiser
+        </a>
+      </li>
+
+      <li class="tw-h-px tw-bg-gray-100" *ngIf="isAdmin && fundraisers.length > 0"></li>
+
+      <!-- Fundraiser items -->
+      <li *ngFor="let fundraiser of filteredFundraisers; let i = index"
+          [class.selected]="selectedFundraiser?.id === fundraiser.id"
+          class="dropdown-fundraiser-item">
+        <a (click)="selectFundraiser(fundraiser)" class="dropdown-fundraiser-link">
+          <!-- Dot icon -->
+          <div class="di-dot" [ngStyle]="fundraiser.poster_url ? {} : getFundraiserDotStyle(i)">
+            <img *ngIf="fundraiser.poster_url"
+                 [src]="fundraiser.poster_url"
+                 (error)="onDropdownImageError($event)"
+                 alt=""
+                 class="di-poster">
+            <i class="fa fa-hand-holding-heart" *ngIf="!fundraiser.poster_url"></i>
           </div>
-        </li>
-
-        <li class="divider" *ngIf="fundraisers.length > 5"></li>
-
-        <!-- Create new fundraiser option at the top -->
-        <li *ngIf="isAdmin" class="create-fundraiser-item">
-          <a (click)="createFundraiser()" class="create-new-fundraiser">
-            <i class="fa fa-plus tw-mr-2"></i>
-            Create New Fundraiser
-          </a>
-        </li>
-
-        <li class="divider" *ngIf="isAdmin && fundraisers.length > 0"></li>
-
-        <li *ngFor="let fundraiser of filteredFundraisers"
-            [class.active]="selectedFundraiser?.id === fundraiser.id"
-            class="fundraiser-item">
-          <a (click)="selectFundraiser(fundraiser)">
-            <div class="dropdown-fundraiser-poster">
-              <img *ngIf="fundraiser.poster_url; else dropdownDefaultPoster"
-                   [src]="fundraiser.poster_url"
-                   class="dropdown-fundraiser-image"
-                   [alt]="fundraiser.title"
-                   (error)="onDropdownImageError($event)">
-              <ng-template #dropdownDefaultPoster>
-                <div class="dropdown-default-fundraiser-image">
-                  <i class="fa fa-hand-holding-heart"></i>
-                </div>
-              </ng-template>
+          <!-- Info -->
+          <div class="di-info">
+            <div class="di-title">{{ fundraiser.title }}</div>
+            <div class="di-meta">
+              <i class="fa fa-peso-sign tw-mr-1"></i>{{ formatCurrency(fundraiser.totalRaised) }} raised
             </div>
-            <div class="dropdown-fundraiser-info">
-              <div class="dropdown-fundraiser-title">
-                {{ fundraiser.title }}
-                <span class="badge badge-sm tw-ml-2" [class]="getFundraiserStatusClass(fundraiser)">
-                  {{ getFundraiserStatusText(fundraiser) }}
-                </span>
-              </div>
-              <div class="dropdown-fundraiser-meta">
-                <span class="dropdown-fundraiser-raised">
-                  <i class="fa fa-peso-sign tw-mr-1"></i>
-                  {{ formatCurrency(fundraiser.totalRaised) }} raised
-                </span>
-                <span class="dropdown-fundraiser-donors tw-ml-2" *ngIf="fundraiser.donationCount">
-                  <i class="fas fa-users tw-mr-1"></i>
-                  {{ fundraiser.donationCount }} donors
-                </span>
-              </div>
-            </div>
-          </a>
-        </li>
-
-        <li class="no-results" *ngIf="filteredFundraisers.length === 0 && searchTerm">
-          <div class="no-results-content">
-            <i class="fa fa-search tw-text-muted"></i>
-            <span>No fundraisers found matching "{{ searchTerm }}"</span>
           </div>
-        </li>
-      </ul>
-    </div>
+          <!-- Status -->
+          <span class="fundraiser-status-pill fundraiser-status-pill--sm" [ngClass]="getFundraiserStatusClass(fundraiser)">{{ getFundraiserStatusText(fundraiser) }}</span>
+          <!-- Selected checkmark -->
+          <svg *ngIf="selectedFundraiser?.id === fundraiser.id" class="di-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </a>
+      </li>
+
+      <!-- No results -->
+      <li *ngIf="filteredFundraisers.length === 0 && searchTerm" class="tw-py-5 tw-text-center tw-text-sm tw-text-gray-400">
+        <i class="fa fa-search tw-mr-2"></i>
+        No fundraisers found matching "{{ searchTerm }}"
+      </li>
+    </ul>
   </div>
 
-  <!-- Fundraiser search results summary -->
-  <div class="search-summary tw-mt-2" *ngIf="searchTerm && filteredFundraisers.length > 0">
-    <small class="tw-text-muted">
-      <i class="fa fa-filter tw-mr-1"></i>
+  <!-- Search summary -->
+  <div class="tw-mt-1.5" *ngIf="searchTerm && filteredFundraisers.length > 0">
+    <small class="tw-text-gray-500">
+      <i class="fa fa-filter tw-mr-1" style="color: var(--brand-color, #3b82f6)"></i>
       Showing {{ filteredFundraisers.length }} of {{ fundraisers.length }} fundraisers
     </small>
   </div>
