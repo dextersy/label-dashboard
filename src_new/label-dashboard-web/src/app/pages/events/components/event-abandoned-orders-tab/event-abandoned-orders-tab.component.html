@@ -19,6 +19,39 @@
     (selectedItemsChange)="onSelectedItemsChange($event)">
     
     
+    <!-- Mobile card layout for pending orders -->
+    <ng-template #mobileRowTemplate let-order let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+      <div class="order-card">
+        <div class="order-card__header">
+          <div class="order-card__avatar" [style.background-color]="getAvatarColor(order.name)">
+            {{ getInitials(order.name) }}
+          </div>
+          <div class="order-card__info">
+            <div class="order-card__name">{{ order.name }}</div>
+            <div class="order-card__email">{{ order.email_address }}</div>
+          </div>
+          <div class="order-card__meta">
+            <span [innerHTML]="getStatusHtml(order.status)"></span>
+            <span class="order-card__qty">{{ order.number_of_entries }} ticket{{ order.number_of_entries !== 1 ? 's' : '' }}</span>
+          </div>
+          <button *ngIf="isAdmin && visibleActions.length > 0"
+                  class="order-card__menu kebab-btn"
+                  type="button"
+                  (click)="toggleKebab($event)"
+                  [class.active]="isKebabOpen">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+        </div>
+        <div class="order-card__phone" *ngIf="order.contact_number">
+          <i class="fas fa-phone"></i> {{ order.contact_number }}
+        </div>
+        <div class="order-card__footer">
+          <span class="order-card__type">{{ order.ticket_type_name || 'Regular' }}</span>
+          <span class="order-card__date">{{ order.order_timestamp | date:'MMM d, h:mm a' }}</span>
+        </div>
+      </div>
+    </ng-template>
+
     <!-- Bulk operations template -->
     <ng-template #bulkOperationsContent let-selectedOrders let-disabled="disabled">
       <div class="bulk-operations tw-flex tw-flex-wrap tw-gap-2">

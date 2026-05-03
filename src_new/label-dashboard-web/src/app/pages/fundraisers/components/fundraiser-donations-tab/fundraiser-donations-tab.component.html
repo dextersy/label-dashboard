@@ -78,5 +78,34 @@
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
     (sortChange)="onSortChange($event)">
+
+    <!-- Mobile card layout for donations -->
+    <ng-template #mobileRowTemplate let-donation>
+      <div class="donation-card">
+        <div class="donation-card__header">
+          <div class="donation-card__avatar"
+               [style.background-color]="donation.anonymous ? '#9ca3af' : getAvatarColor(donation.name)">
+            <i *ngIf="donation.anonymous" class="fas fa-user-secret" style="font-size:15px"></i>
+            <ng-container *ngIf="!donation.anonymous">{{ getInitials(donation.name) }}</ng-container>
+          </div>
+          <div class="donation-card__info">
+            <div class="donation-card__name">{{ donation.anonymous ? 'Anonymous' : donation.name }}</div>
+            <div class="donation-card__email">{{ donation.anonymous ? 'Hidden' : donation.email }}</div>
+          </div>
+          <div class="donation-card__meta">
+            <span class="donation-card__amount">{{ formatCurrency(donation.amount) }}</span>
+            <span [innerHTML]="getStatusHtml(donation.payment_status)"></span>
+          </div>
+        </div>
+        <div class="donation-card__footer">
+          <span class="donation-card__fee">
+            {{ hasPlatformFees ? 'Platform Fee' : 'Processing Fee' }}:
+            {{ formatCurrency(hasPlatformFees ? donation.platform_fee : donation.processing_fee) }}
+          </span>
+          <span class="donation-card__date">{{ donation.createdAt | date:'MMM d, yyyy' }}</span>
+        </div>
+      </div>
+    </ng-template>
+
   </app-paginated-table>
 </div>

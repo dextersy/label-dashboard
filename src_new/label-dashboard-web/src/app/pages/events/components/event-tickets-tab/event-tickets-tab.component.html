@@ -139,6 +139,31 @@
       [showSearch]="false"
       [showSortableHeaders]="true"
       (pageChange)="onWalkInPageChange($event)" >
+
+      <!-- Mobile card layout for walk-in transactions -->
+      <ng-template #mobileRowTemplate let-tx>
+        <div class="walkin-card">
+          <div class="walkin-card__header">
+            <div class="walkin-card__id">#{{ tx.id }}</div>
+            <div class="walkin-card__date">{{ formatWalkInDate(tx.createdAt) }}</div>
+          </div>
+          <div class="walkin-card__items" *ngIf="tx.items?.length">
+            <span class="walkin-card__item" *ngFor="let item of tx.items">
+              {{ item.quantity }}x {{ item.walkInType?.name || 'Unknown' }}
+            </span>
+          </div>
+          <div class="walkin-card__footer">
+            <span class="walkin-card__payment">
+              <i class="fas fa-credit-card"></i> {{ tx.payment_method }}<ng-container *ngIf="tx.payment_reference"> ({{ tx.payment_reference }})</ng-container>
+            </span>
+            <span class="walkin-card__amount">{{ formatWalkInPrice(tx.total_amount) }}</span>
+          </div>
+          <div class="walkin-card__registered" *ngIf="tx.registeredByUser?.first_name">
+            <i class="fas fa-user"></i> {{ tx.registeredByUser?.first_name }}
+          </div>
+        </div>
+      </ng-template>
+
     </app-paginated-table>
 
     <!-- Summary Footer -->

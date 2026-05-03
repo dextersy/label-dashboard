@@ -14,8 +14,8 @@ import { environment } from 'environments/environment';
 interface CampaignsDashboardStats {
   activeEvents: number;
   activeFundraisers: number;
-  thisMonthSales: number;
-  thisMonthDonations: number;
+  activeEventsSales: number;
+  activeFundraisersDonations: number;
 }
 
 export interface OngoingFundraiser {

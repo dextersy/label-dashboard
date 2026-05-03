@@ -187,9 +187,11 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
 
   getDisplayName(donation: Donation): string {
     if (donation.anonymous) {
-      return '<i class="fas fa-user-secret me-1"></i>Anonymous';
+      return `<span class="avatar-chip"><span class="avatar-chip__circle avatar-chip__circle--anon"><i class="fas fa-user-secret"></i></span>Anonymous</span>`;
     }
-    return donation.name;
+    const initials = this.getInitials(donation.name);
+    const idx = this.getAvatarColorIndex(donation.name);
+    return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${donation.name}</span>`;
   }
 
   getStatusHtml(status: string): string {
@@ -215,5 +217,25 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
       style: 'currency',
       currency: 'PHP'
     }).format(amount);
+  }
+
+  private readonly avatarColors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  getAvatarColorIndex(name: string): number {
+    if (!name) return 0;
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return Math.abs(hash) % this.avatarColors.length;
+  }
+
+  getAvatarColor(name: string): string {
+    return this.avatarColors[this.getAvatarColorIndex(name)];
   }
 }
