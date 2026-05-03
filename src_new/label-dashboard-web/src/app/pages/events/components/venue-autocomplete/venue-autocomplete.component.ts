@@ -71,12 +71,148 @@ export interface VenueSelection {
       color: white !important;
     }
     
-    .selected-venue-info .card {
-      border: 1px solid #e9ecef;
+    /* ── Input wrapper (positions hint overlay over the input) ──────────────── */
+    .venue-input-wrapper {
+      position: relative;
     }
-    
-    .has-error .form-control {
-      border-color: #dc3545;
+    .venue-input-wrapper input {
+      min-height: 64px;
+    }
+
+    /* ── Empty hint — overlay with pointer-events:none so clicks reach the input */
+    .venue-empty-hint {
+      position: absolute;
+      inset: 1px; /* stay inside the input border */
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      border-radius: 7px;
+      cursor: text;
+      pointer-events: none;
+      z-index: 1;
+      background: #f9fafb; /* matches tw-input bg-input-bg */
+    }
+    .venue-empty-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 8%, white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--brand-color, #3b82f6);
+      font-size: 14px;
+    }
+    .venue-empty-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .venue-hint-primary {
+      font-size: 13px;
+      color: #9ca3af;
+      font-weight: 400;
+    }
+    .venue-hint-secondary {
+      font-size: 11px;
+      color: color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #d1d5db);
+    }
+    /* ── Filled card ─────────────────────────────────────────────────────────── */
+    .venue-filled {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #e5e7eb);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 2%, white);
+    }
+    .venue-filled-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--brand-color, #3b82f6);
+      font-size: 14px;
+      margin-top: 1px;
+    }
+    .venue-filled-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .venue-filled-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 2px;
+      line-height: 1.3;
+    }
+    .venue-filled-address {
+      font-size: 12px;
+      color: #9ca3af;
+      margin: 0 0 6px;
+    }
+    .venue-filled-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .venue-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .venue-pill--phone {
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, white);
+      color: var(--brand-color, #3b82f6);
+    }
+    .venue-pill--website {
+      background: var(--brand-color, #3b82f6);
+      color: #fff;
+    }
+    .venue-pill--website:hover {
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 85%, black);
+      color: #fff;
+    }
+    .venue-dismiss {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: color-mix(in srgb, var(--brand-color, #3b82f6) 15%, #d1d5db);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+      padding: 0;
+      margin-top: 1px;
+    }
+    .venue-dismiss:hover {
+      color: var(--brand-color, #3b82f6);
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, white);
+    }
+    .venue-dismiss:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .has-error .venue-empty-hint,
+    .has-error .venue-filled {
+      border-color: #FCA5A5; // semantic — not brand
     }
   `]
 })
@@ -96,6 +232,7 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
   showDropdown = false;
   isLoading = false;
   selectedIndex = -1;
+  isFocused = false;
   dropdownTop = 0;
   dropdownLeft = 0;
   dropdownWidth = 0;
@@ -223,11 +360,13 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
   }
   
   onFocus(): void {
+    this.isFocused = true;
     this.showDropdown = this.predictions.length > 0 || this.searchQuery.length >= 3;
     if (this.showDropdown) {
       this.calculateDropdownPosition();
     }
   }
+
 
   private isInputVisible(): boolean {
     // Check if input should be visible based on our conditional logic
@@ -237,6 +376,7 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
   onBlur(): void {
     // Delay hiding dropdown to allow click events on dropdown items
     setTimeout(() => {
+      this.isFocused = false;
       this.removeDropdownFromBody();
       this.onTouched();
     }, 200);

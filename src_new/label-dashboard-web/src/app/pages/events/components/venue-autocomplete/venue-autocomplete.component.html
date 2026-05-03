@@ -1,60 +1,70 @@
 <div class="venue-autocomplete-container" [class.has-error]="hasError">
-  <!-- Input field - only show if no Google Place is selected -->
-  <div class="input-group" *ngIf="!selectedVenue || !selectedVenue.google_place_id">
-    <input
-      #searchInput
-      type="text"
-      class="tw-input"
-      [placeholder]="placeholder"
-      [value]="displayValue"
-      (input)="onInputChange($event)"
-      (focus)="onFocus()"
-      (blur)="onBlur()"
-      [class.is-invalid]="hasError"
-      [disabled]="disabled"
-      autocomplete="off"
-    />
-  </div>
-  
-  <!-- Loading indicator -->
-  <div class="small tw-mt-1 tw-text-muted tw-text-sm" *ngIf="isLoading">
-    <i class="fa fa-spinner fa-spin tw-mr-1"></i>Searching places...
-  </div>
-  
-  <!-- Manual entry option -->
-  <div class="form-text small tw-mt-1 tw-text-sm" *ngIf="showDropdown && predictions.length === 0 && searchQuery.length > 2 && !isLoading">
-    No places found. You can enter the venue name manually.
-  </div>
-  
-  <!-- Selected venue info with clear button -->
-  <div class="selected-venue-info tw-mt-2" *ngIf="selectedVenue && selectedVenue.google_place_id">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-px-card-pad tw-pb-card-pad tw-bg-gray-50 small tw-text-sm">
-      <div class="tw-flex tw-items-start">
-        <i class="fa fa-map-marker-alt text-primary tw-mr-2 tw-mt-1"></i>
-        <div class="tw-grow tw-flex-grow">
-          <div class="tw-font-semibold">{{ selectedVenue.venue }}</div>
-          <div class="tw-text-muted" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</div>
-          <div class="tw-mt-1" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
-            <span class="badge bg-secondary tw-mr-1" *ngIf="selectedVenue.venue_phone">
-              <i class="fa fa-phone tw-mr-1"></i>{{ selectedVenue.venue_phone }}
-            </span>
-            <a [href]="selectedVenue.venue_website" target="_blank" 
-               class="badge bg-primary text-decoration-none" 
-               *ngIf="selectedVenue.venue_website">
-              <i class="fa fa-globe tw-mr-1"></i>Website
-            </a>
-          </div>
-        </div>
-        <button
-          type="button"
-          class="btn-sm btn-ghost tw-ml-2 tw-p-1 tw-text-muted"
-          (click)="clearSelection()"
-          [disabled]="disabled"
-          title="Clear selection"
-          style="background: transparent; border: none;">
-          <i class="fa fa-times"></i>
-        </button>
+
+  <!-- ── Filled state (Google place selected) ─────────────────────────────── -->
+  <div class="venue-filled" *ngIf="selectedVenue && selectedVenue.google_place_id">
+    <div class="venue-filled-icon">
+      <i class="fa fa-map-marker-alt"></i>
+    </div>
+    <div class="venue-filled-body">
+      <p class="venue-filled-name">{{ selectedVenue.venue }}</p>
+      <p class="venue-filled-address" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</p>
+      <div class="venue-filled-pills" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
+        <span class="venue-pill venue-pill--phone" *ngIf="selectedVenue.venue_phone">
+          <i class="fa fa-phone"></i> {{ selectedVenue.venue_phone }}
+        </span>
+        <a [href]="selectedVenue.venue_website" target="_blank" rel="noopener"
+           class="venue-pill venue-pill--website" *ngIf="selectedVenue.venue_website">
+          <i class="fa fa-globe"></i> Website
+        </a>
       </div>
     </div>
+    <button type="button" class="venue-dismiss" (click)="clearSelection()" [disabled]="disabled" title="Remove venue">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ── Input zone (no Google place selected yet) ────────────────────────── -->
+  <div class="venue-input-zone" *ngIf="!selectedVenue || !selectedVenue.google_place_id">
+
+    <!-- Input always in DOM, full-size — hint overlays it when empty -->
+    <div class="venue-input-wrapper">
+      <input
+        #searchInput
+        type="text"
+        class="tw-input"
+        placeholder="Search for a venue or enter manually..."
+        [value]="displayValue"
+        (input)="onInputChange($event)"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        [class.is-invalid]="hasError"
+        [disabled]="disabled"
+        autocomplete="off"
+      />
+
+      <!-- Hint overlay — pointer-events:none so clicks pass through to the input -->
+      <div class="venue-empty-hint"
+           *ngIf="!isFocused && !displayValue"
+           aria-hidden="true">
+        <div class="venue-empty-icon">
+          <i class="fa fa-map-marker-alt"></i>
+        </div>
+        <div class="venue-empty-text">
+          <span class="venue-hint-primary">Search for a venue</span>
+          <span class="venue-hint-secondary">Or enter an address manually</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <div class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1.5 tw-text-xs tw-text-gray-400" *ngIf="isLoading">
+    <i class="fa fa-spinner fa-spin"></i> Searching places...
+  </div>
+
+  <!-- No results hint -->
+  <div class="tw-mt-1 tw-text-xs tw-text-gray-400"
+       *ngIf="showDropdown && predictions.length === 0 && searchQuery.length > 2 && !isLoading">
+    No places found. You can enter the venue name manually.
   </div>
 </div>
