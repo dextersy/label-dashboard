@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, TemplateRef, ContentChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SafeHtml } from '@angular/platform-browser';
 
 export interface PaginationInfo {
   current_page: number;
@@ -36,7 +37,7 @@ export interface TableColumn {
   sortable?: boolean;
   type?: 'text' | 'number' | 'date' | 'select';
   options?: { value: string; label: string }[]; // For select type
-  formatter?: (item: any) => string; // Custom formatter function
+  formatter?: (item: any) => string | SafeHtml; // Custom formatter function
   align?: 'left' | 'center' | 'right'; // Column alignment
   mobileClass?: string; // CSS classes for mobile responsiveness
   tabletClass?: string; // CSS classes for tablet responsiveness

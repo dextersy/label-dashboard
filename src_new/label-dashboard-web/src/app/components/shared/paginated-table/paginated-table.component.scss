@@ -194,9 +194,12 @@
 // Responsive table header actions
 .table-actions {
   min-width: 0; // Allow flexbox to shrink below content size
-  
-  .btn {
+
+  .btn, .btn-sm, [class^="btn-"] {
     white-space: nowrap; // Prevent button text from wrapping
+    font-size: 12px !important;
+    padding: 4px 10px !important;
+    line-height: 1.4 !important;
   }
 }
 
@@ -209,7 +212,14 @@
 
 .pagination-info {
   width: 100%;
-  
+  margin-top: 0 !important;
+  line-height: 1;
+
+  small {
+    font-size: 11px;
+    line-height: 1;
+  }
+
   @media (min-width: 576px) {
     width: auto;
   }

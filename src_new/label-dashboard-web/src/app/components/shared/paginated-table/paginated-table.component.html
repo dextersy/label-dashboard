@@ -1,9 +1,18 @@
 <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
   <div class="md:tw-col-span-12">
-    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-5">
-      <div class="tw-px-card-pad tw-pt-3 tw-pb-3">
+    <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-5">
+      <div class="tw-pt-3 tw-pb-3">
         <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-start tw-gap-3">
-          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">{{ title }}</h3>
+          <div>
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">{{ title }}</h3>
+            <div class="pagination-info tw-mt-0" *ngIf="pagination">
+              <small class="tw-text-muted tw-leading-none">
+                Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} -
+                {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }}
+                of {{ pagination.total_count }} entries
+              </small>
+            </div>
+          </div>
           <div class="table-actions tw-flex tw-items-center tw-gap-2">
             <!-- Custom controls slot (filter dropdowns, etc.) — always visible -->
             <ng-container *ngIf="customButtons">
@@ -63,14 +72,6 @@
             </button>
           </div>
         </div>
-        <!-- Pagination info moved to its own line on mobile -->
-        <div class="pagination-info tw-mt-2" *ngIf="pagination">
-          <small class="tw-text-muted">
-            Showing {{ ((pagination.current_page - 1) * pagination.per_page) + 1 }} - 
-            {{ Math.min(pagination.current_page * pagination.per_page, pagination.total_count) }} 
-            of {{ pagination.total_count }} entries
-          </small>
-        </div>
       </div>
       
       <!-- Search bar -->
@@ -120,7 +121,7 @@
           <i class="fa fa-times"></i>
         </button>
       </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
+      <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
         <div *ngIf="loading" class="tw-p-4 tw-text-center">
           <div class="loading-dots">
             <div></div>
