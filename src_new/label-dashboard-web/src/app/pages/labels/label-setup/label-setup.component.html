@@ -158,55 +158,89 @@
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Domains</h3>
       <p class="tw-text-sm tw-text-muted tw-mb-4">These domains will resolve to your dashboard.</p>
 
-      <div *ngIf="domains.length > 0" class="tw-mb-6 tw-divide-y tw-divide-gray-100">
-        <div *ngFor="let domain of domains" class="tw-flex tw-items-center tw-justify-between tw-py-2.5">
-          <span class="tw-text-sm">
-            <i [class]="getStatusIcon(domain.status)" [title]="getStatusTooltip(domain.status)"></i>
-            {{ domain.domain_name }}
-            <span *ngIf="domain.is_primary" class="badge bg-primary tw-ml-1" style="font-size: 11px;">Primary</span>
+      <div *ngIf="domains.length > 0" class="tw-mb-6 tw-flex tw-flex-col tw-gap-3 sm:tw-gap-0 sm:tw-divide-y sm:tw-divide-gray-100/70">
+        <div *ngFor="let domain of domains"
+             class="tw-rounded-lg tw-border tw-border-gray-200 tw-p-3 tw-flex tw-flex-col tw-gap-1.5
+                    sm:tw-rounded-none sm:tw-border-0 sm:tw-border-b sm:tw-border-gray-100/70 sm:tw-p-0 sm:tw-py-2.5
+                    sm:tw-grid sm:tw-grid-cols-[1fr_auto_auto] sm:tw-items-center sm:tw-gap-x-4 sm:tw-gap-y-0">
+
+          <!-- Row 1 on mobile / Col 1+2 on desktop: domain name + status -->
+          <span class="tw-flex tw-items-center tw-justify-between sm:tw-contents">
+
+            <!-- Domain name + primary badge -->
+            <span class="tw-text-sm tw-flex tw-items-center tw-gap-1.5 tw-min-w-0">
+              <span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block;"
+                    [style.background]="domain.status === 'Connected' ? '#16a34a' : domain.status === 'Pending' ? '#0891b2' : domain.status === 'No SSL' ? '#f59e0b' : '#ef4444'"
+                    [title]="getStatusTooltip(domain.status)"></span>
+              <span [class.tw-text-muted]="domain.status !== 'Connected'"
+                    style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;"
+                    [title]="domain.domain_name">{{ domain.domain_name }}</span>
+              <span *ngIf="domain.is_primary"
+                    style="font-size:10px; padding:1px 5px; border-radius:4px; background:#dbeafe; color:#1d4ed8; flex-shrink:0; font-weight:500; letter-spacing:0.01em; white-space:nowrap;">
+                Primary
+              </span>
+            </span>
+
+            <!-- Connection status -->
+            <span class="tw-text-sm tw-whitespace-nowrap">
+              <span *ngIf="domain.status === 'Connected'" class="tw-text-green-600" [title]="getStatusTooltip(domain.status)">✓ Connected</span>
+              <span *ngIf="domain.status === 'Pending'" class="tw-text-[#0891b2]" [title]="getStatusTooltip(domain.status)"><i class="fas fa-clock fa-spin tw-text-xs"></i> Processing…</span>
+              <span *ngIf="domain.status === 'No SSL'" class="tw-text-amber-500" [title]="getStatusTooltip(domain.status)">✓ No SSL</span>
+              <span *ngIf="domain.status === 'Unverified'" class="tw-text-red-500" [title]="getStatusTooltip(domain.status)">✕ Unverified</span>
+            </span>
+
           </span>
-          <span class="tw-flex tw-items-center tw-gap-2">
+
+          <!-- Row 2 on mobile / Col 3 on desktop: actions -->
+          <span class="tw-flex tw-items-center tw-gap-1">
+            <!-- Verify / Recheck -->
             <button *ngIf="shouldShowVerifyButton(domain.status)"
                     (click)="verifyDomain(domain.domain_name)"
-                    class="btn-ghost btn-sm"
                     [disabled]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
-                    [class.tw-text-muted]="isVerifyButtonDisabled(domain.domain_name, domain.status)"
                     [title]="getVerifyButtonTooltip(domain.domain_name, domain.status)"
-                    style="padding: 0; border: none; background: none; text-decoration: underline;">
-              [ {{ getVerifyButtonText(domain.status) }} ]
+                    style="font-size:11px; padding:2px 8px; border:0.5px solid currentColor; border-radius:4px; background:transparent; cursor:pointer; line-height:1.4;"
+                    [style.opacity]="isVerifyButtonDisabled(domain.domain_name, domain.status) ? '0.4' : '1'"
+                    class="tw-text-gray-500">
+              {{ getVerifyButtonText(domain.status) }}
             </button>
-            <span *ngIf="domain.status === 'Connected'" class="tw-text-success tw-text-sm">
-              <i class="fas fa-check"></i> Connected
-            </span>
-            <span *ngIf="domain.status === 'Pending'" class="tw-text-[#0891b2] tw-text-sm">
-              <i class="fas fa-clock fa-spin"></i> Processing...
-            </span>
-            <button *ngIf="!domain.is_primary"
-                    (click)="setPrimaryDomain(domain.domain_name)"
-                    class="btn-ghost btn-sm tw-text-muted"
-                    title="Set as primary domain"
-                    style="padding: 0; border: none; background: none;">
+            <!-- Star: filled gold if primary, muted if not -->
+            <button *ngIf="domain.is_primary"
+                    style="background:transparent; border:none; cursor:default; padding:2px 4px; font-size:13px;"
+                    title="Primary domain"
+                    class="tw-text-yellow-400"
+                    disabled>
               <i class="fas fa-star"></i>
             </button>
-            <a (click)="deleteDomain(domain.domain_name)" class="btn-ghost btn-sm tw-text-danger tw-cursor-pointer" title="Delete domain">
+            <button *ngIf="!domain.is_primary"
+                    (click)="setPrimaryDomain(domain.domain_name)"
+                    style="background:transparent; border:none; cursor:pointer; padding:2px 4px; font-size:13px;"
+                    title="Set as primary domain"
+                    class="tw-text-gray-300 hover:tw-text-yellow-400">
+              <i class="fas fa-star"></i>
+            </button>
+            <!-- Trash pushed to far right -->
+            <a (click)="deleteDomain(domain.domain_name)"
+               style="background:transparent; border:none; cursor:pointer; padding:2px 4px; font-size:13px; margin-left:auto;"
+               title="Delete domain"
+               class="tw-text-red-300 hover:tw-text-red-500">
               <i class="fas fa-trash"></i>
             </a>
           </span>
+
         </div>
       </div>
 
       <p *ngIf="domains.length === 0" class="tw-text-sm tw-text-muted tw-mb-4">No domains configured.</p>
 
-      <h4 class="tw-text-sm tw-font-semibold tw-text-gray-700 tw-mb-3">Add Domain</h4>
-      <div class="tw-grid tw-grid-cols-4 tw-gap-3 tw-items-end">
-        <div class="tw-col-span-3">
-          <input type="text" class="tw-input" [(ngModel)]="newDomainName" placeholder="Domain name">
-        </div>
-        <div>
-          <button type="button" class="btn-primary tw-w-full" (click)="addDomain()">
-            <i class="fas fa-plus"></i> Add Domain
-          </button>
-        </div>
+      <h4 class="tw-text-sm tw-font-semibold tw-text-gray-700 tw-mb-3">Add domain</h4>
+      <div class="tw-flex tw-gap-3 tw-items-center">
+        <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [(ngModel)]="newDomainName" placeholder="Domain name">
+        <button type="button"
+                (click)="addDomain()"
+                style="flex-shrink:0; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-size:14px; cursor:pointer; white-space:nowrap;"
+                [style.background]="brandSettings?.brand_color || '#6366f1'">
+          <i class="fas fa-plus"></i> Add domain
+        </button>
       </div>
     </div>
   </div>

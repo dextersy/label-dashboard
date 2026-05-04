@@ -245,6 +245,12 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   i { margin-right: 6px !important; font-size: 12px !important; }
 }
 
+.btn-xs {
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+  margin-bottom: 0 !important;
+}
+
 .btn-lg {
   padding: 16px 32px !important;
   font-size: 15px !important;
