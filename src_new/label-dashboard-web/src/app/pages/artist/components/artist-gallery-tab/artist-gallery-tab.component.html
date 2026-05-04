@@ -1,8 +1,8 @@
 <div class="artist-gallery-tab">
 
   <!-- Page Header -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-mb-2">
         <i class="fas fa-images tw-mr-2"></i>
         Media Gallery
@@ -12,8 +12,8 @@
   </div>
 
   <!-- Gallery Section -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 gallery-section">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 gallery-section">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Photo Gallery</h3>
       <div class="filter-controls tw-flex tw-items-center tw-gap-2">
         <button class="btn-sm"
@@ -25,35 +25,27 @@
           <i class="fa fa-arrows-alt" *ngIf="!savingReorder"></i>
           {{ reorderMode ? 'Done' : 'Reorder' }}
         </button>
-        <div class="tw-hidden md:tw-flex tw-rounded-lg tw-overflow-hidden tw-border tw-border-gray-200" role="group">
+        <div class="release-filter-group" role="group">
           <button type="button"
-                  class="btn-sm tw-rounded-none tw-border-0"
-                  [class.btn-primary]="epkFilter === 'all'"
-                  [class.btn-secondary]="epkFilter !== 'all'"
+                  class="release-filter-btn"
+                  [class.active]="epkFilter === 'all'"
                   (click)="epkFilter = 'all'">All</button>
           <button type="button"
-                  class="btn-sm tw-rounded-none tw-border-0 tw-border-l tw-border-gray-200"
-                  [class.btn-primary]="epkFilter === 'visible'"
-                  [class.btn-secondary]="epkFilter !== 'visible'"
+                  class="release-filter-btn"
+                  [class.active]="epkFilter === 'visible'"
                   (click)="epkFilter = 'visible'">
-            <i class="fa fa-globe"></i> Visible in EPK
+            <i class="fa fa-globe"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Visible in EPK</span>
           </button>
           <button type="button"
-                  class="btn-sm tw-rounded-none tw-border-0 tw-border-l tw-border-gray-200"
-                  [class.btn-primary]="epkFilter === 'hidden'"
-                  [class.btn-secondary]="epkFilter !== 'hidden'"
+                  class="release-filter-btn"
+                  [class.active]="epkFilter === 'hidden'"
                   (click)="epkFilter = 'hidden'">
-            <i class="fa fa-eye-slash"></i> Hidden from EPK
+            <i class="fa fa-eye-slash"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
           </button>
         </div>
-        <select class="form-select form-select-sm md:tw-hidden tw-input" [(ngModel)]="epkFilter">
-          <option value="all">All</option>
-          <option value="visible">Visible in EPK</option>
-          <option value="hidden">Hidden from EPK</option>
-        </select>
       </div>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
 
       <div *ngIf="loading" class="tw-text-center">
         <div class="loading-dots">
@@ -160,11 +152,11 @@
   </div>
 
   <!-- Upload Section -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 upload-section">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 upload-section">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Photos</h3>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
       <div class="upload-area">
         <input type="file"
                id="photoUpload"
