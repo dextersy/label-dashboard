@@ -294,11 +294,11 @@
   // Artists Section
   .artists-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
-    
-    @media (max-width: 480px) {
-      grid-template-columns: repeat(2, 1fr);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
   }
   
@@ -308,11 +308,11 @@
     align-items: center;
     justify-content: center;
     padding: 1.25rem 1rem;
-    background: var(--bg-light, #f9f9f9);
+    background: #fff;
     border-radius: 12px;
     text-align: center;
     transition: all 0.2s ease;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color, #e0e0e0);
     min-height: 100px;
     
     &:hover {
@@ -326,31 +326,64 @@
       flex-direction: column;
       align-items: center;
       gap: 0.75rem;
-      
+      width: 100%;
+
+      .artist-photo {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+
+        &--placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-background-secondary, #f3f4f6);
+          color: #9ca3af;
+          font-size: 20px;
+        }
+      }
+
       .artist-name {
         font-weight: 600;
         font-size: 1rem;
         color: var(--text-color, #333);
       }
       
-      .royalty-badge {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.15rem;
-        
-        .royalty-label {
-          font-size: 0.7rem;
-          font-weight: 500;
-          color: var(--text-muted, #888);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+      .royalty-splits-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        width: 100%;
+
+        .royalty-split-tile {
+          background: var(--color-background-secondary, #f8f9fa);
+          border-radius: 6px;
+          padding: 6px 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
-        
-        .royalty-value {
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: var(--primary-color, #7c3aed);
+
+        .royalty-split-label {
+          font-size: 9px;
+          font-weight: 500;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: #9ca3af;
+        }
+
+        .royalty-split-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: #1f2937;
+
+          small {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-left: 1px;
+          }
         }
       }
     }

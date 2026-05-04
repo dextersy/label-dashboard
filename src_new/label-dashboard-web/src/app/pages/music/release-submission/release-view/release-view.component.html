@@ -130,10 +130,28 @@
       <div class="artists-grid" *ngIf="release.artists?.length; else noArtists">
         <div class="artist-tile" *ngFor="let artist of release.artists">
           <div class="artist-details">
+            <img *ngIf="artist.profile_photo" [src]="artist.profile_photo" [alt]="artist.name" class="artist-photo">
+            <div *ngIf="!artist.profile_photo" class="artist-photo artist-photo--placeholder">
+              <i class="fa fa-user"></i>
+            </div>
             <span class="artist-name">{{ artist.name }}</span>
-            <div class="royalty-badge">
-              <span class="royalty-label">Royalty</span>
-              <span class="royalty-value">{{ getRoyaltyDisplay(artist) }}</span>
+            <div class="royalty-splits-grid" *ngIf="artist.ReleaseArtist">
+              <div class="royalty-split-tile">
+                <span class="royalty-split-label">Streaming</span>
+                <span class="royalty-split-value">{{ ((artist.ReleaseArtist.streaming_royalty_percentage || 0) * 100).toFixed(0) }}<small>%</small></span>
+              </div>
+              <div class="royalty-split-tile">
+                <span class="royalty-split-label">Sync</span>
+                <span class="royalty-split-value">{{ ((artist.ReleaseArtist.sync_royalty_percentage || 0) * 100).toFixed(0) }}<small>%</small></span>
+              </div>
+              <div class="royalty-split-tile">
+                <span class="royalty-split-label">Download</span>
+                <span class="royalty-split-value">{{ ((artist.ReleaseArtist.download_royalty_percentage || 0) * 100).toFixed(0) }}<small>%</small></span>
+              </div>
+              <div class="royalty-split-tile">
+                <span class="royalty-split-label">Physical</span>
+                <span class="royalty-split-value">{{ ((artist.ReleaseArtist.physical_royalty_percentage || 0) * 100).toFixed(0) }}<small>%</small></span>
+              </div>
             </div>
           </div>
         </div>

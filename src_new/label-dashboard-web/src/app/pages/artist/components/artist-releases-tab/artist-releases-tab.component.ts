@@ -290,6 +290,17 @@ export class ArtistReleasesTabComponent {
     }
   }
 
+  getStatusChipClass(status: string): string {
+    switch (status) {
+      case 'Live':           return 'release-chip--status-live';
+      case 'For Submission': return 'release-chip--status-submission';
+      case 'Pending':        return 'release-chip--status-pending';
+      case 'Draft':          return 'release-chip--status-draft';
+      case 'Taken Down':     return 'release-chip--status-takendown';
+      default:               return 'release-chip--status-draft';
+    }
+  }
+
   getStatusIcon(status: string): string {
     switch (status) {
       case 'Live': return 'fa-check-circle';

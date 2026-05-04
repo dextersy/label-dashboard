@@ -1,16 +1,5 @@
 <div class="artist-releases-tab">
 
-  <!-- Page Header -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-      <h3 class="tw-mb-2">
-        <i class="fas fa-music tw-mr-2"></i>
-        Releases
-      </h3>
-      <p class="tw-mb-0 tw-text-muted">Manage your discography — albums, EPs, and singles.</p>
-    </div>
-  </div>
-
   <app-paginated-table
     title=""
     [data]="filteredReleases"
@@ -25,32 +14,64 @@
 
     <ng-template #customButtons>
       <div class="filter-controls tw-flex tw-items-center tw-flex-1">
-        <div class="tw-hidden md:tw-flex tw-rounded-lg tw-overflow-hidden tw-border tw-border-gray-200" role="group">
+        <div class="release-filter-group" role="group">
           <button type="button"
-                  class="btn-sm tw-rounded-none tw-border-0"
-                  [class.btn-primary]="epkFilter === 'all'"
-                  [class.btn-secondary]="epkFilter !== 'all'"
+                  class="release-filter-btn"
+                  [class.active]="epkFilter === 'all'"
                   (click)="epkFilter = 'all'">All</button>
           <button type="button"
-                  class="btn-sm tw-rounded-none tw-border-0 tw-border-l tw-border-gray-200"
-                  [class.btn-primary]="epkFilter === 'visible'"
-                  [class.btn-secondary]="epkFilter !== 'visible'"
+                  class="release-filter-btn"
+                  [class.active]="epkFilter === 'visible'"
                   (click)="epkFilter = 'visible'">
-            <i class="fa fa-globe"></i> <span class="tw-hidden lg:tw-inline">Visible in EPK</span>
+            <i class="fa fa-globe"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Visible in EPK</span>
           </button>
           <button type="button"
-                  class="btn-sm tw-rounded-none tw-border-0 tw-border-l tw-border-gray-200"
-                  [class.btn-primary]="epkFilter === 'hidden'"
-                  [class.btn-secondary]="epkFilter !== 'hidden'"
+                  class="release-filter-btn"
+                  [class.active]="epkFilter === 'hidden'"
                   (click)="epkFilter = 'hidden'">
-            <i class="fa fa-eye-slash"></i> <span class="tw-hidden lg:tw-inline">Hidden from EPK</span>
+            <i class="fa fa-eye-slash"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
           </button>
         </div>
-        <select class="form-select form-select-sm md:tw-hidden tw-input tw-w-24" [(ngModel)]="epkFilter">
-          <option value="all">All</option>
-          <option value="visible">In EPK</option>
-          <option value="hidden">Hidden</option>
-        </select>
+      </div>
+    </ng-template>
+
+    <ng-template #mobileRowTemplate let-release let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+      <div class="release-card">
+        <!-- Cover art with overlay chips -->
+        <div class="release-card__cover">
+          <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-card__img">
+          <!-- Bottom overlay: chips row -->
+          <div class="release-card__overlay">
+            <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
+            <span class="release-chip release-chip--status" [ngClass]="getStatusChipClass(release.status)">{{ release.status }}</span>
+            <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
+              <i class="fa fa-eye-slash"></i>
+            </span>
+            <!-- Alert dot: pushed to far right, single unified style -->
+            <span class="release-chip release-chip--alert release-chip--alert-error tw-ml-auto"
+                  *ngIf="hasValidationErrors(release)"
+                  [title]="getValidationTooltip(release)">!</span>
+            <span class="release-chip release-chip--alert release-chip--alert-warning tw-ml-auto"
+                  *ngIf="!hasValidationErrors(release) && hasValidationIssues(release)"
+                  [title]="getValidationTooltip(release)">⚠</span>
+          </div>
+        </div>
+        <!-- Card body -->
+        <div class="release-card__body">
+          <div class="release-card__title">{{ release.title }}</div>
+          <div class="release-card__meta">
+            <span class="release-card__date">{{ formatDate(release.release_date) }}</span>
+          </div>
+          <div *ngIf="release.UPC" class="release-card__id">{{ release.UPC }}</div>
+        </div>
+        <!-- Kebab menu -->
+        <button *ngIf="visibleActions.length > 0"
+                class="release-card__menu kebab-btn"
+                type="button"
+                (click)="toggleKebab($event)"
+                [class.active]="isKebabOpen">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
       </div>
     </ng-template>
 
