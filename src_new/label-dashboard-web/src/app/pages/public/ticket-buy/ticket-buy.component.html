@@ -328,42 +328,105 @@
       </div><!-- end canBuyTickets wrapper -->
 
       <!-- CLOSED state -->
-      <div *ngIf="!canBuyTickets()" class="tw-text-center tw-max-w-sm tw-mx-auto">
-        <div class="tw-w-16 tw-h-16 tw-rounded-full tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
-          <i class="fas fa-ticket-alt tw-text-2xl tw-text-gray-400"></i>
-        </div>
-        <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-1">Online Sales Ended</h2>
-        <p class="tw-text-gray-500 tw-text-sm tw-mb-6">Online ticket sales for <strong>{{ event.title }}</strong> have closed.</p>
+      <div *ngIf="!canBuyTickets()" class="closed-state-panel">
 
-        <!-- Walk-in available -->
+        <!-- State header -->
+        <div class="closed-state-header">
+          <div class="closed-icon-circle">
+            <i class="fas fa-ticket-alt tw-text-gray-400" style="font-size: 18px;"></i>
+          </div>
+          <h2 class="closed-title">Online Sales Ended</h2>
+          <p class="closed-subtitle">Online ticket sales for this event have closed. Walk-in tickets are still available at the venue.</p>
+        </div>
+
+        <!-- Card 1: Walk-in ticket tiers -->
         <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
-          class="tw-rounded-2xl tw-border-2 tw-border-blue-200 tw-bg-blue-50 tw-p-5 tw-text-left">
-          <p class="tw-flex tw-items-center tw-gap-2 tw-font-bold tw-text-blue-800 tw-text-base tw-mb-3">
-            <i class="fas fa-walking tw-text-blue-500"></i>
-            Walk-in tickets available at the venue!
-          </p>
-          <div *ngFor="let wit of event.walkInTypes">
-            <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0"
-              class="tw-flex tw-items-center tw-justify-between tw-py-2 tw-border-b tw-border-blue-100 last:tw-border-0">
-              <span class="tw-font-semibold tw-text-blue-900 tw-text-sm">{{ wit.name }}</span>
-              <div class="tw-text-right">
-                <span class="tw-font-bold tw-text-blue-700 tw-text-sm">{{ formatPriceDisplay(wit.price) }}</span>
-                <span *ngIf="wit.remaining_slots !== null" class="tw-block tw-text-xs tw-text-blue-500">{{ wit.remaining_slots }} slots left</span>
-              </div>
-            </div>
+          class="walkin-card">
+          <div class="walkin-card-header">
+            <i class="fas fa-map-marker-alt" style="color: #1d4ed8; font-size: 13px;"></i>
+            <span>Walk-in tickets at the venue</span>
           </div>
-          <div class="tw-mt-4 tw-text-sm tw-text-blue-700 tw-space-y-1">
-            <p class="tw-mb-0"><i class="fas fa-calendar-alt tw-mr-1.5 tw-text-blue-400"></i>{{ formatEventDate(event.date_and_time) }} at {{ formatEventTime(event.date_and_time) }}</p>
-            <p class="tw-mb-0"><i class="fas fa-map-marker-alt tw-mr-1.5 tw-text-blue-400"></i>{{ event.venue }}<span *ngIf="hasVenueAddress(event)">, {{ event.venue_address }}</span></p>
+          <div class="walkin-rows">
+            <ng-container *ngFor="let wit of event.walkInTypes">
+              <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0" class="walkin-row">
+                <div>
+                  <span class="walkin-row-name">{{ wit.name }}</span>
+                </div>
+                <span class="walkin-row-price">{{ formatPriceDisplay(wit.price) }}</span>
+              </div>
+            </ng-container>
           </div>
         </div>
 
-        <!-- No walk-in -->
-        <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()"
-          class="tw-text-sm tw-text-gray-500">
-          <p>Tickets or walk-in may still be available at the show.</p>
-          <p>Check <strong>{{ event.brand?.name || 'the event organizer' }}</strong>'s social media for more information.</p>
+        <!-- Card 2: Event details (date & venue) -->
+        <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
+          class="walkin-details-card">
+          <!-- Date & time column -->
+          <div class="walkin-details-col">
+            <i class="fas fa-calendar-alt walkin-details-icon"></i>
+            <span class="walkin-details-label">Date &amp; time</span>
+            <span class="walkin-details-value">{{ formatEventDate(event.date_and_time) }}</span>
+            <span class="walkin-details-value">{{ formatEventTime(event.date_and_time) }}</span>
+          </div>
+          <!-- Divider -->
+          <div class="walkin-details-divider"></div>
+          <!-- Venue column -->
+          <div class="walkin-details-col" *ngIf="event.venue">
+            <i class="fas fa-map-marker-alt walkin-details-icon"></i>
+            <span class="walkin-details-label">Venue</span>
+            <span class="walkin-details-value">{{ event.venue }}</span>
+            <span *ngIf="hasVenueAddress(event)" class="walkin-details-subvalue">{{ event.venue_address }}</span>
+          </div>
         </div>
+
+        <!-- No walk-in fallback info -->
+        <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()"
+          class="tw-text-sm tw-text-gray-500 tw-text-center tw-mb-4">
+          <p class="tw-mb-1">Tickets or walk-in may still be available at the show.</p>
+          <p class="tw-mb-0">Check <strong>{{ event.brand?.name || 'the event organizer' }}</strong>'s social media for more information.</p>
+        </div>
+
+        <!-- CTA buttons -->
+        <div class="closed-cta-row">
+          <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" rel="noopener"
+            class="closed-btn-primary">
+            <i class="fas fa-map-marker-alt" style="font-size: 13px;"></i>
+            Get Directions
+          </a>
+          <button *ngIf="!hasVenueMapsLink(event)" class="closed-btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
+            <i class="fas fa-map-marker-alt" style="font-size: 13px;"></i>
+            Get Directions
+          </button>
+          <button type="button" class="closed-btn-secondary" (click)="showClosedDetails = !showClosedDetails">
+            View Event Details
+          </button>
+        </div>
+
+        <!-- Share row -->
+        <div class="closed-share-row">
+          <span class="closed-share-label">Share this event</span>
+          <!-- X -->
+          <a [href]="'https://twitter.com/intent/tweet?url=' + currentPageUrl" target="_blank" rel="noopener"
+            class="share-icon-btn" title="Share on X">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.632 5.905-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <!-- Facebook -->
+          <a [href]="'https://www.facebook.com/sharer/sharer.php?u=' + currentPageUrl" target="_blank" rel="noopener"
+            class="share-icon-btn" title="Share on Facebook">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <!-- Copy link -->
+          <button type="button" class="share-icon-btn" title="Copy link" (click)="copyEventLink()">
+            <i class="fas fa-link" style="font-size: 11px;"></i>
+          </button>
+        </div>
+
+        <!-- Expandable event details -->
+        <div *ngIf="showClosedDetails && event.description"
+          class="tw-mt-6 tw-pt-5 tw-border-t tw-border-gray-100 tw-text-sm tw-text-gray-600 tw-leading-relaxed description-text"
+          [innerHTML]="sanitizeHtml(event.description)">
+        </div>
+
       </div>
 
     </div><!-- end content-panel -->

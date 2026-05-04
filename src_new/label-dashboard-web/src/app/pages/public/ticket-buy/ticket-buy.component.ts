@@ -67,6 +67,8 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   showLightbox = false;
   emailTypoResult: EmailTypoResult | null = null;
   isPreview = false;
+  showClosedDetails = false;
+  currentPageUrl = window.location.href;
 
   constructor(
     private fb: FormBuilder,
@@ -196,6 +198,10 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   goBack() {
     window.history.back();
+  }
+
+  copyEventLink(): void {
+    navigator.clipboard.writeText(window.location.href).catch(() => {});
   }
 
   initializeTicketType() {
@@ -513,15 +519,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
   }
 
-  private applyParallax(scrollTop: number) {
-    if (!this.posterImg?.nativeElement || !this.event?.poster_url) return;
-    const panel = this.posterImg.nativeElement.parentElement;
-    if (!panel) return;
-    // Image is 160% tall with top: -30%, giving 30% buffer above and below.
-    // Clamp translation so the image never slides out of the panel.
-    const maxShift = panel.clientHeight * 0.30;
-    const translate = Math.max(-maxShift, Math.min(maxShift, -(scrollTop * 0.5)));
-    this.posterImg.nativeElement.style.transform = `translateY(${translate}px)`;
+  private applyParallax(_scrollTop: number) {
+    // Parallax disabled — using simple cover-fit instead. See MEMORY.md for original implementation.
+    return;
   }
 
   getHeroBgImageStyle(): SafeStyle | null {

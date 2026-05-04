@@ -1,32 +1,37 @@
 <div class="countdown-notification" [style.background-color]="brandColor" *ngIf="hasTimeLeft">
   <div class="container">
-    <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-      <div class="md:tw-col-span-6">
-        <div class="countdown-text">
-          <i class="fas fa-clock tw-mr-2"></i>
-          Ticket sales for <strong>{{ eventTitle }}</strong> close in:
+    <!-- Desktop: single centered row -->
+    <div class="tw-hidden md:tw-flex tw-items-center tw-justify-center tw-gap-4">
+      <div class="countdown-text">
+        <i class="fas fa-clock tw-mr-2"></i>
+        Ticket sales for <strong>{{ eventTitle }}</strong> close in:
+      </div>
+      <div class="countdown-timer">
+        <div class="time-unit" *ngIf="timeLeft.days > 0">
+          <span class="time-value">{{ timeLeft.days }}</span>
+          <span class="time-label">{{ timeLeft.days === 1 ? 'day' : 'days' }}</span>
+        </div>
+        <div class="time-unit">
+          <span class="time-value">{{ timeLeft.hours.toString().padStart(2, '0') }}</span>
+          <span class="time-label">hours</span>
+        </div>
+        <div class="time-unit">
+          <span class="time-value">{{ timeLeft.minutes.toString().padStart(2, '0') }}</span>
+          <span class="time-label">minutes</span>
+        </div>
+        <div class="time-unit">
+          <span class="time-value">{{ timeLeft.seconds.toString().padStart(2, '0') }}</span>
+          <span class="time-label">seconds</span>
         </div>
       </div>
-      <div class="md:tw-col-span-6">
-        <div class="countdown-timer">
-          <div class="time-unit" *ngIf="timeLeft.days > 0">
-            <span class="time-value">{{ timeLeft.days }}</span>
-            <span class="time-label">{{ timeLeft.days === 1 ? 'day' : 'days' }}</span>
-          </div>
-          <div class="time-unit">
-            <span class="time-value">{{ timeLeft.hours.toString().padStart(2, '0') }}</span>
-            <span class="time-label">hours</span>
-          </div>
-          <div class="time-unit">
-            <span class="time-value">{{ timeLeft.minutes.toString().padStart(2, '0') }}</span>
-            <span class="time-label">minutes</span>
-          </div>
-          <div class="time-unit">
-            <span class="time-value">{{ timeLeft.seconds.toString().padStart(2, '0') }}</span>
-            <span class="time-label">seconds</span>
-          </div>
-        </div>
-      </div>
+    </div>
+    <!-- Mobile: single compact row -->
+    <div class="md:tw-hidden tw-flex tw-items-center tw-justify-center tw-gap-2">
+      <i class="fas fa-clock" style="font-size: 10px; opacity: 0.7;"></i>
+      <span class="mobile-countdown-inline">
+        Closes in
+        <ng-container *ngIf="timeLeft.days > 0"><strong>{{ timeLeft.days }}d</strong> </ng-container><strong>{{ timeLeft.hours.toString().padStart(2, '0') }}h {{ timeLeft.minutes.toString().padStart(2, '0') }}m {{ timeLeft.seconds.toString().padStart(2, '0') }}s</strong>
+      </span>
     </div>
   </div>
 </div>
