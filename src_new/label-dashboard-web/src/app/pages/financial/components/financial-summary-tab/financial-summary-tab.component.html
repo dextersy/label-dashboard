@@ -9,13 +9,16 @@
   </div>
 </div>
 
-<div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="summary">
-  <div class="md:tw-col-span-4">
-    <div class="current-balance-section tw-p-4 tw-text-center">
+<!-- Hero Row: Balance + 3 Stat Cards -->
+<div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-6 tw-mb-6" *ngIf="summary">
+
+  <!-- Current Balance Card -->
+  <div class="lg:tw-col-span-4 tw-flex">
+    <div class="current-balance-section tw-p-4 tw-text-center tw-w-full">
       <h2 class="balance-title">Current Balance</h2>
       <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
       <p class="balance-subtitle" *ngIf="!isAdmin">This is your total earned royalties less payments and advances made to you. Once this reaches your set payout point, this will be transferred to you on the 15th of the month.</p>
-      <button class="btn-primary pay-now-btn" 
+      <button class="btn-primary pay-now-btn"
               *ngIf="isAdmin"
               (click)="onPayNow()"
               [disabled]="summary.currentBalance <= 0">
@@ -23,46 +26,114 @@
       </button>
     </div>
   </div>
-  <div class="md:tw-col-span-8">
-    <div class="financial-summary-card">
-      <div class="financial-summary-item" (click)="viewEarningsDetails.emit()">
-        <span class="financial-item-label">Total Earnings</span>
-        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</span>
-        <a class="financial-item-link">View Details</a>
-      </div>
-      <div class="financial-summary-item" (click)="viewRoyaltiesDetails.emit()">
-        <span class="financial-item-label">Total Royalties</span>
-        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</span>
-        <a class="financial-item-link">View Details</a>
-      </div>
-      <div class="financial-summary-item" (click)="viewPaymentsDetails.emit()">
-        <span class="financial-item-label">Total Payments</span>
-        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
-        <a class="financial-item-link">View Details</a>
-      </div>
+  <!-- 3 Stat Cards -->
+  <div class="lg:tw-col-span-8 tw-grid tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
+    <div class="stat-card" (click)="viewEarningsDetails.emit()">
+      <span class="financial-item-label">Total Earnings</span>
+      <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</span>
+      <a class="financial-item-link">View all</a>
+    </div>
+    <div class="stat-card" (click)="viewRoyaltiesDetails.emit()">
+      <span class="financial-item-label">Total Royalties</span>
+      <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</span>
+      <a class="financial-item-link">View all</a>
+    </div>
+    <div class="stat-card tw-col-span-2 lg:tw-col-span-1" (click)="viewPaymentsDetails.emit()">
+      <span class="financial-item-label">Total Payments</span>
+      <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
+      <a class="financial-item-link">View all</a>
     </div>
   </div>
+
 </div>
 
-<div class="tw-mt-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-  <div class="md:tw-col-span-6">
-    <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Earnings</h3>
-      </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
-        <app-earnings-table [earnings]="latestEarnings" [showHeader]="false"></app-earnings-table>
-      </div>
+<!-- Mobile Tab Switcher (hidden on lg+) -->
+<div class="lg:tw-hidden tw-mb-4 tw-border-b tw-border-gray-200">
+  <nav class="tw-flex">
+    <button class="mobile-tab" [class.mobile-tab-active]="activeMobileTab === 'earnings'" (click)="activeMobileTab = 'earnings'">
+      Earnings
+    </button>
+    <button class="mobile-tab" [class.mobile-tab-active]="activeMobileTab === 'royalties'" (click)="activeMobileTab = 'royalties'">
+      Royalties
+    </button>
+  </nav>
+</div>
+
+<!-- Bottom Panels: Latest Earnings & Latest Royalties -->
+<div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-6">
+
+  <!-- Latest Earnings Panel -->
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden lg:tw-block"
+       [class.tw-hidden]="activeMobileTab !== 'earnings'">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-3 tw-flex tw-items-center tw-justify-between">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Earnings</h3>
+      <a class="financial-item-link tw-text-xs tw-cursor-pointer" (click)="viewEarningsDetails.emit()">View all</a>
+    </div>
+    <div class="tw-pb-card-pad">
+      <table class="table table-financial tw-w-full tw-mb-0" style="table-layout: fixed;">
+        <tbody>
+          <tr *ngFor="let earning of latestEarnings">
+            <td class="tw-align-middle tw-overflow-hidden">
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <img *ngIf="earning.cover_art" [src]="earning.cover_art" alt="" class="tw-w-9 tw-h-9 tw-rounded tw-object-cover tw-flex-shrink-0">
+                <div *ngIf="!earning.cover_art" class="tw-w-9 tw-h-9 tw-rounded tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                  <i class="fas fa-music tw-text-gray-300 tw-text-xs"></i>
+                </div>
+                <div class="tw-min-w-0">
+                  <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ earning.release_title || '(None)' }}</div>
+                  <div class="tw-text-sm tw-text-gray-400 tw-truncate">{{ earning.description }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="tw-align-middle tw-hidden sm:tw-table-cell tw-whitespace-nowrap" style="width: 90px;"><span class="tw-text-base tw-text-gray-400">{{ formatDate(earning.date_recorded) }}</span></td>
+            <td class="tw-text-right tw-align-middle tw-whitespace-nowrap" style="width: 100px;">
+              <div class="tw-text-sm tw-text-gray-400 sm:tw-hidden">{{ formatDate(earning.date_recorded) }}</div>
+              <div class="tw-font-semibold tw-text-base" [ngClass]="getAmountClass(earning.amount)">{{ formatCurrency(earning.amount) }}</div>
+            </td>
+          </tr>
+          <tr *ngIf="latestEarnings.length === 0">
+            <td colspan="3" class="tw-text-center tw-text-gray-400 tw-py-6">No recorded earnings yet.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-  <div class="md:tw-col-span-6">
-    <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Royalties</h3>
-      </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
-        <app-royalties-table [royalties]="latestRoyalties" [showHeader]="false"></app-royalties-table>
-      </div>
+
+  <!-- Latest Royalties Panel -->
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden lg:tw-block"
+       [class.tw-hidden]="activeMobileTab !== 'royalties'">
+    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-3 tw-flex tw-items-center tw-justify-between">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Latest Royalties</h3>
+      <a class="financial-item-link tw-text-xs tw-cursor-pointer" (click)="viewRoyaltiesDetails.emit()">View all</a>
+    </div>
+    <div class="tw-pb-card-pad">
+      <table class="table table-financial tw-w-full tw-mb-0" style="table-layout: fixed;">
+        <tbody>
+          <tr *ngFor="let royalty of latestRoyalties">
+            <td class="tw-align-middle tw-overflow-hidden">
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <img *ngIf="royalty.cover_art" [src]="royalty.cover_art" alt="" class="tw-w-9 tw-h-9 tw-rounded tw-object-cover tw-flex-shrink-0">
+                <div *ngIf="!royalty.cover_art" class="tw-w-9 tw-h-9 tw-rounded tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
+                  <i class="fas fa-music tw-text-gray-300 tw-text-xs"></i>
+                </div>
+                <div class="tw-min-w-0">
+                  <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ royalty.release_title || '(None)' }}</div>
+                  <div class="tw-text-sm tw-text-gray-400 tw-truncate">{{ royalty.description }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="tw-align-middle tw-hidden sm:tw-table-cell tw-whitespace-nowrap" style="width: 90px;"><span class="tw-text-base tw-text-gray-400">{{ formatDate(royalty.date_recorded) }}</span></td>
+            <td class="tw-text-right tw-align-middle tw-whitespace-nowrap" style="width: 100px;">
+              <div class="tw-text-sm tw-text-gray-400 sm:tw-hidden">{{ formatDate(royalty.date_recorded) }}</div>
+              <div class="tw-font-semibold tw-text-base" [ngClass]="getAmountClass(royalty.amount)">{{ formatCurrency(royalty.amount) }}</div>
+            </td>
+          </tr>
+          <tr *ngIf="latestRoyalties.length === 0">
+            <td colspan="3" class="tw-text-center tw-text-gray-400 tw-py-6">No recorded royalties yet.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
 </div>

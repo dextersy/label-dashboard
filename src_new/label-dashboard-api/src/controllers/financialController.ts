@@ -591,7 +591,7 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
     
     const includeConditions: any[] = [
       { model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } },
-      { model: Release, as: 'release', where: releaseWhere } // Include release with filtering
+      { model: Release, as: 'release', where: releaseWhere, required: Object.keys(releaseWhere).length > 0 } // required only when filtering by release title
     ];
 
     if (artist_id) {

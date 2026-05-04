@@ -35,6 +35,7 @@ export interface Earning {
   id: number;
   date_recorded: string;
   release_title: string;
+  cover_art?: string;
   description: string;
   amount: number;
 }
@@ -43,6 +44,7 @@ export interface Royalty {
   id: number;
   date_recorded: string;
   release_title: string;
+  cover_art?: string;
   description: string;
   amount: number;
 }

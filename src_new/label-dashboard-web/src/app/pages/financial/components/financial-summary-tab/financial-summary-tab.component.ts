@@ -1,12 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EarningsTableComponent } from '../earnings-table/earnings-table.component';
-import { RoyaltiesTableComponent } from '../royalties-table/royalties-table.component';
 import { FinancialSummary, Earning, Royalty } from '../../financial.component';
 
 @Component({
     selector: 'app-financial-summary-tab',
-    imports: [CommonModule, EarningsTableComponent, RoyaltiesTableComponent],
+    imports: [CommonModule],
     templateUrl: './financial-summary-tab.component.html',
     styleUrl: './financial-summary-tab.component.scss'
 })
@@ -16,16 +14,22 @@ export class FinancialSummaryTabComponent {
   @Input() latestRoyalties: Royalty[] = [];
   @Input() isAdmin: boolean = false;
   @Input() onPayNow: () => Promise<void> = async () => {};
-  
+
   @Output() viewEarningsDetails = new EventEmitter<void>();
   @Output() viewRoyaltiesDetails = new EventEmitter<void>();
   @Output() viewPaymentsDetails = new EventEmitter<void>();
+
+  activeMobileTab: 'earnings' | 'royalties' = 'earnings';
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
       currency: 'PHP'
     }).format(amount);
+  }
+
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-PH');
   }
 
   getAmountClass(amount: number | undefined): string {

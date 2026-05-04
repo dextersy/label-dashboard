@@ -63,6 +63,7 @@ export class FinancialService {
         id: earning.id,
         date_recorded: earning.date_recorded,
         release_title: earning.release?.title || '(No release)',
+        cover_art: earning.release?.cover_art,
         description: earning.description || earning.type || 'Earning',
         amount: earning.amount
       })),
@@ -100,6 +101,7 @@ export class FinancialService {
         id: royalty.id,
         date_recorded: royalty.date_recorded,
         release_title: royalty.release?.title || '(No release)',
+        cover_art: royalty.release?.cover_art,
         description: royalty.description || 'Royalty',
         amount: royalty.amount
       })),

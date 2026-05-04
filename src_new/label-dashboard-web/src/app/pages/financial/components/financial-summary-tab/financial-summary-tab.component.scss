@@ -159,6 +159,46 @@
   }
 }
 
+// Individual stat card (replaces unified .financial-summary-card)
+.stat-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.3rem;
+  height: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+}
+
+// Mobile tab switcher
+.mobile-tab {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &.mobile-tab-active {
+    color: var(--brand-color, #3b82f6);
+    border-bottom-color: var(--brand-color, #3b82f6);
+  }
+}
+
 @media (max-width: 768px) {
   .balance-amount {
     font-size: 2rem;
