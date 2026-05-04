@@ -18,8 +18,7 @@
     <div class="release-form-container">
       <!-- Release Info Section -->
       <div class="form-section" *ngIf="activeSection === 'info'">
-        <h3>Release Information</h3>
-        <p>Enter the basic details for your release</p>
+        <p class="rs-section-label">Release Information</p>
 
         <app-release-info-section
           [artist]="artist"
@@ -47,8 +46,7 @@
 
       <!-- Album Credits Section -->
       <div class="form-section" *ngIf="activeSection === 'credits'">
-        <h3>Album Credits</h3>
-        <p>Manage artists and royalty splits for this release</p>
+        <p class="rs-section-label">Album Credits</p>
 
         <app-album-credits-section
           [artist]="artist"
@@ -80,8 +78,7 @@
 
       <!-- Track List Section -->
       <div class="form-section" *ngIf="activeSection === 'tracks'">
-        <h3>Track List</h3>
-        <p>Manage the songs for this release</p>
+        <p class="rs-section-label">Track List</p>
 
         <app-track-list-section
           [style.display]="activeSection === 'tracks' ? 'block' : 'none'"
@@ -117,8 +114,7 @@
 
       <!-- Submission Section -->
       <div class="form-section" *ngIf="activeSection === 'submit' && isEditing && isDraftStatus">
-        <h3>Review & Submit</h3>
-        <p>Review your release information and submit for processing</p>
+        <p class="rs-section-label">Review & Submit</p>
 
         <app-submission-section
           [releaseInfoData]="releaseInfoData"

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Artist } from '../../../../models/artist.model';
@@ -36,6 +36,23 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
   loadingArtists = false;
   savingCredits = false;
   isInitialized = false;
+  openDropdownIndex: number | null = null;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!(event.target as HTMLElement).closest('.ac-artist-dropdown')) {
+      this.openDropdownIndex = null;
+    }
+  }
+
+  toggleDropdown(i: number): void {
+    this.openDropdownIndex = this.openDropdownIndex === i ? null : i;
+  }
+
+  selectArtistFromDropdown(i: number, artistId: number): void {
+    this.royaltyArtists.controls[i].get('artist_id')?.setValue(artistId);
+    this.openDropdownIndex = null;
+  }
 
   quillConfig = {
     toolbar: [
@@ -229,6 +246,14 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
 
   get canModifyArtists(): boolean {
     return this.isAdmin || this.editingRelease?.status === 'Draft';
+  }
+
+  getArtistPhoto(artistId: any): string {
+    if (!artistId) return '';
+    const id = typeof artistId === 'string' ? parseInt(artistId, 10) : artistId;
+    const artist = this.allArtists.find(a => a.id === id)
+      ?? (this.editingRelease?.artists as any[])?.find((a: any) => a.id === id);
+    return (artist as any)?.profile_photo || '';
   }
 
   getArtistName(artistId: any): string {

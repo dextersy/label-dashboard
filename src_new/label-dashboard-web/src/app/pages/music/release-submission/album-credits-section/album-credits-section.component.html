@@ -2,10 +2,10 @@
   <form [formGroup]="creditsForm">
     <!-- Artists & Royalty Splits -->
     <div class="artists-section" formArrayName="royaltyArtists">
-      <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
-        <h3 class="tw-mb-0">Artists & Royalty Splits</h3>
+      <div class="ac-heading-row">
+        <h3 class="ac-heading">Artists & Royalty Splits</h3>
         <button type="button"
-                class="btn-sm btn-secondary"
+                class="ac-add-btn"
                 (click)="addRoyaltyArtistFromUI()"
                 [disabled]="loadingArtists || !canModifyArtists">
           <i class="fa fa-plus"></i> Add Artist
@@ -25,125 +25,186 @@
       </div>
 
       <div *ngIf="royaltyArtists.length > 0 && !loadingArtists" class="royalty-artists-list">
+        <!-- Artist cards -->
         <div *ngFor="let artistControl of royaltyArtists.controls; let i = index"
-             class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3"
+             class="ac-artist-card"
              [formGroupName]="i">
-          <div class="tw-px-card-pad tw-pb-card-pad">
-            <div class="tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-              <div [class]="isAdmin ? 'col-md-3' : 'col-md-10'">
-                <div class="tw-mb-5 tw-mb-0">
-                  <label class="small font-weight-bold tw-text-sm">Artist</label>
-                  <select class="tw-input-sm tw-input"
-                          formControlName="artist_id"
-                          [class.is-invalid]="artistControl.get('artist_id')?.invalid && artistControl.get('artist_id')?.touched"
-                          [disabled]="!canModifyArtists">
-                    <option value="">Select Artist</option>
+
+          <div class="ac-card-body">
+          <!-- Card header: artist name/selector + delete -->
+          <div class="ac-card-header">
+            <div class="tw-flex-1">
+              <label class="ac-field-label">Artist</label>
+
+              <!-- Main artist: fixed plain text + photo -->
+              <ng-container *ngIf="artistControl.get('artist_id')?.value == artist?.id; else otherArtistSelect">
+                <div class="ac-artist-fixed">
+                  <img *ngIf="getArtistPhoto(artistControl.get('artist_id')?.value)"
+                       [src]="getArtistPhoto(artistControl.get('artist_id')?.value)"
+                       class="ac-artist-avatar" alt="">
+                  <span *ngIf="!getArtistPhoto(artistControl.get('artist_id')?.value)"
+                        class="ac-artist-avatar ac-artist-avatar--placeholder">
+                    <i class="fa fa-user"></i>
+                  </span>
+                  <p class="ac-artist-name">{{ getArtistName(artistControl.get('artist_id')?.value) }}</p>
+                </div>
+              </ng-container>
+
+              <!-- Other artists: custom dropdown with photos -->
+              <ng-template #otherArtistSelect>
+                <div class="ac-artist-dropdown"
+                     [class.ac-artist-dropdown--open]="openDropdownIndex === i">
+
+                  <button type="button" class="ac-artist-trigger"
+                          [disabled]="!canModifyArtists"
+                          (click)="$event.stopPropagation(); toggleDropdown(i)">
                     <ng-container *ngIf="artistControl.get('artist_id')?.value">
-                      <option [value]="artistControl.get('artist_id')?.value"
-                              selected>
-                        {{ getArtistName(artistControl.get('artist_id')?.value) }}
-                      </option>
+                      <img *ngIf="getArtistPhoto(artistControl.get('artist_id')?.value)"
+                           [src]="getArtistPhoto(artistControl.get('artist_id')?.value)"
+                           class="ac-artist-avatar" alt="">
+                      <span *ngIf="!getArtistPhoto(artistControl.get('artist_id')?.value)"
+                            class="ac-artist-avatar ac-artist-avatar--placeholder">
+                        <i class="fa fa-user"></i>
+                      </span>
                     </ng-container>
-                    <option *ngFor="let artist of getAvailableArtists(i)"
-                            [value]="artist.id">
-                      {{ artist.name }}
-                    </option>
-                  </select>
+                    <span class="ac-artist-trigger-name">
+                      {{ artistControl.get('artist_id')?.value ? getArtistName(artistControl.get('artist_id')?.value) : 'Select Artist' }}
+                    </span>
+                    <i class="fa fa-chevron-down ac-artist-trigger-caret"></i>
+                  </button>
+
+                  <div class="ac-artist-panel" *ngIf="openDropdownIndex === i">
+                    <button type="button" class="ac-artist-option"
+                            *ngFor="let a of getAvailableArtists(i)"
+                            [class.ac-artist-option--selected]="artistControl.get('artist_id')?.value == a.id"
+                            (click)="selectArtistFromDropdown(i, a.id)">
+                      <img *ngIf="a.profile_photo" [src]="a.profile_photo" class="ac-artist-avatar" alt="">
+                      <span *ngIf="!a.profile_photo" class="ac-artist-avatar ac-artist-avatar--placeholder">
+                        <i class="fa fa-user"></i>
+                      </span>
+                      <span>{{ a.name }}</span>
+                    </button>
+                  </div>
                 </div>
+              </ng-template>
+            </div>
+
+            <!-- Delete button: hidden for main artist -->
+            <button *ngIf="artistControl.get('artist_id')?.value != artist?.id"
+                    type="button"
+                    class="ac-delete-btn"
+                    (click)="removeRoyaltyArtist(i)"
+                    [disabled]="!canModifyArtists"
+                    title="Remove Artist">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+
+          <!-- Royalty split tiles (admin only) -->
+          <div *ngIf="isAdmin" class="ac-splits-grid ac-splits-grid--card">
+            <div class="ac-split-tile">
+              <span class="ac-split-label">Streaming</span>
+              <div class="ac-split-value-row">
+                <input type="number" class="ac-split-input" formControlName="streaming_royalty_percentage"
+                       min="0" max="100" step="1" [disabled]="!canModifyArtists">
+                <span class="ac-split-pct">%</span>
               </div>
-              <div  *ngIf="isAdmin">
-                <div class="tw-mb-5 tw-mb-0">
-                  <label class="small font-weight-bold tw-text-sm">Streaming %</label>
-                  <input type="number"
-                         class="tw-input-sm tw-input"
-                         formControlName="streaming_royalty_percentage"
-                         min="0" max="100" step="1"
-                         [disabled]="!canModifyArtists">
-                </div>
+            </div>
+            <div class="ac-split-tile">
+              <span class="ac-split-label">Sync</span>
+              <div class="ac-split-value-row">
+                <input type="number" class="ac-split-input" formControlName="sync_royalty_percentage"
+                       min="0" max="100" step="1" [disabled]="!canModifyArtists">
+                <span class="ac-split-pct">%</span>
               </div>
-              <div  *ngIf="isAdmin">
-                <div class="tw-mb-5 tw-mb-0">
-                  <label class="small font-weight-bold tw-text-sm">Sync %</label>
-                  <input type="number"
-                         class="tw-input-sm tw-input"
-                         formControlName="sync_royalty_percentage"
-                         min="0" max="100" step="1"
-                         [disabled]="!canModifyArtists">
-                </div>
+            </div>
+            <div class="ac-split-tile">
+              <span class="ac-split-label">Download</span>
+              <div class="ac-split-value-row">
+                <input type="number" class="ac-split-input" formControlName="download_royalty_percentage"
+                       min="0" max="100" step="1" [disabled]="!canModifyArtists">
+                <span class="ac-split-pct">%</span>
               </div>
-              <div  *ngIf="isAdmin">
-                <div class="tw-mb-5 tw-mb-0">
-                  <label class="small font-weight-bold tw-text-sm">Download %</label>
-                  <input type="number"
-                         class="tw-input-sm tw-input"
-                         formControlName="download_royalty_percentage"
-                         min="0" max="100" step="1"
-                         [disabled]="!canModifyArtists">
-                </div>
-              </div>
-              <div  *ngIf="isAdmin">
-                <div class="tw-mb-5 tw-mb-0">
-                  <label class="small font-weight-bold tw-text-sm">Physical %</label>
-                  <input type="number"
-                         class="tw-input-sm tw-input"
-                         formControlName="physical_royalty_percentage"
-                         min="0" max="100" step="1"
-                         [disabled]="!canModifyArtists">
-                </div>
-              </div>
-              <div >
-                <button type="button"
-                        class="btn-sm btn-danger"
-                        (click)="removeRoyaltyArtist(i)"
-                        [disabled]="royaltyArtists.length <= 1 || !canModifyArtists"
-                        title="Remove Artist">
-                  <i class="fa fa-trash"></i>
-                </button>
+            </div>
+            <div class="ac-split-tile">
+              <span class="ac-split-label">Physical</span>
+              <div class="ac-split-value-row">
+                <input type="number" class="ac-split-input" formControlName="physical_royalty_percentage"
+                       min="0" max="100" step="1" [disabled]="!canModifyArtists">
+                <span class="ac-split-pct">%</span>
               </div>
             </div>
           </div>
+          </div> <!-- /.ac-card-body -->
         </div>
 
-        <!-- Royalty Totals -->
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50" *ngIf="isAdmin">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
-            <div class="tw-text-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-              <div >
-                <strong>Label Royalty:</strong>
+        <!-- Dashed "add another" button -->
+        <button type="button"
+                class="ac-add-another-btn"
+                (click)="addRoyaltyArtistFromUI()"
+                [disabled]="loadingArtists || !canModifyArtists">
+          <i class="fa fa-plus tw-mr-1"></i> Add another artist
+        </button>
+
+        <!-- Label royalty summary (admin only) -->
+        <div class="ac-label-royalty-card" *ngIf="isAdmin">
+          <div class="ac-label-royalty-body">
+          <p class="ac-label-royalty-title">Label royalty (remaining)</p>
+          <div class="ac-label-royalty-grid">
+            <div class="ac-royalty-bar-item">
+              <span class="ac-royalty-bar-label">Streaming</span>
+              <div class="ac-royalty-track">
+                <div class="ac-royalty-fill"
+                     [style.width.%]="getLabelRoyalty('streaming')"
+                     [class.ac-royalty-fill--over]="getRoyaltyTotal('streaming') > 100"></div>
               </div>
-              <div >
-                <span class="badge" [class]="getRoyaltyTotal('streaming') > 100 ? 'badge-danger' : 'badge-info'">
-                  {{ getLabelRoyalty('streaming') }}%
-                </span>
+              <span class="ac-royalty-bar-pct" [class.ac-royalty-bar-pct--over]="getRoyaltyTotal('streaming') > 100">
+                {{ getLabelRoyalty('streaming') }}%
+              </span>
+            </div>
+            <div class="ac-royalty-bar-item">
+              <span class="ac-royalty-bar-label">Sync</span>
+              <div class="ac-royalty-track">
+                <div class="ac-royalty-fill"
+                     [style.width.%]="getLabelRoyalty('sync')"
+                     [class.ac-royalty-fill--over]="getRoyaltyTotal('sync') > 100"></div>
               </div>
-              <div >
-                <span class="badge" [class]="getRoyaltyTotal('sync') > 100 ? 'badge-danger' : 'badge-info'">
-                  {{ getLabelRoyalty('sync') }}%
-                </span>
+              <span class="ac-royalty-bar-pct" [class.ac-royalty-bar-pct--over]="getRoyaltyTotal('sync') > 100">
+                {{ getLabelRoyalty('sync') }}%
+              </span>
+            </div>
+            <div class="ac-royalty-bar-item">
+              <span class="ac-royalty-bar-label">Download</span>
+              <div class="ac-royalty-track">
+                <div class="ac-royalty-fill"
+                     [style.width.%]="getLabelRoyalty('download')"
+                     [class.ac-royalty-fill--over]="getRoyaltyTotal('download') > 100"></div>
               </div>
-              <div >
-                <span class="badge" [class]="getRoyaltyTotal('download') > 100 ? 'badge-danger' : 'badge-info'">
-                  {{ getLabelRoyalty('download') }}%
-                </span>
+              <span class="ac-royalty-bar-pct" [class.ac-royalty-bar-pct--over]="getRoyaltyTotal('download') > 100">
+                {{ getLabelRoyalty('download') }}%
+              </span>
+            </div>
+            <div class="ac-royalty-bar-item">
+              <span class="ac-royalty-bar-label">Physical</span>
+              <div class="ac-royalty-track">
+                <div class="ac-royalty-fill"
+                     [style.width.%]="getLabelRoyalty('physical')"
+                     [class.ac-royalty-fill--over]="getRoyaltyTotal('physical') > 100"></div>
               </div>
-              <div >
-                <span class="badge" [class]="getRoyaltyTotal('physical') > 100 ? 'badge-danger' : 'badge-info'">
-                  {{ getLabelRoyalty('physical') }}%
-                </span>
-              </div>
-              <div ></div>
+              <span class="ac-royalty-bar-pct" [class.ac-royalty-bar-pct--over]="getRoyaltyTotal('physical') > 100">
+                {{ getLabelRoyalty('physical') }}%
+              </span>
             </div>
           </div>
+          </div> <!-- /.ac-label-royalty-body -->
         </div>
 
-        <!-- Royalty Split Notes -->
-        <div class="tw-mt-3">
-          <small class="tw-text-muted">
-            <i class="fa fa-info-circle"></i>
-            <strong>Note:</strong> Artist percentages for each royalty type should not exceed 100%.
-            The label row shows the remaining percentage (100% - total artist percentages).
-          </small>
-        </div>
+        <!-- Note block -->
+        <aside class="ac-note-block">
+          <strong class="ac-note-bold">Note:</strong>
+          Artist percentages for each royalty type should not exceed 100%.
+          The label row shows the remaining percentage (100% − total artist percentages).
+        </aside>
       </div>
 
       <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="tw-py-3 tw-text-center tw-text-muted">
@@ -155,11 +216,9 @@
     <!-- Liner Notes -->
     <div class="liner-notes-section tw-mt-4">
       <div class="tw-mb-5">
-        <label for="linerNotes" class="tw-label">Liner Notes</label>
-        <small class="form-text tw-mb-2 tw-text-muted">
-          Please add your liner notes, acknowledgments, or credits. This will appear on the release page on the website and on Bandcamp.
-          It will NOT appear on Spotify, Apple Music, or other streaming platforms.<br>
-          <strong>Suggestion:</strong> Mention the cover art designer, producer, mixing and mastering, any additional musicians, and the studio where you recorded it.
+        <label for="linerNotes" class="tw-label">Liner notes</label>
+        <small class="ac-liner-sublabel">
+          Add acknowledgements or credits. Won't appear on streaming platforms — shown on your release page and Bandcamp.
         </small>
         <quill-editor
           id="linerNotes"

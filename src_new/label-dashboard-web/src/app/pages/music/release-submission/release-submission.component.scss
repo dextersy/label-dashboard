@@ -6,6 +6,16 @@
   min-height: calc(100vh - 60px);
 }
 
+/* Section label — matches event-form ef-section-label style */
+.rs-section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 30%, #9ca3af);
+  margin-bottom: 14px;
+}
+
 /* Main content card */
 .release-form-container {
   background: white;
@@ -15,18 +25,6 @@
 
   .form-section {
     padding: 32px;
-
-    h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #333;
-    }
-
-    p {
-      color: #6c757d;
-      margin-bottom: 24px;
-    }
   }
 
   .section-actions {
@@ -59,17 +57,15 @@
 /* Mobile */
 @media (max-width: 768px) {
   .release-submission-page {
-    padding: 12px;
-    padding-bottom: 100px;
+    padding: 0 0 100px;
   }
 
   .release-form-container {
-    .form-section {
-      padding: 20px;
+    border-radius: 0;
+    box-shadow: none;
 
-      h3 {
-        font-size: 18px;
-      }
+    .form-section {
+      padding: 0;
     }
 
     .section-actions {

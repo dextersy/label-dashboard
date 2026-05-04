@@ -3,83 +3,67 @@
     <!-- Basic Release Information -->
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
       <div>
-        <div class="tw-mb-5">
-          <label for="title" class="tw-label">Title <span class="tw-text-danger">*</span></label>
-          <input type="text"
-                 class="tw-input"
-                 id="title"
-                 formControlName="title"
-                 [class.is-invalid]="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched"
-                 [readonly]="isRestrictedMode()"
-                 placeholder="Enter release title">
-          <div *ngIf="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched" class="invalid-feedback">
-            Title is required
-          </div>
+        <label for="title" class="tw-label">Title <span class="tw-text-danger">*</span></label>
+        <input type="text"
+               class="tw-input"
+               id="title"
+               formControlName="title"
+               [class.is-invalid]="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched"
+               [readonly]="isRestrictedMode()"
+               placeholder="Enter release title">
+        <div *ngIf="releaseForm.get('title')?.invalid && releaseForm.get('title')?.touched" class="invalid-feedback">
+          Title is required
         </div>
       </div>
       <div *ngIf="isAdmin">
-        <div class="tw-mb-5">
-          <label for="catalogNo" class="tw-label">Catalog Number <span class="tw-text-danger">*</span></label>
-          <input type="text"
-                class="tw-input"
-                id="catalogNo"
-                formControlName="catalog_no"
-                [class.is-invalid]="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched"
-                placeholder="e.g. MELT001">
-          <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text tw-text-muted">
-            Default is auto-generated
-          </small>
-          <div *ngIf="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched" class="invalid-feedback">
-            Catalog number is required
-          </div>
+        <label for="catalogNo" class="tw-label">Catalog Number <span class="tw-text-danger">*</span></label>
+        <input type="text"
+              class="tw-input"
+              id="catalogNo"
+              formControlName="catalog_no"
+              [class.is-invalid]="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched"
+              placeholder="e.g. MELT001">
+        <small *ngIf="generateCatalogNumber && !editingRelease" class="form-text tw-text-muted">
+          Default is auto-generated
+        </small>
+        <div *ngIf="releaseForm.get('catalog_no')?.invalid && releaseForm.get('catalog_no')?.touched" class="invalid-feedback">
+          Catalog number is required
         </div>
       </div>
-    </div>
-
-    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
       <div *ngIf="isAdmin">
-        <div class="tw-mb-5">
-          <label for="upc" class="tw-label">Barcode (UPC/EAN/Code128)</label>
-          <input type="text"
-                class="tw-input"
-                id="upc"
-                formControlName="UPC"
-                placeholder="UPC, EAN, or Code 128 barcode">
-        </div>
+        <label for="upc" class="tw-label">Barcode (UPC/EAN/Code128)</label>
+        <input type="text"
+              class="tw-input"
+              id="upc"
+              formControlName="UPC"
+              placeholder="UPC, EAN, or Code 128 barcode">
       </div>
       <div>
-        <div class="tw-mb-5">
-          <label for="releaseDate" class="tw-label">Release Date <span class="tw-text-danger">*</span></label>
-          <input type="date"
-                class="tw-input"
-                id="releaseDate"
-                formControlName="release_date"
-                [class.is-invalid]="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched"
-                [readonly]="isRestrictedMode()">
-          <div *ngIf="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched" class="invalid-feedback">
-            Release date is required
-          </div>
+        <label for="releaseDate" class="tw-label">Release Date <span class="tw-text-danger">*</span></label>
+        <input type="date"
+              class="tw-input"
+              id="releaseDate"
+              formControlName="release_date"
+              [class.is-invalid]="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched"
+              [readonly]="isRestrictedMode()">
+        <div *ngIf="releaseForm.get('release_date')?.invalid && releaseForm.get('release_date')?.touched" class="invalid-feedback">
+          Release date is required
         </div>
       </div>
-    </div>
-
-    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4" *ngIf="isAdmin && showStatus">
-      <div>
-        <div class="tw-mb-5">
-          <label for="status" class="tw-label">Status</label>
-          <select class="tw-input" id="status" formControlName="status">
-            <option value="Draft">Draft</option>
-            <option value="For Submission">For Submission</option>
-            <option value="Pending">Pending</option>
-            <option value="Live">Live</option>
-            <option value="Taken Down">Taken Down</option>
-          </select>
-        </div>
+      <div *ngIf="isAdmin && showStatus">
+        <label for="status" class="tw-label">Status</label>
+        <select class="tw-input" id="status" formControlName="status">
+          <option value="Draft">Draft</option>
+          <option value="For Submission">For Submission</option>
+          <option value="Pending">Pending</option>
+          <option value="Live">Live</option>
+          <option value="Taken Down">Taken Down</option>
+        </select>
       </div>
     </div>
 
     <!-- Cover Art -->
-    <div class="tw-mb-5">
+    <div class="tw-mt-4">
       <label for="coverArt" class="tw-label">Cover Art <span class="tw-text-danger">*</span></label>
       <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
         <div>
@@ -114,7 +98,7 @@
     </div>
 
     <!-- Description and Liner Notes -->
-    <div class="tw-mb-5 description-form-group">
+    <div class="tw-mt-4 description-form-group">
       <label for="description" class="tw-label">Tell us about this release</label>
       <small class="form-text tw-mb-2 tw-text-muted">
         Give us a quick statement about the release, indicating what the song is about, the musical approach,

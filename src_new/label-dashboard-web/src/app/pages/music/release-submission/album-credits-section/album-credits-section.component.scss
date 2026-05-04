@@ -1,92 +1,438 @@
 .album-credits-section {
-  .artists-section {
-    .royalty-artists-list {
-      .card {
-        .card-body {
-          padding: 1rem;
 
-          .row {
-            .form-group {
-              label {
-                margin-bottom: 0.25rem;
-                font-size: 0.875rem;
-              }
+  // ── Section heading row ──────────────────────────────────────────────────────
+  .ac-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
 
-              .form-control {
-                font-size: 0.875rem;
-                padding: 0.25rem 0.5rem;
-              }
-            }
+  .ac-heading {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+  }
 
-            .btn {
-              padding: 0.25rem 0.5rem;
-            }
-          }
-        }
+  // ── "Add Artist" filled button (top-right) ───────────────────────────────────
+  .ac-add-btn {
+    background: #5b4ae8;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      background: #4a3bd4;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // ── Artist card body: stacked on mobile, row on desktop ─────────────────────
+  .ac-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+
+      .ac-card-header {
+        width: 220px;
+        flex-shrink: 0;
+        margin-bottom: 0;
       }
 
-      .card.bg-light {
-        .card-body {
-          padding: 0.5rem 0;
-
-          .badge {
-            font-size: 0.875rem;
-            padding: 0.375rem 0.5rem;
-          }
-
-          .badge-info {
-            background-color: #17a2b8;
-          }
-
-          .badge-danger {
-            background-color: #dc3545;
-          }
-        }
+      .ac-splits-grid--card {
+        flex: 1;
+        margin-top: 0;
       }
     }
   }
 
-  .liner-notes-section {
-    .form-group {
-      width: 100% !important;
-      label {
-        font-weight: 600;
-      }
+  // ── Artist card ──────────────────────────────────────────────────────────────
+  .ac-artist-card {
+    border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
+    border-radius: var(--border-radius-lg, 10px);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
 
-      // Full width for liner notes text area
-      ::ng-deep quill-editor {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
+  // Card header: artist selector + delete button
+  .ac-card-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+    min-width: 0;
 
-        .ql-container {
-          width: 100% !important;
-          box-sizing: border-box !important;
-          border-bottom-left-radius: 4px;
-          border-bottom-right-radius: 4px;
-        }
-
-        .ql-editor {
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
-
-        .ql-toolbar {
-          width: 100% !important;
-          box-sizing: border-box !important;
-          border-top-left-radius: 4px;
-          border-top-right-radius: 4px;
-        }
-      }
-
-      // Alternative approach for full width
-      quill-editor {
-        width: 100% !important;
-        display: block !important;
-      }
+    .tw-flex-1 {
+      min-width: 0;
     }
   }
 
+  // ── Custom artist dropdown (other artists) ───────────────────────────────────
+  .ac-artist-dropdown {
+    position: relative;
+  }
+
+  .ac-artist-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s;
+
+    &:hover:not(:disabled) { border-color: #9ca3af; }
+    &:disabled { background: #f9fafb; cursor: not-allowed; opacity: 0.7; }
+  }
+
+  .ac-artist-dropdown--open .ac-artist-trigger {
+    border-color: var(--brand-color, #5b4ae8);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #5b4ae8) 15%, transparent);
+  }
+
+  .ac-artist-trigger-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ac-artist-trigger-caret {
+    font-size: 11px;
+    color: #9ca3af;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+
+    .ac-artist-dropdown--open & { transform: rotate(180deg); }
+  }
+
+  .ac-artist-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+
+  .ac-artist-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #1f2937;
+    text-align: left;
+    transition: background 0.1s;
+
+    &:hover { background: #f3f4f6; }
+
+    &--selected {
+      background: color-mix(in srgb, var(--brand-color, #5b4ae8) 8%, white);
+      color: var(--brand-color, #5b4ae8);
+      font-weight: 500;
+    }
+  }
+
+  // Fixed artist display (main artist)
+  .ac-artist-fixed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ac-artist-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+
+    &--placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-background-secondary, #f3f4f6);
+      color: #9ca3af;
+      font-size: 13px;
+    }
+  }
+
+  .ac-artist-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  .ac-field-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+
+  // ── Delete button (in card header) ──────────────────────────────────────────
+  .ac-delete-btn {
+    background: #fcebeb;
+    color: #c0392b;
+    border: none;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 2px; // align with input bottom
+
+    &:hover:not(:disabled) {
+      background: #f5c6c6;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // ── Royalty split 2×2 grid ───────────────────────────────────────────────────
+  .ac-splits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .ac-split-tile {
+    background: var(--color-background-secondary, #f8f9fa);
+    border-radius: var(--border-radius-md, 6px);
+    padding: 8px 10px;
+  }
+
+  .ac-split-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+
+  .ac-split-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .ac-split-input {
+    width: 100%;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    border: none;
+    background: transparent;
+    padding: 0;
+    outline: none;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    &:disabled {
+      color: #6b7280;
+    }
+  }
+
+  .ac-split-pct {
+    font-size: 11px;
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+
+  // ── Dashed "add another" button ──────────────────────────────────────────────
+  .ac-add-another-btn {
+    display: block;
+    width: 100%;
+    border: 0.5px dashed var(--color-border-tertiary, #d1d5db);
+    background: transparent;
+    border-radius: var(--border-radius-lg, 10px);
+    padding: 10px;
+    font-size: 13px;
+    color: #6b7280;
+    cursor: pointer;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover:not(:disabled) {
+      border-color: #5b4ae8;
+      color: #5b4ae8;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // ── Label royalty summary card ───────────────────────────────────────────────
+  .ac-label-royalty-card {
+    border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
+    border-radius: var(--border-radius-lg, 10px);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .ac-label-royalty-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+  }
+
+  .ac-label-royalty-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+    margin: 0;
+    white-space: nowrap;
+
+    @media (min-width: 768px) {
+      width: 220px;
+      flex-shrink: 0;
+    }
+  }
+
+  .ac-label-royalty-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+
+    @media (min-width: 768px) {
+      flex: 1;
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .ac-royalty-bar-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ac-royalty-bar-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  .ac-royalty-track {
+    height: 6px;
+    background: var(--color-background-tertiary, #e5e7eb);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .ac-royalty-fill {
+    height: 100%;
+    background: #5b4ae8;
+    border-radius: 99px;
+    transition: width 0.3s ease;
+
+    &.ac-royalty-fill--over {
+      background: #dc2626;
+    }
+  }
+
+  .ac-royalty-bar-pct {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1f2937;
+
+    &.ac-royalty-bar-pct--over {
+      color: #dc2626;
+    }
+  }
+
+  // ── Note block ───────────────────────────────────────────────────────────────
+  .ac-note-block {
+    background: var(--color-background-secondary, #f8f9fa);
+    border-radius: var(--border-radius-md, 6px);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+
+  .ac-note-bold {
+    color: #1f2937;
+    font-weight: 600;
+    margin-right: 3px;
+  }
+
+  // ── Liner notes sublabel ─────────────────────────────────────────────────────
+  .ac-liner-sublabel {
+    display: block;
+    font-size: 12px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  // ── Loading dots ─────────────────────────────────────────────────────────────
   .loading-dots {
     display: flex;
     justify-content: center;
@@ -106,44 +452,47 @@
   }
 
   @keyframes loading {
-    0%, 80%, 100% {
-      transform: scale(0);
-    }
-    40% {
-      transform: scale(1);
-    }
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
   }
 
+  // ── Save button ──────────────────────────────────────────────────────────────
   .save-credits-section {
     text-align: center;
 
-    &.mt-4 {
-      .save-changes-btn {
-        padding: 0.75rem 2rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 6px;
-        min-width: 180px;
-
-        i {
-          font-size: 1rem;
-        }
-      }
+    .save-changes-btn {
+      padding: 0.75rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      min-width: 180px;
     }
+  }
 
-    &.mt-5 {
-      margin-top: 4rem !important; // Extra spacing for save button to prevent overlap
+  // ── Liner notes quill editor ─────────────────────────────────────────────────
+  .liner-notes-section {
+    ::ng-deep quill-editor {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
 
-      .save-changes-btn {
-        padding: 0.75rem 2rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 6px;
-        min-width: 180px;
+      .ql-container {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
 
-        i {
-          font-size: 1rem;
-        }
+      .ql-editor {
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      .ql-toolbar {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
       }
     }
   }
