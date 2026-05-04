@@ -47,7 +47,7 @@
           <th class="tw-text-right tw-cursor-pointer">Earnings</th>
           <th class="tw-text-right tw-cursor-pointer">Expense</th>
           <th class="tw-text-right tw-cursor-pointer">Royalties</th>
-          <th class="tw-text-right">Actions</th>
+          <th *ngIf="isAdmin" class="tw-text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -112,7 +112,7 @@
             </td>
 
             <!-- Actions -->
-            <td class="tw-text-right rf-cell-actions" (click)="$event.stopPropagation()">
+            <td *ngIf="isAdmin" class="tw-text-right rf-cell-actions" (click)="$event.stopPropagation()">
               <ng-container *ngIf="editingRow === i; else viewActions">
                 <button type="button" class="btn-ghost btn-sm btn-icon rf-action-save"
                         [disabled]="isSavingRow"
