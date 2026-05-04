@@ -1,161 +1,374 @@
-<!-- Page Header -->
-<div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
-  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-    <h3 class="tw-mb-2">
-      <i class="fas fa-compact-disc tw-mr-2"></i>
-      Release Financials
-    </h3>
-    <p class="tw-mb-0 tw-text-muted">Financial details for your releases including splits, expenses, and revenues.</p>
+<!-- ═══════════════════════════════════════════════════════════════
+     Summary stat bar
+═══════════════════════════════════════════════════════════════ -->
+<div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-3 tw-mb-6">
+
+  <!-- Total Releases — desktop only -->
+  <div class="rf-stat-tile tw-hidden lg:tw-flex">
+    <div class="rf-stat-label">Total Releases</div>
+    <div class="rf-stat-value">{{ releases.length }}</div>
   </div>
+
+  <!-- Total Earnings -->
+  <div class="rf-stat-tile tw-flex">
+    <div class="rf-stat-label">Total Earnings</div>
+    <div class="rf-stat-value">{{ formatCurrency(totalEarnings) }}</div>
+  </div>
+
+  <!-- Total Royalties -->
+  <div class="rf-stat-tile rf-stat-tile--success tw-flex">
+    <div class="rf-stat-label">Total Royalties</div>
+    <div class="rf-stat-value tw-text-green-600">{{ formatCurrency(totalRoyalties) }}</div>
+  </div>
+
+  <!-- Recuperable Expenses — desktop only -->
+  <div class="rf-stat-tile tw-hidden lg:tw-flex">
+    <div class="rf-stat-label">Recuperable Expenses</div>
+    <div class="rf-stat-value" [ngClass]="getAmountClass(totalExpenses)">{{ formatCurrency(totalExpenses) }}</div>
+  </div>
+
 </div>
 
-<div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
-  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Release Information</h3>
-  </div>
-  <div class="tw-px-card-pad tw-pb-card-pad">
-    <p class="card-text">This tab shows financial details regarding your releases, including splits, recuperable expenses, earnings, and revenues.</p>
-    
-    <div class="table-responsive" *ngIf="releases.length > 0">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>For Release</th>
-            <th class="text-right">Sync royalty %</th>
-            <th class="text-right">Streaming royalty %</th>
-            <th class="text-right">Downloads royalty %</th>
-            <th class="text-right">Physical royalty %</th>
-            <th class="text-right">Remaining Recuperable Expense</th>
-            <th class="text-right">Total earnings 
-              <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Data starts on April 2021."></i>
-            </th>
-            <th class="text-right">Total royalties earned</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let release of releases; let i = index">
-            <td><strong>{{ release.title }}</strong></td>
-            <td class="text-right" data-label="Sync royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="tw-input" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.sync_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)"> 
-                <div class="input-group-addon">% of {{ release.sync_royalty_type }}</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESKTOP TABLE  (≥1024px)
+═══════════════════════════════════════════════════════════════ -->
+<div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-hidden lg:tw-block">
+
+  <div *ngIf="releases.length > 0" class="tw-overflow-x-auto">
+    <table class="rf-table">
+      <thead>
+        <tr>
+          <th>Release</th>
+          <th class="tw-text-right">Sync %</th>
+          <th class="tw-text-right">Streaming %</th>
+          <th class="tw-text-right">Downloads %</th>
+          <th class="tw-text-right">Physical %</th>
+          <th class="tw-text-right tw-cursor-pointer">Earnings</th>
+          <th class="tw-text-right tw-cursor-pointer">Expense</th>
+          <th class="tw-text-right tw-cursor-pointer">Royalties</th>
+          <th class="tw-text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let release of releases; let i = index">
+
+          <!-- Main row -->
+          <tr class="rf-row"
+              [class.rf-row--expanded]="expandedRow === i"
+              (click)="toggleRow(i)">
+
+            <!-- Release name + catalog badge -->
+            <td class="rf-cell-release">
+              <img *ngIf="release.cover_art" [src]="release.cover_art" [alt]="release.title" class="rf-cover-thumb">
+              <div *ngIf="!release.cover_art" class="rf-cover-thumb rf-cover-placeholder">
+                <i class="fa fa-music"></i>
+              </div>
+              <div>
+                <span class="rf-release-title">{{ release.title }}</span>
+                <span *ngIf="release.catalog_no" class="rf-catalog-badge tw-block tw-mt-1">{{ release.catalog_no }}</span>
               </div>
             </td>
-            <td class="text-right" data-label="Streaming royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="tw-input" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.streaming_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)"> 
-                <div class="input-group-addon">% of {{ release.streaming_royalty_type }}</div>
-              </div>
+
+            <!-- Sync % -->
+            <td class="tw-text-right rf-cell-pct">
+              {{ formatPercentage(release.sync_royalty_percentage) }}%
             </td>
-            <td class="text-right" data-label="Downloads royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="tw-input" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.download_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
-                <div class="input-group-addon">% of {{ release.download_royalty_type }}</div>
-              </div>
+
+            <!-- Streaming % -->
+            <td class="tw-text-right rf-cell-pct">
+              {{ formatPercentage(release.streaming_royalty_percentage) }}%
             </td>
-            <td class="text-right" data-label="Physical royalty %">
-              <div class="input-group">
-                <input 
-                  type="number" 
-                  class="tw-input" 
-                  style="text-align: right;"
-                  min="0" 
-                  step="1" 
-                  max="100" 
-                  [value]="formatPercentage(release.physical_royalty_percentage)"
-                  [disabled]="!editingRoyalties"
-                  (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
-                <div class="input-group-addon">% of {{ release.physical_royalty_type }}</div>
-              </div>
+
+            <!-- Downloads % -->
+            <td class="tw-text-right rf-cell-pct">
+              {{ formatPercentage(release.download_royalty_percentage) }}%
             </td>
-            <td class="text-right" data-label="Remaining Recuperable Expense">
-              <div class="tw-flex tw-items-center tw-justify-end">
-                <span [ngClass]="getAmountClass(release.recuperable_expense_balance)">{{ formatCurrency(release.recuperable_expense_balance) }}</span>
-                <button 
-                  type="button"
-                  class="btn-ghost btn-sm btn-icon ml-2"
-                  (click)="openExpensesDialog(release.id, release.title)"
-                  title="View expenses">
-                  <i class="fa fa-eye"></i>
+
+            <!-- Physical % -->
+            <td class="tw-text-right rf-cell-pct">
+              {{ formatPercentage(release.physical_royalty_percentage) }}%
+            </td>
+
+            <!-- Earnings — clicking navigates to earnings page -->
+            <td class="tw-text-right rf-cell-financial rf-cell-clickable"
+                [ngClass]="getAmountClass(release.total_earnings)"
+                (click)="goToEarnings($event)">
+              {{ formatCurrency(release.total_earnings) }}
+            </td>
+
+            <!-- Expense — clicking opens expenses modal -->
+            <td class="tw-text-right rf-cell-financial rf-cell-clickable"
+                [ngClass]="getAmountClass(release.recuperable_expense_balance)"
+                (click)="openExpensesDialog(release.id, release.title); $event.stopPropagation()">
+              {{ formatCurrency(release.recuperable_expense_balance) }}
+            </td>
+
+            <!-- Royalties — clicking navigates to royalties page -->
+            <td class="tw-text-right rf-cell-financial rf-cell-clickable"
+                [ngClass]="getAmountClass(release.total_royalties)"
+                (click)="goToRoyalties($event)">
+              {{ formatCurrency(release.total_royalties) }}
+            </td>
+
+            <!-- Actions -->
+            <td class="tw-text-right rf-cell-actions" (click)="$event.stopPropagation()">
+              <ng-container *ngIf="editingRow === i; else viewActions">
+                <button type="button" class="btn-ghost btn-sm btn-icon rf-action-save"
+                        [disabled]="isSavingRow"
+                        (click)="saveRowEdit(i, $event)"
+                        title="Save">
+                  <span *ngIf="isSavingRow" class="spinner-border spinner-border-sm"></span>
+                  <i *ngIf="!isSavingRow" class="fa fa-check"></i>
                 </button>
-                <button 
-                  *ngIf="isAdmin" 
-                  type="button"
-                  class="btn-ghost btn-sm btn-icon ml-1"
-                  (click)="openAddExpenseDialog(release.id, release.title)"
-                  title="Add recuperable expense">
+                <button type="button" class="btn-ghost btn-sm btn-icon tw-ml-1"
+                        [disabled]="isSavingRow"
+                        (click)="cancelRowEdit(i, $event)"
+                        title="Cancel">
+                  <i class="fa fa-times"></i>
+                </button>
+              </ng-container>
+              <ng-template #viewActions>
+                <button *ngIf="isAdmin" type="button" class="btn-ghost btn-sm btn-icon rf-action-edit"
+                        (click)="startEditRow(i, $event)"
+                        title="Edit splits">
+                  <i class="fa fa-pencil"></i>
+                </button>
+                <button *ngIf="isAdmin" type="button" class="btn-ghost btn-sm btn-icon tw-ml-1"
+                        (click)="openAddExpenseDialog(release.id, release.title)"
+                        title="Add recuperable expense">
                   <i class="fa fa-plus"></i>
                 </button>
+              </ng-template>
+            </td>
+          </tr>
+
+          <!-- Expanded royalty tile panel -->
+          <tr *ngIf="expandedRow === i" class="rf-expanded-row">
+            <td colspan="9">
+              <div class="rf-royalty-panel">
+                <div class="rf-royalty-tile">
+                  <div class="rf-royalty-tile-label">Sync</div>
+                  <ng-container *ngIf="editingRow === i; else syncView">
+                    <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                           [value]="formatPercentage(release.sync_royalty_percentage)"
+                           (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)">
+                  </ng-container>
+                  <ng-template #syncView>
+                    <div class="rf-royalty-tile-value">{{ formatPercentage(release.sync_royalty_percentage) }}%</div>
+                  </ng-template>
+                  <div class="rf-royalty-tile-sub">of {{ release.sync_royalty_type }}</div>
+                </div>
+
+                <div class="rf-royalty-tile">
+                  <div class="rf-royalty-tile-label">Streaming</div>
+                  <ng-container *ngIf="editingRow === i; else streamView">
+                    <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                           [value]="formatPercentage(release.streaming_royalty_percentage)"
+                           (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)">
+                  </ng-container>
+                  <ng-template #streamView>
+                    <div class="rf-royalty-tile-value">{{ formatPercentage(release.streaming_royalty_percentage) }}%</div>
+                  </ng-template>
+                  <div class="rf-royalty-tile-sub">of {{ release.streaming_royalty_type }}</div>
+                </div>
+
+                <div class="rf-royalty-tile">
+                  <div class="rf-royalty-tile-label">Downloads</div>
+                  <ng-container *ngIf="editingRow === i; else dlView">
+                    <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                           [value]="formatPercentage(release.download_royalty_percentage)"
+                           (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
+                  </ng-container>
+                  <ng-template #dlView>
+                    <div class="rf-royalty-tile-value">{{ formatPercentage(release.download_royalty_percentage) }}%</div>
+                  </ng-template>
+                  <div class="rf-royalty-tile-sub">of {{ release.download_royalty_type }}</div>
+                </div>
+
+                <div class="rf-royalty-tile">
+                  <div class="rf-royalty-tile-label">Physical</div>
+                  <ng-container *ngIf="editingRow === i; else physView">
+                    <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                           [value]="formatPercentage(release.physical_royalty_percentage)"
+                           (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
+                  </ng-container>
+                  <ng-template #physView>
+                    <div class="rf-royalty-tile-value">{{ formatPercentage(release.physical_royalty_percentage) }}%</div>
+                  </ng-template>
+                  <div class="rf-royalty-tile-sub">of {{ release.physical_royalty_type }}</div>
+                </div>
               </div>
             </td>
-            <td style="text-align: right;" data-label="Total earnings" [ngClass]="getAmountClass(release.total_earnings)">{{ formatCurrency(release.total_earnings) }}</td>
-            <td style="text-align: right;" data-label="Total royalties earned" [ngClass]="getAmountClass(release.total_royalties)">{{ formatCurrency(release.total_royalties) }}</td>
           </tr>
-        </tbody>
-      </table>
-    </div>
 
-    <div *ngIf="releases.length === 0" class="tw-py-5 tw-text-center">
-      <i class="fa fa-music fa-3x tw-mb-3 tw-text-muted"></i>
-      <p class="tw-text-muted">No releases yet.</p>
-    </div>
+        </ng-container>
+      </tbody>
+    </table>
   </div>
 
-  <div *ngIf="isAdmin" class="tw-px-card-pad tw-py-4 tw-border-t tw-border-border-subtle text-right save-panel">
-    <div *ngIf="!editingRoyalties" class="edit-button">
-      <button type="button" class="btn-primary tw-w-full" (click)="toggleEditRoyalties()">
-        Edit Royalties
-      </button> 
-    </div>
-    <div *ngIf="editingRoyalties" class="save-changes-buttons">
-      <button 
-        type="button" 
-        class="btn-primary tw-w-full" 
-        (click)="updateRoyalties()"
-        [disabled]="updatingRoyalties">
-        <span *ngIf="updatingRoyalties" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
-        {{ updatingRoyalties ? 'Saving...' : 'Save Changes' }}
-      </button>
-      <button 
-        type="button" 
-        class="btn-secondary tw-w-full tw-mt-2" 
-        (click)="toggleEditRoyalties()"
-        [disabled]="updatingRoyalties">
-        Cancel
-      </button>
-    </div>
+  <div *ngIf="releases.length === 0" class="tw-py-12 tw-text-center">
+    <i class="fa fa-music fa-3x tw-mb-3 tw-text-muted"></i>
+    <p class="tw-text-muted">No releases yet.</p>
   </div>
+
 </div>
 
 
-<!-- Release Expenses Dialog -->
+<!-- ═══════════════════════════════════════════════════════════════
+     MOBILE CARDS  (<1024px)
+═══════════════════════════════════════════════════════════════ -->
+<div class="lg:tw-hidden tw-mb-8 rf-mobile-breakout">
+
+  <div *ngIf="releases.length === 0" class="tw-bg-white tw-py-12 tw-text-center">
+    <i class="fa fa-music fa-3x tw-mb-3 tw-text-muted"></i>
+    <p class="tw-text-muted">No releases yet.</p>
+  </div>
+
+  <div *ngFor="let release of releases; let i = index"
+       class="rf-mobile-card tw-overflow-hidden">
+
+    <!-- Card header -->
+    <div class="rf-mobile-header" (click)="toggleMobileCard(i)">
+      <div class="tw-flex tw-items-center tw-gap-3 tw-min-w-0">
+        <img *ngIf="release.cover_art" [src]="release.cover_art" [alt]="release.title" class="rf-cover-thumb tw-flex-shrink-0">
+        <div *ngIf="!release.cover_art" class="rf-cover-thumb rf-cover-placeholder tw-flex-shrink-0">
+          <i class="fa fa-music"></i>
+        </div>
+        <div class="tw-min-w-0">
+          <span class="rf-release-title tw-block tw-truncate">{{ release.title }}</span>
+          <span *ngIf="release.catalog_no" class="rf-catalog-badge tw-mt-1">{{ release.catalog_no }}</span>
+        </div>
+      </div>
+      <i class="fa tw-ml-3 tw-flex-shrink-0"
+         [class.fa-chevron-down]="openMobileCard !== i"
+         [class.fa-chevron-up]="openMobileCard === i"></i>
+    </div>
+
+    <!-- Card body -->
+    <div *ngIf="openMobileCard === i" class="rf-mobile-body">
+
+      <!-- 2×2 royalty percentage grid -->
+      <div class="tw-grid tw-grid-cols-2 tw-gap-2 tw-mb-4">
+
+        <div class="rf-royalty-tile">
+          <div class="rf-royalty-tile-label">Sync</div>
+          <ng-container *ngIf="mobileEditingCard === i; else syncMView">
+            <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                   [value]="formatPercentage(release.sync_royalty_percentage)"
+                   (input)="onPercentageChange(release, 'sync_royalty_percentage', $event)">
+          </ng-container>
+          <ng-template #syncMView>
+            <div class="rf-royalty-tile-value">{{ formatPercentage(release.sync_royalty_percentage) }}%</div>
+          </ng-template>
+          <div class="rf-royalty-tile-sub">of {{ release.sync_royalty_type }}</div>
+        </div>
+
+        <div class="rf-royalty-tile">
+          <div class="rf-royalty-tile-label">Streaming</div>
+          <ng-container *ngIf="mobileEditingCard === i; else streamMView">
+            <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                   [value]="formatPercentage(release.streaming_royalty_percentage)"
+                   (input)="onPercentageChange(release, 'streaming_royalty_percentage', $event)">
+          </ng-container>
+          <ng-template #streamMView>
+            <div class="rf-royalty-tile-value">{{ formatPercentage(release.streaming_royalty_percentage) }}%</div>
+          </ng-template>
+          <div class="rf-royalty-tile-sub">of {{ release.streaming_royalty_type }}</div>
+        </div>
+
+        <div class="rf-royalty-tile">
+          <div class="rf-royalty-tile-label">Downloads</div>
+          <ng-container *ngIf="mobileEditingCard === i; else dlMView">
+            <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                   [value]="formatPercentage(release.download_royalty_percentage)"
+                   (input)="onPercentageChange(release, 'download_royalty_percentage', $event)">
+          </ng-container>
+          <ng-template #dlMView>
+            <div class="rf-royalty-tile-value">{{ formatPercentage(release.download_royalty_percentage) }}%</div>
+          </ng-template>
+          <div class="rf-royalty-tile-sub">of {{ release.download_royalty_type }}</div>
+        </div>
+
+        <div class="rf-royalty-tile">
+          <div class="rf-royalty-tile-label">Physical</div>
+          <ng-container *ngIf="mobileEditingCard === i; else physMView">
+            <input type="number" class="tw-input rf-split-input" min="0" max="100" step="1"
+                   [value]="formatPercentage(release.physical_royalty_percentage)"
+                   (input)="onPercentageChange(release, 'physical_royalty_percentage', $event)">
+          </ng-container>
+          <ng-template #physMView>
+            <div class="rf-royalty-tile-value">{{ formatPercentage(release.physical_royalty_percentage) }}%</div>
+          </ng-template>
+          <div class="rf-royalty-tile-sub">of {{ release.physical_royalty_type }}</div>
+        </div>
+
+      </div>
+
+      <!-- 3 financial tappable cells -->
+      <div class="rf-mobile-fin-row">
+        <button type="button" class="rf-mobile-fin-cell"
+                (click)="openExpensesDialog(release.id, release.title)">
+          <span class="rf-mobile-fin-label">Expense</span>
+          <span class="rf-mobile-fin-value" [ngClass]="getAmountClass(release.recuperable_expense_balance)">
+            {{ formatCurrency(release.recuperable_expense_balance) }}
+          </span>
+          <span class="rf-mobile-fin-hint">Tap for details</span>
+        </button>
+        <button type="button" class="rf-mobile-fin-cell" (click)="goToEarnings($event)">
+          <span class="rf-mobile-fin-label">Earnings</span>
+          <span class="rf-mobile-fin-value" [ngClass]="getAmountClass(release.total_earnings)">
+            {{ formatCurrency(release.total_earnings) }}
+          </span>
+          <span class="rf-mobile-fin-hint">Tap for details</span>
+        </button>
+        <button type="button" class="rf-mobile-fin-cell" (click)="goToRoyalties($event)">
+          <span class="rf-mobile-fin-label">Royalties</span>
+          <span class="rf-mobile-fin-value tw-text-green-600">
+            {{ formatCurrency(release.total_royalties) }}
+          </span>
+          <span class="rf-mobile-fin-hint">Tap for details</span>
+        </button>
+      </div>
+
+      <!-- Admin actions (admin only) -->
+      <div *ngIf="isAdmin" class="tw-pt-3 tw-border-t tw-border-gray-100 tw-flex tw-flex-col tw-gap-2">
+        <ng-container *ngIf="mobileEditingCard === i; else mobileEditBtn">
+          <div class="tw-flex tw-gap-2">
+            <button type="button" class="btn-primary tw-flex-1"
+                    [disabled]="isSavingMobileCard"
+                    (click)="saveMobileEdit($event)">
+              <span *ngIf="isSavingMobileCard" class="spinner-border spinner-border-sm tw-mr-1"></span>
+              {{ isSavingMobileCard ? 'Saving…' : 'Save splits' }}
+            </button>
+            <button type="button" class="btn-secondary"
+                    [disabled]="isSavingMobileCard"
+                    (click)="cancelMobileEdit($event)">
+              Cancel
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #mobileEditBtn>
+          <button type="button" class="btn-ghost tw-w-full"
+                  (click)="startMobileEdit(i, $event)">
+            <i class="fa fa-pencil tw-mr-1"></i> Edit splits
+          </button>
+        </ng-template>
+        <button type="button" class="btn-ghost tw-w-full"
+                (click)="openAddExpenseDialog(release.id, release.title)">
+          <i class="fa fa-plus tw-mr-1"></i> Add recuperable expense
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     Dialogs (unchanged)
+═══════════════════════════════════════════════════════════════ -->
 <app-release-expenses-dialog
   [releaseId]="selectedReleaseId"
   [releaseTitle]="selectedReleaseTitle"
@@ -163,7 +376,6 @@
   (close)="closeExpensesDialog()">
 </app-release-expenses-dialog>
 
-<!-- Add Expense Dialog -->
 <app-add-expense-dialog
   [releaseId]="addExpenseReleaseId"
   [releaseTitle]="addExpenseReleaseTitle"

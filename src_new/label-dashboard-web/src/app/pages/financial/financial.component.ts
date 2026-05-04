@@ -93,6 +93,7 @@ export interface ReleaseInfo {
   id: number;
   title: string;
   catalog_no: string;
+  cover_art: string;
   release_date: string;
   sync_royalty_percentage: number;
   sync_royalty_type: string;

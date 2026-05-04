@@ -795,6 +795,7 @@ h6 {
 .table-responsive .table,
 .card .table,
 div .table {
+  width: 100% !important;
   margin-bottom: 0 !important;
   font-size: 14px !important;
 
@@ -1434,4 +1435,34 @@ div .table tbody {
       img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
     }
   }
+}
+
+
+/* =========================================== */
+/* EXPENSES MODAL — full-width table           */
+/* =========================================== */
+/* Strip paginated-table's inner card shell when rendered inside the
+   expenses dialog modal body, so the table fills the full modal width. */
+.rf-expenses-modal-body app-paginated-table > div {
+  padding: 0 !important;
+  gap: 0 !important;
+}
+.rf-expenses-modal-body app-paginated-table .tw-bg-white {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+}
+/* Tailwind responsive padding classes that narrow the table */
+.rf-expenses-modal-body app-paginated-table [class*="tw-px-card-pad"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.rf-expenses-modal-body app-paginated-table [class*="tw-pb-card-pad"] {
+  padding-bottom: 0 !important;
+}
+/* Restore breathing room for the title/pagination info row */
+.rf-expenses-modal-body app-paginated-table .tw-pt-3 {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
 }

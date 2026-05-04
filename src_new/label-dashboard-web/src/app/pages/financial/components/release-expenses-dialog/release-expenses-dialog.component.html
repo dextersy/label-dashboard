@@ -3,7 +3,7 @@
 
 <!-- Modal -->
 <div *ngIf="isVisible" class="modal fade show" style="display: block" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document" (click)="$event.stopPropagation()">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">
@@ -14,8 +14,8 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body tw-p-0">
-        <app-paginated-table 
+      <div class="modal-body tw-p-0 rf-expenses-modal-body">
+        <app-paginated-table
           title=""
           [data]="expenses"
           [pagination]="pagination"
