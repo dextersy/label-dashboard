@@ -68,6 +68,18 @@ export class ConfirmationDialogComponent implements OnInit, OnDestroy {
     this.confirmationService.handleCancel();
   }
 
+  getConfirmClass(): string {
+    switch (this.data?.type) {
+      case 'danger':  return 'cd-btn-danger';
+      case 'warning': return 'cd-btn-warning';
+      default:        return 'cd-btn-info';
+    }
+  }
+
+  getCancelPrimaryClass(): string {
+    return this.getConfirmClass();
+  }
+
   onBackdropClick(event: MouseEvent): void {
     // Only close if the click was directly on the backdrop element
     // This prevents unexpected closures from event propagation

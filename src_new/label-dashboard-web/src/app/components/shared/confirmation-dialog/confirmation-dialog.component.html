@@ -11,47 +11,53 @@
      [attr.aria-labelledby]="'confirmation-dialog-title'"
      [attr.aria-describedby]="'confirmation-dialog-message'"
      (keydown)="onKeyDown($event)">
-  <div #modalDialog class="modal-dialog modal-dialog-centered" role="document" (click)="$event.stopPropagation()">
-    <div class="modal-content">
-      <div class="modal-header" [ngClass]="{
-        'bg-danger text-white': data?.type === 'danger',
-        'bg-warning': data?.type === 'warning',
-        'bg-info text-white': data?.type === 'info'
+  <div #modalDialog class="modal-dialog modal-dialog-centered cd-modal-dialog" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content cd-modal-content">
+
+      <!-- Header -->
+      <div class="cd-modal-header" [ngClass]="{
+        'cd-header-info':    data?.type === 'info' || !data?.type,
+        'cd-header-warning': data?.type === 'warning',
+        'cd-header-danger':  data?.type === 'danger'
       }">
-        <h5 class="modal-title" id="confirmation-dialog-title">
-          <i class="fas tw-mr-2" [ngClass]="{
-            'fa-exclamation-triangle': data?.type === 'danger' || data?.type === 'warning',
-            'fa-info-circle': data?.type === 'info'
-          }"></i>
-          {{ data?.title }}
-        </h5>
-        <button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"
-                [class.btn-close-white]="data?.type === 'danger' || data?.type === 'info'"></button>
+        <div class="cd-header-left">
+          <span class="cd-icon-badge" [ngClass]="{
+            'cd-icon-info':    data?.type === 'info' || !data?.type,
+            'cd-icon-warning': data?.type === 'warning',
+            'cd-icon-danger':  data?.type === 'danger'
+          }">
+            <i class="fas" [ngClass]="{
+              'fa-exclamation-triangle': data?.type === 'danger' || data?.type === 'warning',
+              'fa-info-circle':          data?.type === 'info' || !data?.type
+            }"></i>
+          </span>
+          <h5 class="cd-modal-title" id="confirmation-dialog-title">{{ data?.title }}</h5>
+        </div>
+        <button type="button" class="cd-close-btn" (click)="onCancel()" aria-label="Close">&#x2715;</button>
       </div>
-      <div class="modal-body">
-        <p id="confirmation-dialog-message" style="white-space: pre-line;">{{ data?.message }}</p>
+
+      <!-- Body -->
+      <div class="modal-body cd-modal-body">
+        <p id="confirmation-dialog-message" class="cd-primary-text">{{ data?.message }}</p>
       </div>
-      <div class="modal-footer">
+
+      <!-- Footer -->
+      <div class="cd-modal-footer">
         <button type="button"
-                
-                [ngClass]="data?.primaryAction === 'cancel' ? 'btn-primary' : 'btn-secondary'"
+                class="cd-btn"
+                [ngClass]="data?.primaryAction === 'cancel' ? getCancelPrimaryClass() : 'cd-btn-cancel'"
                 (click)="onCancel()">
           {{ data?.cancelText || 'No' }}
         </button>
         <button #confirmButton
                 type="button"
-                
-                [ngClass]="data?.primaryAction === 'cancel'
-                  ? 'btn-secondary'
-                  : {
-                      'btn-danger': data?.type === 'danger',
-                      'btn-secondary': data?.type === 'warning',
-                      'btn-primary': data?.type === 'info' || !data?.type
-                    }"
+                class="cd-btn"
+                [ngClass]="data?.primaryAction === 'cancel' ? 'cd-btn-cancel' : getConfirmClass()"
                 (click)="onConfirm()">
           {{ data?.confirmText || 'Yes' }}
         </button>
       </div>
+
     </div>
   </div>
 </div>
