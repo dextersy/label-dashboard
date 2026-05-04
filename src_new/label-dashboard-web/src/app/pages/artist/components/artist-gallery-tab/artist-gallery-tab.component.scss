@@ -225,7 +225,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.75);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -236,22 +236,23 @@
           display: flex;
           gap: 8px;
 
-          .btn {
+          button {
             padding: 8px 12px;
             border: none;
             cursor: pointer;
             font-size: 14px;
-            background: none;
-            color: #fff;
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: #fff !important;
             transition: opacity 0.2s ease;
 
             &:hover {
-              opacity: 0.7;
-              color: #fff;
+              background: rgba(255, 255, 255, 0.3) !important;
+              opacity: 1;
+              color: #fff !important;
             }
 
             &.btn-danger {
-              color: #ff6b7a;
+              color: #ff6b7a !important;
             }
           }
         }
@@ -389,7 +390,7 @@
 @media (max-width: 480px) {
   .artist-gallery-tab {
     .gallery-section .photo-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(1, 1fr);
       gap: 6px;
     }
   }
