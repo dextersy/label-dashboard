@@ -42,6 +42,7 @@ export interface Release {
   artists?: Array<{
     id: number;
     name: string;
+    profile_photo?: string;
     ReleaseArtist?: {
       streaming_royalty_percentage: number;
       sync_royalty_percentage: number;
