@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FinancialSummary, Earning, Royalty } from '../../financial.component';
+import { FinancialSummary, Earning, Royalty, PayoutSettings } from '../../financial.component';
 
 @Component({
     selector: 'app-financial-summary-tab',
@@ -13,6 +13,7 @@ export class FinancialSummaryTabComponent {
   @Input() latestEarnings: Earning[] = [];
   @Input() latestRoyalties: Royalty[] = [];
   @Input() isAdmin: boolean = false;
+  @Input() payoutSettings: PayoutSettings | null = null;
   @Input() onPayNow: () => Promise<void> = async () => {};
 
   @Output() viewEarningsDetails = new EventEmitter<void>();

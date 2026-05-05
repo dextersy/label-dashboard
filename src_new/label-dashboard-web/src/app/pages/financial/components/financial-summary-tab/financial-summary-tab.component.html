@@ -16,14 +16,35 @@
   <div class="lg:tw-col-span-4 tw-flex">
     <div class="current-balance-section tw-p-4 tw-text-center tw-w-full">
       <h2 class="balance-title">Current Balance</h2>
-      <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
-      <p class="balance-subtitle" *ngIf="!isAdmin">This is your total earned royalties less payments and advances made to you. Once this reaches your set payout point, this will be transferred to you on the 15th of the month.</p>
-      <button class="btn-primary pay-now-btn"
-              *ngIf="isAdmin"
-              (click)="onPayNow()"
-              [disabled]="summary.currentBalance <= 0">
-        <i class="fas fa-credit-card tw-mr-2"></i>Pay Now
-      </button>
+
+      <!-- Non-admin: balance with tooltip icon -->
+      <ng-container *ngIf="!isAdmin; else adminBalance">
+        <div class="tw-flex tw-items-center tw-justify-center tw-gap-2">
+          <h1 class="balance-amount tw-mb-0" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
+          <span class="tw-relative tw-group tw-cursor-help tw-self-center">
+            <i class="fa-solid fa-circle-info tw-text-white tw-text-xl tw-opacity-80 hover:tw-opacity-100 tw-transition-opacity"></i>
+            <span class="tw-absolute tw-bottom-full tw-left-1/2 -tw-translate-x-1/2 tw-mb-2 tw-w-64 tw-rounded-lg tw-bg-gray-900 tw-px-3 tw-py-2 tw-text-xs tw-text-white tw-shadow-xl tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity tw-pointer-events-none tw-z-10 tw-text-left tw-leading-relaxed">
+              This is your total earned royalties less payments and advances made to you.
+            </span>
+          </span>
+        </div>
+
+        <!-- Payout note widget -->
+        <div class="payout-note tw-mt-3 tw-w-full" *ngIf="payoutSettings">
+          <i class="fas fa-calendar-alt payout-note-icon"></i>Paid out on the <strong>15th of the month</strong> when your payout point of
+          <a (click)="viewPaymentsDetails.emit()">{{ formatCurrency(payoutSettings.payout_point) }}</a>
+          is reached.
+        </div>
+      </ng-container>
+
+      <ng-template #adminBalance>
+        <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
+        <button class="btn-primary pay-now-btn"
+                (click)="onPayNow()"
+                [disabled]="summary.currentBalance <= 0">
+          <i class="fas fa-credit-card tw-mr-2"></i>Pay Now
+        </button>
+      </ng-template>
     </div>
   </div>
   <!-- 3 Stat Cards -->
