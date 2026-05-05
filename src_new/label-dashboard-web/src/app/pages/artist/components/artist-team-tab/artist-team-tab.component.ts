@@ -47,12 +47,37 @@ export class ArtistTeamTabComponent {
     }
   }
 
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  }
+
+  getAvatarColorIndex(name: string): number {
+    if (!name) return 0;
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return Math.abs(hash) % 8;
+  }
+
+  getAvatarColor(name: string): string {
+    const colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+    return colors[this.getAvatarColorIndex(name)];
+  }
+
   get teamColumns(): TableColumn[] {
     return [
       {
         key: 'name',
         label: 'Name',
-        cardHeader: true
+        cardHeader: true,
+        renderHtml: true,
+        formatter: (member: TeamMember) => {
+          const idx = this.getAvatarColorIndex(member.name);
+          const initials = this.getInitials(member.name);
+          return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${member.name}</span>`;
+        }
       },
       {
         key: 'email',

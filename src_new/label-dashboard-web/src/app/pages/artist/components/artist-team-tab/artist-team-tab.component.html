@@ -21,6 +21,36 @@
     [showSortableHeaders]="true"
     [showActionsColumn]="true"
     [actions]="teamActions">
+
+    <ng-template #mobileRowTemplate let-member let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+      <div class="member-card">
+        <div class="member-card__header">
+          <div class="member-card__avatar" [style.background-color]="getAvatarColor(member.name)">
+            {{ getInitials(member.name) }}
+          </div>
+          <div class="member-card__info">
+            <div class="member-card__name">{{ member.name }}</div>
+            <div class="member-card__email">{{ member.email }}</div>
+          </div>
+          <span class="member-card__badge"
+                [class.member-card__badge--success]="member.status === 'Accepted'"
+                [class.member-card__badge--pending]="member.status === 'Pending'">
+            {{ member.status }}
+          </span>
+          <button *ngIf="visibleActions.length > 0"
+                  class="member-card__menu kebab-btn"
+                  type="button"
+                  (click)="toggleKebab($event)"
+                  [class.active]="isKebabOpen">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+        </div>
+        <div class="member-card__footer">
+          <i class="fas fa-calendar-alt"></i> Invited {{ formatDate(member.invited_date) }}
+        </div>
+      </div>
+    </ng-template>
+
   </app-paginated-table>
 
   <!-- Invite New Member Section -->
