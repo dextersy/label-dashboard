@@ -93,6 +93,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @ContentChild('customButtons', { static: false }) customButtons!: TemplateRef<any>;
   @ContentChild('bulkOperationsContent', { static: false }) bulkOperationsContent!: TemplateRef<any>;
   @ContentChild('mobileRowTemplate', { static: false }) mobileRowTemplate!: TemplateRef<any>;
+  @ContentChild('mobileHeaderTemplate', { static: false }) mobileHeaderTemplate!: TemplateRef<any>;
 
   displayColumns: TableColumn[] = [];
 

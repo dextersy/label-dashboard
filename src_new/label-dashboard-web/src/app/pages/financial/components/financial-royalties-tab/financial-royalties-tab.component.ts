@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { DomSanitizer } from '@angular/platform-browser';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, HeaderAction, SearchFilters, SortInfo } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../../components/shared/date-range-filter/date-range-filter.component';
 import { Royalty } from '../../financial.component';
@@ -53,7 +54,8 @@ export class FinancialRoyaltiesTabComponent {
   }
 
   constructor(
-    private router: Router, 
+    private router: Router,
+    private sanitizer: DomSanitizer,
     private authService: AuthService,
     private financialService: FinancialService,
     private notificationService: NotificationService,
@@ -70,6 +72,8 @@ export class FinancialRoyaltiesTabComponent {
       this.selectedArtist = artist;
     });
   }
+
+  readonly coverArtPlaceholder = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><rect width="28" height="28" fill="#e5e7eb" rx="3"/><text x="14" y="20" font-size="14" text-anchor="middle" fill="#9ca3af">♪</text></svg>')}`;
 
   // Define table columns for search and sort functionality
   royaltiesColumns: TableColumn[] = [
@@ -89,6 +93,8 @@ export class FinancialRoyaltiesTabComponent {
       type: 'text',
       searchable: true,
       sortable: true,
+      renderHtml: true,
+      formatter: (item: any) => this.formatReleaseCell(item),
       mobileGroup: 'summary',
       mobileClass: 'mobile-text',
       tabletClass: ''
@@ -115,6 +121,17 @@ export class FinancialRoyaltiesTabComponent {
       tabletClass: ''
     }
   ];
+
+  formatReleaseCell(item: any) {
+    const title = item.release_title || '(None)';
+    const src = item.cover_art || this.coverArtPlaceholder;
+    const html = `<span style="display:inline-flex;align-items:center;gap:8px"><img src="${src}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">${title}</span>`;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+  }
 
   onPageChange(page: number): void {
     this.pageChange.emit(page);

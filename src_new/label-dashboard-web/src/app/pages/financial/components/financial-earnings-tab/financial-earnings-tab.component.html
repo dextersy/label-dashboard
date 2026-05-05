@@ -34,4 +34,24 @@
   (pageChange)="onPageChange($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">
+
+  <ng-template #mobileHeaderTemplate>
+    <div class="fin-mobile-header">
+      <div class="fin-mobile-header-release">Release</div>
+      <div class="fin-mobile-header-amount">Amount</div>
+    </div>
+  </ng-template>
+
+  <ng-template #mobileRowTemplate let-item>
+    <div class="fin-mobile-row">
+      <img [src]="item.cover_art || coverArtPlaceholder" alt="" class="fin-mobile-cover">
+      <div class="fin-mobile-body">
+        <div class="fin-mobile-release">{{ item.release_title || '(None)' }}</div>
+        <div class="fin-mobile-desc">{{ item.description }}</div>
+        <div class="fin-mobile-date">{{ item.date_recorded | date:'MMM d, yyyy' }}</div>
+      </div>
+      <div class="fin-mobile-amount" [class.text-danger]="item.amount < 0">{{ formatCurrency(item.amount) }}</div>
+    </div>
+  </ng-template>
+
 </app-paginated-table>

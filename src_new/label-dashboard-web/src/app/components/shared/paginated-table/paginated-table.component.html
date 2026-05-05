@@ -298,6 +298,9 @@
           </div><!-- end table-responsive -->
           <!-- Mobile card list — rendered instead of table rows on small screens -->
           <div *ngIf="mobileRowTemplate" class="mobile-card-list">
+            <ng-container *ngIf="mobileHeaderTemplate">
+              <ng-container *ngTemplateOutlet="mobileHeaderTemplate"></ng-container>
+            </ng-container>
             <div *ngIf="data.length === 0" class="tw-text-center tw-py-4 tw-text-sm tw-text-gray-400">No data available.</div>
             <ng-container *ngFor="let item of data">
               <ng-container *ngTemplateOutlet="mobileRowTemplate; context: getMobileRowContext(item)"></ng-container>

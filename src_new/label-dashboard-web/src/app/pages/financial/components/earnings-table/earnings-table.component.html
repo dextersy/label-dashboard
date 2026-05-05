@@ -11,7 +11,12 @@
     <tbody>
       <tr *ngFor="let earning of earnings">
         <td class="mobile-narrow" data-label="Date">{{ formatDate(earning.date_recorded) }}</td>
-        <td class="mobile-text" data-label="Release">{{ earning.release_title || '(None)' }}</td>
+        <td class="mobile-text" data-label="Release">
+          <span style="display:inline-flex;align-items:center;gap:8px">
+            <img [src]="earning.cover_art || coverArtPlaceholder" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">
+            {{ earning.release_title || '(None)' }}
+          </span>
+        </td>
         <td class="tablet-hide" data-label="Description">{{ earning.description }}</td>
         <td class="mobile-narrow mobile-number" style="text-align:right" data-label="Amount" [ngClass]="getAmountClass(earning.amount)">{{ formatCurrency(earning.amount) }}</td>
       </tr>
