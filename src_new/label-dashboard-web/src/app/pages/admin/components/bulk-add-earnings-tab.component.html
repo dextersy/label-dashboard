@@ -1,6 +1,6 @@
 <!-- Page Header -->
-<div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
-  <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+<div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+  <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
     <h3 class="tw-mb-2">
       <app-icon name="file-upload" class="tw-mr-2" />
       Bulk Add Earnings
@@ -256,7 +256,7 @@
     <!-- Summary Information -->
     <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
       <div >
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
             <h3 class="card-title text-primary">{{ csvTotalCount - csvTotalUnmatched }}</h3>
             <p class="card-text tw-text-muted">Total Matched Rows</p>
@@ -264,7 +264,7 @@
         </div>
       </div>
       <div >
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
             <h5 class="card-title tw-text-success" [ngClass]="getAmountClass(csvTotalAmount)">{{ formatCurrency(csvTotalAmount) }}</h5>
             <p class="card-text tw-text-muted">Total Matched Amount</p>
@@ -272,7 +272,7 @@
         </div>
       </div>
       <div >
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
             <h3 class="card-title tw-text-danger">{{ csvTotalUnmatched }}</h3>
             <p class="card-text tw-text-muted">Unmatched Rows</p>
@@ -287,7 +287,7 @@
         </div>
       </div>
       <div >
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
             <h6 class="card-title">{{ csvFile.name }}</h6>
             <p class="card-text tw-text-muted">
@@ -299,8 +299,8 @@
     </div>
 
     <!-- CSV Data Table -->
-    <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
-      <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
+    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
+      <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
         <h6 class="tw-mb-0">CSV Preview</h6>
         <button type="button" class="btn-danger btn-sm" (click)="removeCsvFile()">
           <app-icon name="x" class="tw-mr-2" />Remove File

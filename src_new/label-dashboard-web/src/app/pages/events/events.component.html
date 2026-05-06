@@ -69,7 +69,7 @@
     <!-- Loading Events -->
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="loading && availableEvents.length === 0">
       <div class="tw-col-span-12">
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <div class="loading-dots">
               <div></div>
@@ -84,7 +84,7 @@
     <!-- No Events Available -->
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="!loading && availableEvents.length === 0">
       <div class="tw-col-span-12">
-        <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
             <app-icon name="ticket" class="fa-4x tw-mb-3 tw-text-muted" />
             <h4>No Events Available</h4>

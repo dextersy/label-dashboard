@@ -2,8 +2,8 @@
   <h3>Release Summary</h3>
 
   <!-- Release Information Summary - Full Width -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="releaseInfoData">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="releaseInfoData">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Release Information</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('info')">
         <app-icon name="edit" class="tw-mr-1" />Edit
@@ -33,8 +33,8 @@
   </div>
 
   <!-- Album Credits Summary - Full Width -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="albumCreditsData">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="albumCreditsData">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Album Credits</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('credits')">
         <app-icon name="edit" class="tw-mr-1" />Edit
@@ -96,8 +96,8 @@
   </div>
 
   <!-- Track List Summary - Full Width -->
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="trackListData">
-    <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="trackListData">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('tracks')">
         <app-icon name="edit" class="tw-mr-1" />Edit
@@ -135,8 +135,8 @@
   <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
     <div class="md:tw-col-span-6">
       <!-- Validation Summary -->
-      <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
-        <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
+        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
           <h3 class="tw-mb-0">Validation Summary</h3>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
