@@ -3,31 +3,67 @@
 }
 
 .payment-method-item {
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px;
+}
+
+.payment-method-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.payment-method-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .payment-method-type {
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--brand-color, #3b82f6);
+  margin-bottom: 2px;
 }
 
-.payment-method-details {
-  font-size: 0.9em;
-  color: #6c757d;
-  flex-grow: 1;
+.payment-method-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.payment-method-number {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .payment-method-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 5px;
+  flex-shrink: 0;
 }
 
 .badge {

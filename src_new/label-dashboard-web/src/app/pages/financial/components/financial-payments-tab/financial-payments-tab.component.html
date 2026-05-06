@@ -26,28 +26,32 @@
   <div class="md:tw-col-span-4">
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-        <h3>Payment Methods</h3>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payment Methods</h3>
       </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
+      <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
         <div *ngFor="let method of paymentMethods" class="payment-method-item">
-          <div class="payment-method-type">{{ method.type }}</div>
-          <div class="payment-method-details">
-            {{ method.account_name }}<br>
-            <small>{{ method.account_number_or_email }}</small>
+          <div class="payment-method-avatar"
+               [style.background]="getBankColor(method.type)">
+            {{ getBankInitials(method.type) }}
+          </div>
+          <div class="payment-method-info">
+            <div class="payment-method-type">{{ method.type }}</div>
+            <div class="payment-method-name">{{ method.account_name }}</div>
+            <div class="payment-method-number">{{ method.account_number_or_email }}</div>
           </div>
           <div class="payment-method-actions">
-            <div *ngIf="method.is_default_for_artist" class="badge badge-primary">Default</div>
-            <div class="btn-group btn-group-sm tw-mt-1" role="group">
-              <button 
-                type="button" 
+            <div *ngIf="method.is_default_for_artist" class="badge badge-primary tw-mb-2">Default</div>
+            <div class="tw-flex tw-gap-1">
+              <button
+                type="button"
                 class="btn-secondary btn-sm btn-icon"
                 [disabled]="method.is_default_for_artist"
                 (click)="setDefaultPaymentMethod(method.id)"
                 title="Set as default">
                 <app-icon [name]="method.is_default_for_artist ? 'star-filled' : 'star'" [class.tw-text-yellow-400]="method.is_default_for_artist" [class.tw-text-gray-300]="!method.is_default_for_artist" />
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="btn-danger btn-sm btn-icon"
                 [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                 (click)="deletePaymentMethod(method.id)"
@@ -62,13 +66,14 @@
           No payment methods added yet.
         </div>
         
-        <hr>
-        
+        <div class="tw-mt-4 tw-pt-4 tw-border-t tw-border-gray-100">
+          <button type="button" class="btn-ghost btn-sm tw-w-full" (click)="toggleAddPaymentMethodCollapse()">
+            <app-icon [name]="isAddPaymentMethodCollapsed ? 'plus' : 'x'" class="tw-mr-1" />
+            {{ isAddPaymentMethodCollapsed ? 'Add Payment Method' : 'Cancel' }}
+          </button>
+        </div>
+
         <div class="collapsible-section">
-          <div class="collapsible-header" (click)="toggleAddPaymentMethodCollapse()">
-            <h6 class="tw-mb-0">Add Payment Method</h6>
-            <app-icon [name]="isAddPaymentMethodCollapsed ? 'chevron-down' : 'chevron-up'" />
-          </div>
           
           <div class="collapsible-content" [class.collapsed]="isAddPaymentMethodCollapsed">
             <form (ngSubmit)="onSubmitPaymentMethod()">
@@ -104,9 +109,9 @@
     
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mt-3" *ngIf="payoutSettings">
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-        <h3>Payout Settings</h3>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payout Settings</h3>
       </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
+      <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
         <form (ngSubmit)="onUpdatePayoutSettings()">
           <div class="tw-mb-5">
             <label>Payout Point (PHP)</label>
