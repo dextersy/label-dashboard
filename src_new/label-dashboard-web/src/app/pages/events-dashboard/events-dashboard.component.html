@@ -36,7 +36,7 @@
 
       <!-- Hero event -->
       <ng-container *ngIf="dashboardData.upcomingEvents?.length">
-        <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-center tw-gap-5 sm:tw-gap-8"
+        <div class="tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-gap-5 sm:tw-gap-8"
              [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
 
           <!-- Left: proximity · title · date/venue -->
@@ -185,52 +185,62 @@
       <!-- Right: stat tiles + analytics link (2/5 on desktop) -->
       <div class="lg:tw-col-span-2">
 
-        <!-- 2×2 stat tiles -->
-        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-3 tw-mb-3">
+        <!-- Unified stat cards -->
+        <div class="tw-grid tw-grid-cols-1 tw-gap-3 tw-mb-3">
 
-          <a routerLink="/campaigns/events/details"
-             class="tw-no-underline sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
-            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-[var(--brand-color,#667eea)]">
-              <app-icon name="calendar" />
+          <!-- Events card -->
+          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex">
+            <a routerLink="/campaigns/events/details"
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-card">
+              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-[var(--brand-color,#667eea)]">
+                <app-icon name="calendar" />
+              </div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
+                <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Active Events</div>
+              </div>
+            </a>
+            <div class="tw-flex tw-items-center tw-flex-shrink-0 tw-text-gray-300 tw-px-1">
+              <app-icon name="chevron-right" />
             </div>
-            <div>
-              <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
-              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Active Events</div>
-            </div>
-          </a>
+            <a routerLink="/campaigns/events/tickets"
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-card">
+              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-warning">
+                <app-icon name="ticket" />
+              </div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
+                <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Ticket Sales</div>
+              </div>
+            </a>
+          </div>
 
-          <a routerLink="/campaigns/fundraisers/details"
-             class="tw-no-underline sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
-            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-success">
-              <app-icon name="heart" />
+          <!-- Fundraisers card -->
+          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex">
+            <a routerLink="/campaigns/fundraisers/details"
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-card">
+              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-success">
+                <app-icon name="heart" />
+              </div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
+                <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Active Fundraisers</div>
+              </div>
+            </a>
+            <div class="tw-flex tw-items-center tw-flex-shrink-0 tw-text-gray-300 tw-px-1">
+              <app-icon name="chevron-right" />
             </div>
-            <div>
-              <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
-              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Fundraisers</div>
-            </div>
-          </a>
-
-          <a routerLink="/campaigns/events/tickets"
-             class="tw-no-underline sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
-            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-warning">
-              <app-icon name="ticket" />
-            </div>
-            <div class="tw-min-w-0">
-              <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color: #333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
-              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Ticket Sales</div>
-            </div>
-          </a>
-
-          <a routerLink="/campaigns/fundraisers/donations"
-             class="tw-no-underline sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
-            <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-[#0891b2]">
-              <app-icon name="currency" />
-            </div>
-            <div class="tw-min-w-0">
-              <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color: #333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>
-              <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Donations</div>
-            </div>
-          </a>
+            <a routerLink="/campaigns/fundraisers/donations"
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-card">
+              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-[#0891b2]">
+                <app-icon name="currency" />
+              </div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>
+                <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Amount Raised</div>
+              </div>
+            </a>
+          </div>
 
         </div>
 
