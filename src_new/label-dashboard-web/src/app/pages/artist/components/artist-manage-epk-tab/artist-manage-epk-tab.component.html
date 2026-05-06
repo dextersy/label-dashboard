@@ -1,5 +1,7 @@
 <div class="manage-epk-tab">
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
+
+  <!-- Page Header -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-mb-2">
         <app-icon name="link" class="tw-mr-2" />
@@ -9,112 +11,105 @@
         Share your Electronic Press Kit (EPK) with industry professionals, media, and fans using the link below.
       </p>
     </div>
+  </div>
 
-    <div class="tw-px-card-pad tw-pb-card-pad">
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-        <div class="tw-col-span-12">
+  <!-- Content -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
+    <div class="sm:tw-px-card-pad sm:tw-py-card-pad">
 
-          <!-- EPK Link (hidden when EPK is disabled) -->
-          <div class="tw-mb-5 link-accent" *ngIf="selectedTemplate !== 0">
-            <label for="epkUrl" class="tw-label">EPK Link</label>
-            <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
-              <input
-                type="text"
-                id="epkUrl"
-                class="tw-input tw-flex-1 tw-min-w-0"
-                [value]="epkUrl"
-                readonly
-                placeholder="Generating EPK URL...">
-              <div class="tw-flex tw-gap-2 tw-shrink-0">
-                <button
-                  class="btn-secondary tw-flex-1 sm:tw-flex-none"
-                  type="button"
-                  (click)="copyToClipboard()"
-                  [disabled]="!epkUrl">
-                  <app-icon name="copy" class="tw-mr-1" />
-                  Copy
-                </button>
-                <button
-                  class="btn-secondary tw-flex-1 sm:tw-flex-none"
-                  type="button"
-                  (click)="downloadEPKQRCode()"
-                  [disabled]="!epkUrl"
-                  title="Download QR Code">
-                  <app-icon name="scan" class="tw-mr-1" />
-                  QR Code
-                </button>
-              </div>
-            </div>
-            <div class="form-text">
-              This link provides public access to your artist profile, gallery, and releases.
-            </div>
-          </div>
-
-          <!-- EPK Template Selector -->
-          <div class="tw-mb-5 tw-mb-3">
-            <label class="tw-label">EPK Template</label>
-            <p class="small tw-mb-2 tw-text-muted tw-text-sm">Choose the design template for your EPK page.</p>
-
-            <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-4">
-              <div *ngFor="let template of templateOptions">
-                <div
-                  class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden template-option"
-                  [class.selected]="selectedTemplate === template.value"
-                  [class.template-disabled]="template.value === 0"
-                  (click)="selectedTemplate = template.value">
-                  <div class="tw-px-card-pad tw-pb-card-pad">
-                    <div class="form-check">
-                      <input
-                        class="form-check-input"
-                        type="radio"
-                        [id]="'template-' + template.value"
-                        name="epk_template"
-                        [value]="template.value"
-                        [(ngModel)]="selectedTemplate">
-                      <label class="form-check-label tw-w-full" [for]="'template-' + template.value">
-                        <div class="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-text-center">
-                          <span class="template-icon" [innerHTML]="template.icon"></span>
-                          <strong>{{ template.name }}</strong>
-                          <p class="small tw-mb-0 tw-text-muted tw-text-sm">{{ template.description }}</p>
-                        </div>
-                      </label>
-                    </div>
-                    <div class="tw-mt-2" *ngIf="template.value !== 0">
-                      <button
-                        type="button"
-                        class="btn-sm btn-secondary tw-w-full"
-                        (click)="openPreview(template.value); $event.stopPropagation()">
-                        <app-icon name="eye" class="tw-mr-1" />
-                        Preview Template
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Save Button -->
-          <div class="tw-flex tw-justify-end tw-mt-3">
+      <!-- EPK Link (hidden when EPK is disabled) -->
+      <div class="tw-mb-6 link-accent" *ngIf="selectedTemplate !== 0">
+        <label for="epkUrl" class="tw-label">EPK Link</label>
+        <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
+          <input
+            type="text"
+            id="epkUrl"
+            class="tw-input tw-flex-1 tw-min-w-0"
+            [value]="epkUrl"
+            readonly
+            placeholder="Generating EPK URL...">
+          <div class="tw-flex tw-gap-2 tw-shrink-0">
             <button
+              class="btn-secondary tw-flex-1 sm:tw-flex-none"
               type="button"
-              class="btn-primary"
-              (click)="updateEPKSettings()"
-              [disabled]="saving || selectedTemplate === artist.epk_template">
-              <span *ngIf="!saving">
-                <app-icon name="save" class=" tw-mr-1" />
-                Save EPK Settings
-              </span>
-              <span *ngIf="saving">
-                <span class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
-                Saving...
-              </span>
+              (click)="copyToClipboard()"
+              [disabled]="!epkUrl">
+              <app-icon name="copy" class="tw-mr-1" />
+              Copy
+            </button>
+            <button
+              class="btn-secondary tw-flex-1 sm:tw-flex-none"
+              type="button"
+              (click)="downloadEPKQRCode()"
+              [disabled]="!epkUrl"
+              title="Download QR Code">
+              <app-icon name="scan" class="tw-mr-1" />
+              QR Code
             </button>
           </div>
         </div>
+        <div class="form-text">
+          This link provides public access to your artist profile, gallery, and releases.
+        </div>
       </div>
+
+      <!-- EPK Template Selector -->
+      <div class="tw-mb-6">
+        <label class="tw-label">EPK Template</label>
+        <p class="tw-mb-3 tw-text-muted tw-text-sm">Choose the design template for your EPK page.</p>
+
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-4">
+          <div
+            *ngFor="let template of templateOptions"
+            class="template-option"
+            [class.selected]="selectedTemplate === template.value"
+            [class.template-disabled]="template.value === 0"
+            (click)="selectedTemplate = template.value">
+            <!-- Selected indicator -->
+            <div class="template-check" *ngIf="selectedTemplate === template.value">
+              <app-icon name="check-circle" />
+            </div>
+            <div class="tw-p-4">
+              <div class="tw-flex tw-flex-col tw-items-center tw-gap-2 tw-text-center">
+                <span class="template-icon" [innerHTML]="template.icon"></span>
+                <strong>{{ template.name }}</strong>
+                <p class="tw-mb-0 tw-text-muted tw-text-sm">{{ template.description }}</p>
+              </div>
+              <div class="tw-mt-3" *ngIf="template.value !== 0">
+                <button
+                  type="button"
+                  class="btn-sm btn-ghost tw-w-full"
+                  (click)="openPreview(template.value); $event.stopPropagation()">
+                  <app-icon name="eye" class="tw-mr-1" />
+                  Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="tw-flex tw-justify-end">
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="updateEPKSettings()"
+          [disabled]="saving || selectedTemplate === artist.epk_template">
+          <span *ngIf="!saving">
+            <app-icon name="save" class="tw-mr-1" />
+            Save EPK Settings
+          </span>
+          <span *ngIf="saving">
+            <span class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
+            Saving...
+          </span>
+        </button>
+      </div>
+
     </div>
   </div>
+
 </div>
 
 <!-- Preview Modal -->
@@ -124,32 +119,32 @@
       <div class="modal-header bg-dark tw-text-white">
         <div class="tw-flex tw-items-center tw-justify-between tw-w-full">
           <div>
-            <h5 class="modal-title tw-mb-0">
+            <p class="tw-mb-0 tw-font-semibold tw-text-sm tw-text-white">
               <app-icon name="eye" class="tw-mr-2" />
               Template Preview: {{ getPreviewTemplateName() }}
-            </h5>
+            </p>
           </div>
           <div class="tw-flex tw-gap-2 tw-items-center">
             <button
               type="button"
-              class="btn-primary"
+              class="btn-sm btn-primary"
               (click)="useThisTemplate()"
               *ngIf="previewTemplate !== artist.epk_template">
               <app-icon name="check" class="tw-mr-1" />
-              Like this? Use this template
+              Use this template
             </button>
-            <div
+            <span
               class="current-template-badge"
               *ngIf="previewTemplate === artist.epk_template">
-              <app-icon name="check-circle" class="tw-mr-2" />
-              This is currently set as your template
-            </div>
+              <app-icon name="check-circle" class="tw-mr-1" />
+              Currently active
+            </span>
             <button
               type="button"
-              class="btn-secondary"
+              class="btn-sm btn-secondary"
               (click)="closePreview()">
               <app-icon name="x" class="tw-mr-1" />
-              Close Preview
+              Close
             </button>
           </div>
         </div>

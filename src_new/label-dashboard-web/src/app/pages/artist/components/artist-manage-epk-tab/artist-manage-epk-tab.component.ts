@@ -44,13 +44,13 @@ export class ArtistManageEpkTabComponent implements OnInit {
         value: 1,
         name: 'Modern Gradient',
         description: 'Bold design with gradient overlays and dynamic effects',
-        icon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="56" height="72" viewBox="0 0 56 72" fill="none">
+        icon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="92" viewBox="0 0 56 72" fill="none">
           <defs>
             <linearGradient id="epk-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/></linearGradient>
             <linearGradient id="epk-grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/></linearGradient>
           </defs>
           <!-- Page frame -->
-          <rect x="1" y="1" width="54" height="70" rx="4" fill="#1a1a2e" stroke="#333" stroke-width="1"/>
+          <rect x="1" y="1" width="54" height="70" rx="4" fill="#fff" stroke="#dee2e6" stroke-width="1"/>
           <!-- Hero section with gradient overlay -->
           <rect x="1" y="1" width="54" height="30" rx="4" fill="url(#epk-grad)" opacity="0.8"/>
           <rect x="1" y="25" width="54" height="6" fill="#1a1a2e" opacity="0.5"/>
@@ -83,7 +83,7 @@ export class ArtistManageEpkTabComponent implements OnInit {
         value: 2,
         name: 'Minimal Clean',
         description: 'Simple, elegant design with clean typography',
-        icon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="56" height="72" viewBox="0 0 56 72" fill="none">
+        icon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="92" viewBox="0 0 56 72" fill="none">
           <!-- Page frame -->
           <rect x="1" y="1" width="54" height="70" rx="4" fill="#fff" stroke="#dee2e6" stroke-width="1"/>
           <!-- Header with light bg -->
@@ -124,7 +124,7 @@ export class ArtistManageEpkTabComponent implements OnInit {
         value: 0,
         name: 'Disabled',
         description: 'EPK page is not publicly accessible',
-        icon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="56" height="72" viewBox="0 0 56 72" fill="none">
+        icon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="92" viewBox="0 0 56 72" fill="none">
           <!-- Page frame (faded) -->
           <rect x="1" y="1" width="54" height="70" rx="4" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
           <!-- Faded placeholder lines -->
